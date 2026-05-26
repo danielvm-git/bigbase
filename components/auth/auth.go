@@ -15,7 +15,15 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-const version = "0.1.0"
+const (
+	version      = "0.1.0"
+	maxBodyBytes = 1 << 20
+)
+
+type authRequest struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
 
 type Logger interface {
 	Info(msg string, args ...any)
@@ -107,25 +115,38 @@ func (a *Auth) Middleware(next http.Handler) http.Handler {
 	})
 }
 
+func (a *Auth) decodeBody(w http.ResponseWriter, r *http.Request) (*authRequest, bool) {
+	r.Body = http.MaxBytesReader(w, r.Body, maxBodyBytes)
+	var req authRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json"})
+		return nil, false
+	}
+	if req.Email == "" || req.Password == "" {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "email and password required"})
+		return nil, false
+	}
+	return &req, true
+}
+
+func (a *Auth) writeAuthResponse(w http.ResponseWriter, status int, userID int64, email, token string) {
+	writeJSON(w, status, map[string]any{
+		"token": token,
+		"user": map[string]any{
+			"id":    userID,
+			"email": email,
+		},
+	})
+}
+
 func (a *Auth) handleRegister(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
 		writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
 		return
 	}
 
-	r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
-
-	var req struct {
-		Email    string `json:"email"`
-		Password string `json:"password"`
-	}
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json"})
-		return
-	}
-
-	if req.Email == "" || req.Password == "" {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "email and password required"})
+	req, ok := a.decodeBody(w, r)
+	if !ok {
 		return
 	}
 	if len(req.Password) < 6 {
@@ -166,13 +187,7 @@ func (a *Auth) handleRegister(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	writeJSON(w, http.StatusCreated, map[string]any{
-		"token": token,
-		"user": map[string]any{
-			"id":    userID,
-			"email": req.Email,
-		},
-	})
+	a.writeAuthResponse(w, http.StatusCreated, userID, req.Email, token)
 }
 
 func (a *Auth) handleLogin(w http.ResponseWriter, r *http.Request) {
@@ -181,19 +196,8 @@ func (a *Auth) handleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
-
-	var req struct {
-		Email    string `json:"email"`
-		Password string `json:"password"`
-	}
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json"})
-		return
-	}
-
-	if req.Email == "" || req.Password == "" {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "email and password required"})
+	req, ok := a.decodeBody(w, r)
+	if !ok {
 		return
 	}
 
@@ -221,13 +225,7 @@ func (a *Auth) handleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	writeJSON(w, http.StatusOK, map[string]any{
-		"token": token,
-		"user": map[string]any{
-			"id":    userID,
-			"email": req.Email,
-		},
-	})
+	a.writeAuthResponse(w, http.StatusOK, userID, req.Email, token)
 }
 
 func writeJSON(w http.ResponseWriter, status int, data any) {
