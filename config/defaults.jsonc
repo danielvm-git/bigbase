@@ -1,0 +1,6 @@
+{
+  // BigBase default configuration
+  "components": ["proxy", "db", "auth", "api", "storage", "admin"],
+  "db": { "driver": "sqlite" },
+  "proxy": { "domain": "localhost", "port": 443, "ssl": false }
+}

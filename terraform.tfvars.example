@@ -1,0 +1,20 @@
+# Copy to terraform.tfvars and fill in your values (terraform.tfvars is gitignored)
+
+tenancy_ocid     = "ocid1.tenancy.oc1..xxx"
+user_ocid        = "ocid1.user.oc1..xxx"
+fingerprint      = "xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx"
+private_key_path = "~/.oci/oci_api_key.pem"
+
+# Switch to "sa-vinhedo-1" once subscribed
+region = "sa-saopaulo-1"
+
+# Your SSH public key (cat ~/.ssh/id_ed25519.pub)
+ssh_public_key = "ssh-ed25519 AAAA..."
+
+# Domain that will point to the instance's public IP
+appwrite_domain = "appwrite.yourdomain.com"
+
+# Always Free Ampere limits: 4 OCPU / 24 GB total across all A1 instances
+instance_ocpus         = 4
+instance_memory_in_gbs = 24
+boot_volume_size_in_gbs = 50

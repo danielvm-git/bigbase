@@ -1,0 +1,22 @@
+# Go
+bigbase
+*.exe
+*.test
+*.out
+vendor/
+
+# Terraform state — never commit
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+
+# Actual vars file — contains secrets
+terraform.tfvars
+
+# Crash logs
+crash.log
+crash.*.log
+
+# OCI keys — just in case
+*.pem

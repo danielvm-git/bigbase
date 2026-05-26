@@ -1,0 +1,94 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "plugin": ["/Users/danielvm/.opensrc/repos/github.com/affaan-m/ECC/main/.opencode/plugins"],
+  "instructions": [
+    "/Users/danielvm/.opensrc/repos/github.com/affaan-m/ECC/main/skills/tdd-workflow/SKILL.md",
+    "/Users/danielvm/.opensrc/repos/github.com/affaan-m/ECC/main/skills/security-review/SKILL.md",
+    "/Users/danielvm/.opensrc/repos/github.com/affaan-m/ECC/main/skills/coding-standards/SKILL.md",
+    "/Users/danielvm/.opensrc/repos/github.com/affaan-m/ECC/main/skills/backend-patterns/SKILL.md",
+    "/Users/danielvm/.opensrc/repos/github.com/affaan-m/ECC/main/skills/frontend-patterns/SKILL.md",
+    "/Users/danielvm/.opensrc/repos/github.com/affaan-m/ECC/main/skills/e2e-testing/SKILL.md",
+    "/Users/danielvm/.opensrc/repos/github.com/affaan-m/ECC/main/skills/verification-loop/SKILL.md",
+    "/Users/danielvm/.opensrc/repos/github.com/affaan-m/ECC/main/skills/api-design/SKILL.md",
+    "/Users/danielvm/.opensrc/repos/github.com/affaan-m/ECC/main/skills/strategic-compact/SKILL.md"
+  ],
+  "agent": {
+    "planner": {
+      "description": "Implementation planning for complex features",
+      "mode": "subagent",
+      "prompt": "{file:/Users/danielvm/.opensrc/repos/github.com/affaan-m/ECC/main/.opencode/prompts/agents/planner.txt}",
+      "tools": { "read": true, "bash": true, "write": false, "edit": false }
+    },
+    "code-reviewer": {
+      "description": "Code quality and security review",
+      "mode": "subagent",
+      "prompt": "{file:/Users/danielvm/.opensrc/repos/github.com/affaan-m/ECC/main/.opencode/prompts/agents/code-reviewer.txt}",
+      "tools": { "read": true, "bash": true, "write": false, "edit": false }
+    },
+    "security-reviewer": {
+      "description": "Security vulnerability detection",
+      "mode": "subagent",
+      "prompt": "{file:/Users/danielvm/.opensrc/repos/github.com/affaan-m/ECC/main/.opencode/prompts/agents/security-reviewer.txt}",
+      "tools": { "read": true, "bash": true, "write": true, "edit": true }
+    },
+    "tdd-guide": {
+      "description": "Test-driven development with 80%+ coverage",
+      "mode": "subagent",
+      "prompt": "{file:/Users/danielvm/.opensrc/repos/github.com/affaan-m/ECC/main/.opencode/prompts/agents/tdd-guide.txt}",
+      "tools": { "read": true, "write": true, "edit": true, "bash": true }
+    },
+    "build-error-resolver": {
+      "description": "Fix build and type errors",
+      "mode": "subagent",
+      "prompt": "{file:/Users/danielvm/.opensrc/repos/github.com/affaan-m/ECC/main/.opencode/prompts/agents/build-error-resolver.txt}",
+      "tools": { "read": true, "write": true, "edit": true, "bash": true }
+    },
+    "e2e-runner": {
+      "description": "E2E testing with Playwright",
+      "mode": "subagent",
+      "prompt": "{file:/Users/danielvm/.opensrc/repos/github.com/affaan-m/ECC/main/.opencode/prompts/agents/e2e-runner.txt}",
+      "tools": { "read": true, "write": true, "edit": true, "bash": true }
+    }
+  },
+  "command": {
+    "plan": {
+      "description": "Create implementation plan",
+      "agent": "planner",
+      "template": "Create a detailed plan for: $ARGUMENTS",
+      "subtask": true
+    },
+    "tdd": {
+      "description": "TDD workflow",
+      "agent": "tdd-guide",
+      "template": "Apply TDD for: $ARGUMENTS",
+      "subtask": true
+    },
+    "code-review": {
+      "description": "Review recent changes",
+      "agent": "code-reviewer",
+      "template": "Review the code changes for: $ARGUMENTS",
+      "subtask": true
+    },
+    "security": {
+      "description": "Security review",
+      "agent": "security-reviewer",
+      "template": "Run security review for: $ARGUMENTS",
+      "subtask": true
+    },
+    "build-fix": {
+      "description": "Fix build errors",
+      "agent": "build-error-resolver",
+      "template": "Fix build errors: $ARGUMENTS",
+      "subtask": true
+    },
+    "e2e": {
+      "description": "Generate and run E2E tests",
+      "agent": "e2e-runner",
+      "template": "Create E2E tests for: $ARGUMENTS",
+      "subtask": true
+    }
+  },
+  "permission": {
+    "mcp_*": "ask"
+  }
+}
