@@ -16,6 +16,10 @@ func (eb *EventBus) Subscribe(hook HookDef) {
 	eb.hooks[hook.Name] = append(eb.hooks[hook.Name], hook)
 }
 
+func (eb *EventBus) SubscriberCount() int {
+	return len(eb.hooks)
+}
+
 func (eb *EventBus) Emit(event Event, ctx *Context) error {
 	hooks := eb.hooks[event.Name]
 	if len(hooks) == 0 {

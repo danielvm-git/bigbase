@@ -9,11 +9,13 @@ Stack: Go 1.22+ / ECC Kernel + Plugins / SQLite + PostgreSQL
 ## Commands
 | Action | Command |
 |--------|---------|
-| Run    | `go run .` |
+| Run (serve) | `go run . serve [--port PORT]` |
+| Run (CLI)   | `go run . status` / `go run . version` / `go run . components list` |
 | Test   | `go test ./...` |
 | Build  | `go build -o bigbase .` |
 | Lint   | `golangci-lint run ./...` |
 | Test coverage | `go test -coverprofile=coverage.out ./... && go tool cover -func=coverage.out` |
+| Setup  | `bash scripts/setup.sh` (idempotent) |
 
 ## Architecture
 ECC pattern: Kernel (discovery, lifecycle, event bus, config merge) + pluggable components (proxy, auth, db, api, storage, git, forge, cici, functions, realtime, messaging, deploy, admin, monitoring). Components communicate via event hooks, not direct imports.
@@ -31,6 +33,17 @@ ECC pattern: Kernel (discovery, lifecycle, event bus, config merge) + pluggable 
 - Commit to main without PR
 - Expose internal errors or stack traces to API clients
 - Use `any` in Go — prefer concrete types or interfaces
+
+## Observability
+
+| What | Command |
+|------|---------|
+| View logs | `go run . serve --port 9999` then curl `/health` (JSON to stdout) |
+| Health check | `curl http://localhost:9999/health` |
+| Component status | `go run . status` |
+| List components | `go run . components list` |
+
+Logging is structured JSON via `slog.JSONHandler` in serve mode. CLI output uses plain text.
 
 ## Agent Rules
 - Read specs/ before writing code.
