@@ -10,6 +10,8 @@ import (
 	"syscall"
 	"text/tabwriter"
 
+	"github.com/danielvm/bigbase/components/api"
+	"github.com/danielvm/bigbase/components/db"
 	"github.com/danielvm/bigbase/components/proxy"
 	"github.com/danielvm/bigbase/kernel"
 )
@@ -64,16 +66,31 @@ func main() {
 func startProxy() {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo}))
 	k := kernel.New(logger)
+
 	p := proxy.New(proxy.Options{
 		Port:   resolvePort(),
 		Kernel: k,
 		Logger: logger,
 	})
+	d := db.New(db.Options{
+		Path:   "bigbase.db",
+		Logger: logger,
+	})
+	a := api.New(api.Options{
+		DB:     d,
+		Logger: logger,
+	})
+
 	k.Register(p)
+	k.Register(d)
+	k.Register(a)
+
 	if err := k.Start(); err != nil {
 		logger.Error("failed to start kernel", "error", err)
 		os.Exit(1)
 	}
+
+	p.Handle("/api/collections/", a.Handler().ServeHTTP)
 	logger.Info("bigbase running", "port", resolvePort())
 
 	sig := make(chan os.Signal, 1)

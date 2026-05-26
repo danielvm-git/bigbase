@@ -20,3 +20,6 @@ crash.*.log
 
 # OCI keys — just in case
 *.pem
+bigbase.db
+.bigpowers/
+*.zip

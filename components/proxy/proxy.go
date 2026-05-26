@@ -35,6 +35,7 @@ type Proxy struct {
 	kernel *kernel.Kernel
 	logger Logger
 	server *http.Server
+	mux    *http.ServeMux
 }
 
 func New(opts Options) *Proxy {
@@ -63,13 +64,13 @@ func (p *Proxy) Init(ctx *kernel.Context, config json.RawMessage) error {
 }
 
 func (p *Proxy) Start(ctx *kernel.Context) error {
-	mux := http.NewServeMux()
-	mux.HandleFunc("/", p.handleHome)
-	mux.HandleFunc("/health", p.handleHealth)
+	p.mux = http.NewServeMux()
+	p.mux.HandleFunc("/", p.handleHome)
+	p.mux.HandleFunc("/health", p.handleHealth)
 
 	p.server = &http.Server{
 		Addr:    ":" + p.port,
-		Handler: p.loggingMiddleware(mux),
+		Handler: p.loggingMiddleware(p.mux),
 	}
 
 	go func() {
@@ -104,6 +105,12 @@ func (p *Proxy) loggingMiddleware(next http.Handler) http.Handler {
 			"duration", time.Since(start).String(),
 		)
 	})
+}
+
+func (p *Proxy) Handle(pattern string, handler http.HandlerFunc) {
+	if p.mux != nil {
+		p.mux.HandleFunc(pattern, handler)
+	}
 }
 
 func (p *Proxy) Stop(ctx *kernel.Context) error {
