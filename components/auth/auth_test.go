@@ -1,6 +1,7 @@
 package auth_test
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -76,6 +77,52 @@ func TestAuthVersion(t *testing.T) {
 	a := &auth.Auth{}
 	if got := a.Version(); got == "" {
 		t.Fatal("expected non-empty version")
+	}
+}
+
+func TestNewWithNilLogger(t *testing.T) {
+	d := db.New(db.Options{Path: ":memory:", Logger: testLogger{}})
+	a := auth.New(auth.Options{DB: d, Logger: nil, Secret: "test-secret-32-chars!!!"})
+	k := kernel.New(testLogger{})
+	k.Register(a)
+	k.Register(d)
+	if err := k.Start(); err != nil {
+		t.Fatalf("start: %v", err)
+	}
+	t.Cleanup(func() { _ = k.Stop() })
+}
+
+func TestUserIDFromContextMissing(t *testing.T) {
+	if _, ok := auth.UserIDFromContext(context.Background()); ok {
+		t.Fatal("expected false for missing user id")
+	}
+}
+
+func TestUserEmailFromContextMissing(t *testing.T) {
+	if _, ok := auth.UserEmailFromContext(context.Background()); ok {
+		t.Fatal("expected false for missing email")
+	}
+}
+
+func TestRegisterWrongMethod(t *testing.T) {
+	_, handler := setupAuth(t)
+
+	req := httptest.NewRequest("GET", "/api/auth/register", nil)
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+	if w.Code != http.StatusMethodNotAllowed {
+		t.Fatalf("expected 405, got %d", w.Code)
+	}
+}
+
+func TestLoginWrongMethod(t *testing.T) {
+	_, handler := setupAuth(t)
+
+	req := httptest.NewRequest("PUT", "/api/auth/login", nil)
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+	if w.Code != http.StatusMethodNotAllowed {
+		t.Fatalf("expected 405, got %d", w.Code)
 	}
 }
 
@@ -203,30 +250,80 @@ func TestLoginUnknownUser(t *testing.T) {
 	}
 }
 
+func TestRegisterCaseInsensitiveEmail(t *testing.T) {
+	_, handler := setupAuth(t)
+
+	body := `{"email":"Alice@Test.Com","password":"secret123"}`
+	req := httptest.NewRequest("POST", "/api/auth/register", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+
+	if w.Code != http.StatusCreated {
+		t.Fatalf("expected 201, got %d: %s", w.Code, w.Body.String())
+	}
+
+	resp := parseResponse(t, w.Body.Bytes())
+	user := resp["user"].(map[string]any)
+	if user["email"] != "alice@test.com" {
+		t.Fatalf("expected lowercased email 'alice@test.com', got '%v'", user["email"])
+	}
+
+	dupBody := `{"email":"alice@test.com","password":"secret123"}`
+	dupReq := httptest.NewRequest("POST", "/api/auth/register", strings.NewReader(dupBody))
+	dupReq.Header.Set("Content-Type", "application/json")
+	dupW := httptest.NewRecorder()
+	handler.ServeHTTP(dupW, dupReq)
+	if dupW.Code != http.StatusConflict {
+		t.Fatalf("expected 409 for case-insensitive duplicate, got %d", dupW.Code)
+	}
+}
+
+func TestRegisterEmptyBody(t *testing.T) {
+	_, handler := setupAuth(t)
+
+	req := httptest.NewRequest("POST", "/api/auth/register", strings.NewReader(`{"email":"a@b.com"}`))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+	if w.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400 for missing password, got %d", w.Code)
+	}
+}
+
 func TestMiddlewareValidToken(t *testing.T) {
 	a, h := setupAuth(t)
 
-	var called bool
-	protected := a.Middleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		called = true
-		if uid := r.Header.Get("X-User-ID"); uid == "" {
-			t.Fatal("expected X-User-ID header")
-		}
-		if email := r.Header.Get("X-User-Email"); email == "" {
-			t.Fatal("expected X-User-Email header")
-		}
-		w.WriteHeader(http.StatusOK)
-	}))
-
-	h.ServeHTTP(httptest.NewRecorder(), httptest.NewRequest("POST", "/api/auth/register", strings.NewReader(`{"email":"eve@test.com","password":"secret123"}`)))
+	regReq := httptest.NewRequest("POST", "/api/auth/register", strings.NewReader(`{"email":"eve@test.com","password":"secret123"}`))
+	regReq.Header.Set("Content-Type", "application/json")
+	regW := httptest.NewRecorder()
+	h.ServeHTTP(regW, regReq)
+	if regW.Code != http.StatusCreated {
+		t.Fatalf("registration failed: %d %s", regW.Code, regW.Body.String())
+	}
 
 	req := httptest.NewRequest("POST", "/api/auth/login", strings.NewReader(`{"email":"eve@test.com","password":"secret123"}`))
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
 	h.ServeHTTP(w, req)
+	if w.Code != http.StatusOK {
+		t.Fatalf("login failed: %d %s", w.Code, w.Body.String())
+	}
 
 	resp := parseResponse(t, w.Body.Bytes())
 	token, _ := resp["token"].(string)
+
+	var called bool
+	protected := a.Middleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		called = true
+		if _, ok := auth.UserIDFromContext(r.Context()); !ok {
+			t.Fatal("expected UserID in context")
+		}
+		if _, ok := auth.UserEmailFromContext(r.Context()); !ok {
+			t.Fatal("expected UserEmail in context")
+		}
+		w.WriteHeader(http.StatusOK)
+	}))
 
 	authReq := httptest.NewRequest("GET", "/api/protected", nil)
 	authReq.Header.Set("Authorization", "Bearer "+token)
@@ -249,6 +346,23 @@ func TestMiddlewareNoToken(t *testing.T) {
 	}))
 
 	req := httptest.NewRequest("GET", "/api/protected", nil)
+	w := httptest.NewRecorder()
+	protected.ServeHTTP(w, req)
+
+	if w.Code != http.StatusUnauthorized {
+		t.Fatalf("expected 401, got %d", w.Code)
+	}
+}
+
+func TestMiddlewareEmptyBearerPrefix(t *testing.T) {
+	a, _ := setupAuth(t)
+
+	protected := a.Middleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		t.Fatal("should not reach handler")
+	}))
+
+	req := httptest.NewRequest("GET", "/api/protected", nil)
+	req.Header.Set("Authorization", "Bearer ")
 	w := httptest.NewRecorder()
 	protected.ServeHTTP(w, req)
 

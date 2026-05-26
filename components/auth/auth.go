@@ -16,8 +16,16 @@ import (
 )
 
 const (
-	version      = "0.1.0"
-	maxBodyBytes = 1 << 20
+	version        = "0.1.0"
+	maxBodyBytes   = 1 << 20
+	minPasswordLen = 6
+)
+
+type contextKey string
+
+const (
+	ctxUserID    contextKey = "user_id"
+	ctxUserEmail contextKey = "user_email"
 )
 
 type authRequest struct {
@@ -30,6 +38,12 @@ type Logger interface {
 	Error(msg string, args ...any)
 	Warn(msg string, args ...any)
 }
+
+type noopLogger struct{}
+
+func (noopLogger) Info(msg string, args ...any)  {}
+func (noopLogger) Warn(msg string, args ...any)  {}
+func (noopLogger) Error(msg string, args ...any) {}
 
 type DBer interface {
 	ExecContext(ctx context.Context, query string, args ...any) (sql.Result, error)
@@ -50,15 +64,25 @@ type Auth struct {
 }
 
 func New(opts Options) *Auth {
+	logger := opts.Logger
+	if logger == nil {
+		logger = noopLogger{}
+	}
+	if opts.DB == nil {
+		panic("auth: DB is required")
+	}
+
 	secret := []byte(opts.Secret)
 	if len(secret) == 0 {
 		raw := make([]byte, 32)
-		_, _ = rand.Read(raw)
+		if _, err := rand.Read(raw); err != nil {
+			panic("auth: failed to generate random secret: " + err.Error())
+		}
 		secret = []byte(hex.EncodeToString(raw))
 	}
 	return &Auth{
 		db:     opts.DB,
-		logger: opts.Logger,
+		logger: logger,
 		secret: secret,
 	}
 }
@@ -106,13 +130,24 @@ func (a *Auth) Middleware(next http.Handler) http.Handler {
 		}
 		claims, err := verifyJWT(token, a.secret)
 		if err != nil {
+			a.logger.Error("jwt verification failed", "error", err)
 			writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "invalid token"})
 			return
 		}
-		r.Header.Set("X-User-ID", fmt.Sprintf("%d", claims.UserID))
-		r.Header.Set("X-User-Email", claims.Email)
-		next.ServeHTTP(w, r)
+		ctx := context.WithValue(r.Context(), ctxUserID, claims.UserID)
+		ctx = context.WithValue(ctx, ctxUserEmail, claims.Email)
+		next.ServeHTTP(w, r.WithContext(ctx))
 	})
+}
+
+func UserIDFromContext(ctx context.Context) (int64, bool) {
+	id, ok := ctx.Value(ctxUserID).(int64)
+	return id, ok
+}
+
+func UserEmailFromContext(ctx context.Context) (string, bool) {
+	email, ok := ctx.Value(ctxUserEmail).(string)
+	return email, ok
 }
 
 func (a *Auth) decodeBody(w http.ResponseWriter, r *http.Request) (*authRequest, bool) {
@@ -139,6 +174,27 @@ func (a *Auth) writeAuthResponse(w http.ResponseWriter, status int, userID int64
 	})
 }
 
+func hashPassword(password string) (string, error) {
+	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return "", fmt.Errorf("bcrypt hash: %w", err)
+	}
+	return string(hash), nil
+}
+
+func (a *Auth) insertUser(ctx context.Context, email, passwordHash string) (int64, error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	res, err := a.db.ExecContext(ctx,
+		"INSERT INTO users (email, password_hash, created_at) VALUES (?, ?, ?)",
+		email, passwordHash, time.Now().UTC().Format(time.RFC3339))
+	if err != nil {
+		return 0, err
+	}
+	return res.LastInsertId()
+}
+
 func (a *Auth) handleRegister(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
 		writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
@@ -149,26 +205,24 @@ func (a *Auth) handleRegister(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	if len(req.Password) < 6 {
+
+	email := strings.ToLower(req.Email)
+
+	if len(req.Password) < minPasswordLen {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "password must be at least 6 characters"})
 		return
 	}
 
-	hash, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+	hash, err := hashPassword(req.Password)
 	if err != nil {
 		a.logger.Error("bcrypt hash", "error", err)
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 
-	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
-	defer cancel()
-
-	_, err = a.db.ExecContext(ctx,
-		"INSERT INTO users (email, password_hash, created_at) VALUES (?, ?, ?)",
-		strings.ToLower(req.Email), string(hash), time.Now().UTC().Format(time.RFC3339))
+	userID, err := a.insertUser(r.Context(), email, hash)
 	if err != nil {
-		if strings.Contains(err.Error(), "UNIQUE") {
+		if strings.Contains(err.Error(), "UNIQUE constraint") {
 			writeJSON(w, http.StatusConflict, map[string]string{"error": "email already registered"})
 			return
 		}
@@ -177,17 +231,14 @@ func (a *Auth) handleRegister(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var userID int64
-	_ = a.db.QueryRowContext(ctx, "SELECT id FROM users WHERE email = ?", strings.ToLower(req.Email)).Scan(&userID)
-
-	token, err := createJWT(userID, req.Email, a.secret)
+	token, err := createJWT(userID, email, a.secret)
 	if err != nil {
 		a.logger.Error("create jwt", "error", err)
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 
-	a.writeAuthResponse(w, http.StatusCreated, userID, req.Email, token)
+	a.writeAuthResponse(w, http.StatusCreated, userID, email, token)
 }
 
 func (a *Auth) handleLogin(w http.ResponseWriter, r *http.Request) {
@@ -201,13 +252,15 @@ func (a *Auth) handleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	email := strings.ToLower(req.Email)
+
 	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 	defer cancel()
 
 	var userID int64
 	var passwordHash string
 	err := a.db.QueryRowContext(ctx,
-		"SELECT id, password_hash FROM users WHERE email = ?", strings.ToLower(req.Email)).Scan(&userID, &passwordHash)
+		"SELECT id, password_hash FROM users WHERE email = ?", email).Scan(&userID, &passwordHash)
 	if err != nil {
 		writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "invalid email or password"})
 		return
@@ -218,14 +271,14 @@ func (a *Auth) handleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, err := createJWT(userID, req.Email, a.secret)
+	token, err := createJWT(userID, email, a.secret)
 	if err != nil {
 		a.logger.Error("create jwt", "error", err)
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 
-	a.writeAuthResponse(w, http.StatusOK, userID, req.Email, token)
+	a.writeAuthResponse(w, http.StatusOK, userID, email, token)
 }
 
 func writeJSON(w http.ResponseWriter, status int, data any) {
