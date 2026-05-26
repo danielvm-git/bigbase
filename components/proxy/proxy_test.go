@@ -127,6 +127,44 @@ func TestProxyServeHomePage(t *testing.T) {
 	}
 }
 
+func TestProxyHandle(t *testing.T) {
+	logger := testLogger{}
+	k := kernel.New(logger)
+
+	port := freePort(t)
+	p := proxy.New(proxy.Options{
+		Port:   port,
+		Kernel: k,
+		Logger: logger,
+	})
+
+	if err := p.Start(&kernel.Context{}); err != nil {
+		t.Fatalf("failed to start proxy: %v", err)
+	}
+	defer func() { _ = p.Stop(&kernel.Context{}) }()
+
+	waitForServer(t, port, "/health")
+
+	var handled bool
+	p.Handle("/api/test", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		handled = true
+		w.WriteHeader(http.StatusOK)
+	}))
+
+	resp, err := http.Get("http://localhost:" + port + "/api/test")
+	if err != nil {
+		t.Fatalf("failed to GET /api/test: %v", err)
+	}
+	defer func() { _ = resp.Body.Close() }()
+
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("expected 200, got %d", resp.StatusCode)
+	}
+	if !handled {
+		t.Fatal("expected handler to be called")
+	}
+}
+
 func TestProxyHealthEndpoint(t *testing.T) {
 	logger := testLogger{}
 	k := kernel.New(logger)

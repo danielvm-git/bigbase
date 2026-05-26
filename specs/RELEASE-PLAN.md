@@ -1,5 +1,9 @@
 # BigBase Release Plan — Vertical Slices
 
+type: release-plan
+context: BigBase BaaS — single-binary, ECC architecture, vertical slices
+slopcheck: modernc.org/libc [OK human-approved — verified upstream at github.com/sqlite/sqlite, used by PocketBase], golang.org/x/sys [OK human-approved — official Go stdlib supplement], modernc.org/sqlite [OK human-approved — well-known pure-Go SQLite driver], github.com/mattn/go-isatty [OK human-approved — established Go ecosystem package by mattn]
+
 ## Vision
 A single-binary BaaS you can see evolving every step of the way.
 

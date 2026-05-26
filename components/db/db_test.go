@@ -44,7 +44,6 @@ func TestDBStartStop(t *testing.T) {
 		t.Fatalf("Start failed: %v", err)
 	}
 
-	// verify DB is accessible
 	if d.DB() == nil {
 		t.Fatal("expected non-nil DB handle after Start")
 	}
@@ -54,18 +53,39 @@ func TestDBStartStop(t *testing.T) {
 	}
 }
 
+func TestDBStartWithNilLogger(t *testing.T) {
+	d := db.New(db.Options{Path: ":memory:"})
+	ctx := &kernel.Context{Logger: testLogger{}}
+	if err := d.Init(ctx, nil); err != nil {
+		t.Fatalf("Init failed: %v", err)
+	}
+	if err := d.Start(ctx); err != nil {
+		t.Fatalf("Start failed: %v", err)
+	}
+	if err := d.Stop(ctx); err != nil {
+		t.Fatalf("Stop failed: %v", err)
+	}
+}
+
 func TestDBMigrate(t *testing.T) {
 	d := db.New(db.Options{Path: ":memory:", Logger: testLogger{}})
 	ctx := &kernel.Context{Logger: testLogger{}}
-	_ = d.Init(ctx, nil)
-	_ = d.Start(ctx)
-	defer func() { _ = d.Stop(ctx) }()
+	if err := d.Init(ctx, nil); err != nil {
+		t.Fatalf("Init failed: %v", err)
+	}
+	if err := d.Start(ctx); err != nil {
+		t.Fatalf("Start failed: %v", err)
+	}
+	defer func() {
+		if err := d.Stop(ctx); err != nil {
+			t.Fatalf("Stop failed: %v", err)
+		}
+	}()
 
 	if err := d.Migrate(`CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, name TEXT)`); err != nil {
 		t.Fatalf("Migrate failed: %v", err)
 	}
 
-	// verify table exists
 	var count int
 	row := d.DB().QueryRow("SELECT COUNT(*) FROM users")
 	if err := row.Scan(&count); err != nil {
@@ -79,11 +99,21 @@ func TestDBMigrate(t *testing.T) {
 func TestDBExecQuery(t *testing.T) {
 	d := db.New(db.Options{Path: ":memory:", Logger: testLogger{}})
 	ctx := &kernel.Context{Logger: testLogger{}}
-	_ = d.Init(ctx, nil)
-	_ = d.Start(ctx)
-	defer func() { _ = d.Stop(ctx) }()
+	if err := d.Init(ctx, nil); err != nil {
+		t.Fatalf("Init failed: %v", err)
+	}
+	if err := d.Start(ctx); err != nil {
+		t.Fatalf("Start failed: %v", err)
+	}
+	defer func() {
+		if err := d.Stop(ctx); err != nil {
+			t.Fatalf("Stop failed: %v", err)
+		}
+	}()
 
-	_ = d.Migrate(`CREATE TABLE IF NOT EXISTS items (id INTEGER PRIMARY KEY, name TEXT)`)
+	if err := d.Migrate(`CREATE TABLE IF NOT EXISTS items (id INTEGER PRIMARY KEY, name TEXT)`); err != nil {
+		t.Fatalf("Migrate failed: %v", err)
+	}
 
 	if _, err := d.Exec("INSERT INTO items (name) VALUES (?)", "test-item"); err != nil {
 		t.Fatalf("Exec failed: %v", err)
@@ -93,7 +123,11 @@ func TestDBExecQuery(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Query failed: %v", err)
 	}
-	defer func() { _ = rows.Close() }()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			t.Fatalf("rows.Close failed: %v", err)
+		}
+	}()
 
 	if !rows.Next() {
 		t.Fatal("expected at least one row")

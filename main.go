@@ -64,16 +64,21 @@ func main() {
 }
 
 func startProxy() {
+	serveFS := flag.NewFlagSet("serve", flag.ContinueOnError)
+	port := serveFS.String("port", "8080", "HTTP server port")
+	dbPath := serveFS.String("db", "bigbase.db", "SQLite database path")
+	_ = serveFS.Parse(os.Args[2:])
+
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo}))
 	k := kernel.New(logger)
 
 	p := proxy.New(proxy.Options{
-		Port:   resolvePort(),
+		Port:   *port,
 		Kernel: k,
 		Logger: logger,
 	})
 	d := db.New(db.Options{
-		Path:   "bigbase.db",
+		Path:   *dbPath,
 		Logger: logger,
 	})
 	a := api.New(api.Options{
@@ -90,8 +95,9 @@ func startProxy() {
 		os.Exit(1)
 	}
 
+	logger.Warn("CRUD API has no authentication — add auth component for production use")
 	p.Handle("/api/collections/", a.Handler().ServeHTTP)
-	logger.Info("bigbase running", "port", resolvePort())
+	logger.Info("bigbase running", "port", *port, "db", *dbPath)
 
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)
@@ -103,13 +109,6 @@ func startProxy() {
 	os.Exit(0)
 }
 
-func resolvePort() string {
-	fs := flag.NewFlagSet("serve", flag.ContinueOnError)
-	port := fs.String("port", "8080", "HTTP server port")
-	_ = fs.Parse(os.Args[2:])
-	return *port
-}
-
 func printUsage() {
 	fmt.Println(`bigbase - BigBase BaaS Platform
 
@@ -117,7 +116,7 @@ Usage:
   bigbase version              Show version
   bigbase status               Show kernel and component status
   bigbase components list      List registered components
-  bigbase serve [--port PORT]  Start HTTP server (default :8080)
+  bigbase serve [--port PORT] [--db PATH]  Start HTTP server (default :8080)
   bigbase help                 Show this help`)
 }
 

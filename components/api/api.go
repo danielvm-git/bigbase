@@ -1,11 +1,14 @@
 package api
 
 import (
+	"context"
 	"database/sql"
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/danielvm/bigbase/kernel"
 )
@@ -18,7 +21,9 @@ type Logger interface {
 }
 
 type DBer interface {
-	DB() *sql.DB
+	ExecContext(ctx context.Context, query string, args ...any) (sql.Result, error)
+	QueryContext(ctx context.Context, query string, args ...any) (*sql.Rows, error)
+	QueryRowContext(ctx context.Context, query string, args ...any) *sql.Row
 	Exec(query string, args ...any) (sql.Result, error)
 	Query(query string, args ...any) (*sql.Rows, error)
 	QueryRow(query string, args ...any) *sql.Row
@@ -33,12 +38,14 @@ type Options struct {
 type API struct {
 	db     DBer
 	logger Logger
+	tables map[string]bool
 }
 
 func New(opts Options) *API {
 	return &API{
 		db:     opts.DB,
 		logger: opts.Logger,
+		tables: make(map[string]bool),
 	}
 }
 
@@ -68,19 +75,26 @@ func (a *API) Handler() http.Handler {
 }
 
 func (a *API) ensureTable(collection string) error {
+	if a.tables[collection] {
+		return nil
+	}
 	query := fmt.Sprintf(`CREATE TABLE IF NOT EXISTS %s (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		data TEXT
-	)`, sanitize(collection))
-	return a.db.Migrate(query)
+	)`, collection)
+	if err := a.db.Migrate(query); err != nil {
+		return err
+	}
+	a.tables[collection] = true
+	return nil
 }
 
 func (a *API) handleCollection(w http.ResponseWriter, r *http.Request) {
 	path := strings.TrimPrefix(r.URL.Path, "/api/collections/")
 	parts := strings.SplitN(path, "/", 2)
-	collection := sanitize(parts[0])
-	if collection == "" {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "collection name required"})
+	collection, err := sanitize(parts[0])
+	if err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
 		return
 	}
 
@@ -112,22 +126,45 @@ func (a *API) handleCollection(w http.ResponseWriter, r *http.Request) {
 
 func (a *API) listRecords(w http.ResponseWriter, r *http.Request, collection string) {
 	if err := a.ensureTable(collection); err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		a.logger.Error("ensure table", "collection", collection, "error", err)
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 
-	rows, err := a.db.Query(fmt.Sprintf("SELECT id, data FROM %s ORDER BY id", sanitize(collection)))
+	limit := 100
+	offset := 0
+	if l := r.URL.Query().Get("limit"); l != "" {
+		if v, err := strconv.Atoi(l); err == nil && v > 0 && v <= 1000 {
+			limit = v
+		}
+	}
+	if o := r.URL.Query().Get("offset"); o != "" {
+		if v, err := strconv.Atoi(o); err == nil && v >= 0 {
+			offset = v
+		}
+	}
+
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	rows, err := a.db.QueryContext(ctx, fmt.Sprintf("SELECT id, data FROM %s ORDER BY id LIMIT ? OFFSET ?", collection), limit, offset)
 	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		a.logger.Error("list records query", "collection", collection, "error", err)
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
-	defer func() { _ = rows.Close() }()
+	defer func() {
+		if cerr := rows.Close(); cerr != nil {
+			a.logger.Error("close rows in listRecords", "collection", collection, "error", cerr)
+		}
+	}()
 
 	result := make([]map[string]any, 0)
 	for rows.Next() {
 		var id int64
 		var dataStr string
 		if err := rows.Scan(&id, &dataStr); err != nil {
+			a.logger.Error("scan row in listRecords", "collection", collection, "error", err)
 			continue
 		}
 		record := map[string]any{"id": id}
@@ -139,16 +176,25 @@ func (a *API) listRecords(w http.ResponseWriter, r *http.Request, collection str
 		}
 		result = append(result, record)
 	}
+	if err := rows.Err(); err != nil {
+		a.logger.Error("iterate records", "collection", collection, "error", err)
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		return
+	}
 	writeJSON(w, http.StatusOK, map[string]any{"data": result})
 }
 
 func (a *API) getRecord(w http.ResponseWriter, r *http.Request, collection, id string) {
 	if err := a.ensureTable(collection); err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		a.logger.Error("ensure table", "collection", collection, "error", err)
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 
-	row := a.db.QueryRow(fmt.Sprintf("SELECT id, data FROM %s WHERE id = ?", sanitize(collection)), id)
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	row := a.db.QueryRowContext(ctx, fmt.Sprintf("SELECT id, data FROM %s WHERE id = ?", collection), id)
 	var recordID int64
 	var dataStr string
 	if err := row.Scan(&recordID, &dataStr); err != nil {
@@ -167,20 +213,28 @@ func (a *API) getRecord(w http.ResponseWriter, r *http.Request, collection, id s
 
 func (a *API) createRecord(w http.ResponseWriter, r *http.Request, collection string) {
 	if err := a.ensureTable(collection); err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		a.logger.Error("ensure table", "collection", collection, "error", err)
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 
+	r.Body = http.MaxBytesReader(w, r.Body, 10<<20)
+
 	var body map[string]any
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json"})
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json or body too large"})
 		return
 	}
 
 	dataBytes, _ := json.Marshal(body)
-	res, err := a.db.Exec(fmt.Sprintf("INSERT INTO %s (data) VALUES (?)", sanitize(collection)), string(dataBytes))
+
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	res, err := a.db.ExecContext(ctx, fmt.Sprintf("INSERT INTO %s (data) VALUES (?)", collection), string(dataBytes))
 	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		a.logger.Error("insert record", "collection", collection, "error", err)
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 
@@ -190,18 +244,23 @@ func (a *API) createRecord(w http.ResponseWriter, r *http.Request, collection st
 
 func (a *API) updateRecord(w http.ResponseWriter, r *http.Request, collection, id string) {
 	if err := a.ensureTable(collection); err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		a.logger.Error("ensure table", "collection", collection, "error", err)
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
+
+	r.Body = http.MaxBytesReader(w, r.Body, 10<<20)
 
 	var body map[string]any
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json"})
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json or body too large"})
 		return
 	}
 
-	// read existing data
-	row := a.db.QueryRow(fmt.Sprintf("SELECT data FROM %s WHERE id = ?", sanitize(collection)), id)
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	row := a.db.QueryRowContext(ctx, fmt.Sprintf("SELECT data FROM %s WHERE id = ?", collection), id)
 	var existingStr string
 	if err := row.Scan(&existingStr); err != nil {
 		writeJSON(w, http.StatusNotFound, map[string]string{"error": "not found"})
@@ -215,9 +274,10 @@ func (a *API) updateRecord(w http.ResponseWriter, r *http.Request, collection, i
 	}
 
 	merged, _ := json.Marshal(existing)
-	_, err := a.db.Exec(fmt.Sprintf("UPDATE %s SET data = ? WHERE id = ?", sanitize(collection)), string(merged), id)
+	_, err := a.db.ExecContext(ctx, fmt.Sprintf("UPDATE %s SET data = ? WHERE id = ?", collection), string(merged), id)
 	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		a.logger.Error("update record", "collection", collection, "id", id, "error", err)
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 
@@ -226,25 +286,33 @@ func (a *API) updateRecord(w http.ResponseWriter, r *http.Request, collection, i
 
 func (a *API) deleteRecord(w http.ResponseWriter, r *http.Request, collection, id string) {
 	if err := a.ensureTable(collection); err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		a.logger.Error("ensure table", "collection", collection, "error", err)
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 
-	_, err := a.db.Exec(fmt.Sprintf("DELETE FROM %s WHERE id = ?", sanitize(collection)), id)
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	_, err := a.db.ExecContext(ctx, fmt.Sprintf("DELETE FROM %s WHERE id = ?", collection), id)
 	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		a.logger.Error("delete record", "collection", collection, "id", id, "error", err)
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]string{"status": "deleted"})
 }
 
-func sanitize(name string) string {
-	return strings.Map(func(r rune) rune {
-		if (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9') || r == '_' {
-			return r
+func sanitize(name string) (string, error) {
+	if name == "" {
+		return "", fmt.Errorf("collection name required")
+	}
+	for _, r := range name {
+		if (r < 'a' || r > 'z') && (r < 'A' || r > 'Z') && (r < '0' || r > '9') && r != '_' {
+			return "", fmt.Errorf("invalid character %q in collection name", r)
 		}
-		return '_'
-	}, name)
+	}
+	return name, nil
 }
 
 func writeJSON(w http.ResponseWriter, status int, data any) {

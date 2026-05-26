@@ -1,9 +1,11 @@
 package db
 
 import (
+	"context"
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"time"
 
 	_ "modernc.org/sqlite"
 
@@ -11,6 +13,12 @@ import (
 )
 
 const version = "0.1.0"
+
+type noopLogger struct{}
+
+func (noopLogger) Info(msg string, args ...any)  {}
+func (noopLogger) Error(msg string, args ...any) {}
+func (noopLogger) Debug(msg string, args ...any) {}
 
 type Logger interface {
 	Info(msg string, args ...any)
@@ -30,6 +38,9 @@ type DB struct {
 }
 
 func New(opts Options) *DB {
+	if opts.Logger == nil {
+		opts.Logger = noopLogger{}
+	}
 	return &DB{
 		path:   opts.Path,
 		logger: opts.Logger,
@@ -55,6 +66,7 @@ func (d *DB) Start(ctx *kernel.Context) error {
 		return fmt.Errorf("open db: %w", err)
 	}
 	sqldb.SetMaxOpenConns(1)
+	sqldb.SetConnMaxLifetime(5 * time.Minute)
 	d.db = sqldb
 	d.logger.Info("database opened", "path", d.path)
 	return nil
@@ -69,6 +81,18 @@ func (d *DB) Stop(ctx *kernel.Context) error {
 
 func (d *DB) DB() *sql.DB {
 	return d.db
+}
+
+func (d *DB) ExecContext(ctx context.Context, query string, args ...any) (sql.Result, error) {
+	return d.db.ExecContext(ctx, query, args...)
+}
+
+func (d *DB) QueryContext(ctx context.Context, query string, args ...any) (*sql.Rows, error) {
+	return d.db.QueryContext(ctx, query, args...)
+}
+
+func (d *DB) QueryRowContext(ctx context.Context, query string, args ...any) *sql.Row {
+	return d.db.QueryRowContext(ctx, query, args...)
 }
 
 func (d *DB) Exec(query string, args ...any) (sql.Result, error) {
