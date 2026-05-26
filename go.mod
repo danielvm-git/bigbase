@@ -2,7 +2,11 @@ module github.com/danielvm/bigbase
 
 go 1.26.3
 
-require modernc.org/sqlite v1.50.1
+require (
+	github.com/golang-jwt/jwt/v5 v5.2.2
+	golang.org/x/crypto v0.36.0
+	modernc.org/sqlite v1.50.1
+)
 
 require (
 	github.com/dustin/go-humanize v1.0.1 // indirect
