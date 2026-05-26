@@ -11,6 +11,7 @@ import (
 	"text/tabwriter"
 
 	"github.com/danielvm/bigbase/components/api"
+	"github.com/danielvm/bigbase/components/auth"
 	"github.com/danielvm/bigbase/components/db"
 	"github.com/danielvm/bigbase/components/proxy"
 	"github.com/danielvm/bigbase/kernel"
@@ -85,18 +86,25 @@ func startProxy() {
 		DB:     d,
 		Logger: logger,
 	})
+	authComp := auth.New(auth.Options{
+		DB:     d,
+		Logger: logger,
+	})
 
 	k.Register(p)
 	k.Register(d)
 	k.Register(a)
+	k.Register(authComp)
 
 	if err := k.Start(); err != nil {
 		logger.Error("failed to start kernel", "error", err)
 		os.Exit(1)
 	}
 
-	logger.Warn("CRUD API has no authentication — add auth component for production use")
-	p.Handle("/api/collections/", a.Handler().ServeHTTP)
+	publicAPI := a.Handler()
+	protectedAPI := authComp.Middleware(publicAPI)
+	p.Handle("/api/collections/", protectedAPI.ServeHTTP)
+	p.Handle("/api/auth/", authComp.Handler().ServeHTTP)
 	logger.Info("bigbase running", "port", *port, "db", *dbPath)
 
 	sig := make(chan os.Signal, 1)
