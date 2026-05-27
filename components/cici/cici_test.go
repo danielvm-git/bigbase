@@ -205,3 +205,94 @@ jobs:
 		t.Fatalf("expected non-empty logs, got: %v", logResp)
 	}
 }
+
+func TestCICISaveWorkflowMissingName(t *testing.T) {
+	c := setupCICI(t)
+	h := c.Handler()
+
+	body, _ := json.Marshal(map[string]string{"repo_id": "r", "name": "", "yaml": "name: Test\non: [push]\njobs:\n  t:\n    steps:\n      - run: echo\n"})
+	req := httptest.NewRequest("PUT", "/api/cici/r/workflows", bytes.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	h.ServeHTTP(w, req)
+
+	if w.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400, got %d: %s", w.Code, w.Body.String())
+	}
+}
+
+func TestCICISaveWorkflowInvalidYAML(t *testing.T) {
+	c := setupCICI(t)
+	h := c.Handler()
+
+	body, _ := json.Marshal(map[string]string{"repo_id": "r", "name": "Bad", "yaml": "<<<<"})
+	req := httptest.NewRequest("PUT", "/api/cici/r/workflows", bytes.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	h.ServeHTTP(w, req)
+
+	if w.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400, got %d: %s", w.Code, w.Body.String())
+	}
+}
+
+func TestCICITriggerRunNotFound(t *testing.T) {
+	c := setupCICI(t)
+	h := c.Handler()
+
+	runBody, _ := json.Marshal(map[string]string{"event": "manual"})
+	req := httptest.NewRequest("POST", "/api/cici/r/workflows/nonexistent/run", bytes.NewReader(runBody))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	h.ServeHTTP(w, req)
+
+	if w.Code != http.StatusNotFound {
+		t.Fatalf("expected 404, got %d: %s", w.Code, w.Body.String())
+	}
+}
+
+func TestCICIRunsMethodNotAllowed(t *testing.T) {
+	c := setupCICI(t)
+	h := c.Handler()
+
+	req := httptest.NewRequest("DELETE", "/api/cici/runs", nil)
+	w := httptest.NewRecorder()
+	h.ServeHTTP(w, req)
+
+	if w.Code != http.StatusMethodNotAllowed {
+		t.Fatalf("expected 405, got %d: %s", w.Code, w.Body.String())
+	}
+}
+
+func TestCICIWorkflowsMethodNotAllowed(t *testing.T) {
+	c := setupCICI(t)
+	h := c.Handler()
+
+	req := httptest.NewRequest("DELETE", "/api/cici/r/workflows", nil)
+	w := httptest.NewRecorder()
+	h.ServeHTTP(w, req)
+
+	if w.Code != http.StatusMethodNotAllowed {
+		t.Fatalf("expected 405, got %d: %s", w.Code, w.Body.String())
+	}
+}
+
+func TestCICIEmptyRepoWorkflows(t *testing.T) {
+	c := setupCICI(t)
+	h := c.Handler()
+
+	req := httptest.NewRequest("GET", "/api/cici/empty/workflows", nil)
+	w := httptest.NewRecorder()
+	h.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", w.Code, w.Body.String())
+	}
+	var resp map[string][]map[string]any
+	if err := json.NewDecoder(w.Body).Decode(&resp); err != nil {
+		t.Fatal(err)
+	}
+	if len(resp["data"]) != 0 {
+		t.Fatalf("expected empty list, got %d items", len(resp["data"]))
+	}
+}
