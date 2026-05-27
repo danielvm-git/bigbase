@@ -16,6 +16,7 @@ import (
 	"github.com/danielvm/bigbase/components/auth"
 	"github.com/danielvm/bigbase/components/db"
 	"github.com/danielvm/bigbase/components/proxy"
+	"github.com/danielvm/bigbase/components/storage"
 	"github.com/danielvm/bigbase/kernel"
 )
 
@@ -94,11 +95,13 @@ func startProxy() {
 	})
 
 	ad := admin.New(admin.Options{Logger: logger})
+	s := storage.New(storage.Options{DB: d, Logger: logger})
 	k.Register(p)
 	k.Register(d)
 	k.Register(a)
 	k.Register(authComp)
 	k.Register(ad)
+	k.Register(s)
 
 	if err := k.Start(); err != nil {
 		logger.Error("failed to start kernel", "error", err)
@@ -107,9 +110,13 @@ func startProxy() {
 
 	publicAPI := a.Handler()
 	protectedAPI := authComp.Middleware(publicAPI)
+	storageHandler := authComp.Middleware(s.Handler())
 
 	p.Handle("/api/collections/", protectedAPI.ServeHTTP)
 	p.Handle("/api/sql", protectedAPI.ServeHTTP)
+	p.Handle("/api/storage/upload", storageHandler.ServeHTTP)
+	p.Handle("/api/storage/files/", storageHandler.ServeHTTP)
+	p.Handle("/api/storage/files", storageHandler.ServeHTTP)
 	p.Handle("/api/auth/", authComp.Handler().ServeHTTP)
 	p.Handle("GET /api/auth/users", authComp.ProtectedHandler().ServeHTTP)
 	p.Handle("DELETE /api/auth/users/", authComp.ProtectedHandler().ServeHTTP)

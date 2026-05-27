@@ -164,9 +164,94 @@ open http://localhost:9999/admin/#/users
 - **Vite base path**: `base: "./"` is critical — without it, asset paths would be absolute and fail under `/admin/` subpath.
 
 ### Slice 6: Storage — "See Files"
-- `components/storage/` — file upload/download, local filesystem
-- Visual: Upload a file via admin UI → download it back
-- Verify: `curl -X POST /api/storage/upload -F "file=@photo.png"` → file URL
+
+**type:** feat
+**context:** File upload, storage, and retrieval. Local filesystem backend with metadata in SQLite.
+
+#### Scope
+- `POST /api/storage/upload` — multipart file upload (MIME validated, size limited)
+- `GET /api/storage/files/:id` — download file by UUID
+- `GET /api/storage/files` — list uploaded files with metadata
+- `DELETE /api/storage/files/:id` — delete file + metadata
+- Image thumbnails deferred to Slice 6.1
+
+#### Implementation
+
+- `components/storage/` — Go component implementing `kernel.Component`
+- Files stored at `data/storage/<uuid>/<filename>` on local filesystem
+- Metadata in SQLite `storage_files` table (id, name, size, mime_type, path, created_at)
+- File IDs as hex-encoded random bytes (no external UUID dependency)
+- All routes behind auth middleware
+- Max upload size: 10 MB (configurable)
+- MIME type detection via `net/http` `DetectContentType`
+
+## Steps
+
+1. Create `components/storage/storage.go` with Component interface, `FileInfo` struct, auto-migration for `storage_files` table, file ID generation via `crypto/rand`, and `New()` constructor → verify: `go build ./components/storage/...`
+
+2. Add component compliance test for Name, Version, Dependencies, Hooks → verify: `go test ./components/storage/... -count=1`
+
+3. Implement `POST /api/storage/upload` — parse multipart form, validate MIME type, generate UUID filename, save to `data/storage/`, store metadata in SQLite, return JSON with file info → verify: `curl -X POST /api/storage/upload -F "file=@testdata/test.txt"` returns 201 with file ID
+
+4. Add tests for upload: success, missing file, wrong field name, file too large → verify: `go test ./components/storage/... -count=1`
+
+5. Implement `GET /api/storage/files/:id` — look up metadata by ID, serve file with correct Content-Type and Content-Disposition → verify: `curl /api/storage/files/<id>` returns the file content with correct MIME type
+
+6. Add tests for download: success, not found → verify: `go test ./components/storage/... -count=1`
+
+7. Implement `GET /api/storage/files` — query all `storage_files` rows, return as JSON array → verify: `curl /api/storage/files` returns list
+
+8. Implement `DELETE /api/storage/files/:id` — delete metadata row + file from disk, return 404 if not found → verify: `curl -X DELETE /api/storage/files/<id>` returns 200, subsequent download returns 404
+
+9. Add tests for list and delete: empty list, list after upload, delete not found → verify: `go test ./components/storage/... -count=1`
+
+10. Wire in `main.go` — register storage component, mount routes behind `protectedAPI` → verify: `go build .` succeeds, `go run . serve --port 9999` starts without error
+
+## Verification Script
+
+```bash
+# Start server
+go run . serve --port 9999 &
+
+# Get token
+TOKEN=$(curl -s -X POST http://localhost:9999/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"email":"s@b.com","password":"secret123"}' | python3 -c "import sys,json; print(json.load(sys.stdin)['token'])")
+
+# Upload
+echo "hello world" > /tmp/test.txt
+UPLOAD=$(curl -s -X POST http://localhost:9999/api/storage/upload \
+  -H "Authorization: Bearer $TOKEN" \
+  -F "file=@/tmp/test.txt")
+echo "$UPLOAD"
+ID=$(echo "$UPLOAD" | python3 -c "import sys,json; print(json.load(sys.stdin)['id'])")
+
+# Download
+curl -s -o /tmp/downloaded.txt \
+  -H "Authorization: Bearer $TOKEN" \
+  http://localhost:9999/api/storage/files/$ID
+cat /tmp/downloaded.txt  # → "hello world"
+
+# List
+curl -s -H "Authorization: Bearer $TOKEN" http://localhost:9999/api/storage/files
+
+# Delete
+curl -s -X DELETE -H "Authorization: Bearer $TOKEN" http://localhost:9999/api/storage/files/$ID
+
+# Verify deleted
+curl -s -o /dev/null -w "%{http_code}" \
+  -H "Authorization: Bearer $TOKEN" \
+  http://localhost:9999/api/storage/files/$ID  # → 404
+```
+
+## Out of scope
+- Image thumbnails (deferred to Slice 6.1)
+- S3/cloud storage backend
+- Admin UI file browser page (deferred)
+
+## Risks
+- Disk space: no quota enforcement yet. Files accumulate until explicitly deleted.
+- No external storage dependency — files live on the server filesystem.
 
 ### Slice 7: Git — "See Repos"
 - `components/git/` — SSH server, repo create/clone/push, LFS
