@@ -69,3 +69,157 @@ func TestFunctionsCreateFunction(t *testing.T) {
 		t.Fatalf("expected id, got: %v", resp)
 	}
 }
+
+func createTestFunction(t *testing.T, h http.Handler, name string) string {
+	t.Helper()
+	body := `{"name":"` + name + `","source":"return 42;","trigger":"http"}`
+	req := httptest.NewRequest("POST", "/api/functions", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	h.ServeHTTP(w, req)
+	if w.Code != http.StatusCreated {
+		t.Fatalf("create %s: expected 201, got %d: %s", name, w.Code, w.Body.String())
+	}
+	var resp map[string]any
+	_ = json.NewDecoder(w.Body).Decode(&resp)
+	id, _ := resp["id"].(string)
+	return id
+}
+
+func TestFunctionsListFunctions(t *testing.T) {
+	f := setupFunctions(t)
+	h := f.Handler()
+
+	createTestFunction(t, h, "fn-a")
+	createTestFunction(t, h, "fn-b")
+
+	req := httptest.NewRequest("GET", "/api/functions", nil)
+	w := httptest.NewRecorder()
+	h.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", w.Code, w.Body.String())
+	}
+
+	var resp map[string][]map[string]any
+	_ = json.NewDecoder(w.Body).Decode(&resp)
+	data := resp["data"]
+	if len(data) != 2 {
+		t.Fatalf("expected 2 functions, got %d", len(data))
+	}
+}
+
+func TestFunctionsGetFunction(t *testing.T) {
+	f := setupFunctions(t)
+	h := f.Handler()
+
+	id := createTestFunction(t, h, "get-test")
+
+	req := httptest.NewRequest("GET", "/api/functions/"+id, nil)
+	w := httptest.NewRecorder()
+	h.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", w.Code, w.Body.String())
+	}
+
+	var resp map[string]any
+	_ = json.NewDecoder(w.Body).Decode(&resp)
+	if resp["id"] != id {
+		t.Fatalf("expected id %s, got %v", id, resp)
+	}
+	if resp["name"] != "get-test" {
+		t.Fatalf("expected name 'get-test', got %v", resp["name"])
+	}
+}
+
+func TestFunctionsUpdateFunction(t *testing.T) {
+	f := setupFunctions(t)
+	h := f.Handler()
+
+	id := createTestFunction(t, h, "old-name")
+
+	body := `{"name":"new-name","source":"return 99;","trigger":"http"}`
+	req := httptest.NewRequest("PUT", "/api/functions/"+id, strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	h.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", w.Code, w.Body.String())
+	}
+
+	getReq := httptest.NewRequest("GET", "/api/functions/"+id, nil)
+	getW := httptest.NewRecorder()
+	h.ServeHTTP(getW, getReq)
+
+	var resp map[string]any
+	_ = json.NewDecoder(getW.Body).Decode(&resp)
+	if resp["name"] != "new-name" {
+		t.Fatalf("expected name 'new-name', got %v", resp["name"])
+	}
+}
+
+func TestFunctionsDeleteFunction(t *testing.T) {
+	f := setupFunctions(t)
+	h := f.Handler()
+
+	id := createTestFunction(t, h, "delete-me")
+
+	req := httptest.NewRequest("DELETE", "/api/functions/"+id, nil)
+	w := httptest.NewRecorder()
+	h.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", w.Code, w.Body.String())
+	}
+
+	getReq := httptest.NewRequest("GET", "/api/functions/"+id, nil)
+	getW := httptest.NewRecorder()
+	h.ServeHTTP(getW, getReq)
+
+	if getW.Code != http.StatusNotFound {
+		t.Fatalf("expected 404 after delete, got %d", getW.Code)
+	}
+}
+
+func TestFunctionsDeleteNotFound(t *testing.T) {
+	f := setupFunctions(t)
+	h := f.Handler()
+
+	req := httptest.NewRequest("DELETE", "/api/functions/nonexistent", nil)
+	w := httptest.NewRecorder()
+	h.ServeHTTP(w, req)
+
+	if w.Code != http.StatusNotFound {
+		t.Fatalf("expected 404, got %d", w.Code)
+	}
+}
+
+func TestFunctionsCreateInvalidJSON(t *testing.T) {
+	f := setupFunctions(t)
+	h := f.Handler()
+
+	req := httptest.NewRequest("POST", "/api/functions", strings.NewReader("not-json"))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	h.ServeHTTP(w, req)
+
+	if w.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400, got %d: %s", w.Code, w.Body.String())
+	}
+}
+
+func TestFunctionsCreateMissingName(t *testing.T) {
+	f := setupFunctions(t)
+	h := f.Handler()
+
+	req := httptest.NewRequest("POST", "/api/functions", strings.NewReader(`{"source":"x"}`))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	h.ServeHTTP(w, req)
+
+	if w.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400, got %d: %s", w.Code, w.Body.String())
+	}
+}
