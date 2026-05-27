@@ -20,7 +20,7 @@ func (testLogger) Warn(msg string, args ...any)  {}
 func (testLogger) Error(msg string, args ...any) {}
 func (testLogger) Debug(msg string, args ...any) {}
 
-func setupAuth(t *testing.T) (*auth.Auth, http.Handler) {
+func setupAuth(t *testing.T) (*auth.Auth, http.Handler, http.Handler) {
 	t.Helper()
 	logger := testLogger{}
 	k := kernel.New(logger)
@@ -36,7 +36,7 @@ func setupAuth(t *testing.T) (*auth.Auth, http.Handler) {
 	}
 	t.Cleanup(func() { _ = k.Stop() })
 
-	return a, a.Handler()
+	return a, a.Handler(), a.ProtectedHandler()
 }
 
 func parseResponse(t *testing.T, body []byte) map[string]any {
@@ -105,7 +105,7 @@ func TestUserEmailFromContextMissing(t *testing.T) {
 }
 
 func TestRegisterWrongMethod(t *testing.T) {
-	_, handler := setupAuth(t)
+	_, handler, _ := setupAuth(t)
 
 	req := httptest.NewRequest("GET", "/api/auth/register", nil)
 	w := httptest.NewRecorder()
@@ -116,7 +116,7 @@ func TestRegisterWrongMethod(t *testing.T) {
 }
 
 func TestLoginWrongMethod(t *testing.T) {
-	_, handler := setupAuth(t)
+	_, handler, _ := setupAuth(t)
 
 	req := httptest.NewRequest("PUT", "/api/auth/login", nil)
 	w := httptest.NewRecorder()
@@ -127,7 +127,7 @@ func TestLoginWrongMethod(t *testing.T) {
 }
 
 func TestRegister(t *testing.T) {
-	_, handler := setupAuth(t)
+	_, handler, _ := setupAuth(t)
 
 	req := httptest.NewRequest("POST", "/api/auth/register", strings.NewReader(`{"email":"alice@test.com","password":"secret123"}`))
 	req.Header.Set("Content-Type", "application/json")
@@ -152,7 +152,7 @@ func TestRegister(t *testing.T) {
 }
 
 func TestRegisterDuplicateEmail(t *testing.T) {
-	_, handler := setupAuth(t)
+	_, handler, _ := setupAuth(t)
 
 	body := `{"email":"bob@test.com","password":"secret123"}`
 	req1 := httptest.NewRequest("POST", "/api/auth/register", strings.NewReader(body))
@@ -171,7 +171,7 @@ func TestRegisterDuplicateEmail(t *testing.T) {
 }
 
 func TestRegisterMissingFields(t *testing.T) {
-	_, handler := setupAuth(t)
+	_, handler, _ := setupAuth(t)
 
 	tests := []struct {
 		name string
@@ -197,7 +197,7 @@ func TestRegisterMissingFields(t *testing.T) {
 }
 
 func TestLogin(t *testing.T) {
-	_, handler := setupAuth(t)
+	_, handler, _ := setupAuth(t)
 
 	reg := httptest.NewRequest("POST", "/api/auth/register", strings.NewReader(`{"email":"carol@test.com","password":"secret123"}`))
 	reg.Header.Set("Content-Type", "application/json")
@@ -220,7 +220,7 @@ func TestLogin(t *testing.T) {
 }
 
 func TestLoginWrongPassword(t *testing.T) {
-	_, handler := setupAuth(t)
+	_, handler, _ := setupAuth(t)
 
 	reg := httptest.NewRequest("POST", "/api/auth/register", strings.NewReader(`{"email":"dave@test.com","password":"secret123"}`))
 	reg.Header.Set("Content-Type", "application/json")
@@ -238,7 +238,7 @@ func TestLoginWrongPassword(t *testing.T) {
 }
 
 func TestLoginUnknownUser(t *testing.T) {
-	_, handler := setupAuth(t)
+	_, handler, _ := setupAuth(t)
 
 	req := httptest.NewRequest("POST", "/api/auth/login", strings.NewReader(`{"email":"nobody@test.com","password":"secret123"}`))
 	req.Header.Set("Content-Type", "application/json")
@@ -251,7 +251,7 @@ func TestLoginUnknownUser(t *testing.T) {
 }
 
 func TestRegisterCaseInsensitiveEmail(t *testing.T) {
-	_, handler := setupAuth(t)
+	_, handler, _ := setupAuth(t)
 
 	body := `{"email":"Alice@Test.Com","password":"secret123"}`
 	req := httptest.NewRequest("POST", "/api/auth/register", strings.NewReader(body))
@@ -280,7 +280,7 @@ func TestRegisterCaseInsensitiveEmail(t *testing.T) {
 }
 
 func TestRegisterEmptyBody(t *testing.T) {
-	_, handler := setupAuth(t)
+	_, handler, _ := setupAuth(t)
 
 	req := httptest.NewRequest("POST", "/api/auth/register", strings.NewReader(`{"email":"a@b.com"}`))
 	req.Header.Set("Content-Type", "application/json")
@@ -292,7 +292,7 @@ func TestRegisterEmptyBody(t *testing.T) {
 }
 
 func TestMiddlewareValidToken(t *testing.T) {
-	a, h := setupAuth(t)
+	a, h, _ := setupAuth(t)
 
 	regReq := httptest.NewRequest("POST", "/api/auth/register", strings.NewReader(`{"email":"eve@test.com","password":"secret123"}`))
 	regReq.Header.Set("Content-Type", "application/json")
@@ -339,7 +339,7 @@ func TestMiddlewareValidToken(t *testing.T) {
 }
 
 func TestMiddlewareNoToken(t *testing.T) {
-	a, _ := setupAuth(t)
+	a, _, _ := setupAuth(t)
 
 	protected := a.Middleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		t.Fatal("should not reach handler")
@@ -355,7 +355,7 @@ func TestMiddlewareNoToken(t *testing.T) {
 }
 
 func TestMiddlewareEmptyBearerPrefix(t *testing.T) {
-	a, _ := setupAuth(t)
+	a, _, _ := setupAuth(t)
 
 	protected := a.Middleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		t.Fatal("should not reach handler")
@@ -371,8 +371,144 @@ func TestMiddlewareEmptyBearerPrefix(t *testing.T) {
 	}
 }
 
+func TestListUsers(t *testing.T) {
+	_, handler, protected := setupAuth(t)
+
+	for i, email := range []string{"u1@test.com", "u2@test.com", "u3@test.com"} {
+		req := httptest.NewRequest("POST", "/api/auth/register", strings.NewReader(`{"email":"`+email+`","password":"secret123"}`))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+		handler.ServeHTTP(w, req)
+		if w.Code != http.StatusCreated {
+			t.Fatalf("register %d: expected 201, got %d", i, w.Code)
+		}
+	}
+
+	loginBody := `{"email":"u1@test.com","password":"secret123"}`
+	loginReq := httptest.NewRequest("POST", "/api/auth/login", strings.NewReader(loginBody))
+	loginReq.Header.Set("Content-Type", "application/json")
+	loginW := httptest.NewRecorder()
+	handler.ServeHTTP(loginW, loginReq)
+	resp := parseResponse(t, loginW.Body.Bytes())
+	token, _ := resp["token"].(string)
+
+	req := httptest.NewRequest("GET", "/api/auth/users", nil)
+	req.Header.Set("Authorization", "Bearer "+token)
+	w := httptest.NewRecorder()
+	protected.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", w.Code, w.Body.String())
+	}
+
+	var body map[string][]map[string]any
+	if err := json.NewDecoder(w.Body).Decode(&body); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	users := body["data"]
+	if len(users) != 3 {
+		t.Fatalf("expected 3 users, got %d", len(users))
+	}
+}
+
+func TestListUsersUnauthenticated(t *testing.T) {
+	_, _, protected := setupAuth(t)
+
+	req := httptest.NewRequest("GET", "/api/auth/users", nil)
+	w := httptest.NewRecorder()
+	protected.ServeHTTP(w, req)
+
+	if w.Code != http.StatusUnauthorized {
+		t.Fatalf("expected 401, got %d", w.Code)
+	}
+}
+
+func TestDeleteUser(t *testing.T) {
+	_, handler, protected := setupAuth(t)
+
+	for _, email := range []string{"del1@test.com", "del2@test.com"} {
+		req := httptest.NewRequest("POST", "/api/auth/register", strings.NewReader(`{"email":"`+email+`","password":"secret123"}`))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+		handler.ServeHTTP(w, req)
+	}
+
+	loginReq := httptest.NewRequest("POST", "/api/auth/login", strings.NewReader(`{"email":"del1@test.com","password":"secret123"}`))
+	loginReq.Header.Set("Content-Type", "application/json")
+	loginW := httptest.NewRecorder()
+	handler.ServeHTTP(loginW, loginReq)
+	resp := parseResponse(t, loginW.Body.Bytes())
+	token, _ := resp["token"].(string)
+
+	delReq := httptest.NewRequest("DELETE", "/api/auth/users/2", nil)
+	delReq.Header.Set("Authorization", "Bearer "+token)
+	delW := httptest.NewRecorder()
+	protected.ServeHTTP(delW, delReq)
+	if delW.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", delW.Code, delW.Body.String())
+	}
+
+	listReq := httptest.NewRequest("GET", "/api/auth/users", nil)
+	listReq.Header.Set("Authorization", "Bearer "+token)
+	listW := httptest.NewRecorder()
+	protected.ServeHTTP(listW, listReq)
+	var listResp map[string][]map[string]any
+	_ = json.NewDecoder(listW.Body).Decode(&listResp)
+	if len(listResp["data"]) != 1 {
+		t.Fatalf("expected 1 user after delete, got %d", len(listResp["data"]))
+	}
+}
+
+func TestDeleteUserNotFound(t *testing.T) {
+	_, handler, protected := setupAuth(t)
+
+	regReq := httptest.NewRequest("POST", "/api/auth/register", strings.NewReader(`{"email":"del@test.com","password":"secret123"}`))
+	regReq.Header.Set("Content-Type", "application/json")
+	regW := httptest.NewRecorder()
+	handler.ServeHTTP(regW, regReq)
+
+	loginReq := httptest.NewRequest("POST", "/api/auth/login", strings.NewReader(`{"email":"del@test.com","password":"secret123"}`))
+	loginReq.Header.Set("Content-Type", "application/json")
+	loginW := httptest.NewRecorder()
+	handler.ServeHTTP(loginW, loginReq)
+	resp := parseResponse(t, loginW.Body.Bytes())
+	token, _ := resp["token"].(string)
+
+	delReq := httptest.NewRequest("DELETE", "/api/auth/users/999", nil)
+	delReq.Header.Set("Authorization", "Bearer "+token)
+	delW := httptest.NewRecorder()
+	protected.ServeHTTP(delW, delReq)
+	if delW.Code != http.StatusNotFound {
+		t.Fatalf("expected 404, got %d: %s", delW.Code, delW.Body.String())
+	}
+}
+
+func TestDeleteUserWrongMethod(t *testing.T) {
+	_, handler, protected := setupAuth(t)
+
+	regReq := httptest.NewRequest("POST", "/api/auth/register", strings.NewReader(`{"email":"wm@test.com","password":"secret123"}`))
+	regReq.Header.Set("Content-Type", "application/json")
+	regW := httptest.NewRecorder()
+	handler.ServeHTTP(regW, regReq)
+
+	loginReq := httptest.NewRequest("POST", "/api/auth/login", strings.NewReader(`{"email":"wm@test.com","password":"secret123"}`))
+	loginReq.Header.Set("Content-Type", "application/json")
+	loginW := httptest.NewRecorder()
+	handler.ServeHTTP(loginW, loginReq)
+	resp := parseResponse(t, loginW.Body.Bytes())
+	token, _ := resp["token"].(string)
+
+	req := httptest.NewRequest("GET", "/api/auth/users/1", nil)
+	req.Header.Set("Authorization", "Bearer "+token)
+	w := httptest.NewRecorder()
+	protected.ServeHTTP(w, req)
+	if w.Code != http.StatusMethodNotAllowed {
+		t.Fatalf("expected 405, got %d", w.Code)
+	}
+}
+
 func TestMiddlewareBadToken(t *testing.T) {
-	a, _ := setupAuth(t)
+	a, _, _ := setupAuth(t)
 
 	protected := a.Middleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		t.Fatal("should not reach handler")

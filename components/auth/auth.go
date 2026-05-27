@@ -47,6 +47,7 @@ func (noopLogger) Error(msg string, args ...any) {}
 
 type DBer interface {
 	ExecContext(ctx context.Context, query string, args ...any) (sql.Result, error)
+	QueryContext(ctx context.Context, query string, args ...any) (*sql.Rows, error)
 	QueryRowContext(ctx context.Context, query string, args ...any) *sql.Row
 	Migrate(migration string) error
 }
@@ -119,6 +120,13 @@ func (a *Auth) Handler() http.Handler {
 	mux.HandleFunc("/api/auth/register", a.handleRegister)
 	mux.HandleFunc("/api/auth/login", a.handleLogin)
 	return mux
+}
+
+func (a *Auth) ProtectedHandler() http.Handler {
+	mux := http.NewServeMux()
+	mux.HandleFunc("GET /api/auth/users", a.handleUsers)
+	mux.HandleFunc("DELETE /api/auth/users/{id}", a.handleUserByID)
+	return a.Middleware(mux)
 }
 
 func (a *Auth) Middleware(next http.Handler) http.Handler {
@@ -279,6 +287,73 @@ func (a *Auth) handleLogin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	a.writeAuthResponse(w, http.StatusOK, userID, email, token)
+}
+
+type userRow struct {
+	ID        int64  `json:"id"`
+	Email     string `json:"email"`
+	CreatedAt string `json:"created_at"`
+}
+
+func (a *Auth) handleUsers(w http.ResponseWriter, r *http.Request) {
+	users, err := a.fetchUsers(r.Context())
+	if err != nil {
+		a.logger.Error("fetch users", "error", err)
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		return
+	}
+
+	writeJSON(w, http.StatusOK, map[string]any{"data": users})
+}
+
+func (a *Auth) fetchUsers(ctx context.Context) ([]userRow, error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	rows, err := a.db.QueryContext(ctx, "SELECT id, email, created_at FROM users ORDER BY id")
+	if err != nil {
+		return nil, err
+	}
+	defer func() {
+		if cerr := rows.Close(); cerr != nil {
+			a.logger.Error("close rows in fetchUsers", "error", cerr)
+		}
+	}()
+
+	users := make([]userRow, 0)
+	for rows.Next() {
+		var u userRow
+		if err := rows.Scan(&u.ID, &u.Email, &u.CreatedAt); err != nil {
+			return nil, err
+		}
+		users = append(users, u)
+	}
+	return users, rows.Err()
+}
+
+func (a *Auth) handleUserByID(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	if id == "" {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "id required"})
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	res, err := a.db.ExecContext(ctx, "DELETE FROM users WHERE id = ?", id)
+	if err != nil {
+		a.logger.Error("delete user", "id", id, "error", err)
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		return
+	}
+	affected, _ := res.RowsAffected()
+	if affected == 0 {
+		writeJSON(w, http.StatusNotFound, map[string]string{"error": "user not found"})
+		return
+	}
+
+	writeJSON(w, http.StatusOK, map[string]string{"status": "deleted"})
 }
 
 func writeJSON(w http.ResponseWriter, status int, data any) {

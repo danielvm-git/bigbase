@@ -36,6 +36,13 @@ info "golangci-lint found: $(golangci-lint --version | head -1)"
 info "Downloading Go module dependencies..."
 (cd "$BIGBASE_DIR" && go mod download)
 
+# --- Build admin UI ---
+if [ -d "$BIGBASE_DIR/ui" ]; then
+  info "Building admin UI..."
+  (cd "$BIGBASE_DIR/ui" && npm ci && npm run build)
+  info "Admin UI build OK"
+fi
+
 # --- Verify build ---
 info "Verifying build..."
 (cd "$BIGBASE_DIR" && go build -o /dev/null .)

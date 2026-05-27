@@ -34,10 +34,134 @@ A single-binary BaaS you can see evolving every step of the way.
 - Verify: `curl -X POST /api/auth/login -d '{"email":"a@b.com","password":"x"}'` → JWT token
 
 ### Slice 5: Admin UI — "See the Dashboard"
-- `components/admin/` — React SPA embedded via `//go:embed`
-- Data Studio, SQL Editor, user management
-- Visual: Full admin interface in browser at `/admin`
-- Verify: Open http://localhost/admin → login → CRUD tables visually
+
+**type:** feat  
+**context:** BigBase admin panel — React SPA embedded in Go binary via `//go:embed`, served at `/admin/`.
+
+#### Reference: PocketBase approach (opensrc)
+PocketBase embeds its vanilla JS SPA at `/_/` using `//go:embed all:dist` with `fs.Sub()` to strip the base path. Key patterns adopted here:
+- Hash routing (`#/login`, `#/collections`) — no server-side SPA fallback needed
+- Vite `base: "./"` — relative asset paths resolve correctly under any base URL
+- No auth on static files; auth enforced client-side + on API endpoints
+- `ui/dist/` committed to Git (required by `//go:embed`)
+
+#### Implementation
+
+- `components/admin/` — Go component embedding the SPA via `//go:embed all:dist`, using `fs.Sub()` to strip prefix, served via `http.FileServer()`
+- `ui/` — Vite + React + TypeScript SPA with hash routing (`#/login`, `#/`, `#/data`)
+- Auth via JWT in localStorage, sent as Bearer header to existing API endpoints
+- SPA routes: `#/login` → login/register form, `#/` → dashboard, `#/data` → data browser
+- No auth middleware on `/admin/` static files (enforced client-side + API layer)
+- Vite config: `base: "./"` for relative asset paths
+- Verify: Open http://localhost:9999/admin → login → CRUD tables visually
+
+### Out of scope for Slice 5 (core)
+- Full admin section management (deferred to later slices)
+
+### Slice 5.1: SQL Editor
+
+**type:** feat  
+**context:** In-browser SQL query tool in the admin UI. Send read-only queries to the database and view results as a table.
+
+#### Backend
+- `POST /api/sql` endpoint in `components/api/api.go`
+- Accepts `{"query": "SELECT ..."}` JSON body
+- Validates read-only: only `SELECT`, `EXPLAIN`, `PRAGMA` queries allowed (rejects DDL/DML)
+- 10-second query timeout
+- Returns `{"columns": [...], "rows": [{...}, ...]}` JSON
+- Protected by auth middleware (same as `/api/collections/`)
+
+#### Frontend
+- `SqlEditorPage.tsx` at `#/sql`
+- Textarea with default query (`SELECT name FROM sqlite_master WHERE type='table'`)
+- "Run" button, keyboard shortcut `⌘⏎` / `Ctrl+Enter`
+- Results table with dynamic columns
+- Error display for invalid SQL or DML attempts
+- Nav link in sidebar Layout
+
+#### Verify
+```bash
+open http://localhost:9999/admin/#/sql
+# Default query shows table list → click Run
+# Type SELECT * FROM posts → Run → see records
+# Type DROP TABLE posts → Run → see error
+```
+
+#### Implementation
+1. Add `POST /api/sql` handler to `components/api/api.go` with read-only validation and JSON response
+2. Add route registration in `Handler()` and wire through auth middleware in `main.go`
+3. Create `SqlEditorPage.tsx` with textarea, Run button, results table, error state
+4. Add route (`#/sql`) to `App.tsx` and nav link to `Layout.tsx`
+5. Rebuild UI → `go test ./...` passes, `go build` succeeds
+
+### Slice 5.2: User Management
+
+**type:** feat  
+**context:** User management page in the admin UI. List and delete registered users.
+
+#### Backend
+- `GET /api/auth/users` — list all users (id, email, created_at), requires auth
+- `DELETE /api/auth/users/:id` — delete a user, requires auth
+- Auth enforced internally via JWT check (not through external middleware)
+
+#### Frontend
+- `UsersPage.tsx` at `#/users`
+- Table with columns: ID, Email, Created
+- Delete button per row with confirmation dialog
+- Refresh button to reload user list
+- Nav link in sidebar Layout
+
+#### Verify
+```bash
+open http://localhost:9999/admin/#/users
+# See list of registered users
+# Click Delete on a user → confirm → user removed from list
+```
+
+#### Implementation
+1. Add `QueryContext` to auth's `DBer` interface
+2. Add `GET /api/auth/users` and `DELETE /api/auth/users/:id` handlers to `auth.go`
+3. Register routes in `Handler()`
+4. Write tests for list, delete, unauthenticated access, not-found, wrong-method
+5. Create `UsersPage.tsx` with table, delete, refresh
+6. Add route (`#/users`) to `App.tsx` and nav link to `Layout.tsx`
+
+## Steps
+
+1. Scaffold Vite + React + TypeScript app in `ui/` with `base: "./"` in vite.config.ts → verify: `npm run build --prefix ui` exits 0, `ls ui/dist/index.html`
+
+2. Add hash-based routing (`react-router-dom` with `HashRouter`), create placeholder pages: Login, Dashboard, NotFound. Vite config: `base: "./"`, `build.outDir: "dist"`. Commit `ui/dist` to git → verify: open `ui/dist/index.html` directly in browser shows placeholder content (relative paths resolve)
+
+3. Create `components/admin/admin.go` — Go component that embeds `ui/dist/` via `//go:embed all:dist`, strips prefix with `fs.Sub()`, serves via `http.FileServer()`. Implements `kernel.Component` interface. The admin handler serves all requests with `http.FileServer` + index.html fallback for directory roots. No auth middleware on static files → verify: `go build ./components/admin/...`
+
+4. Wire admin component in `main.go` — register with kernel, mount at `/admin/` via `p.Handle("/admin/", adminComp.Handler().ServeHTTP)` → verify: `go run . serve --port 9999` and `curl http://localhost:9999/admin/` returns HTML page
+
+5. Add auth to SPA — login form (`#/login`), JWT in localStorage after register/login API call, `AuthContext` provider wrapping hash router, auto-redirect to `#/` on login, auto-redirect to `#/login` if no valid token → verify: open browser at `/admin`, see login form, register a user, see dashboard at `#/`
+
+6. Add dashboard page (`#/`) — show user email decoded from JWT, navigation links to Data Studio, logout button that clears localStorage → verify: after login, dashboard shows user email and nav links
+
+7. Add Data Studio page (`#/data`) — fetch collection list via `GET /api/collections/` with Bearer header, display as clickable list; on selection, fetch records via `GET /api/collections/:name/` and display in HTML table → verify: navigate to Data Studio, see collection list, click a collection to see its records
+
+8. Admin component test — verify embedded FS serves files correctly, verify 404 for missing files, verify index.html is served for directory root → verify: `go test ./components/admin/... -count=1`
+
+## Verification Script (Step-by-Step)
+
+1. `cd ui && npm run build` → verify `ui/dist/index.html` exists
+2. `go build -o bigbase .` → build succeeds
+3. `go run . serve --port 9999` → server starts
+4. Open `http://localhost:9999/admin/` in browser → login form appears
+5. Click "Register", enter email/password → registration succeeds, redirected to `#/`
+6. Dashboard shows user email and navigation links
+7. Click "Data Studio" → list of collections shown
+8. Click a collection → records displayed in a table
+9. Click "Logout" → redirected to `#/login`
+
+## Risks
+
+- **Hash routing chosen** to avoid SPA fallback complexity on the server. Risk: URLs use `#/` fragments (less SEO-friendly, but acceptable for an admin panel).
+- **Build order**: SPA must be built (`npm run build`) before Go build. The `setup.sh` script should be updated. `ui/dist/` is committed to Git so `go build` works on fresh checkout without npm.
+- **No CORS issues**: SPA and API share the same Go server port.
+- **Vite base path**: `base: "./"` is critical — without it, asset paths would be absolute and fail under `/admin/` subpath.
 
 ### Slice 6: Storage — "See Files"
 - `components/storage/` — file upload/download, local filesystem
