@@ -138,9 +138,11 @@ func generateID() (string, error) {
 
 func (c *CICI) Handler() http.Handler {
 	mux := http.NewServeMux()
-	mux.HandleFunc("/api/cici/runs", c.handleRuns)
-	mux.HandleFunc("/api/cici/runs/", c.handleRunsByID)
-	mux.HandleFunc("/api/cici/", c.handleRepoWorkflows)
+	mux.HandleFunc("GET /api/cici/runs", c.handleRuns)
+	mux.HandleFunc("GET /api/cici/runs/{id}/logs", c.getRunLogs)
+	mux.HandleFunc("GET /api/cici/{repo}/workflows", c.listWorkflows)
+	mux.HandleFunc("PUT /api/cici/{repo}/workflows", c.saveWorkflow)
+	mux.HandleFunc("POST /api/cici/{repo}/workflows/{id}/run", c.triggerRun)
 	return mux
 }
 

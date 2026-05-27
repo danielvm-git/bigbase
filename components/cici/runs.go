@@ -7,18 +7,19 @@ import (
 	"fmt"
 	"net/http"
 	"os/exec"
+	"strconv"
 	"strings"
 	"time"
 
 	"gopkg.in/yaml.v3"
 )
 
-type triggerReq struct {
-	Event string `json:"event"`
-}
+func (c *CICI) triggerRun(w http.ResponseWriter, r *http.Request) {
+	workflowID := r.PathValue("id")
 
-func (c *CICI) triggerRun(w http.ResponseWriter, r *http.Request, repoID, workflowID string) {
-	var req triggerReq
+	var req struct {
+		Event string `json:"event"`
+	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json"})
 		return
@@ -128,16 +129,38 @@ func (c *CICI) finishRun(ctx context.Context, runID, status string) {
 }
 
 func (c *CICI) handleRuns(w http.ResponseWriter, r *http.Request) {
-	if r.Method != "GET" {
-		writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
-		return
-	}
-
 	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 	defer cancel()
 
-	rows, err := c.db.QueryContext(ctx,
-		"SELECT id, workflow_id, event, status, started_at, finished_at FROM cici_runs ORDER BY started_at DESC")
+	query := "SELECT id, workflow_id, event, status, started_at, finished_at FROM cici_runs"
+	args := make([]any, 0)
+
+	repoID := r.URL.Query().Get("repo_id")
+	if repoID != "" {
+		query += " WHERE workflow_id IN (SELECT id FROM cici_workflows WHERE repo_id = ?)"
+		args = append(args, repoID)
+	}
+	query += " ORDER BY started_at DESC"
+
+	limit := 100
+	if l := r.URL.Query().Get("limit"); l != "" {
+		if v, err := strconv.Atoi(l); err == nil && v > 0 && v <= 500 {
+			limit = v
+		}
+	}
+	query += " LIMIT ?"
+	args = append(args, limit)
+
+	offset := 0
+	if o := r.URL.Query().Get("offset"); o != "" {
+		if v, err := strconv.Atoi(o); err == nil && v >= 0 {
+			offset = v
+		}
+	}
+	query += " OFFSET ?"
+	args = append(args, offset)
+
+	rows, err := c.db.QueryContext(ctx, query, args...)
 	if err != nil {
 		c.logger.Error("list runs", "error", err)
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
@@ -154,31 +177,16 @@ func (c *CICI) handleRuns(w http.ResponseWriter, r *http.Request) {
 		}
 		runs = append(runs, r)
 	}
+	if err := rows.Err(); err != nil {
+		c.logger.Error("iterate runs", "error", err)
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		return
+	}
 	writeJSON(w, http.StatusOK, map[string]any{"data": runs})
 }
 
-func (c *CICI) handleRunsByID(w http.ResponseWriter, r *http.Request) {
-	path := strings.TrimPrefix(r.URL.Path, "/api/cici/runs/")
-	parts := strings.SplitN(path, "/", 2)
-	if len(parts) == 0 || parts[0] == "" {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "id required"})
-		return
-	}
-	runID := parts[0]
-
-	if len(parts) == 2 && parts[1] == "logs" {
-		c.getRunLogs(w, r, runID)
-		return
-	}
-
-	writeJSON(w, http.StatusNotFound, map[string]string{"error": "not found"})
-}
-
-func (c *CICI) getRunLogs(w http.ResponseWriter, r *http.Request, runID string) {
-	if r.Method != "GET" {
-		writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
-		return
-	}
+func (c *CICI) getRunLogs(w http.ResponseWriter, r *http.Request) {
+	runID := r.PathValue("id")
 
 	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 	defer cancel()
@@ -200,6 +208,11 @@ func (c *CICI) getRunLogs(w http.ResponseWriter, r *http.Request, runID string) 
 			continue
 		}
 		logs = append(logs, l)
+	}
+	if err := rows.Err(); err != nil {
+		c.logger.Error("iterate logs", "error", err)
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		return
 	}
 	writeJSON(w, http.StatusOK, map[string]any{"logs": logs})
 }

@@ -5,50 +5,33 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"strings"
 	"time"
 
 	"gopkg.in/yaml.v3"
 )
-
-func (c *CICI) handleRepoWorkflows(w http.ResponseWriter, r *http.Request) {
-	path := strings.TrimPrefix(r.URL.Path, "/api/cici/")
-	parts := strings.SplitN(path, "/", 4)
-	if len(parts) < 2 || parts[0] == "" || parts[1] != "workflows" {
-		writeJSON(w, http.StatusNotFound, map[string]string{"error": "not found"})
-		return
-	}
-	repoID := parts[0]
-
-	if r.Method == "GET" {
-		c.listWorkflows(w, r, repoID)
-		return
-	}
-	if r.Method == "PUT" {
-		c.saveWorkflow(w, r, repoID)
-		return
-	}
-	if len(parts) >= 4 && parts[3] == "run" && r.Method == "POST" {
-		c.triggerRun(w, r, repoID, parts[2])
-		return
-	}
-	writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
-}
 
 type saveWorkflowReq struct {
 	Name string `json:"name"`
 	YAML string `json:"yaml"`
 }
 
-func (c *CICI) saveWorkflow(w http.ResponseWriter, r *http.Request, repoID string) {
-	req, ok := decodeSaveWorkflow(w, r)
-	if !ok {
+func (c *CICI) saveWorkflow(w http.ResponseWriter, r *http.Request) {
+	repoID := r.PathValue("repo")
+
+	var req saveWorkflowReq
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json"})
+		return
+	}
+	if req.Name == "" || req.YAML == "" {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "name and yaml are required"})
 		return
 	}
 
 	var wf workflowYAML
 	if err := yaml.Unmarshal([]byte(req.YAML), &wf); err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid yaml: " + err.Error()})
+		c.logger.Warn("invalid workflow yaml", "repo", repoID, "error", err)
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid workflow YAML format"})
 		return
 	}
 
@@ -73,20 +56,9 @@ func (c *CICI) saveWorkflow(w http.ResponseWriter, r *http.Request, repoID strin
 	})
 }
 
-func decodeSaveWorkflow(w http.ResponseWriter, r *http.Request) (*saveWorkflowReq, bool) {
-	var req saveWorkflowReq
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json"})
-		return nil, false
-	}
-	if req.Name == "" || req.YAML == "" {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "name and yaml are required"})
-		return nil, false
-	}
-	return &req, true
-}
+func (c *CICI) listWorkflows(w http.ResponseWriter, r *http.Request) {
+	repoID := r.PathValue("repo")
 
-func (c *CICI) listWorkflows(w http.ResponseWriter, r *http.Request, repoID string) {
 	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 	defer cancel()
 
@@ -107,6 +79,11 @@ func (c *CICI) listWorkflows(w http.ResponseWriter, r *http.Request, repoID stri
 			continue
 		}
 		workflows = append(workflows, w)
+	}
+	if err := rows.Err(); err != nil {
+		c.logger.Error("iterate workflows", "error", err)
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		return
 	}
 	writeJSON(w, http.StatusOK, map[string]any{"data": workflows})
 }
