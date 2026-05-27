@@ -395,9 +395,21 @@ func (d *Deploy) startApp(ctx context.Context, buildDir string, deploy *Deployme
 }
 
 func (d *Deploy) serveStatic(ctx context.Context, buildDir string, deploy *Deployment) {
+	mux := http.NewServeMux()
+	mux.Handle("/", http.FileServer(http.Dir(buildDir)))
+	server := &http.Server{
+		Addr:    fmt.Sprintf(":%d", deploy.Port),
+		Handler: mux,
+	}
+
 	d.mu.Lock()
 	d.apps[deploy.ID] = &runningApp{port: deploy.Port, buildID: deploy.ID}
 	d.mu.Unlock()
+
+	d.logger.Info("serving static site", "id", deploy.ID, "port", deploy.Port, "url", deploy.URL)
+	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		d.logger.Error("static server error", "id", deploy.ID, "error", err)
+	}
 }
 
 func (d *Deploy) updateStatus(id, status string) {
