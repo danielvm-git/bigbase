@@ -20,16 +20,12 @@ type RunError struct {
 func (e *RunError) Error() string { return e.Message }
 
 type Runtime interface {
-	Execute(source string, timeout int) (*RunOutput, *RunError)
-}
-
-var runtimes = map[string]Runtime{
-	"javascript": &jsRuntime{},
+	Execute(source string, timeout int) (*RunOutput, error)
 }
 
 type jsRuntime struct{}
 
-func (*jsRuntime) Execute(source string, timeout int) (*RunOutput, *RunError) {
+func (*jsRuntime) Execute(source string, timeout int) (*RunOutput, error) {
 	vm := goja.New()
 	col := injectConsole(vm)
 
@@ -46,6 +42,8 @@ func (*jsRuntime) Execute(source string, timeout int) (*RunOutput, *RunError) {
 		}
 		return &RunOutput{Logs: col.snapshot(), Result: r.val.Export()}, nil
 	case <-timer.C:
+		vm.Interrupt("execution timeout")
+		<-done
 		return &RunOutput{Logs: col.snapshot()}, &RunError{Message: fmt.Sprintf("execution timed out after %d seconds", timeout)}
 	}
 }

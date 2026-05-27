@@ -49,6 +49,7 @@ func (f *Functions) handleFunctionByID(w http.ResponseWriter, r *http.Request) {
 }
 
 func (f *Functions) handleCreate(w http.ResponseWriter, r *http.Request) {
+	r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
 	fn, err := f.decodeFunction(r)
 	if err != nil {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
@@ -96,6 +97,9 @@ func (f *Functions) decodeFunction(r *http.Request) (Function, error) {
 	if fn.Timeout == 0 {
 		fn.Timeout = f.timeout
 	}
+	if fn.Env == nil {
+		fn.Env = map[string]string{}
+	}
 	return fn, nil
 }
 
@@ -119,6 +123,12 @@ func (f *Functions) handleList(w http.ResponseWriter, r *http.Request) {
 		funcs = append(funcs, fn)
 	}
 
+	if err := rows.Err(); err != nil {
+		f.logger.Error("iterate functions", "error", err)
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		return
+	}
+
 	writeJSON(w, http.StatusOK, map[string]any{"data": funcs})
 }
 
@@ -132,9 +142,10 @@ func (f *Functions) handleGet(w http.ResponseWriter, r *http.Request, id string)
 }
 
 func (f *Functions) handleUpdate(w http.ResponseWriter, r *http.Request, id string) {
-	var fn Function
-	if err := json.NewDecoder(r.Body).Decode(&fn); err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json"})
+	r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
+	fn, err := f.decodeFunction(r)
+	if err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
 		return
 	}
 
@@ -154,7 +165,12 @@ func (f *Functions) handleUpdate(w http.ResponseWriter, r *http.Request, id stri
 		return
 	}
 
-	fn.ID = id
+	fn, err = f.fetchFunctionByID(r.Context(), id)
+	if err != nil {
+		f.logger.Error("fetch after update", "error", err)
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		return
+	}
 	writeJSON(w, http.StatusOK, fn)
 }
 
@@ -182,7 +198,7 @@ func (f *Functions) handleRun(w http.ResponseWriter, r *http.Request, id string)
 		return
 	}
 
-	rt, ok := runtimes[fn.Runtime]
+	rt, ok := f.runtimes[fn.Runtime]
 	if !ok {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "unsupported runtime: " + fn.Runtime})
 		return

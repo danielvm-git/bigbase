@@ -72,8 +72,10 @@ func TestFunctionsCreateFunction(t *testing.T) {
 
 func createTestFunction(t *testing.T, h http.Handler, name string) string {
 	t.Helper()
-	body := `{"name":"` + name + `","source":"return 42;","trigger":"http"}`
-	req := httptest.NewRequest("POST", "/api/functions", strings.NewReader(body))
+	bodyBytes, _ := json.Marshal(map[string]string{
+		"name": name, "source": "return 42;", "trigger": "http",
+	})
+	req := httptest.NewRequest("POST", "/api/functions", strings.NewReader(string(bodyBytes)))
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
 	h.ServeHTTP(w, req)
@@ -332,5 +334,98 @@ func TestFunctionsUpdateMethodNotAllowed(t *testing.T) {
 
 	if w.Code != http.StatusMethodNotAllowed {
 		t.Fatalf("expected 405, got %d: %s", w.Code, w.Body.String())
+	}
+}
+
+func TestFunctionsRunTimeout(t *testing.T) {
+	f := setupFunctions(t)
+	h := f.Handler()
+
+	body := `{"name":"inf-loop","source":"while(true){}","trigger":"http","timeout":1}`
+	req := httptest.NewRequest("POST", "/api/functions", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	h.ServeHTTP(w, req)
+
+	if w.Code != http.StatusCreated {
+		t.Fatalf("expected 201, got %d: %s", w.Code, w.Body.String())
+	}
+
+	var created map[string]any
+	_ = json.NewDecoder(w.Body).Decode(&created)
+	id := created["id"].(string)
+
+	runReq := httptest.NewRequest("POST", "/api/functions/"+id+"/run", nil)
+	runW := httptest.NewRecorder()
+	h.ServeHTTP(runW, runReq)
+
+	if runW.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", runW.Code, runW.Body.String())
+	}
+
+	var runResp map[string]any
+	_ = json.NewDecoder(runW.Body).Decode(&runResp)
+	if runResp["error"] == nil {
+		t.Fatalf("expected timeout error, got: %v", runResp)
+	}
+}
+
+func TestFunctionsRunJSError(t *testing.T) {
+	f := setupFunctions(t)
+	h := f.Handler()
+
+	body := `{"name":"thrower","source":"throw new Error(\"boom\");","trigger":"http"}`
+	req := httptest.NewRequest("POST", "/api/functions", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	h.ServeHTTP(w, req)
+
+	if w.Code != http.StatusCreated {
+		t.Fatalf("expected 201, got %d: %s", w.Code, w.Body.String())
+	}
+
+	var created map[string]any
+	_ = json.NewDecoder(w.Body).Decode(&created)
+	id := created["id"].(string)
+
+	runReq := httptest.NewRequest("POST", "/api/functions/"+id+"/run", nil)
+	runW := httptest.NewRecorder()
+	h.ServeHTTP(runW, runReq)
+
+	if runW.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", runW.Code, runW.Body.String())
+	}
+
+	var runResp map[string]any
+	_ = json.NewDecoder(runW.Body).Decode(&runResp)
+	if runResp["error"] == nil {
+		t.Fatalf("expected error, got: %v", runResp)
+	}
+}
+
+func TestFunctionsRunUnsupportedRuntime(t *testing.T) {
+	f := setupFunctions(t)
+	h := f.Handler()
+
+	body := `{"name":"py","runtime":"python","source":"print('hi')","trigger":"http"}`
+	req := httptest.NewRequest("POST", "/api/functions", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	h.ServeHTTP(w, req)
+
+	if w.Code != http.StatusCreated {
+		t.Fatalf("expected 201, got %d: %s", w.Code, w.Body.String())
+	}
+
+	var created map[string]any
+	_ = json.NewDecoder(w.Body).Decode(&created)
+	id := created["id"].(string)
+
+	runReq := httptest.NewRequest("POST", "/api/functions/"+id+"/run", nil)
+	runW := httptest.NewRecorder()
+	h.ServeHTTP(runW, runReq)
+
+	if runW.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400, got %d: %s", runW.Code, runW.Body.String())
 	}
 }

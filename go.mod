@@ -3,6 +3,7 @@ module github.com/danielvm/bigbase
 go 1.26.3
 
 require (
+	github.com/dop251/goja v0.0.0-20260311135729-065cd970411c
 	github.com/go-git/go-git/v5 v5.19.1
 	github.com/golang-jwt/jwt/v5 v5.2.2
 	golang.org/x/crypto v0.50.0
@@ -17,7 +18,6 @@ require (
 	github.com/cloudflare/circl v1.6.3 // indirect
 	github.com/cyphar/filepath-securejoin v0.6.1 // indirect
 	github.com/dlclark/regexp2 v1.11.4 // indirect
-	github.com/dop251/goja v0.0.0-20260311135729-065cd970411c // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect
 	github.com/go-git/gcfg v1.5.1-0.20230307220236-3a3c6141e376 // indirect

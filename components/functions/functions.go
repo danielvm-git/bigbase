@@ -52,9 +52,10 @@ type Function struct {
 }
 
 type Functions struct {
-	db      DBer
-	logger  Logger
-	timeout int
+	db       DBer
+	logger   Logger
+	timeout  int
+	runtimes map[string]Runtime
 }
 
 type Options struct {
@@ -72,7 +73,12 @@ func New(opts Options) *Functions {
 	if timeout == 0 {
 		timeout = 30
 	}
-	return &Functions{db: opts.DB, logger: logger, timeout: timeout}
+	return &Functions{
+		db:       opts.DB,
+		logger:   logger,
+		timeout:  timeout,
+		runtimes: map[string]Runtime{"javascript": &jsRuntime{}},
+	}
 }
 
 func (f *Functions) Name() string                  { return "functions" }
@@ -95,7 +101,7 @@ func (f *Functions) Start(ctx *kernel.Context) error {
 		schedule TEXT DEFAULT '',
 		env TEXT DEFAULT '{}',
 		timeout INTEGER NOT NULL DEFAULT 30,
-		created_at TEXT NOT NULL DEFAULT (datetime('now'))
+		created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ','now'))
 	)`); err != nil {
 		return fmt.Errorf("migrate functions table: %w", err)
 	}
@@ -131,7 +137,12 @@ func (f *Functions) scanFunction(row interface {
 	if err != nil {
 		return fn, err
 	}
-	_ = json.Unmarshal([]byte(envStr), &fn.Env)
+	if err := json.Unmarshal([]byte(envStr), &fn.Env); err != nil {
+		f.logger.Warn("unmarshal function env", "error", err)
+	}
+	if fn.Env == nil {
+		fn.Env = map[string]string{}
+	}
 	return fn, nil
 }
 
