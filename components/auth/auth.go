@@ -95,6 +95,10 @@ func (a *Auth) Dependencies() []string          { return []string{"db"} }
 func (a *Auth) ConfigSchema() json.RawMessage   { return nil }
 func (a *Auth) Hooks() []kernel.HookDef         { return nil }
 
+func (a *Auth) ValidateToken(token string) (*Claims, error) {
+	return verifyJWT(token, a.secret)
+}
+
 func (a *Auth) Init(ctx *kernel.Context, config json.RawMessage) error {
 	return nil
 }

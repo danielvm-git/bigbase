@@ -16,9 +16,11 @@ import (
 	"github.com/danielvm/bigbase/components/auth"
 	"github.com/danielvm/bigbase/components/cici"
 	"github.com/danielvm/bigbase/components/db"
-	"github.com/danielvm/bigbase/components/proxy"
 	"github.com/danielvm/bigbase/components/forge"
+	"github.com/danielvm/bigbase/components/functions"
 	"github.com/danielvm/bigbase/components/git"
+	"github.com/danielvm/bigbase/components/proxy"
+	"github.com/danielvm/bigbase/components/realtime"
 	"github.com/danielvm/bigbase/components/storage"
 	"github.com/danielvm/bigbase/kernel"
 )
@@ -102,6 +104,17 @@ func startProxy() {
 	g := git.New(git.Options{DB: d, Logger: logger})
 	f := forge.New(forge.Options{DB: d, Logger: logger})
 	ci := cici.New(cici.Options{DB: d, Logger: logger})
+	fn := functions.New(functions.Options{DB: d, Logger: logger})
+	rt := realtime.New(realtime.Options{
+		Logger: logger,
+		Validate: func(token string) (int64, error) {
+			claims, err := authComp.ValidateToken(token)
+			if err != nil {
+				return 0, err
+			}
+			return claims.UserID, nil
+		},
+	})
 	k.Register(p)
 	k.Register(d)
 	k.Register(a)
@@ -111,6 +124,8 @@ func startProxy() {
 	k.Register(g)
 	k.Register(f)
 	k.Register(ci)
+	k.Register(fn)
+	k.Register(rt)
 
 	// Register routes before kernel.Start to avoid race on proxy mux
 	publicAPI := a.Handler()
@@ -128,6 +143,9 @@ func startProxy() {
 	p.Handle("/api/git/repos/", gitHandler.ServeHTTP)
 	p.Handle("/api/forge/", forgeHandler.ServeHTTP)
 	p.Handle("/api/cici/", authComp.Middleware(ci.Handler()).ServeHTTP)
+	p.Handle("/api/functions/", authComp.Middleware(fn.Handler()).ServeHTTP)
+	p.Handle("/api/functions", authComp.Middleware(fn.Handler()).ServeHTTP)
+	p.Handle("/realtime", rt.Handler().ServeHTTP)
 	p.Handle("/api/auth/", authComp.Handler().ServeHTTP)
 	p.Handle("GET /api/auth/users", authComp.ProtectedHandler().ServeHTTP)
 	p.Handle("DELETE /api/auth/users/", authComp.ProtectedHandler().ServeHTTP)

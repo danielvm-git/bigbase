@@ -47,6 +47,7 @@ type API struct {
 	db     DBer
 	logger Logger
 	tables map[string]bool
+	bus    *kernel.EventBus
 }
 
 func New(opts Options) *API {
@@ -68,6 +69,7 @@ func (a *API) Init(ctx *kernel.Context, config json.RawMessage) error {
 }
 
 func (a *API) Start(ctx *kernel.Context) error {
+	a.bus = ctx.Kernel.EventBus()
 	a.logger.Info("api component ready")
 	return nil
 }
@@ -229,6 +231,18 @@ func (a *API) getRecord(w http.ResponseWriter, r *http.Request, collection, id s
 	writeJSON(w, http.StatusOK, record)
 }
 
+func (a *API) emitMutation(mutType, collection string, id any) {
+	if a.bus != nil {
+		if err := a.bus.Emit(kernel.Event{Name: "mutation", Data: map[string]any{
+			"collection": collection,
+			"type":       mutType,
+			"id":         id,
+		}}, nil); err != nil {
+			a.logger.Error("emit mutation event", "collection", collection, "type", mutType, "id", id, "error", err)
+		}
+	}
+}
+
 func (a *API) createRecord(w http.ResponseWriter, r *http.Request, collection string) {
 	if err := a.ensureTable(collection); err != nil {
 		a.logger.Error("ensure table", "collection", collection, "error", err)
@@ -257,6 +271,7 @@ func (a *API) createRecord(w http.ResponseWriter, r *http.Request, collection st
 	}
 
 	id, _ := res.LastInsertId()
+	a.emitMutation("create", collection, id)
 	writeJSON(w, http.StatusCreated, map[string]any{"id": id})
 }
 
@@ -299,6 +314,7 @@ func (a *API) updateRecord(w http.ResponseWriter, r *http.Request, collection, i
 		return
 	}
 
+	a.emitMutation("update", collection, id)
 	writeJSON(w, http.StatusOK, map[string]string{"status": "updated"})
 }
 
@@ -323,6 +339,8 @@ func (a *API) deleteRecord(w http.ResponseWriter, r *http.Request, collection, i
 		writeJSON(w, http.StatusNotFound, map[string]string{"error": "not found"})
 		return
 	}
+
+	a.emitMutation("delete", collection, id)
 	writeJSON(w, http.StatusOK, map[string]string{"status": "deleted"})
 }
 

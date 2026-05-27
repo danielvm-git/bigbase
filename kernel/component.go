@@ -17,6 +17,7 @@ type HookDef struct {
 	Name     string
 	Priority int
 	Handler  HookFunc
+	subID    uint64
 }
 
 type HookFunc func(ctx *Context, event Event) error
