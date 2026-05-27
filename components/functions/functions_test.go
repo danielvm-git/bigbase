@@ -210,6 +210,78 @@ func TestFunctionsCreateInvalidJSON(t *testing.T) {
 	}
 }
 
+func TestFunctionsRunFunction(t *testing.T) {
+	f := setupFunctions(t)
+	h := f.Handler()
+
+	id := createTestFunction(t, h, "runner")
+
+	req := httptest.NewRequest("POST", "/api/functions/"+id+"/run", nil)
+	w := httptest.NewRecorder()
+	h.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", w.Code, w.Body.String())
+	}
+
+	var resp map[string]any
+	_ = json.NewDecoder(w.Body).Decode(&resp)
+	if resp["result"] == nil {
+		t.Fatalf("expected result, got: %v", resp)
+	}
+}
+
+func TestFunctionsRunWithLogs(t *testing.T) {
+	f := setupFunctions(t)
+	h := f.Handler()
+
+	body := `{"name":"loggy","source":"console.log(\"hello from js\"); return 99;","trigger":"http"}`
+	req := httptest.NewRequest("POST", "/api/functions", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	h.ServeHTTP(w, req)
+
+	if w.Code != http.StatusCreated {
+		t.Fatalf("expected 201, got %d: %s", w.Code, w.Body.String())
+	}
+
+	var created map[string]any
+	_ = json.NewDecoder(w.Body).Decode(&created)
+	id := created["id"].(string)
+
+	runReq := httptest.NewRequest("POST", "/api/functions/"+id+"/run", nil)
+	runW := httptest.NewRecorder()
+	h.ServeHTTP(runW, runReq)
+
+	if runW.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", runW.Code, runW.Body.String())
+	}
+
+	var runResp map[string]any
+	_ = json.NewDecoder(runW.Body).Decode(&runResp)
+
+	logs, _ := runResp["logs"].([]any)
+	if len(logs) == 0 {
+		t.Fatalf("expected logs, got: %v", runResp)
+	}
+	if logs[0] != "hello from js" {
+		t.Fatalf("expected 'hello from js', got: %v", logs[0])
+	}
+}
+
+func TestFunctionsRunNotFound(t *testing.T) {
+	f := setupFunctions(t)
+	h := f.Handler()
+
+	req := httptest.NewRequest("POST", "/api/functions/nonexistent/run", nil)
+	w := httptest.NewRecorder()
+	h.ServeHTTP(w, req)
+
+	if w.Code != http.StatusNotFound {
+		t.Fatalf("expected 404, got %d", w.Code)
+	}
+}
+
 func TestFunctionsCreateMissingName(t *testing.T) {
 	f := setupFunctions(t)
 	h := f.Handler()
