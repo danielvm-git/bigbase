@@ -130,6 +130,28 @@ func TestRealtimeUnsubscribe(t *testing.T) {
 	}
 }
 
+func TestRealtimeStop(t *testing.T) {
+	rt, server := setupRealtime(t)
+	conn := dialWS(t, server, "valid")
+
+	sub := map[string]string{"action": "subscribe", "channel": "collection:posts"}
+	subBytes, _ := json.Marshal(sub)
+	_ = conn.WriteMessage(websocket.TextMessage, subBytes)
+	time.Sleep(50 * time.Millisecond)
+
+	rt.Hub().Broadcast("posts", map[string]any{
+		"action": "mutation",
+		"type":   "create",
+	})
+	_ = conn.SetReadDeadline(time.Now().Add(time.Second))
+	_, _, err := conn.ReadMessage()
+	if err != nil {
+		t.Fatal("expected message before stop")
+	}
+
+	_ = rt.Stop(nil)
+}
+
 func TestRealtimeBroadcastOnlySubscribedChannel(t *testing.T) {
 	rt, server := setupRealtime(t)
 	conn := dialWS(t, server, "valid")

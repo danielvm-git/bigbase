@@ -7,7 +7,7 @@ STAGED_GO=$(git diff --cached --name-only --diff-filter=ACM | grep '\.go$' || tr
 
 if [ -n "$STAGED_GO" ]; then
     echo "   golangci-lint..."
-    echo "$STAGED_GO" | xargs golangci-lint run 2>&1 | head -30
+    echo "$STAGED_GO" | xargs -I{} dirname {} | sort -u | xargs -I{} golangci-lint run ./{} 2>&1 | head -30
 
     echo "   go vet..."
     go vet ./... 2>&1 | head -20

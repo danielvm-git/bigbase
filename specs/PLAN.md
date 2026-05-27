@@ -1,3 +1,8 @@
+---
+type: implementation-plan
+context: realtime WebSocket subscriptions for live mutation events
+---
+
 # Slice 11: Realtime — Implementation Plan
 
 ## Prerequisites
