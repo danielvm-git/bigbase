@@ -116,6 +116,13 @@ func (f *Forge) Start(ctx *kernel.Context) error {
 			return fmt.Errorf("migrate: %w", err)
 		}
 	}
+	for _, idx := range []string{
+		"CREATE INDEX IF NOT EXISTS idx_forge_issues_repo_status ON forge_issues(repo_id, status)",
+		"CREATE INDEX IF NOT EXISTS idx_forge_labels_repo ON forge_labels(repo_id)",
+		"CREATE INDEX IF NOT EXISTS idx_forge_comments_issue ON forge_comments(issue_id)",
+	} {
+		_ = f.db.Migrate(idx)
+	}
 	f.logger.Info("forge component ready")
 	return nil
 }
@@ -204,15 +211,32 @@ func (f *Forge) listIssues(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
-	defer cancel()
-
-	rows, err := f.db.QueryContext(ctx,
-		"SELECT id, repo_id, title, description, status, labels, created_at, updated_at FROM forge_issues WHERE repo_id = ? ORDER BY created_at DESC", repoID)
+	issues, err := f.fetchIssues(r.Context(), repoID, "")
 	if err != nil {
 		f.logger.Error("list issues", "error", err)
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"data": issues})
+}
+
+func (f *Forge) fetchIssues(ctx context.Context, repoID, status string) ([]Issue, error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	var rows *sql.Rows
+	var err error
+	if status != "" {
+		rows, err = f.db.QueryContext(ctx,
+			"SELECT id, repo_id, title, description, status, labels, created_at, updated_at FROM forge_issues WHERE repo_id = ? AND status = ? ORDER BY updated_at DESC",
+			repoID, status)
+	} else {
+		rows, err = f.db.QueryContext(ctx,
+			"SELECT id, repo_id, title, description, status, labels, created_at, updated_at FROM forge_issues WHERE repo_id = ? ORDER BY created_at DESC",
+			repoID)
+	}
+	if err != nil {
+		return nil, err
 	}
 	defer func() { _ = rows.Close() }()
 
@@ -221,13 +245,12 @@ func (f *Forge) listIssues(w http.ResponseWriter, r *http.Request) {
 		var i Issue
 		var labelsStr string
 		if err := rows.Scan(&i.ID, &i.RepoID, &i.Title, &i.Description, &i.Status, &labelsStr, &i.CreatedAt, &i.UpdatedAt); err != nil {
-			f.logger.Error("scan issue", "error", err)
-			continue
+			return nil, err
 		}
-		json.Unmarshal([]byte(labelsStr), &i.Labels)
+		_ = json.Unmarshal([]byte(labelsStr), &i.Labels)
 		issues = append(issues, i)
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"data": issues})
+	return issues, rows.Err()
 }
 
 func (f *Forge) handleIssueByID(w http.ResponseWriter, r *http.Request) {
@@ -267,7 +290,7 @@ func (f *Forge) getIssue(w http.ResponseWriter, r *http.Request, id string) {
 		writeJSON(w, http.StatusNotFound, map[string]string{"error": "issue not found"})
 		return
 	}
-	json.Unmarshal([]byte(labelsStr), &i.Labels)
+	_ = json.Unmarshal([]byte(labelsStr), &i.Labels)
 	writeJSON(w, http.StatusOK, i)
 }
 
@@ -283,26 +306,21 @@ func (f *Forge) updateIssue(w http.ResponseWriter, r *http.Request, id string) {
 		return
 	}
 
+	validStatuses := map[string]bool{"open": true, "in_progress": true, "review": true, "closed": true}
+	if req.Status != "" && !validStatuses[req.Status] {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid status"})
+		return
+	}
+
+	labelsJSON, _ := json.Marshal(req.Labels)
 	now := time.Now().UTC().Format(time.RFC3339)
-	if req.Labels != nil {
-		labelsJSON, _ := json.Marshal(req.Labels)
-		_, err := f.db.ExecContext(r.Context(),
-			"UPDATE forge_issues SET title=COALESCE(NULLIF(?,''),title), description=COALESCE(NULLIF(?,''),description), status=COALESCE(NULLIF(?,''),status), labels=?, updated_at=? WHERE id=?",
-			req.Title, req.Description, req.Status, string(labelsJSON), now, id)
-		if err != nil {
-			f.logger.Error("update issue", "id", id, "error", err)
-			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
-			return
-		}
-	} else {
-		_, err := f.db.ExecContext(r.Context(),
-			"UPDATE forge_issues SET title=COALESCE(NULLIF(?,''),title), description=COALESCE(NULLIF(?,''),description), status=COALESCE(NULLIF(?,''),status), updated_at=? WHERE id=?",
-			req.Title, req.Description, req.Status, now, id)
-		if err != nil {
-			f.logger.Error("update issue", "id", id, "error", err)
-			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
-			return
-		}
+	_, err := f.db.ExecContext(r.Context(),
+		"UPDATE forge_issues SET title=COALESCE(NULLIF(?,''),title), description=COALESCE(NULLIF(?,''),description), status=COALESCE(NULLIF(?,''),status), labels=COALESCE(NULLIF(?,''),labels), updated_at=? WHERE id=?",
+		req.Title, req.Description, req.Status, string(labelsJSON), now, id)
+	if err != nil {
+		f.logger.Error("update issue", "id", id, "error", err)
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		return
 	}
 	writeJSON(w, http.StatusOK, map[string]string{"status": "updated"})
 }
@@ -439,36 +457,17 @@ func (f *Forge) handleBoard(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
-	defer cancel()
-
 	statuses := []string{"open", "in_progress", "review", "closed"}
 	board := make(map[string][]Issue, len(statuses))
-
 	for _, status := range statuses {
-		rows, err := f.db.QueryContext(ctx,
-			"SELECT id, repo_id, title, description, status, labels, created_at, updated_at FROM forge_issues WHERE repo_id = ? AND status = ? ORDER BY updated_at DESC",
-			repoID, status)
+		issues, err := f.fetchIssues(r.Context(), repoID, status)
 		if err != nil {
 			f.logger.Error("query board column", "status", status, "error", err)
-			continue
+			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "failed to load board"})
+			return
 		}
-
-		issues := make([]Issue, 0)
-		for rows.Next() {
-			var i Issue
-			var labelsStr string
-			if err := rows.Scan(&i.ID, &i.RepoID, &i.Title, &i.Description, &i.Status, &labelsStr, &i.CreatedAt, &i.UpdatedAt); err != nil {
-				f.logger.Error("scan issue", "error", err)
-				continue
-			}
-			json.Unmarshal([]byte(labelsStr), &i.Labels)
-			issues = append(issues, i)
-		}
-		_ = rows.Close()
 		board[status] = issues
 	}
-
 	writeJSON(w, http.StatusOK, board)
 }
 

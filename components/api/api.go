@@ -15,6 +15,13 @@ import (
 
 const version = "0.1.0"
 
+var internalTables = map[string]bool{
+	"users": true, "storage_files": true,
+	"git_repos": true, "git_ssh_keys": true,
+	"forge_issues": true, "forge_labels": true,
+	"forge_comments": true, "forge_wiki": true,
+}
+
 type Logger interface {
 	Info(msg string, args ...any)
 	Warn(msg string, args ...any)
@@ -175,7 +182,8 @@ func (a *API) listRecords(w http.ResponseWriter, r *http.Request, collection str
 		var dataStr string
 		if err := rows.Scan(&id, &dataStr); err != nil {
 			a.logger.Error("scan row in listRecords", "collection", collection, "error", err)
-			continue
+			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+			return
 		}
 		record := map[string]any{"id": id}
 		var data map[string]any
@@ -355,7 +363,7 @@ func (a *API) fetchCollectionNames(ctx context.Context) ([]string, error) {
 			a.logger.Error("scan collection name", "error", err)
 			continue
 		}
-		if name != "users" {
+		if !internalTables[name] {
 			result = append(result, name)
 		}
 	}
@@ -387,8 +395,7 @@ func (a *API) handleSQL(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sensitiveTables := []string{"users", "storage_files"}
-	for _, t := range sensitiveTables {
+	for t := range internalTables {
 		if strings.Contains(strings.ToUpper(q), strings.ToUpper(t)) {
 			writeJSON(w, http.StatusForbidden, map[string]string{"error": "access to internal tables denied"})
 			return

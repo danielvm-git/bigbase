@@ -79,7 +79,7 @@ func TestGitCreateRepo(t *testing.T) {
 	}
 
 	var resp map[string]any
-	json.NewDecoder(w.Body).Decode(&resp)
+	_ = json.NewDecoder(w.Body).Decode(&resp)
 	if name, ok := resp["name"]; !ok || name != "myproject" {
 		t.Fatalf("expected name 'myproject', got: %v", resp)
 	}
@@ -134,7 +134,7 @@ func TestGitListRepos(t *testing.T) {
 	}
 
 	var resp map[string][]map[string]any
-	json.NewDecoder(w.Body).Decode(&resp)
+	_ = json.NewDecoder(w.Body).Decode(&resp)
 	data := resp["data"]
 	if len(data) != 2 {
 		t.Fatalf("expected 2 repos, got %d", len(data))

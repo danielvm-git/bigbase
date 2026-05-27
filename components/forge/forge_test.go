@@ -61,7 +61,7 @@ func TestForgeCreateIssue(t *testing.T) {
 	}
 
 	var resp map[string]any
-	json.NewDecoder(w.Body).Decode(&resp)
+	_ = json.NewDecoder(w.Body).Decode(&resp)
 	if title, ok := resp["title"]; !ok || title != "Bug: login fails" {
 		t.Fatalf("expected title, got: %v", resp)
 	}
@@ -94,7 +94,7 @@ func TestForgeListIssues(t *testing.T) {
 	}
 
 	var resp map[string][]map[string]any
-	json.NewDecoder(w.Body).Decode(&resp)
+	_ = json.NewDecoder(w.Body).Decode(&resp)
 	data := resp["data"]
 	if len(data) != 2 {
 		t.Fatalf("expected 2 issues, got %d", len(data))
@@ -127,7 +127,7 @@ func TestForgeAddComment(t *testing.T) {
 	h.ServeHTTP(w, createResp)
 
 	var issue map[string]any
-	json.NewDecoder(w.Body).Decode(&issue)
+	_ = json.NewDecoder(w.Body).Decode(&issue)
 
 	// Add comment
 	body := `{"content":"This is a comment"}`
@@ -170,7 +170,7 @@ func TestForgeKanbanBoard(t *testing.T) {
 	}
 
 	var resp map[string][]map[string]any
-	json.NewDecoder(w.Body).Decode(&resp)
+	_ = json.NewDecoder(w.Body).Decode(&resp)
 	if len(resp["open"]) != 1 || len(resp["in_progress"]) != 1 {
 		t.Fatalf("expected 1 open + 1 in_progress, got: open=%d in_progress=%d", len(resp["open"]), len(resp["in_progress"]))
 	}
@@ -199,7 +199,7 @@ func TestForgeWikiPage(t *testing.T) {
 	}
 
 	var page map[string]any
-	json.NewDecoder(getW.Body).Decode(&page)
+	_ = json.NewDecoder(getW.Body).Decode(&page)
 	if content, ok := page["content"]; !ok || content != "# Welcome to the wiki" {
 		t.Fatalf("expected wiki content, got: %v", page)
 	}

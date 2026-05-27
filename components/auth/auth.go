@@ -184,15 +184,19 @@ func (a *Auth) decodeBody(w http.ResponseWriter, r *http.Request) (*authRequest,
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "email and password required"})
 		return nil, false
 	}
+	if !strings.Contains(req.Email, "@") {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid email"})
+		return nil, false
+	}
 	return &req, true
 }
 
-func (a *Auth) writeAuthResponse(w http.ResponseWriter, status int, userID int64, email, token string) {
+func (a *Auth) writeAuthResponse(w http.ResponseWriter, r *http.Request, status int, userID int64, email, token string) {
 	http.SetCookie(w, &http.Cookie{
 		Name:     "token",
 		Value:    token,
 		HttpOnly: true,
-		Secure:   false,
+		Secure:   r.TLS != nil,
 		SameSite: http.SameSiteStrictMode,
 		Path:     "/",
 		MaxAge:   86400,
@@ -220,7 +224,9 @@ func (a *Auth) insertUser(ctx context.Context, email, passwordHash string) (int6
 
 	role := "user"
 	var count int64
-	_ = a.db.QueryRowContext(ctx, "SELECT COUNT(*) FROM users").Scan(&count)
+	if err := a.db.QueryRowContext(ctx, "SELECT COUNT(*) FROM users").Scan(&count); err != nil {
+		a.logger.Error("count users", "error", err)
+	}
 	if count == 0 {
 		role = "admin"
 	}
@@ -278,7 +284,7 @@ func (a *Auth) handleRegister(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	a.writeAuthResponse(w, http.StatusCreated, userID, email, token)
+	a.writeAuthResponse(w, r, http.StatusCreated, userID, email, token)
 }
 
 func (a *Auth) handleLogin(w http.ResponseWriter, r *http.Request) {
@@ -318,7 +324,7 @@ func (a *Auth) handleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	a.writeAuthResponse(w, http.StatusOK, userID, email, token)
+	a.writeAuthResponse(w, r, http.StatusOK, userID, email, token)
 }
 
 type userRow struct {
@@ -373,7 +379,7 @@ func (a *Auth) handleUserByID(w http.ResponseWriter, r *http.Request) {
 	requesterID, _ := UserIDFromContext(r.Context())
 	requesterRole, _ := UserRoleFromContext(r.Context())
 	if requesterRole != "admin" && fmt.Sprint(requesterID) != id {
-		writeJSON(w, http.StatusForbidden, map[string]string{"error": "admin only"})
+		writeJSON(w, http.StatusForbidden, map[string]string{"error": "insufficient permissions"})
 		return
 	}
 

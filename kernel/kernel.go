@@ -130,8 +130,8 @@ func (k *Kernel) resolveOrder() ([]string, error) {
 	state := make(map[string]int)
 	order := make([]string, 0)
 
-	var visit func(name string) error
-	visit = func(name string) error {
+	var visit func(name, requiredBy string) error
+	visit = func(name, requiredBy string) error {
 		switch state[name] {
 		case gray:
 			return fmt.Errorf("circular dependency detected at %s", name)
@@ -141,11 +141,10 @@ func (k *Kernel) resolveOrder() ([]string, error) {
 		state[name] = gray
 		comp, ok := k.components[name]
 		if !ok {
-			state[name] = black
-			return nil
+			return fmt.Errorf("dependency %q required by %q is not registered", name, requiredBy)
 		}
 		for _, dep := range comp.Dependencies() {
-			if err := visit(dep); err != nil {
+			if err := visit(dep, name); err != nil {
 				return err
 			}
 		}
@@ -155,7 +154,7 @@ func (k *Kernel) resolveOrder() ([]string, error) {
 	}
 
 	for name := range k.components {
-		if err := visit(name); err != nil {
+		if err := visit(name, ""); err != nil {
 			return nil, err
 		}
 	}

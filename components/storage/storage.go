@@ -312,7 +312,7 @@ func (s *Storage) handleFileDownload(w http.ResponseWriter, r *http.Request, id 
 	}
 
 	w.Header().Set("Content-Type", mimeType)
-	w.Header().Set("Content-Disposition", "inline; filename=\""+strings.ReplaceAll(name, "\"", "")+"\"")
+	w.Header().Set("Content-Disposition", `inline; filename="`+sanitizeFilename(name)+`"`)
 	http.ServeFile(w, r, fullPath)
 }
 
@@ -335,6 +335,14 @@ func (s *Storage) handleFileDelete(w http.ResponseWriter, r *http.Request, id st
 
 	_ = os.RemoveAll(filepath.Join(s.dir, id))
 	writeJSON(w, http.StatusOK, map[string]string{"status": "deleted"})
+}
+
+func sanitizeFilename(name string) string {
+	r := strings.NewReplacer(
+		`"`, "", `\`, "", "\n", "", "\r", "",
+		"\t", "", "\x00", "", "\x1f", "",
+	)
+	return r.Replace(name)
 }
 
 func writeJSON(w http.ResponseWriter, status int, data any) {
