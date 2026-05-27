@@ -16,6 +16,7 @@ import (
 	"github.com/danielvm/bigbase/components/auth"
 	"github.com/danielvm/bigbase/components/db"
 	"github.com/danielvm/bigbase/components/proxy"
+	"github.com/danielvm/bigbase/components/forge"
 	"github.com/danielvm/bigbase/components/git"
 	"github.com/danielvm/bigbase/components/storage"
 	"github.com/danielvm/bigbase/kernel"
@@ -98,6 +99,7 @@ func startProxy() {
 	ad := admin.New(admin.Options{Logger: logger})
 	s := storage.New(storage.Options{DB: d, Logger: logger})
 	g := git.New(git.Options{DB: d, Logger: logger})
+	f := forge.New(forge.Options{DB: d, Logger: logger})
 	k.Register(p)
 	k.Register(d)
 	k.Register(a)
@@ -105,12 +107,14 @@ func startProxy() {
 	k.Register(ad)
 	k.Register(s)
 	k.Register(g)
+	k.Register(f)
 
 	// Register routes before kernel.Start to avoid race on proxy mux
 	publicAPI := a.Handler()
 	protectedAPI := authComp.Middleware(publicAPI)
 	storageHandler := authComp.Middleware(s.Handler())
 	gitHandler := authComp.Middleware(g.Handler())
+	forgeHandler := authComp.Middleware(f.Handler())
 
 	p.Handle("/api/collections/", protectedAPI.ServeHTTP)
 	p.Handle("/api/sql", protectedAPI.ServeHTTP)
@@ -119,6 +123,7 @@ func startProxy() {
 	p.Handle("/api/storage/files", storageHandler.ServeHTTP)
 	p.Handle("/api/git/repos", gitHandler.ServeHTTP)
 	p.Handle("/api/git/repos/", gitHandler.ServeHTTP)
+	p.Handle("/api/forge/", forgeHandler.ServeHTTP)
 	p.Handle("/api/auth/", authComp.Handler().ServeHTTP)
 	p.Handle("GET /api/auth/users", authComp.ProtectedHandler().ServeHTTP)
 	p.Handle("DELETE /api/auth/users/", authComp.ProtectedHandler().ServeHTTP)
