@@ -15,6 +15,7 @@ import (
 	"github.com/danielvm/bigbase/components/api"
 	"github.com/danielvm/bigbase/components/auth"
 	"github.com/danielvm/bigbase/components/cici"
+	"github.com/danielvm/bigbase/components/deploy"
 	"github.com/danielvm/bigbase/components/db"
 	"github.com/danielvm/bigbase/components/forge"
 	"github.com/danielvm/bigbase/components/functions"
@@ -110,6 +111,10 @@ func startProxy() {
 		DB:     d,
 		Logger: logger,
 	})
+	depComp := deploy.New(deploy.Options{
+		DB:     d,
+		Logger: logger,
+	})
 	rt := realtime.New(realtime.Options{
 		Logger: logger,
 		Validate: func(token string) (int64, error) {
@@ -132,6 +137,7 @@ func startProxy() {
 	k.Register(fn)
 	k.Register(rt)
 	k.Register(msgComp)
+	k.Register(depComp)
 
 	// Register routes before kernel.Start to avoid race on proxy mux
 	publicAPI := a.Handler()
@@ -152,6 +158,8 @@ func startProxy() {
 	p.Handle("/api/functions/", authComp.Middleware(fn.Handler()).ServeHTTP)
 	p.Handle("/api/functions", authComp.Middleware(fn.Handler()).ServeHTTP)
 	p.Handle("/api/messaging/", authComp.Middleware(msgComp.Handler()).ServeHTTP)
+	p.Handle("/api/deploy", authComp.Middleware(depComp.Handler()).ServeHTTP)
+	p.Handle("/api/deploy/", authComp.Middleware(depComp.Handler()).ServeHTTP)
 	p.Handle("/realtime", rt.Handler().ServeHTTP)
 	p.Handle("/api/auth/", authComp.Handler().ServeHTTP)
 	p.Handle("GET /api/auth/users", authComp.ProtectedHandler().ServeHTTP)
