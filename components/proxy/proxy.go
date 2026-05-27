@@ -43,6 +43,7 @@ func New(opts Options) *Proxy {
 		port:   opts.Port,
 		kernel: opts.Kernel,
 		logger: opts.Logger,
+		mux:    http.NewServeMux(),
 	}
 }
 
@@ -64,7 +65,6 @@ func (p *Proxy) Init(ctx *kernel.Context, config json.RawMessage) error {
 }
 
 func (p *Proxy) Start(ctx *kernel.Context) error {
-	p.mux = http.NewServeMux()
 	p.mux.HandleFunc("/", p.handleHome)
 	p.mux.HandleFunc("/health", p.handleHealth)
 

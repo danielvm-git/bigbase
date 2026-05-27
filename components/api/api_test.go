@@ -2,6 +2,7 @@ package api_test
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -423,7 +424,7 @@ func TestAPIListRecordsPagination(t *testing.T) {
 	_, handler := setupAPI(t)
 
 	for i := 0; i < 5; i++ {
-		body := strings.NewReader(`{"n":` + string(rune('0'+i)) + `}`)
+		body := strings.NewReader(fmt.Sprintf(`{"n":%d}`, i))
 		req := httptest.NewRequest("POST", "/api/collections/posts", body)
 		req.Header.Set("Content-Type", "application/json")
 		w := httptest.NewRecorder()
@@ -448,5 +449,23 @@ func TestAPIListRecordsPagination(t *testing.T) {
 	}
 	if len(data) != 2 {
 		t.Fatalf("expected 2 records with limit=2, got %d", len(data))
+	}
+}
+
+func TestAPIDeleteNonExistentRecord(t *testing.T) {
+	_, handler := setupAPI(t)
+
+	// Table must exist first
+	post := httptest.NewRequest("POST", "/api/collections/posts", strings.NewReader(`{"a":1}`))
+	post.Header.Set("Content-Type", "application/json")
+	w0 := httptest.NewRecorder()
+	handler.ServeHTTP(w0, post)
+
+	req := httptest.NewRequest("DELETE", "/api/collections/posts/999", nil)
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+
+	if w.Code != http.StatusNotFound {
+		t.Fatalf("expected 404 for non-existent record, got %d: %s", w.Code, w.Body.String())
 	}
 }

@@ -11,10 +11,7 @@ export default function DataStudioPage() {
   const [recordError, setRecordError] = useState('')
 
   useEffect(() => {
-    const token = localStorage.getItem('token')
-    fetch('/api/collections/', {
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-    })
+    fetch('/api/collections/')
       .then(r => r.json())
       .then(d => setCollections((d as { data: ColName[] }).data || []))
       .catch(() => setCollections([]))
@@ -24,11 +21,8 @@ export default function DataStudioPage() {
   const loadRecords = async (name: string) => {
     setSelected(name)
     setRecordError('')
-    const token = localStorage.getItem('token')
     try {
-      const res = await fetch(`/api/collections/${name}`, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-      })
+      const res = await fetch(`/api/collections/${name}`)
       if (!res.ok) {
         setRecordError(`error: ${res.status}`)
         setRecords([])

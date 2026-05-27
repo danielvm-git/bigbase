@@ -103,11 +103,7 @@ func startProxy() {
 	k.Register(ad)
 	k.Register(s)
 
-	if err := k.Start(); err != nil {
-		logger.Error("failed to start kernel", "error", err)
-		os.Exit(1)
-	}
-
+	// Register routes before kernel.Start to avoid race on proxy mux
 	publicAPI := a.Handler()
 	protectedAPI := authComp.Middleware(publicAPI)
 	storageHandler := authComp.Middleware(s.Handler())
@@ -121,6 +117,12 @@ func startProxy() {
 	p.Handle("GET /api/auth/users", authComp.ProtectedHandler().ServeHTTP)
 	p.Handle("DELETE /api/auth/users/", authComp.ProtectedHandler().ServeHTTP)
 	p.Handle("/admin/", http.StripPrefix("/admin/", ad.Handler()).ServeHTTP)
+
+	if err := k.Start(); err != nil {
+		logger.Error("failed to start kernel", "error", err)
+		os.Exit(1)
+	}
+
 	logger.Info("bigbase running", "port", *port, "db", *dbPath)
 
 	sig := make(chan os.Signal, 1)

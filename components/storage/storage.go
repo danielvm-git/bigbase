@@ -201,7 +201,7 @@ func (s *Storage) readUpload(w http.ResponseWriter, r *http.Request) ([]byte, st
 	if err != nil {
 		return nil, "", fmt.Errorf("read uploaded file: %w", err)
 	}
-	return content, header.Filename, nil
+	return content, filepath.Base(header.Filename), nil
 }
 
 func detectMIME(content []byte) string {
@@ -312,7 +312,7 @@ func (s *Storage) handleFileDownload(w http.ResponseWriter, r *http.Request, id 
 	}
 
 	w.Header().Set("Content-Type", mimeType)
-	w.Header().Set("Content-Disposition", "inline; filename=\""+name+"\"")
+	w.Header().Set("Content-Disposition", "inline; filename=\""+strings.ReplaceAll(name, "\"", "")+"\"")
 	http.ServeFile(w, r, fullPath)
 }
 

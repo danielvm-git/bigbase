@@ -14,11 +14,8 @@ export default function UsersPage() {
   const fetchUsers = async () => {
     setError('')
     setLoading(true)
-    const token = localStorage.getItem('token')
     try {
-      const res = await fetch('/api/auth/users', {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-      })
+      const res = await fetch('/api/auth/users')
       const data = await res.json()
       if (!res.ok) {
         setError(data.error || `error: ${res.status}`)
@@ -41,12 +38,8 @@ export default function UsersPage() {
 
   const handleDelete = async (id: number) => {
     if (!confirm(`Delete user #${id}?`)) return
-    const token = localStorage.getItem('token')
     try {
-      const res = await fetch(`/api/auth/users/${id}`, {
-        method: 'DELETE',
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-      })
+      const res = await fetch(`/api/auth/users/${id}`, { method: 'DELETE' })
       if (!res.ok) {
         const data = await res.json()
         setError(data.error || `error: ${res.status}`)

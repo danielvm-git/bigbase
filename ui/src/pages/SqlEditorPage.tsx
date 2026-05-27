@@ -16,14 +16,10 @@ export default function SqlEditorPage() {
     setResult(null)
     setRunning(true)
 
-    const token = localStorage.getItem('token')
     try {
       const res = await fetch('/api/sql', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ query }),
       })
       const data = await res.json()

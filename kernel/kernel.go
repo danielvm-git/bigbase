@@ -40,7 +40,11 @@ func (k *Kernel) Register(component Component) {
 
 func (k *Kernel) Start() error {
 	k.startedOrder = nil
-	for _, name := range k.resolveOrder() {
+	order, err := k.resolveOrder()
+	if err != nil {
+		return fmt.Errorf("resolve order: %w", err)
+	}
+	for _, name := range order {
 		comp := k.components[name]
 		ctx := &Context{
 			Kernel:     k,
@@ -61,7 +65,7 @@ func (k *Kernel) Start() error {
 }
 
 func (k *Kernel) Stop() error {
-	order := k.resolveOrder()
+	order, _ := k.resolveOrder()
 	for i := len(order) - 1; i >= 0; i-- {
 		comp := k.components[order[i]]
 		if err := comp.Stop(&Context{
@@ -95,7 +99,8 @@ func (k *Kernel) ListComponents() []ComponentStatus {
 	}
 
 	result := make([]ComponentStatus, 0, len(k.components))
-	for _, name := range k.resolveOrder() {
+	order, _ := k.resolveOrder()
+	for _, name := range order {
 		comp := k.components[name]
 		result = append(result, ComponentStatus{
 			Name:         name,
@@ -116,29 +121,44 @@ func hookNames(hooks []HookDef) []string {
 	return names
 }
 
-func (k *Kernel) resolveOrder() []string {
-	visited := make(map[string]bool)
+func (k *Kernel) resolveOrder() ([]string, error) {
+	const (
+		white = 0
+		gray  = 1
+		black = 2
+	)
+	state := make(map[string]int)
 	order := make([]string, 0)
 
-	var visit func(name string)
-	visit = func(name string) {
-		if visited[name] {
-			return
+	var visit func(name string) error
+	visit = func(name string) error {
+		switch state[name] {
+		case gray:
+			return fmt.Errorf("circular dependency detected at %s", name)
+		case black:
+			return nil
 		}
-		visited[name] = true
+		state[name] = gray
 		comp, ok := k.components[name]
 		if !ok {
-			return
+			state[name] = black
+			return nil
 		}
 		for _, dep := range comp.Dependencies() {
-			visit(dep)
+			if err := visit(dep); err != nil {
+				return err
+			}
 		}
+		state[name] = black
 		order = append(order, name)
+		return nil
 	}
 
 	for name := range k.components {
-		visit(name)
+		if err := visit(name); err != nil {
+			return nil, err
+		}
 	}
 
-	return order
+	return order, nil
 }

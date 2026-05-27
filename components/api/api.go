@@ -304,10 +304,15 @@ func (a *API) deleteRecord(w http.ResponseWriter, r *http.Request, collection, i
 	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 	defer cancel()
 
-	_, err := a.db.ExecContext(ctx, fmt.Sprintf("DELETE FROM %s WHERE id = ?", collection), id)
+	res, err := a.db.ExecContext(ctx, fmt.Sprintf("DELETE FROM %s WHERE id = ?", collection), id)
 	if err != nil {
 		a.logger.Error("delete record", "collection", collection, "id", id, "error", err)
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		return
+	}
+	affected, _ := res.RowsAffected()
+	if affected == 0 {
+		writeJSON(w, http.StatusNotFound, map[string]string{"error": "not found"})
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]string{"status": "deleted"})
@@ -380,6 +385,14 @@ func (a *API) handleSQL(w http.ResponseWriter, r *http.Request) {
 	if q == "" {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "query is required"})
 		return
+	}
+
+	sensitiveTables := []string{"users", "storage_files"}
+	for _, t := range sensitiveTables {
+		if strings.Contains(strings.ToUpper(q), strings.ToUpper(t)) {
+			writeJSON(w, http.StatusForbidden, map[string]string{"error": "access to internal tables denied"})
+			return
+		}
 	}
 
 	if strings.Contains(q, ";") {

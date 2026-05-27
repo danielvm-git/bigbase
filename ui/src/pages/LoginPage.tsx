@@ -29,7 +29,6 @@ export default function LoginPage() {
         setError(data.error || 'request failed')
         return
       }
-      localStorage.setItem('token', data.token)
       nav('/')
     } catch {
       setError('network error')

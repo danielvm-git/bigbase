@@ -5,13 +5,12 @@ export default function Layout() {
   const nav = useNavigate()
 
   useEffect(() => {
-    if (!localStorage.getItem('token')) {
-      nav('/login')
-    }
+    fetch('/api/auth/me')
+      .then(r => { if (!r.ok) nav('/login') })
+      .catch(() => nav('/login'))
   }, [nav])
 
   const handleLogout = () => {
-    localStorage.removeItem('token')
     nav('/login')
   }
 

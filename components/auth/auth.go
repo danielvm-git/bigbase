@@ -26,6 +26,7 @@ type contextKey string
 const (
 	ctxUserID    contextKey = "user_id"
 	ctxUserEmail contextKey = "user_email"
+	ctxUserRole  contextKey = "user_role"
 )
 
 type authRequest struct {
@@ -103,10 +104,12 @@ func (a *Auth) Start(ctx *kernel.Context) error {
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		email TEXT NOT NULL UNIQUE,
 		password_hash TEXT NOT NULL,
+		role TEXT NOT NULL DEFAULT 'user',
 		created_at TEXT NOT NULL
 	)`); err != nil {
 		return fmt.Errorf("migrate users table: %w", err)
 	}
+	_ = a.db.Migrate("ALTER TABLE users ADD COLUMN role TEXT NOT NULL DEFAULT 'user'")
 	a.logger.Info("auth component ready")
 	return nil
 }
@@ -126,6 +129,7 @@ func (a *Auth) ProtectedHandler() http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /api/auth/users", a.handleUsers)
 	mux.HandleFunc("DELETE /api/auth/users/{id}", a.handleUserByID)
+	mux.HandleFunc("GET /api/auth/me", a.handleMe)
 	return a.Middleware(mux)
 }
 
@@ -133,7 +137,12 @@ func (a *Auth) Middleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		token := extractBearerToken(r)
 		if token == "" {
-			writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "authorization header required"})
+			if c, err := r.Cookie("token"); err == nil {
+				token = c.Value
+			}
+		}
+		if token == "" {
+			writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "authorization required"})
 			return
 		}
 		claims, err := verifyJWT(token, a.secret)
@@ -144,6 +153,7 @@ func (a *Auth) Middleware(next http.Handler) http.Handler {
 		}
 		ctx := context.WithValue(r.Context(), ctxUserID, claims.UserID)
 		ctx = context.WithValue(ctx, ctxUserEmail, claims.Email)
+		ctx = context.WithValue(ctx, ctxUserRole, claims.Role)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
@@ -156,6 +166,11 @@ func UserIDFromContext(ctx context.Context) (int64, bool) {
 func UserEmailFromContext(ctx context.Context) (string, bool) {
 	email, ok := ctx.Value(ctxUserEmail).(string)
 	return email, ok
+}
+
+func UserRoleFromContext(ctx context.Context) (string, bool) {
+	role, ok := ctx.Value(ctxUserRole).(string)
+	return role, ok
 }
 
 func (a *Auth) decodeBody(w http.ResponseWriter, r *http.Request) (*authRequest, bool) {
@@ -173,6 +188,15 @@ func (a *Auth) decodeBody(w http.ResponseWriter, r *http.Request) (*authRequest,
 }
 
 func (a *Auth) writeAuthResponse(w http.ResponseWriter, status int, userID int64, email, token string) {
+	http.SetCookie(w, &http.Cookie{
+		Name:     "token",
+		Value:    token,
+		HttpOnly: true,
+		Secure:   false,
+		SameSite: http.SameSiteStrictMode,
+		Path:     "/",
+		MaxAge:   86400,
+	})
 	writeJSON(w, status, map[string]any{
 		"token": token,
 		"user": map[string]any{
@@ -190,17 +214,25 @@ func hashPassword(password string) (string, error) {
 	return string(hash), nil
 }
 
-func (a *Auth) insertUser(ctx context.Context, email, passwordHash string) (int64, error) {
+func (a *Auth) insertUser(ctx context.Context, email, passwordHash string) (int64, string, error) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
-	res, err := a.db.ExecContext(ctx,
-		"INSERT INTO users (email, password_hash, created_at) VALUES (?, ?, ?)",
-		email, passwordHash, time.Now().UTC().Format(time.RFC3339))
-	if err != nil {
-		return 0, err
+	role := "user"
+	var count int64
+	_ = a.db.QueryRowContext(ctx, "SELECT COUNT(*) FROM users").Scan(&count)
+	if count == 0 {
+		role = "admin"
 	}
-	return res.LastInsertId()
+
+	res, err := a.db.ExecContext(ctx,
+		"INSERT INTO users (email, password_hash, role, created_at) VALUES (?, ?, ?, ?)",
+		email, passwordHash, role, time.Now().UTC().Format(time.RFC3339))
+	if err != nil {
+		return 0, "", err
+	}
+	id, _ := res.LastInsertId()
+	return id, role, nil
 }
 
 func (a *Auth) handleRegister(w http.ResponseWriter, r *http.Request) {
@@ -228,7 +260,7 @@ func (a *Auth) handleRegister(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userID, err := a.insertUser(r.Context(), email, hash)
+	userID, role, err := a.insertUser(r.Context(), email, hash)
 	if err != nil {
 		if strings.Contains(err.Error(), "UNIQUE constraint") {
 			writeJSON(w, http.StatusConflict, map[string]string{"error": "email already registered"})
@@ -239,7 +271,7 @@ func (a *Auth) handleRegister(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, err := createJWT(userID, email, a.secret)
+	token, err := createJWT(userID, email, role, a.secret)
 	if err != nil {
 		a.logger.Error("create jwt", "error", err)
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
@@ -266,9 +298,9 @@ func (a *Auth) handleLogin(w http.ResponseWriter, r *http.Request) {
 	defer cancel()
 
 	var userID int64
-	var passwordHash string
+	var passwordHash, role string
 	err := a.db.QueryRowContext(ctx,
-		"SELECT id, password_hash FROM users WHERE email = ?", email).Scan(&userID, &passwordHash)
+		"SELECT id, password_hash, role FROM users WHERE email = ?", email).Scan(&userID, &passwordHash, &role)
 	if err != nil {
 		writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "invalid email or password"})
 		return
@@ -279,7 +311,7 @@ func (a *Auth) handleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, err := createJWT(userID, email, a.secret)
+	token, err := createJWT(userID, email, role, a.secret)
 	if err != nil {
 		a.logger.Error("create jwt", "error", err)
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
@@ -338,6 +370,13 @@ func (a *Auth) handleUserByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	requesterID, _ := UserIDFromContext(r.Context())
+	requesterRole, _ := UserRoleFromContext(r.Context())
+	if requesterRole != "admin" && fmt.Sprint(requesterID) != id {
+		writeJSON(w, http.StatusForbidden, map[string]string{"error": "admin only"})
+		return
+	}
+
 	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 	defer cancel()
 
@@ -354,6 +393,15 @@ func (a *Auth) handleUserByID(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSON(w, http.StatusOK, map[string]string{"status": "deleted"})
+}
+
+func (a *Auth) handleMe(w http.ResponseWriter, r *http.Request) {
+	userID, _ := UserIDFromContext(r.Context())
+	email, _ := UserEmailFromContext(r.Context())
+	writeJSON(w, http.StatusOK, map[string]any{
+		"id":    userID,
+		"email": email,
+	})
 }
 
 func writeJSON(w http.ResponseWriter, status int, data any) {
