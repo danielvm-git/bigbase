@@ -295,3 +295,42 @@ func TestFunctionsCreateMissingName(t *testing.T) {
 		t.Fatalf("expected 400, got %d: %s", w.Code, w.Body.String())
 	}
 }
+
+func TestFunctionsMethodNotAllowed(t *testing.T) {
+	f := setupFunctions(t)
+	h := f.Handler()
+
+	req := httptest.NewRequest("PATCH", "/api/functions", nil)
+	w := httptest.NewRecorder()
+	h.ServeHTTP(w, req)
+
+	if w.Code != http.StatusMethodNotAllowed {
+		t.Fatalf("expected 405, got %d: %s", w.Code, w.Body.String())
+	}
+}
+
+func TestFunctionsEmptyID(t *testing.T) {
+	f := setupFunctions(t)
+	h := f.Handler()
+
+	req := httptest.NewRequest("GET", "/api/functions/", nil)
+	w := httptest.NewRecorder()
+	h.ServeHTTP(w, req)
+
+	if w.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400, got %d: %s", w.Code, w.Body.String())
+	}
+}
+
+func TestFunctionsUpdateMethodNotAllowed(t *testing.T) {
+	f := setupFunctions(t)
+	h := f.Handler()
+
+	req := httptest.NewRequest("PATCH", "/api/functions/some-id", nil)
+	w := httptest.NewRecorder()
+	h.ServeHTTP(w, req)
+
+	if w.Code != http.StatusMethodNotAllowed {
+		t.Fatalf("expected 405, got %d: %s", w.Code, w.Body.String())
+	}
+}
