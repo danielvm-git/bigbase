@@ -97,9 +97,17 @@ func New(opts Options) *Deploy {
 	if dir == "" {
 		dir = "data/builds"
 	}
+	absDir, err := filepath.Abs(dir)
+	if err == nil {
+		dir = absDir
+	}
 	gitDir := opts.GitDir
 	if gitDir == "" {
 		gitDir = "data/git"
+	}
+	absGitDir, err := filepath.Abs(gitDir)
+	if err == nil {
+		gitDir = absGitDir
 	}
 	basePort := opts.BasePort
 	if basePort == 0 {
@@ -281,8 +289,8 @@ func (d *Deploy) runDeployment(deploy *Deployment, buildDir, repoName string) {
 		"UPDATE deployments SET app_type = ? WHERE id = ?", string(appType), deploy.ID)
 
 	if appType == AppStatic {
-		deploy.URL = fmt.Sprintf("http://localhost:%d", deploy.Port)
 		d.updateStatus(deploy.ID, "running")
+		d.updateURL(deploy.ID, deploy.Port)
 		go d.serveStatic(ctx, buildDir, deploy)
 		return
 	}
@@ -293,8 +301,8 @@ func (d *Deploy) runDeployment(deploy *Deployment, buildDir, repoName string) {
 		return
 	}
 
-	deploy.URL = fmt.Sprintf("http://localhost:%d", deploy.Port)
 	d.updateStatus(deploy.ID, "running")
+	d.updateURL(deploy.ID, deploy.Port)
 	go d.startApp(ctx, buildDir, deploy, appType)
 }
 
@@ -395,22 +403,14 @@ func (d *Deploy) serveStatic(ctx context.Context, buildDir string, deploy *Deplo
 func (d *Deploy) updateStatus(id, status string) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
-
 	_, _ = d.db.ExecContext(context.Background(),
 		"UPDATE deployments SET status = ? WHERE id = ?", status, id)
-
-	if status == "running" {
-		_, _ = d.db.ExecContext(context.Background(),
-			"UPDATE deployments SET url = ? WHERE id = ?",
-			fmt.Sprintf("http://localhost:%d", d.getPort(id)), id)
-	}
 }
 
-func (d *Deploy) getPort(id string) int {
-	if app, ok := d.apps[id]; ok {
-		return app.port
-	}
-	return 0
+func (d *Deploy) updateURL(id string, port int) {
+	_, _ = d.db.ExecContext(context.Background(),
+		"UPDATE deployments SET url = ?, port = ? WHERE id = ?",
+		fmt.Sprintf("http://localhost:%d", port), port, id)
 }
 
 func DetectAppType(buildDir string) AppType {
