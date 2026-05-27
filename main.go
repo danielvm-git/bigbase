@@ -19,6 +19,7 @@ import (
 	"github.com/danielvm/bigbase/components/forge"
 	"github.com/danielvm/bigbase/components/functions"
 	"github.com/danielvm/bigbase/components/git"
+	"github.com/danielvm/bigbase/components/messaging"
 	"github.com/danielvm/bigbase/components/proxy"
 	"github.com/danielvm/bigbase/components/realtime"
 	"github.com/danielvm/bigbase/components/storage"
@@ -105,6 +106,10 @@ func startProxy() {
 	f := forge.New(forge.Options{DB: d, Logger: logger})
 	ci := cici.New(cici.Options{DB: d, Logger: logger})
 	fn := functions.New(functions.Options{DB: d, Logger: logger})
+	msgComp := messaging.New(messaging.Options{
+		DB:     d,
+		Logger: logger,
+	})
 	rt := realtime.New(realtime.Options{
 		Logger: logger,
 		Validate: func(token string) (int64, error) {
@@ -126,6 +131,7 @@ func startProxy() {
 	k.Register(ci)
 	k.Register(fn)
 	k.Register(rt)
+	k.Register(msgComp)
 
 	// Register routes before kernel.Start to avoid race on proxy mux
 	publicAPI := a.Handler()
@@ -145,6 +151,7 @@ func startProxy() {
 	p.Handle("/api/cici/", authComp.Middleware(ci.Handler()).ServeHTTP)
 	p.Handle("/api/functions/", authComp.Middleware(fn.Handler()).ServeHTTP)
 	p.Handle("/api/functions", authComp.Middleware(fn.Handler()).ServeHTTP)
+	p.Handle("/api/messaging/", authComp.Middleware(msgComp.Handler()).ServeHTTP)
 	p.Handle("/realtime", rt.Handler().ServeHTTP)
 	p.Handle("/api/auth/", authComp.Handler().ServeHTTP)
 	p.Handle("GET /api/auth/users", authComp.ProtectedHandler().ServeHTTP)
