@@ -1,0 +1,233 @@
+package messaging
+
+import (
+	"context"
+	"crypto/rand"
+	"database/sql"
+	"encoding/hex"
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"strings"
+	"time"
+
+	"github.com/danielvm/bigbase/kernel"
+)
+
+const version = "0.1.0"
+
+type Logger interface {
+	Info(msg string, args ...any)
+	Warn(msg string, args ...any)
+	Error(msg string, args ...any)
+	Debug(msg string, args ...any)
+}
+
+type noopLogger struct{}
+
+func (noopLogger) Info(msg string, args ...any)  {}
+func (noopLogger) Warn(msg string, args ...any)  {}
+func (noopLogger) Error(msg string, args ...any) {}
+func (noopLogger) Debug(msg string, args ...any) {}
+
+type DBer interface {
+	ExecContext(ctx context.Context, query string, args ...any) (sql.Result, error)
+	QueryContext(ctx context.Context, query string, args ...any) (*sql.Rows, error)
+	QueryRowContext(ctx context.Context, query string, args ...any) *sql.Row
+	Migrate(migration string) error
+}
+
+type Message struct {
+	ID        string `json:"id"`
+	Channel   string `json:"channel"`
+	ToAddr    string `json:"to_addr"`
+	Subject   string `json:"subject,omitempty"`
+	Body      string `json:"body"`
+	Status    string `json:"status"`
+	CreatedAt string `json:"created_at"`
+}
+
+type sendRequest struct {
+	To      string `json:"to"`
+	Subject string `json:"subject,omitempty"`
+	Body    string `json:"body"`
+	Title   string `json:"title,omitempty"`
+	Token   string `json:"token,omitempty"`
+	Message string `json:"message,omitempty"`
+}
+
+type Provider interface {
+	Send(ctx context.Context, msg Message) error
+}
+
+type Messaging struct {
+	db          DBer
+	logger      Logger
+	smtpHost    string
+	smtpPort    int
+	smtpUser    string
+	smtpPass    string
+	smtpFrom    string
+	providers   map[string]Provider
+}
+
+type Options struct {
+	DB       DBer
+	Logger   Logger
+	SMTPHost string
+	SMTPPort int
+	SMTPUser string
+	SMTPPass string
+	SMTPFrom string
+}
+
+func New(opts Options) *Messaging {
+	logger := opts.Logger
+	if logger == nil {
+		logger = noopLogger{}
+	}
+	if opts.SMTPHost == "" {
+		opts.SMTPHost = "localhost"
+	}
+	if opts.SMTPPort == 0 {
+		opts.SMTPPort = 1025
+	}
+	if opts.SMTPFrom == "" {
+		opts.SMTPFrom = "no-reply@bigbase.local"
+	}
+	return &Messaging{
+		db:        opts.DB,
+		logger:    logger,
+		smtpHost:  opts.SMTPHost,
+		smtpPort:  opts.SMTPPort,
+		smtpUser:  opts.SMTPUser,
+		smtpPass:  opts.SMTPPass,
+		smtpFrom:  opts.SMTPFrom,
+		providers: make(map[string]Provider),
+	}
+}
+
+func (m *Messaging) RegisterProvider(channel string, p Provider) {
+	m.providers[channel] = p
+}
+
+func (m *Messaging) Provider(channel string) Provider {
+	return m.providers[channel]
+}
+
+func (m *Messaging) Name() string                   { return "messaging" }
+func (m *Messaging) Version() string                { return version }
+func (m *Messaging) Dependencies() []string         { return []string{"db"} }
+func (m *Messaging) ConfigSchema() json.RawMessage  { return nil }
+func (m *Messaging) Hooks() []kernel.HookDef        { return nil }
+
+func (m *Messaging) Init(ctx *kernel.Context, config json.RawMessage) error {
+	return nil
+}
+
+func (m *Messaging) Start(ctx *kernel.Context) error {
+	if err := m.db.Migrate(`CREATE TABLE IF NOT EXISTS messages (
+		id TEXT PRIMARY KEY,
+		channel TEXT NOT NULL,
+		to_addr TEXT NOT NULL,
+		subject TEXT,
+		body TEXT NOT NULL,
+		status TEXT NOT NULL DEFAULT 'sent',
+		created_at TEXT NOT NULL DEFAULT (datetime('now'))
+	)`); err != nil {
+		return fmt.Errorf("migrate messages table: %w", err)
+	}
+	m.logger.Info("messaging component ready")
+	return nil
+}
+
+func (m *Messaging) Stop(ctx *kernel.Context) error {
+	return nil
+}
+
+func (m *Messaging) Handler() http.Handler {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/api/messaging/email", m.handleEmail)
+	mux.HandleFunc("/api/messaging/sms", m.handleSMS)
+	mux.HandleFunc("/api/messaging/push", m.handlePush)
+	mux.HandleFunc("/api/messaging/messages", m.handleList)
+	return mux
+}
+
+func generateID() (string, error) {
+	b := make([]byte, 16)
+	if _, err := rand.Read(b); err != nil {
+		return "", fmt.Errorf("generate id: %w", err)
+	}
+	return hex.EncodeToString(b), nil
+}
+
+func (m *Messaging) send(ctx context.Context, channel, toAddr, subject, body string) (*Message, error) {
+	id, err := generateID()
+	if err != nil {
+		return nil, err
+	}
+
+	now := time.Now().UTC().Format(time.RFC3339)
+	msg := &Message{
+		ID:        id,
+		Channel:   channel,
+		ToAddr:    toAddr,
+		Subject:   subject,
+		Body:      body,
+		Status:    "sent",
+		CreatedAt: now,
+	}
+
+	if p, ok := m.providers[channel]; ok {
+		if err := p.Send(ctx, *msg); err != nil {
+			msg.Status = "failed"
+			m.logger.Error("send message", "channel", channel, "id", id, "error", err)
+		}
+	}
+
+	_, err = m.db.ExecContext(ctx,
+		"INSERT INTO messages (id, channel, to_addr, subject, body, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
+		id, channel, toAddr, subject, body, msg.Status, now)
+	if err != nil {
+		return nil, fmt.Errorf("insert message: %w", err)
+	}
+
+	return msg, nil
+}
+
+func (m *Messaging) handleMethod(w http.ResponseWriter, r *http.Request, method string) bool {
+	if r.Method != method {
+		writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
+		return false
+	}
+	return true
+}
+
+func writeJSON(w http.ResponseWriter, status int, data any) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+	_ = json.NewEncoder(w).Encode(data)
+}
+
+func validateRequired(value, field string) string {
+	if strings.TrimSpace(value) == "" {
+		return field + " is required"
+	}
+	return ""
+}
+
+func collectErrors(errs ...string) string {
+	var msgs []string
+	for _, e := range errs {
+		if e != "" {
+			msgs = append(msgs, e)
+		}
+	}
+	if len(msgs) > 0 {
+		return strings.Join(msgs, "; ")
+	}
+	return ""
+}
+
+var _ kernel.Component = (*Messaging)(nil)
