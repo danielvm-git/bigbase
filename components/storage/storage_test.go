@@ -1,0 +1,323 @@
+package storage_test
+
+import (
+	"bytes"
+	"encoding/json"
+	"mime/multipart"
+	"net/http"
+	"net/http/httptest"
+	"os"
+	"path/filepath"
+	"testing"
+
+	"github.com/danielvm/bigbase/components/db"
+	"github.com/danielvm/bigbase/components/storage"
+	"github.com/danielvm/bigbase/kernel"
+)
+
+type testLogger struct{}
+
+func (testLogger) Info(msg string, args ...any)  {}
+func (testLogger) Warn(msg string, args ...any)  {}
+func (testLogger) Error(msg string, args ...any) {}
+func (testLogger) Debug(msg string, args ...any) {}
+
+func setupStorage(t *testing.T) (*storage.Storage, http.Handler) {
+	t.Helper()
+	logger := testLogger{}
+	k := kernel.New(logger)
+
+	d := db.New(db.Options{Path: ":memory:", Logger: logger})
+	dir := t.TempDir()
+
+	s := storage.New(storage.Options{DB: d, Logger: logger, Dir: dir, MaxSize: 10 << 20})
+	k.Register(s)
+	k.Register(d)
+	if err := k.Start(); err != nil {
+		t.Fatalf("kernel start: %v", err)
+	}
+	t.Cleanup(func() { _ = k.Stop() })
+
+	return s, s.Handler()
+}
+
+func uploadFile(t *testing.T, handler http.Handler, filename, content string) *httptest.ResponseRecorder {
+	t.Helper()
+	var buf bytes.Buffer
+	w := multipart.NewWriter(&buf)
+	fw, err := w.CreateFormFile("file", filename)
+	if err != nil {
+		t.Fatalf("create form file: %v", err)
+	}
+	_, _ = fw.Write([]byte(content))
+	_ = w.Close()
+
+	req := httptest.NewRequest("POST", "/api/storage/upload", &buf)
+	req.Header.Set("Content-Type", w.FormDataContentType())
+	resp := httptest.NewRecorder()
+	handler.ServeHTTP(resp, req)
+	return resp
+}
+
+func TestUploadSuccess(t *testing.T) {
+	_, handler := setupStorage(t)
+
+	resp := uploadFile(t, handler, "test.txt", "hello world")
+
+	if resp.Code != http.StatusCreated {
+		t.Fatalf("expected 201, got %d: %s", resp.Code, resp.Body.String())
+	}
+
+	var body map[string]any
+	if err := json.NewDecoder(resp.Body).Decode(&body); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	if id, ok := body["id"]; !ok || id == "" {
+		t.Fatalf("expected non-empty id, got: %v", body)
+	}
+	if name, ok := body["name"]; !ok || name != "test.txt" {
+		t.Fatalf("expected name 'test.txt', got: %v", body)
+	}
+	if mime, ok := body["mime_type"]; !ok || mime != "text/plain; charset=utf-8" {
+		t.Fatalf("expected text/plain, got: %v", body)
+	}
+	if size, ok := body["size"]; !ok || size != float64(11) {
+		t.Fatalf("expected size 11, got: %v", body)
+	}
+}
+
+func TestUploadMissingFile(t *testing.T) {
+	_, handler := setupStorage(t)
+
+	var buf bytes.Buffer
+	w := multipart.NewWriter(&buf)
+	_ = w.Close()
+
+	req := httptest.NewRequest("POST", "/api/storage/upload", &buf)
+	req.Header.Set("Content-Type", w.FormDataContentType())
+	resp := httptest.NewRecorder()
+	handler.ServeHTTP(resp, req)
+
+	if resp.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400, got %d: %s", resp.Code, resp.Body.String())
+	}
+}
+
+func TestUploadWrongFieldName(t *testing.T) {
+	_, handler := setupStorage(t)
+
+	var buf bytes.Buffer
+	w := multipart.NewWriter(&buf)
+	fw, _ := w.CreateFormFile("wrongfield", "test.txt")
+	_, _ = fw.Write([]byte("data"))
+	_ = w.Close()
+
+	req := httptest.NewRequest("POST", "/api/storage/upload", &buf)
+	req.Header.Set("Content-Type", w.FormDataContentType())
+	resp := httptest.NewRecorder()
+	handler.ServeHTTP(resp, req)
+
+	if resp.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400, got %d: %s", resp.Code, resp.Body.String())
+	}
+}
+
+func TestUploadWrongMethod(t *testing.T) {
+	_, handler := setupStorage(t)
+
+	req := httptest.NewRequest("GET", "/api/storage/upload", nil)
+	resp := httptest.NewRecorder()
+	handler.ServeHTTP(resp, req)
+
+	if resp.Code != http.StatusMethodNotAllowed {
+		t.Fatalf("expected 405, got %d", resp.Code)
+	}
+}
+
+func TestUploadFileWrittenToDisk(t *testing.T) {
+	s, handler := setupStorage(t)
+
+	resp := uploadFile(t, handler, "hello.txt", "file content")
+	if resp.Code != http.StatusCreated {
+		t.Fatalf("expected 201, got %d", resp.Code)
+	}
+
+	var body map[string]any
+	_ = json.NewDecoder(resp.Body).Decode(&body)
+
+	// Verify file exists on disk
+	diskPath := filepath.Join(s.Dir(), body["id"].(string), "hello.txt")
+	if _, err := os.Stat(diskPath); os.IsNotExist(err) {
+		t.Fatalf("file not found on disk at %s", diskPath)
+	}
+	data, _ := os.ReadFile(diskPath)
+	if string(data) != "file content" {
+		t.Fatalf("expected 'file content', got '%s'", string(data))
+	}
+}
+
+func uploadAndGetID(t *testing.T, handler http.Handler) string {
+	t.Helper()
+	resp := uploadFile(t, handler, "data.txt", "test data")
+	var body map[string]any
+	_ = json.NewDecoder(resp.Body).Decode(&body)
+	id, _ := body["id"].(string)
+	return id
+}
+
+func TestDownloadSuccess(t *testing.T) {
+	_, handler := setupStorage(t)
+	id := uploadAndGetID(t, handler)
+
+	req := httptest.NewRequest("GET", "/api/storage/files/"+id, nil)
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", w.Code, w.Body.String())
+	}
+	if w.Body.String() != "test data" {
+		t.Fatalf("expected 'test data', got '%s'", w.Body.String())
+	}
+	ct := w.Header().Get("Content-Type")
+	if ct != "text/plain; charset=utf-8" {
+		t.Fatalf("expected text/plain, got %q", ct)
+	}
+}
+
+func TestDownloadNotFound(t *testing.T) {
+	_, handler := setupStorage(t)
+
+	req := httptest.NewRequest("GET", "/api/storage/files/nonexistent", nil)
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+
+	if w.Code != http.StatusNotFound {
+		t.Fatalf("expected 404, got %d: %s", w.Code, w.Body.String())
+	}
+}
+
+func TestDownloadMissingID(t *testing.T) {
+	_, handler := setupStorage(t)
+
+	req := httptest.NewRequest("GET", "/api/storage/files/", nil)
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+
+	if w.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400, got %d", w.Code)
+	}
+}
+
+func TestListFilesEmpty(t *testing.T) {
+	_, handler := setupStorage(t)
+
+	req := httptest.NewRequest("GET", "/api/storage/files", nil)
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", w.Code, w.Body.String())
+	}
+
+	var resp map[string]any
+	_ = json.NewDecoder(w.Body).Decode(&resp)
+	data, _ := resp["data"].([]any)
+	if len(data) != 0 {
+		t.Fatalf("expected empty list, got %d items", len(data))
+	}
+}
+
+func TestListFilesAfterUpload(t *testing.T) {
+	_, handler := setupStorage(t)
+	uploadAndGetID(t, handler)
+
+	req := httptest.NewRequest("GET", "/api/storage/files", nil)
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+
+	var resp map[string]any
+	_ = json.NewDecoder(w.Body).Decode(&resp)
+	data, _ := resp["data"].([]any)
+	if len(data) != 1 {
+		t.Fatalf("expected 1 file, got %d", len(data))
+	}
+}
+
+func TestDeleteSuccess(t *testing.T) {
+	_, handler := setupStorage(t)
+	id := uploadAndGetID(t, handler)
+
+	delReq := httptest.NewRequest("DELETE", "/api/storage/files/"+id, nil)
+	delW := httptest.NewRecorder()
+	handler.ServeHTTP(delW, delReq)
+
+	if delW.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", delW.Code, delW.Body.String())
+	}
+
+	// Verify file is gone
+	getReq := httptest.NewRequest("GET", "/api/storage/files/"+id, nil)
+	getW := httptest.NewRecorder()
+	handler.ServeHTTP(getW, getReq)
+	if getW.Code != http.StatusNotFound {
+		t.Fatalf("expected 404 after delete, got %d", getW.Code)
+	}
+}
+
+func TestDeleteNotFound(t *testing.T) {
+	_, handler := setupStorage(t)
+
+	req := httptest.NewRequest("DELETE", "/api/storage/files/nonexistent", nil)
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+
+	if w.Code != http.StatusNotFound {
+		t.Fatalf("expected 404, got %d: %s", w.Code, w.Body.String())
+	}
+}
+
+func TestListFilesWrongMethod(t *testing.T) {
+	_, handler := setupStorage(t)
+
+	req := httptest.NewRequest("POST", "/api/storage/files", nil)
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+
+	if w.Code != http.StatusMethodNotAllowed {
+		t.Fatalf("expected 405, got %d", w.Code)
+	}
+}
+
+func TestStorageImplementsComponent(t *testing.T) {
+	var _ kernel.Component = &storage.Storage{}
+}
+
+func TestStorageName(t *testing.T) {
+	s := &storage.Storage{}
+	if got := s.Name(); got != "storage" {
+		t.Fatalf("expected Name()='storage', got '%s'", got)
+	}
+}
+
+func TestStorageVersion(t *testing.T) {
+	s := &storage.Storage{}
+	if got := s.Version(); got == "" {
+		t.Fatal("expected non-empty version")
+	}
+}
+
+func TestStorageDependencies(t *testing.T) {
+	s := &storage.Storage{}
+	deps := s.Dependencies()
+	if len(deps) != 1 || deps[0] != "db" {
+		t.Fatalf("expected dependency on 'db', got %v", deps)
+	}
+}
+
+func TestStorageHooks(t *testing.T) {
+	s := &storage.Storage{}
+	if got := s.Hooks(); len(got) != 0 {
+		t.Fatalf("expected no hooks, got %v", got)
+	}
+}
