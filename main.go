@@ -4,12 +4,14 @@ import (
 	"flag"
 	"fmt"
 	"log/slog"
+	"net/http"
 	"os"
 	"os/signal"
 	"strings"
 	"syscall"
 	"text/tabwriter"
 
+	"github.com/danielvm/bigbase/components/admin"
 	"github.com/danielvm/bigbase/components/api"
 	"github.com/danielvm/bigbase/components/auth"
 	"github.com/danielvm/bigbase/components/db"
@@ -91,10 +93,12 @@ func startProxy() {
 		Logger: logger,
 	})
 
+	ad := admin.New(admin.Options{Logger: logger})
 	k.Register(p)
 	k.Register(d)
 	k.Register(a)
 	k.Register(authComp)
+	k.Register(ad)
 
 	if err := k.Start(); err != nil {
 		logger.Error("failed to start kernel", "error", err)
@@ -103,8 +107,13 @@ func startProxy() {
 
 	publicAPI := a.Handler()
 	protectedAPI := authComp.Middleware(publicAPI)
+
 	p.Handle("/api/collections/", protectedAPI.ServeHTTP)
+	p.Handle("/api/sql", protectedAPI.ServeHTTP)
 	p.Handle("/api/auth/", authComp.Handler().ServeHTTP)
+	p.Handle("GET /api/auth/users", authComp.ProtectedHandler().ServeHTTP)
+	p.Handle("DELETE /api/auth/users/", authComp.ProtectedHandler().ServeHTTP)
+	p.Handle("/admin/", http.StripPrefix("/admin/", ad.Handler()).ServeHTTP)
 	logger.Info("bigbase running", "port", *port, "db", *dbPath)
 
 	sig := make(chan os.Signal, 1)

@@ -17,6 +17,7 @@ const version = "0.1.0"
 
 type Logger interface {
 	Info(msg string, args ...any)
+	Warn(msg string, args ...any)
 	Error(msg string, args ...any)
 }
 
@@ -71,10 +72,14 @@ func (a *API) Stop(ctx *kernel.Context) error {
 func (a *API) Handler() http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/api/collections/", a.handleCollection)
+	mux.HandleFunc("/api/sql", a.handleSQL)
 	return mux
 }
 
 func (a *API) ensureTable(collection string) error {
+	if _, err := sanitize(collection); err != nil {
+		return err
+	}
 	if a.tables[collection] {
 		return nil
 	}
@@ -92,6 +97,11 @@ func (a *API) ensureTable(collection string) error {
 func (a *API) handleCollection(w http.ResponseWriter, r *http.Request) {
 	path := strings.TrimPrefix(r.URL.Path, "/api/collections/")
 	parts := strings.SplitN(path, "/", 2)
+	if parts[0] == "" {
+		a.listCollections(w, r)
+		return
+	}
+
 	collection, err := sanitize(parts[0])
 	if err != nil {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
@@ -301,6 +311,145 @@ func (a *API) deleteRecord(w http.ResponseWriter, r *http.Request, collection, i
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]string{"status": "deleted"})
+}
+
+func (a *API) listCollections(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "GET" {
+		writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	names, err := a.fetchCollectionNames(ctx)
+	if err != nil {
+		a.logger.Error("fetch collection names", "error", err)
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"data": names})
+}
+
+func (a *API) fetchCollectionNames(ctx context.Context) ([]string, error) {
+	rows, err := a.db.QueryContext(ctx,
+		"SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' ORDER BY name")
+	if err != nil {
+		return nil, err
+	}
+	defer func() {
+		if cerr := rows.Close(); cerr != nil {
+			a.logger.Error("close rows in fetchCollectionNames", "error", cerr)
+		}
+	}()
+
+	var result []string
+	for rows.Next() {
+		var name string
+		if err := rows.Scan(&name); err != nil {
+			a.logger.Error("scan collection name", "error", err)
+			continue
+		}
+		if name != "users" {
+			result = append(result, name)
+		}
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+func (a *API) handleSQL(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "POST" {
+		writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
+		return
+	}
+
+	r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
+
+	var req struct {
+		Query string `json:"query"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json or body too large"})
+		return
+	}
+
+	q := strings.TrimSpace(req.Query)
+	if q == "" {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "query is required"})
+		return
+	}
+
+	if strings.Contains(q, ";") {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "only single-statement queries are allowed"})
+		return
+	}
+
+	firstWord := strings.ToUpper(strings.Fields(q)[0])
+	switch firstWord {
+	case "SELECT", "EXPLAIN", "PRAGMA", "WITH":
+	default:
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "only read-only queries are allowed"})
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
+	defer cancel()
+
+	rows, err := a.db.QueryContext(ctx, q)
+	if err != nil {
+		a.logger.Error("sql execution failed", "query", q, "error", err)
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "query execution failed"})
+		return
+	}
+	defer func() {
+		if cerr := rows.Close(); cerr != nil {
+			a.logger.Error("close rows in handleSQL", "error", cerr)
+		}
+	}()
+
+	columns, err := rows.Columns()
+	if err != nil {
+		a.logger.Error("get columns in handleSQL", "error", err)
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		return
+	}
+
+	result, err := rowsToMaps(rows, columns)
+	if err != nil {
+		a.logger.Error("rows to maps in handleSQL", "error", err)
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		return
+	}
+
+	writeJSON(w, http.StatusOK, map[string]any{"columns": columns, "rows": result})
+}
+
+func rowsToMaps(rows *sql.Rows, columns []string) ([]map[string]any, error) {
+	// Uses any because SQLite column types are dynamic at runtime.
+	result := make([]map[string]any, 0)
+	for rows.Next() {
+		vals := make([]any, len(columns))
+		valPtrs := make([]any, len(columns))
+		for i := range columns {
+			valPtrs[i] = &vals[i]
+		}
+		if err := rows.Scan(valPtrs...); err != nil {
+			return nil, err
+		}
+		row := make(map[string]any, len(columns))
+		for i, col := range columns {
+			val := vals[i]
+			if b, ok := val.([]byte); ok {
+				val = string(b)
+			}
+			row[col] = val
+		}
+		result = append(result, row)
+	}
+	return result, rows.Err()
 }
 
 func sanitize(name string) (string, error) {

@@ -171,15 +171,172 @@ func TestAPIDeleteRecord(t *testing.T) {
 	}
 }
 
-func TestAPIEmptyCollectionName(t *testing.T) {
+func TestAPIListCollections(t *testing.T) {
 	_, handler := setupAPI(t)
+
+	create := func(name string) {
+		req := httptest.NewRequest("POST", "/api/collections/"+name, strings.NewReader(`{"a":1}`))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+		handler.ServeHTTP(w, req)
+		if w.Code != http.StatusCreated {
+			t.Fatalf("create %s: expected 201, got %d", name, w.Code)
+		}
+	}
+	create("posts")
+	create("comments")
 
 	req := httptest.NewRequest("GET", "/api/collections/", nil)
 	w := httptest.NewRecorder()
 	handler.ServeHTTP(w, req)
 
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", w.Code, w.Body.String())
+	}
+
+	var resp map[string][]string
+	if err := json.NewDecoder(w.Body).Decode(&resp); err != nil {
+		t.Fatalf("decode response: %v", err)
+	}
+	if len(resp["data"]) != 2 {
+		t.Fatalf("expected 2 collections (posts, comments), got %v", resp["data"])
+	}
+}
+
+func TestAPIExecuteSQLSelect(t *testing.T) {
+	_, handler := setupAPI(t)
+
+	// Seed a record
+	post := httptest.NewRequest("POST", "/api/collections/posts", strings.NewReader(`{"title":"hello"}`))
+	post.Header.Set("Content-Type", "application/json")
+	w0 := httptest.NewRecorder()
+	handler.ServeHTTP(w0, post)
+	if w0.Code != http.StatusCreated {
+		t.Fatalf("seed: expected 201, got %d", w0.Code)
+	}
+
+	body := `{"query":"SELECT id, data FROM posts ORDER BY id"}`
+	req := httptest.NewRequest("POST", "/api/sql", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", w.Code, w.Body.String())
+	}
+
+	var resp map[string]any
+	if err := json.NewDecoder(w.Body).Decode(&resp); err != nil {
+		t.Fatalf("decode response: %v", err)
+	}
+	if _, ok := resp["columns"]; !ok {
+		t.Fatalf("expected columns in response, got: %v", resp)
+	}
+	if _, ok := resp["rows"]; !ok {
+		t.Fatalf("expected rows in response, got: %v", resp)
+	}
+	cols, _ := resp["columns"].([]any)
+	if len(cols) != 2 {
+		t.Fatalf("expected 2 columns, got %d: %v", len(cols), cols)
+	}
+	rows, _ := resp["rows"].([]any)
+	if len(rows) != 1 {
+		t.Fatalf("expected 1 row, got %d", len(rows))
+	}
+}
+
+func TestAPIExecuteSQLInvalidQuery(t *testing.T) {
+	_, handler := setupAPI(t)
+
+	body := `{"query":"DROP TABLE posts"}`
+	req := httptest.NewRequest("POST", "/api/sql", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+
+	if w.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400 for DROP, got %d: %s", w.Code, w.Body.String())
+	}
+}
+
+func TestAPIExecuteSQLMultiStatement(t *testing.T) {
+	_, handler := setupAPI(t)
+
+	body := `{"query":"SELECT 1; DROP TABLE posts"}`
+	req := httptest.NewRequest("POST", "/api/sql", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+
+	if w.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400 for multi-statement, got %d: %s", w.Code, w.Body.String())
+	}
+}
+
+func TestAPIExecuteSQLWith(t *testing.T) {
+	_, handler := setupAPI(t)
+
+	body := `{"query":"WITH t AS (SELECT 1 AS n) SELECT * FROM t"}`
+	req := httptest.NewRequest("POST", "/api/sql", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200 for WITH, got %d: %s", w.Code, w.Body.String())
+	}
+}
+
+func TestAPIExecuteSQLSyntaxError(t *testing.T) {
+	_, handler := setupAPI(t)
+
+	body := `{"query":"SELECTT oops FROM posts"}`
+	req := httptest.NewRequest("POST", "/api/sql", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+
+	if w.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400 for bad syntax, got %d: %s", w.Code, w.Body.String())
+	}
+}
+
+func TestAPIExecuteSQLEmptyQuery(t *testing.T) {
+	_, handler := setupAPI(t)
+
+	body := `{"query":""}`
+	req := httptest.NewRequest("POST", "/api/sql", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+
 	if w.Code != http.StatusBadRequest {
 		t.Fatalf("expected 400, got %d: %s", w.Code, w.Body.String())
+	}
+}
+
+func TestAPIExecuteSQLMissingBody(t *testing.T) {
+	_, handler := setupAPI(t)
+
+	req := httptest.NewRequest("POST", "/api/sql", nil)
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+
+	if w.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400, got %d: %s", w.Code, w.Body.String())
+	}
+}
+
+func TestAPIExecuteSQLWrongMethod(t *testing.T) {
+	_, handler := setupAPI(t)
+
+	req := httptest.NewRequest("GET", "/api/sql", nil)
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+
+	if w.Code != http.StatusMethodNotAllowed {
+		t.Fatalf("expected 405, got %d: %s", w.Code, w.Body.String())
 	}
 }
 
