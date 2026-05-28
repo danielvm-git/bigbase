@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from 'react'
+import { PageHeader, Button } from '../components'
 
 interface FileObj {
   id: string
@@ -60,20 +61,21 @@ export default function StoragePage() {
     } catch { setError('network error') }
   }
 
-  if (loading) return <p className="loading">Loading files...</p>
+  if (loading) return <div className="loading">Loading files...</div>
 
   return (
-    <div className="page">
-      <div className="page-header">
-        <h1>Storage</h1>
-        <button className="refresh-btn" onClick={fetchFiles}>Refresh</button>
-      </div>
-      {error && <p className="error">{error}</p>}
+    <div>
+      <PageHeader title="Storage">
+        <Button variant="secondary" size="sm" onClick={fetchFiles}>Refresh</Button>
+      </PageHeader>
+      {error && <p className="input-error-text">{error}</p>}
 
-      <div className="card">
+      <div className="card" style={{ marginBottom: 'var(--space-8)' }}>
         <form onSubmit={handleUpload} className="upload-form">
-          <input type="file" ref={fileRef} required />
-          <button type="submit" className="create-btn" disabled={uploading}>{uploading ? 'Uploading...' : 'Upload'}</button>
+          <input type="file" ref={fileRef} required style={{ fontSize: 'var(--text-s)' }} />
+          <Button type="submit" size="sm" disabled={uploading}>
+            {uploading ? 'Uploading...' : 'Upload'}
+          </Button>
         </form>
       </div>
 
@@ -98,8 +100,8 @@ export default function StoragePage() {
                   <td><code>{f.mime_type}</code></td>
                   <td>{new Date(f.created_at).toLocaleString()}</td>
                   <td className="actions-cell">
-                    <a href={`/api/storage/files/${f.id}`} className="download-link" download={f.name}>Download</a>
-                    <button className="delete-btn" onClick={() => handleDelete(f.id)}>Delete</button>
+                    <a href={`/api/storage/files/${f.id}`} className="btn btn-secondary btn-sm" download={f.name} style={{ marginRight: 'var(--space-2)' }}>Download</a>
+                    <Button variant="danger" size="sm" onClick={() => handleDelete(f.id)}>Delete</Button>
                   </td>
                 </tr>
               ))}

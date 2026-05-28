@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { PageHeader, Button, Input, Tabs, Badge, statusBadgeVariant } from '../components'
 
 interface Repo { id: string; name: string }
 interface Workflow { id: string; repo_id: string; name: string; yaml: string }
@@ -79,91 +80,108 @@ export default function CiciPage() {
     } catch { setError('network error') }
   }
 
+  const ciciTabs = [
+    { id: 'workflows', label: 'Workflows' },
+    { id: 'runs', label: 'Runs' },
+  ]
+  const [ciciTab, setCiciTab] = useState('workflows')
+
   if (!repoId) return (
-    <div className="page">
-      <h1>CI/CD</h1>
+    <div>
+      <PageHeader title="CI/CD" />
       <p className="dim">Select a repo to view workflows.</p>
-      <select value={repoId} onChange={e => setRepoId(e.target.value)} className="repo-select">
+      <select value={repoId} onChange={e => setRepoId(e.target.value)} className="input" style={{ maxWidth: 240, marginTop: 'var(--space-4)' }}>
         <option value="">Select repo...</option>
         {repos.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
       </select>
     </div>
   )
 
-  if (loading) return <p className="loading">Loading...</p>
+  if (loading) return <div className="loading">Loading...</div>
 
   return (
-    <div className="page">
-      <div className="page-header">
-        <h1>CI/CD</h1>
-        <select value={repoId} onChange={e => setRepoId(e.target.value)} className="repo-select">
+    <div>
+      <PageHeader title="CI/CD">
+        <select value={repoId} onChange={e => setRepoId(e.target.value)} className="input" style={{ maxWidth: 200 }}>
           {repos.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
         </select>
-        <button className="create-btn" onClick={() => setShowForm(!showForm)}>{showForm ? 'Cancel' : 'New Workflow'}</button>
-      </div>
-      {error && <p className="error">{error}</p>}
+        <Button variant="primary" size="sm" onClick={() => setShowForm(!showForm)}>
+          {showForm ? 'Cancel' : 'New Workflow'}
+        </Button>
+      </PageHeader>
+      {error && <p className="input-error-text">{error}</p>}
 
       {showForm && (
-        <div className="card">
-          <h3>New Workflow</h3>
+        <div className="card" style={{ marginBottom: 'var(--space-8)' }}>
+          <h3 style={{ marginBottom: 'var(--space-6)', fontSize: 'var(--text-m)', fontWeight: 600 }}>New Workflow</h3>
           <form onSubmit={handleCreateWorkflow} className="fn-form">
-            <input placeholder="Workflow name *" value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} required />
-            <textarea placeholder="YAML config *" value={form.yaml} onChange={e => setForm(p => ({ ...p, yaml: e.target.value }))} required rows={10} className="code-textarea" />
-            <button type="submit" className="create-btn">Save</button>
+            <Input placeholder="Workflow name *" value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} required />
+            <Input as="textarea" placeholder="YAML config *" value={form.yaml} onChange={e => setForm(p => ({ ...p, yaml: e.target.value }))} required rows={10} className="code-textarea" />
+            <Button type="submit">Save</Button>
           </form>
         </div>
       )}
 
-      <h2 className="section-title">Workflows</h2>
-      {workflows.length === 0 ? <p className="dim">No workflows.</p> : (
-        <div className="table-wrap">
-          <table>
-            <thead>
-              <tr><th>Name</th><th>Actions</th></tr>
-            </thead>
-            <tbody>
-              {workflows.map(w => (
-                <tr key={w.id}>
-                  <td><code>{w.name}</code></td>
-                  <td><button className="action-btn" onClick={() => handleRun(w.id)}>Run</button></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+      <Tabs tabs={ciciTabs} active={ciciTab} onChange={setCiciTab} />
+
+      {ciciTab === 'workflows' && (
+        <>
+          <h2 className="section-title">Workflows</h2>
+          {workflows.length === 0 ? <p className="dim">No workflows.</p> : (
+            <div className="table-wrap">
+              <table>
+                <thead>
+                  <tr><th>Name</th><th>Actions</th></tr>
+                </thead>
+                <tbody>
+                  {workflows.map(w => (
+                    <tr key={w.id}>
+                      <td><code>{w.name}</code></td>
+                      <td><Button variant="secondary" size="sm" onClick={() => handleRun(w.id)}>Run</Button></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </>
       )}
 
-      <h2 className="section-title">Runs</h2>
-      {runs.length === 0 ? <p className="dim">No runs yet.</p> : (
-        <div className="table-wrap">
-          <table>
-            <thead>
-              <tr><th>ID</th><th>Event</th><th>Status</th><th>Started</th><th>Finished</th><th>Logs</th></tr>
-            </thead>
-            <tbody>
-              {runs.map(run => (
-                <tr key={run.id}>
-                  <td><code>{run.id.slice(0, 8)}</code></td>
-                  <td>{run.event}</td>
-                  <td><span className={`status-badge ${run.status === 'completed' ? 'status-ok' : run.status === 'failed' ? 'status-err' : 'status-warn'}`}>{run.status}</span></td>
-                  <td>{run.started_at ? new Date(run.started_at).toLocaleString() : '—'}</td>
-                  <td>{run.finished_at ? new Date(run.finished_at).toLocaleString() : '—'}</td>
-                  <td><button className="action-btn" onClick={() => loadLogs(run.id)}>{expandedRun === run.id ? 'Hide' : 'Logs'}</button></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+      {ciciTab === 'runs' && (
+        <>
+          <h2 className="section-title">Runs</h2>
+          {runs.length === 0 ? <p className="dim">No runs yet.</p> : (
+            <div className="table-wrap">
+              <table>
+                <thead>
+                  <tr><th>ID</th><th>Event</th><th>Status</th><th>Started</th><th>Finished</th><th>Logs</th></tr>
+                </thead>
+                <tbody>
+                  {runs.map(run => (
+                    <tr key={run.id}>
+                      <td><code>{run.id.slice(0, 8)}</code></td>
+                      <td>{run.event}</td>
+                      <td><Badge variant={statusBadgeVariant(run.status)}>{run.status}</Badge></td>
+                      <td>{run.started_at ? new Date(run.started_at).toLocaleString() : '—'}</td>
+                      <td>{run.finished_at ? new Date(run.finished_at).toLocaleString() : '—'}</td>
+                      <td><Button variant="secondary" size="sm" onClick={() => loadLogs(run.id)}>{expandedRun === run.id ? 'Hide' : 'Logs'}</Button></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </>
       )}
 
       {expandedRun && logs[expandedRun] && (
-        <div className="card">
-          <h3>Logs — <code>{expandedRun.slice(0, 8)}</code></h3>
+        <div className="card" style={{ marginTop: 'var(--space-8)' }}>
+          <h3 style={{ marginBottom: 'var(--space-4)' }}>Logs — <code>{expandedRun.slice(0, 8)}</code></h3>
           {logs[expandedRun].length === 0 ? <p className="dim">No logs.</p> : (
-            <div className="log-output">
+            <div className="code-output">
               {logs[expandedRun].map((l, i) => (
                 <div key={i} className="log-entry">
-                  <strong className="log-step">[{l.step}]</strong>
+                  <span className="log-step">[{l.step}]</span>
                   <pre>{l.output}</pre>
                 </div>
               ))}

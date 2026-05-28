@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { PageHeader, Button } from '../components'
 
 interface User {
   id: number
@@ -31,9 +32,7 @@ export default function UsersPage() {
   }
 
   useEffect(() => {
-    const controller = new AbortController()
     fetchUsers()
-    return () => controller.abort()
   }, [])
 
   const handleDelete = async (id: number) => {
@@ -51,15 +50,14 @@ export default function UsersPage() {
     }
   }
 
-  if (loading) return <p className="loading">Loading users...</p>
+  if (loading) return <div className="loading">Loading users...</div>
 
   return (
-    <div className="users-page">
-      <div className="users-header">
-        <h1>Users</h1>
-        <button className="refresh-btn" onClick={fetchUsers}>Refresh</button>
-      </div>
-      {error && <p className="error">{error}</p>}
+    <div>
+      <PageHeader title="Users">
+        <Button variant="secondary" size="sm" onClick={fetchUsers}>Refresh</Button>
+      </PageHeader>
+      {error && <p className="input-error-text">{error}</p>}
       {users.length === 0 && !error && <p className="dim">No users found.</p>}
       {users.length > 0 && (
         <div className="table-wrap">
@@ -79,7 +77,7 @@ export default function UsersPage() {
                   <td>{u.email}</td>
                   <td>{new Date(u.created_at).toLocaleString()}</td>
                   <td>
-                    <button className="delete-btn" onClick={() => handleDelete(u.id)}>Delete</button>
+                    <Button variant="danger" size="sm" onClick={() => handleDelete(u.id)}>Delete</Button>
                   </td>
                 </tr>
               ))}

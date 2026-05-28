@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from 'react'
+import { PageHeader, Button, Input, Badge, statusBadgeVariant } from '../components'
 
 interface Deployment {
   id: string
@@ -75,33 +76,27 @@ export default function DeployPage() {
     } catch { setError('network error') }
   }
 
-  const statusClass = (s: string) => {
-    if (s === 'running') return 'status-ok'
-    if (s === 'failed') return 'status-err'
-    if (s === 'building') return 'status-warn'
-    return ''
-  }
-
-  if (loading) return <p className="loading">Loading deployments...</p>
+  if (loading) return <div className="loading">Loading deployments...</div>
 
   return (
-    <div className="page">
-      <div className="page-header">
-        <h1>Deployments</h1>
-        <button className="refresh-btn" onClick={fetchDeployments}>Refresh</button>
-        <button className="create-btn" onClick={() => setShowForm(!showForm)}>{showForm ? 'Cancel' : 'New Deployment'}</button>
-      </div>
-      {error && <p className="error">{error}</p>}
+    <div>
+      <PageHeader title="Deployments">
+        <Button variant="secondary" size="sm" onClick={fetchDeployments}>Refresh</Button>
+        <Button variant="primary" size="sm" onClick={() => setShowForm(!showForm)}>
+          {showForm ? 'Cancel' : 'New Deployment'}
+        </Button>
+      </PageHeader>
+      {error && <p className="input-error-text">{error}</p>}
 
       {showForm && (
-        <div className="card">
-          <form onSubmit={handleCreate} className="inline-form">
-            <select value={selectedRepoId} onChange={e => setSelectedRepoId(e.target.value)} required>
+        <div className="card" style={{ marginBottom: 'var(--space-8)' }}>
+          <form onSubmit={handleCreate} className="form-row">
+            <select className="input" value={selectedRepoId} onChange={e => setSelectedRepoId(e.target.value)} required style={{ flex: 1, minWidth: 140 }}>
               <option value="">Select repo...</option>
               {repos.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
             </select>
-            <input placeholder="Branch" value={branch} onChange={e => setBranch(e.target.value)} />
-            <button type="submit" className="create-btn">Deploy</button>
+            <Input placeholder="Branch" value={branch} onChange={e => setBranch(e.target.value)} />
+            <Button type="submit" size="sm">Deploy</Button>
           </form>
         </div>
       )}
@@ -124,7 +119,7 @@ export default function DeployPage() {
             <tbody>
               {deployments.map(d => (
                 <tr key={d.id}>
-                  <td><span className={`status-badge ${statusClass(d.status)}`}>{d.status}</span></td>
+                  <td><Badge variant={statusBadgeVariant(d.status)}>{d.status}</Badge></td>
                   <td><code>{d.repo_id.slice(0, 8)}</code></td>
                   <td>{d.branch}</td>
                   <td>{d.app_type || '—'}</td>

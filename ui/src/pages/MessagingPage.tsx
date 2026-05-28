@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { PageHeader, Button, Input, Tabs } from '../components'
 
 interface Message {
   id: string
@@ -19,14 +20,11 @@ export default function MessagingPage() {
   const [error, setError] = useState('')
   const [sending, setSending] = useState(false)
 
-  // Email
   const [emailTo, setEmailTo] = useState('')
   const [emailSubject, setEmailSubject] = useState('')
   const [emailBody, setEmailBody] = useState('')
-  // SMS
   const [smsTo, setSmsTo] = useState('')
   const [smsMsg, setSmsMsg] = useState('')
-  // Push
   const [pushToken, setPushToken] = useState('')
   const [pushTitle, setPushTitle] = useState('')
   const [pushBody, setPushBody] = useState('')
@@ -89,52 +87,49 @@ export default function MessagingPage() {
     finally { setSending(false) }
   }
 
-  const tabs: Channel[] = ['email', 'sms', 'push']
+  const channelTabs = [
+    { id: 'email', label: 'EMAIL' },
+    { id: 'sms', label: 'SMS' },
+    { id: 'push', label: 'PUSH' },
+  ]
 
   return (
-    <div className="page">
-      <div className="page-header">
-        <h1>Messaging</h1>
-        <button className="refresh-btn" onClick={fetchMessages}>Refresh</button>
-      </div>
-      {error && <p className="error">{error}</p>}
+    <div>
+      <PageHeader title="Messaging">
+        <Button variant="secondary" size="sm" onClick={fetchMessages}>Refresh</Button>
+      </PageHeader>
+      {error && <p className="input-error-text">{error}</p>}
 
-      <div className="tabs">
-        {tabs.map(t => (
-          <button key={t} className={`tab ${tab === t ? 'active' : ''}`} onClick={() => setTab(t)}>
-            {t.toUpperCase()}
-          </button>
-        ))}
-      </div>
+      <Tabs tabs={channelTabs} active={tab} onChange={id => setTab(id as Channel)} />
 
-      <div className="card">
+      <div className="card" style={{ marginBottom: 'var(--space-12)' }}>
         {tab === 'email' && (
           <form onSubmit={sendEmail} className="msg-form">
-            <input placeholder="To" value={emailTo} onChange={e => setEmailTo(e.target.value)} required />
-            <input placeholder="Subject" value={emailSubject} onChange={e => setEmailSubject(e.target.value)} />
-            <textarea placeholder="Body" value={emailBody} onChange={e => setEmailBody(e.target.value)} required rows={4} />
-            <button type="submit" className="create-btn" disabled={sending}>{sending ? 'Sending...' : 'Send Email'}</button>
+            <Input placeholder="To" value={emailTo} onChange={e => setEmailTo(e.target.value)} required />
+            <Input placeholder="Subject" value={emailSubject} onChange={e => setEmailSubject(e.target.value)} />
+            <Input as="textarea" placeholder="Body" value={emailBody} onChange={e => setEmailBody(e.target.value)} required rows={4} />
+            <Button type="submit" disabled={sending}>{sending ? 'Sending...' : 'Send Email'}</Button>
           </form>
         )}
         {tab === 'sms' && (
           <form onSubmit={sendSms} className="msg-form">
-            <input placeholder="To" value={smsTo} onChange={e => setSmsTo(e.target.value)} required />
-            <textarea placeholder="Message" value={smsMsg} onChange={e => setSmsMsg(e.target.value)} required rows={3} />
-            <button type="submit" className="create-btn" disabled={sending}>{sending ? 'Sending...' : 'Send SMS'}</button>
+            <Input placeholder="To" value={smsTo} onChange={e => setSmsTo(e.target.value)} required />
+            <Input as="textarea" placeholder="Message" value={smsMsg} onChange={e => setSmsMsg(e.target.value)} required rows={3} />
+            <Button type="submit" disabled={sending}>{sending ? 'Sending...' : 'Send SMS'}</Button>
           </form>
         )}
         {tab === 'push' && (
           <form onSubmit={sendPush} className="msg-form">
-            <input placeholder="Device Token" value={pushToken} onChange={e => setPushToken(e.target.value)} required />
-            <input placeholder="Title" value={pushTitle} onChange={e => setPushTitle(e.target.value)} />
-            <textarea placeholder="Body" value={pushBody} onChange={e => setPushBody(e.target.value)} required rows={3} />
-            <button type="submit" className="create-btn" disabled={sending}>{sending ? 'Sending...' : 'Send Push'}</button>
+            <Input placeholder="Device Token" value={pushToken} onChange={e => setPushToken(e.target.value)} required />
+            <Input placeholder="Title" value={pushTitle} onChange={e => setPushTitle(e.target.value)} />
+            <Input as="textarea" placeholder="Body" value={pushBody} onChange={e => setPushBody(e.target.value)} required rows={3} />
+            <Button type="submit" disabled={sending}>{sending ? 'Sending...' : 'Send Push'}</Button>
           </form>
         )}
       </div>
 
       <h2 className="section-title">History</h2>
-      {loading ? <p className="loading">Loading...</p> : messages.length === 0 ? <p className="dim">No messages sent.</p> : (
+      {loading ? <div className="loading">Loading...</div> : messages.length === 0 ? <p className="dim">No messages sent.</p> : (
         <div className="table-wrap">
           <table>
             <thead>

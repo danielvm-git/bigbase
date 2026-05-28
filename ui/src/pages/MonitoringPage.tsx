@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from 'react'
+import { PageHeader, Button, Input, Tabs, Badge } from '../components'
 
 interface SystemMetrics {
   cpu_percent: number
@@ -41,7 +42,7 @@ export default function MonitoringPage() {
   const [alerts, setAlerts] = useState<Alert[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [tab, setTab] = useState<'overview' | 'logs' | 'alerts'>('overview')
+  const [tab, setTab] = useState('overview')
   const [logQuery, setLogQuery] = useState('')
   const [showAlertForm, setShowAlertForm] = useState(false)
   const [alertForm, setAlertForm] = useState({ name: '', metric: '', threshold: 0, operator: 'gt', enabled: true })
@@ -100,27 +101,22 @@ export default function MonitoringPage() {
     return `${d}d ${h}h`
   }
 
-  const levelClass = (l: string) => {
-    if (l === 'error') return 'status-err'
-    if (l === 'warn') return 'status-warn'
-    return 'status-ok'
-  }
+  const monitoringTabs = [
+    { id: 'overview', label: 'Overview' },
+    { id: 'logs', label: 'Logs' },
+    { id: 'alerts', label: 'Alerts' },
+  ]
 
-  if (loading) return <p className="loading">Loading monitoring...</p>
+  if (loading) return <div className="loading">Loading monitoring...</div>
 
   return (
-    <div className="page">
-      <div className="page-header">
-        <h1>Monitoring</h1>
-        <button className="refresh-btn" onClick={() => { fetchMetrics(); fetchLogs(); fetchAlerts() }}>Refresh</button>
-      </div>
-      {error && <p className="error">{error}</p>}
+    <div>
+      <PageHeader title="Monitoring">
+        <Button variant="secondary" size="sm" onClick={() => { fetchMetrics(); fetchLogs(); fetchAlerts() }}>Refresh</Button>
+      </PageHeader>
+      {error && <p className="input-error-text">{error}</p>}
 
-      <div className="tabs">
-        <button className={`tab ${tab === 'overview' ? 'active' : ''}`} onClick={() => setTab('overview')}>Overview</button>
-        <button className={`tab ${tab === 'logs' ? 'active' : ''}`} onClick={() => setTab('logs')}>Logs</button>
-        <button className={`tab ${tab === 'alerts' ? 'active' : ''}`} onClick={() => setTab('alerts')}>Alerts</button>
-      </div>
+      <Tabs tabs={monitoringTabs} active={tab} onChange={setTab} />
 
       {tab === 'overview' && metrics && (
         <>
@@ -138,7 +134,7 @@ export default function MonitoringPage() {
           </div>
 
           {Object.keys(metrics.requests.by_endpoint).length > 0 && (
-            <div className="table-wrap">
+            <div className="table-wrap" style={{ marginTop: 'var(--space-8)' }}>
               <table>
                 <thead>
                   <tr><th>Endpoint</th><th>Count</th><th>Avg Latency</th><th>Status Codes</th></tr>
@@ -150,7 +146,9 @@ export default function MonitoringPage() {
                       <td>{ep.count}</td>
                       <td>{ep.avg_latency_ms.toFixed(1)}ms</td>
                       <td>{Object.entries(ep.status_count).map(([code, count]) => (
-                        <span key={code} className={`status-badge ${code.startsWith('2') ? 'status-ok' : code.startsWith('4') ? 'status-warn' : 'status-err'}`}>{code}: {count}</span>
+                        <Badge key={code} variant={code.startsWith('2') ? 'success' : code.startsWith('4') ? 'warning' : 'error'} style={{ marginRight: 'var(--space-2)' }}>
+                          {code}: {count}
+                        </Badge>
                       ))}</td>
                     </tr>
                   ))}
@@ -163,10 +161,10 @@ export default function MonitoringPage() {
 
       {tab === 'logs' && (
         <>
-          <div className="card">
-            <form onSubmit={e => { e.preventDefault(); fetchLogs(logQuery) }} className="inline-form">
-              <input placeholder="Search logs..." value={logQuery} onChange={e => setLogQuery(e.target.value)} />
-              <button type="submit" className="create-btn">Search</button>
+          <div className="card" style={{ marginBottom: 'var(--space-8)' }}>
+            <form onSubmit={e => { e.preventDefault(); fetchLogs(logQuery) }} className="form-row">
+              <Input placeholder="Search logs..." value={logQuery} onChange={e => setLogQuery(e.target.value)} />
+              <Button type="submit" size="sm">Search</Button>
             </form>
           </div>
           {logs.length === 0 ? <p className="dim">No logs.</p> : (
@@ -178,8 +176,8 @@ export default function MonitoringPage() {
                 <tbody>
                   {logs.map(l => (
                     <tr key={l.id}>
-                      <td><span className={`status-badge ${levelClass(l.level)}`}>{l.level}</span></td>
-                      <td>{l.message}</td>
+                      <td><Badge variant={l.level === 'error' ? 'error' : l.level === 'warn' ? 'warning' : 'success'}>{l.level}</Badge></td>
+                      <td className="max">{l.message}</td>
                       <td>{new Date(l.created_at).toLocaleString()}</td>
                     </tr>
                   ))}
@@ -192,23 +190,27 @@ export default function MonitoringPage() {
 
       {tab === 'alerts' && (
         <>
-          <button className="create-btn" onClick={() => setShowAlertForm(!showAlertForm)}>{showAlertForm ? 'Cancel' : 'New Alert'}</button>
+          <div style={{ marginBottom: 'var(--space-8)' }}>
+            <Button variant="primary" size="sm" onClick={() => setShowAlertForm(!showAlertForm)}>
+              {showAlertForm ? 'Cancel' : 'New Alert'}
+            </Button>
+          </div>
           {showAlertForm && (
-            <div className="card">
+            <div className="card" style={{ marginBottom: 'var(--space-8)' }}>
               <form onSubmit={handleCreateAlert} className="fn-form">
-                <input placeholder="Name *" value={alertForm.name} onChange={e => setAlertForm(p => ({ ...p, name: e.target.value }))} required />
-                <input placeholder="Metric *" value={alertForm.metric} onChange={e => setAlertForm(p => ({ ...p, metric: e.target.value }))} required />
-                <input placeholder="Threshold" type="number" step="0.1" value={alertForm.threshold} onChange={e => setAlertForm(p => ({ ...p, threshold: +e.target.value }))} />
-                <select value={alertForm.operator} onChange={e => setAlertForm(p => ({ ...p, operator: e.target.value }))}>
+                <Input placeholder="Name *" value={alertForm.name} onChange={e => setAlertForm(p => ({ ...p, name: e.target.value }))} required />
+                <Input placeholder="Metric *" value={alertForm.metric} onChange={e => setAlertForm(p => ({ ...p, metric: e.target.value }))} required />
+                <Input placeholder="Threshold" type="number" step="0.1" value={alertForm.threshold} onChange={e => setAlertForm(p => ({ ...p, threshold: +e.target.value }))} />
+                <Input as="select" value={alertForm.operator} onChange={e => setAlertForm(p => ({ ...p, operator: e.target.value }))}>
                   <option value="gt">Greater Than</option>
                   <option value="lt">Less Than</option>
                   <option value="eq">Equals</option>
-                </select>
+                </Input>
                 <label className="checkbox-label">
                   <input type="checkbox" checked={alertForm.enabled} onChange={e => setAlertForm(p => ({ ...p, enabled: e.target.checked }))} />
                   Enabled
                 </label>
-                <button type="submit" className="create-btn">Create</button>
+                <Button type="submit">Create</Button>
               </form>
             </div>
           )}
@@ -225,7 +227,7 @@ export default function MonitoringPage() {
                       <td><code>{a.metric}</code></td>
                       <td>{a.threshold}</td>
                       <td>{a.operator}</td>
-                      <td><span className={`status-badge ${a.enabled ? 'status-ok' : 'status-warn'}`}>{a.enabled ? 'Enabled' : 'Disabled'}</span></td>
+                      <td><Badge variant={a.enabled ? 'success' : 'warning'}>{a.enabled ? 'Enabled' : 'Disabled'}</Badge></td>
                     </tr>
                   ))}
                 </tbody>

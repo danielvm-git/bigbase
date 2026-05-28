@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { PageHeader, Button, Input } from '../components'
 
 interface Repo {
   id: string
@@ -55,27 +56,28 @@ export default function GitReposPage() {
     } catch { setError('network error') }
   }
 
-  if (loading) return <p className="loading">Loading repos...</p>
+  if (loading) return <div className="loading">Loading repos...</div>
 
   return (
-    <div className="page">
-      <div className="page-header">
-        <h1>Git Repos</h1>
-        <button className="refresh-btn" onClick={fetchRepos}>Refresh</button>
-        <button className="create-btn" onClick={() => setShowForm(!showForm)}>{showForm ? 'Cancel' : 'New Repo'}</button>
-      </div>
-      {error && <p className="error">{error}</p>}
+    <div>
+      <PageHeader title="Git Repos">
+        <Button variant="secondary" size="sm" onClick={fetchRepos}>Refresh</Button>
+        <Button variant="primary" size="sm" onClick={() => setShowForm(!showForm)}>
+          {showForm ? 'Cancel' : 'New Repo'}
+        </Button>
+      </PageHeader>
+      {error && <p className="input-error-text">{error}</p>}
 
       {showForm && (
-        <div className="card">
-          <form onSubmit={handleCreate} className="inline-form">
-            <input placeholder="Name *" value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} required />
-            <input placeholder="Description" value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} />
+        <div className="card" style={{ marginBottom: 'var(--space-8)' }}>
+          <form onSubmit={handleCreate} className="form-row">
+            <Input placeholder="Name *" value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} required />
+            <Input placeholder="Description" value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} />
             <label className="checkbox-label">
               <input type="checkbox" checked={form.private} onChange={e => setForm(p => ({ ...p, private: e.target.checked }))} />
               Private
             </label>
-            <button type="submit" className="create-btn">Create</button>
+            <Button type="submit" size="sm">Create</Button>
           </form>
         </div>
       )}
@@ -101,7 +103,7 @@ export default function GitReposPage() {
                   <td className="dim">{r.description || '—'}</td>
                   <td>{new Date(r.created_at).toLocaleString()}</td>
                   <td>
-                    <button className="delete-btn" onClick={() => handleDelete(r.id)}>Delete</button>
+                    <Button variant="danger" size="sm" onClick={() => handleDelete(r.id)}>Delete</Button>
                   </td>
                 </tr>
               ))}

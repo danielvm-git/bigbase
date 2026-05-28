@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { PageHeader } from '../components'
 
 type ColName = string
 type ColRecord = { id: number } & Record<string, unknown>
@@ -40,20 +41,20 @@ export default function DataStudioPage() {
     ? Array.from(new Set(records.flatMap(r => Object.keys(r))))
     : []
 
-  if (loading) return <p className="loading">Loading collections...</p>
+  if (loading) return <div className="loading">Loading collections...</div>
 
   return (
     <div className="data-studio">
-      <h1>Data Studio</h1>
+      <PageHeader title="Data Studio" />
       <div className="studio-layout">
         <aside className="collection-list">
-          <h3>Collections</h3>
+          <div className="collection-list-title">Collections</div>
           {collections.length === 0 && <p className="dim">No collections yet.</p>}
-          <ul>
+          <ul className="collection-list-nav">
             {collections.map(c => (
               <li key={c}>
                 <button
-                  className={`link${selected === c ? ' active' : ''}`}
+                  className={`collection-btn${selected === c ? ' active' : ''}`}
                   onClick={() => loadRecords(c)}
                 >
                   {c}
@@ -64,7 +65,7 @@ export default function DataStudioPage() {
         </aside>
         <section className="record-view">
           {!selected && <p className="dim">Select a collection to browse.</p>}
-          {recordError && <p className="error">{recordError}</p>}
+          {recordError && <p className="input-error-text">{recordError}</p>}
           {selected && !recordError && records.length === 0 && (
             <p className="dim">No records found.</p>
           )}
@@ -78,7 +79,7 @@ export default function DataStudioPage() {
                   {records.map(r => (
                     <tr key={r.id}>
                       {allKeys.map(k => (
-                        <td key={k}>{JSON.stringify(r[k] ?? '')}</td>
+                        <td className="max" key={k}>{JSON.stringify(r[k] ?? '')}</td>
                       ))}
                     </tr>
                   ))}

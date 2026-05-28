@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { PageHeader, Button } from '../components'
 
 interface SqlResult {
   columns: string[]
@@ -6,7 +7,7 @@ interface SqlResult {
 }
 
 export default function SqlEditorPage() {
-  const [query, setQuery] = useState('SELECT name FROM sqlite_master WHERE type = \'table\' ORDER BY name')
+  const [query, setQuery] = useState("SELECT name FROM sqlite_master WHERE type = 'table' ORDER BY name")
   const [result, setResult] = useState<SqlResult | null>(null)
   const [error, setError] = useState('')
   const [running, setRunning] = useState(false)
@@ -44,7 +45,7 @@ export default function SqlEditorPage() {
 
   return (
     <div className="sql-editor">
-      <h1>SQL Editor</h1>
+      <PageHeader title="SQL Editor" />
       <div className="sql-layout">
         <div className="sql-input-area">
           <textarea
@@ -57,9 +58,9 @@ export default function SqlEditorPage() {
             placeholder="Enter SQL query..."
           />
           <div className="sql-actions">
-            <button className="run-btn" onClick={handleRun} disabled={running || !query.trim()}>
+            <Button onClick={handleRun} disabled={running || !query.trim()}>
               {running ? 'Running...' : 'Run (⌘⏎)'}
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -82,7 +83,7 @@ export default function SqlEditorPage() {
                     {result.rows.map((row, i) => (
                       <tr key={i}>
                         {result.columns.map(col => (
-                          <td key={col}>{formatCell(row[col])}</td>
+                          <td className="max" key={col}>{formatCell(row[col])}</td>
                         ))}
                       </tr>
                     ))}

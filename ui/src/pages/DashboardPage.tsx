@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Card, CardHeader, PageHeader, Badge, statusBadgeVariant } from '../components'
 
 interface Stat { label: string; count: number; link: string }
 interface Deployment { id: string; repo_id: string; branch: string; status: string; app_type: string; url: string; created_at: string }
@@ -69,40 +70,33 @@ export default function DashboardPage() {
   const recentDeps = deployments.slice(0, 5)
   const recentMsgs = messages.slice(0, 5)
 
-  const statusClass = (s: string) => {
-    if (s === 'running') return 'status-ok'
-    if (s === 'failed') return 'status-err'
-    if (s === 'building') return 'status-warn'
-    return ''
-  }
-
-  if (loading) return <p className="loading">Loading dashboard...</p>
-  if (!user) return <p className="loading">Loading...</p>
+  if (loading) return <div className="loading">Loading dashboard...</div>
+  if (!user) return <div className="loading">Loading...</div>
 
   return (
     <div className="dashboard">
-      <h1>Dashboard</h1>
+      <PageHeader title="Dashboard" />
 
       <div className="dash-grid">
-        <div className="card">
-          <h3>Signed in as</h3>
-          <p className="email">{user.email}</p>
+        <Card>
+          <CardHeader title="Signed in as" />
+          <p style={{ fontSize: 'var(--text-m)', fontWeight: 500 }}>{user.email}</p>
           <p className="dim">ID #{user.id}</p>
-        </div>
+        </Card>
 
         {health && (
-          <div className="card">
-            <h3>System</h3>
+          <Card>
+            <CardHeader title="System" />
             <p className="stat-value">{health.components}</p>
-            <p className="dim">components · {health.status}</p>
-          </div>
+            <p className="dim">components &middot; {health.status}</p>
+          </Card>
         )}
 
-        <div className="card">
-          <h3>Storage</h3>
+        <Card>
+          <CardHeader title="Storage" />
           <p className="stat-value">{fmtSize(totalBytes)}</p>
           <p className="dim">{files.length} files</p>
-        </div>
+        </Card>
       </div>
 
       {stats.length > 0 && (
@@ -119,8 +113,8 @@ export default function DashboardPage() {
       <div className="dash-cols">
         <div className="dash-col">
           {depTotal > 0 && (
-            <div className="card">
-              <h3>Deployments by Status</h3>
+            <Card>
+              <CardHeader title="Deployments by Status" />
               <div className="bar-chart">
                 {Object.entries(depByStatus).map(([status, count]) => (
                   <div key={status} className="bar-row">
@@ -132,12 +126,12 @@ export default function DashboardPage() {
                   </div>
                 ))}
               </div>
-            </div>
+            </Card>
           )}
 
           {msgTotal > 0 && (
-            <div className="card">
-              <h3>Messages by Channel</h3>
+            <Card>
+              <CardHeader title="Messages by Channel" />
               <div className="bar-chart">
                 {Object.entries(msgByChannel).map(([ch, count]) => (
                   <div key={ch} className="bar-row">
@@ -149,42 +143,41 @@ export default function DashboardPage() {
                   </div>
                 ))}
               </div>
-            </div>
+            </Card>
           )}
         </div>
 
         <div className="dash-col">
           {recentDeps.length > 0 && (
-            <div className="card">
-              <h3>Recent Deployments</h3>
+            <Card>
+              <CardHeader title="Recent Deployments" />
               <div className="activity-feed">
                 {recentDeps.map(d => (
                   <div key={d.id} className="activity-item">
-                    <span className={`status-dot ${statusClass(d.status)}`} />
+                    <Badge variant={statusBadgeVariant(d.status)}>{d.status}</Badge>
                     <span className="activity-text">
-                      <code>{d.repo_id.slice(0, 8)}</code> · {d.app_type || '?'}
+                      <code>{d.repo_id.slice(0, 8)}</code> &middot; {d.app_type || '?'}
                     </span>
-                    <span className={`status-badge ${statusClass(d.status)}`}>{d.status}</span>
-                    <span className="dim activity-time">{new Date(d.created_at).toLocaleDateString()}</span>
+                    <span className="activity-time">{new Date(d.created_at).toLocaleDateString()}</span>
                   </div>
                 ))}
               </div>
-            </div>
+            </Card>
           )}
 
           {recentMsgs.length > 0 && (
-            <div className="card">
-              <h3>Recent Messages</h3>
+            <Card>
+              <CardHeader title="Recent Messages" />
               <div className="activity-feed">
                 {recentMsgs.map(m => (
                   <div key={m.id} className="activity-item">
                     <span className={`channel-badge channel-${m.channel}`}>{m.channel}</span>
                     <span className="activity-text">{m.to_addr}</span>
-                    <span className="dim activity-time">{new Date(m.created_at).toLocaleDateString()}</span>
+                    <span className="activity-time">{new Date(m.created_at).toLocaleDateString()}</span>
                   </div>
                 ))}
               </div>
-            </div>
+            </Card>
           )}
         </div>
       </div>

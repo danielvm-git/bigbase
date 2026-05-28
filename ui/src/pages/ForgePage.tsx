@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { PageHeader, Button, Input, Tabs } from '../components'
 
 interface Repo { id: string; name: string }
 interface Issue { id: string; repo_id: string; title: string; description: string; status: string; labels: string; created_at: string; updated_at: string }
@@ -9,7 +10,7 @@ interface Comment { id: string; issue_id: string; content: string; created_at: s
 export default function ForgePage() {
   const [repos, setRepos] = useState<Repo[]>([])
   const [repoId, setRepoId] = useState('')
-  const [tab, setTab] = useState<'issues' | 'board'>('issues')
+  const [tab, setTab] = useState('issues')
   const [issues, setIssues] = useState<Issue[]>([])
   const [labels, setLabels] = useState<Label[]>([])
   const [board, setBoard] = useState<Board | null>(null)
@@ -98,10 +99,10 @@ export default function ForgePage() {
   }
 
   if (!repoId) return (
-    <div className="page">
-      <h1>Forge</h1>
+    <div>
+      <PageHeader title="Forge" />
       <p className="dim">Select a repo to view issues.</p>
-      <select value={repoId} onChange={e => setRepoId(e.target.value)} className="repo-select">
+      <select value={repoId} onChange={e => setRepoId(e.target.value)} className="input" style={{ maxWidth: 240, marginTop: 'var(--space-4)' }}>
         <option value="">Select repo...</option>
         {repos.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
       </select>
@@ -110,32 +111,35 @@ export default function ForgePage() {
 
   const labelColor = (name: string) => labels.find(l => l.name === name)?.color || '#888'
 
-  if (loading) return <p className="loading">Loading...</p>
+  if (loading) return <div className="loading">Loading...</div>
+
+  const forgeTabs = [
+    { id: 'issues', label: 'Issues' },
+    { id: 'board', label: 'Board' },
+  ]
 
   return (
-    <div className="page">
-      <div className="page-header">
-        <h1>Forge</h1>
-        <select value={repoId} onChange={e => setRepoId(e.target.value)} className="repo-select">
+    <div>
+      <PageHeader title="Forge">
+        <select value={repoId} onChange={e => setRepoId(e.target.value)} className="input" style={{ maxWidth: 200 }}>
           {repos.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
         </select>
-        <button className="create-btn" onClick={() => setShowForm(!showForm)}>{showForm ? 'Cancel' : 'New Issue'}</button>
-      </div>
-      {error && <p className="error">{error}</p>}
+        <Button variant="primary" size="sm" onClick={() => setShowForm(!showForm)}>
+          {showForm ? 'Cancel' : 'New Issue'}
+        </Button>
+      </PageHeader>
+      {error && <p className="input-error-text">{error}</p>}
 
-      <div className="tabs">
-        <button className={`tab ${tab === 'issues' ? 'active' : ''}`} onClick={() => setTab('issues')}>Issues</button>
-        <button className={`tab ${tab === 'board' ? 'active' : ''}`} onClick={() => setTab('board')}>Board</button>
-      </div>
+      <Tabs tabs={forgeTabs} active={tab} onChange={setTab} />
 
       {showForm && (
-        <div className="card">
-          <h3>New Issue</h3>
+        <div className="card" style={{ marginBottom: 'var(--space-8)' }}>
+          <h3 style={{ marginBottom: 'var(--space-6)', fontSize: 'var(--text-m)', fontWeight: 600 }}>New Issue</h3>
           <form onSubmit={handleCreate} className="fn-form">
-            <input placeholder="Title *" value={form.title} onChange={e => setForm(p => ({ ...p, title: e.target.value }))} required />
-            <textarea placeholder="Description" value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} rows={4} />
-            <input placeholder="Labels (comma-separated)" value={form.labels} onChange={e => setForm(p => ({ ...p, labels: e.target.value }))} />
-            <button type="submit" className="create-btn">Create</button>
+            <Input placeholder="Title *" value={form.title} onChange={e => setForm(p => ({ ...p, title: e.target.value }))} required />
+            <Input as="textarea" placeholder="Description" value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} rows={4} />
+            <Input placeholder="Labels (comma-separated)" value={form.labels} onChange={e => setForm(p => ({ ...p, labels: e.target.value }))} />
+            <Button type="submit">Create</Button>
           </form>
         </div>
       )}
@@ -158,7 +162,7 @@ export default function ForgePage() {
                   {issues.map(issue => (
                     <tr key={issue.id}>
                       <td>
-                        <button className="link" onClick={() => { setSelectedIssue(issue); loadComments(issue.id) }}>{issue.title}</button>
+                        <button className="btn-link" onClick={() => { setSelectedIssue(issue); loadComments(issue.id) }}>{issue.title}</button>
                       </td>
                       <td>
                         <select value={issue.status} onChange={e => handleStatusChange(issue.id, e.target.value)} className="status-select">
@@ -171,9 +175,9 @@ export default function ForgePage() {
                       <td>{issue.labels ? issue.labels.split(',').map(l => <span key={l} className="label-badge" style={{ background: labelColor(l.trim()) }}>{l.trim()}</span>) : '—'}</td>
                       <td>{new Date(issue.updated_at).toLocaleString()}</td>
                       <td>
-                        <button className="action-btn" onClick={() => handleStatusChange(issue.id, issue.status === 'closed' ? 'open' : 'closed')}>
+                        <Button variant="secondary" size="sm" onClick={() => handleStatusChange(issue.id, issue.status === 'closed' ? 'open' : 'closed')}>
                           {issue.status === 'closed' ? 'Reopen' : 'Close'}
-                        </button>
+                        </Button>
                       </td>
                     </tr>
                   ))}
@@ -186,12 +190,12 @@ export default function ForgePage() {
             <div className="card issue-detail">
               <div className="issue-detail-header">
                 <h3>{selectedIssue.title}</h3>
-                <button className="refresh-btn" onClick={() => setSelectedIssue(null)}>Close</button>
+                <Button variant="secondary" size="sm" onClick={() => setSelectedIssue(null)}>Close</Button>
               </div>
               <p className="dim">{selectedIssue.description || 'No description.'}</p>
               {comments.length > 0 && (
                 <div className="comments">
-                  <h4>Comments</h4>
+                  <h4 style={{ marginBottom: 'var(--space-4)' }}>Comments</h4>
                   {comments.map(c => (
                     <div key={c.id} className="comment">
                       <p>{c.content}</p>
@@ -200,9 +204,9 @@ export default function ForgePage() {
                   ))}
                 </div>
               )}
-              <form onSubmit={handleComment} className="inline-form">
-                <input placeholder="Add a comment..." value={commentText} onChange={e => setCommentText(e.target.value)} />
-                <button type="submit" className="create-btn">Comment</button>
+              <form onSubmit={handleComment} className="form-row" style={{ marginTop: 'var(--space-4)' }}>
+                <Input placeholder="Add a comment..." value={commentText} onChange={e => setCommentText(e.target.value)} />
+                <Button type="submit" size="sm">Comment</Button>
               </form>
             </div>
           )}
@@ -213,7 +217,7 @@ export default function ForgePage() {
         <div className="board">
           {(['open', 'in_progress', 'review', 'closed'] as const).map(col => (
             <div key={col} className="board-col">
-              <h3 className="board-col-title">{col.replace('_', ' ').toUpperCase()}</h3>
+              <h3 className="board-col-title">{col.replace('_', ' ')}</h3>
               {(board[col] || []).map(issue => (
                 <div key={issue.id} className="board-card" onClick={() => { setSelectedIssue(issue); setTab('issues'); loadComments(issue.id) }}>
                   <strong>{issue.title}</strong>

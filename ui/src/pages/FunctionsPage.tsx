@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { PageHeader, Button, Input } from '../components'
 
 interface Fn {
   id: string
@@ -78,37 +79,38 @@ export default function FunctionsPage() {
     } catch { setError('network error') }
   }
 
-  if (loading) return <p className="loading">Loading functions...</p>
+  if (loading) return <div className="loading">Loading functions...</div>
 
   return (
-    <div className="page">
-      <div className="page-header">
-        <h1>Functions</h1>
-        <button className="refresh-btn" onClick={fetchFns}>Refresh</button>
-        <button className="create-btn" onClick={openCreate}>New Function</button>
-      </div>
-      {error && <p className="error">{error}</p>}
+    <div>
+      <PageHeader title="Functions">
+        <Button variant="secondary" size="sm" onClick={fetchFns}>Refresh</Button>
+        <Button variant="primary" size="sm" onClick={openCreate}>New Function</Button>
+      </PageHeader>
+      {error && <p className="input-error-text">{error}</p>}
 
       {showForm && (
-        <div className="card">
-          <h3>{editing ? 'Edit Function' : 'New Function'}</h3>
+        <div className="card" style={{ marginBottom: 'var(--space-8)' }}>
+          <h3 style={{ marginBottom: 'var(--space-6)', fontSize: 'var(--text-m)', fontWeight: 600 }}>
+            {editing ? 'Edit Function' : 'New Function'}
+          </h3>
           <form onSubmit={handleSave} className="fn-form">
-            <input placeholder="Name *" value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} required />
-            <select value={form.runtime} onChange={e => setForm(p => ({ ...p, runtime: e.target.value }))}>
+            <Input placeholder="Name *" value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} required />
+            <Input as="select" value={form.runtime} onChange={e => setForm(p => ({ ...p, runtime: e.target.value }))}>
               <option value="javascript">JavaScript</option>
-            </select>
-            <select value={form.trigger} onChange={e => setForm(p => ({ ...p, trigger: e.target.value }))}>
+            </Input>
+            <Input as="select" value={form.trigger} onChange={e => setForm(p => ({ ...p, trigger: e.target.value }))}>
               <option value="http">HTTP</option>
               <option value="schedule">Schedule</option>
               <option value="event">Event</option>
-            </select>
-            {form.trigger === 'schedule' && <input placeholder="Cron schedule" value={form.schedule} onChange={e => setForm(p => ({ ...p, schedule: e.target.value }))} />}
-            <input placeholder='Env JSON ({"KEY":"val"})' value={form.env} onChange={e => setForm(p => ({ ...p, env: e.target.value }))} />
-            <input placeholder="Timeout (seconds)" type="number" value={form.timeout} onChange={e => setForm(p => ({ ...p, timeout: +e.target.value }))} />
-            <textarea placeholder="Source code *" value={form.source} onChange={e => setForm(p => ({ ...p, source: e.target.value }))} required rows={8} className="code-textarea" />
+            </Input>
+            {form.trigger === 'schedule' && <Input placeholder="Cron schedule" value={form.schedule} onChange={e => setForm(p => ({ ...p, schedule: e.target.value }))} />}
+            <Input placeholder='Env JSON ({"KEY":"val"})' value={form.env} onChange={e => setForm(p => ({ ...p, env: e.target.value }))} />
+            <Input placeholder="Timeout (seconds)" type="number" value={form.timeout} onChange={e => setForm(p => ({ ...p, timeout: +e.target.value }))} />
+            <Input as="textarea" placeholder="Source code *" value={form.source} onChange={e => setForm(p => ({ ...p, source: e.target.value }))} required rows={8} className="code-textarea" />
             <div className="form-actions">
-              <button type="submit" className="create-btn">{editing ? 'Update' : 'Create'}</button>
-              <button type="button" className="refresh-btn" onClick={() => setShowForm(false)}>Cancel</button>
+              <Button type="submit">{editing ? 'Update' : 'Create'}</Button>
+              <Button type="button" variant="secondary" onClick={() => setShowForm(false)}>Cancel</Button>
             </div>
           </form>
         </div>
@@ -137,9 +139,9 @@ export default function FunctionsPage() {
                   <td>{fn.timeout}s</td>
                   <td>{new Date(fn.created_at).toLocaleString()}</td>
                   <td className="actions-cell">
-                    <button className="action-btn" onClick={() => handleRun(fn.id)}>Run</button>
-                    <button className="action-btn" onClick={() => openEdit(fn)}>Edit</button>
-                    <button className="delete-btn" onClick={() => handleDelete(fn.id)}>Delete</button>
+                    <Button variant="secondary" size="sm" onClick={() => handleRun(fn.id)}>Run</Button>
+                    <Button variant="secondary" size="sm" onClick={() => openEdit(fn)}>Edit</Button>
+                    <Button variant="danger" size="sm" onClick={() => handleDelete(fn.id)}>Delete</Button>
                   </td>
                 </tr>
               ))}
@@ -149,16 +151,18 @@ export default function FunctionsPage() {
       )}
 
       {Object.entries(runResult).map(([id, result]) => (
-        <div key={id} className="card run-result">
-          <h3>Run Result — <code>{fns.find(f => f.id === id)?.name || id}</code></h3>
+        <div key={id} className="card" style={{ marginTop: 'var(--space-8)', maxHeight: 400, overflow: 'auto' }}>
+          <h3 style={{ marginBottom: 'var(--space-4)' }}>
+            Run Result — <code>{fns.find(f => f.id === id)?.name || id}</code>
+          </h3>
           {result.logs?.length > 0 && (
-            <div className="log-output">
+            <div className="code-output">
               {result.logs.map((l, i) => <pre key={i}>{l}</pre>)}
             </div>
           )}
-          {result.error && <p className="error">{result.error}</p>}
+          {result.error && <p className="input-error-text">{result.error}</p>}
           {result.result !== undefined && (
-            <div className="log-output">
+            <div className="code-output" style={{ marginTop: 'var(--space-4)' }}>
               <pre>{JSON.stringify(result.result, null, 2)}</pre>
             </div>
           )}

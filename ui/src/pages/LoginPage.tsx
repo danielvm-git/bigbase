@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { Button, Input, Card } from '../components'
 
 interface AuthResponse {
   token: string
@@ -44,18 +45,22 @@ export default function LoginPage() {
 
   return (
     <div className="login-page">
-      <div className="login-card">
-        <h1>BigBase</h1>
-        <h2>{isRegister ? 'Create Account' : 'Sign In'}</h2>
-        <form onSubmit={handleSubmit}>
-          <input
+      <Card className="login-card">
+        <div className="login-brand">
+          <div className="login-brand-logo">B</div>
+          <h1>BigBase</h1>
+          <p>{isRegister ? 'Create your account' : 'Sign in to continue'}</p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="login-form">
+          <Input
             type="email"
             placeholder="Email"
             value={email}
             onChange={e => setEmail(e.target.value)}
             required
           />
-          <input
+          <Input
             type="password"
             placeholder="Password"
             value={password}
@@ -63,8 +68,10 @@ export default function LoginPage() {
             required
             minLength={6}
           />
-          {error && <p className="error">{error}</p>}
-          <button type="submit">{isRegister ? 'Register' : 'Sign In'}</button>
+          {error && <p className="input-error-text">{error}</p>}
+          <Button type="submit" variant="primary">
+            {isRegister ? 'Register' : 'Sign In'}
+          </Button>
         </form>
 
         {googleEnabled && (
@@ -77,13 +84,13 @@ export default function LoginPage() {
           </>
         )}
 
-        <p className="toggle">
+        <p className="login-toggle">
           {isRegister ? 'Already have an account?' : "Don't have an account?"}{' '}
-          <button className="link" onClick={() => setIsRegister(!isRegister)}>
+          <button className="btn-link" onClick={() => setIsRegister(!isRegister)} type="button">
             {isRegister ? 'Sign In' : 'Register'}
           </button>
         </p>
-      </div>
+      </Card>
     </div>
   )
 }
