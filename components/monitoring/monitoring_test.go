@@ -99,6 +99,53 @@ func TestMonitoringMetricsEndpoint(t *testing.T) {
 	}
 }
 
+func TestMonitoringMiddlewareRecordsMetrics(t *testing.T) {
+	m, _ := setupMonitoring(t)
+
+	next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(`ok`))
+	})
+
+	wrapped := m.Middleware(next)
+	mux := http.NewServeMux()
+	mux.Handle("/api/test", wrapped)
+	mux.Handle("/api/monitoring/metrics", m.Handler())
+
+	req := httptest.NewRequest("GET", "/api/test", nil)
+	w := httptest.NewRecorder()
+	mux.ServeHTTP(w, req)
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200 from test handler, got %d", w.Code)
+	}
+
+	metricsReq := httptest.NewRequest("GET", "/api/monitoring/metrics", nil)
+	mw := httptest.NewRecorder()
+	mux.ServeHTTP(mw, metricsReq)
+
+	var body map[string]any
+	if err := json.NewDecoder(mw.Body).Decode(&body); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+
+	reqs, _ := body["requests"].(map[string]any)
+	total, _ := reqs["total"].(float64)
+	if total != 1 {
+		t.Fatalf("expected 1 request, got %v", total)
+	}
+
+	byEndpoint, _ := reqs["by_endpoint"].(map[string]any)
+	if _, ok := byEndpoint["/api/test"]; !ok {
+		t.Fatalf("expected /api/test in by_endpoint, got %v", byEndpoint)
+	}
+
+	byStatus, _ := reqs["by_status"].(map[string]any)
+	status200, ok := byStatus["200"].(float64)
+	if !ok || status200 != 1 {
+		t.Fatalf("expected 1 request with status 200, got %v", byStatus)
+	}
+}
+
 func TestMonitoringSystemMetrics(t *testing.T) {
 	m, _ := setupMonitoring(t)
 	metrics := m.SystemMetrics()

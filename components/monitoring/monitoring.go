@@ -86,6 +86,50 @@ func (m *Monitoring) Init(ctx *kernel.Context, config json.RawMessage) error { r
 func (m *Monitoring) Start(ctx *kernel.Context) error { return nil }
 func (m *Monitoring) Stop(ctx *kernel.Context) error  { return nil }
 
+type statusRecorder struct {
+	http.ResponseWriter
+	statusCode int
+}
+
+func (r *statusRecorder) WriteHeader(code int) {
+	r.statusCode = code
+	r.ResponseWriter.WriteHeader(code)
+}
+
+func (m *Monitoring) Middleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		start := time.Now()
+		rec := &statusRecorder{ResponseWriter: w, statusCode: http.StatusOK}
+		next.ServeHTTP(rec, r)
+		latency := time.Since(start).Seconds() * 1000
+
+		path := r.URL.Path
+		m.metrics.mu.Lock()
+		ep, ok := m.metrics.requests[path]
+		if !ok {
+			ep = &EndpointMetrics{
+				StatusCount: make(map[int]int64),
+				Latencies:   make([]float64, 0, 100),
+			}
+			m.metrics.requests[path] = ep
+		}
+		ep.Count++
+		ep.StatusCount[rec.statusCode]++
+		ep.Latencies = append(ep.Latencies, latency)
+		if len(ep.Latencies) > 1000 {
+			ep.Latencies = ep.Latencies[len(ep.Latencies)-500:]
+		}
+		{
+			var sum float64
+			for _, l := range ep.Latencies {
+				sum += l
+			}
+			ep.AvgLatency = sum / float64(len(ep.Latencies))
+		}
+		m.metrics.mu.Unlock()
+	})
+}
+
 func (m *Monitoring) SystemMetrics() SystemMetrics {
 	m.metrics.mu.RLock()
 	uptime := time.Since(m.metrics.startedAt).Seconds()
