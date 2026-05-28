@@ -30,6 +30,7 @@ export default function Layout() {
           <li><Link to="/functions">Functions</Link></li>
           <li><Link to="/forge">Forge</Link></li>
           <li><Link to="/cici">CI/CD</Link></li>
+          <li><Link to="/monitoring">Monitoring</Link></li>
         </ul>
         <div className="spacer" />
         <button className="logout-btn" onClick={handleLogout}>Logout</button>
