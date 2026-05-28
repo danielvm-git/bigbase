@@ -33,9 +33,25 @@ type SystemMetrics struct {
 	UptimeSeconds float64 `json:"uptime_seconds"`
 }
 
+type EndpointMetrics struct {
+	Count       int64             `json:"count"`
+	StatusCount map[int]int64     `json:"status_count"`
+	Latencies   []float64         `json:"-"`
+	AvgLatency  float64           `json:"avg_latency_ms"`
+	P99Latency  float64           `json:"p99_latency_ms"`
+}
+
+type RequestMetrics struct {
+	Total        int64                       `json:"total"`
+	ByEndpoint   map[string]*EndpointMetrics `json:"by_endpoint"`
+	ByStatus     map[int]int64               `json:"by_status"`
+	AvgLatencyMs float64                     `json:"avg_latency_ms"`
+}
+
 type MetricsCollector struct {
 	mu        sync.RWMutex
 	startedAt time.Time
+	requests  map[string]*EndpointMetrics
 }
 
 type Monitoring struct {
@@ -53,8 +69,11 @@ func New(opts Options) *Monitoring {
 		logger = noopLogger{}
 	}
 	return &Monitoring{
-		logger:  logger,
-		metrics: &MetricsCollector{startedAt: time.Now()},
+		logger: logger,
+		metrics: &MetricsCollector{
+			startedAt: time.Now(),
+			requests:  make(map[string]*EndpointMetrics),
+		},
 	}
 }
 
@@ -85,6 +104,7 @@ func (m *Monitoring) SystemMetrics() SystemMetrics {
 func (m *Monitoring) Handler() http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/api/monitoring/health", m.handleHealth)
+	mux.HandleFunc("/api/monitoring/metrics", m.handleMetrics)
 	return mux
 }
 
@@ -92,6 +112,63 @@ func (m *Monitoring) handleHealth(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	_, _ = w.Write([]byte(`{"status":"ok"}`))
+}
+
+func (m *Monitoring) handleMetrics(w http.ResponseWriter, r *http.Request) {
+	sys := m.SystemMetrics()
+
+	m.metrics.mu.RLock()
+	total := int64(0)
+	byStatus := make(map[int]int64)
+	var allLatencies []float64
+
+	for _, ep := range m.metrics.requests {
+		total += ep.Count
+		for code, count := range ep.StatusCount {
+			byStatus[code] += count
+		}
+		allLatencies = append(allLatencies, ep.Latencies...)
+	}
+
+	endpoints := make(map[string]map[string]any)
+	for path, ep := range m.metrics.requests {
+		endpoints[path] = map[string]any{
+			"count":         ep.Count,
+			"status_count":  ep.StatusCount,
+			"avg_latency_ms": ep.AvgLatency,
+		}
+	}
+	m.metrics.mu.RUnlock()
+
+	var avgLatency float64
+	if len(allLatencies) > 0 {
+		var sum float64
+		for _, l := range allLatencies {
+			sum += l
+		}
+		avgLatency = sum / float64(len(allLatencies))
+	}
+
+	writeJSON(w, http.StatusOK, map[string]any{
+		"system": map[string]any{
+			"cpu_percent":    sys.CPUPercent,
+			"memory_mb":      sys.MemoryMB,
+			"goroutines":     sys.Goroutines,
+			"uptime_seconds": sys.UptimeSeconds,
+		},
+		"requests": map[string]any{
+			"total":          total,
+			"by_endpoint":    endpoints,
+			"by_status":      byStatus,
+			"avg_latency_ms": avgLatency,
+		},
+	})
+}
+
+func writeJSON(w http.ResponseWriter, status int, data any) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+	_ = json.NewEncoder(w).Encode(data)
 }
 
 var _ kernel.Component = (*Monitoring)(nil)

@@ -60,6 +60,45 @@ func TestMonitoringHealthEndpoint(t *testing.T) {
 	}
 }
 
+func TestMonitoringMetricsEndpoint(t *testing.T) {
+	_, handler := setupMonitoring(t)
+	req := httptest.NewRequest("GET", "/api/monitoring/metrics", nil)
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", w.Code, w.Body.String())
+	}
+
+	var body map[string]any
+	if err := json.NewDecoder(w.Body).Decode(&body); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+
+	sys, ok := body["system"].(map[string]any)
+	if !ok {
+		t.Fatal("expected 'system' key in metrics response")
+	}
+	if _, ok := sys["goroutines"]; !ok {
+		t.Fatal("expected 'goroutines' in system metrics")
+	}
+	if _, ok := sys["uptime_seconds"]; !ok {
+		t.Fatal("expected 'uptime_seconds' in system metrics")
+	}
+	if _, ok := sys["memory_mb"]; !ok {
+		t.Fatal("expected 'memory_mb' in system metrics")
+	}
+
+	reqs, ok := body["requests"].(map[string]any)
+	if !ok {
+		t.Fatal("expected 'requests' key in metrics response")
+	}
+	total, ok := reqs["total"].(float64)
+	if !ok || total < 0 {
+		t.Fatalf("expected non-negative requests total, got %v", reqs["total"])
+	}
+}
+
 func TestMonitoringSystemMetrics(t *testing.T) {
 	m, _ := setupMonitoring(t)
 	metrics := m.SystemMetrics()
