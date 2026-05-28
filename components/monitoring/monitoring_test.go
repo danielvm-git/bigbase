@@ -198,6 +198,77 @@ func TestMonitoringLogWriteAndSearch(t *testing.T) {
 	}
 }
 
+func TestMonitoringLogByID(t *testing.T) {
+	_, handler, _ := setupMonitoringWithDB(t)
+
+	entry := map[string]string{"level": "error", "message": "find me by id"}
+	body, _ := json.Marshal(entry)
+	req := httptest.NewRequest("POST", "/api/monitoring/logs", bytes.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+	if w.Code != http.StatusCreated {
+		t.Fatalf("expected 201, got %d", w.Code)
+	}
+	var created map[string]string
+	json.NewDecoder(w.Body).Decode(&created)
+	logID := created["id"]
+
+	getReq := httptest.NewRequest("GET", "/api/monitoring/logs/"+logID, nil)
+	gw := httptest.NewRecorder()
+	handler.ServeHTTP(gw, getReq)
+	if gw.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", gw.Code, gw.Body.String())
+	}
+	var got map[string]any
+	json.NewDecoder(gw.Body).Decode(&got)
+	if got["id"] != logID {
+		t.Fatalf("expected id '%s', got '%s'", logID, got["id"])
+	}
+}
+
+func TestMonitoringLogSearchByQuery(t *testing.T) {
+	_, handler, _ := setupMonitoringWithDB(t)
+
+	for _, msg := range []string{"hello world", "error occurred", "hello again"} {
+		entry := map[string]string{"message": msg}
+		body, _ := json.Marshal(entry)
+		req := httptest.NewRequest("POST", "/api/monitoring/logs", bytes.NewReader(body))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+		handler.ServeHTTP(w, req)
+		if w.Code != http.StatusCreated {
+			t.Fatalf("create failed: %d", w.Code)
+		}
+	}
+
+	searchReq := httptest.NewRequest("GET", "/api/monitoring/logs?q=hello", nil)
+	sw := httptest.NewRecorder()
+	handler.ServeHTTP(sw, searchReq)
+	if sw.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d", sw.Code)
+	}
+	var result map[string]any
+	json.NewDecoder(sw.Body).Decode(&result)
+	logs, _ := result["data"].([]any)
+	if len(logs) != 2 {
+		t.Fatalf("expected 2 logs matching 'hello', got %d", len(logs))
+	}
+}
+
+func TestMonitoringAlertCreateMissingFields(t *testing.T) {
+	_, handler, _ := setupMonitoringWithDB(t)
+
+	body, _ := json.Marshal(map[string]string{"name": ""})
+	req := httptest.NewRequest("POST", "/api/monitoring/alerts", bytes.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+	if w.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400 for missing fields, got %d: %s", w.Code, w.Body.String())
+	}
+}
+
 func TestMonitoringAlertCreateAndList(t *testing.T) {
 	_, handler, _ := setupMonitoringWithDB(t)
 
