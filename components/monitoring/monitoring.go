@@ -37,6 +37,15 @@ func (noopLogger) Warn(msg string, args ...any)  {}
 func (noopLogger) Error(msg string, args ...any) {}
 func (noopLogger) Debug(msg string, args ...any) {}
 
+type Alert struct {
+	ID        string  `json:"id"`
+	Name      string  `json:"name"`
+	Metric    string  `json:"metric"`
+	Threshold float64 `json:"threshold"`
+	Operator  string  `json:"operator"`
+	Enabled   bool    `json:"enabled"`
+}
+
 type LogEntry struct {
 	ID        string `json:"id"`
 	Level     string `json:"level"`
@@ -108,11 +117,21 @@ func (m *Monitoring) Start(ctx *kernel.Context) error {
 	if m.db == nil {
 		return nil
 	}
-	return m.db.Migrate(`CREATE TABLE IF NOT EXISTS monitoring_logs (
+	if err := m.db.Migrate(`CREATE TABLE IF NOT EXISTS monitoring_logs (
 		id TEXT PRIMARY KEY,
 		level TEXT NOT NULL DEFAULT 'info',
 		message TEXT NOT NULL,
 		created_at TEXT NOT NULL DEFAULT (datetime('now'))
+	)`); err != nil {
+		return err
+	}
+	return m.db.Migrate(`CREATE TABLE IF NOT EXISTS monitoring_alerts (
+		id TEXT PRIMARY KEY,
+		name TEXT NOT NULL,
+		metric TEXT NOT NULL,
+		threshold REAL NOT NULL DEFAULT 0,
+		operator TEXT NOT NULL DEFAULT 'gt',
+		enabled INTEGER NOT NULL DEFAULT 1
 	)`)
 }
 func (m *Monitoring) Stop(ctx *kernel.Context) error { return nil }
@@ -182,6 +201,7 @@ func (m *Monitoring) Handler() http.Handler {
 	mux.HandleFunc("/api/monitoring/metrics", m.handleMetrics)
 	mux.HandleFunc("/api/monitoring/logs", m.handleLogs)
 	mux.HandleFunc("/api/monitoring/logs/", m.handleLogByID)
+	mux.HandleFunc("/api/monitoring/alerts", m.handleAlerts)
 	return mux
 }
 
@@ -335,6 +355,81 @@ func (m *Monitoring) handleLogByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, http.StatusOK, l)
+}
+
+func (m *Monitoring) handleAlerts(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case "GET":
+		m.handleAlertList(w, r)
+	case "POST":
+		m.handleAlertCreate(w, r)
+	default:
+		writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
+	}
+}
+
+func (m *Monitoring) handleAlertCreate(w http.ResponseWriter, r *http.Request) {
+	if m.db == nil {
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "db not configured"})
+		return
+	}
+	var alert struct {
+		Name      string  `json:"name"`
+		Metric    string  `json:"metric"`
+		Threshold float64 `json:"threshold"`
+		Operator  string  `json:"operator"`
+		Enabled   bool    `json:"enabled"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&alert); err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid JSON"})
+		return
+	}
+	if alert.Name == "" || alert.Metric == "" {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "name and metric are required"})
+		return
+	}
+	id := fmt.Sprintf("%d", time.Now().UnixNano())
+	enabled := 0
+	if alert.Enabled {
+		enabled = 1
+	}
+	_, err := m.db.ExecContext(r.Context(),
+		"INSERT INTO monitoring_alerts (id, name, metric, threshold, operator, enabled) VALUES (?, ?, ?, ?, ?, ?)",
+		id, alert.Name, alert.Metric, alert.Threshold, alert.Operator, enabled)
+	if err != nil {
+		m.logger.Error("insert alert", "error", err)
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		return
+	}
+	writeJSON(w, http.StatusCreated, map[string]string{"id": id})
+}
+
+func (m *Monitoring) handleAlertList(w http.ResponseWriter, r *http.Request) {
+	if m.db == nil {
+		writeJSON(w, http.StatusOK, map[string]any{"data": []Alert{}})
+		return
+	}
+	rows, err := m.db.QueryContext(r.Context(),
+		"SELECT id, name, metric, threshold, operator, enabled FROM monitoring_alerts ORDER BY name")
+	if err != nil {
+		m.logger.Error("list alerts", "error", err)
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		return
+	}
+	defer rows.Close()
+
+	alerts := make([]Alert, 0)
+	for rows.Next() {
+		var a Alert
+		var enabled int
+		if err := rows.Scan(&a.ID, &a.Name, &a.Metric, &a.Threshold, &a.Operator, &enabled); err != nil {
+			m.logger.Error("scan alert", "error", err)
+			continue
+		}
+		a.Enabled = enabled == 1
+		alerts = append(alerts, a)
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"data": alerts})
 }
 
 func writeJSON(w http.ResponseWriter, status int, data any) {

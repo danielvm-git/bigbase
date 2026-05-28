@@ -198,6 +198,42 @@ func TestMonitoringLogWriteAndSearch(t *testing.T) {
 	}
 }
 
+func TestMonitoringAlertCreateAndList(t *testing.T) {
+	_, handler, _ := setupMonitoringWithDB(t)
+
+	alert := map[string]any{
+		"name":      "high error rate",
+		"metric":    "error_rate",
+		"threshold": 5.0,
+		"operator":  "gt",
+		"enabled":   true,
+	}
+	body, _ := json.Marshal(alert)
+	req := httptest.NewRequest("POST", "/api/monitoring/alerts", bytes.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+	if w.Code != http.StatusCreated {
+		t.Fatalf("expected 201, got %d: %s", w.Code, w.Body.String())
+	}
+
+	listReq := httptest.NewRequest("GET", "/api/monitoring/alerts", nil)
+	lw := httptest.NewRecorder()
+	handler.ServeHTTP(lw, listReq)
+	if lw.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", lw.Code, lw.Body.String())
+	}
+
+	var result map[string]any
+	if err := json.NewDecoder(lw.Body).Decode(&result); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	alerts, ok := result["data"].([]any)
+	if !ok || len(alerts) != 1 {
+		t.Fatalf("expected 1 alert, got %v", result)
+	}
+}
+
 func TestMonitoringDependenciesIncludeDB(t *testing.T) {
 	m := &monitoring.Monitoring{}
 	deps := m.Dependencies()
