@@ -21,6 +21,7 @@ import (
 	"github.com/danielvm/bigbase/components/functions"
 	"github.com/danielvm/bigbase/components/git"
 	"github.com/danielvm/bigbase/components/messaging"
+	"github.com/danielvm/bigbase/components/monitoring"
 	"github.com/danielvm/bigbase/components/proxy"
 	"github.com/danielvm/bigbase/components/realtime"
 	"github.com/danielvm/bigbase/components/storage"
@@ -115,6 +116,10 @@ func startProxy() {
 		DB:     d,
 		Logger: logger,
 	})
+	mComp := monitoring.New(monitoring.Options{
+		DB:     d,
+		Logger: logger,
+	})
 	rt := realtime.New(realtime.Options{
 		Logger: logger,
 		Validate: func(token string) (int64, error) {
@@ -138,13 +143,14 @@ func startProxy() {
 	k.Register(rt)
 	k.Register(msgComp)
 	k.Register(depComp)
+	k.Register(mComp)
 
 	// Register routes before kernel.Start to avoid race on proxy mux
 	publicAPI := a.Handler()
-	protectedAPI := authComp.Middleware(publicAPI)
-	storageHandler := authComp.Middleware(s.Handler())
-	gitHandler := authComp.Middleware(g.Handler())
-	forgeHandler := authComp.Middleware(f.Handler())
+	protectedAPI := mComp.Middleware(authComp.Middleware(publicAPI))
+	storageHandler := mComp.Middleware(authComp.Middleware(s.Handler()))
+	gitHandler := mComp.Middleware(authComp.Middleware(g.Handler()))
+	forgeHandler := mComp.Middleware(authComp.Middleware(f.Handler()))
 
 	p.Handle("/api/collections/", protectedAPI.ServeHTTP)
 	p.Handle("/api/sql", protectedAPI.ServeHTTP)
@@ -154,20 +160,25 @@ func startProxy() {
 	p.Handle("/api/git/repos", gitHandler.ServeHTTP)
 	p.Handle("/api/git/repos/", gitHandler.ServeHTTP)
 	p.Handle("/api/forge/", forgeHandler.ServeHTTP)
-	p.Handle("/api/cici/", authComp.Middleware(ci.Handler()).ServeHTTP)
-	p.Handle("/api/functions/", authComp.Middleware(fn.Handler()).ServeHTTP)
-	p.Handle("/api/functions", authComp.Middleware(fn.Handler()).ServeHTTP)
-	p.Handle("/api/messaging/", authComp.Middleware(msgComp.Handler()).ServeHTTP)
-	p.Handle("/api/deploy", authComp.Middleware(depComp.Handler()).ServeHTTP)
-	p.Handle("/api/deploy/", authComp.Middleware(depComp.Handler()).ServeHTTP)
-	p.Handle("/realtime", rt.Handler().ServeHTTP)
-	p.Handle("/api/auth/", authComp.Handler().ServeHTTP)
-	p.Handle("GET /api/auth/users", authComp.ProtectedHandler().ServeHTTP)
-	p.Handle("GET /api/auth/me", authComp.ProtectedHandler().ServeHTTP)
-	p.Handle("DELETE /api/auth/users/", authComp.ProtectedHandler().ServeHTTP)
+	p.Handle("/api/cici/", mComp.Middleware(authComp.Middleware(ci.Handler())).ServeHTTP)
+	p.Handle("/api/functions/", mComp.Middleware(authComp.Middleware(fn.Handler())).ServeHTTP)
+	p.Handle("/api/functions", mComp.Middleware(authComp.Middleware(fn.Handler())).ServeHTTP)
+	p.Handle("/api/messaging/", mComp.Middleware(authComp.Middleware(msgComp.Handler())).ServeHTTP)
+	p.Handle("/api/deploy", mComp.Middleware(authComp.Middleware(depComp.Handler())).ServeHTTP)
+	p.Handle("/api/deploy/", mComp.Middleware(authComp.Middleware(depComp.Handler())).ServeHTTP)
+	p.Handle("/realtime", mComp.Middleware(rt.Handler()).ServeHTTP)
+	p.Handle("/api/auth/", mComp.Middleware(authComp.Handler()).ServeHTTP)
+	p.Handle("GET /api/auth/users", mComp.Middleware(authComp.ProtectedHandler()).ServeHTTP)
+	p.Handle("GET /api/auth/me", mComp.Middleware(authComp.ProtectedHandler()).ServeHTTP)
+	p.Handle("DELETE /api/auth/users/", mComp.Middleware(authComp.ProtectedHandler()).ServeHTTP)
+	p.Handle("/api/monitoring/health", mComp.Handler().ServeHTTP)
+	p.Handle("/api/monitoring/metrics", authComp.Middleware(mComp.Handler()).ServeHTTP)
+	p.Handle("/api/monitoring/logs", authComp.Middleware(mComp.Handler()).ServeHTTP)
+	p.Handle("/api/monitoring/logs/", authComp.Middleware(mComp.Handler()).ServeHTTP)
+	p.Handle("/api/monitoring/alerts", authComp.Middleware(mComp.Handler()).ServeHTTP)
 	p.Handle("/admin/", http.StripPrefix("/admin/", ad.Handler()).ServeHTTP)
 
-	spaPaths := []string{"/repos", "/deploy", "/messaging", "/storage", "/functions", "/forge", "/cici", "/data", "/sql", "/users", "/login"}
+	spaPaths := []string{"/repos", "/deploy", "/messaging", "/storage", "/functions", "/forge", "/cici", "/monitoring", "/data", "/sql", "/users", "/login"}
 	for _, sp := range spaPaths {
 		path := sp
 		p.Handle("GET "+path, func(w http.ResponseWriter, r *http.Request) {

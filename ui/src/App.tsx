@@ -11,6 +11,7 @@ import StoragePage from './pages/StoragePage'
 import FunctionsPage from './pages/FunctionsPage'
 import ForgePage from './pages/ForgePage'
 import CiciPage from './pages/CiciPage'
+import MonitoringPage from './pages/MonitoringPage'
 import NotFoundPage from './pages/NotFoundPage'
 import Layout from './Layout'
 
@@ -29,6 +30,7 @@ function App() {
         <Route path="functions" element={<FunctionsPage />} />
         <Route path="forge" element={<ForgePage />} />
         <Route path="cici" element={<CiciPage />} />
+        <Route path="monitoring" element={<MonitoringPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Route>
       <Route path="login" element={<LoginPage />} />
