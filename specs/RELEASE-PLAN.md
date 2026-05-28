@@ -27,8 +27,15 @@ Google OAuth app próprio. Config via `--google-client-id` e
 | main.go | 2 flags: `--google-client-id`, `--google-client-secret` |
 | UI | Botão "Sign in with Google" na LoginPage com divider "or" |
 
+## Dashboard Aprimorado (completed)
+
+- **Stats grid** com contagens de repos, deploys, messages, files, functions
+- **Bar charts** CSS-only: deploys por status (running/failed/building/pending) e messages por canal (email/sms/push)
+- **Activity feed** com últimos 5 deployments e últimas 5 mensagens
+- **Storage total** formatado (KB/MB)
+- **System card** com contagem de componentes
+
 ## Próximos
 
-- Dashboard com métricas reais (gráficos de uso)
-- Notificações push/setup de provedores SMTP
-- UI para Monitoring (gráficos, alertas)
+- Notificações push/setup de provedores SMTP (email real)
+- UI para Monitoring (gráficos, alertas históricos)
