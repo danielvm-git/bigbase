@@ -1,9 +1,13 @@
 package monitoring
 
 import (
+	"context"
+	"database/sql"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"runtime"
+	"strings"
 	"sync"
 	"time"
 
@@ -11,6 +15,13 @@ import (
 )
 
 const version = "0.1.0"
+
+type DBer interface {
+	ExecContext(ctx context.Context, query string, args ...any) (sql.Result, error)
+	QueryContext(ctx context.Context, query string, args ...any) (*sql.Rows, error)
+	QueryRowContext(ctx context.Context, query string, args ...any) *sql.Row
+	Migrate(migration string) error
+}
 
 type Logger interface {
 	Info(msg string, args ...any)
@@ -25,6 +36,13 @@ func (noopLogger) Info(msg string, args ...any)  {}
 func (noopLogger) Warn(msg string, args ...any)  {}
 func (noopLogger) Error(msg string, args ...any) {}
 func (noopLogger) Debug(msg string, args ...any) {}
+
+type LogEntry struct {
+	ID        string `json:"id"`
+	Level     string `json:"level"`
+	Message   string `json:"message"`
+	CreatedAt string `json:"created_at"`
+}
 
 type SystemMetrics struct {
 	CPUPercent    float64 `json:"cpu_percent"`
@@ -55,11 +73,13 @@ type MetricsCollector struct {
 }
 
 type Monitoring struct {
-	logger   Logger
-	metrics  *MetricsCollector
+	db      DBer
+	logger  Logger
+	metrics *MetricsCollector
 }
 
 type Options struct {
+	DB     DBer
 	Logger Logger
 }
 
@@ -69,6 +89,7 @@ func New(opts Options) *Monitoring {
 		logger = noopLogger{}
 	}
 	return &Monitoring{
+		db:     opts.DB,
 		logger: logger,
 		metrics: &MetricsCollector{
 			startedAt: time.Now(),
@@ -79,12 +100,22 @@ func New(opts Options) *Monitoring {
 
 func (m *Monitoring) Name() string                  { return "monitoring" }
 func (m *Monitoring) Version() string               { return version }
-func (m *Monitoring) Dependencies() []string         { return nil }
+func (m *Monitoring) Dependencies() []string         { return []string{"db"} }
 func (m *Monitoring) ConfigSchema() json.RawMessage { return nil }
 func (m *Monitoring) Hooks() []kernel.HookDef        { return nil }
 func (m *Monitoring) Init(ctx *kernel.Context, config json.RawMessage) error { return nil }
-func (m *Monitoring) Start(ctx *kernel.Context) error { return nil }
-func (m *Monitoring) Stop(ctx *kernel.Context) error  { return nil }
+func (m *Monitoring) Start(ctx *kernel.Context) error {
+	if m.db == nil {
+		return nil
+	}
+	return m.db.Migrate(`CREATE TABLE IF NOT EXISTS monitoring_logs (
+		id TEXT PRIMARY KEY,
+		level TEXT NOT NULL DEFAULT 'info',
+		message TEXT NOT NULL,
+		created_at TEXT NOT NULL DEFAULT (datetime('now'))
+	)`)
+}
+func (m *Monitoring) Stop(ctx *kernel.Context) error { return nil }
 
 type statusRecorder struct {
 	http.ResponseWriter
@@ -149,6 +180,8 @@ func (m *Monitoring) Handler() http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/api/monitoring/health", m.handleHealth)
 	mux.HandleFunc("/api/monitoring/metrics", m.handleMetrics)
+	mux.HandleFunc("/api/monitoring/logs", m.handleLogs)
+	mux.HandleFunc("/api/monitoring/logs/", m.handleLogByID)
 	return mux
 }
 
@@ -207,6 +240,101 @@ func (m *Monitoring) handleMetrics(w http.ResponseWriter, r *http.Request) {
 			"avg_latency_ms": avgLatency,
 		},
 	})
+}
+
+func (m *Monitoring) handleLogs(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case "POST":
+		m.handleLogCreate(w, r)
+	case "GET":
+		m.handleLogSearch(w, r)
+	default:
+		writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
+	}
+}
+
+func (m *Monitoring) handleLogCreate(w http.ResponseWriter, r *http.Request) {
+	if m.db == nil {
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "db not configured"})
+		return
+	}
+	var entry struct {
+		Level   string `json:"level"`
+		Message string `json:"message"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&entry); err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid JSON"})
+		return
+	}
+	if entry.Level == "" {
+		entry.Level = "info"
+	}
+	id := fmt.Sprintf("%d", time.Now().UnixNano())
+	_, err := m.db.ExecContext(r.Context(),
+		"INSERT INTO monitoring_logs (id, level, message, created_at) VALUES (?, ?, ?, datetime('now'))",
+		id, entry.Level, entry.Message)
+	if err != nil {
+		m.logger.Error("insert log", "error", err)
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		return
+	}
+	writeJSON(w, http.StatusCreated, map[string]string{"id": id})
+}
+
+func (m *Monitoring) handleLogSearch(w http.ResponseWriter, r *http.Request) {
+	if m.db == nil {
+		writeJSON(w, http.StatusOK, map[string]any{"data": []LogEntry{}})
+		return
+	}
+	q := r.URL.Query().Get("q")
+	var rows *sql.Rows
+	var err error
+	if q != "" {
+		rows, err = m.db.QueryContext(r.Context(),
+			"SELECT id, level, message, created_at FROM monitoring_logs WHERE message LIKE ? ORDER BY created_at DESC LIMIT 100",
+			"%"+q+"%")
+	} else {
+		rows, err = m.db.QueryContext(r.Context(),
+			"SELECT id, level, message, created_at FROM monitoring_logs ORDER BY created_at DESC LIMIT 100")
+	}
+	if err != nil {
+		m.logger.Error("search logs", "error", err)
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		return
+	}
+	defer rows.Close()
+
+	logs := make([]LogEntry, 0)
+	for rows.Next() {
+		var l LogEntry
+		if err := rows.Scan(&l.ID, &l.Level, &l.Message, &l.CreatedAt); err != nil {
+			m.logger.Error("scan log", "error", err)
+			continue
+		}
+		logs = append(logs, l)
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"data": logs})
+}
+
+func (m *Monitoring) handleLogByID(w http.ResponseWriter, r *http.Request) {
+	id := strings.TrimPrefix(r.URL.Path, "/api/monitoring/logs/")
+	if id == "" || strings.Contains(id, "/") {
+		writeJSON(w, http.StatusNotFound, map[string]string{"error": "not found"})
+		return
+	}
+	if m.db == nil {
+		writeJSON(w, http.StatusNotFound, map[string]string{"error": "not found"})
+		return
+	}
+	var l LogEntry
+	err := m.db.QueryRowContext(r.Context(),
+		"SELECT id, level, message, created_at FROM monitoring_logs WHERE id = ?", id).
+		Scan(&l.ID, &l.Level, &l.Message, &l.CreatedAt)
+	if err != nil {
+		writeJSON(w, http.StatusNotFound, map[string]string{"error": "log not found"})
+		return
+	}
+	writeJSON(w, http.StatusOK, l)
 }
 
 func writeJSON(w http.ResponseWriter, status int, data any) {
