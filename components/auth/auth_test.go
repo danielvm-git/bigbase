@@ -507,6 +507,60 @@ func TestDeleteUserWrongMethod(t *testing.T) {
 	}
 }
 
+func TestHandleMe(t *testing.T) {
+	_, handler, protected := setupAuth(t)
+
+	regReq := httptest.NewRequest("POST", "/api/auth/register", strings.NewReader(`{"email":"me@test.com","password":"secret123"}`))
+	regReq.Header.Set("Content-Type", "application/json")
+	regW := httptest.NewRecorder()
+	handler.ServeHTTP(regW, regReq)
+	if regW.Code != http.StatusCreated {
+		t.Fatalf("register: %d", regW.Code)
+	}
+
+	loginReq := httptest.NewRequest("POST", "/api/auth/login", strings.NewReader(`{"email":"me@test.com","password":"secret123"}`))
+	loginReq.Header.Set("Content-Type", "application/json")
+	loginW := httptest.NewRecorder()
+	handler.ServeHTTP(loginW, loginReq)
+	resp := parseResponse(t, loginW.Body.Bytes())
+	token, _ := resp["token"].(string)
+	if token == "" {
+		t.Fatal("expected non-empty token")
+	}
+
+	req := httptest.NewRequest("GET", "/api/auth/me", nil)
+	req.Header.Set("Authorization", "Bearer "+token)
+	w := httptest.NewRecorder()
+	protected.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", w.Code, w.Body.String())
+	}
+
+	var body map[string]any
+	if err := json.NewDecoder(w.Body).Decode(&body); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	if body["email"] != "me@test.com" {
+		t.Fatalf("expected email 'me@test.com', got '%v'", body["email"])
+	}
+	if _, ok := body["id"]; !ok {
+		t.Fatal("expected id in response")
+	}
+}
+
+func TestHandleMeUnauthenticated(t *testing.T) {
+	_, _, protected := setupAuth(t)
+
+	req := httptest.NewRequest("GET", "/api/auth/me", nil)
+	w := httptest.NewRecorder()
+	protected.ServeHTTP(w, req)
+
+	if w.Code != http.StatusUnauthorized {
+		t.Fatalf("expected 401, got %d", w.Code)
+	}
+}
+
 func TestMiddlewareBadToken(t *testing.T) {
 	a, _, _ := setupAuth(t)
 

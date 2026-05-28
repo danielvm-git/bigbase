@@ -163,8 +163,17 @@ func startProxy() {
 	p.Handle("/realtime", rt.Handler().ServeHTTP)
 	p.Handle("/api/auth/", authComp.Handler().ServeHTTP)
 	p.Handle("GET /api/auth/users", authComp.ProtectedHandler().ServeHTTP)
+	p.Handle("GET /api/auth/me", authComp.ProtectedHandler().ServeHTTP)
 	p.Handle("DELETE /api/auth/users/", authComp.ProtectedHandler().ServeHTTP)
 	p.Handle("/admin/", http.StripPrefix("/admin/", ad.Handler()).ServeHTTP)
+
+	spaPaths := []string{"/repos", "/deploy", "/messaging", "/storage", "/functions", "/forge", "/cici", "/data", "/sql", "/users", "/login"}
+	for _, sp := range spaPaths {
+		path := sp
+		p.Handle("GET "+path, func(w http.ResponseWriter, r *http.Request) {
+			http.Redirect(w, r, "/admin/#"+path, http.StatusFound)
+		})
+	}
 
 	if err := k.Start(); err != nil {
 		logger.Error("failed to start kernel", "error", err)

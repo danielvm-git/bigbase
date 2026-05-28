@@ -291,7 +291,7 @@ func (d *Deploy) runDeployment(deploy *Deployment, buildDir, repoName string) {
 	if appType == AppStatic {
 		d.updateStatus(deploy.ID, "running")
 		d.updateURL(deploy.ID, deploy.Port)
-		go d.serveStatic(ctx, buildDir, deploy)
+		go d.serveStatic(context.Background(), buildDir, deploy)
 		return
 	}
 
@@ -301,9 +301,25 @@ func (d *Deploy) runDeployment(deploy *Deployment, buildDir, repoName string) {
 		return
 	}
 
+	serveDir := buildDir
+	if appType == AppNode {
+		if _, err := os.Stat(filepath.Join(buildDir, "dist")); err == nil {
+			serveDir = filepath.Join(buildDir, "dist")
+			appType = AppStatic
+			deploy.AppType = AppStatic
+			_, _ = d.db.ExecContext(context.Background(),
+				"UPDATE deployments SET app_type = ? WHERE id = ?", string(AppStatic), deploy.ID)
+		}
+	}
+
 	d.updateStatus(deploy.ID, "running")
 	d.updateURL(deploy.ID, deploy.Port)
-	go d.startApp(ctx, buildDir, deploy, appType)
+
+	if appType == AppStatic {
+		go d.serveStatic(context.Background(), serveDir, deploy)
+	} else {
+		go d.startApp(context.Background(), serveDir, deploy, appType)
+	}
 }
 
 func (d *Deploy) cloneAndCheckout(ctx context.Context, repoPath, buildDir, branch string) error {
@@ -338,10 +354,16 @@ func (d *Deploy) getCommitSHA(buildDir string) (string, error) {
 func (d *Deploy) buildApp(ctx context.Context, buildDir string, appType AppType) error {
 	switch appType {
 	case AppNode:
-		cmd := exec.CommandContext(ctx, "npm", "run", "build")
-		cmd.Dir = buildDir
-		cmd.Stderr = nil
-		return cmd.Run()
+		install := exec.CommandContext(ctx, "npm", "install")
+		install.Dir = buildDir
+		install.Stderr = nil
+		if err := install.Run(); err != nil {
+			return fmt.Errorf("npm install: %w", err)
+		}
+		build := exec.CommandContext(ctx, "npm", "run", "build")
+		build.Dir = buildDir
+		build.Stderr = nil
+		return build.Run()
 	case AppGo:
 		cmd := exec.CommandContext(ctx, "go", "build", "-o", "app", ".")
 		cmd.Dir = buildDir
@@ -360,7 +382,7 @@ func (d *Deploy) startApp(ctx context.Context, buildDir string, deploy *Deployme
 
 	switch appType {
 	case AppNode:
-		startCmd := getStartCommand(buildDir)
+		startCmd := GetStartCommand(buildDir)
 		cmd = exec.CommandContext(ctx, "npm", "exec", "--", startCmd)
 		cmd.Dir = buildDir
 	case AppGo:
@@ -443,7 +465,7 @@ func DetectAppType(buildDir string) AppType {
 	return AppStatic
 }
 
-func getStartCommand(buildDir string) string {
+func GetStartCommand(buildDir string) string {
 	data, err := os.ReadFile(filepath.Join(buildDir, "package.json"))
 	if err != nil {
 		return "node index.js"

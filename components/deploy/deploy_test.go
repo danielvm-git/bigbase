@@ -10,6 +10,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/danielvm/bigbase/components/db"
 	"github.com/danielvm/bigbase/components/deploy"
@@ -377,5 +378,182 @@ func TestDetectAppTypeUnknownFallbackToStatic(t *testing.T) {
 	dir := t.TempDir()
 	if got := deploy.DetectAppType(dir); got != "static" {
 		t.Fatalf("expected 'static' fallback, got '%s'", got)
+	}
+}
+
+func TestGetStartCommandWithStartScript(t *testing.T) {
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, "package.json"), []byte(`{"scripts":{"start":"node server.js"}}`), 0644); err != nil {
+		t.Fatal(err)
+	}
+	if got := deploy.GetStartCommand(dir); got != "node" {
+		t.Fatalf("expected 'node', got '%s'", got)
+	}
+}
+
+func TestGetStartCommandNoStartScript(t *testing.T) {
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, "package.json"), []byte(`{"name":"test"}`), 0644); err != nil {
+		t.Fatal(err)
+	}
+	if got := deploy.GetStartCommand(dir); got != "node index.js" {
+		t.Fatalf("expected 'node index.js', got '%s'", got)
+	}
+}
+
+func TestGetStartCommandNoPackageJSON(t *testing.T) {
+	dir := t.TempDir()
+	if got := deploy.GetStartCommand(dir); got != "node index.js" {
+		t.Fatalf("expected 'node index.js', got '%s'", got)
+	}
+}
+
+func TestGetStartCommandMalformedJSON(t *testing.T) {
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, "package.json"), []byte(`not json`), 0644); err != nil {
+		t.Fatal(err)
+	}
+	if got := deploy.GetStartCommand(dir); got != "node index.js" {
+		t.Fatalf("expected 'node index.js' fallback, got '%s'", got)
+	}
+}
+
+func TestUpdateURLUpdatesPort(t *testing.T) {
+	_, handler, database, gitDir := setupDeploy(t)
+	repoID := createTestRepo(t, database, "repo-url-test", gitDir)
+
+	var buf bytes.Buffer
+	_ = json.NewEncoder(&buf).Encode(map[string]string{"repo_id": repoID})
+	req := httptest.NewRequest("POST", "/api/deploy", &buf)
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+	if w.Code != http.StatusCreated {
+		t.Fatalf("expected 201, got %d", w.Code)
+	}
+
+	var created map[string]any
+	_ = json.NewDecoder(w.Body).Decode(&created)
+	depID := created["id"].(string)
+
+	// Wait briefly for async deployment to begin processing
+	time.Sleep(500 * time.Millisecond)
+
+	// List and verify deployment has a URL
+	listReq := httptest.NewRequest("GET", "/api/deploy/"+depID, nil)
+	listW := httptest.NewRecorder()
+	handler.ServeHTTP(listW, listReq)
+	if listW.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d", listW.Code)
+	}
+
+	var got map[string]any
+	_ = json.NewDecoder(listW.Body).Decode(&got)
+	if url, ok := got["url"]; !ok || url == "" {
+		t.Fatalf("expected non-empty url after deployment, got: %v", got)
+	}
+	if port, ok := got["port"]; !ok || port == float64(0) {
+		t.Fatalf("expected non-zero port, got: %v", got)
+	}
+}
+
+func TestRunDeploymentRepoNotFoundOnDisk(t *testing.T) {
+	// Use setupDeploy which creates the kernel + db + git_stub
+	// Create a repo in the DB but without a corresponding bare git repo on disk
+	_, handler, database, gitDir := setupDeploy(t)
+
+	// Manually insert a repo row - no bare repo created
+	_, err := database.ExecContext(context.Background(),
+		`CREATE TABLE IF NOT EXISTS git_repos (
+			id TEXT PRIMARY KEY, name TEXT NOT NULL UNIQUE, owner_id INTEGER NOT NULL,
+			private INTEGER NOT NULL DEFAULT 1, default_branch TEXT NOT NULL DEFAULT 'main',
+			description TEXT DEFAULT '', created_at TEXT NOT NULL DEFAULT (datetime('now'))
+		)`)
+	if err != nil {
+		t.Fatalf("create git_repos table: %v", err)
+	}
+
+	// Insert but DON'T call createTestRepo (which creates the bare git repo)
+	_, err = database.ExecContext(context.Background(),
+		"INSERT OR IGNORE INTO git_repos (id, name, owner_id, private, default_branch, description, created_at) VALUES (?, ?, ?, ?, ?, ?, datetime('now'))",
+		"repo-no-clone", "no-clone-repo", 0, 1, "main", "")
+	if err != nil {
+		t.Fatalf("insert repo: %v", err)
+	}
+	_ = gitDir
+
+	var buf bytes.Buffer
+	_ = json.NewEncoder(&buf).Encode(map[string]string{"repo_id": "repo-no-clone"})
+	req := httptest.NewRequest("POST", "/api/deploy", &buf)
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+	if w.Code != http.StatusCreated {
+		t.Fatalf("expected 201, got %d: %s", w.Code, w.Body.String())
+	}
+
+	var created map[string]any
+	_ = json.NewDecoder(w.Body).Decode(&created)
+	depID := created["id"].(string)
+
+	// Wait for async runDeployment to try cloning and fail
+	time.Sleep(1 * time.Second)
+
+	getReq := httptest.NewRequest("GET", "/api/deploy/"+depID, nil)
+	getW := httptest.NewRecorder()
+	handler.ServeHTTP(getW, getReq)
+	if getW.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d", getW.Code)
+	}
+
+	var got map[string]any
+	_ = json.NewDecoder(getW.Body).Decode(&got)
+	if got["status"] != "failed" {
+		t.Fatalf("expected status 'failed' for repo without git dir, got '%s'", got["status"])
+	}
+}
+
+func TestRunDeploymentStaticSite(t *testing.T) {
+	dep, handler, database, gitDir := setupDeploy(t)
+	_ = dep
+
+	// Create a repo with an index.html (detected as static)
+	repoID := createTestRepo(t, database, "repo-static-test", gitDir)
+
+	var buf bytes.Buffer
+	_ = json.NewEncoder(&buf).Encode(map[string]string{"repo_id": repoID})
+	req := httptest.NewRequest("POST", "/api/deploy", &buf)
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+	if w.Code != http.StatusCreated {
+		t.Fatalf("expected 201, got %d: %s", w.Code, w.Body.String())
+	}
+
+	var created map[string]any
+	_ = json.NewDecoder(w.Body).Decode(&created)
+	depID := created["id"].(string)
+
+	// Wait for async deploy (clone + detect static + serve)
+	time.Sleep(2 * time.Second)
+
+	getReq := httptest.NewRequest("GET", "/api/deploy/"+depID, nil)
+	getW := httptest.NewRecorder()
+	handler.ServeHTTP(getW, getReq)
+	if getW.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d", getW.Code)
+	}
+
+	var got map[string]any
+	_ = json.NewDecoder(getW.Body).Decode(&got)
+
+	if got["status"] != "running" {
+		t.Fatalf("expected status 'running', got '%s'", got["status"])
+	}
+	if appType, ok := got["app_type"]; !ok || appType != "static" {
+		t.Fatalf("expected app_type 'static', got '%v'", appType)
+	}
+	if url, ok := got["url"]; !ok || url == "" {
+		t.Fatalf("expected non-empty url, got: %v", got)
 	}
 }

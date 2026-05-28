@@ -23,6 +23,13 @@ export default function Layout() {
           <li><Link to="/data">Data Studio</Link></li>
           <li><Link to="/sql">SQL Editor</Link></li>
           <li><Link to="/users">Users</Link></li>
+          <li><Link to="/repos">Git Repos</Link></li>
+          <li><Link to="/deploy">Deploy</Link></li>
+          <li><Link to="/messaging">Messaging</Link></li>
+          <li><Link to="/storage">Storage</Link></li>
+          <li><Link to="/functions">Functions</Link></li>
+          <li><Link to="/forge">Forge</Link></li>
+          <li><Link to="/cici">CI/CD</Link></li>
         </ul>
         <div className="spacer" />
         <button className="logout-btn" onClick={handleLogout}>Logout</button>

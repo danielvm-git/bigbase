@@ -20,6 +20,8 @@ var internalTables = map[string]bool{
 	"git_repos": true, "git_ssh_keys": true,
 	"forge_issues": true, "forge_labels": true,
 	"forge_comments": true, "forge_wiki": true,
+	"cici_logs": true, "cici_runs": true, "cici_workflows": true,
+	"deployments": true, "functions": true, "messages": true,
 }
 
 type Logger interface {
@@ -114,6 +116,11 @@ func (a *API) handleCollection(w http.ResponseWriter, r *http.Request) {
 	collection, err := sanitize(parts[0])
 	if err != nil {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+		return
+	}
+
+	if internalTables[collection] {
+		writeJSON(w, http.StatusNotFound, map[string]string{"error": "not found"})
 		return
 	}
 

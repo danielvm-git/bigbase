@@ -452,6 +452,86 @@ func TestAPIListRecordsPagination(t *testing.T) {
 	}
 }
 
+func TestAPIComponentTableExcludedFromCollections(t *testing.T) {
+	logger := testLogger{}
+	k := kernel.New(logger)
+	d := db.New(db.Options{Path: ":memory:", Logger: logger})
+	a := api.New(api.Options{DB: d, Logger: logger})
+	k.Register(a)
+	k.Register(d)
+	if err := k.Start(); err != nil {
+		t.Fatalf("kernel start: %v", err)
+	}
+	t.Cleanup(func() { _ = k.Stop() })
+
+	// Simulate another component creating a table with a name matching internalTables
+	if err := d.Migrate("CREATE TABLE deployments (id TEXT PRIMARY KEY, repo_id TEXT, status TEXT)"); err != nil {
+		t.Fatalf("create component table: %v", err)
+	}
+
+	// Create a user collection to verify it still appears
+	if err := d.Migrate("CREATE TABLE mydata (id INTEGER PRIMARY KEY AUTOINCREMENT, data TEXT)"); err != nil {
+		t.Fatalf("create user collection: %v", err)
+	}
+
+	req := httptest.NewRequest("GET", "/api/collections/", nil)
+	w := httptest.NewRecorder()
+	a.Handler().ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", w.Code, w.Body.String())
+	}
+
+	var resp map[string][]string
+	if err := json.NewDecoder(w.Body).Decode(&resp); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+
+	for _, name := range resp["data"] {
+		if name == "deployments" {
+			t.Fatal("component table 'deployments' should be excluded from collections")
+		}
+	}
+
+	found := false
+	for _, name := range resp["data"] {
+		if name == "mydata" {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Fatal("user collection 'mydata' should still appear in collections")
+	}
+}
+
+func TestAPIComponentTableAccessNoCrash(t *testing.T) {
+	logger := testLogger{}
+	k := kernel.New(logger)
+	d := db.New(db.Options{Path: ":memory:", Logger: logger})
+	a := api.New(api.Options{DB: d, Logger: logger})
+	k.Register(a)
+	k.Register(d)
+	if err := k.Start(); err != nil {
+		t.Fatalf("kernel start: %v", err)
+	}
+	t.Cleanup(func() { _ = k.Stop() })
+
+	// Create a component-style table with different schema
+	if err := d.Migrate("CREATE TABLE functions (id TEXT PRIMARY KEY, name TEXT, runtime TEXT)"); err != nil {
+		t.Fatalf("create component table: %v", err)
+	}
+
+	// Accessing a component table directly should not crash with 500
+	req := httptest.NewRequest("GET", "/api/collections/functions", nil)
+	w := httptest.NewRecorder()
+	a.Handler().ServeHTTP(w, req)
+
+	if w.Code == http.StatusInternalServerError {
+		t.Fatalf("expected no 500 when accessing component table, got %d: %s", w.Code, w.Body.String())
+	}
+}
+
 func TestAPIDeleteNonExistentRecord(t *testing.T) {
 	_, handler := setupAPI(t)
 
