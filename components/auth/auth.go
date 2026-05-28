@@ -4,10 +4,12 @@ import (
 	"context"
 	"crypto/rand"
 	"database/sql"
+	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
@@ -34,6 +36,17 @@ type authRequest struct {
 	Password string `json:"password"`
 }
 
+type GoogleUser struct {
+	GoogleID string
+	Email    string
+	Name     string
+	Avatar   string
+}
+
+type GoogleVerifier interface {
+	Verify(ctx context.Context, code string) (*GoogleUser, error)
+}
+
 type Logger interface {
 	Info(msg string, args ...any)
 	Error(msg string, args ...any)
@@ -54,15 +67,24 @@ type DBer interface {
 }
 
 type Options struct {
-	DB     DBer
-	Logger Logger
-	Secret string
+	DB                DBer
+	Logger            Logger
+	Secret            string
+	GoogleClientID    string
+	GoogleClientSecret string
 }
 
 type Auth struct {
-	db     DBer
-	logger Logger
-	secret []byte
+	db                DBer
+	logger            Logger
+	secret            []byte
+	googleClientID    string
+	googleClientSecret string
+	googleVerifier    GoogleVerifier
+}
+
+func (a *Auth) SetGoogleVerifier(v GoogleVerifier) {
+	a.googleVerifier = v
 }
 
 func New(opts Options) *Auth {
@@ -83,9 +105,11 @@ func New(opts Options) *Auth {
 		secret = []byte(hex.EncodeToString(raw))
 	}
 	return &Auth{
-		db:     opts.DB,
-		logger: logger,
-		secret: secret,
+		db:                opts.DB,
+		logger:            logger,
+		secret:            secret,
+		googleClientID:    opts.GoogleClientID,
+		googleClientSecret: opts.GoogleClientSecret,
 	}
 }
 
@@ -114,6 +138,8 @@ func (a *Auth) Start(ctx *kernel.Context) error {
 		return fmt.Errorf("migrate users table: %w", err)
 	}
 	_ = a.db.Migrate("ALTER TABLE users ADD COLUMN role TEXT NOT NULL DEFAULT 'user'")
+	_ = a.db.Migrate("ALTER TABLE users ADD COLUMN google_id TEXT DEFAULT ''")
+	_ = a.db.Migrate("ALTER TABLE users ADD COLUMN avatar_url TEXT DEFAULT ''")
 	a.logger.Info("auth component ready")
 	return nil
 }
@@ -126,6 +152,8 @@ func (a *Auth) Handler() http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/api/auth/register", a.handleRegister)
 	mux.HandleFunc("/api/auth/login", a.handleLogin)
+	mux.HandleFunc("/api/auth/oauth/google", a.handleGoogleOAuth)
+	mux.HandleFunc("/api/auth/oauth/google/callback", a.handleGoogleCallback)
 	return mux
 }
 
@@ -412,6 +440,206 @@ func (a *Auth) handleMe(w http.ResponseWriter, r *http.Request) {
 		"id":    userID,
 		"email": email,
 	})
+}
+
+func (a *Auth) handleGoogleOAuth(w http.ResponseWriter, r *http.Request) {
+	if a.googleClientID == "" {
+		writeJSON(w, http.StatusNotFound, map[string]string{"error": "not found"})
+		return
+	}
+	state, _ := generateID()
+	scheme := "http"
+	if r.TLS != nil {
+		scheme = "https"
+	}
+	redirectURI := fmt.Sprintf("%s://%s/api/auth/oauth/google/callback", scheme, r.Host)
+	url := fmt.Sprintf("https://accounts.google.com/o/oauth2/v2/auth?client_id=%s&redirect_uri=%s&response_type=code&scope=openid+email+profile&state=%s",
+		a.googleClientID, url.QueryEscape(redirectURI), state)
+	http.Redirect(w, r, url, http.StatusFound)
+}
+
+func (a *Auth) handleGoogleCallback(w http.ResponseWriter, r *http.Request) {
+	if a.googleClientID == "" {
+		writeJSON(w, http.StatusNotFound, map[string]string{"error": "not found"})
+		return
+	}
+
+	code := r.URL.Query().Get("code")
+	if code == "" {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "code required"})
+		return
+	}
+
+	verifier := a.googleVerifier
+	if verifier == nil {
+		scheme := "http"
+		if r.TLS != nil {
+			scheme = "https"
+		}
+		verifier = &realGoogleVerifier{
+			clientID:     a.googleClientID,
+			clientSecret: a.googleClientSecret,
+			redirectURI:  fmt.Sprintf("%s://%s/api/auth/oauth/google/callback", scheme, r.Host),
+		}
+	}
+
+	googleUser, err := verifier.Verify(r.Context(), code)
+	if err != nil {
+		a.logger.Error("google token verification failed", "error", err)
+		writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "google auth failed"})
+		return
+	}
+
+	userID, err := a.findOrCreateGoogleUser(r.Context(), googleUser)
+	if err != nil {
+		a.logger.Error("find or create google user", "error", err)
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		return
+	}
+
+	token, err := createJWT(userID, googleUser.Email, "user", a.secret)
+	if err != nil {
+		a.logger.Error("create jwt", "error", err)
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		return
+	}
+
+	http.SetCookie(w, &http.Cookie{
+		Name:     "token",
+		Value:    token,
+		HttpOnly: true,
+		Path:     "/",
+		MaxAge:   86400,
+	})
+	http.Redirect(w, r, "/admin/", http.StatusFound)
+}
+
+func (a *Auth) findOrCreateGoogleUser(ctx context.Context, gu *GoogleUser) (int64, error) {
+	if gu.GoogleID != "" {
+		var existingID int64
+		err := a.db.QueryRowContext(ctx, "SELECT id FROM users WHERE google_id = ?", gu.GoogleID).Scan(&existingID)
+		if err == nil {
+			return existingID, nil
+		}
+	}
+
+	if gu.Email != "" {
+		var existingID int64
+		var existingGoogleID string
+		err := a.db.QueryRowContext(ctx, "SELECT id, COALESCE(google_id,'') FROM users WHERE email = ?", gu.Email).Scan(&existingID, &existingGoogleID)
+		if err == nil {
+			if existingGoogleID == "" || existingGoogleID != gu.GoogleID {
+				_, _ = a.db.ExecContext(ctx, "UPDATE users SET google_id = ?, avatar_url = ? WHERE id = ?", gu.GoogleID, gu.Avatar, existingID)
+			}
+			return existingID, nil
+		}
+	}
+
+	passwordHash, _ := hashPassword(generateTempPass())
+	now := time.Now().UTC().Format(time.RFC3339)
+	res, err := a.db.ExecContext(ctx,
+		"INSERT INTO users (email, password_hash, google_id, avatar_url, role, created_at) VALUES (?, ?, ?, ?, 'user', ?)",
+		gu.Email, passwordHash, gu.GoogleID, gu.Avatar, now)
+	if err != nil {
+		return 0, fmt.Errorf("insert google user: %w", err)
+	}
+	return res.LastInsertId()
+}
+
+type realGoogleVerifier struct {
+	clientID     string
+	clientSecret string
+	redirectURI  string
+}
+
+func (v *realGoogleVerifier) Verify(ctx context.Context, code string) (*GoogleUser, error) {
+	body := fmt.Sprintf("code=%s&client_id=%s&client_secret=%s&redirect_uri=%s&grant_type=authorization_code",
+		code, v.clientID, v.clientSecret, v.redirectURI)
+	req, err := http.NewRequestWithContext(ctx, "POST", "https://oauth2.googleapis.com/token", strings.NewReader(body))
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("google token request: %w", err)
+	}
+	defer func() { _ = resp.Body.Close() }()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("google token error: status %d", resp.StatusCode)
+	}
+
+	var tokenResp struct {
+		IDToken string `json:"id_token"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&tokenResp); err != nil {
+		return nil, fmt.Errorf("decode token response: %w", err)
+	}
+
+	claims, err := decodeGoogleIDToken(tokenResp.IDToken)
+	if err != nil {
+		return nil, err
+	}
+
+	return &GoogleUser{
+		GoogleID: claims.Sub,
+		Email:    claims.Email,
+		Name:     claims.Name,
+		Avatar:   claims.Picture,
+	}, nil
+}
+
+type googleIDClaims struct {
+	Sub     string `json:"sub"`
+	Email   string `json:"email"`
+	Name    string `json:"name"`
+	Picture string `json:"picture"`
+}
+
+func decodeGoogleIDToken(token string) (*googleIDClaims, error) {
+	parts := strings.Split(token, ".")
+	if len(parts) != 3 {
+		return nil, fmt.Errorf("invalid id_token: expected 3 parts, got %d", len(parts))
+	}
+
+	payload, err := jwtDecodePart(parts[1])
+	if err != nil {
+		return nil, fmt.Errorf("decode id_token payload: %w", err)
+	}
+
+	var claims googleIDClaims
+	if err := json.Unmarshal(payload, &claims); err != nil {
+		return nil, fmt.Errorf("parse id_token claims: %w", err)
+	}
+	return &claims, nil
+}
+
+// jwtDecodePart decodes a base64url-encoded JWT part without padding
+func jwtDecodePart(part string) ([]byte, error) {
+	// Add padding if needed
+	switch len(part) % 4 {
+	case 2:
+		part += "=="
+	case 3:
+		part += "="
+	}
+	return base64.RawURLEncoding.DecodeString(part)
+}
+
+func generateID() (string, error) {
+	b := make([]byte, 16)
+	if _, err := rand.Read(b); err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(b), nil
+}
+
+func generateTempPass() string {
+	b := make([]byte, 16)
+	_, _ = rand.Read(b)
+	return hex.EncodeToString(b)
 }
 
 func writeJSON(w http.ResponseWriter, status int, data any) {

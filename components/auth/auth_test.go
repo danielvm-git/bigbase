@@ -507,6 +507,133 @@ func TestDeleteUserWrongMethod(t *testing.T) {
 	}
 }
 
+type mockGoogleVerifier struct {
+	user *auth.GoogleUser
+	err  error
+}
+
+func (m *mockGoogleVerifier) Verify(ctx context.Context, code string) (*auth.GoogleUser, error) {
+	return m.user, m.err
+}
+
+func setupAuthWithGoogle(t *testing.T) (*auth.Auth, http.Handler, http.Handler) {
+	t.Helper()
+	logger := testLogger{}
+	k := kernel.New(logger)
+
+	d := db.New(db.Options{Path: ":memory:", Logger: logger})
+	a := auth.New(auth.Options{
+		DB:                d,
+		Logger:            logger,
+		Secret:            "test-secret-32-chars!!!",
+		GoogleClientID:    "test-client-id",
+		GoogleClientSecret: "test-client-secret",
+	})
+
+	k.Register(a)
+	k.Register(d)
+
+	if err := k.Start(); err != nil {
+		t.Fatalf("kernel start: %v", err)
+	}
+	t.Cleanup(func() { _ = k.Stop() })
+
+	a.SetGoogleVerifier(&mockGoogleVerifier{
+		user: &auth.GoogleUser{GoogleID: "google-123", Email: "oauth@test.com", Name: "OAuth User", Avatar: ""},
+	})
+
+	return a, a.Handler(), a.ProtectedHandler()
+}
+
+func TestGoogleCallbackCreatesUser(t *testing.T) {
+	a, handler, _ := setupAuthWithGoogle(t)
+
+	req := httptest.NewRequest("GET", "/api/auth/oauth/google/callback?code=testcode", nil)
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+
+	if w.Code != http.StatusFound {
+		t.Fatalf("expected 302 redirect, got %d: %s", w.Code, w.Body.String())
+	}
+
+	loc := w.Header().Get("Location")
+	if loc != "/admin/" {
+		t.Fatalf("expected redirect to /admin/, got %q", loc)
+	}
+
+	cookies := w.Result().Cookies()
+	var tokenCookie string
+	for _, c := range cookies {
+		if c.Name == "token" {
+			tokenCookie = c.Value
+			break
+		}
+	}
+	if tokenCookie == "" {
+		t.Fatal("expected token cookie in response")
+	}
+
+	claims, err := a.ValidateToken(tokenCookie)
+	if err != nil {
+		t.Fatalf("validate token: %v", err)
+	}
+	if claims.Email != "oauth@test.com" {
+		t.Fatalf("expected email 'oauth@test.com', got %q", claims.Email)
+	}
+}
+
+func TestGoogleCallbackLinksExistingUser(t *testing.T) {
+	a, handler, _ := setupAuthWithGoogle(t)
+
+	regReq := httptest.NewRequest("POST", "/api/auth/register", strings.NewReader(`{"email":"oauth@test.com","password":"secret123"}`))
+	regReq.Header.Set("Content-Type", "application/json")
+	regW := httptest.NewRecorder()
+	handler.ServeHTTP(regW, regReq)
+	if regW.Code != http.StatusCreated {
+		t.Fatalf("register: %d", regW.Code)
+	}
+
+	req := httptest.NewRequest("GET", "/api/auth/oauth/google/callback?code=testcode", nil)
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+
+	if w.Code != http.StatusFound {
+		t.Fatalf("expected 302 redirect, got %d: %s", w.Code, w.Body.String())
+	}
+
+	cookies := w.Result().Cookies()
+	var tokenCookie string
+	for _, c := range cookies {
+		if c.Name == "token" {
+			tokenCookie = c.Value
+			break
+		}
+	}
+	if tokenCookie == "" {
+		t.Fatal("expected token cookie")
+	}
+
+	claims, err := a.ValidateToken(tokenCookie)
+	if err != nil {
+		t.Fatalf("validate token: %v", err)
+	}
+	if claims.Email != "oauth@test.com" {
+		t.Fatalf("expected email 'oauth@test.com', got %q", claims.Email)
+	}
+}
+
+func TestGoogleOAuthDisabledWhenNoConfig(t *testing.T) {
+	_, handler, _ := setupAuth(t)
+
+	req := httptest.NewRequest("GET", "/api/auth/oauth/google", nil)
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+
+	if w.Code != http.StatusNotFound {
+		t.Fatalf("expected 404 when google auth not configured, got %d", w.Code)
+	}
+}
+
 func TestHandleMe(t *testing.T) {
 	_, handler, protected := setupAuth(t)
 

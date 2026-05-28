@@ -79,6 +79,8 @@ func startProxy() {
 	serveFS := flag.NewFlagSet("serve", flag.ContinueOnError)
 	port := serveFS.String("port", "8080", "HTTP server port")
 	dbPath := serveFS.String("db", "bigbase.db", "SQLite database path")
+	googleClientID := serveFS.String("google-client-id", "", "Google OAuth client ID")
+	googleClientSecret := serveFS.String("google-client-secret", "", "Google OAuth client secret")
 	_ = serveFS.Parse(os.Args[2:])
 
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo}))
@@ -98,8 +100,10 @@ func startProxy() {
 		Logger: logger,
 	})
 	authComp := auth.New(auth.Options{
-		DB:     d,
-		Logger: logger,
+		DB:                d,
+		Logger:            logger,
+		GoogleClientID:    *googleClientID,
+		GoogleClientSecret: *googleClientSecret,
 	})
 
 	ad := admin.New(admin.Options{Logger: logger})

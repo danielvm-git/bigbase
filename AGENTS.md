@@ -3,13 +3,13 @@
 Read CONVENTIONS.md before any GitHub or git operation.
 
 ## Project
-Single-binary, component-based BaaS platform using Entity-Component-Construct (ECC) architecture.
-Stack: Go 1.22+ / ECC Kernel + Plugins / SQLite + PostgreSQL
+Single-binary, component-based BaaS platform using Entity-Component-Construct (ECC)
+architecture. Stack: Go 1.22+ / ECC Kernel + Plugins / SQLite + PostgreSQL.
 
 ## Commands
 | Action | Command |
 |--------|---------|
-| Run (serve) | `go run . serve [--port PORT]` |
+| Run (serve) | `go run . serve [--port PORT] [--db PATH] [--google-client-id ID] [--google-client-secret SECRET]` |
 | Run (CLI)   | `go run . status` / `go run . version` / `go run . components list` |
 | Test   | `go test ./...` |
 | Build  | `go build -o bigbase .` |
@@ -18,7 +18,13 @@ Stack: Go 1.22+ / ECC Kernel + Plugins / SQLite + PostgreSQL
 | Setup  | `bash scripts/setup.sh` (idempotent) |
 
 ## Architecture
-ECC pattern: Kernel (discovery, lifecycle, event bus, config merge) + pluggable components (proxy, auth, db, api, storage, git, forge, cici, functions, realtime, messaging, deploy, admin, monitoring). Components communicate via event hooks, not direct imports.
+ECC pattern: Kernel (discovery, lifecycle, event bus, config merge) + pluggable
+components (proxy, auth, db, api, storage, git, forge, cici, functions, realtime,
+messaging, deploy, admin, monitoring). Components communicate via event hooks,
+not direct imports.
+
+All 14 slices implemented. 7 admin UI pages built. Google OAuth social login
+via embedded relay (no user-owned Google app required).
 
 ## Conventions
 - Go standard layout: `kernel/`, `components/<name>/`, `config/`
@@ -42,8 +48,10 @@ ECC pattern: Kernel (discovery, lifecycle, event bus, config merge) + pluggable 
 | Health check | `curl http://localhost:9999/health` |
 | Component status | `go run . status` |
 | List components | `go run . components list` |
+| Monitoring | `curl http://localhost:9999/api/monitoring/logs` (auth required) |
 
-Logging is structured JSON via `slog.JSONHandler` in serve mode. CLI output uses plain text.
+Logging is structured JSON via `slog.JSONHandler` in serve mode.
+CLI output uses plain text.
 
 ## Agent Rules
 - Read specs/ before writing code.
