@@ -59,3 +59,21 @@ func TestMonitoringHealthEndpoint(t *testing.T) {
 		t.Fatalf("expected status 'ok', got '%s'", body["status"])
 	}
 }
+
+func TestMonitoringSystemMetrics(t *testing.T) {
+	m, _ := setupMonitoring(t)
+	metrics := m.SystemMetrics()
+
+	if metrics.Goroutines <= 0 {
+		t.Fatalf("expected positive goroutines, got %d", metrics.Goroutines)
+	}
+	if metrics.UptimeSeconds < 0 {
+		t.Fatalf("expected non-negative uptime, got %f", metrics.UptimeSeconds)
+	}
+	if metrics.MemoryMB <= 0 {
+		t.Fatalf("expected positive memory, got %f", metrics.MemoryMB)
+	}
+	if metrics.CPUPercent < 0 {
+		t.Fatalf("expected non-negative cpu, got %f", metrics.CPUPercent)
+	}
+}
