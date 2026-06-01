@@ -20,7 +20,9 @@ import (
 	"github.com/danielvm/bigbase/components/forge"
 	"github.com/danielvm/bigbase/components/functions"
 	"github.com/danielvm/bigbase/components/git"
+	"github.com/danielvm/bigbase/components/github"
 	"github.com/danielvm/bigbase/components/messaging"
+	"github.com/danielvm/bigbase/components/sites"
 	"github.com/danielvm/bigbase/components/monitoring"
 	"github.com/danielvm/bigbase/components/proxy"
 	"github.com/danielvm/bigbase/components/realtime"
@@ -124,6 +126,14 @@ func startProxy() {
 		DB:     d,
 		Logger: logger,
 	})
+	gh := github.New(github.Options{
+		DB:     d,
+		Logger: logger,
+	})
+	st := sites.New(sites.Options{
+		DB:     d,
+		Logger: logger,
+	})
 	rt := realtime.New(realtime.Options{
 		Logger: logger,
 		Validate: func(token string) (int64, error) {
@@ -142,6 +152,8 @@ func startProxy() {
 	k.Register(s)
 	k.Register(g)
 	k.Register(f)
+	k.Register(gh)
+	k.Register(st)
 	k.Register(ci)
 	k.Register(fn)
 	k.Register(rt)
@@ -155,6 +167,8 @@ func startProxy() {
 	storageHandler := mComp.Middleware(authComp.Middleware(s.Handler()))
 	gitHandler := mComp.Middleware(authComp.Middleware(g.Handler()))
 	forgeHandler := mComp.Middleware(authComp.Middleware(f.Handler()))
+	githubHandler := mComp.Middleware(authComp.Middleware(gh.Handler()))
+	sitesHandler := mComp.Middleware(authComp.Middleware(st.Handler()))
 
 	p.Handle("/api/collections/", protectedAPI.ServeHTTP)
 	p.Handle("/api/sql", protectedAPI.ServeHTTP)
@@ -164,6 +178,9 @@ func startProxy() {
 	p.Handle("/api/git/repos", gitHandler.ServeHTTP)
 	p.Handle("/api/git/repos/", gitHandler.ServeHTTP)
 	p.Handle("/api/forge/", forgeHandler.ServeHTTP)
+	p.Handle("/api/github/", githubHandler.ServeHTTP)
+	p.Handle("/api/sites", sitesHandler.ServeHTTP)
+	p.Handle("/api/sites/", sitesHandler.ServeHTTP)
 	p.Handle("/api/cici/", mComp.Middleware(authComp.Middleware(ci.Handler())).ServeHTTP)
 	p.Handle("/api/functions/", mComp.Middleware(authComp.Middleware(fn.Handler())).ServeHTTP)
 	p.Handle("/api/functions", mComp.Middleware(authComp.Middleware(fn.Handler())).ServeHTTP)
@@ -182,7 +199,7 @@ func startProxy() {
 	p.Handle("/api/monitoring/alerts", authComp.Middleware(mComp.Handler()).ServeHTTP)
 	p.Handle("/admin/", http.StripPrefix("/admin/", ad.Handler()).ServeHTTP)
 
-	spaPaths := []string{"/repos", "/deploy", "/messaging", "/storage", "/functions", "/forge", "/cici", "/monitoring", "/data", "/sql", "/users", "/login"}
+	spaPaths := []string{"/repos", "/deploy", "/deploy/new", "/messaging", "/storage", "/functions", "/forge", "/cici", "/monitoring", "/data", "/sql", "/users", "/login"}
 	for _, sp := range spaPaths {
 		path := sp
 		p.Handle("GET "+path, func(w http.ResponseWriter, r *http.Request) {

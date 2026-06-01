@@ -1,5 +1,7 @@
 # 006 — Port Appwrite Look & Feel to BigBase Admin UI
 
+**status:** done
+
 ## Analysis Summary
 
 | Aspect | Current (BigBase) | Target (Appwrite) |

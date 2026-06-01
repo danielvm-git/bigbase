@@ -1,7 +1,7 @@
 # Slice 14: Monitoring — "See Metrics"
 
 **type:** epic  
-**status:** planned  
+**status:** done  
 **verify:** Dashboard shows CPU, requests, error rates
 
 ## Purpose

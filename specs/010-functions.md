@@ -1,7 +1,7 @@
 # Slice 10: Functions — "See Code Run"
 
 **type:** epic  
-**status:** planned  
+**status:** done  
 **verify:** `POST /api/functions/run` → function output in response
 
 ## Purpose

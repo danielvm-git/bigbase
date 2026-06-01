@@ -107,13 +107,17 @@ curl -s http://89.116.26.18/admin/ | grep -q "index-DH469bMX.js"
 - [x] Database persists across restarts locally
 - [x] Auth API works correctly
 - [x] Admin UI loads at `/admin/` with proper styling (Appwrite design tokens)
-- [ ] Root `/` redirects to `/admin/`
-- [ ] CSS and JS assets load with correct MIME types (verified via `curl -I`)
-- [ ] All unit and integration tests pass
-- [ ] Deploy to VPS and verify login page has styling (fancy card, colors, shadows)
-- [ ] User can log in and navigate dashboard
+- [x] Root `/` redirects to `/admin/`
+- [x] CSS and JS assets load with correct MIME types (verified via `curl -I`)
+- [x] All unit and integration tests pass
+- [x] Deploy to VPS and verify login page has styling (fancy card, colors, shadows)
+- [x] User can log in and navigate dashboard
 
 ## Resolution
 
-<!-- filled in by validate-fix -->
+**Status:** Resolved — verified working in latest build.
+
+SPA redirect routes were added in `main.go` (commits around `f05faf3`). Login page styling with Appwrite design tokens was deployed via commit `da3f118`. The binary now embeds the updated `ui/dist/` assets, and `go run . serve` correctly serves the styled admin UI at `/admin/`. Root path `/` redirects to `/admin/#/login`.
+
+The bug was caused by stale embedded assets — the VPS binary was built before the design token port. The CI/CD pipeline now ensures `npm run build` runs before `go build` in the release workflow.
 
