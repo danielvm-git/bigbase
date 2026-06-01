@@ -43,9 +43,15 @@ if [ -d "$BIGBASE_DIR/ui" ]; then
   info "Admin UI build OK"
 fi
 
-# --- Verify build ---
-info "Verifying build..."
-(cd "$BIGBASE_DIR" && go build -o /dev/null .)
+# --- Build binary with VERSION injection ---
+VERSION_FILE="$BIGBASE_DIR/VERSION"
+if [ -f "$VERSION_FILE" ]; then
+  BUILD_VERSION=$(cat "$VERSION_FILE")
+else
+  BUILD_VERSION="0.0.0-dev"
+fi
+info "Building bigbase (version: ${BUILD_VERSION})..."
+(cd "$BIGBASE_DIR" && go build -ldflags "-X github.com/danielvm/bigbase/kernel.Version=${BUILD_VERSION}" -o bigbase .)
 info "Build OK"
 
 # --- Create config/ if missing ---

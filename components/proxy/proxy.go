@@ -115,6 +115,7 @@ func (p *Proxy) Start(ctx *kernel.Context) error {
 	p.mux.HandleFunc("/", p.handleHome)
 	p.mux.HandleFunc("/docs", p.handleDocs)
 	p.mux.HandleFunc("/health", p.handleHealth)
+	p.mux.HandleFunc("/api/version", p.handleVersion)
 
 	p.server = &http.Server{
 		Addr:    ":" + p.port,
@@ -227,6 +228,11 @@ func (p *Proxy) handleHealth(w http.ResponseWriter, r *http.Request) {
 	status := "ok"
 	compCount := len(p.kernel.Components())
 	_, _ = fmt.Fprintf(w, `{"status":"%s","components":%d}`, status, compCount)
+}
+
+func (p *Proxy) handleVersion(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	_, _ = fmt.Fprintf(w, `{"version":"%s"}`, kernel.Version)
 }
 
 var homeTemplate = `<!DOCTYPE html>

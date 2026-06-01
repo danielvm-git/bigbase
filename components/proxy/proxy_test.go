@@ -122,8 +122,8 @@ func TestProxyServeHomePage(t *testing.T) {
 	if !strings.Contains(bodyStr, "testcomp") {
 		t.Fatal("expected page to list 'testcomp' component")
 	}
-	if !strings.Contains(bodyStr, "0.1.0") {
-		t.Fatal("expected page to show version '0.1.0'")
+	if !strings.Contains(bodyStr, kernel.Version) {
+		t.Fatalf("expected page to show version %q", kernel.Version)
 	}
 }
 
@@ -349,6 +349,58 @@ func TestProxyHealthEndpoint(t *testing.T) {
 
 	if len(body) == 0 {
 		t.Fatal("expected non-empty health response")
+	}
+}
+
+func TestProxyVersionEndpoint(t *testing.T) {
+	comp := &testComponents{}
+	logger := testLogger{}
+	k := kernel.New(logger)
+	k.Register(comp)
+
+	if err := k.Start(); err != nil {
+		t.Fatalf("failed to start kernel: %v", err)
+	}
+	defer func() { _ = k.Stop() }()
+
+	port := freePort(t)
+	p := proxy.New(proxy.Options{
+		Port:   port,
+		Kernel: k,
+		Logger: logger,
+	})
+
+	if err := p.Start(&kernel.Context{}); err != nil {
+		t.Fatalf("failed to start proxy: %v", err)
+	}
+	defer func() { _ = p.Stop(&kernel.Context{}) }()
+
+	waitForServer(t, port, "/api/version")
+
+	resp, err := http.Get("http://localhost:" + port + "/api/version")
+	if err != nil {
+		t.Fatalf("failed to GET /api/version: %v", err)
+	}
+	defer func() { _ = resp.Body.Close() }()
+
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("expected 200, got %d", resp.StatusCode)
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		t.Fatalf("failed to read body: %v", err)
+	}
+
+	var result struct {
+		Version string `json:"version"`
+	}
+	if err := json.Unmarshal(body, &result); err != nil {
+		t.Fatalf("failed to parse JSON: %v (body: %s)", err, string(body))
+	}
+
+	if result.Version == "" {
+		t.Fatal("expected non-empty version in response")
 	}
 }
 

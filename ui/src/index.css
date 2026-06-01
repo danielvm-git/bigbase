@@ -699,6 +699,24 @@ tr:hover td {
   min-width: 0;
 }
 
+/* Layout body — wraps content + footer in a column */
+.layout-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+/* Page footer — version info at the bottom */
+.page-footer {
+  border-top: 1px solid var(--border-default);
+  padding: var(--space-3) var(--space-8);
+  text-align: right;
+  font-size: var(--text-xs);
+  color: var(--fg-tertiary);
+  background: var(--bg-surface);
+}
+
 /* ── Login Page ─────────────────────────────────────────────── */
 .login-page {
   display: flex;
