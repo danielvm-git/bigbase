@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -49,6 +51,34 @@ func setupDeploy(t *testing.T) (*deploy.Deploy, http.Handler, *db.DB, string) {
 	t.Cleanup(func() { _ = k.Stop() })
 
 	return dep, dep.Handler(), d, gitDir
+}
+
+func waitForDeploymentTerminal(t *testing.T, handler http.Handler, depID string, timeout time.Duration) {
+	t.Helper()
+	start := time.Now()
+	for {
+		if time.Since(start) > timeout {
+			t.Fatalf("deployment %s did not reach terminal state within %v", depID, timeout)
+		}
+		req := httptest.NewRequest("GET", "/api/deploy/"+depID, nil)
+		w := httptest.NewRecorder()
+		handler.ServeHTTP(w, req)
+		if w.Code != http.StatusOK {
+			time.Sleep(50 * time.Millisecond)
+			continue
+		}
+		var got map[string]any
+		_ = json.NewDecoder(w.Body).Decode(&got)
+		status, ok := got["status"].(string)
+		if !ok {
+			time.Sleep(50 * time.Millisecond)
+			continue
+		}
+		if status == "running" || status == "failed" {
+			return
+		}
+		time.Sleep(50 * time.Millisecond)
+	}
 }
 
 type gitStub struct {
@@ -220,6 +250,10 @@ func TestDeployCreateSuccess(t *testing.T) {
 	if p, ok := dep["port"]; !ok || p == float64(0) {
 		t.Fatalf("expected non-zero port, got: %v", dep)
 	}
+
+	// Wait for deployment to reach terminal state
+	depID := dep["id"].(string)
+	waitForDeploymentTerminal(t, handler, depID, 5*time.Second)
 }
 
 func TestDeployCreateWrongMethod(t *testing.T) {
@@ -269,6 +303,13 @@ func TestDeployListAfterCreate(t *testing.T) {
 		t.Fatalf("create failed: %d: %s", w.Code, w.Body.String())
 	}
 
+	var created map[string]any
+	_ = json.NewDecoder(w.Body).Decode(&created)
+	depID := created["id"].(string)
+
+	// Wait for deployment to reach terminal state
+	waitForDeploymentTerminal(t, handler, depID, 5*time.Second)
+
 	listReq := httptest.NewRequest("GET", "/api/deploy", nil)
 	listW := httptest.NewRecorder()
 	handler.ServeHTTP(listW, listReq)
@@ -298,6 +339,9 @@ func TestDeployGetByID(t *testing.T) {
 	var created map[string]any
 	_ = json.NewDecoder(w.Body).Decode(&created)
 	depID := created["id"].(string)
+
+	// Wait for deployment to reach terminal state
+	waitForDeploymentTerminal(t, handler, depID, 5*time.Second)
 
 	getReq := httptest.NewRequest("GET", "/api/deploy/"+depID, nil)
 	getW := httptest.NewRecorder()
@@ -439,8 +483,8 @@ func TestUpdateURLUpdatesPort(t *testing.T) {
 	_ = json.NewDecoder(w.Body).Decode(&created)
 	depID := created["id"].(string)
 
-	// Wait briefly for async deployment to begin processing
-	time.Sleep(500 * time.Millisecond)
+	// Wait for deployment to reach terminal state
+	waitForDeploymentTerminal(t, handler, depID, 5*time.Second)
 
 	// List and verify deployment has a URL
 	listReq := httptest.NewRequest("GET", "/api/deploy/"+depID, nil)
@@ -500,7 +544,7 @@ func TestRunDeploymentRepoNotFoundOnDisk(t *testing.T) {
 	depID := created["id"].(string)
 
 	// Wait for async runDeployment to try cloning and fail
-	time.Sleep(1 * time.Second)
+	waitForDeploymentTerminal(t, handler, depID, 5*time.Second)
 
 	getReq := httptest.NewRequest("GET", "/api/deploy/"+depID, nil)
 	getW := httptest.NewRecorder()
@@ -537,8 +581,8 @@ func TestRunDeploymentStaticSite(t *testing.T) {
 	_ = json.NewDecoder(w.Body).Decode(&created)
 	depID := created["id"].(string)
 
-	// Wait for async deploy (clone + detect static + serve)
-	time.Sleep(2 * time.Second)
+	// Wait for deployment to reach running state
+	waitForDeploymentTerminal(t, handler, depID, 5*time.Second)
 
 	getReq := httptest.NewRequest("GET", "/api/deploy/"+depID, nil)
 	getW := httptest.NewRecorder()
@@ -558,5 +602,64 @@ func TestRunDeploymentStaticSite(t *testing.T) {
 	}
 	if url, ok := got["url"]; !ok || url == "" {
 		t.Fatalf("expected non-empty url, got: %v", got)
+	}
+}
+
+func TestDeployStopShutsDownStaticServer(t *testing.T) {
+	// RED: After triggering a static deployment, calling Stop must leave the deployment port unreachable.
+	dep, handler, database, gitDir := setupDeploy(t)
+
+	// Create a repo with index.html (static)
+	repoID := createTestRepo(t, database, "repo-stop-test", gitDir)
+
+	// Trigger deployment
+	var buf bytes.Buffer
+	_ = json.NewEncoder(&buf).Encode(map[string]string{"repo_id": repoID})
+	req := httptest.NewRequest("POST", "/api/deploy", &buf)
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+	if w.Code != http.StatusCreated {
+		t.Fatalf("expected 201, got %d: %s", w.Code, w.Body.String())
+	}
+
+	var created map[string]any
+	_ = json.NewDecoder(w.Body).Decode(&created)
+	depID := created["id"].(string)
+	port := int(created["port"].(float64))
+
+	// Wait for deployment to reach running state
+	for i := 0; i < 20; i++ {
+		getReq := httptest.NewRequest("GET", "/api/deploy/"+depID, nil)
+		getW := httptest.NewRecorder()
+		handler.ServeHTTP(getW, getReq)
+		if getW.Code != http.StatusOK {
+			continue
+		}
+		var got map[string]any
+		_ = json.NewDecoder(getW.Body).Decode(&got)
+		if got["status"] == "running" {
+			break
+		}
+		time.Sleep(100 * time.Millisecond)
+	}
+
+	// Verify server is running: can connect to the port
+	conn, err := net.Dial("tcp", fmt.Sprintf("localhost:%d", port))
+	if err != nil {
+		t.Fatalf("port %d should be open before Stop, got error: %v", port, err)
+	}
+	_ = conn.Close()
+
+	// Call Stop
+	ctx := &kernel.Context{Kernel: &kernel.Kernel{}}
+	_ = dep.Stop(ctx)
+
+	// After Stop, the port should NOT be accepting connections
+	time.Sleep(100 * time.Millisecond) // Give server time to shut down
+	conn, err = net.Dial("tcp", fmt.Sprintf("localhost:%d", port))
+	if err == nil {
+		_ = conn.Close()
+		t.Fatalf("port %d should be closed after Stop, but connection succeeded", port)
 	}
 }

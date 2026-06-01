@@ -65,19 +65,21 @@ type Deployment struct {
 
 type runningApp struct {
 	cmd     *exec.Cmd
+	server  *http.Server
 	port    int
 	buildID string
 }
 
 type Deploy struct {
-	db          DBer
-	logger      Logger
-	buildsDir   string
-	gitDir      string
-	basePort    int
-	mu          sync.Mutex
-	nextPort    int
-	apps        map[string]*runningApp
+	db           DBer
+	logger       Logger
+	buildsDir    string
+	gitDir       string
+	basePort     int
+	mu           sync.Mutex
+	nextPort     int
+	apps         map[string]*runningApp
+	unsubscribe  func()
 }
 
 type Options struct {
@@ -156,7 +158,20 @@ func (d *Deploy) Start(ctx *kernel.Context) error {
 }
 
 func (d *Deploy) Stop(ctx *kernel.Context) error {
+	if d.unsubscribe != nil {
+		d.unsubscribe()
+	}
+	d.mu.Lock()
+	defer d.mu.Unlock()
+	
 	for id, app := range d.apps {
+		// Shutdown static HTTP servers
+		if app.server != nil {
+			shutdownCtx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+			_ = app.server.Shutdown(shutdownCtx)
+			cancel()
+		}
+		// Kill process-based deployments
 		if app.cmd != nil && app.cmd.Process != nil {
 			_ = app.cmd.Process.Kill()
 		}
@@ -425,7 +440,7 @@ func (d *Deploy) serveStatic(ctx context.Context, buildDir string, deploy *Deplo
 	}
 
 	d.mu.Lock()
-	d.apps[deploy.ID] = &runningApp{port: deploy.Port, buildID: deploy.ID}
+	d.apps[deploy.ID] = &runningApp{port: deploy.Port, buildID: deploy.ID, server: server}
 	d.mu.Unlock()
 
 	d.logger.Info("serving static site", "id", deploy.ID, "port", deploy.Port, "url", deploy.URL)
