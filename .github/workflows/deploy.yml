@@ -90,7 +90,7 @@ jobs:
       - name: Smoke test binary
         run: |
           chmod +x ${{ env.BINARY_PATH }}
-          VERSION_OUTPUT=$(${{ env.BINARY_PATH}} version 2>&1)
+          VERSION_OUTPUT=$(./${{ env.BINARY_PATH }} version 2>&1)
           echo "Version: $VERSION_OUTPUT"
 
       # --- Upload binary as artifact (for deploy job) ---
