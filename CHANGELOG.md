@@ -1,3 +1,10 @@
+# [1.1.0](https://github.com/danielvm-git/bigbase/compare/v1.0.2...v1.1.0) (2026-06-01)
+
+
+### Features
+
+* **config:** configure bigbase.click domain with HTTPS ([7226b98](https://github.com/danielvm-git/bigbase/commit/7226b9832799238b75dd3d4dbc2c1beab84d290d))
+
 ## [1.0.2](https://github.com/danielvm-git/bigbase/compare/v1.0.1...v1.0.2) (2026-06-01)
 
 
