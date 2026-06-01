@@ -11,7 +11,9 @@ import StoragePage from './pages/StoragePage'
 import FunctionsPage from './pages/FunctionsPage'
 import ForgePage from './pages/ForgePage'
 import CiciPage from './pages/CiciPage'
+import CreateSitePage from './pages/CreateSitePage'
 import MonitoringPage from './pages/MonitoringPage'
+import SiteDetailPage from './pages/SiteDetailPage'
 import NotFoundPage from './pages/NotFoundPage'
 import Layout from './Layout'
 
@@ -25,6 +27,8 @@ function App() {
         <Route path="users" element={<UsersPage />} />
         <Route path="repos" element={<GitReposPage />} />
         <Route path="deploy" element={<DeployPage />} />
+        <Route path="deploy/new" element={<CreateSitePage />} />
+        <Route path="deploy/:siteId" element={<SiteDetailPage />} />
         <Route path="messaging" element={<MessagingPage />} />
         <Route path="storage" element={<StoragePage />} />
         <Route path="functions" element={<FunctionsPage />} />
