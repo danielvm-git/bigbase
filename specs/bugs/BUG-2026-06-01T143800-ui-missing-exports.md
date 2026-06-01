@@ -49,4 +49,20 @@ However, [ui/src/components/index.ts](ui/src/components/index.ts) does not expor
 
 ## Resolution
 
-<!-- filled in by validate-fix -->
+**Fixed:** 2026-06-01 at 17:41 UTC
+**Root cause confirmed:** Four new React components existed but were not exported from the barrel export file (index.ts), causing TypeScript compilation errors when pages imported them.
+**Fix applied:** Added 4 export lines to ui/src/components/index.ts for ChoiceCard, WizardSteps, PreviewBanner, and SitesListSkeleton.
+**Hardening added:** Components are now properly registered in the barrel export barrel—no missing exports by design.
+**Evidence:** 
+- Local: `npm run build` passes
+- CI run [26771419432](https://github.com/danielvm-git/bigbase/actions/runs/26771419432): Test & Build ✓ SUCCESS (46s), Deploy to Contabo ✓ SUCCESS (34s)
+- No TypeScript errors in logs
+**Commit:** `fix(ui): export missing components from index.ts`
+
+## Acceptance Criteria
+
+- [x] All four component files exist in `ui/src/components/`
+- [x] All four components are exported from `ui/src/components/index.ts`
+- [x] `npm run build` passes with no TypeScript errors
+- [x] CI "Build Admin UI" step completes successfully  
+- [x] Full CI run: all jobs green (Test & Build ✓, Deploy to Contabo ✓)
