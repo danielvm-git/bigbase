@@ -184,7 +184,8 @@ WantedBy=multi-user.target
 SYSTEMDEOF
 
 systemctl daemon-reload
-info "  systemd service created: bigbase.service"
+systemctl enable bigbase
+info "  systemd service created and enabled: bigbase.service"
 
 # ============================================================================
 # Step 7: Create helper scripts
