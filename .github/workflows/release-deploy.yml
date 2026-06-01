@@ -1,26 +1,37 @@
 # ============================================================================
-# deploy.yml — CI/CD pipeline for BigBase on Contabo VPS
+# release-deploy.yml — Release + Deploy pipeline for BigBase
+#
+# Merged workflow to fix GITHUB_TOKEN event suppression: semantic-release
+# creates the release, and deploy proceeds in the same workflow if a new
+# version was published. This avoids the issue where GITHUB_TOKEN-triggered
+# releases don't fire downstream workflow events.
 #
 # Triggers:
-#   - Release published (via semantic-release)
-#   - Manual workflow_dispatch (for ad-hoc deploys)
+#   - Push to main → semantic-release analyzes commits, publishes if warranted
+#   - Manual workflow_dispatch (for re-deploying an existing tag)
 #
 # Pipeline:
+#   0. Semantic Release (determine version, publish release)
 #   1. Test & Build (Go + embedded Admin UI)
 #   2. Deploy to Contabo VPS via SSH
 #   3. Automatic rollback on health check failure
 # ============================================================================
-name: Deploy to Contabo VPS
+name: Release & Deploy
 
 on:
-  release:
-    types: [published]
+  push:
+    branches: [main]
   workflow_dispatch:
     inputs:
       ref:
-        description: 'Tag to deploy (e.g., v0.2.0)'
+        description: 'Git ref to build (tag, e.g. v1.0.0)'
         required: true
         default: ''
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
 
 env:
   GO_VERSION: '1.26'
@@ -37,43 +48,89 @@ env:
 
 jobs:
   # ==========================================================================
-  # JOB 1: Test & Build
+  # JOB: Release + Deploy (single job chain)
   # ==========================================================================
-  build:
-    name: Test & Build
+  release-and-deploy:
+    name: Release & Deploy
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
 
     outputs:
-      binary_name: ${{ steps.set-outputs.outputs.binary_name }}
+      new_release: ${{ steps.detect-release.outputs.new_release }}
+      version: ${{ steps.detect-release.outputs.version }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          fetch-depth: 1
+          fetch-depth: 0
+          ref: ${{ github.event.inputs.ref || github.ref }}
+          persist-credentials: true
+
+      # --- Semantic Release (only on push events, not workflow_dispatch) ---
+      - name: Setup Node
+        if: github.event_name == 'push'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '${{ env.NODE_VERSION }}'
+          cache: 'npm'
+
+      - name: Save pre-release HEAD
+        id: pre-release
+        if: github.event_name == 'push'
+        run: echo "head=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Install dependencies
+        if: github.event_name == 'push'
+        run: npm ci
+
+      - name: Semantic Release
+        if: github.event_name == 'push'
+        id: semantic
+        run: npx semantic-release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # --- Detect if a release was created ---
+      - name: Detect new release
+        id: detect-release
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            # Manual deploy — always release
+            VERSION=$(cat VERSION 2>/dev/null || echo "0.0.0-dev")
+            echo "new_release=true" >> "$GITHUB_OUTPUT"
+            echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+            echo "Manual deploy — version ${VERSION}"
+          else
+            # Push event — check if sem-rel created a new commit
+            NEW_HEAD=$(git rev-parse HEAD)
+            if [ "${{ steps.pre-release.outputs.head }}" != "$NEW_HEAD" ]; then
+              VERSION=$(cat VERSION)
+              echo "new_release=true" >> "$GITHUB_OUTPUT"
+              echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+              echo "New release detected: v${VERSION}"
+            else
+              echo "new_release=false" >> "$GITHUB_OUTPUT"
+              echo "No new release"
+            fi
+          fi
 
       # --- Setup Go ---
       - name: Setup Go ${{ env.GO_VERSION }}
+        if: steps.detect-release.outputs.new_release == 'true'
         uses: actions/setup-go@v5
         with:
           go-version: '${{ env.GO_VERSION }}'
           cache: true
 
-      # --- Setup Node (needed for admin UI build) ---
-      - name: Setup Node ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@v4
-        with:
-          node-version: '${{ env.NODE_VERSION }}'
-          cache: 'npm'
-          cache-dependency-path: ui/package-lock.json
-
       # --- Run Go unit tests ---
       - name: Run tests
+        if: steps.detect-release.outputs.new_release == 'true'
         run: go test ./... -count=1
 
       # --- Build Admin UI (embedded in binary) ---
       - name: Build Admin UI
+        if: steps.detect-release.outputs.new_release == 'true'
         working-directory: ui
         run: |
           npm ci --prefer-offline
@@ -82,8 +139,9 @@ jobs:
 
       # --- Build Go binary for linux/amd64 ---
       - name: Build binary
+        if: steps.detect-release.outputs.new_release == 'true'
         run: |
-          BUILD_VERSION=$(cat VERSION 2>/dev/null || echo "0.0.0-dev")
+          BUILD_VERSION=${{ steps.detect-release.outputs.version }}
           echo "Building version: ${BUILD_VERSION}"
           GOOS=linux GOARCH=amd64 go build \
             -ldflags "-X github.com/danielvm/bigbase/kernel.Version=${BUILD_VERSION}" \
@@ -92,47 +150,38 @@ jobs:
           echo "Size: $(ls -lh ${{ env.BINARY_PATH }} | awk '{print $5}')"
 
       - name: Smoke test binary
+        if: steps.detect-release.outputs.new_release == 'true'
         run: |
           chmod +x ${{ env.BINARY_PATH }}
           VERSION_OUTPUT=$(./${{ env.BINARY_PATH }} version 2>&1)
-          echo "Version: $VERSION_OUTPUT"
+          echo "Built: $VERSION_OUTPUT"
 
-      # --- Upload binary as artifact (for deploy job) ---
+      # --- Upload binary as artifact ---
       - name: Upload binary artifact
+        if: steps.detect-release.outputs.new_release == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: bigbase-linux-amd64
           path: ${{ env.BINARY_PATH }}
           retention-days: 3
-          compression-level: 0  # already compressed
+          compression-level: 0
 
-      - name: Set output
-        id: set-outputs
-        run: echo "binary_name=${{ env.BINARY_PATH }}" >> "$GITHUB_OUTPUT"
-
-  # ==========================================================================
-  # JOB 2: Deploy to Contabo VPS
-  # ==========================================================================
-  deploy:
-    name: Deploy to Contabo
-    runs-on: ubuntu-latest
-    needs: build
-    timeout-minutes: 10
-
-    # Gate on required secrets being configured
-    environment: production
-
-    steps:
+      # ======================================================================
+      # Deploy to Contabo VPS
+      # ======================================================================
       - name: Download built binary
+        if: steps.detect-release.outputs.new_release == 'true'
         uses: actions/download-artifact@v4
         with:
           name: bigbase-linux-amd64
 
       - name: Make binary executable
+        if: steps.detect-release.outputs.new_release == 'true'
         run: chmod +x ${{ env.BINARY_PATH }}
 
       # --- Upload binary via SCP ---
       - name: Upload binary to VPS
+        if: steps.detect-release.outputs.new_release == 'true'
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.CONTABO_HOST }}
@@ -145,6 +194,7 @@ jobs:
 
       # --- Deploy via SSH ---
       - name: Deploy binary and restart service
+        if: steps.detect-release.outputs.new_release == 'true'
         uses: appleboy/ssh-action@v1.2.2
         env:
           BINARY_PATH: ${{ env.BINARY_PATH }}
@@ -193,7 +243,6 @@ jobs:
             if [ -f "${VPS_BIN_DIR}/bigbase" ]; then
               mkdir -p "${VPS_RELEASES_DIR}/${TIMESTAMP}"
               cp "${VPS_BIN_DIR}/bigbase" "${VPS_RELEASES_DIR}/${TIMESTAMP}/bigbase"
-              # Also keep a 'previous' link for the rollback script
               rm -rf "${VPS_RELEASES_DIR}/previous"
               cp -r "${VPS_RELEASES_DIR}/${TIMESTAMP}" "${VPS_RELEASES_DIR}/previous"
               echo "  Backed up current binary to releases/${TIMESTAMP}/"
@@ -209,8 +258,6 @@ jobs:
             if [ -f "${VPS_DATA_DIR}/bigbase.db" ]; then
               cp "${VPS_DATA_DIR}/bigbase.db" "${VPS_BACKUPS_DIR}/bigbase-${TIMESTAMP}.db"
               echo "  Database backed up to backups/bigbase-${TIMESTAMP}.db"
-
-              # Clean old backups
               ls -1t "${VPS_BACKUPS_DIR}"/bigbase-*.db 2>/dev/null \
                 | tail -n +$((MAX_BACKUPS + 1)) \
                 | xargs -r rm
@@ -242,7 +289,6 @@ jobs:
             # ----------------------------------------------------------------
             echo "=== Phase 5: Deploy new binary ==="
 
-            # Binary is placed at /tmp/ by the SCP action — move it into place
             if [ -f "/tmp/${BINARY_PATH}" ]; then
               mv "/tmp/${BINARY_PATH}" "${VPS_BIN_DIR}/bigbase"
             else
@@ -286,7 +332,6 @@ jobs:
               echo "=== HEALTH CHECK FAILED! Rolling back... ==="
               journalctl -u bigbase --no-pager -n 50 || true
 
-              # Rollback
               if [ -f "${VPS_RELEASES_DIR}/previous/bigbase" ]; then
                 cp "${VPS_RELEASES_DIR}/previous/bigbase" "${VPS_BIN_DIR}/bigbase"
                 chmod +x "${VPS_BIN_DIR}/bigbase"
@@ -310,7 +355,6 @@ jobs:
             # ----------------------------------------------------------------
             echo "=== Phase 8: Cleanup ==="
 
-            # Keep last 5 releases (plus 'previous' link)
             ls -1t "${VPS_RELEASES_DIR}" \
               | grep -E '^[0-9]{8}-[0-9]{6}$' \
               | tail -n +6 \
@@ -327,25 +371,25 @@ jobs:
 
       # --- Deployment verification ---
       - name: Deployment verification
-        if: success()
+        if: success() && steps.detect-release.outputs.new_release == 'true'
         run: |
           echo "✅ Deploy finished successfully"
           echo "   Server: ${{ secrets.CONTABO_HOST }}"
           echo "   Time: $(date -u)"
 
   # ==========================================================================
-  # JOB 3: Notify (only on failure)
+  # Notify on failure
   # ==========================================================================
   notify:
     name: Notify on failure
     runs-on: ubuntu-latest
-    needs: [build, deploy]
+    needs: [release-and-deploy]
     if: failure() && github.event_name != 'workflow_dispatch'
 
     steps:
       - name: Build failure summary
         run: |
-          echo "❌ BigBase deploy FAILED"
+          echo "❌ BigBase release/deploy FAILED"
           echo "   Repository: ${{ github.repository }}"
           echo "   Commit: ${{ github.sha }}"
           echo "   Branch: ${{ github.ref_name }}"
