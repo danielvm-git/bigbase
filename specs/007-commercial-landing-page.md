@@ -1,7 +1,7 @@
 # 007 — Appwrite-Style Commercial Landing Page
 
 **type:** feature
-**status:** planned
+**status:** done
 **target:** `components/proxy/proxy.go` — `homeTemplate`
 
 ## Structure

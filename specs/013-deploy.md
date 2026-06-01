@@ -1,7 +1,7 @@
 # Slice 13: Deploy — "See Apps Live"
 
 **type:** epic  
-**status:** planned  
+**status:** done  
 **verify:** Open preview URL → app is running
 
 ## Purpose

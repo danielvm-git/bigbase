@@ -2,28 +2,81 @@
 
 All planning and architecture documents for the BigBase project.
 
-## Index
+## How to Use
+
+| If you want to... | Read this first |
+|-------------------|-----------------|
+| Understand the full architecture | `CONTEXT.md` |
+| Know what's being built now | `RELEASE-PLAN.md` |
+| See task-level breakdown | `TASKS.md` |
+| Know what's in/out of scope | `SCOPE.md` |
+| Understand domain terms | `UBIQUITOUS_LANGUAGE.md` |
+| Trace stories to code | `TRACEABILITY.md` |
+| Find refactoring opportunities | `REFACTOR.md` |
+| Check session state | `STATE.md` |
+| See architecture decisions | `adr/` |
+| Find bug investigations | `bugs/` |
+| See past component specs | `001-cli-bigbase-breathes.md` through `015-deploy-github-journey.md` |
+
+---
+
+## Planning Documents (v2.0)
 
 | Document | Description |
 |----------|-------------|
-| `adr/` | Architecture Decision Records |
-| `CONTEXT.md` | Domain context and glossary |
-| `RELEASE-PLAN.md` | Epics, stories, and release roadmap |
-| `GOOGLE-OAUTH.md` | Google social login (style Neon) |
-| `001-cli-bigbase-breathes.md` | Slice 1: CLI (done) |
-| `002-proxy-landing.md` | Slice 2: Proxy + Landing Page (done) |
-| `003-db-auto-api.md` | Slice 3: DB + Auto API (done) |
-| `004-auth.md` | Slice 4: Auth (done) |
-| `005-admin-ui.md` | Slice 5: Admin UI (done) |
-| `006-storage.md` | Slice 6: Storage (done) |
-| `007-git.md` | Slice 7: Git (done) |
-| `008-forge.md` | Slice 8: Forge (done) |
-| `009-cici.md` | Slice 9: CI/CD (done) |
-| `010-functions.md` | Slice 10: Functions (done) |
-| `011-realtime.md` | Slice 11: Realtime (done) |
-| `012-messaging.md` | Slice 12: Messaging (done) |
-| `013-deploy.md` | Slice 13: Deploy (done) |
-| `014-monitoring.md` | Slice 14: Monitoring (done) |
-| `PLAN.md` | Slice 11 implementation plan |
-| `DIAGNOSIS.md` | Bug investigation log |
+| `CONTEXT.md` | Domain model, architecture, component catalog, event flow, deployment topology |
+| `UBIQUITOUS_LANGUAGE.md` | DDD-style glossary of all domain terms |
+| `SCOPE.md` | v2.0 scope: what's in, what's out, future candidates |
+| `RELEASE-PLAN.md` | 7 epics (017–023) with vertical slices and verify commands |
+| `TASKS.md` | Independently grabbable tasks derived from RELEASE-PLAN, with dependency tiers |
+| `STATE.md` | Session state tracker — updated by build agents during work |
+| `TRACEABILITY.md` | Story-to-code mapping for all 14 original slices |
+| `REFACTOR.md` | 6 known refactoring opportunities with severity, scope, and proposed fixes |
+| `IMPACT.md` | Blast radius analysis for Epic 017 (Multi-DB) |
+
+---
+
+## Architecture Decisions
+
+| Document | Decision |
+|----------|----------|
+| `adr/001-sqlite-json-blob-api.md` | SQLite + JSON blob for auto-CRUD API |
+| `adr/002-jwt-bcrypt-auth.md` | JWT + bcrypt for auth component |
+| `adr/003-github-app-sites.md` | GitHub App for Sites deployment |
+
+---
+
+## Original Slice Specs (v1.0 — All Implemented)
+
+| Document | Slice | Status |
+|----------|-------|--------|
+| `001-cli-bigbase-breathes.md` | CLI + ECC Kernel | ✅ done |
+| `002-proxy-landing.md` | Proxy + Landing Page | ✅ done |
+| `003-db-auto-api.md` | DB + Auto REST API | ✅ done |
+| `004-auth.md` | Auth (email/password + JWT) | ✅ done |
+| `005-admin-ui.md` | Admin UI (React SPA) | ✅ done |
+| `006-storage.md` | Storage (file upload/download) | ✅ done |
+| `006-appwrite-look-and-feel.md` | Appwrite Design Token Port | ✅ done |
+| `007-git.md` | Git Repo Management | ✅ done |
+| `007-commercial-landing-page.md` | Commercial Landing Page | ✅ done |
+| `008-forge.md` | Forge (Issues, Kanban, Wiki) | ✅ done |
+| `009-cici.md` | CI/CD Pipeline Engine | ✅ done |
+| `010-functions.md` | Functions (JS Runtime) | ✅ done |
+| `011-realtime.md` | Realtime (WebSocket) | ✅ done |
+| `012-messaging.md` | Messaging (Email, SMS, Push) | ✅ done |
+| `013-deploy.md` | Deploy (App Runner) | ✅ done |
+| `014-monitoring.md` | Monitoring (Metrics, Logs, Alerts) | ✅ done |
+| `015-deploy-github-journey.md` | Sites: Deploy from GitHub | ✅ done |
+
+---
+
+## Supporting Documents
+
+| Document | Description |
+|----------|-------------|
 | `GOOGLE-OAUTH.md` | Google OAuth social login plan |
+| `PLAN.md` | Slice 11 (Realtime) implementation plan |
+| `DIAGNOSIS.md` | SPA redirect diagnosis (resolved) |
+| `DEPLOY.md` | Production deployment to Contabo VPS |
+| `bugs/BUG-LOG.md` | Bug tracking log |
+| `README.md` | This file |

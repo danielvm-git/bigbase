@@ -1,0 +1,188 @@
+{
+  "main": {
+    "id": "a6da1e0b0aec0913",
+    "type": "split",
+    "children": [
+      {
+        "id": "a8464338cb9cf9e7",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "e5870ea3859be54c",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "015-deploy-github-journey.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "015-deploy-github-journey"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "3d5354d6d7c18f47",
+    "type": "split",
+    "children": [
+      {
+        "id": "e98846ee2d91f89c",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "d712ccd484f4b498",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false
+              },
+              "icon": "lucide-folder-closed",
+              "title": "Files"
+            }
+          },
+          {
+            "id": "34e0917044fb63bd",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "Search"
+            }
+          },
+          {
+            "id": "1309850ac8354ab7",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {},
+              "icon": "lucide-bookmark",
+              "title": "Bookmarks"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "2d77ba0c6f7acf08",
+    "type": "split",
+    "children": [
+      {
+        "id": "4f734b20e60d72f9",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "6d4d304bbbdb5b72",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "015-deploy-github-journey.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "Backlinks for 015-deploy-github-journey"
+            }
+          },
+          {
+            "id": "42572e6d94349538",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "015-deploy-github-journey.md",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "Outgoing links from 015-deploy-github-journey"
+            }
+          },
+          {
+            "id": "1028eb718b8f1ddb",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "Tags"
+            }
+          },
+          {
+            "id": "bec4ac4fdb7c45c1",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "All properties"
+            }
+          },
+          {
+            "id": "6b5080428b479210",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "015-deploy-github-journey.md",
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "Outline of 015-deploy-github-journey"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:Open quick switcher": false,
+      "graph:Open graph view": false,
+      "canvas:Create new canvas": false,
+      "daily-notes:Open today's daily note": false,
+      "templates:Insert template": false,
+      "command-palette:Open command palette": false,
+      "bases:Create new base": false
+    }
+  },
+  "active": "e5870ea3859be54c",
+  "lastOpenFiles": []
+}

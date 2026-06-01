@@ -1,7 +1,7 @@
 # Slice 6: Storage — "See Files"
 
 **type:** epic  
-**status:** planned  
+**status:** done  
 **verify:** `curl -X POST /api/storage/upload -F "file=@photo.png"` → file URL
 
 ## Purpose
