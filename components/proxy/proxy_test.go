@@ -165,6 +165,155 @@ func TestProxyHandle(t *testing.T) {
 	}
 }
 
+func TestProxyGitHubStars(t *testing.T) {
+	t.Run("starts with empty cache", func(t *testing.T) {
+		p := &proxy.Proxy{}
+		if stars := p.GitHubStars(); stars != "" {
+			t.Fatalf("expected empty stars before fetch, got %q", stars)
+		}
+	})
+}
+
+func TestProxyHomePageCommercialContent(t *testing.T) {
+	comp := &testComponents{}
+	logger := testLogger{}
+	k := kernel.New(logger)
+	k.Register(comp)
+
+	if err := k.Start(); err != nil {
+		t.Fatalf("failed to start kernel: %v", err)
+	}
+	defer func() { _ = k.Stop() }()
+
+	port := freePort(t)
+	p := proxy.New(proxy.Options{
+		Port:   port,
+		Kernel: k,
+		Logger: logger,
+	})
+
+	if err := p.Start(&kernel.Context{}); err != nil {
+		t.Fatalf("failed to start proxy: %v", err)
+	}
+	defer func() { _ = p.Stop(&kernel.Context{}) }()
+
+	waitForServer(t, port, "/health")
+
+	resp, err := http.Get("http://localhost:" + port + "/")
+	if err != nil {
+		t.Fatalf("failed to GET /: %v", err)
+	}
+	defer func() { _ = resp.Body.Close() }()
+
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("expected 200, got %d", resp.StatusCode)
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		t.Fatalf("failed to read body: %v", err)
+	}
+
+	bodyStr := string(body)
+
+	if !strings.Contains(bodyStr, "text/html") &&
+		!strings.Contains(resp.Header.Get("Content-Type"), "text/html") {
+		t.Fatal("expected Content-Type text/html")
+	}
+
+	if !strings.Contains(bodyStr, "BigBase") {
+		t.Fatal("expected page to contain 'BigBase'")
+	}
+	if !strings.Contains(bodyStr, "testcomp") {
+		t.Fatal("expected page to list 'testcomp' component")
+	}
+
+	if !strings.Contains(bodyStr, "Launch Admin") {
+		t.Fatal("expected page to contain 'Launch Admin' CTA button")
+	}
+
+	if !strings.Contains(bodyStr, "open-source BaaS") {
+		t.Fatal("expected page to contain hero headline")
+	}
+
+	if !strings.Contains(bodyStr, "Auth") {
+		t.Fatal("expected page to contain feature card 'Auth'")
+	}
+
+	if !strings.Contains(bodyStr, "Why BigBase") {
+		t.Fatal("expected page to contain differentiators section")
+	}
+
+	if !strings.Contains(bodyStr, "Product") && !strings.Contains(bodyStr, "Resources") {
+		t.Fatal("expected page to contain footer with columns")
+	}
+}
+
+func TestProxyDocsPage(t *testing.T) {
+	comp := &testComponents{}
+	logger := testLogger{}
+	k := kernel.New(logger)
+	k.Register(comp)
+
+	if err := k.Start(); err != nil {
+		t.Fatalf("failed to start kernel: %v", err)
+	}
+	defer func() { _ = k.Stop() }()
+
+	port := freePort(t)
+	p := proxy.New(proxy.Options{
+		Port:   port,
+		Kernel: k,
+		Logger: logger,
+	})
+
+	if err := p.Start(&kernel.Context{}); err != nil {
+		t.Fatalf("failed to start proxy: %v", err)
+	}
+	defer func() { _ = p.Stop(&kernel.Context{}) }()
+
+	waitForServer(t, port, "/health")
+
+	resp, err := http.Get("http://localhost:" + port + "/docs")
+	if err != nil {
+		t.Fatalf("failed to GET /docs: %v", err)
+	}
+	defer func() { _ = resp.Body.Close() }()
+
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("expected 200, got %d", resp.StatusCode)
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		t.Fatalf("failed to read body: %v", err)
+	}
+
+	bodyStr := string(body)
+
+	if !strings.Contains(bodyStr, "BigBase") {
+		t.Fatal("expected docs page to contain 'BigBase'")
+	}
+	if !strings.Contains(bodyStr, "Quick Start") {
+		t.Fatal("expected docs page to contain 'Quick Start' section")
+	}
+	if !strings.Contains(bodyStr, "CLI Reference") {
+		t.Fatal("expected docs page to have CLI Reference")
+	}
+	if !strings.Contains(bodyStr, "bigbase serve") {
+		t.Fatal("expected docs page to mention 'bigbase serve' command")
+	}
+	if !strings.Contains(bodyStr, "--port") {
+		t.Fatal("expected docs page to mention flags")
+	}
+	if !strings.Contains(bodyStr, "API Reference") {
+		t.Fatal("expected docs page to have API Reference section")
+	}
+	if !strings.Contains(bodyStr, "ECC Architecture") {
+		t.Fatal("expected docs page to explain architecture")
+	}
+}
+
 func TestProxyHealthEndpoint(t *testing.T) {
 	logger := testLogger{}
 	k := kernel.New(logger)
