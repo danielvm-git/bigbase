@@ -1,0 +1,348 @@
+# ============================================================================
+# deploy.yml — CI/CD pipeline for BigBase on Contabo VPS
+#
+# Triggers:
+#   - Push to main
+#   - Manual workflow_dispatch (for ad-hoc deploys)
+#
+# Pipeline:
+#   1. Test & Build (Go + embedded Admin UI)
+#   2. Deploy to Contabo VPS via SSH
+#   3. Automatic rollback on health check failure
+# ============================================================================
+name: Deploy to Contabo VPS
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: 'Branch / tag / commit to deploy'
+        required: false
+        default: 'main'
+
+env:
+  GO_VERSION: '1.26'
+  NODE_VERSION: '22'
+  BINARY_NAME: 'bigbase'
+  BINARY_PATH: 'bigbase-linux-amd64'
+  VPS_BIN_DIR: '/opt/bigbase/bin'
+  VPS_RELEASES_DIR: '/opt/bigbase/releases'
+  VPS_BACKUPS_DIR: '/opt/bigbase/backups'
+  VPS_DATA_DIR: '/opt/bigbase/data'
+  VPS_ENV_FILE: '/opt/bigbase/.env'
+  HEALTH_URL: 'http://localhost:8080/api/monitoring/health'
+  MAX_BACKUPS_TO_KEEP: 7
+
+jobs:
+  # ==========================================================================
+  # JOB 1: Test & Build
+  # ==========================================================================
+  build:
+    name: Test & Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    outputs:
+      binary_name: ${{ steps.set-outputs.outputs.binary_name }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      # --- Setup Go ---
+      - name: Setup Go ${{ env.GO_VERSION }}
+        uses: actions/setup-go@v5
+        with:
+          go-version: '${{ env.GO_VERSION }}'
+          cache: true
+
+      # --- Setup Node (needed for admin UI build) ---
+      - name: Setup Node ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: '${{ env.NODE_VERSION }}'
+          cache: 'npm'
+          cache-dependency-path: ui/package-lock.json
+
+      # --- Run Go unit tests ---
+      - name: Run tests
+        run: go test ./... -count=1
+
+      # --- Build Admin UI (embedded in binary) ---
+      - name: Build Admin UI
+        working-directory: ui
+        run: |
+          npm ci --prefer-offline
+          npm run build
+          echo "Admin UI built: $(ls -lh dist/ | wc -l) files"
+
+      # --- Build Go binary for linux/amd64 ---
+      - name: Build binary
+        run: |
+          GOOS=linux GOARCH=amd64 go build -o ${{ env.BINARY_PATH }} .
+          echo "Binary: $(file ${{ env.BINARY_PATH }})"
+          echo "Size: $(ls -lh ${{ env.BINARY_PATH }} | awk '{print $5}')"
+
+      - name: Smoke test binary
+        run: |
+          chmod +x ${{ env.BINARY_PATH }}
+          VERSION_OUTPUT=$(${{ env.BINARY_PATH}} version 2>&1)
+          echo "Version: $VERSION_OUTPUT"
+
+      # --- Upload binary as artifact (for deploy job) ---
+      - name: Upload binary artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: bigbase-linux-amd64
+          path: ${{ env.BINARY_PATH }}
+          retention-days: 3
+          compression-level: 0  # already compressed
+
+      - name: Set output
+        id: set-outputs
+        run: echo "binary_name=${{ env.BINARY_PATH }}" >> "$GITHUB_OUTPUT"
+
+  # ==========================================================================
+  # JOB 2: Deploy to Contabo VPS
+  # ==========================================================================
+  deploy:
+    name: Deploy to Contabo
+    runs-on: ubuntu-latest
+    needs: build
+    timeout-minutes: 10
+
+    # Gate on required secrets being configured
+    environment: production
+
+    steps:
+      - name: Download built binary
+        uses: actions/download-artifact@v4
+        with:
+          name: bigbase-linux-amd64
+
+      - name: Make binary executable
+        run: chmod +x ${{ env.BINARY_PATH }}
+
+      # --- Upload binary via SCP ---
+      - name: Upload binary to VPS
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.CONTABO_HOST }}
+          username: ${{ secrets.CONTABO_USER }}
+          key: ${{ secrets.CONTABO_SSH_KEY }}
+          port: ${{ secrets.CONTABO_SSH_PORT || 22 }}
+          source: ${{ env.BINARY_PATH }}
+          target: /tmp/
+          strip_components: 0
+
+      # --- Deploy via SSH ---
+      - name: Deploy binary and restart service
+        uses: appleboy/ssh-action@v1.2.2
+        env:
+          BINARY_PATH: ${{ env.BINARY_PATH }}
+          VPS_BIN_DIR: ${{ env.VPS_BIN_DIR }}
+          VPS_RELEASES_DIR: ${{ env.VPS_RELEASES_DIR }}
+          VPS_BACKUPS_DIR: ${{ env.VPS_BACKUPS_DIR }}
+          VPS_DATA_DIR: ${{ env.VPS_DATA_DIR }}
+          VPS_ENV_FILE: ${{ env.VPS_ENV_FILE }}
+          HEALTH_URL: ${{ env.HEALTH_URL }}
+          MAX_BACKUPS: ${{ env.MAX_BACKUPS_TO_KEEP }}
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+        with:
+          host: ${{ secrets.CONTABO_HOST }}
+          username: ${{ secrets.CONTABO_USER }}
+          key: ${{ secrets.CONTABO_SSH_KEY }}
+          port: ${{ secrets.CONTABO_SSH_PORT || 22 }}
+          envs: >-
+            BINARY_PATH,VPS_BIN_DIR,VPS_RELEASES_DIR,
+            VPS_BACKUPS_DIR,VPS_DATA_DIR,VPS_ENV_FILE,
+            HEALTH_URL,MAX_BACKUPS,
+            GOOGLE_CLIENT_ID,GOOGLE_CLIENT_SECRET
+          # -------- Script executed on VPS --------
+          script: |
+            set -euo pipefail
+
+            # ----------------------------------------------------------------
+            # Phase 1: Verify preconditions
+            # ----------------------------------------------------------------
+            echo "=== Phase 1: Preconditions ==="
+
+            if [ ! -d "${VPS_BIN_DIR}" ]; then
+              echo "ERROR: ${VPS_BIN_DIR} does not exist."
+              echo "Run scripts/setup-vps.sh on this server first."
+              exit 1
+            fi
+
+            TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+            echo "Deploy timestamp: ${TIMESTAMP}"
+
+            # ----------------------------------------------------------------
+            # Phase 2: Backup current binary
+            # ----------------------------------------------------------------
+            echo "=== Phase 2: Backup current binary ==="
+
+            if [ -f "${VPS_BIN_DIR}/bigbase" ]; then
+              mkdir -p "${VPS_RELEASES_DIR}/${TIMESTAMP}"
+              cp "${VPS_BIN_DIR}/bigbase" "${VPS_RELEASES_DIR}/${TIMESTAMP}/bigbase"
+              # Also keep a 'previous' link for the rollback script
+              rm -rf "${VPS_RELEASES_DIR}/previous"
+              cp -r "${VPS_RELEASES_DIR}/${TIMESTAMP}" "${VPS_RELEASES_DIR}/previous"
+              echo "  Backed up current binary to releases/${TIMESTAMP}/"
+            else
+              echo "  No previous binary — first deploy"
+            fi
+
+            # ----------------------------------------------------------------
+            # Phase 3: Backup database
+            # ----------------------------------------------------------------
+            echo "=== Phase 3: Backup database ==="
+
+            if [ -f "${VPS_DATA_DIR}/bigbase.db" ]; then
+              cp "${VPS_DATA_DIR}/bigbase.db" "${VPS_BACKUPS_DIR}/bigbase-${TIMESTAMP}.db"
+              echo "  Database backed up to backups/bigbase-${TIMESTAMP}.db"
+
+              # Clean old backups
+              ls -1t "${VPS_BACKUPS_DIR}"/bigbase-*.db 2>/dev/null \
+                | tail -n +$((MAX_BACKUPS + 1)) \
+                | xargs -r rm
+              echo "  Keeping last ${MAX_BACKUPS} database backups"
+            else
+              echo "  No database to backup — initial deploy"
+            fi
+
+            # ----------------------------------------------------------------
+            # Phase 4: Write OAuth env file if secrets provided
+            # ----------------------------------------------------------------
+            echo "=== Phase 4: Configure environment ==="
+
+            if [ -n "${GOOGLE_CLIENT_ID:-}" ] && [ -n "${GOOGLE_CLIENT_SECRET:-}" ]; then
+              cat > "${VPS_ENV_FILE}" << EOENV
+            GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+            GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+            EOENV
+              chmod 600 "${VPS_ENV_FILE}"
+              chown bigbase:bigbase "${VPS_ENV_FILE}" 2>/dev/null || true
+              echo "  Environment file written: ${VPS_ENV_FILE}"
+            else
+              echo "  No Google OAuth credentials — deploying without social login"
+              rm -f "${VPS_ENV_FILE}" 2>/dev/null || true
+            fi
+
+            # ----------------------------------------------------------------
+            # Phase 5: Deploy new binary
+            # ----------------------------------------------------------------
+            echo "=== Phase 5: Deploy new binary ==="
+
+            # Binary is placed at /tmp/ by the SCP action — move it into place
+            if [ -f "/tmp/${BINARY_PATH}" ]; then
+              mv "/tmp/${BINARY_PATH}" "${VPS_BIN_DIR}/bigbase"
+            else
+              echo "ERROR: Binary not found at /tmp/${BINARY_PATH}"
+              ls -la /tmp/bigbase* 2>/dev/null || true
+              exit 1
+            fi
+
+            chmod +x "${VPS_BIN_DIR}/bigbase"
+            chown bigbase:bigbase "${VPS_BIN_DIR}/bigbase" 2>/dev/null || true
+            echo "  Binary deployed to ${VPS_BIN_DIR}/bigbase"
+            echo "  Version: $(${VPS_BIN_DIR}/bigbase version 2>&1)"
+
+            # ----------------------------------------------------------------
+            # Phase 6: Restart service
+            # ----------------------------------------------------------------
+            echo "=== Phase 6: Restart service ==="
+
+            systemctl daemon-reload 2>/dev/null || true
+            systemctl restart bigbase
+            echo "  Service restarted"
+
+            # ----------------------------------------------------------------
+            # Phase 7: Health check with retry
+            # ----------------------------------------------------------------
+            echo "=== Phase 7: Health check ==="
+
+            HEALTH_PASS=false
+            for i in 1 2 3 4 5; do
+              sleep 3
+              echo "  Attempt ${i}/5..."
+              if curl -sf "${HEALTH_URL}" > /dev/null 2>&1; then
+                HEALTH_PASS=true
+                echo "  HEALTHY — BigBase is serving requests"
+                break
+              fi
+            done
+
+            if [ "${HEALTH_PASS}" = false ]; then
+              echo ""
+              echo "=== HEALTH CHECK FAILED! Rolling back... ==="
+              journalctl -u bigbase --no-pager -n 50 || true
+
+              # Rollback
+              if [ -f "${VPS_RELEASES_DIR}/previous/bigbase" ]; then
+                cp "${VPS_RELEASES_DIR}/previous/bigbase" "${VPS_BIN_DIR}/bigbase"
+                chmod +x "${VPS_BIN_DIR}/bigbase"
+                chown bigbase:bigbase "${VPS_BIN_DIR}/bigbase" 2>/dev/null || true
+                systemctl restart bigbase
+                echo "  Rolled back to previous release"
+                sleep 3
+                if curl -sf "${HEALTH_URL}" > /dev/null 2>&1; then
+                  echo "  Rollback successful — previous release is running"
+                else
+                  echo "  CRITICAL: Rollback also failed. Manual intervention required!"
+                fi
+              else
+                echo "  CRITICAL: No previous release to rollback to. Manual intervention required!"
+              fi
+              exit 1
+            fi
+
+            # ----------------------------------------------------------------
+            # Phase 8: Cleanup old releases
+            # ----------------------------------------------------------------
+            echo "=== Phase 8: Cleanup ==="
+
+            # Keep last 5 releases (plus 'previous' link)
+            ls -1t "${VPS_RELEASES_DIR}" \
+              | grep -E '^[0-9]{8}-[0-9]{6}$' \
+              | tail -n +6 \
+              | while read -r old; do
+                  rm -rf "${VPS_RELEASES_DIR}/${old}"
+                  echo "  Removed old release: ${old}"
+                done
+
+            echo ""
+            echo "=== DEPLOY COMPLETE ==="
+            echo "Timestamp: ${TIMESTAMP}"
+            echo "Binary:    $(ls -lh ${VPS_BIN_DIR}/bigbase | awk '{print $5}')"
+            echo "Database:  $(ls -lh ${VPS_DATA_DIR}/bigbase.db 2>/dev/null | awk '{print $5}')"
+
+      # --- Deployment verification ---
+      - name: Deployment verification
+        if: success()
+        run: |
+          echo "✅ Deploy finished successfully"
+          echo "   Server: ${{ secrets.CONTABO_HOST }}"
+          echo "   Time: $(date -u)"
+
+  # ==========================================================================
+  # JOB 3: Notify (only on failure)
+  # ==========================================================================
+  notify:
+    name: Notify on failure
+    runs-on: ubuntu-latest
+    needs: [build, deploy]
+    if: failure() && github.event_name != 'workflow_dispatch'
+
+    steps:
+      - name: Build failure summary
+        run: |
+          echo "❌ BigBase deploy FAILED"
+          echo "   Repository: ${{ github.repository }}"
+          echo "   Commit: ${{ github.sha }}"
+          echo "   Branch: ${{ github.ref_name }}"
+          echo "   Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"

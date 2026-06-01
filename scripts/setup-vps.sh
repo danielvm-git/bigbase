@@ -1,0 +1,289 @@
+#!/usr/bin/env bash
+# ============================================================================
+# setup-vps.sh — One-time Contabo VPS setup for BigBase
+# Run this ONCE on your fresh Contabo VPS before the first GitHub Actions deploy.
+#
+# Usage:
+#   ssh root@<VPS_IP> 'bash -s' < scripts/setup-vps.sh
+#
+# Or copy it to the VPS and run:
+#   ./setup-vps.sh
+#
+# Idempotent — safe to run multiple times.
+# ============================================================================
+set -euo pipefail
+
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+RED='\033[0;31m'
+NC='\033[0m'
+
+info()  { printf "${GREEN}%s${NC}\n" "$1"; }
+warn()  { printf "${YELLOW}WARNING: %s${NC}\n" "$1"; }
+err()   { printf "${RED}ERROR: %s${NC}\n" "$1"; }
+
+if [ "$(id -u)" -ne 0 ]; then
+  err "This script must be run as root (use sudo)"
+  exit 1
+fi
+
+# --- Detect architecture ---
+ARCH=$(uname -m)
+case "$ARCH" in
+  x86_64|amd64)  ARCH="amd64" ;;
+  aarch64|arm64) ARCH="arm64" ;;
+  *)
+    err "Unsupported architecture: $ARCH"
+    exit 1
+    ;;
+esac
+info "Architecture: $ARCH"
+
+# --- Configuration (edit these if needed) ---
+BIGBASE_USER="${BIGBASE_USER:-bigbase}"
+BIGBASE_GROUP="${BIGBASE_GROUP:-bigbase}"
+BIGBASE_HOME="/opt/bigbase"
+BIGBASE_PORT="${BIGBASE_PORT:-8080}"
+BIGBASE_DB="${BIGBASE_HOME}/data/bigbase.db"
+
+# ============================================================================
+# Step 1: System packages
+# ============================================================================
+info "[1/7] Installing system packages..."
+apt-get update -qq
+apt-get install -y -qq \
+  curl \
+  gnupg \
+  ufw \
+  caddy \
+  rsync
+
+# ============================================================================
+# Step 2: Create bigbase user
+# ============================================================================
+info "[2/7] Creating '${BIGBASE_USER}' system user..."
+if ! id -u "${BIGBASE_USER}" &>/dev/null; then
+  useradd --system --no-create-home --shell /usr/sbin/nologin "${BIGBASE_USER}"
+  info "  Created user: ${BIGBASE_USER}"
+else
+  info "  User already exists: ${BIGBASE_USER}"
+fi
+
+# ============================================================================
+# Step 3: Create directory structure
+# ============================================================================
+info "[3/7] Creating directory structure..."
+mkdir -p "${BIGBASE_HOME}/bin"
+mkdir -p "${BIGBASE_HOME}/data"
+mkdir -p "${BIGBASE_HOME}/backups"
+mkdir -p "${BIGBASE_HOME}/releases"
+chown -R "${BIGBASE_USER}:${BIGBASE_GROUP}" "${BIGBASE_HOME}"
+
+# ============================================================================
+# Step 4: Configure firewall (UFW)
+# ============================================================================
+info "[4/7] Configuring firewall..."
+ufw --force reset
+ufw default deny incoming
+ufw default allow outgoing
+ufw allow 22/tcp    comment 'SSH'
+ufw allow 80/tcp    comment 'HTTP'
+ufw allow 443/tcp   comment 'HTTPS'
+ufw --force enable
+info "  Firewall rules applied: SSH(22) HTTP(80) HTTPS(443)"
+
+# ============================================================================
+# Step 5: Set up Caddy reverse proxy
+# ============================================================================
+info "[5/7] Configuring Caddy reverse proxy..."
+
+cat > /etc/caddy/Caddyfile << CADDYEOF
+# BigBase — Caddy reverse proxy configuration
+# ============================================
+#
+# HTTPS via automatic Let's Encrypt:
+#   Replace :80 with your domain (e.g., api.yourdomain.com)
+#   Caddy will auto-provision TLS certificates.
+#
+# Without a domain:
+#   The current config serves HTTP on port 80.
+#   Caddy still handles compression, headers, and logging.
+
+:80 {
+    reverse_proxy localhost:${BIGBASE_PORT} {
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-Proto {scheme}
+    }
+
+    # Security headers
+    header {
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "DENY"
+        X-XSS-Protection "1; mode=block"
+        Referrer-Policy "strict-origin-when-cross-origin"
+        -Server
+    }
+
+    # Structured JSON access logs
+    log {
+        output file /var/log/caddy/bigbase-access.log
+        format json
+    }
+}
+CADDYEOF
+
+systemctl enable caddy
+info "  Caddy configured — HTTP on port 80 → localhost:${BIGBASE_PORT}"
+
+# ============================================================================
+# Step 6: Create systemd service for BigBase
+# ============================================================================
+info "[6/7] Creating systemd service..."
+
+cat > /etc/systemd/system/bigbase.service << SYSTEMDEOF
+[Unit]
+Description=BigBase BaaS Platform
+Documentation=https://github.com/danielvm-git/bigbase
+After=network.target caddy.service
+Wants=caddy.service
+
+[Service]
+Type=simple
+User=${BIGBASE_USER}
+Group=${BIGBASE_GROUP}
+WorkingDirectory=${BIGBASE_HOME}
+
+# The binary is deployed by GitHub Actions
+ExecStart=${BIGBASE_HOME}/bin/bigbase serve \\
+    --port ${BIGBASE_PORT} \\
+    --db ${BIGBASE_DB}
+
+# Environment variables for Google OAuth (set from GitHub Secrets)
+EnvironmentFile=-${BIGBASE_HOME}/.env
+
+# Restart behavior
+Restart=always
+RestartSec=5
+StartLimitIntervalSec=60
+StartLimitBurst=3
+
+# Graceful shutdown
+TimeoutStopSec=30
+KillSignal=SIGTERM
+
+# Security hardening
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=full
+ProtectHome=yes
+ReadWritePaths=${BIGBASE_HOME}/data
+ReadWritePaths=${BIGBASE_HOME}/backups
+
+[Install]
+WantedBy=multi-user.target
+SYSTEMDEOF
+
+systemctl daemon-reload
+info "  systemd service created: bigbase.service"
+
+# ============================================================================
+# Step 7: Create helper scripts
+# ============================================================================
+info "[7/7] Creating helper scripts..."
+
+# Rollback script
+cat > "${BIGBASE_HOME}/rollback.sh" << 'ROLLBACK'
+#!/usr/bin/env bash
+# ============================================================================
+# rollback.sh — Roll back to the previous BigBase release
+# ============================================================================
+set -euo pipefail
+
+BIGBASE_HOME="/opt/bigbase"
+RELEASES_DIR="${BIGBASE_HOME}/releases"
+
+if [ ! -f "${RELEASES_DIR}/previous/bigbase" ]; then
+  echo "ERROR: No previous release found at ${RELEASES_DIR}/previous/"
+  exit 1
+fi
+
+echo "Rolling back to previous release..."
+cp "${RELEASES_DIR}/previous/bigbase" "${BIGBASE_HOME}/bin/bigbase"
+chmod +x "${BIGBASE_HOME}/bin/bigbase"
+chown bigbase:bigbase "${BIGBASE_HOME}/bin/bigbase"
+
+systemctl restart bigbase
+sleep 3
+
+# Health check
+if curl -sf http://localhost:8080/api/monitoring/health > /dev/null 2>&1; then
+  echo "Rollback successful — BigBase is running."
+else
+  echo "ERROR: Rollback failed — health check did not pass."
+  exit 1
+fi
+ROLLBACK
+chmod +x "${BIGBASE_HOME}/rollback.sh"
+chown "${BIGBASE_USER}:${BIGBASE_GROUP}" "${BIGBASE_HOME}/rollback.sh"
+
+# Status script
+cat > "${BIGBASE_HOME}/status.sh" << 'STATUS'
+#!/usr/bin/env bash
+# ============================================================================
+# status.sh — Check BigBase deployment status
+# ============================================================================
+echo "=== BigBase Service Status ==="
+systemctl status bigbase --no-pager 2>&1 | head -20
+
+echo ""
+echo "=== Binary ==="
+ls -lh /opt/bigbase/bin/bigbase 2>/dev/null || echo "No binary found"
+
+echo ""
+echo "=== Database ==="
+ls -lh /opt/bigbase/data/bigbase.db 2>/dev/null || echo "No database found"
+
+echo ""
+echo "=== Backups ==="
+ls -lh /opt/bigbase/backups/ 2>/dev/null | tail -5 || echo "No backups found"
+
+echo ""
+echo "=== Listeners ==="
+ss -tlnp | grep -E ':(80|443|8080)' || echo "No listeners found"
+
+echo ""
+echo "=== Health Check ==="
+curl -sf http://localhost:8080/api/monitoring/health && echo "  OK" || echo "  FAILED"
+STATUS
+chmod +x "${BIGBASE_HOME}/status.sh"
+chown "${BIGBASE_USER}:${BIGBASE_GROUP}" "${BIGBASE_HOME}/status.sh"
+
+# ============================================================================
+# Summary
+# ============================================================================
+echo ""
+echo "================================================================================"
+info "  BigBase VPS setup complete!"
+echo ""
+echo "  Binary directory:  ${BIGBASE_HOME}/bin/"
+echo "  Data directory:    ${BIGBASE_HOME}/data/"
+echo "  Backups directory: ${BIGBASE_HOME}/backups/"
+echo "  Releases:          ${BIGBASE_HOME}/releases/"
+echo ""
+echo "  Service:           systemctl [start|stop|restart|status] bigbase"
+echo "  Logs:              journalctl -u bigbase -f"
+echo "  Status:            sudo ${BIGBASE_HOME}/status.sh"
+echo "  Rollback:          sudo ${BIGBASE_HOME}/rollback.sh"
+echo ""
+echo "  Caddy logs:        journalctl -u caddy -f"
+echo ""
+echo "  NEXT STEPS:"
+echo "  1. Set up GitHub Secrets in your repo:"
+echo "       - CONTABO_HOST     → Your VPS IP address"
+echo "       - CONTABO_USER     → $(whoami)"
+echo "       - CONTABO_SSH_KEY  → Your SSH private key (deploy key)"
+echo "       - GOOGLE_CLIENT_ID     → (optional) Google OAuth client ID"
+echo "       - GOOGLE_CLIENT_SECRET → (optional) Google OAuth client secret"
+echo "  2. Push to main — GitHub Actions will build and deploy"
+echo "  3. (Optional) Set up a domain and update the Caddyfile for HTTPS"
+echo "================================================================================"

@@ -1,5 +1,7 @@
 # Go
 bigbase
+bigbase-linux-amd64
+bigbase-darwin-*
 *.exe
 *.test
 *.out
