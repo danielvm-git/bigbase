@@ -89,10 +89,13 @@ func createTestRepo(t *testing.T, database *db.DB, repoID, gitDir string) string
 	}
 
 	repoPath := filepath.Join(gitDir, repoID+".git")
-	mustRun(t, "git", "init", "--bare", repoPath)
+	mustRun(t, "git", "init", "--bare", "-b", "main", repoPath)
+	// CI runners may mark temp dirs as dubious ownership (git 2.35+).
+	mustRun(t, "git", "config", "--global", "--add", "safe.directory", repoPath)
 
 	sourceDir := t.TempDir()
-	mustRun(t, "git", "init", sourceDir)
+	mustRun(t, "git", "init", "-b", "main", sourceDir)
+	mustRun(t, "git", "config", "--global", "--add", "safe.directory", sourceDir)
 	mustRun(t, "git", "-C", sourceDir, "config", "user.email", "test@test.com")
 	mustRun(t, "git", "-C", sourceDir, "config", "user.name", "test")
 	if err := os.WriteFile(filepath.Join(sourceDir, "index.html"), []byte("<h1>Hello</h1>"), 0644); err != nil {

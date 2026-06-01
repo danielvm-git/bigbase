@@ -109,8 +109,8 @@ cat > /etc/caddy/Caddyfile << CADDYEOF
 #   The current config serves HTTP on port 80.
 #   Caddy still handles compression, headers, and logging.
 
-:80 {
-    reverse_proxy localhost:${BIGBASE_PORT} {
+http:// {
+    reverse_proxy 127.0.0.1:${BIGBASE_PORT} {
         header_up X-Real-IP {remote_host}
         header_up X-Forwarded-Proto {scheme}
     }
