@@ -5,7 +5,9 @@ import (
 	"fmt"
 )
 
-const Version = "0.1.0"
+// Version is the build-time app version, injected via ldflags (e.g., -X ...kernel.Version=1.2.3).
+// Falls back to "0.0.0-dev" when not set at build time (local dev without ldflags).
+var Version = "0.0.0-dev"
 
 type ComponentStatus struct {
 	Name         string

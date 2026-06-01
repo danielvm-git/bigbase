@@ -26,3 +26,7 @@ bigbase.db
 data/
 .bigpowers/
 *.zip
+
+# Node / semantic-release
+node_modules/
+

@@ -10,6 +10,7 @@ function SidebarIcon({ children }: { children: string }) {
 export default function Layout() {
   const nav = useNavigate()
   const [user, setUser] = useState<UserInfo | null>(null)
+  const [appVersion, setAppVersion] = useState<string | null>(null)
 
   useEffect(() => {
     fetch('/api/auth/me')
@@ -20,6 +21,13 @@ export default function Layout() {
       .then(setUser)
       .catch(() => nav('/login'))
   }, [nav])
+
+  useEffect(() => {
+    fetch('/api/version')
+      .then(r => r.json())
+      .then(d => setAppVersion(d.version))
+      .catch(() => {})
+  }, [])
 
   const handleLogout = () => nav('/login')
 
@@ -144,9 +152,15 @@ export default function Layout() {
         )}
       </nav>
 
-      <main className="content">
-        <Outlet />
-      </main>
+      <div className="layout-body">
+        <main className="content">
+          <Outlet />
+        </main>
+
+        <footer className="page-footer">
+          {appVersion && <span>BigBase v{appVersion}</span>}
+        </footer>
+      </div>
     </div>
   )
 }

@@ -2,7 +2,7 @@
 # deploy.yml — CI/CD pipeline for BigBase on Contabo VPS
 #
 # Triggers:
-#   - Push to main
+#   - Release published (via semantic-release)
 #   - Manual workflow_dispatch (for ad-hoc deploys)
 #
 # Pipeline:
@@ -13,14 +13,14 @@
 name: Deploy to Contabo VPS
 
 on:
-  push:
-    branches: [main]
+  release:
+    types: [published]
   workflow_dispatch:
     inputs:
       ref:
-        description: 'Branch / tag / commit to deploy'
-        required: false
-        default: 'main'
+        description: 'Tag to deploy (e.g., v0.2.0)'
+        required: true
+        default: ''
 
 env:
   GO_VERSION: '1.26'
@@ -83,7 +83,11 @@ jobs:
       # --- Build Go binary for linux/amd64 ---
       - name: Build binary
         run: |
-          GOOS=linux GOARCH=amd64 go build -o ${{ env.BINARY_PATH }} .
+          BUILD_VERSION=$(cat VERSION 2>/dev/null || echo "0.0.0-dev")
+          echo "Building version: ${BUILD_VERSION}"
+          GOOS=linux GOARCH=amd64 go build \
+            -ldflags "-X github.com/danielvm/bigbase/kernel.Version=${BUILD_VERSION}" \
+            -o ${{ env.BINARY_PATH }} .
           echo "Binary: $(file ${{ env.BINARY_PATH }})"
           echo "Size: $(ls -lh ${{ env.BINARY_PATH }} | awk '{print $5}')"
 
