@@ -1,0 +1,57 @@
+# 1.0.0 (2026-06-01)
+
+
+### Bug Fixes
+
+* address review findings — rows.Err, routing, YAML leak, repo filter ([45e79c3](https://github.com/danielvm-git/bigbase/commit/45e79c39440ae6327525ca662b53e02f4d57d6ee))
+* address review findings — security, authz, race conditions ([2a49228](https://github.com/danielvm-git/bigbase/commit/2a49228e1fc32f95d22e29aebf03cc3719490e4f))
+* **api db:** address all 18 code review findings ([9c693a4](https://github.com/danielvm-git/bigbase/commit/9c693a433d006a26e1ca48164444a5f94576afa7))
+* **ci:** run smoke test binary with ./ prefix ([83b2de1](https://github.com/danielvm-git/bigbase/commit/83b2de10b643f22d25ff458d763b432db1a045ad))
+* **deploy:** CI git safe.directory and Caddy http:// catch-all ([d0af465](https://github.com/danielvm-git/bigbase/commit/d0af4650fdb84b21ad26d571b581132371e9c0c3))
+* **deploy:** enable bigbase systemd unit on VPS setup ([2aa3361](https://github.com/danielvm-git/bigbase/commit/2aa3361db77c02c25ec310359194f0730edcc241))
+* **deploy:** resolve relative paths and URL update timing ([9ca144b](https://github.com/danielvm-git/bigbase/commit/9ca144b2b585e30fd6f8a974c90db627a21d25f3))
+* **deploy:** serve static files via HTTP file server ([575f780](https://github.com/danielvm-git/bigbase/commit/575f780ed0e063a5f8072e2c942cc4e6c111a925))
+* **functions:** address review findings — interrupt timeout, validate update, runtime interface, body limit, injectable runtimes ([a45fa7a](https://github.com/danielvm-git/bigbase/commit/a45fa7a90f7100d96473bdb978e3cb7a4f220cdd))
+* harden kernel, api, auth, forge, git, and storage components ([ef4ea80](https://github.com/danielvm-git/bigbase/commit/ef4ea80440bd62ca63199138d6d0fbba2f686408))
+* **realtime:** fix Hub data race, add event unsubscribe, log emit errors ([f10ed83](https://github.com/danielvm-git/bigbase/commit/f10ed8398be27a6fc5f7a6de5107f891789723db))
+* **ui:** export missing components from index.ts ([994bc53](https://github.com/danielvm-git/bigbase/commit/994bc531c75d4026f2ca72c9425ae8b77362d95d))
+
+
+### Features
+
+* **admin-ui:** port Appwrite design tokens and create shared component system ([da3f118](https://github.com/danielvm-git/bigbase/commit/da3f118678f0b80b5874e0d7dc559b5700cd3447))
+* **admin:** add Admin UI, SQL Editor, and User Management ([e19e977](https://github.com/danielvm-git/bigbase/commit/e19e9775f62605ca4174a457e0d62ba021e47d32))
+* **auth:** add email/password auth with JWT tokens ([#1](https://github.com/danielvm-git/bigbase/issues/1)) ([35c6096](https://github.com/danielvm-git/bigbase/commit/35c60969656a3a51a0ecff3a720f97f0a174f177))
+* **auth:** add Google OAuth social login via embedded relay ([d4970ec](https://github.com/danielvm-git/bigbase/commit/d4970ec7b7d89e32652c9811f67b93ee668f7a29))
+* **cici:** add CI/CD pipeline component (Slice 9) ([5d2ba35](https://github.com/danielvm-git/bigbase/commit/5d2ba355b884661e9938e051d00adcf05303b5ac))
+* **cli proxy kernel:** add CLI commands, proxy server, and observability ([fc23a09](https://github.com/danielvm-git/bigbase/commit/fc23a09eb75b67436a08200e876eef687ad8d237))
+* **db api:** add SQLite database and auto REST CRUD API ([696befb](https://github.com/danielvm-git/bigbase/commit/696befbe2b772042cfe1c23193e6a45ebea17876))
+* **deploy:** add deploy component with build detection, process execution, and port allocation ([c8d001a](https://github.com/danielvm-git/bigbase/commit/c8d001aa34aac7d4d0665db256de235310376761))
+* **deploy:** improve deployment pipeline and add admin UI pages ([d056ce1](https://github.com/danielvm-git/bigbase/commit/d056ce1757c3460861913113fa18f01cedd30ad1))
+* **forge:** add issues, labels, comments, kanban board, and wiki ([e893817](https://github.com/danielvm-git/bigbase/commit/e893817528dd57a27fd918387a417b68e0346a76))
+* **functions:** add Functions component with CRUD operations ([00ea81c](https://github.com/danielvm-git/bigbase/commit/00ea81c45485f2d1971227d1fc39c9c67fcd7260))
+* **functions:** add goja JS runtime with console.log capture and timeout ([44a74f5](https://github.com/danielvm-git/bigbase/commit/44a74f5cba9002559f0aed918a4c895f4abd6e5f))
+* **functions:** wire Functions component into main.go ([9b89585](https://github.com/danielvm-git/bigbase/commit/9b89585a569ac42e9dd505847675c908ee4b3649))
+* **git:** add repository management with bare repo creation ([0481cfc](https://github.com/danielvm-git/bigbase/commit/0481cfc785e6fbfd0ec0ad58c7ff416a781bde9d))
+* integrate semantic-release and display version in admin footer ([3e6b86c](https://github.com/danielvm-git/bigbase/commit/3e6b86cdf5df726fc506ab568a05ed9819f71d56))
+* integrate semantic-release and display version in admin footer ([f042fe2](https://github.com/danielvm-git/bigbase/commit/f042fe2361ed476a9ac03f784f87c44374ac545a))
+* **messaging:** add email, SMS, and push notification endpoints with message log ([fd7cb61](https://github.com/danielvm-git/bigbase/commit/fd7cb61b82c42f473e19cac76565ef8dd435debf))
+* **messaging:** wire messaging component into main.go with auth middleware ([5e48755](https://github.com/danielvm-git/bigbase/commit/5e487553f624c8093d267c1b4a908ee942f141f7))
+* **monitoring:** add /api/monitoring/metrics endpoint with system and request metrics ([dcd0430](https://github.com/danielvm-git/bigbase/commit/dcd04303045bef4131262e517c704882fdde2838))
+* **monitoring:** add alert CRUD endpoints ([1b356e6](https://github.com/danielvm-git/bigbase/commit/1b356e63f8644510a74b813227a86aacdb09dd99))
+* **monitoring:** add component shell with health endpoint ([b292c81](https://github.com/danielvm-git/bigbase/commit/b292c81635e7fee26049253a5402af3329fb0d16))
+* **monitoring:** add log storage and search endpoints ([6d3a6b7](https://github.com/danielvm-git/bigbase/commit/6d3a6b75331dd46e4603da2c31bcfc04d87a47e2))
+* **monitoring:** add request metrics middleware ([4dfbbc1](https://github.com/danielvm-git/bigbase/commit/4dfbbc1318a7f5a8cb4ee8ecd12ac48cd49bcb43))
+* **monitoring:** add system metrics collector ([fc6bd9e](https://github.com/danielvm-git/bigbase/commit/fc6bd9e883f4b8b1a39c62d43ecd53a09bec7f92))
+* **monitoring:** wire into main.go and add admin UI page ([0a683cd](https://github.com/danielvm-git/bigbase/commit/0a683cd2663b412eb0554ccb875265aa4a2fc43f))
+* **proxy:** add commercial landing page and documentation ([c3197e6](https://github.com/danielvm-git/bigbase/commit/c3197e6066744ef52f18cec62f3f4e03273eaf9f))
+* **proxy:** add commercial landing page with GitHub stars cache ([fea3761](https://github.com/danielvm-git/bigbase/commit/fea37618f2e70ddccb5d983b487c53c0a013c4cd))
+* **proxy:** add documentation page with sidebar navigation ([dcaff68](https://github.com/danielvm-git/bigbase/commit/dcaff68f7fac2a19583c14b619b6c3b614974cc8))
+* **realtime:** add WebSocket subscriptions, event bus broadcasts, and Hub pattern ([4ab37bf](https://github.com/danielvm-git/bigbase/commit/4ab37bf4a3a7ab5a895d9f8897bf5bbb597bf560))
+* **storage:** add file upload, download, list, and delete ([78ebe92](https://github.com/danielvm-git/bigbase/commit/78ebe9205aa9eb4feb290ab8ca6810e6e46ffff8))
+* **ui:** enhance dashboard with charts and fix Google login visibility ([a453256](https://github.com/danielvm-git/bigbase/commit/a453256a715c56eb2df2c8584045d3b48fa901ee))
+
+
+### BREAKING CHANGES
+
+* Deploy now triggers on release.published instead of every push to main.
