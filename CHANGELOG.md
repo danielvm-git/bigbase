@@ -1,3 +1,10 @@
+## [1.0.1](https://github.com/danielvm-git/bigbase/compare/v1.0.0...v1.0.1) (2026-06-01)
+
+
+### Bug Fixes
+
+* **ci:** merge release and deploy into single workflow to fix GITHUB_TOKEN event suppression ([f05faf3](https://github.com/danielvm-git/bigbase/commit/f05faf3c6d5b2eb292dd9af9280f06ac263e1983))
+
 # 1.0.0 (2026-06-01)
 
 
