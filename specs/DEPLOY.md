@@ -4,11 +4,13 @@
 
 | Service | URL |
 |---------|-----|
-| Admin UI & API (HTTP) | http://89.116.26.187/ |
-| Health (via Caddy) | http://89.116.26.187/health |
-| Monitoring health | http://89.116.26.187/api/monitoring/health |
+| Main site (HTTPS) | https://bigbase.click/ |
+| Admin UI | https://bigbase.click/admin/ |
+| Health | https://bigbase.click/health |
+| Monitoring health | https://bigbase.click/api/monitoring/health |
+| Backend (internal) | http://localhost:8080 (via Caddy reverse proxy) |
 
-HTTPS and a custom domain are deferred until DNS is configured. Update `/etc/caddy/Caddyfile` on the VPS when ready.
+HTTPS is handled automatically by Caddy (Let's Encrypt). Update `/etc/caddy/Caddyfile` on the VPS if the domain changes.
 
 ## Infrastructure
 

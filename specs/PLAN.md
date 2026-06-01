@@ -1,61 +1,41 @@
 ---
 type: implementation-plan
-context: realtime WebSocket subscriptions for live mutation events
+context: configure bigbase.click domain with HTTPS via Caddy
 ---
 
-# Slice 11: Realtime — Implementation Plan
+# Domain Setup: bigbase.click
 
-## Prerequisites
+Configure the new `bigbase.click` domain across all layers: DNS → reverse proxy → app config → landing page → docs.
 
-| Step | File | Change |
-|------|------|--------|
-| 1 | `components/auth/auth.go` | Add exported `ValidateToken(token) (*Claims, error)` |
-| 2 | `components/auth/jwt.go` | Export `Claims` (already exported) |
-| 3 | `components/api/api.go` | Add `Bus` interface to Options; emit mutation events in create/update/delete |
-| 4 | `go get github.com/gorilla/websocket` | Add WebSocket library |
-| 5 | `components/realtime/realtime.go` | New component: Hub, Client, WebSocket upgrade, event subscription |
-| 6 | `components/realtime/realtime_test.go` | Tests: connect, subscribe, broadcast, invalid token |
-| 7 | `main.go` | Wire realtime component + auth ValidateToken |
+## Steps
 
-## Event Flow
+| # | Layer | What | Verify |
+|---|-------|------|--------|
+| 1 | 🌐 DNS (Spaceship) | Create A record `bigbase.click` → `89.116.26.187` | `dig +short bigbase.click` returns `89.116.26.187` |
+| 2 | 🔄 Caddy (VPS) | Update Caddyfile: replace `http://` with `bigbase.click` for auto HTTPS via Let's Encrypt | `curl -sI https://bigbase.click | head -1` returns 200 |
+| 3 | ⚙️ Config defaults | Update `config/defaults.jsonc` `proxy.domain` from `"localhost"` to `"bigbase.click"`, `proxy.ssl` to `true` | `go run . status` shows domain config |
+| 4 | 🏠 Landing page | Replace hardcoded `http://localhost:8080/admin/` with relative `/admin/` in proxy.go docs template | `go test ./components/proxy/...` passes |
+| 5 | 📄 DEPLOY.md | Update with new domain and HTTPS URLs | File diff verified |
+| 6 | ✅ Commit & deploy | Build, test, commit, push to trigger deploy | CI passes, site live at https://bigbase.click |
 
+## Service file note
+
+The systemd service (`/etc/systemd/system/bigbase.service`) on the VPS already passes `--port 8080` and doesn't need a domain flag — domain is handled entirely by the Caddy reverse proxy. No changes needed there.
+
+## Caddyfile change
+
+**Before:**
 ```
-POST /api/collections/posts  →  api.handleCreate()
-                                   ↓
-                              api.EventBus.Emit("mutation", {collection, type, data})
-                                   ↓
-                              realtime.receiveMutation()
-                                   ↓
-                              hub.broadcast to subscribers of "collection:posts"
-                                   ↓
-                              WebSocket clients receive JSON
-```
-
-## Message Protocol (JSON over WebSocket)
-
-Client → Server:
-```json
-{"action": "subscribe", "channel": "collection:posts"}
-{"action": "unsubscribe", "channel": "collection:posts"}
+http:// {
+    reverse_proxy 127.0.0.1:8080 { ... }
+}
 ```
 
-Server → Client:
-```json
-{"action": "mutation", "channel": "collection:posts", "type": "create", "data": {...}}
+**After:**
+```
+bigbase.click {
+    reverse_proxy 127.0.0.1:8080 { ... }
+}
 ```
 
-## Verify
-
-```bash
-# Terminal 1
-wscat -c "ws://localhost:9999/realtime?token=$TOKEN"
-> {"action":"subscribe","channel":"collection:posts"}
-
-# Terminal 2
-curl -X POST /api/collections/posts \
-  -H "Authorization: Bearer $TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{"title":"Hello"}'
-
-# Terminal 1 receives mutation event
-```
+Caddy will auto-provision a Let's Encrypt TLS certificate for `bigbase.click` and redirect HTTP → HTTPS.

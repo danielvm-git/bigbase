@@ -102,14 +102,10 @@ cat > /etc/caddy/Caddyfile << CADDYEOF
 # ============================================
 #
 # HTTPS via automatic Let's Encrypt:
-#   Replace :80 with your domain (e.g., api.yourdomain.com)
-#   Caddy will auto-provision TLS certificates.
-#
-# Without a domain:
-#   The current config serves HTTP on port 80.
-#   Caddy still handles compression, headers, and logging.
+#   Caddy auto-provisions TLS certificates for the domain.
+#   HTTP requests are automatically redirected to HTTPS.
 
-http:// {
+bigbase.click {
     reverse_proxy 127.0.0.1:${BIGBASE_PORT} {
         header_up X-Real-IP {remote_host}
         header_up X-Forwarded-Proto {scheme}
@@ -133,7 +129,7 @@ http:// {
 CADDYEOF
 
 systemctl enable caddy
-info "  Caddy configured — HTTP on port 80 → localhost:${BIGBASE_PORT}"
+info "  Caddy configured — https://bigbase.click → localhost:${BIGBASE_PORT}"
 
 # ============================================================================
 # Step 6: Create systemd service for BigBase
@@ -286,5 +282,5 @@ echo "       - CONTABO_SSH_KEY  → Your SSH private key (deploy key)"
 echo "       - GOOGLE_CLIENT_ID     → (optional) Google OAuth client ID"
 echo "       - GOOGLE_CLIENT_SECRET → (optional) Google OAuth client secret"
 echo "  2. Push to main — GitHub Actions will build and deploy"
-echo "  3. (Optional) Set up a domain and update the Caddyfile for HTTPS"
+echo "  3. Domain bigbase.click is pre-configured in the Caddyfile"
 echo "================================================================================"

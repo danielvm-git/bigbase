@@ -1,5 +1,5 @@
 {
   "components": ["proxy", "db", "auth", "api", "storage", "admin"],
   "db": { "driver": "sqlite" },
-  "proxy": { "domain": "localhost", "ssl": false }
+  "proxy": { "domain": "bigbase.click", "ssl": true }
 }

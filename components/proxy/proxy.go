@@ -767,7 +767,7 @@ a:hover { opacity: 0.8; }
       <span>$</span> go run . serve --port 8080 --db bigbase.db
     </div>
 
-    <p>Open <a href="/admin/">http://localhost:8080/admin/</a> to access the admin dashboard. Register an account and start building.</p>
+    <p>Open <a href="/admin/">/admin/</a> to access the admin dashboard. Register an account and start building.</p>
 
     <p>For Google OAuth support:</p>
     <div class="cmd">
