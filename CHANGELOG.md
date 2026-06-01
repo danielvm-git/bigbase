@@ -1,3 +1,10 @@
+## [1.0.2](https://github.com/danielvm-git/bigbase/compare/v1.0.1...v1.0.2) (2026-06-01)
+
+
+### Bug Fixes
+
+* **main:** wire github and sites components into backend, proxy, and UI ([#9](https://github.com/danielvm-git/bigbase/issues/9)) ([540a2da](https://github.com/danielvm-git/bigbase/commit/540a2dab0437235ccd4f7a390a8a1e3fb40965dd))
+
 ## [1.0.1](https://github.com/danielvm-git/bigbase/compare/v1.0.0...v1.0.1) (2026-06-01)
 
 
