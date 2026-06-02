@@ -1,11 +1,33 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { Outlet, NavLink, useNavigate } from 'react-router-dom'
+import { Icon, type IconName } from './components/Icon'
 import { useTheme } from './hooks/useTheme'
 
 interface UserInfo { id: number; email: string }
 
-function SidebarIcon({ children }: { children: string }) {
-  return <span className="sidebar-nav-icon">{children}</span>
+interface NavItem {
+  to: string
+  label: string
+  icon: IconName
+  end?: boolean
+}
+
+function NavSection({ title, items }: { title: string; items: NavItem[] }) {
+  return (
+    <div className="sidebar-section">
+      <div className="sidebar-section-title">{title}</div>
+      <ul className="sidebar-nav">
+        {items.map(item => (
+          <li key={item.to}>
+            <NavLink to={item.to} end={item.end}>
+              <Icon name={item.icon} size={18} />
+              <span>{item.label}</span>
+            </NavLink>
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
 }
 
 export default function Layout() {
@@ -36,9 +58,71 @@ export default function Layout() {
 
   const initial = user?.email?.[0]?.toUpperCase() || '?'
 
+  const buildNav: NavItem[] = [
+    { to: '/deploy', label: 'Sites', icon: 'rocket' },
+    { to: '/functions', label: 'Functions', icon: 'box' },
+  ]
+  const dataNav: NavItem[] = [
+    { to: '/data', label: 'Data Studio', icon: 'database' },
+    { to: '/sql', label: 'SQL Editor', icon: 'terminal' },
+    { to: '/storage', label: 'Storage', icon: 'hard-drive' },
+  ]
+  const authNav: NavItem[] = [{ to: '/users', label: 'Users', icon: 'users' }]
+  const engageNav: NavItem[] = [{ to: '/messaging', label: 'Messaging', icon: 'mail' }]
+  const devOpsNav: NavItem[] = [
+    { to: '/repos', label: 'Git Repos', icon: 'git-branch' },
+    { to: '/cici', label: 'CI/CD', icon: 'git-pull-request' },
+    { to: '/monitoring', label: 'Monitoring', icon: 'activity' },
+    { to: '/forge', label: 'Forge', icon: 'hammer' },
+    { to: '/realtime', label: 'Realtime', icon: 'radio' },
+  ]
+
+  let footerBlock: ReactNode = null
+  if (user) {
+    footerBlock = (
+      <div className="sidebar-footer">
+        <div className="sidebar-section-title sidebar-appearance-label">Appearance</div>
+        <div className="sidebar-appearance">
+          <button
+            type="button"
+            onClick={toggleTheme}
+            className="btn btn-secondary btn-sm sidebar-appearance-btn"
+            title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
+            aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
+          >
+            <Icon name={theme === 'light' ? 'moon' : 'sun'} size={16} />
+            <span>{theme === 'light' ? 'Dark mode' : 'Light mode'}</span>
+          </button>
+          <label className="sidebar-accent-label">
+            <span className="dim">Accent</span>
+            <select className="input input-sm" disabled aria-label="Accent theme (coming in e17s12)" title="Accent themes ship in e17s12">
+              <option>Indigo (default)</option>
+            </select>
+          </label>
+        </div>
+        <ul className="sidebar-nav sidebar-footer-nav">
+          <li>
+            <NavLink to="/settings">
+              <Icon name="settings" size={18} />
+              <span>Settings</span>
+            </NavLink>
+          </li>
+        </ul>
+        <div className="sidebar-user">
+          <div className="sidebar-avatar">{initial}</div>
+          <span className="sidebar-email">{user.email}</span>
+        </div>
+        <button type="button" className="btn btn-secondary btn-sm" onClick={handleLogout} style={{ width: '100%' }}>
+          Logout
+        </button>
+      </div>
+    )
+  }
+
   return (
     <div className="layout">
       <button
+        type="button"
         className="sidebar-toggle"
         onClick={() => setSidebarOpen(o => !o)}
         aria-label={sidebarOpen ? 'Close sidebar' : 'Open sidebar'}
@@ -53,132 +137,15 @@ export default function Layout() {
           <span>BigBase</span>
         </div>
 
-        <div className="sidebar-section" style={{ paddingTop: 0 }}>
-          <button
-            onClick={toggleTheme}
-            className="btn btn-secondary btn-sm"
-            style={{ width: '100%', justifyContent: 'center' }}
-            title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
-          >
-            {theme === 'light' ? '🌙 Dark' : '☀️ Light'}
-          </button>
-        </div>
-
-        <div className="sidebar-section">
-          <div className="sidebar-section-title">Overview</div>
-          <ul className="sidebar-nav">
-            <li>
-              <NavLink to="/" end>
-                <SidebarIcon>H</SidebarIcon>
-                <span>Dashboard</span>
-              </NavLink>
-            </li>
-          </ul>
-        </div>
-
-        <div className="sidebar-section">
-          <div className="sidebar-section-title">Data</div>
-          <ul className="sidebar-nav">
-            <li>
-              <NavLink to="/data">
-                <SidebarIcon>D</SidebarIcon>
-                <span>Data Studio</span>
-              </NavLink>
-            </li>
-            <li>
-              <NavLink to="/sql">
-                <SidebarIcon>S</SidebarIcon>
-                <span>SQL Editor</span>
-              </NavLink>
-            </li>
-            <li>
-              <NavLink to="/storage">
-                <SidebarIcon>F</SidebarIcon>
-                <span>Storage</span>
-              </NavLink>
-            </li>
-          </ul>
-        </div>
-
-        <div className="sidebar-section">
-          <div className="sidebar-section-title">Services</div>
-          <ul className="sidebar-nav">
-            <li>
-              <NavLink to="/users">
-                <SidebarIcon>U</SidebarIcon>
-                <span>Users</span>
-              </NavLink>
-            </li>
-            <li>
-              <NavLink to="/repos">
-                <SidebarIcon>G</SidebarIcon>
-                <span>Git Repos</span>
-              </NavLink>
-            </li>
-            <li>
-              <NavLink to="/deploy">
-                <SidebarIcon>R</SidebarIcon>
-                <span>Deploy</span>
-              </NavLink>
-            </li>
-            <li>
-              <NavLink to="/functions">
-                <SidebarIcon>λ</SidebarIcon>
-                <span>Functions</span>
-              </NavLink>
-            </li>
-            <li>
-              <NavLink to="/messaging">
-                <SidebarIcon>M</SidebarIcon>
-                <span>Messaging</span>
-              </NavLink>
-            </li>
-          </ul>
-        </div>
-
-        <div className="sidebar-section">
-          <div className="sidebar-section-title">DevOps</div>
-          <ul className="sidebar-nav">
-            <li>
-              <NavLink to="/forge">
-                <SidebarIcon>I</SidebarIcon>
-                <span>Forge</span>
-              </NavLink>
-            </li>
-            <li>
-              <NavLink to="/cici">
-                <SidebarIcon>C</SidebarIcon>
-                <span>CI/CD</span>
-              </NavLink>
-            </li>
-            <li>
-              <NavLink to="/monitoring">
-                <SidebarIcon>V</SidebarIcon>
-                <span>Monitoring</span>
-              </NavLink>
-            </li>
-            <li>
-              <NavLink to="/realtime">
-                <SidebarIcon>R</SidebarIcon>
-                <span>Realtime</span>
-              </NavLink>
-            </li>
-          </ul>
-        </div>
+        <NavSection title="Overview" items={[{ to: '/', label: 'Dashboard', icon: 'layout-dashboard', end: true }]} />
+        <NavSection title="Build" items={buildNav} />
+        <NavSection title="Data" items={dataNav} />
+        <NavSection title="Auth" items={authNav} />
+        <NavSection title="Engage" items={engageNav} />
+        <NavSection title="DevOps" items={devOpsNav} />
 
         <div className="sidebar-spacer" />
-
-        {user && (
-          <div className="sidebar-footer">
-            <div className="sidebar-user">
-              <div className="sidebar-avatar">{initial}</div>
-              <span className="sidebar-email">{user.email}</span>
-            </div>
-            <button className="btn btn-secondary btn-sm" onClick={handleLogout} style={{ width: '100%' }}>
-              Logout
-            </button>
-          </div>
-        )}
+        {footerBlock}
       </nav>
 
       <div className="layout-body">

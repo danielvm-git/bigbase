@@ -1,7 +1,7 @@
 ---
 id: e17s08
 title: Dashboard primitives
-status: in_progress
+status: done
 legacy_slice: "017-H"
 tasks:
   - desc: Build MetricCard — reusable stat card with label, value, trend, color

@@ -1,8 +1,8 @@
 type: session-state
 context: infra
 active_flow: build_epic
-active_epic_id: e18
-active_story_id: e18s01
+active_epic_id: e17
+active_story_id: e17s12
 active_bug_id: null
 release:
   target_version: 2.0.0
@@ -19,11 +19,11 @@ git:
   branch: main
   hash: 42565d3
 handoff:
-  last_step_completed: 'Epic 17 shipped: 6 new components, 84 new tests, 7 review
-    findings fixed, landed on main and pushed'
+  last_step_completed: 'e17 prototype parity intake: stories e17s11–e18; e17s11 IA shell shipped'
   open_decisions: []
   required_reading:
   - CONVENTIONS.md
   - specs/release-plan.yaml
-  - specs/epics/e18-multi-db.yaml
-  next_skill: survey-context
+  - specs/GAP-PROTOTYPE.md
+  - specs/epics/e17-enhanced-admin-ui/stories/e17s12-accent-themes.md
+  next_skill: build-epic
