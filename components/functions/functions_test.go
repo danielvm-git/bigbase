@@ -429,3 +429,138 @@ func TestFunctionsRunUnsupportedRuntime(t *testing.T) {
 		t.Fatalf("expected 400, got %d: %s", runW.Code, runW.Body.String())
 	}
 }
+
+func TestLogs(t *testing.T) {
+	f := setupFunctions(t)
+	h := f.Handler()
+
+	// Create a function that generates console output
+	createBody := `{"name":"loggy","source":"console.log('step 1'); console.log('step 2'); console.error('oops'); return 42;","trigger":"http"}`
+	createReq := httptest.NewRequest("POST", "/api/functions", strings.NewReader(createBody))
+	createReq.Header.Set("Content-Type", "application/json")
+	createW := httptest.NewRecorder()
+	h.ServeHTTP(createW, createReq)
+
+	if createW.Code != http.StatusCreated {
+		t.Fatalf("create: expected 201, got %d: %s", createW.Code, createW.Body.String())
+	}
+
+	var created map[string]any
+	_ = json.NewDecoder(createW.Body).Decode(&created)
+	fnID := created["id"].(string)
+
+	// Run the function to produce logs
+	runReq := httptest.NewRequest("POST", "/api/functions/"+fnID+"/run", nil)
+	runW := httptest.NewRecorder()
+	h.ServeHTTP(runW, runReq)
+
+	if runW.Code != http.StatusOK {
+		t.Fatalf("run: expected 200, got %d: %s", runW.Code, runW.Body.String())
+	}
+
+	// Run it a second time to test multiple executions
+	runReq2 := httptest.NewRequest("POST", "/api/functions/"+fnID+"/run", nil)
+	runW2 := httptest.NewRecorder()
+	h.ServeHTTP(runW2, runReq2)
+
+	// Fetch logs
+	logsReq := httptest.NewRequest("GET", "/api/functions/"+fnID+"/logs", nil)
+	logsW := httptest.NewRecorder()
+	h.ServeHTTP(logsW, logsReq)
+
+	if logsW.Code != http.StatusOK {
+		t.Fatalf("logs: expected 200, got %d: %s", logsW.Code, logsW.Body.String())
+	}
+
+	var resp struct {
+		Data []struct {
+			ID        string   `json:"id"`
+			Status    string   `json:"status"`
+			Logs      []string `json:"logs"`
+			CreatedAt string   `json:"created_at"`
+		} `json:"data"`
+	}
+	if err := json.NewDecoder(logsW.Body).Decode(&resp); err != nil {
+		t.Fatalf("decode logs: %v", err)
+	}
+
+	if len(resp.Data) < 2 {
+		t.Fatalf("expected at least 2 executions, got %d", len(resp.Data))
+	}
+
+	// Most recent first — check the latest execution
+	latest := resp.Data[0]
+	if latest.Status != "success" {
+		t.Fatalf("expected status 'success', got '%s'", latest.Status)
+	}
+	if len(latest.Logs) == 0 {
+		t.Fatal("expected logs in latest execution, got empty")
+	}
+	if latest.CreatedAt == "" {
+		t.Fatal("expected created_at timestamp")
+	}
+
+	// Verify log content
+	foundStep1, foundErr := false, false
+	for _, log := range latest.Logs {
+		if strings.Contains(log, "step 1") {
+			foundStep1 = true
+		}
+		if strings.Contains(log, "oops") {
+			foundErr = true
+		}
+	}
+	if !foundStep1 {
+		t.Fatal("expected 'step 1' in logs")
+	}
+	if !foundErr {
+		t.Fatal("expected 'oops' in logs")
+	}
+}
+
+func TestLogsNonexistentFunction(t *testing.T) {
+	f := setupFunctions(t)
+	h := f.Handler()
+
+	req := httptest.NewRequest("GET", "/api/functions/nonexistent/logs", nil)
+	w := httptest.NewRecorder()
+	h.ServeHTTP(w, req)
+
+	if w.Code != http.StatusNotFound {
+		t.Fatalf("expected 404, got %d: %s", w.Code, w.Body.String())
+	}
+}
+
+func TestLogsEmptyHistory(t *testing.T) {
+	f := setupFunctions(t)
+	h := f.Handler()
+
+	// Create a function but don't run it
+	createBody := `{"name":"unused","source":"return 1;","trigger":"http"}`
+	createReq := httptest.NewRequest("POST", "/api/functions", strings.NewReader(createBody))
+	createReq.Header.Set("Content-Type", "application/json")
+	createW := httptest.NewRecorder()
+	h.ServeHTTP(createW, createReq)
+
+	var created map[string]any
+	_ = json.NewDecoder(createW.Body).Decode(&created)
+	fnID := created["id"].(string)
+
+	// Fetch logs for function with no executions
+	logsReq := httptest.NewRequest("GET", "/api/functions/"+fnID+"/logs", nil)
+	logsW := httptest.NewRecorder()
+	h.ServeHTTP(logsW, logsReq)
+
+	if logsW.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", logsW.Code, logsW.Body.String())
+	}
+
+	var resp struct {
+		Data []any `json:"data"`
+	}
+	_ = json.NewDecoder(logsW.Body).Decode(&resp)
+
+	if len(resp.Data) != 0 {
+		t.Fatalf("expected empty history, got %d entries", len(resp.Data))
+	}
+}

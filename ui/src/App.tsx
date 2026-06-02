@@ -15,6 +15,7 @@ import CreateSitePage from './pages/CreateSitePage'
 import MonitoringPage from './pages/MonitoringPage'
 import SiteDetailPage from './pages/SiteDetailPage'
 import RealtimePage from './pages/RealtimePage'
+import FunctionLogsPage from './pages/FunctionLogsPage'
 import NotFoundPage from './pages/NotFoundPage'
 import Layout from './Layout'
 
@@ -33,6 +34,7 @@ function App() {
         <Route path="messaging" element={<MessagingPage />} />
         <Route path="storage" element={<StoragePage />} />
         <Route path="functions" element={<FunctionsPage />} />
+        <Route path="functions/:id/logs" element={<FunctionLogsPage />} />
         <Route path="forge" element={<ForgePage />} />
         <Route path="cici" element={<CiciPage />} />
         <Route path="monitoring" element={<MonitoringPage />} />
