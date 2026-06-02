@@ -107,7 +107,7 @@ func (g *GitHub) listInstallationRepos(ctx context.Context, installationID int64
 		return nil, err
 	}
 
-	url := fmt.Sprintf("https://api.github.com/installation/repositories?per_page=100")
+	url := "https://api.github.com/installation/repositories?per_page=100"
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err

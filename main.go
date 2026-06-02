@@ -83,6 +83,10 @@ func startProxy() {
 	dbPath := serveFS.String("db", "bigbase.db", "SQLite database path")
 	googleClientID := serveFS.String("google-client-id", "", "Google OAuth client ID")
 	googleClientSecret := serveFS.String("google-client-secret", "", "Google OAuth client secret")
+	githubAppID := serveFS.String("github-app-id", "", "GitHub App ID")
+	githubAppSlug := serveFS.String("github-app-slug", "", "GitHub App slug")
+	githubPrivateKeyPath := serveFS.String("github-app-private-key-path", "", "GitHub App private key path")
+	githubWebhookSecret := serveFS.String("github-webhook-secret", "", "GitHub App webhook secret")
 	_ = serveFS.Parse(os.Args[2:])
 
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo}))
@@ -127,8 +131,12 @@ func startProxy() {
 		Logger: logger,
 	})
 	gh := github.New(github.Options{
-		DB:     d,
-		Logger: logger,
+		DB:             d,
+		Logger:         logger,
+		AppID:          *githubAppID,
+		AppSlug:        *githubAppSlug,
+		PrivateKeyPath: *githubPrivateKeyPath,
+		WebhookSecret:  *githubWebhookSecret,
 	})
 	st := sites.New(sites.Options{
 		DB:     d,
