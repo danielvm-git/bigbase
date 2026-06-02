@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
-import { Card, CardHeader, PageHeader, Badge, statusBadgeVariant } from '../components'
+import { useNavigate } from 'react-router-dom'
+import { Card, CardHeader, PageHeader, Badge, statusBadgeVariant, Button } from '../components'
+import { useToast } from '../context/ToastContext'
 
 interface Stat { label: string; count: number; link: string }
 interface Deployment { id: string; repo_id: string; branch: string; status: string; app_type: string; url: string; created_at: string }
@@ -13,6 +15,8 @@ function fmtSize(bytes: number): string {
 }
 
 export default function DashboardPage() {
+  const navigate = useNavigate()
+  const toast = useToast()
   const [user, setUser] = useState<{ id: number; email: string } | null>(null)
   const [health, setHealth] = useState<{ status: string; components: number } | null>(null)
   const [deployments, setDeployments] = useState<Deployment[]>([])
@@ -76,6 +80,38 @@ export default function DashboardPage() {
   return (
     <div className="dashboard">
       <PageHeader title="Dashboard" />
+
+      <div style={{ display: 'flex', gap: 'var(--space-4)', marginBottom: 'var(--space-12)', flexWrap: 'wrap' }}>
+        <Button variant="primary" size="sm" onClick={() => { navigate('/deploy/new'); toast.show('Create a new deployment', 'info') }}>
+          + Deploy Site
+        </Button>
+        <Button variant="secondary" size="sm" onClick={() => { navigate('/functions'); toast.show('Manage your serverless functions', 'info') }}>
+          ⚡ Run Function
+        </Button>
+        <Button variant="secondary" size="sm" onClick={() => { toast.show('Feature coming soon', 'info') }}>
+          📦 Create Collection
+        </Button>
+      </div>
+
+      {health && (
+        <div className="card" style={{
+          marginBottom: 'var(--space-8)',
+          padding: 'var(--space-6) var(--space-8)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 'var(--space-6)',
+          background: health.status === 'ok' ? 'var(--success-bg)' : 'var(--warning-bg)',
+          border: `1px solid ${health.status === 'ok' ? 'var(--success)' : 'var(--warning)'}`,
+        }}>
+          <span style={{ fontSize: '1.2rem' }}>{health.status === 'ok' ? '✅' : '⚠️'}</span>
+          <span style={{ fontWeight: 600, color: health.status === 'ok' ? 'var(--success-fg)' : 'var(--warning-fg)' }}>
+            {health.status === 'ok' ? 'All systems operational' : 'System issues detected'}
+          </span>
+          <span style={{ color: 'var(--fg-tertiary)', fontSize: 'var(--text-s)' }}>
+            {health.components} component{health.components !== 1 ? 's' : ''} running
+          </span>
+        </div>
+      )}
 
       <div className="dash-grid">
         <Card>
