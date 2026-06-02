@@ -1,0 +1,1838 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>BigBase Console</title>
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+  <style>
+  /* ============================================================
+     BigBase Design System — Colors & Type (tokens)
+     ============================================================ */
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;600;700&family=Fira+Code:wght@400;500;600&display=swap');
+
+  :root {
+    --neutral-0:   rgb(255, 255, 255);
+    --neutral-25:  rgb(250, 250, 251);
+    --neutral-40:  rgb(244, 244, 247);
+    --neutral-50:  rgb(237, 237, 240);
+    --neutral-100: rgb(228, 228, 231);
+    --neutral-200: rgb(216, 216, 219);
+    --neutral-250: rgb(195, 195, 198);
+    --neutral-300: rgb(173, 173, 176);
+    --neutral-400: rgb(151, 151, 155);
+    --neutral-500: rgb(129, 129, 134);
+    --neutral-600: rgb(108, 108, 113);
+    --neutral-700: rgb(86, 86, 92);
+    --neutral-750: rgb(65, 65, 70);
+    --neutral-800: rgb(45, 45, 49);
+    --neutral-850: rgb(29, 29, 33);
+    --neutral-900: rgb(25, 25, 28);
+
+    --brand-50:  rgb(238, 236, 252);
+    --brand-100: rgb(224, 221, 250);
+    --brand-500: rgb(79, 70, 229);
+    --brand-600: rgb(67, 56, 202);
+    --brand-700: rgb(55, 48, 163);
+    --brand-tint: rgba(79, 70, 229, 0.10);
+
+    --success:    rgb(16, 185, 129);
+    --success-bg: rgba(16, 185, 129, 0.12);
+    --success-fg: rgb(6, 95, 70);
+    --warning:    rgb(245, 158, 11);
+    --warning-bg: rgba(245, 158, 11, 0.12);
+    --warning-fg: rgb(146, 64, 14);
+    --error:      rgb(239, 68, 68);
+    --error-bg:   rgba(239, 68, 68, 0.08);
+    --error-fg:   rgb(153, 27, 27);
+    --info:       rgb(59, 130, 246);
+    --info-bg:    rgba(59, 130, 246, 0.10);
+    --info-fg:    rgb(30, 64, 175);
+
+    --bg-default:           var(--neutral-25);
+    --bg-surface:           var(--neutral-0);
+    --bg-surface-hover:     var(--neutral-25);
+    --bg-surface-secondary: var(--neutral-40);
+    --bg-subtle:            var(--neutral-40);
+    --bg-accent:            var(--brand-500);
+    --bg-accent-hover:      var(--brand-600);
+    --bg-accent-active:     var(--brand-700);
+
+    --fg-primary:   var(--neutral-800);
+    --fg-secondary: var(--neutral-600);
+    --fg-tertiary:  var(--neutral-400);
+    --fg-accent:    var(--brand-500);
+    --fg-on-accent: var(--neutral-0);
+
+    --border-default: var(--neutral-100);
+    --border-strong:  var(--neutral-200);
+    --border-focus:   var(--neutral-300);
+    --border-accent:  var(--brand-500);
+    --border-error:   var(--error);
+
+    --overlay-hover:   rgba(25, 25, 28, 0.04);
+    --overlay-pressed: rgba(25, 25, 28, 0.06);
+    --overlay-scrim:   rgba(25, 25, 28, 0.55);
+
+    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-mono: 'Fira Code', 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, monospace;
+
+    --text-xs: 12px;
+    --text-s:  14px;
+    --text-m:  16px;
+    --text-l:  20px;
+    --text-xl: 24px;
+    --text-2xl: 32px;
+    --text-3xl: 40px;
+
+    --space-0: 0;     --space-1: 2px;   --space-2: 4px;
+    --space-3: 6px;   --space-4: 8px;   --space-5: 10px;
+    --space-6: 12px;  --space-8: 16px;  --space-10: 20px;
+    --space-12: 24px; --space-16: 32px; --space-20: 40px;
+    --space-24: 48px; --space-32: 64px;
+
+    --radius-xs:   4px;
+    --radius-s:    8px;
+    --radius-m:    12px;
+    --radius-l:    16px;
+    --radius-full: 9999px;
+
+    --duration-fast:     150ms;
+    --duration-short:    160ms;
+    --duration-medium:   200ms;
+    --duration-extended: 250ms;
+    --duration-slow:     300ms;
+    --ease-standard:   ease;
+    --ease-emphasized: cubic-bezier(0.32, 0.72, 0, 1);
+    --ease-in-out:     ease-in-out;
+    --ease-out:        ease-out;
+
+    --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.04);
+    --shadow-s:  0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+    --shadow-m:  0 4px 6px rgba(0, 0, 0, 0.04), 0 2px 4px rgba(0, 0, 0, 0.04);
+    --shadow-l:  0 10px 15px rgba(0, 0, 0, 0.06), 0 4px 8px rgba(0, 0, 0, 0.04);
+    --shadow-xl: 0 20px 40px rgba(0, 0, 0, 0.10), 0 8px 16px rgba(0, 0, 0, 0.05);
+    --focus-ring: 0 0 0 3px rgba(79, 70, 229, 0.18);
+  }
+
+  [data-theme="dark"] {
+    --bg-default:           var(--neutral-900);
+    --bg-surface:           var(--neutral-850);
+    --bg-surface-hover:     var(--neutral-800);
+    --bg-surface-secondary: var(--neutral-800);
+    --bg-subtle:            var(--neutral-800);
+
+    --fg-primary:   var(--neutral-25);
+    --fg-secondary: var(--neutral-300);
+    --fg-tertiary:  var(--neutral-500);
+
+    --border-default: var(--neutral-750);
+    --border-strong:  var(--neutral-700);
+    --border-focus:   var(--neutral-600);
+
+    --success-fg: rgb(110, 231, 183);
+    --warning-fg: rgb(252, 211, 77);
+    --error-fg:   rgb(252, 165, 165);
+    --info-fg:    rgb(147, 197, 253);
+
+    --overlay-hover:   rgba(255, 255, 255, 0.05);
+    --overlay-pressed: rgba(255, 255, 255, 0.08);
+    --overlay-scrim:   rgba(0, 0, 0, 0.7);
+
+    --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.25);
+    --shadow-s:  0 1px 3px rgba(0, 0, 0, 0.35);
+    --shadow-m:  0 4px 6px rgba(0, 0, 0, 0.35);
+    --shadow-l:  0 10px 15px rgba(0, 0, 0, 0.4);
+    --shadow-xl: 0 20px 40px rgba(0, 0, 0, 0.5);
+  }
+
+  /* ── Semantic type styles ── */
+  .ds-display { font-family: var(--font-sans); font-size: var(--text-3xl); font-weight: 700; line-height: 1.1; letter-spacing: -0.03em; color: var(--fg-primary); }
+  .ds-h1, .page-title { font-family: var(--font-sans); font-size: var(--text-xl); font-weight: 600; line-height: 1.25; letter-spacing: -0.02em; color: var(--fg-primary); }
+  .ds-h2 { font-family: var(--font-sans); font-size: var(--text-l); font-weight: 600; line-height: 1.3; letter-spacing: -0.01em; color: var(--fg-primary); }
+  .ds-h3 { font-family: var(--font-sans); font-size: var(--text-m); font-weight: 600; line-height: 1.4; color: var(--fg-primary); }
+  .ds-body { font-family: var(--font-sans); font-size: var(--text-s); font-weight: 400; line-height: 1.55; color: var(--fg-primary); }
+  .ds-body-lg { font-size: var(--text-m); line-height: 1.55; }
+  .ds-caption { font-family: var(--font-sans); font-size: var(--text-xs); font-weight: 400; line-height: 1.5; color: var(--fg-secondary); }
+  .ds-overline { font-family: var(--font-sans); font-size: var(--text-xs); font-weight: 600; line-height: 1.4; text-transform: uppercase; letter-spacing: 0.06em; color: var(--fg-tertiary); }
+  .ds-code, code, pre { font-family: var(--font-mono); font-size: 0.92em; font-weight: 450; font-feature-settings: 'liga' 0; }
+
+  /* ============================================================
+     BigBase Design System — Component Classes
+     ============================================================ */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font-sans); font-size: var(--text-m); color: var(--fg-primary); background: var(--bg-default); -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+
+  /* ── Button ── */
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: var(--space-3); padding: var(--space-4) var(--space-8); border: 1px solid transparent; border-radius: var(--radius-s); font-family: var(--font-sans); font-size: var(--text-s); font-weight: 500; line-height: 1.4; cursor: pointer; white-space: nowrap; text-decoration: none; transition: background var(--duration-fast) var(--ease-standard), border-color var(--duration-fast) var(--ease-standard), opacity var(--duration-fast) var(--ease-standard), transform var(--duration-fast) var(--ease-standard); }
+  .btn:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+  .btn:active:not(:disabled) { transform: translateY(0.5px); }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn .icon { width: 16px; height: 16px; }
+  .btn-primary { background: var(--bg-accent); color: var(--fg-on-accent); }
+  .btn-primary:hover:not(:disabled) { background: var(--bg-accent-hover); }
+  .btn-primary:active:not(:disabled) { background: var(--bg-accent-active); }
+  .btn-secondary { background: var(--bg-surface); color: var(--fg-primary); border-color: var(--border-strong); }
+  .btn-secondary:hover:not(:disabled) { background: var(--bg-surface-hover); border-color: var(--border-focus); }
+  .btn-secondary:active:not(:disabled) { background: var(--bg-subtle); }
+  .btn-danger { background: var(--error); color: #fff; }
+  .btn-danger:hover:not(:disabled) { opacity: 0.9; }
+  .btn-ghost { background: transparent; color: var(--fg-secondary); }
+  .btn-ghost:hover:not(:disabled) { background: var(--overlay-hover); color: var(--fg-primary); }
+  .btn-link { background: none; border: none; color: var(--fg-accent); padding: 0; font-size: inherit; cursor: pointer; }
+  .btn-link:hover { text-decoration: underline; }
+  .btn-sm { padding: var(--space-2) var(--space-5); font-size: var(--text-xs); border-radius: var(--radius-xs); }
+  .btn-block { width: 100%; }
+
+  /* ── Card ── */
+  .card { background: var(--bg-surface); border: 1px solid var(--border-default); border-radius: var(--radius-m); padding: var(--space-10); box-shadow: var(--shadow-s); }
+  .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-8); }
+  .card-title { font-size: var(--text-xs); font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--fg-tertiary); }
+
+  /* ── Input ── */
+  .input-group { display: flex; flex-direction: column; gap: var(--space-3); }
+  .input-label { font-size: var(--text-s); font-weight: 500; color: var(--fg-primary); }
+  .input { width: 100%; padding: var(--space-5) var(--space-6); border: 1px solid var(--border-strong); border-radius: var(--radius-s); font-family: var(--font-sans); font-size: var(--text-s); color: var(--fg-primary); background: var(--bg-surface); transition: border-color var(--duration-fast) var(--ease-standard), box-shadow var(--duration-fast) var(--ease-standard); }
+  .input::placeholder { color: var(--fg-tertiary); }
+  .input:focus { outline: none; border-color: var(--border-accent); box-shadow: var(--focus-ring); }
+  .input:disabled { background: var(--bg-subtle); color: var(--fg-tertiary); cursor: not-allowed; }
+  .input-error { border-color: var(--border-error); }
+  .input-error:focus { box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15); }
+  .input-hint { font-size: var(--text-xs); color: var(--fg-tertiary); }
+  .input-error-text { font-size: var(--text-xs); color: var(--error); }
+  textarea.input { resize: vertical; min-height: 80px; }
+  select.input { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2386888c' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right var(--space-6) center; padding-right: var(--space-12); }
+  .input-with-prefix { display: flex; align-items: stretch; }
+  .input-prefix { display: flex; align-items: center; padding: 0 var(--space-6); background: var(--bg-subtle); border: 1px solid var(--border-strong); border-right: none; border-radius: var(--radius-s) 0 0 var(--radius-s); font-size: var(--text-s); color: var(--fg-tertiary); white-space: nowrap; }
+  .input-with-prefix .input { border-radius: 0 var(--radius-s) var(--radius-s) 0; }
+
+  /* ── Badge ── */
+  .badge { display: inline-flex; align-items: center; gap: var(--space-2); padding: var(--space-1) var(--space-4); border-radius: var(--radius-full); font-size: var(--text-xs); font-weight: 500; line-height: 1.5; text-transform: uppercase; letter-spacing: 0.03em; white-space: nowrap; }
+  .badge .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .badge-neutral { background: var(--bg-surface-secondary); color: var(--fg-secondary); }
+  .badge-success { background: var(--success-bg); color: var(--success-fg); }
+  .badge-warning { background: var(--warning-bg); color: var(--warning-fg); }
+  .badge-error   { background: var(--error-bg); color: var(--error-fg); }
+  .badge-accent  { background: var(--brand-tint); color: var(--fg-accent); }
+  .badge-info    { background: var(--info-bg); color: var(--info-fg); }
+
+  /* ── Tabs ── */
+  .tabs { display: flex; gap: var(--space-2); border-bottom: 1px solid var(--border-default); margin-bottom: var(--space-12); }
+  .tab { padding: var(--space-5) var(--space-4); background: none; border: none; cursor: pointer; font-family: var(--font-sans); font-size: var(--text-s); font-weight: 500; color: var(--fg-secondary); border-bottom: 2px solid transparent; margin-bottom: -1px; transition: color var(--duration-fast), border-color var(--duration-fast); }
+  .tab:hover { color: var(--fg-primary); }
+  .tab.active { color: var(--fg-accent); border-bottom-color: var(--fg-accent); }
+
+  /* ── Page Header ── */
+  .page-header { display: flex; align-items: center; justify-content: space-between; gap: var(--space-8); margin-bottom: var(--space-12); flex-wrap: wrap; }
+  .page-header-actions { display: flex; gap: var(--space-4); align-items: center; }
+  .page-subtitle { font-size: var(--text-s); color: var(--fg-secondary); margin-top: var(--space-2); }
+  .breadcrumb { display: flex; align-items: center; gap: var(--space-3); font-size: var(--text-s); color: var(--fg-tertiary); margin-bottom: var(--space-6); }
+  .breadcrumb a { color: var(--fg-secondary); text-decoration: none; }
+  .breadcrumb a:hover { color: var(--fg-accent); }
+  .breadcrumb .sep { color: var(--fg-tertiary); }
+
+  /* ── Table ── */
+  .table-wrap { overflow-x: auto; border: 1px solid var(--border-default); border-radius: var(--radius-m); background: var(--bg-surface); }
+  table { width: 100%; border-collapse: collapse; font-size: var(--text-s); }
+  th { padding: var(--space-5) var(--space-8); text-align: left; font-weight: 600; font-size: var(--text-xs); text-transform: uppercase; letter-spacing: 0.05em; color: var(--fg-tertiary); background: var(--bg-subtle); border-bottom: 1px solid var(--border-default); white-space: nowrap; }
+  td { padding: var(--space-6) var(--space-8); border-bottom: 1px solid var(--border-default); white-space: nowrap; color: var(--fg-primary); }
+  tr:last-child td { border-bottom: none; }
+  tbody tr { transition: background var(--duration-fast); }
+  tbody tr:hover td { background: var(--overlay-hover); }
+  .actions-cell { display: flex; gap: var(--space-2); }
+
+  /* ── Empty State ── */
+  .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--space-6); padding: var(--space-32) var(--space-16); text-align: center; border: 1px dashed var(--border-strong); border-radius: var(--radius-l); background: var(--bg-surface); }
+  .empty-state-icon { width: 56px; height: 56px; display: flex; align-items: center; justify-content: center; border-radius: var(--radius-m); background: var(--brand-tint); color: var(--fg-accent); }
+  .empty-state-icon .icon { width: 28px; height: 28px; }
+  .empty-state-title { font-size: var(--text-l); font-weight: 600; color: var(--fg-primary); }
+  .empty-state-text { font-size: var(--text-s); color: var(--fg-secondary); max-width: 380px; line-height: 1.55; }
+
+  /* ── Divider ── */
+  .divider { display: flex; align-items: center; margin: var(--space-8) 0; gap: var(--space-4); }
+  .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--border-default); }
+  .divider span { font-size: var(--text-xs); color: var(--fg-tertiary); text-transform: uppercase; font-weight: 500; }
+
+  /* ── Spinner ── */
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .spinner { width: 18px; height: 18px; border: 2px solid var(--border-strong); border-top-color: var(--fg-accent); border-radius: 50%; animation: spin 0.6s linear infinite; }
+  .spinner-sm { width: 14px; height: 14px; }
+
+  /* ── Layout / Sidebar ── */
+  .layout { display: flex; min-height: 100vh; }
+  .sidebar { width: 252px; background: var(--bg-surface); border-right: 1px solid var(--border-default); padding: var(--space-8) var(--space-6); display: flex; flex-direction: column; flex-shrink: 0; }
+  .sidebar-logo { display: flex; align-items: center; gap: var(--space-4); padding: 0 var(--space-4); margin-bottom: var(--space-12); }
+  .sidebar-logo-mark { width: 30px; height: 30px; flex-shrink: 0; }
+  .sidebar-logo-text { font-size: var(--text-m); font-weight: 700; letter-spacing: -0.02em; color: var(--fg-primary); }
+  .sidebar-section { margin-bottom: var(--space-8); }
+  .sidebar-section-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; color: var(--fg-tertiary); padding: 0 var(--space-4); margin-bottom: var(--space-3); }
+  .sidebar-nav { list-style: none; display: flex; flex-direction: column; gap: 1px; }
+  .sidebar-nav a { display: flex; align-items: center; gap: var(--space-4); padding: var(--space-4) var(--space-4); border-radius: var(--radius-s); color: var(--fg-secondary); text-decoration: none; font-size: var(--text-s); font-weight: 450; transition: background var(--duration-fast), color var(--duration-fast); }
+  .sidebar-nav a:hover { background: var(--overlay-hover); color: var(--fg-primary); }
+  .sidebar-nav a.active { background: var(--brand-tint); color: var(--fg-accent); font-weight: 550; }
+  .sidebar-nav-icon { width: 18px; height: 18px; flex-shrink: 0; opacity: 0.75; display: flex; }
+  .sidebar-nav a.active .sidebar-nav-icon, .sidebar-nav a:hover .sidebar-nav-icon { opacity: 1; }
+  .sidebar-spacer { flex: 1; }
+  .sidebar-footer { border-top: 1px solid var(--border-default); padding-top: var(--space-6); margin-top: var(--space-6); }
+  .sidebar-user { display: flex; align-items: center; gap: var(--space-4); padding: var(--space-3) var(--space-4); border-radius: var(--radius-s); }
+  .sidebar-user:hover { background: var(--overlay-hover); }
+  .avatar { width: 30px; height: 30px; border-radius: var(--radius-full); background: var(--bg-accent); color: var(--fg-on-accent); display: flex; align-items: center; justify-content: center; font-size: var(--text-xs); font-weight: 600; flex-shrink: 0; }
+  .sidebar-email { font-size: var(--text-xs); color: var(--fg-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .content { flex: 1; padding: var(--space-16) var(--space-20); min-width: 0; max-width: 1180px; }
+
+  /* ── Choice Card ── */
+  .choice-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: var(--space-6); }
+  .choice-card { display: flex; flex-direction: column; gap: var(--space-4); text-align: left; padding: var(--space-10); border: 1px solid var(--border-strong); border-radius: var(--radius-m); background: var(--bg-surface); cursor: pointer; transition: border-color var(--duration-fast), box-shadow var(--duration-fast), background var(--duration-fast); position: relative; }
+  .choice-card:hover:not(.disabled) { border-color: var(--border-accent); box-shadow: var(--shadow-s); }
+  .choice-card.selected { border-color: var(--border-accent); box-shadow: var(--focus-ring); }
+  .choice-card.disabled { opacity: 0.55; cursor: not-allowed; }
+  .choice-card-icon { width: 44px; height: 44px; border-radius: var(--radius-s); background: var(--bg-subtle); display: flex; align-items: center; justify-content: center; color: var(--fg-primary); }
+  .choice-card.selected .choice-card-icon { background: var(--brand-tint); color: var(--fg-accent); }
+  .choice-card-title { font-size: var(--text-m); font-weight: 600; color: var(--fg-primary); }
+  .choice-card-desc { font-size: var(--text-s); color: var(--fg-secondary); line-height: 1.5; }
+  .choice-card-check { position: absolute; top: var(--space-6); right: var(--space-6); color: var(--fg-accent); opacity: 0; }
+  .choice-card.selected .choice-card-check { opacity: 1; }
+
+  /* ── Wizard Steps ── */
+  .wizard-steps { display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-16); }
+  .wizard-step { display: flex; align-items: center; gap: var(--space-4); }
+  .wizard-step-num { width: 26px; height: 26px; border-radius: var(--radius-full); flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: var(--text-xs); font-weight: 600; background: var(--bg-subtle); color: var(--fg-tertiary); border: 1px solid var(--border-strong); transition: all var(--duration-medium) var(--ease-emphasized); }
+  .wizard-step.active .wizard-step-num { background: var(--bg-accent); color: var(--fg-on-accent); border-color: var(--bg-accent); }
+  .wizard-step.done .wizard-step-num { background: var(--success); color: #fff; border-color: var(--success); }
+  .wizard-step-label { font-size: var(--text-s); font-weight: 500; color: var(--fg-tertiary); white-space: nowrap; }
+  .wizard-step.active .wizard-step-label, .wizard-step.done .wizard-step-label { color: var(--fg-primary); }
+  .wizard-step-line { width: 32px; height: 1px; background: var(--border-strong); margin: 0 var(--space-2); }
+  .wizard-step.done + .wizard-step-line, .wizard-step-line.done { background: var(--success); }
+
+  /* ── Site Card ── */
+  .site-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: var(--space-8); }
+  .site-card { display: flex; flex-direction: column; background: var(--bg-surface); border: 1px solid var(--border-default); border-radius: var(--radius-m); overflow: hidden; text-decoration: none; box-shadow: var(--shadow-xs); transition: border-color var(--duration-fast), box-shadow var(--duration-fast), transform var(--duration-fast); }
+  .site-card:hover { border-color: var(--border-accent); box-shadow: var(--shadow-m); transform: translateY(-2px); }
+  .site-card-thumb { height: 132px; background: var(--bg-subtle); position: relative; display: flex; align-items: center; justify-content: center; overflow: hidden; border-bottom: 1px solid var(--border-default); }
+  .site-card-thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .site-card-body { padding: var(--space-8); display: flex; flex-direction: column; gap: var(--space-3); }
+  .site-card-row { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); }
+  .site-card-name { font-size: var(--text-m); font-weight: 600; color: var(--fg-primary); }
+  .site-card-url { font-size: var(--text-xs); color: var(--fg-secondary); font-family: var(--font-mono); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .site-card-meta { display: flex; align-items: center; gap: var(--space-4); font-size: var(--text-xs); color: var(--fg-tertiary); margin-top: var(--space-2); }
+
+  /* ── Preview Banner ── */
+  .preview-banner { display: flex; align-items: center; gap: var(--space-4); padding: var(--space-4) var(--space-8); background: var(--warning-bg); color: var(--warning-fg); font-size: var(--text-s); font-weight: 500; border-bottom: 1px solid rgba(245, 158, 11, 0.25); }
+  .preview-banner .icon { width: 16px; height: 16px; flex-shrink: 0; }
+
+  /* ── Toast ── */
+  .toast-container { position: fixed; top: var(--space-12); right: var(--space-12); z-index: 1000; display: flex; flex-direction: column; gap: var(--space-4); max-width: 400px; }
+  .toast { display: flex; align-items: flex-start; gap: var(--space-4); padding: var(--space-6) var(--space-8); border-radius: var(--radius-s); background: var(--bg-surface); border: 1px solid var(--border-default); box-shadow: var(--shadow-l); font-size: var(--text-s); color: var(--fg-primary); animation: toast-in var(--duration-medium) var(--ease-emphasized); }
+  .toast-icon { flex-shrink: 0; width: 18px; height: 18px; margin-top: 1px; }
+  .toast-success .toast-icon { color: var(--success); }
+  .toast-error .toast-icon { color: var(--error); }
+  .toast-info .toast-icon { color: var(--fg-accent); }
+  .toast-body { flex: 1; }
+  .toast-title { font-weight: 600; margin-bottom: 2px; }
+  .toast-msg { color: var(--fg-secondary); font-size: var(--text-xs); }
+  .toast-close { background: none; border: none; color: var(--fg-tertiary); cursor: pointer; padding: 0; line-height: 1; flex-shrink: 0; }
+  .toast-close:hover { color: var(--fg-primary); }
+  @keyframes toast-in { from { opacity: 0; transform: translateX(16px) scale(0.97); } to { opacity: 1; transform: none; } }
+
+  /* ── Skeleton ── */
+  @keyframes shimmer { 0% { background-position: -200px 0; } 100% { background-position: calc(200px + 100%) 0; } }
+  .skeleton { background: linear-gradient(90deg, var(--bg-subtle) 25%, var(--bg-surface-hover) 37%, var(--bg-subtle) 63%); background-size: 200px 100%; animation: shimmer 1.4s ease infinite; border-radius: var(--radius-s); }
+  .skeleton-text { height: 13px; margin-bottom: var(--space-4); border-radius: var(--radius-xs); }
+  .skeleton-text:last-child { width: 60%; }
+  .skeleton-heading { height: 20px; width: 40%; margin-bottom: var(--space-8); }
+  .skeleton-card { height: 132px; border-radius: var(--radius-m); }
+  .skeleton-circle { border-radius: 50%; }
+
+  /* ── Log / code output ── */
+  .code-output { background: var(--neutral-900); border-radius: var(--radius-s); padding: var(--space-8); overflow: auto; max-height: 360px; }
+  .code-output pre { font-family: var(--font-mono); font-size: var(--text-xs); line-height: 1.65; color: #d4d4d4; white-space: pre-wrap; word-break: break-word; }
+  .log-line { display: flex; gap: var(--space-6); font-family: var(--font-mono); font-size: var(--text-xs); line-height: 1.8; }
+  .log-time { color: var(--neutral-500); flex-shrink: 0; }
+  .log-ok { color: var(--success); }
+  .log-warn { color: var(--warning); }
+  .log-err { color: var(--error); }
+
+  /* ── Stat / dashboard ── */
+  .stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: var(--space-6); }
+  .stat-card { display: flex; flex-direction: column; gap: var(--space-4); padding: var(--space-8); background: var(--bg-surface); border: 1px solid var(--border-default); border-radius: var(--radius-m); text-decoration: none; transition: border-color var(--duration-fast), box-shadow var(--duration-fast); }
+  .stat-card:hover { border-color: var(--border-accent); box-shadow: var(--shadow-s); }
+  .stat-card-top { display: flex; align-items: center; justify-content: space-between; }
+  .stat-icon { width: 34px; height: 34px; border-radius: var(--radius-s); background: var(--brand-tint); color: var(--fg-accent); display: flex; align-items: center; justify-content: center; }
+  .stat-count { font-size: var(--text-2xl); font-weight: 700; color: var(--fg-primary); line-height: 1; letter-spacing: -0.02em; }
+  .stat-label { font-size: var(--text-xs); font-weight: 600; color: var(--fg-secondary); text-transform: uppercase; letter-spacing: 0.05em; }
+
+  /* ── System status panel (metrics + activity) ── */
+  .metric-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-6); }
+  .metric-tile { padding: var(--space-8); border: 1px solid var(--border-default); border-radius: var(--radius-m); background: var(--bg-default); display: flex; flex-direction: column; gap: var(--space-3); }
+  .metric-tile-top { display: flex; align-items: center; justify-content: space-between; }
+  .metric-label { font-size: var(--text-xs); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--fg-tertiary); }
+  .metric-value { font-size: var(--text-xl); font-weight: 700; letter-spacing: -0.02em; color: var(--fg-primary); line-height: 1; }
+  .metric-value .unit { font-size: var(--text-s); font-weight: 500; color: var(--fg-tertiary); }
+  .activity-item { display: flex; align-items: center; gap: var(--space-6); padding: var(--space-5) 0; border-bottom: 1px solid var(--border-default); }
+  .activity-item:last-child { border-bottom: none; }
+
+  /* ── App footer (version info) ── */
+  .app-footer { display: flex; align-items: center; justify-content: space-between; gap: var(--space-8); flex-wrap: wrap; margin-top: var(--space-20); padding-top: var(--space-10); border-top: 1px solid var(--border-default); font-size: var(--text-xs); color: var(--fg-tertiary); }
+  .app-footer a { color: var(--fg-secondary); text-decoration: none; }
+  .app-footer a:hover { color: var(--fg-accent); }
+  .app-footer .footer-meta { display: flex; align-items: center; gap: var(--space-8); flex-wrap: wrap; }
+  .app-footer .footer-sep { width: 3px; height: 3px; border-radius: 50%; background: var(--border-strong); }
+
+  /* ── SQL editor ── */
+  .sql-editor { width: 100%; min-height: 150px; resize: vertical; background: var(--neutral-900); color: #e4e4e7; border: 1px solid var(--border-strong); border-radius: var(--radius-s); padding: var(--space-8); font-family: var(--font-mono); font-size: var(--text-s); line-height: 1.7; tab-size: 2; }
+  .sql-editor:focus { outline: none; border-color: var(--border-accent); box-shadow: var(--focus-ring); }
+
+  /* ── Utility ── */
+  .dim { color: var(--fg-tertiary); }
+  .mono { font-family: var(--font-mono); }
+  .row { display: flex; align-items: center; gap: var(--space-4); }
+  .col { display: flex; flex-direction: column; }
+  .gap-2 { gap: var(--space-4); } .gap-3 { gap: var(--space-6); } .gap-4 { gap: var(--space-8); }
+  .grow { flex: 1; }
+  .icon { display: inline-block; vertical-align: middle; stroke-width: 2; }
+
+  /* ── Local helpers (from kit index.html) ── */
+  .bar-track { width: 100%; }
+  details > summary::-webkit-details-marker { display: none; }
+  details[open] > summary > .icon:first-child { transform: rotate(90deg); }
+  summary > .icon { transition: transform var(--duration-fast) var(--ease-standard); }
+
+  /* responsive: collapse sidebar to icon rail under 768px */
+  @media (max-width: 768px) {
+    .sidebar { width: 64px; padding: var(--space-8) var(--space-3); }
+    .sidebar-logo-text, .sidebar-section-title, .sidebar-nav a span:last-child, .sidebar-user > div, .sidebar-user .toast-close { display: none; }
+    .sidebar-nav a { justify-content: center; }
+    .content { padding: var(--space-12) var(--space-8); }
+    .dash-cols { grid-template-columns: 1fr !important; }
+    .metric-grid { grid-template-columns: 1fr; }
+  }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <!-- ── Icons (Lucide-derived) + brand mark ── -->
+  <script type="text/babel">
+  (function () {
+    const P = {
+      'layout-dashboard': '<rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/>',
+      'database': '<ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5V19A9 3 0 0 0 21 19V5"/><path d="M3 12A9 3 0 0 0 21 12"/>',
+      'terminal': '<polyline points="4 17 10 11 4 5"/><line x1="12" x2="20" y1="19" y2="19"/>',
+      'folder': '<path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/>',
+      'users': '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+      'git-branch': '<line x1="6" x2="6" y1="3" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/>',
+      'rocket': '<path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/>',
+      'code': '<polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>',
+      'send': '<path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"/><path d="m21.854 2.147-10.94 10.939"/>',
+      'box': '<path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/>',
+      'git-pull-request': '<circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M13 6h3a2 2 0 0 1 2 2v7"/><line x1="6" x2="6" y1="9" y2="21"/>',
+      'activity': '<path d="M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2"/>',
+      'plus': '<path d="M5 12h14"/><path d="M12 5v14"/>',
+      'search': '<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',
+      'check': '<path d="M20 6 9 17l-5-5"/>',
+      'check-circle': '<path d="M21.801 10A10 10 0 1 1 17 3.335"/><path d="m9 11 3 3L22 4"/>',
+      'chevron-right': '<path d="m9 18 6-6-6-6"/>',
+      'chevron-left': '<path d="m15 18-6-6 6-6"/>',
+      'chevron-down': '<path d="m6 9 6 6 6-6"/>',
+      'external-link': '<path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>',
+      'refresh-cw': '<path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/>',
+      'globe': '<circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/>',
+      'github': '<path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 4 5 4 5 4c-.3 1.15-.3 2.35 0 3.5A5.4 5.4 0 0 0 4 11c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"/><path d="M9 18c-4.51 2-5-2-7-2"/>',
+      'settings': '<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>',
+      'log-out': '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/>',
+      'moon': '<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>',
+      'sun': '<circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/>',
+      'x': '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
+      'alert-triangle': '<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/>',
+      'info': '<circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>',
+      'clock': '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',
+      'more-horizontal': '<circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/>',
+      'arrow-left': '<path d="m12 19-7-7 7-7"/><path d="M19 12H5"/>',
+      'arrow-right': '<path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>',
+      'zap': '<path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/>',
+      'hard-drive': '<line x1="22" x2="2" y1="12" y2="12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/><line x1="6" x2="6.01" y1="16" y2="16"/><line x1="10" x2="10.01" y1="16" y2="16"/>',
+      'mail': '<rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>',
+      'file-code': '<path d="M10 12.5 8 15l2 2.5"/><path d="m14 12.5 2 2.5-2 2.5"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M4 6V4a2 2 0 0 1 2-2h9l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-1"/>',
+      'play': '<polygon points="6 3 20 12 6 21 6 3"/>',
+      'copy': '<rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>',
+      'link': '<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>',
+      'loader': '<line x1="12" x2="12" y1="2" y2="6"/><line x1="12" x2="12" y1="18" y2="22"/><line x1="4.93" x2="7.76" y1="4.93" y2="7.76"/><line x1="16.24" x2="19.07" y1="16.24" y2="19.07"/><line x1="2" x2="6" y1="12" y2="12"/><line x1="18" x2="22" y1="12" y2="12"/><line x1="4.93" x2="7.76" y1="19.07" y2="16.24"/><line x1="16.24" x2="19.07" y1="7.76" y2="4.93"/>',
+      'cpu': '<rect width="16" height="16" x="4" y="4" rx="2"/><rect width="6" height="6" x="9" y="9" rx="1"/><path d="M15 2v2"/><path d="M15 20v2"/><path d="M2 15h2"/><path d="M2 9h2"/><path d="M20 15h2"/><path d="M20 9h2"/><path d="M9 2v2"/><path d="M9 20v2"/>',
+      'bell': '<path d="M10.268 21a2 2 0 0 0 3.464 0"/><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"/>',
+    };
+    function Icon({ name, size = 18, className = '', style = {}, strokeWidth = 2 }) {
+      const d = P[name] || '';
+      return React.createElement('svg', {
+        className: 'icon ' + className, width: size, height: size, viewBox: '0 0 24 24',
+        fill: 'none', stroke: 'currentColor', strokeWidth, strokeLinecap: 'round',
+        strokeLinejoin: 'round', style, dangerouslySetInnerHTML: { __html: d },
+      });
+    }
+    const LOGO_SVG = '<svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="120" height="120" rx="28" fill="#4F46E5"></rect><path d="M40 34h22.5c11.3 0 18.5 5.4 18.5 14.6 0 6-3.3 10.2-8.7 11.9 6.8 1.4 10.9 6 10.9 12.8C83.2 81.6 75.6 87 63.4 87H40V34Zm12.4 21.1h8.8c4.6 0 7.3-2.1 7.3-5.8 0-3.6-2.6-5.6-7.3-5.6h-8.8v11.4Zm0 22h9.8c4.9 0 7.7-2.2 7.7-6.1 0-3.8-2.8-6-7.8-6h-9.7v12.1Z" fill="#fff"></path></svg>';
+    window.Icon = Icon;
+    window.ICON_PATHS = P;
+    window.BIGBASE_LOGO = 'data:image/svg+xml,' + encodeURIComponent(LOGO_SVG);
+  })();
+  </script>
+
+  <!-- ── Mock data + helpers ── -->
+  <script type="text/babel">
+  (function () {
+    const now = Date.now();
+    const min = 60000, hr = 3600000, day = 86400000;
+
+    const SITES = [
+      {
+        id: 'ste_marketing', name: 'marketing-site', framework: 'Astro',
+        repo: 'danielvm/marketing', branch: 'main', root: '/',
+        status: 'ready', url: 'marketing-site.bigbase.local',
+        commit: 'a3f91c2', commitMsg: 'Update hero copy and pricing grid',
+        updated: now - 2 * min, env: 'production', thumb: 'grad-indigo',
+        deployments: [
+          { id: 'dep_1', status: 'ready', branch: 'main', commit: 'a3f91c2', msg: 'Update hero copy and pricing grid', when: now - 2 * min, duration: '38s' },
+          { id: 'dep_2', status: 'ready', branch: 'main', commit: '7e10b4d', msg: 'Add testimonials section', when: now - 6 * hr, duration: '41s' },
+          { id: 'dep_3', status: 'ready', branch: 'main', commit: '2c8aa90', msg: 'Initial import', when: now - 3 * day, duration: '52s' },
+        ],
+      },
+      {
+        id: 'ste_docs', name: 'docs', framework: 'Next.js',
+        repo: 'danielvm/docs', branch: 'main', root: '/',
+        status: 'building', url: 'docs.bigbase.local',
+        commit: 'f29d1aa', commitMsg: 'Restructure API reference nav',
+        updated: now - 40000, env: 'production', thumb: 'grad-slate', progress: 62,
+        deployments: [
+          { id: 'dep_4', status: 'building', branch: 'main', commit: 'f29d1aa', msg: 'Restructure API reference nav', when: now - 40000, duration: '—' },
+          { id: 'dep_5', status: 'ready', branch: 'main', commit: 'b81f0c3', msg: 'Fix broken anchor links', when: now - day, duration: '1m 12s' },
+        ],
+      },
+      {
+        id: 'ste_app', name: 'dashboard-app', framework: 'Vite + React',
+        repo: 'danielvm/dashboard', branch: 'release', root: '/web',
+        status: 'failed', url: 'dashboard-app.bigbase.local',
+        commit: '0d4e7f1', commitMsg: 'Bump dependencies for security patch',
+        updated: now - 25 * min, env: 'preview', thumb: 'grad-rose',
+        deployments: [
+          { id: 'dep_6', status: 'failed', branch: 'release', commit: '0d4e7f1', msg: 'Bump dependencies for security patch', when: now - 25 * min, duration: '19s' },
+          { id: 'dep_7', status: 'ready', branch: 'release', commit: 'ac5512e', msg: 'Wire up auth guard', when: now - 2 * day, duration: '1m 04s' },
+        ],
+      },
+    ];
+
+    const REPOS = [
+      { name: 'danielvm/marketing', desc: 'Astro marketing site', updated: '2 hours ago', lang: 'Astro', private: false },
+      { name: 'danielvm/dashboard', desc: 'Internal admin dashboard', updated: 'yesterday', lang: 'TypeScript', private: true },
+      { name: 'danielvm/api-gateway', desc: 'Go edge gateway + proxy', updated: '3 days ago', lang: 'Go', private: true },
+      { name: 'danielvm/blog-engine', desc: 'Markdown blog with RSS', updated: 'last week', lang: 'JavaScript', private: false },
+      { name: 'danielvm/landing-kit', desc: 'Reusable landing components', updated: '2 weeks ago', lang: 'Svelte', private: false },
+    ];
+
+    const FRAMEWORKS = [
+      { id: 'astro', name: 'Astro', build: 'npm run build', output: 'dist', install: 'npm install' },
+      { id: 'next', name: 'Next.js', build: 'next build', output: '.next', install: 'npm install' },
+      { id: 'vite', name: 'Vite', build: 'vite build', output: 'dist', install: 'npm install' },
+      { id: 'static', name: 'Static HTML', build: '—', output: '.', install: '—' },
+      { id: 'sveltekit', name: 'SvelteKit', build: 'vite build', output: 'build', install: 'npm install' },
+    ];
+
+    const FUNCTIONS = [
+      { id: 'fn_resize', name: 'image-resize', runtime: 'JavaScript', trigger: 'HTTP', timeout: 30, updated: now - 3 * hr, status: 'active' },
+      { id: 'fn_webhook', name: 'stripe-webhook', runtime: 'JavaScript', trigger: 'HTTP', timeout: 15, updated: now - day, status: 'active' },
+      { id: 'fn_cron', name: 'nightly-digest', runtime: 'JavaScript', trigger: 'Schedule', timeout: 60, updated: now - 2 * day, status: 'active' },
+    ];
+
+    const COLLECTIONS = ['users', 'sites', 'deployments', 'sessions', 'audit_log'];
+    const TABLE_ROWS = [
+      { id: 'usr_8x2a', email: 'daniel@bigbase.dev', role: 'owner', verified: true, created: 'Mar 2, 2026' },
+      { id: 'usr_91kd', email: 'maya@acme.io', role: 'admin', verified: true, created: 'Apr 11, 2026' },
+      { id: 'usr_3jf0', email: 'sam@studio.co', role: 'member', verified: false, created: 'May 7, 2026' },
+      { id: 'usr_55ze', email: 'lee@northwind.com', role: 'member', verified: true, created: 'May 22, 2026' },
+    ];
+
+    /* ── System status (from bigbase.click landing widget) ── */
+    const METRICS = { cpu: 23, memory: '512 MB', memPct: 25, requests: '1.2k', uptime: '14d 6h' };
+    const ACTIVITY = [
+      { label: 'Deploy web-app', detail: 'Completed', status: 'ready', icon: 'rocket', when: '2m ago' },
+      { label: 'Build api-service', detail: 'Running', status: 'building', icon: 'box', when: 'just now' },
+      { label: 'Auth DB migration', detail: 'Done', status: 'ready', icon: 'database', when: '14m ago' },
+      { label: 'Push notification', detail: 'Failed', status: 'failed', icon: 'send', when: '26m ago' },
+      { label: 'Nightly digest cron', detail: 'Completed', status: 'ready', icon: 'clock', when: '1h ago' },
+    ];
+    const COMPONENTS = [
+      { name: 'db', deps: 'none' }, { name: 'api', deps: 'db' }, { name: 'storage', deps: 'db' },
+      { name: 'git', deps: 'db' }, { name: 'messaging', deps: 'db' }, { name: 'deploy', deps: 'db, git' },
+      { name: 'monitoring', deps: 'db' }, { name: 'admin', deps: 'none' }, { name: 'github', deps: 'db' },
+      { name: 'cici', deps: 'db' }, { name: 'functions', deps: 'db' }, { name: 'auth', deps: 'db' },
+      { name: 'forge', deps: 'db' }, { name: 'realtime', deps: 'auth, api' }, { name: 'proxy', deps: 'none' },
+      { name: 'sites', deps: 'db' },
+    ].map(c => ({ ...c, version: '0.1.0', status: 'running', hooks: 'none' }));
+
+    /* ── Storage ── */
+    const BUCKETS = ['public-assets', 'avatars', 'uploads', 'backups'];
+    const FILES = [
+      { name: 'hero-banner.png', size: '1.4 MB', type: 'image/png', modified: '2h ago', bucket: 'public-assets', icon: 'box' },
+      { name: 'logo.svg', size: '4 KB', type: 'image/svg+xml', modified: '1w ago', bucket: 'public-assets', icon: 'box' },
+      { name: 'user-8x2a.jpg', size: '248 KB', type: 'image/jpeg', modified: 'yesterday', bucket: 'avatars', icon: 'box' },
+      { name: 'export-2026-05.csv', size: '3.1 MB', type: 'text/csv', modified: '3d ago', bucket: 'uploads', icon: 'file-code' },
+      { name: 'invoice-0042.pdf', size: '92 KB', type: 'application/pdf', modified: '2w ago', bucket: 'uploads', icon: 'file-code' },
+      { name: 'db-snapshot.sql.gz', size: '18.6 MB', type: 'application/gzip', modified: '5d ago', bucket: 'backups', icon: 'hard-drive' },
+    ];
+
+    /* ── CI / CD pipeline runs ── */
+    const PIPELINES = [
+      { id: 'run_318', repo: 'danielvm/marketing', branch: 'main', commit: 'a3f91c2', status: 'ready', duration: '1m 12s', when: now - 3 * min, trigger: 'push', actor: 'daniel' },
+      { id: 'run_317', repo: 'danielvm/docs', branch: 'main', commit: 'f29d1aa', status: 'building', duration: '—', when: now - 40000, trigger: 'push', actor: 'maya' },
+      { id: 'run_316', repo: 'danielvm/dashboard', branch: 'release', commit: '0d4e7f1', status: 'failed', duration: '19s', when: now - 25 * min, trigger: 'push', actor: 'sam' },
+      { id: 'run_315', repo: 'danielvm/api-gateway', branch: 'main', commit: '9b2c01a', status: 'ready', duration: '2m 04s', when: now - 2 * hr, trigger: 'manual', actor: 'daniel' },
+      { id: 'run_314', repo: 'danielvm/blog-engine', branch: 'main', commit: '7712dd0', status: 'ready', duration: '46s', when: now - day, trigger: 'schedule', actor: 'system' },
+    ];
+
+    /* ── SQL Editor sample result ── */
+    const SQL_DEFAULT = "select id, email, role, verified\nfrom users\nwhere verified = true\norder by created desc;";
+    const SQL_RESULT = TABLE_ROWS.filter(r => r.verified).map(r => ({ id: r.id, email: r.email, role: r.role, verified: r.verified }));
+
+    const BUILD_LOG = [
+      { t: '00:00', m: 'Cloning danielvm/marketing @ main…', k: '' },
+      { t: '00:02', m: 'Checked out commit a3f91c2', k: 'ok' },
+      { t: '00:03', m: 'Detected framework: Astro', k: 'ok' },
+      { t: '00:04', m: 'Running: npm install', k: '' },
+      { t: '00:21', m: 'added 412 packages in 16s', k: '' },
+      { t: '00:22', m: 'Running: npm run build', k: '' },
+      { t: '00:34', m: 'building client + server…', k: '' },
+      { t: '00:37', m: 'Completed in 14.82s — 18 pages built', k: 'ok' },
+      { t: '00:38', m: 'Uploading dist → edge', k: '' },
+      { t: '00:38', m: 'Deployment ready ✓  https://marketing-site.bigbase.local', k: 'ok' },
+    ];
+
+    function timeAgo(ts) {
+      const d = Date.now() - ts;
+      if (d < min) return 'just now';
+      if (d < hr) return Math.floor(d / min) + 'm ago';
+      if (d < day) return Math.floor(d / hr) + 'h ago';
+      return Math.floor(d / day) + 'd ago';
+    }
+    function statusVariant(s) {
+      if (s === 'ready') return 'success';
+      if (s === 'building' || s === 'pending') return 'warning';
+      if (s === 'failed') return 'error';
+      return 'neutral';
+    }
+    const THUMBS = {
+      'grad-indigo': 'linear-gradient(135deg,#4F46E5 0%,#7C73F0 100%)',
+      'grad-slate': 'linear-gradient(135deg,#3a3a48 0%,#5b5b6e 100%)',
+      'grad-rose': 'linear-gradient(135deg,#9f1239 0%,#e11d48 100%)',
+      'grad-emerald': 'linear-gradient(135deg,#065f46 0%,#10b981 100%)',
+    };
+
+    window.DATA = { SITES, REPOS, FRAMEWORKS, FUNCTIONS, COLLECTIONS, TABLE_ROWS, BUILD_LOG, METRICS, ACTIVITY, COMPONENTS, BUCKETS, FILES, PIPELINES, SQL_DEFAULT, SQL_RESULT, timeAgo, statusVariant, THUMBS };
+  })();
+  </script>
+
+  <!-- ── Shared UI primitives + sidebar ── -->
+  <script type="text/babel">
+  (function () {
+    const { useState, useEffect, createContext, useContext, useCallback } = React;
+    const Icon = window.Icon;
+
+    function Badge({ variant = 'neutral', dot, children }) {
+      return (
+        <span className={`badge badge-${variant}`}>
+          {dot && <span className="dot"></span>}
+          {children}
+        </span>
+      );
+    }
+    function StatusBadge({ status }) {
+      const v = window.DATA.statusVariant(status);
+      const label = status.charAt(0).toUpperCase() + status.slice(1);
+      return <Badge variant={v} dot={status !== 'ready'}>{status === 'building' ? <><span className="spinner spinner-sm" style={{ width: 10, height: 10, borderWidth: 1.5 }}></span>{label}</> : <><span className="dot"></span>{label}</>}</Badge>;
+    }
+
+    function Avatar({ email, size = 30 }) {
+      const initial = (email || '?')[0].toUpperCase();
+      return <div className="avatar" style={{ width: size, height: size, fontSize: size * 0.42 }}>{initial}</div>;
+    }
+
+    function PreviewBanner() {
+      return (
+        <div className="preview-banner">
+          <Icon name="alert-triangle" size={16} />
+          Preview mode — showing mock data. Connect a backend to deploy for real.
+        </div>
+      );
+    }
+
+    const ToastCtx = createContext(null);
+    function useToast() { return useContext(ToastCtx); }
+    function ToastProvider({ children }) {
+      const [toasts, setToasts] = useState([]);
+      const push = useCallback((t) => {
+        const id = Math.random().toString(36).slice(2);
+        setToasts(p => [...p, { id, ...t }]);
+        setTimeout(() => setToasts(p => p.filter(x => x.id !== id)), t.duration || 4200);
+      }, []);
+      const remove = (id) => setToasts(p => p.filter(x => x.id !== id));
+      const iconFor = { success: 'check-circle', error: 'alert-triangle', info: 'info' };
+      return (
+        <ToastCtx.Provider value={push}>
+          {children}
+          <div className="toast-container">
+            {toasts.map(t => (
+              <div key={t.id} className={`toast toast-${t.type || 'info'}`}>
+                <Icon name={iconFor[t.type || 'info']} size={18} className="toast-icon" />
+                <div className="toast-body">
+                  <div className="toast-title">{t.title}</div>
+                  {t.msg && <div className="toast-msg">{t.msg}</div>}
+                </div>
+                <button className="toast-close" onClick={() => remove(t.id)}><Icon name="x" size={15} /></button>
+              </div>
+            ))}
+          </div>
+        </ToastCtx.Provider>
+      );
+    }
+
+    function SkeletonCard() {
+      return (
+        <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <div className="skeleton skeleton-card" style={{ height: 110 }}></div>
+          <div className="skeleton skeleton-text" style={{ width: '70%' }}></div>
+          <div className="skeleton skeleton-text" style={{ width: '45%' }}></div>
+        </div>
+      );
+    }
+
+    const NAV = [
+      { section: 'Overview', items: [{ id: 'dashboard', label: 'Dashboard', icon: 'layout-dashboard' }] },
+      { section: 'Build', items: [
+        { id: 'sites', label: 'Sites', icon: 'rocket' },
+        { id: 'functions', label: 'Functions', icon: 'box' },
+      ] },
+      { section: 'Data', items: [
+        { id: 'data', label: 'Data Studio', icon: 'database' },
+        { id: 'sql', label: 'SQL Editor', icon: 'terminal' },
+        { id: 'storage', label: 'Storage', icon: 'hard-drive' },
+      ] },
+      { section: 'Auth', items: [{ id: 'users', label: 'Users', icon: 'users' }] },
+      { section: 'DevOps', items: [
+        { id: 'repos', label: 'Git Repos', icon: 'git-branch' },
+        { id: 'cici', label: 'CI / CD', icon: 'git-pull-request' },
+        { id: 'monitoring', label: 'Monitoring', icon: 'activity' },
+      ] },
+    ];
+
+    function Sidebar({ route, onNav, user, dark, onToggleDark, onLogout }) {
+      const active = (id) => route === id || route.startsWith(id + '/');
+      return (
+        <nav className="sidebar">
+          <div className="sidebar-logo">
+            <img className="sidebar-logo-mark" src={window.BIGBASE_LOGO} alt="" />
+            <span className="sidebar-logo-text">BigBase</span>
+          </div>
+          {NAV.map(grp => (
+            <div className="sidebar-section" key={grp.section}>
+              <div className="sidebar-section-title">{grp.section}</div>
+              <ul className="sidebar-nav">
+                {grp.items.map(it => (
+                  <li key={it.id}>
+                    <a href="#" className={active(it.id) ? 'active' : ''} onClick={(e) => { e.preventDefault(); onNav(it.id); }}>
+                      <span className="sidebar-nav-icon"><Icon name={it.icon} size={18} /></span>
+                      <span>{it.label}</span>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+          <div className="sidebar-spacer"></div>
+          <div className="sidebar-section">
+            <ul className="sidebar-nav">
+              <li>
+                <a href="#" onClick={(e) => { e.preventDefault(); onToggleDark(); }}>
+                  <span className="sidebar-nav-icon"><Icon name={dark ? 'sun' : 'moon'} size={18} /></span>
+                  <span>{dark ? 'Light mode' : 'Dark mode'}</span>
+                </a>
+              </li>
+              <li>
+                <a href="#" onClick={(e) => { e.preventDefault(); onNav('settings'); }}>
+                  <span className="sidebar-nav-icon"><Icon name="settings" size={18} /></span>
+                  <span>Settings</span>
+                </a>
+              </li>
+            </ul>
+          </div>
+          <div className="sidebar-footer">
+            <div className="sidebar-user">
+              <Avatar email={user.email} />
+              <div style={{ minWidth: 0, flex: 1 }}>
+                <div className="sidebar-email" style={{ fontWeight: 600, color: 'var(--fg-primary)' }}>{user.email.split('@')[0]}</div>
+                <div className="sidebar-email">{user.email}</div>
+              </div>
+              <button className="toast-close" title="Log out" onClick={onLogout}><Icon name="log-out" size={16} /></button>
+            </div>
+          </div>
+        </nav>
+      );
+    }
+
+    Object.assign(window, { Badge, StatusBadge, Avatar, PreviewBanner, ToastProvider, useToast, SkeletonCard, Sidebar });
+  })();
+  </script>
+
+  <!-- ── Create Site wizard (Journey A) ── -->
+  <script type="text/babel">
+  (function () {
+    const { useState, useEffect, useRef } = React;
+    const Icon = window.Icon;
+    const { REPOS, FRAMEWORKS, BUILD_LOG, THUMBS } = window.DATA;
+
+    function WizardRail({ step }) {
+      const steps = ['Source', 'Configure', 'Deploy'];
+      return (
+        <div className="wizard-steps">
+          {steps.map((s, i) => (
+            <React.Fragment key={s}>
+              <div className={`wizard-step ${i < step ? 'done' : ''} ${i === step ? 'active' : ''}`}>
+                <div className="wizard-step-num">{i < step ? <Icon name="check" size={14} /> : i + 1}</div>
+                <div className="wizard-step-label">{s}</div>
+              </div>
+              {i < steps.length - 1 && <div className={`wizard-step-line ${i < step ? 'done' : ''}`}></div>}
+            </React.Fragment>
+          ))}
+        </div>
+      );
+    }
+
+    function SourceStep({ source, setSource, gitConnected, setGitConnected, selectedRepo, setSelectedRepo, search, setSearch }) {
+      const filtered = REPOS.filter(r => r.name.toLowerCase().includes(search.toLowerCase()));
+      return (
+        <div className="col gap-4">
+          <div>
+            <div className="ds-h3" style={{ marginBottom: 6 }}>Where's your code?</div>
+            <div className="ds-body dim">Choose a source. BigBase detects the framework and builds it for you.</div>
+          </div>
+          <div className="choice-grid">
+            <div className={`choice-card ${source === 'github' ? 'selected' : ''}`} onClick={() => setSource('github')}>
+              <div className="choice-card-check"><Icon name="check" size={18} /></div>
+              <div className="choice-card-icon"><Icon name="github" size={22} /></div>
+              <div className="choice-card-title">Connect Git</div>
+              <div className="choice-card-desc">Deploy from a GitHub repository. Auto-redeploys on every push.</div>
+            </div>
+            <div className={`choice-card ${source === 'bigbase' ? 'selected' : ''}`} onClick={() => setSource('bigbase')}>
+              <div className="choice-card-check"><Icon name="check" size={18} /></div>
+              <div className="choice-card-icon"><Icon name="box" size={22} /></div>
+              <div className="choice-card-title">Existing BigBase repo</div>
+              <div className="choice-card-desc">Use a repo already hosted on this BigBase instance.</div>
+            </div>
+            <div className="choice-card disabled">
+              <div className="choice-card-icon"><Icon name="rocket" size={22} /></div>
+              <div className="choice-card-title">Start from template</div>
+              <div className="choice-card-desc">Astro, Next.js & more.</div>
+              <span className="badge badge-neutral" style={{ alignSelf: 'flex-start', marginTop: 4 }}>Coming soon</span>
+            </div>
+          </div>
+
+          {source === 'github' && (
+            <div className="card" style={{ marginTop: 4 }}>
+              {!gitConnected ? (
+                <div className="col" style={{ alignItems: 'center', gap: 14, padding: '20px 0' }}>
+                  <div className="choice-card-icon" style={{ width: 52, height: 52 }}><Icon name="github" size={26} /></div>
+                  <div className="ds-h3">Connect your GitHub account</div>
+                  <div className="ds-body dim" style={{ textAlign: 'center', maxWidth: 360 }}>Authorize BigBase to read repositories and receive push events.</div>
+                  <button className="btn btn-primary" onClick={() => setGitConnected(true)}><Icon name="github" size={16} /> Authorize GitHub</button>
+                </div>
+              ) : (
+                <div className="col gap-3">
+                  <div className="row" style={{ justifyContent: 'space-between' }}>
+                    <div className="row" style={{ gap: 8 }}>
+                      <Icon name="github" size={16} />
+                      <span className="ds-body" style={{ fontWeight: 600 }}>danielvm</span>
+                      <span className="badge badge-success"><span className="dot"></span>Connected</span>
+                    </div>
+                    <div className="input-with-prefix" style={{ width: 240 }}>
+                      <span className="input-prefix"><Icon name="search" size={14} /></span>
+                      <input className="input" placeholder="Search repos" value={search} onChange={e => setSearch(e.target.value)} />
+                    </div>
+                  </div>
+                  <div className="col" style={{ gap: 1, border: '1px solid var(--border-default)', borderRadius: 'var(--radius-s)', overflow: 'hidden' }}>
+                    {filtered.map(r => (
+                      <div key={r.name} onClick={() => setSelectedRepo(r.name)}
+                        style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', cursor: 'pointer',
+                          background: selectedRepo === r.name ? 'var(--brand-tint)' : 'var(--bg-surface)' }}>
+                        <Icon name="git-branch" size={16} className="dim" />
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div className="row" style={{ gap: 6 }}>
+                            <span className="ds-body" style={{ fontWeight: 600 }}>{r.name}</span>
+                            {r.private && <span className="badge badge-neutral">Private</span>}
+                          </div>
+                          <div className="ds-caption">{r.desc} · {r.lang} · {r.updated}</div>
+                        </div>
+                        {selectedRepo === r.name
+                          ? <span className="badge badge-accent">Selected</span>
+                          : <button className="btn btn-secondary btn-sm">Select</button>}
+                      </div>
+                    ))}
+                    {filtered.length === 0 && <div className="dim" style={{ padding: 16, fontSize: 14 }}>No repos match "{search}".</div>}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {source === 'bigbase' && (
+            <div className="card" style={{ marginTop: 4 }}>
+              <div className="col" style={{ gap: 1, border: '1px solid var(--border-default)', borderRadius: 'var(--radius-s)', overflow: 'hidden' }}>
+                {REPOS.slice(0, 3).map(r => (
+                  <div key={r.name} onClick={() => setSelectedRepo(r.name)}
+                    style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', cursor: 'pointer',
+                      background: selectedRepo === r.name ? 'var(--brand-tint)' : 'var(--bg-surface)' }}>
+                    <Icon name="box" size={16} className="dim" />
+                    <div style={{ flex: 1 }}><span className="ds-body" style={{ fontWeight: 600 }}>{r.name}</span><div className="ds-caption">on this instance</div></div>
+                    {selectedRepo === r.name ? <span className="badge badge-accent">Selected</span> : <button className="btn btn-secondary btn-sm">Select</button>}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    function ConfigureStep({ cfg, setCfg }) {
+      const set = (k, v) => setCfg(p => ({ ...p, [k]: v }));
+      return (
+        <div className="col gap-4">
+          <div>
+            <div className="ds-h3" style={{ marginBottom: 6 }}>Configure your site</div>
+            <div className="ds-body dim">We detected <b style={{ color: 'var(--fg-primary)' }}>{cfg.framework}</b>. Adjust if needed.</div>
+          </div>
+          <div className="card col gap-4">
+            <div className="form-row" style={{ display: 'flex', gap: 16 }}>
+              <div className="input-group" style={{ flex: 1 }}>
+                <label className="input-label">Site name</label>
+                <input className="input" value={cfg.name} onChange={e => set('name', e.target.value.replace(/[^a-z0-9-]/g, ''))} />
+                <span className="input-hint">Used for your URL: <span className="mono">{cfg.name || 'your-site'}.bigbase.local</span></span>
+              </div>
+              <div className="input-group" style={{ width: 200 }}>
+                <label className="input-label">Production branch</label>
+                <input className="input" value={cfg.branch} onChange={e => set('branch', e.target.value)} />
+              </div>
+            </div>
+            <div className="form-row" style={{ display: 'flex', gap: 16 }}>
+              <div className="input-group" style={{ flex: 1 }}>
+                <label className="input-label">Framework preset</label>
+                <select className="input" value={cfg.framework} onChange={e => {
+                  const f = FRAMEWORKS.find(x => x.name === e.target.value);
+                  setCfg(p => ({ ...p, framework: f.name, build: f.build, install: f.install, output: f.output }));
+                }}>
+                  {FRAMEWORKS.map(f => <option key={f.id} value={f.name}>{f.name}</option>)}
+                </select>
+              </div>
+              <div className="input-group" style={{ width: 200 }}>
+                <label className="input-label">Root directory</label>
+                <input className="input" value={cfg.root} onChange={e => set('root', e.target.value)} />
+              </div>
+            </div>
+          </div>
+
+          <details className="card" style={{ padding: 0 }}>
+            <summary style={{ padding: 'var(--space-8) var(--space-10)', cursor: 'pointer', fontWeight: 600, fontSize: 14, display: 'flex', alignItems: 'center', gap: 8, listStyle: 'none' }}>
+              <Icon name="chevron-right" size={16} className="dim" /> Build & output settings
+            </summary>
+            <div className="col gap-3" style={{ padding: '0 var(--space-10) var(--space-10)' }}>
+              <div className="input-group"><label className="input-label">Install command</label><input className="input mono" value={cfg.install} onChange={e => set('install', e.target.value)} /></div>
+              <div className="input-group"><label className="input-label">Build command</label><input className="input mono" value={cfg.build} onChange={e => set('build', e.target.value)} /></div>
+              <div className="input-group"><label className="input-label">Output directory</label><input className="input mono" value={cfg.output} onChange={e => set('output', e.target.value)} /></div>
+            </div>
+          </details>
+
+          <details className="card" style={{ padding: 0 }}>
+            <summary style={{ padding: 'var(--space-8) var(--space-10)', cursor: 'pointer', fontWeight: 600, fontSize: 14, display: 'flex', alignItems: 'center', gap: 8, listStyle: 'none' }}>
+              <Icon name="chevron-right" size={16} className="dim" /> Environment variables <span className="badge badge-neutral" style={{ marginLeft: 4 }}>{cfg.env.length}</span>
+            </summary>
+            <div className="col gap-3" style={{ padding: '0 var(--space-10) var(--space-10)' }}>
+              {cfg.env.map((e, i) => (
+                <div className="row" key={i} style={{ gap: 8 }}>
+                  <input className="input mono" placeholder="KEY" value={e.k} onChange={ev => setCfg(p => { const env = [...p.env]; env[i] = { ...env[i], k: ev.target.value }; return { ...p, env }; })} />
+                  <input className="input mono" placeholder="value" value={e.v} onChange={ev => setCfg(p => { const env = [...p.env]; env[i] = { ...env[i], v: ev.target.value }; return { ...p, env }; })} />
+                  <button className="btn btn-ghost btn-sm" onClick={() => setCfg(p => ({ ...p, env: p.env.filter((_, j) => j !== i) }))}><Icon name="x" size={14} /></button>
+                </div>
+              ))}
+              <button className="btn btn-secondary btn-sm" style={{ alignSelf: 'flex-start' }} onClick={() => setCfg(p => ({ ...p, env: [...p.env, { k: '', v: '' }] }))}><Icon name="plus" size={14} /> Add variable</button>
+            </div>
+          </details>
+        </div>
+      );
+    }
+
+    function DeployStep({ cfg, onReady }) {
+      const [lines, setLines] = useState([]);
+      const [done, setDone] = useState(false);
+      const logRef = useRef(null);
+      useEffect(() => {
+        let i = 0;
+        const t = setInterval(() => {
+          if (i >= BUILD_LOG.length) { clearInterval(t); setDone(true); onReady && onReady(); return; }
+          setLines(prev => [...prev, BUILD_LOG[i]]); i++;
+        }, 520);
+        return () => clearInterval(t);
+      }, []);
+      useEffect(() => { if (logRef.current) logRef.current.scrollTop = logRef.current.scrollHeight; }, [lines]);
+      const pct = Math.min(100, Math.round((lines.length / BUILD_LOG.length) * 100));
+      return (
+        <div className="col gap-4">
+          <div className="row" style={{ justifyContent: 'space-between' }}>
+            <div>
+              <div className="ds-h3" style={{ marginBottom: 6 }}>{done ? 'Your site is live 🎉' : 'Building your site…'}</div>
+              <div className="ds-body dim">{cfg.name}.bigbase.local · {cfg.framework} · {cfg.branch}</div>
+            </div>
+            {done ? <span className="badge badge-success"><span className="dot"></span>Ready</span>
+              : <span className="badge badge-warning"><span className="spinner spinner-sm" style={{ width: 10, height: 10, borderWidth: 1.5 }}></span>Building</span>}
+          </div>
+          <div className="bar-track" style={{ height: 6, background: 'var(--bg-subtle)', borderRadius: 999, overflow: 'hidden' }}>
+            <div style={{ height: '100%', width: pct + '%', background: done ? 'var(--success)' : 'var(--brand-500)', borderRadius: 999, transition: 'width .4s var(--ease-emphasized)' }}></div>
+          </div>
+          <div className="code-output" ref={logRef} style={{ maxHeight: 280 }}>
+            {lines.map((l, i) => (
+              <div className="log-line" key={i}>
+                <span className="log-time">{l.t}</span>
+                <span className={l.k === 'ok' ? 'log-ok' : ''} style={{ color: l.k === 'ok' ? undefined : '#d4d4d4' }}>{l.m}</span>
+              </div>
+            ))}
+            {!done && <div className="log-line"><span className="log-time">&nbsp;</span><span style={{ color: 'var(--brand-100)' }}>▍</span></div>}
+          </div>
+        </div>
+      );
+    }
+
+    function CreateSite({ onCancel, onDeployed, onBackToList }) {
+      const [step, setStep] = useState(0);
+      const [source, setSource] = useState(null);
+      const [gitConnected, setGitConnected] = useState(false);
+      const [selectedRepo, setSelectedRepo] = useState(null);
+      const [search, setSearch] = useState('');
+      const [deployReady, setDeployReady] = useState(false);
+      const [cfg, setCfg] = useState({ name: '', branch: 'main', framework: 'Astro', root: '/', install: 'npm install', build: 'npm run build', output: 'dist', env: [] });
+
+      useEffect(() => {
+        if (selectedRepo && !cfg.name) {
+          const guessed = selectedRepo.split('/')[1] || 'my-site';
+          setCfg(p => ({ ...p, name: guessed }));
+        }
+      }, [selectedRepo]);
+
+      const canNext = step === 0 ? !!selectedRepo : step === 1 ? cfg.name.length > 1 : false;
+
+      const next = () => setStep(s => Math.min(2, s + 1));
+      const back = () => setStep(s => Math.max(0, s - 1));
+
+      const finish = () => {
+        const site = {
+          id: 'ste_' + cfg.name, name: cfg.name, framework: cfg.framework, repo: selectedRepo,
+          branch: cfg.branch, root: cfg.root, status: 'ready', url: cfg.name + '.bigbase.local',
+          commit: 'a3f91c2', commitMsg: 'Initial deployment', updated: Date.now(), env: 'production', thumb: 'grad-emerald',
+          deployments: [{ id: 'dep_new', status: 'ready', branch: cfg.branch, commit: 'a3f91c2', msg: 'Initial deployment', when: Date.now(), duration: '38s' }],
+        };
+        onDeployed(site);
+      };
+
+      return (
+        <div>
+          <div className="breadcrumb">
+            <a href="#" onClick={(e) => { e.preventDefault(); onBackToList(); }}>Sites</a>
+            <span className="sep">/</span><span>Create site</span>
+          </div>
+          <div className="page-header">
+            <h1 className="page-title">Create a new site</h1>
+            <button className="btn btn-ghost" onClick={onCancel}><Icon name="x" size={16} /> Cancel</button>
+          </div>
+
+          <div style={{ maxWidth: 760 }}>
+            <WizardRail step={step} />
+
+            {step === 0 && <SourceStep {...{ source, setSource, gitConnected, setGitConnected, selectedRepo, setSelectedRepo, search, setSearch }} />}
+            {step === 1 && <ConfigureStep cfg={cfg} setCfg={setCfg} />}
+            {step === 2 && <DeployStep cfg={cfg} onReady={() => setDeployReady(true)} />}
+
+            <div className="row" style={{ justifyContent: 'space-between', marginTop: 28 }}>
+              <button className="btn btn-secondary" onClick={step === 0 ? onCancel : back} disabled={step === 2}>
+                <Icon name="arrow-left" size={16} /> {step === 0 ? 'Cancel' : 'Back'}
+              </button>
+              {step < 2 && (
+                <button className="btn btn-primary" disabled={!canNext} onClick={next}>
+                  {step === 1 ? <>Deploy <Icon name="rocket" size={16} /></> : <>Continue <Icon name="arrow-right" size={16} /></>}
+                </button>
+              )}
+              {step === 2 && (
+                <button className="btn btn-primary" disabled={!deployReady} onClick={finish}>
+                  {deployReady ? <>View site <Icon name="arrow-right" size={16} /></> : <><span className="spinner spinner-sm"></span> Building…</>}
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    window.CreateSite = CreateSite;
+  })();
+  </script>
+
+  <!-- ── Core screens ── -->
+  <script type="text/babel">
+  (function () {
+    const { useState, useEffect } = React;
+    const Icon = window.Icon;
+    const { SITES, REPOS, FUNCTIONS, COLLECTIONS, TABLE_ROWS, BUILD_LOG, METRICS, ACTIVITY, COMPONENTS, BUCKETS, FILES, PIPELINES, SQL_DEFAULT, SQL_RESULT, timeAgo, statusVariant, THUMBS } = window.DATA;
+    const { Badge, StatusBadge, Avatar, SkeletonCard } = window;
+
+    function PageHeader({ title, subtitle, children }) {
+      return (
+        <div className="page-header">
+          <div><h1 className="page-title">{title}</h1>{subtitle && <div className="page-subtitle">{subtitle}</div>}</div>
+          {children && <div className="page-header-actions">{children}</div>}
+        </div>
+      );
+    }
+
+    /* ── System status panel (activity + components/cpu/memory) ── */
+    function SystemStatusPanel() {
+      const running = COMPONENTS.filter(c => c.status === 'running').length;
+      return (
+        <div className="card col gap-4">
+          <div className="row" style={{ justifyContent: 'space-between' }}>
+            <div className="row" style={{ gap: 10 }}>
+              <span className="stat-icon" style={{ background: 'var(--success-bg)', color: 'var(--success)' }}><Icon name="activity" size={16} /></span>
+              <div>
+                <div className="ds-body" style={{ fontWeight: 600 }}>All systems operational</div>
+                <div className="ds-caption">Live health across {COMPONENTS.length} components · uptime {METRICS.uptime}</div>
+              </div>
+            </div>
+            <Badge variant="success" dot>Healthy</Badge>
+          </div>
+
+          <div className="metric-grid">
+            <div className="metric-tile">
+              <div className="metric-tile-top"><span className="metric-label">Components</span><Icon name="cpu" size={15} className="dim" /></div>
+              <div className="metric-value">{running}<span className="unit"> / {COMPONENTS.length}</span></div>
+              <div className="ds-caption">all running</div>
+            </div>
+            <div className="metric-tile">
+              <div className="metric-tile-top"><span className="metric-label">CPU</span><Icon name="activity" size={15} className="dim" /></div>
+              <div className="metric-value">{METRICS.cpu}<span className="unit">%</span></div>
+              <div className="bar-track" style={{ height: 5, background: 'var(--bg-subtle)', borderRadius: 999, overflow: 'hidden' }}>
+                <div style={{ height: '100%', width: METRICS.cpu + '%', background: 'var(--brand-500)', borderRadius: 999 }}></div>
+              </div>
+            </div>
+            <div className="metric-tile">
+              <div className="metric-tile-top"><span className="metric-label">Memory</span><Icon name="hard-drive" size={15} className="dim" /></div>
+              <div className="metric-value">{METRICS.memory}</div>
+              <div className="bar-track" style={{ height: 5, background: 'var(--bg-subtle)', borderRadius: 999, overflow: 'hidden' }}>
+                <div style={{ height: '100%', width: METRICS.memPct + '%', background: 'var(--success)', borderRadius: 999 }}></div>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div className="ds-overline" style={{ marginBottom: 4 }}>Activity</div>
+            <div className="col">
+              {ACTIVITY.map((a, i) => (
+                <div key={i} className="activity-item">
+                  <span className="stat-icon" style={{ width: 30, height: 30 }}><Icon name={a.icon} size={15} /></span>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div className="ds-body" style={{ fontWeight: 550 }}>{a.label}</div>
+                    <div className="ds-caption">{a.when}</div>
+                  </div>
+                  <Badge variant={statusVariant(a.status)} dot>{a.detail}</Badge>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    function Login({ onLogin }) {
+      const [email, setEmail] = useState('daniel@bigbase.dev');
+      const [pw, setPw] = useState('demo1234');
+      const [err, setErr] = useState('');
+      const [loading, setLoading] = useState(false);
+      const submit = (e) => {
+        e.preventDefault();
+        if (!email.includes('@')) { setErr('Enter a valid email address.'); return; }
+        if (pw.length < 6) { setErr('Password must be at least 6 characters.'); return; }
+        setErr(''); setLoading(true);
+        setTimeout(() => { setLoading(false); onLogin(email); }, 700);
+      };
+      return (
+        <div className="login-page" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', padding: 24, background: 'var(--bg-default)' }}>
+          <div style={{ width: '100%', maxWidth: 400 }}>
+            <div className="card" style={{ padding: 40, borderRadius: 'var(--radius-l)', boxShadow: 'var(--shadow-m)' }}>
+              <div className="col" style={{ alignItems: 'center', gap: 8, marginBottom: 28 }}>
+                <img src={window.BIGBASE_LOGO} width="44" height="44" alt="" style={{ marginBottom: 6 }} />
+                <div className="ds-h2">Welcome back</div>
+                <div className="ds-body dim">Sign in to your BigBase console</div>
+              </div>
+              <form className="col gap-4" onSubmit={submit}>
+                <div className="input-group"><label className="input-label">Email</label>
+                  <input className="input" type="email" value={email} onChange={e => setEmail(e.target.value)} autoFocus /></div>
+                <div className="input-group"><label className="input-label">Password</label>
+                  <input className={`input ${err && pw.length < 6 ? 'input-error' : ''}`} type="password" value={pw} onChange={e => setPw(e.target.value)} /></div>
+                {err && <div className="input-error-text"><Icon name="alert-triangle" size={13} style={{ marginRight: 4, verticalAlign: '-2px' }} />{err}</div>}
+                <button className="btn btn-primary btn-block" type="submit" disabled={loading}>
+                  {loading ? <><span className="spinner spinner-sm"></span> Signing in…</> : 'Sign in'}
+                </button>
+              </form>
+              <div className="divider"><span>or</span></div>
+              <button className="btn btn-secondary btn-block" onClick={() => onLogin(email)}>
+                <svg viewBox="0 0 24 24" width="16" height="16"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+                Continue with Google
+              </button>
+            </div>
+            <div className="ds-caption" style={{ textAlign: 'center', marginTop: 16 }}>Self-hosted · v2.0 · running on this instance</div>
+          </div>
+        </div>
+      );
+    }
+
+    function Dashboard({ user, onNav }) {
+      const stats = [
+        { label: 'Sites', count: SITES.length, icon: 'rocket', to: 'sites' },
+        { label: 'Functions', count: FUNCTIONS.length, icon: 'box', to: 'functions' },
+        { label: 'Git Repos', count: 5, icon: 'git-branch', to: 'repos' },
+        { label: 'Users', count: TABLE_ROWS.length, icon: 'users', to: 'users' },
+      ];
+      const recent = SITES.flatMap(s => s.deployments.map(d => ({ ...d, site: s.name }))).sort((a, b) => b.when - a.when).slice(0, 5);
+      return (
+        <div className="col gap-4">
+          <PageHeader title={`Welcome back, ${user.email.split('@')[0]}`} subtitle="Here's what's running on your BigBase instance.">
+            <button className="btn btn-primary" onClick={() => onNav('sites/new')}><Icon name="plus" size={16} /> Create site</button>
+          </PageHeader>
+
+          <SystemStatusPanel />
+
+          <div className="stats-grid">
+            {stats.map(s => (
+              <a key={s.label} className="stat-card" href="#" onClick={(e) => { e.preventDefault(); onNav(s.to); }}>
+                <div className="stat-card-top">
+                  <div className="stat-icon"><Icon name={s.icon} size={18} /></div>
+                  <Icon name="chevron-right" size={16} className="dim" />
+                </div>
+                <div className="stat-count">{s.count}</div>
+                <div className="stat-label">{s.label}</div>
+              </a>
+            ))}
+          </div>
+
+          <div className="dash-cols" style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: 20 }}>
+            <div className="card">
+              <div className="card-header"><span className="card-title">Recent deployments</span>
+                <button className="btn btn-link" onClick={() => onNav('sites')}>View all</button></div>
+              <div className="col" style={{ gap: 2 }}>
+                {recent.map(d => (
+                  <div key={d.id} className="row" style={{ gap: 12, padding: '10px 0', borderBottom: '1px solid var(--border-default)' }}>
+                    <StatusBadge status={d.status} />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div className="ds-body" style={{ fontWeight: 550 }}>{d.site}</div>
+                      <div className="ds-caption" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d.msg}</div>
+                    </div>
+                    <span className="mono ds-caption">{d.commit}</span>
+                    <span className="ds-caption" style={{ minWidth: 56, textAlign: 'right' }}>{timeAgo(d.when)}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="card">
+              <div className="card-header"><span className="card-title">Jump back in</span></div>
+              <div className="col gap-2">
+                {[{ l: 'Deploy a site from GitHub', i: 'rocket', to: 'sites/new' }, { l: 'Write a SQL query', i: 'terminal', to: 'sql' }, { l: 'Add a serverless function', i: 'box', to: 'functions' }, { l: 'Invite a teammate', i: 'users', to: 'users' }].map(q => (
+                  <a key={q.l} href="#" onClick={(e) => { e.preventDefault(); onNav(q.to); }}
+                    className="row" style={{ gap: 12, padding: '11px 12px', borderRadius: 'var(--radius-s)', textDecoration: 'none', color: 'var(--fg-primary)', border: '1px solid var(--border-default)' }}>
+                    <span className="stat-icon" style={{ width: 30, height: 30 }}><Icon name={q.i} size={15} /></span>
+                    <span className="ds-body" style={{ flex: 1, fontWeight: 500 }}>{q.l}</span>
+                    <Icon name="chevron-right" size={16} className="dim" />
+                  </a>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    function SitesList({ sites, onNav, loading }) {
+      const [q, setQ] = useState('');
+      const [filter, setFilter] = useState('all');
+      const shown = sites.filter(s => (filter === 'all' || s.env === filter) && s.name.toLowerCase().includes(q.toLowerCase()));
+
+      if (loading) {
+        return (<div><PageHeader title="Sites" /><div className="site-grid">{[0, 1, 2].map(i => <SkeletonCard key={i} />)}</div></div>);
+      }
+      return (
+        <div className="col gap-4">
+          <PageHeader title="Sites" subtitle="Deploy and host web apps straight from Git.">
+            <button className="btn btn-primary" onClick={() => onNav('sites/new')}><Icon name="plus" size={16} /> Create site</button>
+          </PageHeader>
+
+          {sites.length === 0 ? (
+            <div className="empty-state">
+              <div className="empty-state-icon"><Icon name="rocket" size={28} /></div>
+              <div className="empty-state-title">Create your first site</div>
+              <div className="empty-state-text">Connect a Git repository and BigBase will build, deploy, and serve it with a live preview URL — auto-redeploying on every push.</div>
+              <button className="btn btn-primary" onClick={() => onNav('sites/new')}><Icon name="plus" size={16} /> Create site</button>
+            </div>
+          ) : (
+            <>
+              <div className="row" style={{ justifyContent: 'space-between', gap: 12 }}>
+                <div className="row" style={{ gap: 4, background: 'var(--bg-subtle)', padding: 3, borderRadius: 'var(--radius-s)' }}>
+                  {['all', 'production', 'preview'].map(f => (
+                    <button key={f} onClick={() => setFilter(f)}
+                      className="btn btn-sm" style={{ background: filter === f ? 'var(--bg-surface)' : 'transparent', color: filter === f ? 'var(--fg-primary)' : 'var(--fg-secondary)', boxShadow: filter === f ? 'var(--shadow-xs)' : 'none', textTransform: 'capitalize', border: 'none' }}>{f}</button>
+                  ))}
+                </div>
+                <div className="input-with-prefix" style={{ width: 260 }}>
+                  <span className="input-prefix"><Icon name="search" size={14} /></span>
+                  <input className="input" placeholder="Search sites" value={q} onChange={e => setQ(e.target.value)} />
+                </div>
+              </div>
+              <div className="site-grid">
+                {shown.map(s => (
+                  <a key={s.id} className="site-card" href="#" onClick={(e) => { e.preventDefault(); onNav('sites/' + s.id); }}>
+                    <div className="site-card-thumb" style={{ background: THUMBS[s.thumb] }}>
+                      {s.status === 'building' && <span className="badge badge-warning" style={{ position: 'absolute', top: 10, right: 10 }}><span className="spinner spinner-sm" style={{ width: 10, height: 10, borderWidth: 1.5 }}></span>Building</span>}
+                      {s.status === 'failed' && <span className="badge badge-error" style={{ position: 'absolute', top: 10, right: 10 }}><span className="dot"></span>Failed</span>}
+                    </div>
+                    <div className="site-card-body">
+                      <div className="site-card-row">
+                        <span className="site-card-name">{s.name}</span>
+                        <StatusBadge status={s.status} />
+                      </div>
+                      <span className="site-card-url"><Icon name="globe" size={12} style={{ verticalAlign: '-2px', marginRight: 4 }} />{s.url}</span>
+                      <div className="site-card-meta"><Icon name="git-branch" size={13} /> {s.branch} · {s.commit} · {timeAgo(s.updated)}</div>
+                    </div>
+                  </a>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+      );
+    }
+
+    function SiteDetail({ site, onNav, onRedeploy }) {
+      const [tab, setTab] = useState('overview');
+      const tabs = ['overview', 'deployments', 'domains', 'logs', 'settings'];
+      return (
+        <div className="col gap-4">
+          <div className="breadcrumb">
+            <a href="#" onClick={(e) => { e.preventDefault(); onNav('sites'); }}>Sites</a>
+            <span className="sep">/</span><span style={{ color: 'var(--fg-primary)' }}>{site.name}</span>
+          </div>
+          <div className="page-header" style={{ marginBottom: 0 }}>
+            <div className="row" style={{ gap: 14 }}>
+              <div style={{ width: 44, height: 44, borderRadius: 'var(--radius-s)', background: THUMBS[site.thumb] }}></div>
+              <div>
+                <div className="row" style={{ gap: 10 }}><h1 className="page-title">{site.name}</h1><StatusBadge status={site.status} /></div>
+                <a className="site-card-url" href="#" onClick={e => e.preventDefault()} style={{ textDecoration: 'none' }}><Icon name="globe" size={12} style={{ verticalAlign: '-2px', marginRight: 4 }} />{site.url}</a>
+              </div>
+            </div>
+            <div className="page-header-actions">
+              <button className="btn btn-secondary" onClick={() => onRedeploy(site)}><Icon name="refresh-cw" size={15} /> Redeploy</button>
+              <button className="btn btn-primary"><Icon name="external-link" size={15} /> Visit</button>
+            </div>
+          </div>
+
+          <div className="tabs">
+            {tabs.map(t => <button key={t} className={`tab ${tab === t ? 'active' : ''}`} style={{ textTransform: 'capitalize' }} onClick={() => setTab(t)}>{t}</button>)}
+          </div>
+
+          {tab === 'overview' && (
+            <div className="dash-cols" style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: 20 }}>
+              <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+                <div className="site-card-thumb" style={{ height: 200, background: THUMBS[site.thumb] }}></div>
+                <div className="col gap-3" style={{ padding: 20 }}>
+                  <div className="row" style={{ justifyContent: 'space-between' }}>
+                    <span className="card-title">Production deployment</span>
+                    <StatusBadge status={site.status} />
+                  </div>
+                  <div className="row" style={{ gap: 8 }}>
+                    <Icon name="globe" size={15} className="dim" />
+                    <a href="#" onClick={e => e.preventDefault()} className="mono" style={{ fontSize: 14, color: 'var(--fg-accent)', textDecoration: 'none' }}>{site.url}</a>
+                    <button className="toast-close"><Icon name="copy" size={14} /></button>
+                  </div>
+                  <div className="ds-caption">Deployed {timeAgo(site.updated)} from <span className="mono">{site.branch}</span> · {site.framework}</div>
+                </div>
+              </div>
+              <div className="card col gap-3">
+                <span className="card-title">Latest commit</span>
+                <div className="row" style={{ gap: 8 }}><Icon name="git-branch" size={15} className="dim" /><span className="mono ds-body">{site.commit}</span></div>
+                <div className="ds-body" style={{ fontWeight: 500 }}>{site.commitMsg || 'Initial deployment'}</div>
+                <div className="divider" style={{ margin: '6px 0' }}></div>
+                <div className="row" style={{ justifyContent: 'space-between', gap: 12 }}><span className="ds-caption" style={{ flexShrink: 0 }}>Repository</span><span className="ds-body mono" style={{ fontSize: 13, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{site.repo}</span></div>
+                <div className="row" style={{ justifyContent: 'space-between' }}><span className="ds-caption">Branch</span><span className="ds-body mono" style={{ fontSize: 13 }}>{site.branch}</span></div>
+                <div className="row" style={{ justifyContent: 'space-between' }}><span className="ds-caption">Root</span><span className="ds-body mono" style={{ fontSize: 13 }}>{site.root}</span></div>
+                <div className="row" style={{ justifyContent: 'space-between' }}><span className="ds-caption">Environment</span><Badge variant="accent">{site.env}</Badge></div>
+              </div>
+            </div>
+          )}
+
+          {tab === 'deployments' && (
+            <div className="table-wrap">
+              <table><thead><tr><th>Status</th><th>Commit</th><th>Branch</th><th>Duration</th><th>When</th><th></th></tr></thead>
+                <tbody>{site.deployments.map(d => (
+                  <tr key={d.id}>
+                    <td><StatusBadge status={d.status} /></td>
+                    <td><span className="mono">{d.commit}</span> <span className="dim">{d.msg}</span></td>
+                    <td><span className="mono">{d.branch}</span></td>
+                    <td>{d.duration}</td>
+                    <td>{timeAgo(d.when)}</td>
+                    <td className="actions-cell"><button className="btn btn-ghost btn-sm"><Icon name="more-horizontal" size={16} /></button></td>
+                  </tr>
+                ))}</tbody></table>
+            </div>
+          )}
+
+          {tab === 'domains' && (
+            <div className="col gap-3">
+              <div className="card row" style={{ justifyContent: 'space-between' }}>
+                <div className="row" style={{ gap: 10 }}><Icon name="globe" size={16} className="dim" /><span className="mono ds-body">{site.url}</span><Badge variant="success" dot>Active</Badge></div>
+                <span className="ds-caption">BigBase subdomain · auto-issued TLS</span>
+              </div>
+              <div className="card col gap-3">
+                <span className="card-title">Add a custom domain</span>
+                <div className="row" style={{ gap: 8 }}><input className="input" placeholder="www.yourdomain.com" /><button className="btn btn-primary">Add domain</button></div>
+                <span className="input-hint">Point a CNAME at <span className="mono">{site.url}</span> and BigBase issues a certificate automatically.</span>
+              </div>
+            </div>
+          )}
+
+          {tab === 'logs' && (
+            <div className="code-output" style={{ maxHeight: 420 }}>
+              {BUILD_LOG.map((l, i) => <div className="log-line" key={i}><span className="log-time">{l.t}</span><span className={l.k === 'ok' ? 'log-ok' : ''} style={{ color: l.k === 'ok' ? undefined : '#d4d4d4' }}>{l.m}</span></div>)}
+            </div>
+          )}
+
+          {tab === 'settings' && (
+            <div className="col gap-3" style={{ maxWidth: 620 }}>
+              <div className="card col gap-3">
+                <span className="card-title">Build settings</span>
+                <div className="input-group"><label className="input-label">Framework preset</label><input className="input" defaultValue={site.framework} /></div>
+                <div className="input-group"><label className="input-label">Build command</label><input className="input mono" defaultValue="npm run build" /></div>
+                <div className="input-group"><label className="input-label">Output directory</label><input className="input mono" defaultValue="dist" /></div>
+                <button className="btn btn-primary" style={{ alignSelf: 'flex-start' }}>Save changes</button>
+              </div>
+              <div className="card col gap-3" style={{ borderColor: 'var(--error)' }}>
+                <span className="card-title" style={{ color: 'var(--error)' }}>Danger zone</span>
+                <div className="row" style={{ justifyContent: 'space-between' }}>
+                  <div><div className="ds-body" style={{ fontWeight: 600 }}>Delete this site</div><div className="ds-caption">Permanently remove {site.name} and all deployments.</div></div>
+                  <button className="btn btn-danger">Delete site</button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    function Functions({ onNav }) {
+      return (
+        <div className="col gap-4">
+          <PageHeader title="Functions" subtitle="Run server-side code on HTTP, schedule, or event triggers.">
+            <button className="btn btn-primary"><Icon name="plus" size={16} /> New function</button>
+          </PageHeader>
+          <div className="table-wrap">
+            <table><thead><tr><th>Name</th><th>Runtime</th><th>Trigger</th><th>Timeout</th><th>Updated</th><th></th></tr></thead>
+              <tbody>{FUNCTIONS.map(f => (
+                <tr key={f.id}>
+                  <td><div className="row" style={{ gap: 8 }}><Icon name="box" size={15} className="dim" /><span className="mono" style={{ fontWeight: 600 }}>{f.name}</span></div></td>
+                  <td>{f.runtime}</td>
+                  <td><Badge variant="neutral">{f.trigger}</Badge></td>
+                  <td>{f.timeout}s</td>
+                  <td>{timeAgo(f.updated)}</td>
+                  <td className="actions-cell"><button className="btn btn-secondary btn-sm"><Icon name="play" size={13} /> Run</button><button className="btn btn-ghost btn-sm"><Icon name="more-horizontal" size={16} /></button></td>
+                </tr>
+              ))}</tbody></table>
+          </div>
+        </div>
+      );
+    }
+
+    function DataStudio() {
+      const [active, setActive] = useState('users');
+      return (
+        <div className="col gap-4">
+          <PageHeader title="Data Studio" subtitle="Browse and edit your collections." >
+            <button className="btn btn-secondary"><Icon name="plus" size={15} /> New row</button>
+          </PageHeader>
+          <div className="row" style={{ gap: 20, alignItems: 'flex-start' }}>
+            <div style={{ width: 200, flexShrink: 0 }}>
+              <div className="sidebar-section-title" style={{ padding: '0 0 8px' }}>Collections</div>
+              <div className="col" style={{ gap: 1 }}>
+                {COLLECTIONS.map(c => (
+                  <button key={c} onClick={() => setActive(c)} className="row" style={{ gap: 8, padding: '8px 10px', borderRadius: 'var(--radius-s)', border: 'none', cursor: 'pointer', fontSize: 14, fontFamily: 'var(--font-mono)', background: active === c ? 'var(--brand-tint)' : 'transparent', color: active === c ? 'var(--fg-accent)' : 'var(--fg-secondary)' }}>
+                    <Icon name="database" size={14} /> {c}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="table-wrap" style={{ flex: 1 }}>
+              <table><thead><tr><th>id</th><th>email</th><th>role</th><th>verified</th><th>created</th></tr></thead>
+                <tbody>{TABLE_ROWS.map(r => (
+                  <tr key={r.id}>
+                    <td><span className="mono dim">{r.id}</span></td>
+                    <td>{r.email}</td>
+                    <td><Badge variant={r.role === 'owner' ? 'accent' : 'neutral'}>{r.role}</Badge></td>
+                    <td>{r.verified ? <Badge variant="success" dot>yes</Badge> : <Badge variant="warning" dot>no</Badge>}</td>
+                    <td className="dim">{r.created}</td>
+                  </tr>
+                ))}</tbody></table>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    /* ── SQL Editor ── */
+    function SqlEditor() {
+      const [query, setQuery] = useState(SQL_DEFAULT);
+      const [meta, setMeta] = useState({ rows: SQL_RESULT.length, ms: 12 });
+      const [running, setRunning] = useState(false);
+      const toast = window.useToast();
+      const run = () => {
+        setRunning(true);
+        setTimeout(() => {
+          const ms = 6 + Math.floor(Math.random() * 22);
+          setRunning(false); setMeta({ rows: SQL_RESULT.length, ms });
+          toast({ type: 'success', title: 'Query ran', msg: `${SQL_RESULT.length} rows in ${ms} ms` });
+        }, 550);
+      };
+      return (
+        <div className="col gap-4">
+          <PageHeader title="SQL Editor" subtitle="Query your database directly with SQL.">
+            <button className="btn btn-secondary"><Icon name="copy" size={15} /> Save query</button>
+            <button className="btn btn-primary" disabled={running} onClick={run}>
+              {running ? <><span className="spinner spinner-sm"></span> Running…</> : <><Icon name="play" size={15} /> Run query</>}
+            </button>
+          </PageHeader>
+          <div className="row" style={{ gap: 20, alignItems: 'flex-start' }}>
+            <div style={{ width: 190, flexShrink: 0 }}>
+              <div className="sidebar-section-title" style={{ padding: '0 0 8px' }}>Tables</div>
+              <div className="col" style={{ gap: 1 }}>
+                {COLLECTIONS.map(c => (
+                  <div key={c} className="row" style={{ gap: 8, padding: '8px 10px', fontFamily: 'var(--font-mono)', fontSize: 14, color: 'var(--fg-secondary)' }}>
+                    <Icon name="database" size={14} className="dim" /> {c}
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="col gap-3" style={{ flex: 1, minWidth: 0 }}>
+              <textarea className="sql-editor" value={query} onChange={e => setQuery(e.target.value)} spellCheck={false}></textarea>
+              <div className="row" style={{ justifyContent: 'space-between' }}>
+                <div className="row" style={{ gap: 8 }}><Badge variant="success" dot>Success</Badge><span className="ds-caption">{meta.rows} rows · {meta.ms} ms</span></div>
+                <span className="ds-caption mono">from users</span>
+              </div>
+              <div className="table-wrap">
+                <table><thead><tr><th>id</th><th>email</th><th>role</th><th>verified</th></tr></thead>
+                  <tbody>{SQL_RESULT.map(r => (
+                    <tr key={r.id}>
+                      <td><span className="mono dim">{r.id}</span></td>
+                      <td>{r.email}</td>
+                      <td><Badge variant={r.role === 'owner' ? 'accent' : 'neutral'}>{r.role}</Badge></td>
+                      <td><span className="mono dim">true</span></td>
+                    </tr>
+                  ))}</tbody></table>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    /* ── Storage ── */
+    function Storage() {
+      const [bucket, setBucket] = useState('all');
+      const toast = window.useToast();
+      const shown = FILES.filter(f => bucket === 'all' || f.bucket === bucket);
+      return (
+        <div className="col gap-4">
+          <PageHeader title="Storage" subtitle="Upload, organize, and serve files with secure access controls.">
+            <button className="btn btn-primary" onClick={() => toast({ type: 'info', title: 'Upload', msg: 'A file picker would open here.' })}><Icon name="plus" size={16} /> Upload file</button>
+          </PageHeader>
+          <div className="row" style={{ gap: 20, alignItems: 'flex-start' }}>
+            <div style={{ width: 190, flexShrink: 0 }}>
+              <div className="sidebar-section-title" style={{ padding: '0 0 8px' }}>Buckets</div>
+              <div className="col" style={{ gap: 1 }}>
+                {['all', ...BUCKETS].map(b => (
+                  <button key={b} onClick={() => setBucket(b)} className="row" style={{ gap: 8, padding: '8px 10px', borderRadius: 'var(--radius-s)', border: 'none', cursor: 'pointer', fontSize: 14, background: bucket === b ? 'var(--brand-tint)' : 'transparent', color: bucket === b ? 'var(--fg-accent)' : 'var(--fg-secondary)' }}>
+                    <Icon name={b === 'all' ? 'hard-drive' : 'box'} size={14} /> {b === 'all' ? 'All files' : b}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="table-wrap" style={{ flex: 1 }}>
+              <table><thead><tr><th>Name</th><th>Bucket</th><th>Type</th><th>Size</th><th>Modified</th><th></th></tr></thead>
+                <tbody>{shown.map(f => (
+                  <tr key={f.name}>
+                    <td><div className="row" style={{ gap: 8 }}><Icon name={f.icon} size={15} className="dim" /><span className="mono" style={{ fontWeight: 600 }}>{f.name}</span></div></td>
+                    <td><Badge variant="neutral">{f.bucket}</Badge></td>
+                    <td className="dim mono" style={{ fontSize: 12 }}>{f.type}</td>
+                    <td>{f.size}</td>
+                    <td className="dim">{f.modified}</td>
+                    <td className="actions-cell"><button className="btn btn-ghost btn-sm"><Icon name="external-link" size={15} /></button><button className="btn btn-ghost btn-sm"><Icon name="more-horizontal" size={16} /></button></td>
+                  </tr>
+                ))}</tbody></table>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    /* ── Users ── */
+    function Users() {
+      const [q, setQ] = useState('');
+      const toast = window.useToast();
+      const shown = TABLE_ROWS.filter(r => r.email.toLowerCase().includes(q.toLowerCase()) || r.role.includes(q.toLowerCase()));
+      const verified = TABLE_ROWS.filter(r => r.verified).length;
+      const admins = TABLE_ROWS.filter(r => r.role === 'owner' || r.role === 'admin').length;
+      const tiles = [{ l: 'Total users', v: TABLE_ROWS.length }, { l: 'Verified', v: verified }, { l: 'Admins', v: admins }];
+      return (
+        <div className="col gap-4">
+          <PageHeader title="Users" subtitle="Manage accounts, roles, and verification.">
+            <button className="btn btn-primary" onClick={() => toast({ type: 'success', title: 'Invite sent', msg: 'An invite link would be emailed to the new user.' })}><Icon name="mail" size={16} /> Invite user</button>
+          </PageHeader>
+          <div className="metric-grid">
+            {tiles.map(t => (
+              <div key={t.l} className="metric-tile"><span className="metric-label">{t.l}</span><div className="metric-value">{t.v}</div></div>
+            ))}
+          </div>
+          <div className="row" style={{ justifyContent: 'flex-end' }}>
+            <div className="input-with-prefix" style={{ width: 260 }}>
+              <span className="input-prefix"><Icon name="search" size={14} /></span>
+              <input className="input" placeholder="Search by email or role" value={q} onChange={e => setQ(e.target.value)} />
+            </div>
+          </div>
+          <div className="table-wrap">
+            <table><thead><tr><th>User</th><th>Role</th><th>Verified</th><th>Created</th><th></th></tr></thead>
+              <tbody>{shown.map(r => (
+                <tr key={r.id}>
+                  <td><div className="row" style={{ gap: 10 }}><Avatar email={r.email} size={28} /><div><div className="ds-body" style={{ fontWeight: 550 }}>{r.email}</div><div className="ds-caption mono">{r.id}</div></div></div></td>
+                  <td><Badge variant={r.role === 'owner' ? 'accent' : 'neutral'}>{r.role}</Badge></td>
+                  <td>{r.verified ? <Badge variant="success" dot>Verified</Badge> : <Badge variant="warning" dot>Pending</Badge>}</td>
+                  <td className="dim">{r.created}</td>
+                  <td className="actions-cell"><button className="btn btn-ghost btn-sm"><Icon name="more-horizontal" size={16} /></button></td>
+                </tr>
+              ))}</tbody></table>
+          </div>
+        </div>
+      );
+    }
+
+    /* ── Git Repos ── */
+    function GitRepos({ onNav }) {
+      const [q, setQ] = useState('');
+      const langColor = { Astro: '#ff5d01', TypeScript: '#3178c6', Go: '#00add8', JavaScript: '#f1e05a', Svelte: '#ff3e00' };
+      const shown = REPOS.filter(r => r.name.toLowerCase().includes(q.toLowerCase()));
+      return (
+        <div className="col gap-4">
+          <PageHeader title="Git Repos" subtitle="Host repositories on this instance and deploy them as sites.">
+            <button className="btn btn-secondary"><Icon name="git-branch" size={15} /> New repository</button>
+          </PageHeader>
+          <div className="row" style={{ justifyContent: 'flex-end' }}>
+            <div className="input-with-prefix" style={{ width: 260 }}>
+              <span className="input-prefix"><Icon name="search" size={14} /></span>
+              <input className="input" placeholder="Search repositories" value={q} onChange={e => setQ(e.target.value)} />
+            </div>
+          </div>
+          <div className="table-wrap">
+            <table><thead><tr><th>Repository</th><th>Language</th><th>Visibility</th><th>Updated</th><th></th></tr></thead>
+              <tbody>{shown.map(r => (
+                <tr key={r.name}>
+                  <td><div className="row" style={{ gap: 10 }}><Icon name="git-branch" size={16} className="dim" /><div><div className="ds-body mono" style={{ fontWeight: 600 }}>{r.name}</div><div className="ds-caption">{r.desc}</div></div></div></td>
+                  <td><div className="row" style={{ gap: 6 }}><span style={{ width: 9, height: 9, borderRadius: '50%', background: langColor[r.lang] || 'var(--fg-tertiary)' }}></span>{r.lang}</div></td>
+                  <td>{r.private ? <Badge variant="neutral">Private</Badge> : <Badge variant="info">Public</Badge>}</td>
+                  <td className="dim">{r.updated}</td>
+                  <td className="actions-cell"><button className="btn btn-secondary btn-sm" onClick={() => onNav('sites/new')}><Icon name="rocket" size={13} /> Create site</button><button className="btn btn-ghost btn-sm"><Icon name="more-horizontal" size={16} /></button></td>
+                </tr>
+              ))}</tbody></table>
+          </div>
+        </div>
+      );
+    }
+
+    /* ── CI / CD ── */
+    function CICD() {
+      const total = PIPELINES.length;
+      const success = PIPELINES.filter(p => p.status === 'ready').length;
+      const rate = Math.round((success / total) * 100);
+      const triggerVariant = { push: 'neutral', manual: 'accent', schedule: 'info' };
+      const tiles = [{ l: 'Success rate', v: rate + '%' }, { l: 'Runs (24h)', v: total }, { l: 'Avg duration', v: '1m 04s' }];
+      return (
+        <div className="col gap-4">
+          <PageHeader title="CI / CD" subtitle="Automated build and deploy pipelines, triggered on every push.">
+            <button className="btn btn-secondary"><Icon name="settings" size={15} /> Configure</button>
+          </PageHeader>
+          <div className="metric-grid">
+            {tiles.map(t => (
+              <div key={t.l} className="metric-tile"><span className="metric-label">{t.l}</span><div className="metric-value">{t.v}</div></div>
+            ))}
+          </div>
+          <div className="table-wrap">
+            <table><thead><tr><th>Status</th><th>Pipeline</th><th>Branch</th><th>Trigger</th><th>Duration</th><th>When</th><th></th></tr></thead>
+              <tbody>{PIPELINES.map(p => (
+                <tr key={p.id}>
+                  <td><StatusBadge status={p.status} /></td>
+                  <td><div className="ds-body mono" style={{ fontWeight: 600 }}>{p.repo}</div><div className="ds-caption mono">{p.id} · by {p.actor}</div></td>
+                  <td><span className="mono">{p.branch}</span> <span className="dim mono">{p.commit}</span></td>
+                  <td><Badge variant={triggerVariant[p.trigger]}>{p.trigger}</Badge></td>
+                  <td>{p.duration}</td>
+                  <td className="dim">{timeAgo(p.when)}</td>
+                  <td className="actions-cell"><button className="btn btn-ghost btn-sm"><Icon name="refresh-cw" size={14} /></button><button className="btn btn-ghost btn-sm"><Icon name="more-horizontal" size={16} /></button></td>
+                </tr>
+              ))}</tbody></table>
+          </div>
+        </div>
+      );
+    }
+
+    /* ── Monitoring ── */
+    function Monitoring() {
+      return (
+        <div className="col gap-4">
+          <PageHeader title="Monitoring" subtitle="Health and resource usage across every component.">
+            <button className="btn btn-secondary"><Icon name="refresh-cw" size={15} /> Refresh</button>
+          </PageHeader>
+          <SystemStatusPanel />
+          <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+            <div className="card-header" style={{ padding: 'var(--space-8) var(--space-10)', marginBottom: 0, borderBottom: '1px solid var(--border-default)' }}>
+              <span className="card-title">Components</span>
+              <span className="ds-caption">{COMPONENTS.length} registered · ECC architecture</span>
+            </div>
+            <div className="table-wrap" style={{ border: 'none', borderRadius: 0 }}>
+              <table><thead><tr><th>Name</th><th>Version</th><th>Status</th><th>Dependencies</th><th>Hooks</th></tr></thead>
+                <tbody>{COMPONENTS.map(c => (
+                  <tr key={c.name}>
+                    <td><span className="mono" style={{ fontWeight: 600 }}>{c.name}</span></td>
+                    <td><span className="mono dim">{c.version}</span></td>
+                    <td><Badge variant="success" dot>Running</Badge></td>
+                    <td><span className="mono dim">{c.deps}</span></td>
+                    <td className="dim mono">{c.hooks}</td>
+                  </tr>
+                ))}</tbody></table>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    function Placeholder({ title }) {
+      return (
+        <div className="col gap-4">
+          <PageHeader title={title} />
+          <div className="empty-state">
+            <div className="empty-state-icon"><Icon name="box" size={28} /></div>
+            <div className="empty-state-title">{title}</div>
+            <div className="empty-state-text">This screen follows the same BigBase design system shown across Sites, Dashboard, and Data Studio. Wire it up next using the shared components.</div>
+          </div>
+        </div>
+      );
+    }
+
+    Object.assign(window, { Login, Dashboard, SitesList, SiteDetail, Functions, DataStudio, SqlEditor, Storage, Users, GitRepos, CICD, Monitoring, Placeholder, PageHeader });
+  })();
+  </script>
+
+  <!-- ── App shell + state machine ── -->
+  <script type="text/babel">
+  (function () {
+    const { useState, useEffect } = React;
+    const { Sidebar, ToastProvider, useToast, PreviewBanner, Login, Dashboard, SitesList, SiteDetail, CreateSite, Functions, DataStudio, SqlEditor, Storage, Users, GitRepos, CICD, Monitoring, Placeholder } = window;
+
+    function Shell() {
+      const [user, setUser] = useState(null);
+      const [route, setRoute] = useState('dashboard');
+      const [dark, setDark] = useState(false);
+      const [sites, setSites] = useState(window.DATA.SITES.map(s => ({ ...s })));
+      const [loadingSites, setLoadingSites] = useState(false);
+      const toast = useToast();
+
+      useEffect(() => { document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light'); }, [dark]);
+
+      const nav = (r) => {
+        if (r === 'sites') { setLoadingSites(true); setTimeout(() => setLoadingSites(false), 550); }
+        setRoute(r);
+        window.scrollTo(0, 0);
+      };
+
+      const onDeployed = (site) => {
+        setSites(prev => [site, ...prev.filter(s => s.id !== site.id)]);
+        toast({ type: 'success', title: 'Deployment ready', msg: `${site.name} is live at ${site.url}` });
+        nav('sites/' + site.id);
+      };
+
+      const onRedeploy = (site) => {
+        toast({ type: 'info', title: 'Redeploy started', msg: `Building ${site.name} from ${site.branch}…` });
+        setSites(prev => prev.map(s => s.id === site.id ? { ...s, status: 'building' } : s));
+        setTimeout(() => {
+          setSites(prev => prev.map(s => s.id === site.id ? { ...s, status: 'ready', updated: Date.now() } : s));
+          toast({ type: 'success', title: 'Deployment ready', msg: `${site.name} redeployed successfully.` });
+        }, 2600);
+      };
+
+      if (!user) return <Login onLogin={(email) => { setUser({ email }); nav('dashboard'); }} />;
+
+      let screen;
+      if (route === 'dashboard') screen = <Dashboard user={user} onNav={nav} />;
+      else if (route === 'sites') screen = <SitesList sites={sites} onNav={nav} loading={loadingSites} />;
+      else if (route === 'sites/new') screen = <CreateSite onCancel={() => nav('sites')} onBackToList={() => nav('sites')} onDeployed={onDeployed} />;
+      else if (route.startsWith('sites/')) {
+        const site = sites.find(s => s.id === route.slice(6));
+        screen = site ? <SiteDetail site={site} onNav={nav} onRedeploy={onRedeploy} /> : <Placeholder title="Site not found" />;
+      }
+      else if (route === 'functions') screen = <Functions onNav={nav} />;
+      else if (route === 'data') screen = <DataStudio />;
+      else if (route === 'sql') screen = <SqlEditor />;
+      else if (route === 'storage') screen = <Storage />;
+      else if (route === 'users') screen = <Users />;
+      else if (route === 'repos') screen = <GitRepos onNav={nav} />;
+      else if (route === 'cici') screen = <CICD />;
+      else if (route === 'monitoring') screen = <Monitoring />;
+      else {
+        const titles = { settings: 'Settings' };
+        screen = <Placeholder title={titles[route] || 'BigBase'} />;
+      }
+
+      return (
+        <div>
+          <PreviewBanner />
+          <div className="layout">
+            <Sidebar route={route} onNav={nav} user={user} dark={dark} onToggleDark={() => setDark(d => !d)} onLogout={() => setUser(null)} />
+            <main className="content">
+              {screen}
+              <footer className="app-footer">
+                <div className="row" style={{ gap: 8 }}>
+                  <img src={window.BIGBASE_LOGO} width="18" height="18" alt="" />
+                  <span>© 2026 BigBase · MIT License</span>
+                </div>
+                <div className="footer-meta">
+                  <span className="mono">v1.1.0</span>
+                  <span className="footer-sep"></span>
+                  <span>Built with Go · ECC Architecture</span>
+                  <span className="footer-sep"></span>
+                  <a href="https://github.com/danielvm-git/bigbase" target="_blank" rel="noopener">GitHub</a>
+                  <a href="https://github.com/danielvm-git/bigbase/blob/main/CHANGELOG.md" target="_blank" rel="noopener">Changelog</a>
+                </div>
+              </footer>
+            </main>
+          </div>
+        </div>
+      );
+    }
+
+    function App() { return <ToastProvider><Shell /></ToastProvider>; }
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  })();
+  </script>
+</body>
+</html>

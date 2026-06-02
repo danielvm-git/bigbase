@@ -6,8 +6,8 @@
 ## Current Session
 
 - **Date:** 2026-06-01
-- **Task:** Documentation cleanup + new RELEASE-PLAN rewrite
-- **Status:** In progress
+- **Task:** Specs consolidation — merge console UI docs into Epic 017, remove RELEASE_PLAN.md duplicate, renumber epics (UI-first)
+- **Status:** Complete
 
 ## Decisions Made
 
@@ -15,6 +15,9 @@
 |------|----------|-----------|
 | 2026-06-01 | Infrastructure-first execution order for Epics 017-023 | Multi-DB foundation unlocks production-readiness; testing woven throughout |
 | 2026-06-01 | 7 vertical-slice epics with no overlap | Each epic targets a distinct concern (DB, security, UI, ops, testing, DX, multi-tenancy) |
+| 2026-06-01 | **Reorder to UI-first**: Epic 017 = Enhanced Admin UI (was 019) | Admin UI is independent, fully spec'd by new console docs, and delivers immediate visible value. Multi-DB (now 018) starts after. |
+| 2026-06-01 | Console UI design docs moved to `specs/epics/017-enhanced-admin-ui/` | Three new docs (SYSTEM_DESIGN, COMPONENT_INVENTORY, IMPLEMENTATION_GUIDE) provide complete design backing for Epic 017 |
+| 2026-06-01 | Deleted `RELEASE_PLAN.md` (new 10-epic conflicting plan) | That plan assumed greenfield; Auth/Deploy/Storage/Functions already shipped in v1.0. Useful EPIC 1 content absorbed into Epic 017. |
 
 ## Open Questions
 

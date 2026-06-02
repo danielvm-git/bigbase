@@ -27,12 +27,13 @@ All planning and architecture documents for the BigBase project.
 | `CONTEXT.md` | Domain model, architecture, component catalog, event flow, deployment topology |
 | `UBIQUITOUS_LANGUAGE.md` | DDD-style glossary of all domain terms |
 | `SCOPE.md` | v2.0 scope: what's in, what's out, future candidates |
-| `RELEASE-PLAN.md` | 7 epics (017–023) with vertical slices and verify commands |
+| `RELEASE-PLAN.md` | 7 epics (017–023) with vertical slices and verify commands — **UI-first order** |
 | `TASKS.md` | Independently grabbable tasks derived from RELEASE-PLAN, with dependency tiers |
 | `STATE.md` | Session state tracker — updated by build agents during work |
 | `TRACEABILITY.md` | Story-to-code mapping for all 14 original slices |
 | `REFACTOR.md` | 6 known refactoring opportunities with severity, scope, and proposed fixes |
-| `IMPACT.md` | Blast radius analysis for Epic 017 (Multi-DB) |
+| `IMPACT.md` | Blast radius analysis for Epic 018 (Multi-DB) |
+| `epics/017-enhanced-admin-ui/` | Design system, 8 screen specs, component inventory, and React migration guide for Epic 017 |
 
 ---
 

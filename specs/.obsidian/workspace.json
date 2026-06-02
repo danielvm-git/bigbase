@@ -183,6 +183,25 @@
       "bases:Create new base": false
     }
   },
-  "active": "e5870ea3859be54c",
-  "lastOpenFiles": []
+  "active": "d712ccd484f4b498",
+  "lastOpenFiles": [
+    "bugs/BUG-2026-06-02T000000-github-flags-not-wired.md",
+    "PROMPT_02_UPDATE_CONSOLE_PROTOTYPE.md",
+    "PROMPT_01_UPDATE_DESIGN_SYSTEM.md",
+    "PROTOTYPE_ENHANCEMENT_PROMPT.md",
+    "epics/017-enhanced-admin-ui/SYSTEM_DESIGN.md",
+    "epics/017-enhanced-admin-ui/IMPLEMENTATION_GUIDE.md",
+    "epics/017-enhanced-admin-ui/COMPONENT_INVENTORY.md",
+    "epics/017-enhanced-admin-ui",
+    "BIGBASE_CONSOLE_INTEGRATION_SUMMARY.txt",
+    "BIGBASE_CONSOLE_INDEX.md",
+    "BigBase Console.html",
+    "RELEASE_PLAN.md",
+    "PROTOTYPE_IMPLEMENTATION_GUIDE.md",
+    "COMPONENT_INVENTORY.md",
+    "SYSTEM_DESIGN.md",
+    "bugs/BUG-2026-06-01T182800-github-app-flags-missing.md",
+    "BIGBASE-REPORT.md",
+    "BIGBASE-EVOLUTION-PLAN.md"
+  ]
 }
