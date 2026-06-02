@@ -4,9 +4,18 @@
   "version": "0.0.0-dev",
   "description": "Single-binary BaaS platform",
   "scripts": {
+    "preflight": "npm run preflight:ui && npm run preflight:go",
+    "preflight:go": "go vet ./... && go test ./... -count=1 && test -f ui/dist/index.html",
+    "preflight:ui": "npm run build --prefix ui",
+    "preflight:build": "go build -o bigbase .",
+    "sync:opencode-skills": "bash specs/agentic-stack-templates/sync-opencode-skills.sh",
     "semantic-release": "semantic-release"
   },
   "devDependencies": {
+    "bigpowers": "^1.2.3",
+    "opensrc": "^0.7.2",
+    "context-mode": "^1.0.161",
+    
     "semantic-release": "^24.2.3",
     "@semantic-release/commit-analyzer": "^13.0.1",
     "@semantic-release/release-notes-generator": "^14.0.3",

@@ -30,3 +30,6 @@ data/
 # Node / semantic-release
 node_modules/
 
+# Environment (secrets)
+.env
+

@@ -1,7 +1,15 @@
 {
   "$schema": "https://opencode.ai/config.json",
-  "plugin": ["/Users/danielvm/.opensrc/repos/github.com/affaan-m/ECC/main/.opencode/plugins"],
+
+  "plugin": [
+    "context-mode",
+    "/Users/danielvm/.opensrc/repos/github.com/affaan-m/ECC/main/.opencode/plugins"
+  ],
+
   "instructions": [
+    "AGENTS.md",
+    "specs/CONTEXT.md",
+    "CONVENTIONS.md",
     "/Users/danielvm/.opensrc/repos/github.com/affaan-m/ECC/main/skills/tdd-workflow/SKILL.md",
     "/Users/danielvm/.opensrc/repos/github.com/affaan-m/ECC/main/skills/security-review/SKILL.md",
     "/Users/danielvm/.opensrc/repos/github.com/affaan-m/ECC/main/skills/coding-standards/SKILL.md",
@@ -12,6 +20,27 @@
     "/Users/danielvm/.opensrc/repos/github.com/affaan-m/ECC/main/skills/api-design/SKILL.md",
     "/Users/danielvm/.opensrc/repos/github.com/affaan-m/ECC/main/skills/strategic-compact/SKILL.md"
   ],
+
+  "mcp": {
+    "sqz": {
+      "type": "local",
+      "command": ["sqz-mcp"]
+    },
+    "ctxo": {
+      "type": "local",
+      "command": ["npx", "-y", "@ctxo/cli"]
+    },
+    "context7": {
+      "type": "local",
+      "command": ["npx", "-y", "@upstash/context7-mcp"]
+    }
+  },
+
+  "lsp": {
+    "gopls": {},
+    "typescript": {}
+  },
+
   "agent": {
     "planner": {
       "description": "Implementation planning for complex features",
@@ -50,6 +79,7 @@
       "tools": { "read": true, "write": true, "edit": true, "bash": true }
     }
   },
+
   "command": {
     "plan": {
       "description": "Create implementation plan",
@@ -88,7 +118,28 @@
       "subtask": true
     }
   },
+
   "permission": {
-    "mcp_*": "ask"
+    "mcp_*": "ask",
+    "skill": {
+      "*": "allow"
+    },
+    "bash": {
+      "*": "ask",
+      "git status*": "allow",
+      "git diff*": "allow",
+      "git log*": "allow",
+      "git branch*": "allow",
+      "git commit*": "ask",
+      "git push*": "allow",
+      "gh pr create*": "allow",
+      "gh pr view*": "allow",
+      "gh pr checks*": "allow",
+      "gh pr merge*": "ask",
+      "npm run preflight*": "allow",
+      "npm ci*": "allow",
+      "npx opensrc *": "allow",
+      "npx *": "ask"
+    }
   }
 }

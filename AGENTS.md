@@ -58,3 +58,52 @@ CLI output uses plain text.
 - All planning and specifications MUST be written to `specs/` before code.
 - Write minimum code that solves the stated problem.
 - Run tests after every change. Show evidence before declaring done.
+
+## Agentic Stack (OpenCode)
+
+### Commands
+| Command | Purpose | Agent |
+|---------|---------|-------|
+| `/check-stack` | Verify agentic stack health (Go + UI + MCP/LSP wiring) | build-error-resolver |
+| `/ship` | Push, PR, merge when preflight + CI pass | build |
+| `/plan` | Create implementation plan | planner |
+| `/tdd` | TDD workflow | tdd-guide |
+| `/code-review` | Code quality review | code-reviewer |
+| `/security` | Security review | security-reviewer |
+| `/build-fix` | Fix build errors | build-error-resolver |
+| `/e2e` | Generate and run E2E tests | e2e-runner |
+
+### Preflight (build gate)
+```bash
+npm run preflight       # Go vet + tests + ui/dist check
+npm run preflight:go    # Go-only checks
+npm run preflight:ui    # UI build
+npm run preflight:build # Go binary build
+```
+
+### opensrc learn-before-build
+Before implementing against an unfamiliar dependency, run:
+```bash
+npx opensrc list
+npx opensrc fetch github:org/repo  # if not cached
+```
+Read the opensrc cache path before changing integration code.
+
+### Build and Release Loop
+```text
+/check-stack → npm run preflight → /ship
+```
+- Every push/PR runs CI (Go vet + tests + UI build)
+- Merge to `main` triggers semantic-release via `release.yml`
+
+### Observability
+| What | Command |
+|------|---------|
+| View logs | `go run . serve --port 9999` then curl `/health` (JSON to stdout) |
+| Health check | `curl http://localhost:9999/health` |
+| Component status | `go run . status` |
+| List components | `go run . components list` |
+| Monitoring | `curl http://localhost:9999/api/monitoring/logs` (auth required) |
+
+Logging is structured JSON via `slog.JSONHandler` in serve mode.
+CLI output uses plain text.
