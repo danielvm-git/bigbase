@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { PageHeader, Button, Input, Badge, statusBadgeVariant } from '../components'
 
 interface Deployment {
@@ -19,6 +20,7 @@ interface Repo {
 }
 
 export default function DeployPage() {
+  const navigate = useNavigate()
   const [deployments, setDeployments] = useState<Deployment[]>([])
   const [repos, setRepos] = useState<Repo[]>([])
   const [loading, setLoading] = useState(true)
@@ -114,6 +116,7 @@ export default function DeployPage() {
                 <th>URL</th>
                 <th>Commit</th>
                 <th>Created</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -126,6 +129,9 @@ export default function DeployPage() {
                   <td>{d.url ? <a href={d.url} target="_blank" rel="noreferrer">{d.url}</a> : '—'}</td>
                   <td><code>{d.commit_sha ? d.commit_sha.slice(0, 7) : '—'}</code></td>
                   <td>{new Date(d.created_at).toLocaleString()}</td>
+                  <td>
+                    <Button variant="secondary" size="sm" onClick={() => navigate(`/deploy/${d.id}`)}>Logs</Button>
+                  </td>
                 </tr>
               ))}
             </tbody>
