@@ -1,0 +1,40 @@
+/* BigBase Dark Mode Overrides
+   Activated when <html data-theme="dark">
+   Source: specs/BigBase Console.html prototype (dark-first design) */
+
+[data-theme="dark"] {
+  /* ── Background semantic roles (dark mode) ──────────────── */
+  --bg-default: var(--neutral-900);
+  --bg-surface: var(--neutral-850);
+  --bg-surface-hover: var(--neutral-800);
+  --bg-surface-secondary: var(--neutral-800);
+  --bg-subtle: var(--neutral-800);
+
+  /* ── Foreground semantic roles (dark mode) ──────────────── */
+  --fg-primary: var(--neutral-25);
+  --fg-secondary: var(--neutral-300);
+  --fg-tertiary: var(--neutral-500);
+
+  /* ── Border semantic roles (dark mode) ──────────────────── */
+  --border-default: var(--neutral-750);
+  --border-strong: var(--neutral-700);
+  --border-focus: var(--neutral-600);
+
+  /* ── Overlay (dark mode — light overlays on dark bg) ────── */
+  --overlay-hover: rgba(255, 255, 255, 0.05);
+  --overlay-pressed: rgba(255, 255, 255, 0.08);
+  --overlay-scrim: rgba(0, 0, 0, 0.7);
+
+  /* ── Semantic fg colors (dark mode — lighter for contrast) */
+  --success-fg: rgba(110, 231, 183, 1);
+  --warning-fg: rgba(252, 211, 77, 1);
+  --error-fg: rgba(252, 165, 165, 1);
+  --info-fg: rgba(147, 197, 253, 1);
+
+  /* ── Shadow (dark mode — deeper, more opaque) ───────────── */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.25);
+  --shadow-s: 0 1px 3px rgba(0, 0, 0, 0.35);
+  --shadow-m: 0 4px 6px rgba(0, 0, 0, 0.35);
+  --shadow-l: 0 10px 15px rgba(0, 0, 0, 0.4);
+  --shadow-xl: 0 20px 40px rgba(0, 0, 0, 0.5);
+}
