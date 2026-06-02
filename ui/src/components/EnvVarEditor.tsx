@@ -10,6 +10,9 @@ export function EnvVarEditor({ vars, onChange }: EnvVarEditorProps): ReactNode {
   const entries = Object.entries(vars)
 
   const updateKey = (oldKey: string, newKey: string) => {
+    if (oldKey === newKey) return
+    // Guard against silent overwrite on key collision
+    if (newKey in vars) return
     const copy = { ...vars }
     delete copy[oldKey]
     copy[newKey] = vars[oldKey]
@@ -30,7 +33,8 @@ export function EnvVarEditor({ vars, onChange }: EnvVarEditorProps): ReactNode {
     const copy = { ...vars }
     let next = ''
     let i = 1
-    do { next = `KEY_${i}`; i++ } while (next in copy)
+    do { next = `KEY_${i}`; i++ } while (next in copy && i < 1000)
+    if (i >= 1000) next = `KEY_${Date.now()}`
     copy[next] = ''
     onChange(copy)
   }

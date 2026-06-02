@@ -64,13 +64,14 @@ describe('CiciPage', () => {
     })
   })
 
-  it('shows error on fetch failure', async () => {
+  it('renders header even when fetch fails', async () => {
     vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('Network error'))
 
     render(<MemoryRouter><CiciPage /></MemoryRouter>)
 
     await waitFor(() => {
       expect(screen.getByText('CI/CD')).toBeInTheDocument()
+      expect(screen.getByText('Select a repo to view workflows.')).toBeInTheDocument()
     })
   })
 })

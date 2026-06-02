@@ -25,11 +25,11 @@ describe('RequestChart', () => {
   })
 
   it('filters bars with less than 1%', () => {
-    render(<RequestChart byStatus={{ '200': 99, '500': 1 }} total={100} />)
+    // 0.5% of 200 = 1 → filtered out
+    render(<RequestChart byStatus={{ '200': 199, '404': 1 }} total={200} />)
 
-    // 500 bar should appear (1%), 200 should appear (99%)
-    expect(screen.getByTitle('200: 99')).toBeInTheDocument()
-    expect(screen.getByTitle('500: 1')).toBeInTheDocument()
+    expect(screen.getByTitle('200: 199')).toBeInTheDocument()
+    expect(screen.queryByTitle('404: 1')).not.toBeInTheDocument()
   })
 
   it('handles missing status codes gracefully with gray fallback', () => {

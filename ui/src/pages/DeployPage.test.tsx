@@ -94,6 +94,7 @@ describe('DeployPage', () => {
 
     await waitFor(() => {
       expect(screen.getByText('Deployments')).toBeInTheDocument()
+      expect(screen.getByText('New Deployment')).toBeInTheDocument()
     })
   })
 })

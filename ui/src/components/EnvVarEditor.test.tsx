@@ -76,4 +76,15 @@ describe('EnvVarEditor', () => {
     expect(Object.keys(updated)).toHaveLength(1)
     expect(Object.keys(updated)[0]).toMatch(/^KEY_/)
   })
+
+  it('does not overwrite existing key when renaming to a collision', () => {
+    const onChange = vi.fn()
+    render(<EnvVarEditor vars={{ FOO: 'fooVal', BAR: 'barVal' }} onChange={onChange} />)
+
+    const fooInput = screen.getByDisplayValue('FOO')
+    fireEvent.change(fooInput, { target: { value: 'BAR' } })
+
+    // onChange should NOT be called because BAR already exists
+    expect(onChange).not.toHaveBeenCalled()
+  })
 })

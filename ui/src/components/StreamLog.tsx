@@ -14,7 +14,7 @@ export function StreamLog({ logs, isStreaming = false, className = '' }: StreamL
   return (
     <div className={`stream-log ${className}`} data-testid="stream-log">
       {logs.map((line, i) => (
-        <div key={i} className="stream-log-line" data-testid="stream-log-line">
+        <div key={`line-${i}-${line.slice(0, 12)}`} className="stream-log-line" data-testid="stream-log-line">
           <span className="stream-log-ln">{i + 1}</span>
           <code className="stream-log-text">{line}</code>
         </div>
