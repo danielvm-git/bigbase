@@ -5,9 +5,24 @@
 
 ## Current Session
 
-- **Date:** 2026-06-01
-- **Task:** Specs consolidation — merge console UI docs into Epic 017, remove RELEASE_PLAN.md duplicate, renumber epics (UI-first)
-- **Status:** Complete
+- **Date:** 2026-06-02
+- **Task:** Epic 017 — Enhanced Admin UI complete. All 5 slices + P0 preflight shipped.
+- **Status:** Complete ✅
+
+## Epic 017 Completion
+
+| Slice | Feature | Status |
+|-------|---------|--------|
+| P0 | Design tokens (light/dark) + Vitest | ✅ |
+| 017-A | Realtime inspector page + `/api/realtime/status` | ✅ |
+| 017-B | Function logs viewer + `/api/functions/:id/logs` | ✅ |
+| 017-C | Storage grid/list + thumbnail endpoint | ✅ |
+| 017-D | Deploy status timeline + logs endpoint | ✅ |
+| 017-E | Dark mode toggle, toasts, metrics grid, sidebar hamburger | ✅ |
+
+CI passing: 258 Go + 29 UI tests. Deployed to production.
+
+## Decisions Made
 
 ## Decisions Made
 

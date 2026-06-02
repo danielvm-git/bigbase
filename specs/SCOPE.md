@@ -5,26 +5,26 @@
 The following 7 epics define the v2.0 release. Each is a standalone vertical
 slice that can be delivered independently, though some share dependencies.
 
-### Epic 017: Multi-DB Support (PostgreSQL)
+### Epic 017: Enhanced Admin UI ✅ COMPLETE
+- Realtime inspector page
+- Function logs viewer
+- Storage browser with preview
+- Deploy & CICI pipeline detail viewer
+- Dashboard overhaul with live charts, dark mode, and quick actions
+
+### Epic 018: Multi-DB Support (PostgreSQL)
 - Generalize DBer interface to a shared kernel-level abstraction
 - Add PostgreSQL driver via `lib/pq`
 - Config-based driver selection (`--db-driver`, `--db-dsn`)
 - Dual-driver CI test matrix
 - Versioned migration system replacing ad-hoc CREATE TABLE
 
-### Epic 018: Security Hardening
+### Epic 019: Security Hardening
 - Rate limiting middleware (token bucket per IP + per user)
 - Email verification flow
 - Password reset (forgot + reset)
 - Refresh token rotation for JWT
 - Security headers middleware (CSP, HSTS, X-Frame-Options)
-
-### Epic 019: Enhanced Admin UI
-- Realtime inspector page
-- Function logs viewer
-- Storage browser with preview
-- Deploy & CICI pipeline detail viewer
-- Dashboard overhaul with live charts and quick actions
 
 ### Epic 020: Platform Operations
 - Backup/restore CLI and API
