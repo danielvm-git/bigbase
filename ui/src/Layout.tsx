@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Outlet, NavLink, useNavigate } from 'react-router-dom'
-import { useTheme } from './context/ThemeContext'
+import { useTheme } from './hooks/useTheme'
 
 interface UserInfo { id: number; email: string }
 

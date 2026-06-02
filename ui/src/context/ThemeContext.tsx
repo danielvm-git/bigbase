@@ -1,13 +1,6 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
-
-type Theme = 'light' | 'dark'
-
-interface ThemeCtx {
-  theme: Theme
-  toggle: () => void
-}
-
-const ThemeContext = createContext<ThemeCtx>({ theme: 'light', toggle: () => {} })
+import { useEffect, useState, type ReactNode } from 'react'
+import { ThemeContext } from './themeState'
+import type { Theme } from './themeState'
 
 const STORAGE_KEY = 'bigbase-theme'
 
@@ -34,8 +27,4 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       {children}
     </ThemeContext.Provider>
   )
-}
-
-export function useTheme() {
-  return useContext(ThemeContext)
 }

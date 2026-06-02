@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Card, CardHeader, PageHeader, Badge, statusBadgeVariant, Button } from '../components'
-import { useToast } from '../context/ToastContext'
+import { useToast } from '../hooks/useToast'
 
 interface Stat { label: string; count: number; link: string }
 interface Deployment { id: string; repo_id: string; branch: string; status: string; app_type: string; url: string; created_at: string }
