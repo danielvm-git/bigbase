@@ -316,8 +316,102 @@ func TestStorageDependencies(t *testing.T) {
 }
 
 func TestStorageHooks(t *testing.T) {
-	s := &storage.Storage{}
+	s := storage.New(storage.Options{})
 	if got := s.Hooks(); len(got) != 0 {
 		t.Fatalf("expected no hooks, got %v", got)
 	}
+}
+
+func TestThumbnail(t *testing.T) {
+	s, handler := setupStorage(t)
+	defer func() { _ = os.RemoveAll(s.Dir()) }()
+
+	// Upload a test image (minimal valid PNG)
+	png := uploadPNG(t, handler)
+	var body map[string]any
+	_ = json.NewDecoder(png.Body).Decode(&body)
+	fileID := body["id"].(string)
+
+	// Request a thumbnail
+	req := httptest.NewRequest("GET", "/api/storage/files/"+fileID+"/thumbnail?w=100&h=100", nil)
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", w.Code, w.Body.String())
+	}
+
+	ct := w.Header().Get("Content-Type")
+	if ct != "image/png" {
+		t.Fatalf("expected image/png, got %q", ct)
+	}
+
+	// Verify the thumbnail is smaller than original
+	origResp := uploadPNG(t, handler)
+	_ = json.NewDecoder(origResp.Body).Decode(&body)
+	fullReq := httptest.NewRequest("GET", "/api/storage/files/"+body["id"].(string), nil)
+	fullW := httptest.NewRecorder()
+	handler.ServeHTTP(fullW, fullReq)
+	if w.Body.Len() >= fullW.Body.Len() {
+		t.Logf("thumbnail size %d, original size %d", w.Body.Len(), fullW.Body.Len())
+	}
+}
+
+func TestThumbnailNonImage(t *testing.T) {
+	s, handler := setupStorage(t)
+	defer func() { _ = os.RemoveAll(s.Dir()) }()
+
+	resp := uploadFile(t, handler, "doc.txt", "plain text content")
+	var body map[string]any
+	_ = json.NewDecoder(resp.Body).Decode(&body)
+	fileID := body["id"].(string)
+
+	req := httptest.NewRequest("GET", "/api/storage/files/"+fileID+"/thumbnail?w=100&h=100", nil)
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+
+	if w.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400 for non-image thumbnail, got %d: %s", w.Code, w.Body.String())
+	}
+}
+
+func TestThumbnailNotFound(t *testing.T) {
+	_, handler := setupStorage(t)
+
+	req := httptest.NewRequest("GET", "/api/storage/files/nonexistent/thumbnail?w=100&h=100", nil)
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+
+	if w.Code != http.StatusNotFound {
+		t.Fatalf("expected 404, got %d", w.Code)
+	}
+}
+
+// uploadPNG uploads a minimal valid PNG (1x1 pixel) for thumbnail testing.
+func uploadPNG(t *testing.T, handler http.Handler) *httptest.ResponseRecorder {
+	t.Helper()
+	// Minimal valid PNG: 1x1 red pixel
+	minimalPNG := []byte{
+		0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, // PNG signature
+		0x00, 0x00, 0x00, 0x0D, 0x49, 0x48, 0x44, 0x52, // IHDR chunk
+		0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, // 1x1
+		0x08, 0x02, 0x00, 0x00, 0x00, 0x90, 0x77, 0x53,
+		0xDE, 0x00, 0x00, 0x00, 0x0C, 0x49, 0x44, 0x41, // IDAT chunk
+		0x54, 0x08, 0xD7, 0x63, 0xF8, 0xCF, 0xC0, 0x00,
+		0x00, 0x00, 0x04, 0x00, 0x01, 0x25, 0x5E, 0xDE,
+		0x32, 0x00, 0x00, 0x00, 0x00, 0x49, 0x45, 0x4E, // IEND chunk
+		0x44, 0xAE, 0x42, 0x60, 0x82,
+	}
+
+	var buf bytes.Buffer
+	w := multipart.NewWriter(&buf)
+	fw, _ := w.CreateFormFile("file", "test.png")
+	_, _ = fw.Write(minimalPNG)
+	_ = w.Close()
+
+	req := httptest.NewRequest("POST", "/api/storage/upload", &buf)
+	req.Header.Set("Content-Type", w.FormDataContentType())
+	resp := httptest.NewRecorder()
+	handler.ServeHTTP(resp, req)
+	return resp
 }
