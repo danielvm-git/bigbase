@@ -19,7 +19,7 @@ Run a full agentic stack health check for BigBase. For each item, run the shell 
 12. `find .opencode/skills -name SKILL.md 2>/dev/null | wc -l` — expect > 0 after `npm run sync:opencode-skills`
 13. `test -d specs`
 14. `gh auth status` 2>/dev/null || echo "MISSING: gh not authenticated"
-15. `test -f .github/workflows/ci.yml`
+15. `test -f .github/workflows/release-deploy.yml`
 16. `jq -e '.plugin | index("context-mode")' opencode.json`
 17. `jq -e '.mcp.sqz and .mcp.context7' opencode.json`
 18. `jq -e '.mcp.ctxo' opencode.json`
