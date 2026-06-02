@@ -152,6 +152,93 @@ func TestRealtimeStop(t *testing.T) {
 	_ = rt.Stop(nil)
 }
 
+func TestRealtimeStatusEndpoint(t *testing.T) {
+	_, server := setupRealtime(t)
+
+	// Connect a client and subscribe to a channel
+	conn := dialWS(t, server, "valid")
+	sub := map[string]string{"action": "subscribe", "channel": "collection:posts"}
+	subBytes, _ := json.Marshal(sub)
+	if err := conn.WriteMessage(websocket.TextMessage, subBytes); err != nil {
+		t.Fatalf("subscribe write: %v", err)
+	}
+	time.Sleep(100 * time.Millisecond)
+
+	// Call the status endpoint
+	resp, err := server.Client().Get(server.URL + "/api/realtime/status")
+	if err != nil {
+		t.Fatalf("status request: %v", err)
+	}
+	defer func() { _ = resp.Body.Close() }()
+
+	if resp.StatusCode != 200 {
+		t.Fatalf("expected 200 OK, got %d", resp.StatusCode)
+	}
+
+	var status struct {
+		TotalConnections int `json:"total_connections"`
+		TotalRooms       int `json:"total_rooms"`
+		Connections      []struct {
+			UserID int64    `json:"user_id"`
+			Rooms  []string `json:"rooms"`
+		} `json:"connections"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&status); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+
+	if status.TotalConnections < 1 {
+		t.Fatalf("expected at least 1 connection, got %d", status.TotalConnections)
+	}
+	if status.TotalRooms < 1 {
+		t.Fatalf("expected at least 1 room, got %d", status.TotalRooms)
+	}
+	if len(status.Connections) < 1 {
+		t.Fatal("expected at least 1 connection in list, got 0")
+	}
+	found := false
+	for _, c := range status.Connections {
+		if c.UserID == 1 {
+			found = true
+			if len(c.Rooms) < 1 {
+				t.Fatal("expected at least 1 room for user 1")
+			}
+		}
+	}
+	if !found {
+		t.Fatal("expected to find userID=1 in connections")
+	}
+}
+
+func TestRealtimeStatusEmpty(t *testing.T) {
+	_, server := setupRealtime(t)
+
+	resp, err := server.Client().Get(server.URL + "/api/realtime/status")
+	if err != nil {
+		t.Fatalf("status request: %v", err)
+	}
+	defer func() { _ = resp.Body.Close() }()
+
+	if resp.StatusCode != 200 {
+		t.Fatalf("expected 200 OK, got %d", resp.StatusCode)
+	}
+
+	var status struct {
+		TotalConnections int `json:"total_connections"`
+		TotalRooms       int `json:"total_rooms"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&status); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+
+	if status.TotalConnections != 0 {
+		t.Fatalf("expected 0 connections, got %d", status.TotalConnections)
+	}
+	if status.TotalRooms != 0 {
+		t.Fatalf("expected 0 rooms, got %d", status.TotalRooms)
+	}
+}
+
 func TestRealtimeBroadcastOnlySubscribedChannel(t *testing.T) {
 	rt, server := setupRealtime(t)
 	conn := dialWS(t, server, "valid")
