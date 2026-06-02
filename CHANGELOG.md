@@ -1,3 +1,10 @@
+# [1.2.0](https://github.com/danielvm-git/bigbase/compare/v1.1.1...v1.2.0) (2026-06-02)
+
+
+### Features
+
+* **opencode:** wire /check-stack command and agentic stack ([6306a3d](https://github.com/danielvm-git/bigbase/commit/6306a3da6b38af3e6f6b36a91d7b89fe362ab67e))
+
 ## [1.1.1](https://github.com/danielvm-git/bigbase/compare/v1.1.0...v1.1.1) (2026-06-02)
 
 
