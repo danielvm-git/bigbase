@@ -14,6 +14,34 @@ import { getSite, getSiteDeployments } from '../lib/sitesData'
 import { isPreviewForced, previewQuerySuffix } from '../lib/previewMode'
 import type { Deployment, Site } from '../types/sites'
 
+const STATUS_STEPS = ['pending', 'building', 'deploying', 'running']
+
+function StatusTimeline({ status }: { status: string }) {
+  const currentIdx = STATUS_STEPS.indexOf(status)
+  if (currentIdx < 0) return null
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', padding: 'var(--space-3) 0' }}>
+      {STATUS_STEPS.map((step, i) => (
+        <div key={step} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', flex: 1 }}>
+          <div style={{
+            width: 10, height: 10, borderRadius: '50%', flexShrink: 0,
+            background: i <= currentIdx ? (status === 'failed' && i === currentIdx ? 'var(--error)' : 'var(--brand-500)') : 'var(--border-default)',
+            transition: 'background var(--duration-medium) var(--ease-standard)',
+          }} />
+          <span style={{
+            fontSize: 'var(--text-xs)', textTransform: 'capitalize', whiteSpace: 'nowrap',
+            color: i <= currentIdx ? 'var(--fg-primary)' : 'var(--fg-tertiary)',
+            fontWeight: i === currentIdx ? 600 : 400,
+          }}>{step}</span>
+          {i < STATUS_STEPS.length - 1 && (
+            <div style={{ flex: 1, height: 2, background: i < currentIdx ? 'var(--brand-500)' : 'var(--border-default)', minWidth: 16 }} />
+          )}
+        </div>
+      ))}
+    </div>
+  )
+}
+
 export default function SiteDetailPage() {
   const { siteId = '' } = useParams()
   const [site, setSite] = useState<Site | null>(null)
@@ -93,7 +121,11 @@ export default function SiteDetailPage() {
           <CardHeader title="Status" />
           {latest ? (
             <>
-              <Badge variant={statusBadgeVariant(latest.status)}>{latest.status}</Badge>
+              <div style={{ marginBottom: 'var(--space-4)' }}>
+                <Badge variant={statusBadgeVariant(latest.status)}>{latest.status}</Badge>
+                {site.production_branch && <code style={{ marginLeft: 'var(--space-4)' }}>{site.production_branch}</code>}
+              </div>
+              <StatusTimeline status={latest.status} />
               {latest.url && (
                 <p style={{ marginTop: 'var(--space-6)' }}>
                   <Button as="a" href={latest.url} target="_blank" rel="noreferrer" variant="primary" size="sm">

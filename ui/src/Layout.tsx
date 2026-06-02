@@ -13,6 +13,7 @@ export default function Layout() {
   const { theme, toggle: toggleTheme } = useTheme()
   const [user, setUser] = useState<UserInfo | null>(null)
   const [appVersion, setAppVersion] = useState<string | null>(null)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
 
   useEffect(() => {
     fetch('/api/auth/me')
@@ -37,7 +38,20 @@ export default function Layout() {
 
   return (
     <div className="layout">
-      <nav className="sidebar">
+      <button
+        className="sidebar-toggle"
+        onClick={() => setSidebarOpen(o => !o)}
+        style={{
+          display: 'none',
+          position: 'fixed', top: 'var(--space-4)', left: 'var(--space-4)', zIndex: 100,
+          padding: 'var(--space-3)', borderRadius: 'var(--radius-s)',
+          background: 'var(--bg-surface)', border: '1px solid var(--border-default)',
+          cursor: 'pointer', fontSize: '1.2rem',
+        }}
+      >
+        {sidebarOpen ? '✕' : '☰'}
+      </button>
+      <nav className={`sidebar${sidebarOpen ? ' sidebar-open' : ''}`}>
         <div className="sidebar-logo">
           <div className="sidebar-logo-icon">B</div>
           <span>BigBase</span>

@@ -1234,4 +1234,19 @@ tr:hover td {
   .collection-list {
     width: 100%;
   }
+  .sidebar-toggle {
+    display: flex !important;
+  }
+  .sidebar-open {
+    width: 240px !important;
+  }
+  .sidebar-open .sidebar-logo span,
+  .sidebar-open .sidebar-section-title,
+  .sidebar-open .sidebar-nav a span:not(.sidebar-nav-icon),
+  .sidebar-open .sidebar-footer {
+    display: block;
+  }
+  .sidebar-open .sidebar-nav a {
+    justify-content: flex-start;
+  }
 }

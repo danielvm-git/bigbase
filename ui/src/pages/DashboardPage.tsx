@@ -24,6 +24,10 @@ export default function DashboardPage() {
   const [files, setFiles] = useState<FileObj[]>([])
   const [stats, setStats] = useState<Stat[]>([])
   const [loading, setLoading] = useState(true)
+  const [metrics, setMetrics] = useState<{
+    system?: { cpu_percent: number; memory_mb: number; goroutines: number; uptime_seconds: number }
+    requests?: { total: number; avg_latency_ms: number; by_status: Record<string, number> }
+  }>({})
 
   useEffect(() => {
     const ctrl = new AbortController()
@@ -37,7 +41,8 @@ export default function DashboardPage() {
       fetch('/api/messaging/messages', opts).then(r => r.json()).catch(() => ({ data: [] })),
       fetch('/api/storage/files', opts).then(r => r.json()).catch(() => ({ data: [] })),
       fetch('/api/functions', opts).then(r => r.json()).catch(() => ({ data: [] })),
-    ]).then(([u, h, reposR, depR, msgR, fileR, fnR]) => {
+      fetch('/api/monitoring/metrics', opts).then(r => r.json()).catch(() => ({})),
+    ]).then(([u, h, reposR, depR, msgR, fileR, fnR, metricsR]) => {
       setUser(u as { id: number; email: string } | null)
       setHealth(h as { status: string; components: number })
       const deps = (depR as { data: Deployment[] }).data || []
@@ -46,6 +51,7 @@ export default function DashboardPage() {
       setDeployments(deps)
       setMessages(msgs)
       setFiles(fils)
+      setMetrics(metricsR as typeof metrics)
       setStats([
         { label: 'Git Repos', count: ((reposR as { data: unknown[] }).data || []).length, link: '/repos' },
         { label: 'Deployments', count: deps.length, link: '/deploy' },
@@ -110,6 +116,37 @@ export default function DashboardPage() {
           <span style={{ color: 'var(--fg-tertiary)', fontSize: 'var(--text-s)' }}>
             {health.components} component{health.components !== 1 ? 's' : ''} running
           </span>
+        </div>
+      )}
+
+      {metrics.system && (
+        <div className="dash-grid" style={{ marginBottom: 'var(--space-8)' }}>
+          <Card>
+            <CardHeader title="Request Rate" />
+            <p className="stat-value">{metrics.requests?.total ?? 0}</p>
+            <p className="dim">total requests</p>
+          </Card>
+          <Card>
+            <CardHeader title="Error Rate" />
+            <p className="stat-value" style={{ color: (metrics.requests?.by_status?.['500'] ?? 0) > 0 ? 'var(--error-fg)' : 'var(--success-fg)' }}>
+              {metrics.requests?.by_status?.['500'] ?? 0}
+            </p>
+            <p className="dim">server errors</p>
+          </Card>
+          <Card>
+            <CardHeader title="CPU" />
+            <p className="stat-value">{metrics.system.cpu_percent.toFixed(1)}%</p>
+            <div className="bar-track" style={{ marginTop: 'var(--space-3)' }}>
+              <div className="bar-fill" style={{ width: `${Math.min(metrics.system.cpu_percent, 100)}%`, background: metrics.system.cpu_percent > 80 ? 'var(--error)' : 'var(--brand-500)' }} />
+            </div>
+          </Card>
+          <Card>
+            <CardHeader title="Components" />
+            <p className="stat-value" style={{ color: health?.status === 'ok' ? 'var(--success-fg)' : 'var(--warning-fg)' }}>
+              {health?.components ?? 0}/16
+            </p>
+            <p className="dim">healthy</p>
+          </Card>
         </div>
       )}
 
