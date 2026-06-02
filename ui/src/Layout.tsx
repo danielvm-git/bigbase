@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Outlet, NavLink, useNavigate } from 'react-router-dom'
+import { useTheme } from './hooks/useTheme'
 
 interface UserInfo { id: number; email: string }
 
@@ -9,6 +10,7 @@ function SidebarIcon({ children }: { children: string }) {
 
 export default function Layout() {
   const nav = useNavigate()
+  const { theme, toggle: toggleTheme } = useTheme()
   const [user, setUser] = useState<UserInfo | null>(null)
   const [appVersion, setAppVersion] = useState<string | null>(null)
 
@@ -39,6 +41,17 @@ export default function Layout() {
         <div className="sidebar-logo">
           <div className="sidebar-logo-icon">B</div>
           <span>BigBase</span>
+        </div>
+
+        <div className="sidebar-section" style={{ paddingTop: 0 }}>
+          <button
+            onClick={toggleTheme}
+            className="btn btn-secondary btn-sm"
+            style={{ width: '100%', justifyContent: 'center' }}
+            title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
+          >
+            {theme === 'light' ? '🌙 Dark' : '☀️ Light'}
+          </button>
         </div>
 
         <div className="sidebar-section">
