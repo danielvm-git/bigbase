@@ -27,7 +27,6 @@ export default function RealtimePage() {
       })
       .catch(err => {
         setError('Failed to load realtime status')
-        console.error('realtime status:', err)
       })
   }, [])
 

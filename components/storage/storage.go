@@ -321,7 +321,14 @@ func (s *Storage) handleThumbnail(w http.ResponseWriter, r *http.Request, id str
 		return
 	}
 
-	fullPath := filepath.Join(s.dir, filePath)
+	fullPath := filepath.Join(s.dir, filepath.Clean(filePath))
+	absDir, _ := filepath.Abs(s.dir)
+	absPath, _ := filepath.Abs(fullPath)
+	if !strings.HasPrefix(absPath, absDir+string(filepath.Separator)) {
+		writeJSON(w, http.StatusForbidden, map[string]string{"error": "access denied"})
+		return
+	}
+
 	w.Header().Set("Content-Type", mimeType)
 	http.ServeFile(w, r, fullPath)
 }

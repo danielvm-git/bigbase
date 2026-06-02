@@ -663,3 +663,34 @@ func TestDeployStopShutsDownStaticServer(t *testing.T) {
 		t.Fatalf("port %d should be closed after Stop, but connection succeeded", port)
 	}
 }
+
+func TestDeployLogs(t *testing.T) {
+	_, handler, _, _ := setupDeploy(t)
+
+	// No deployments — should return 404
+	req := httptest.NewRequest("GET", "/api/deploy/nonexistent/logs", nil)
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+
+	if w.Code != http.StatusNotFound {
+		t.Fatalf("expected 404, got %d: %s", w.Code, w.Body.String())
+	}
+
+	var body map[string]any
+	_ = json.NewDecoder(w.Body).Decode(&body)
+	if body["error"] != "deployment not found" {
+		t.Fatalf("expected 'deployment not found', got %v", body["error"])
+	}
+}
+
+func TestDeployLogsMethodNotAllowed(t *testing.T) {
+	_, handler, _, _ := setupDeploy(t)
+
+	req := httptest.NewRequest("POST", "/api/deploy/test-id/logs", nil)
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+
+	if w.Code != http.StatusMethodNotAllowed {
+		t.Fatalf("expected 405, got %d", w.Code)
+	}
+}

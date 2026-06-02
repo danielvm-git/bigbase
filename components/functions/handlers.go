@@ -3,6 +3,7 @@ package functions
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -247,7 +248,17 @@ func (f *Functions) saveExecution(ctx context.Context, fnID string, output *RunO
 		status = "error"
 		errMsg = execErr.Error()
 	}
-	logsJSON, _ := json.Marshal(output.Logs)
+
+	// Nil-guard: runtime may return nil output on hard failures
+	logs := []string{}
+	if output != nil {
+		logs = output.Logs
+	}
+
+	logsJSON, marshalErr := json.Marshal(logs)
+	if marshalErr != nil {
+		return "", fmt.Errorf("marshal logs: %w", marshalErr)
+	}
 	_, dbErr := f.db.ExecContext(ctx,
 		"INSERT INTO function_executions (id, function_id, status, logs, error, created_at) VALUES (?, ?, ?, ?, ?, datetime('now'))",
 		id, fnID, status, string(logsJSON), errMsg)
@@ -303,6 +314,12 @@ func (f *Functions) handleFunctionLogs(w http.ResponseWriter, r *http.Request, f
 			e.Logs = []string{}
 		}
 		results = append(results, e)
+	}
+
+	if err := rows.Err(); err != nil {
+		f.logger.Error("rows iteration error", "error", err)
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		return
 	}
 
 	writeJSON(w, http.StatusOK, map[string]any{"data": results})

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
+import { statusBadgeVariant } from '../components/Badge'
 
 interface ExecutionEntry {
   id: string
@@ -27,7 +28,6 @@ export default function FunctionLogsPage() {
       })
       .catch(err => {
         setError('Failed to load execution logs')
-        console.error('function logs:', err)
       })
   }, [id])
 
@@ -69,7 +69,7 @@ export default function FunctionLogsPage() {
             <div key={exec.id} className="card" style={{ padding: 'var(--space-8)' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--space-6)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-4)' }}>
-                  <span className={`badge ${exec.status === 'success' ? 'badge-success' : 'badge-error'}`}>
+                  <span className={`badge badge-${statusBadgeVariant(exec.status)}`}>
                     {exec.status}
                   </span>
                   <span style={{ fontSize: 'var(--text-xs)', color: 'var(--fg-tertiary)' }}>
