@@ -1,3 +1,10 @@
+## [1.3.1](https://github.com/danielvm-git/bigbase/compare/v1.3.0...v1.3.1) (2026-06-02)
+
+
+### Bug Fixes
+
+* address code review findings for Epic 017 ([f7669f2](https://github.com/danielvm-git/bigbase/commit/f7669f2b3a7899232bd84aecb5a3c62d0efd0361))
+
 # [1.3.0](https://github.com/danielvm-git/bigbase/compare/v1.2.1...v1.3.0) (2026-06-02)
 
 
