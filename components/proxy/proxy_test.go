@@ -309,7 +309,7 @@ func TestProxyDocsPage(t *testing.T) {
 	if !strings.Contains(bodyStr, "API Reference") {
 		t.Fatal("expected docs page to have API Reference section")
 	}
-	if !strings.Contains(bodyStr, "ECC Architecture") {
+	if !strings.Contains(bodyStr, "BigPowers") {
 		t.Fatal("expected docs page to explain architecture")
 	}
 }

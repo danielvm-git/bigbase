@@ -596,7 +596,7 @@ a:hover { opacity: 0.8; }
   </div>
   <div class="footer-bottom">
     <span>&copy; 2026 BigBase &middot; MIT License &middot; v{{.Version}}</span>
-    <span>Built with Go &middot; ECC Architecture</span>
+    <span>Built with <a href="https://github.com/danielvm-git/bigpowers" target="_blank" rel="noreferrer">BigPowers</a> by <a href="https://github.com/danielvm-git" target="_blank" rel="noreferrer">danielvm-git</a></span>
   </div>
 </footer>
 
@@ -990,7 +990,7 @@ a:hover { opacity: 0.8; }
   </div>
   <div class="footer-bottom">
     <span>&copy; 2026 BigBase &middot; MIT License &middot; v{{.Version}}</span>
-    <span>Built with Go &middot; ECC Architecture</span>
+    <span>Built with <a href="https://github.com/danielvm-git/bigpowers" target="_blank" rel="noreferrer">BigPowers</a> by <a href="https://github.com/danielvm-git" target="_blank" rel="noreferrer">danielvm-git</a></span>
   </div>
 </footer>
 
