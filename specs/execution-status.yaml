@@ -2,7 +2,7 @@ generated_by: scripts/sync-status-from-epics.sh
 type: execution-status
 context: infra
 epics:
-  e17: in_progress
+  e17: done
   e18: pending
   e19: pending
   e20: pending
@@ -17,11 +17,11 @@ stories:
   e17s03: done
   e17s04: done
   e17s05: done
-  e17s06: in_progress
-  e17s07: in_progress
-  e17s08: in_progress
-  e17s09: in_progress
-  e17s10: in_progress
+  e17s06: done
+  e17s07: done
+  e17s08: done
+  e17s09: done
+  e17s10: done
   e18s01: pending
   e18s02: pending
   e18s03: pending

@@ -1,7 +1,7 @@
 type: session-state
 context: infra
 active_flow: build_epic
-active_epic_id: e17
+active_epic_id: e18
 active_story_id: e18s01
 active_bug_id: null
 release:
@@ -10,25 +10,20 @@ release:
   last_publish: null
 epic_cycle:
   current_step: plan-work
-  next_skill: kickoff-branch
+  next_skill: survey-context
   completed_steps: []
 bug_cycle:
   current_step: null
   completed_steps: []
 git:
   branch: main
-  hash: 7a3a4af
+  hash: 42565d3
 handoff:
-  last_step_completed: Plan fleshed out for 5 re-opened e17 stories (e17s06-e17s10).
-    42 TDD steps defined.
+  last_step_completed: 'Epic 17 shipped: 6 new components, 84 new tests, 7 review
+    findings fixed, landed on main and pushed'
   open_decisions: []
   required_reading:
   - CONVENTIONS.md
   - specs/release-plan.yaml
-  - specs/epics/e17-enhanced-admin-ui/epic.yaml
-  - specs/epics/e17-enhanced-admin-ui/stories/e17s06-storage-tests.md
-  - specs/epics/e17-enhanced-admin-ui/stories/e17s07-deploy-detail.md
-  - specs/epics/e17-enhanced-admin-ui/stories/e17s08-dashboard-primitives.md
-  - specs/epics/e17-enhanced-admin-ui/stories/e17s09-dashboard-polish.md
-  - specs/epics/e17-enhanced-admin-ui/stories/e17s10-site-users.md
-  next_skill: kickoff-branch
+  - specs/epics/e18-multi-db.yaml
+  next_skill: survey-context
