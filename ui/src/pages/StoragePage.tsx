@@ -20,6 +20,8 @@ export default function StoragePage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [uploading, setUploading] = useState(false)
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('list')
+  const [previewFile, setPreviewFile] = useState<FileObj | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
 
   const fetchFiles = async () => {
@@ -66,7 +68,11 @@ export default function StoragePage() {
   return (
     <div>
       <PageHeader title="Storage">
-        <Button variant="secondary" size="sm" onClick={fetchFiles}>Refresh</Button>
+        <div style={{ display: 'flex', gap: 'var(--space-4)' }}>
+          <Button variant={viewMode === 'list' ? 'primary' : 'secondary'} size="sm" onClick={() => setViewMode('list')}>List</Button>
+          <Button variant={viewMode === 'grid' ? 'primary' : 'secondary'} size="sm" onClick={() => setViewMode('grid')}>Grid</Button>
+          <Button variant="secondary" size="sm" onClick={fetchFiles}>Refresh</Button>
+        </div>
       </PageHeader>
       {error && <p className="input-error-text">{error}</p>}
 
@@ -80,7 +86,7 @@ export default function StoragePage() {
       </div>
 
       {files.length === 0 && !error && <p className="dim">No files uploaded.</p>}
-      {files.length > 0 && (
+      {files.length > 0 && viewMode === 'list' && (
         <div className="table-wrap">
           <table>
             <thead>
@@ -95,7 +101,14 @@ export default function StoragePage() {
             <tbody>
               {files.map(f => (
                 <tr key={f.id}>
-                  <td>{f.name}</td>
+                  <td>
+                    <span
+                      style={{ cursor: f.mime_type.startsWith('image/') ? 'pointer' : 'default', color: f.mime_type.startsWith('image/') ? 'var(--fg-accent)' : 'inherit' }}
+                      onClick={() => f.mime_type.startsWith('image/') && setPreviewFile(f)}
+                    >
+                      {f.name}
+                    </span>
+                  </td>
                   <td>{fmtSize(f.size)}</td>
                   <td><code>{f.mime_type}</code></td>
                   <td>{new Date(f.created_at).toLocaleString()}</td>
@@ -107,6 +120,61 @@ export default function StoragePage() {
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+      {files.length > 0 && viewMode === 'grid' && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 'var(--space-6)' }}>
+          {files.map(f => {
+            const isImage = f.mime_type.startsWith('image/')
+            return (
+              <div
+                key={f.id}
+                className="card"
+                style={{ padding: 'var(--space-6)', cursor: isImage ? 'pointer' : 'default', textAlign: 'center' }}
+                onClick={() => isImage && setPreviewFile(f)}
+              >
+                {isImage ? (
+                  <img
+                    src={`/api/storage/files/${f.id}/thumbnail?w=150&h=150`}
+                    alt={f.name}
+                    style={{ width: '100%', height: 120, objectFit: 'cover', borderRadius: 'var(--radius-s)', marginBottom: 'var(--space-3)' }}
+                  />
+                ) : (
+                  <div style={{ width: '100%', height: 120, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-subtle)', borderRadius: 'var(--radius-s)', marginBottom: 'var(--space-3)', fontSize: '2rem' }}>
+                    📄
+                  </div>
+                )}
+                <div style={{ fontSize: 'var(--text-xs)', fontWeight: 500, wordBreak: 'break-word' }}>{f.name}</div>
+                <div style={{ fontSize: 'var(--text-xs)', color: 'var(--fg-tertiary)' }}>{fmtSize(f.size)}</div>
+              </div>
+            )
+          })}
+        </div>
+      )}
+
+      {previewFile && (
+        <div
+          style={{
+            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+            background: 'var(--overlay-scrim)', display: 'flex', alignItems: 'center',
+            justifyContent: 'center', zIndex: 1000, cursor: 'pointer',
+          }}
+          onClick={() => setPreviewFile(null)}
+        >
+          <div
+            style={{ background: 'var(--bg-surface)', borderRadius: 'var(--radius-m)', padding: 'var(--space-8)', maxWidth: '90vw', maxHeight: '90vh' }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-6)' }}>
+              <span style={{ fontWeight: 600 }}>{previewFile.name}</span>
+              <Button variant="secondary" size="sm" onClick={() => setPreviewFile(null)}>Close</Button>
+            </div>
+            <img
+              src={`/api/storage/files/${previewFile.id}`}
+              alt={previewFile.name}
+              style={{ maxWidth: '100%', maxHeight: '70vh', borderRadius: 'var(--radius-s)' }}
+            />
+          </div>
         </div>
       )}
     </div>

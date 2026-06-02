@@ -280,6 +280,13 @@ func (s *Storage) handleFiles(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Check for thumbnail sub-path: /api/storage/files/:id/thumbnail
+	if strings.HasSuffix(path, "/thumbnail") {
+		id := strings.TrimSuffix(path, "/thumbnail")
+		s.handleThumbnail(w, r, id)
+		return
+	}
+
 	if r.Method == "DELETE" {
 		s.handleFileDelete(w, r, path)
 		return
@@ -290,6 +297,33 @@ func (s *Storage) handleFiles(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
+}
+
+func (s *Storage) handleThumbnail(w http.ResponseWriter, r *http.Request, id string) {
+	if r.Method != http.MethodGet {
+		writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	var name, mimeType, filePath string
+	err := s.db.QueryRowContext(ctx,
+		"SELECT name, mime_type, path FROM storage_files WHERE id = ?", id).Scan(&name, &mimeType, &filePath)
+	if err != nil {
+		writeJSON(w, http.StatusNotFound, map[string]string{"error": "file not found"})
+		return
+	}
+
+	if !strings.HasPrefix(mimeType, "image/") {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "file is not an image"})
+		return
+	}
+
+	fullPath := filepath.Join(s.dir, filePath)
+	w.Header().Set("Content-Type", mimeType)
+	http.ServeFile(w, r, fullPath)
 }
 
 func (s *Storage) handleFileDownload(w http.ResponseWriter, r *http.Request, id string) {
