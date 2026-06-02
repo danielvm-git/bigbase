@@ -28,7 +28,7 @@ export function QuickActions({ actions, onAction }: QuickActionsProps): ReactNod
       {actions.map((a) => (
         <Button
           key={a.label}
-          variant={a.disabled ? 'ghost' : 'primary'}
+          variant={a.disabled ? 'secondary' : 'primary'}
           size="sm"
           onClick={() => onAction(a.link)}
           disabled={a.disabled}

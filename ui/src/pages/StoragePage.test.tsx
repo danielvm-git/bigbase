@@ -16,14 +16,6 @@ function mockFetchOk(data: unknown) {
   } as Response)
 }
 
-function mockFetchFail(status: number, error: string) {
-  return vi.spyOn(globalThis, 'fetch').mockResolvedValue({
-    ok: false,
-    status,
-    json: () => Promise.resolve({ error }),
-  } as Response)
-}
-
 describe('StoragePage', () => {
   beforeEach(() => {
     vi.restoreAllMocks()
