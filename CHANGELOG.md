@@ -1,3 +1,16 @@
+# [1.3.0](https://github.com/danielvm-git/bigbase/compare/v1.2.1...v1.3.0) (2026-06-02)
+
+
+### Features
+
+* **deploy:** add SSE log stream and enhanced detail pages ([a4abae1](https://github.com/danielvm-git/bigbase/commit/a4abae1120a620a856070f9eb15495bf6748f16c))
+* **functions:** add execution logs persistence and viewer page ([914d490](https://github.com/danielvm-git/bigbase/commit/914d490e17450f80a3083776c8ce0665e8035706))
+* **realtime:** add status endpoint and Realtime inspector page ([567a41a](https://github.com/danielvm-git/bigbase/commit/567a41a6ad025bbfbbcbe6c70618fc2b034fd090))
+* **storage:** add thumbnail endpoint for image previews ([cd2ed09](https://github.com/danielvm-git/bigbase/commit/cd2ed093b9ef85d82b41e87d0fcdd8b6aac0b6ad))
+* **ui:** add dark mode toggle, toast notifications, and dashboard enhancements ([0d1138c](https://github.com/danielvm-git/bigbase/commit/0d1138cd35b3057d54c5320b71e237cd516f6c6d))
+* **ui:** add grid/list view toggle and image preview to Storage ([484cea6](https://github.com/danielvm-git/bigbase/commit/484cea6992e3067867b043d22d308b770d7be7a7))
+* **ui:** extract design tokens to styles/, add Vitest test infrastructure ([bf8b662](https://github.com/danielvm-git/bigbase/commit/bf8b66251084846f39dc5c2b646a46ebdc58ea17))
+
 ## [1.2.1](https://github.com/danielvm-git/bigbase/compare/v1.2.0...v1.2.1) (2026-06-02)
 
 
