@@ -3,7 +3,7 @@
 
   "plugin": [
     "context-mode",
-    "/Users/danielvm/.opensrc/repos/github.com/affaan-m/ECC/main/.opencode/plugins"
+    ".opencode/plugins"
   ],
 
   "instructions": [
@@ -11,15 +11,15 @@
     "specs/CONTEXT.md",
     "CONVENTIONS.md",
     ".opencode/docs/PRINCIPLES.md",
-    "/Users/danielvm/.opensrc/repos/github.com/danielvm-git/bigpowers/main/develop-tdd/SKILL.md",
-    "/Users/danielvm/.opensrc/repos/github.com/affaan-m/ECC/main/skills/security-review/SKILL.md",
-    "/Users/danielvm/.opensrc/repos/github.com/affaan-m/ECC/main/skills/coding-standards/SKILL.md",
-    "/Users/danielvm/.opensrc/repos/github.com/affaan-m/ECC/main/skills/backend-patterns/SKILL.md",
-    "/Users/danielvm/.opensrc/repos/github.com/affaan-m/ECC/main/skills/frontend-patterns/SKILL.md",
-    "/Users/danielvm/.opensrc/repos/github.com/affaan-m/ECC/main/skills/e2e-testing/SKILL.md",
-    "/Users/danielvm/.opensrc/repos/github.com/affaan-m/ECC/main/skills/verification-loop/SKILL.md",
-    "/Users/danielvm/.opensrc/repos/github.com/affaan-m/ECC/main/skills/api-design/SKILL.md",
-    "/Users/danielvm/.opensrc/repos/github.com/affaan-m/ECC/main/skills/strategic-compact/SKILL.md"
+    ".opencode/skills/develop-tdd/SKILL.md",
+    ".opencode/skills/security-review/SKILL.md",
+    ".opencode/skills/coding-standards/SKILL.md",
+    ".opencode/skills/backend-patterns/SKILL.md",
+    ".opencode/skills/frontend-patterns/SKILL.md",
+    ".opencode/skills/e2e-testing/SKILL.md",
+    ".opencode/skills/verification-loop/SKILL.md",
+    ".opencode/skills/api-design/SKILL.md",
+    ".opencode/skills/strategic-compact/SKILL.md"
   ],
 
   "mcp": {
@@ -46,37 +46,37 @@
     "planner": {
       "description": "Implementation planning for complex features",
       "mode": "subagent",
-      "prompt": "{file:/Users/danielvm/.opensrc/repos/github.com/affaan-m/ECC/main/.opencode/prompts/agents/planner.txt}",
+      "prompt": "{file:.opencode/prompts/agents/planner.txt}",
       "tools": { "read": true, "bash": true, "write": false, "edit": false }
     },
     "code-reviewer": {
       "description": "Code quality and security review",
       "mode": "subagent",
-      "prompt": "{file:/Users/danielvm/.opensrc/repos/github.com/affaan-m/ECC/main/.opencode/prompts/agents/code-reviewer.txt}",
+      "prompt": "{file:.opencode/prompts/agents/code-reviewer.txt}",
       "tools": { "read": true, "bash": true, "write": false, "edit": false }
     },
     "security-reviewer": {
       "description": "Security vulnerability detection",
       "mode": "subagent",
-      "prompt": "{file:/Users/danielvm/.opensrc/repos/github.com/affaan-m/ECC/main/.opencode/prompts/agents/security-reviewer.txt}",
+      "prompt": "{file:.opencode/prompts/agents/security-reviewer.txt}",
       "tools": { "read": true, "bash": true, "write": true, "edit": true }
     },
     "tdd-guide": {
       "description": "Test-driven development with 80%+ coverage",
       "mode": "subagent",
-      "prompt": "{file:/Users/danielvm/.opensrc/repos/github.com/affaan-m/ECC/main/.opencode/prompts/agents/tdd-guide.txt}",
+      "prompt": "{file:.opencode/prompts/agents/tdd-guide.txt}",
       "tools": { "read": true, "write": true, "edit": true, "bash": true }
     },
     "build-error-resolver": {
       "description": "Fix build and type errors",
       "mode": "subagent",
-      "prompt": "{file:/Users/danielvm/.opensrc/repos/github.com/affaan-m/ECC/main/.opencode/prompts/agents/build-error-resolver.txt}",
+      "prompt": "{file:.opencode/prompts/agents/build-error-resolver.txt}",
       "tools": { "read": true, "write": true, "edit": true, "bash": true }
     },
     "e2e-runner": {
       "description": "E2E testing with Playwright",
       "mode": "subagent",
-      "prompt": "{file:/Users/danielvm/.opensrc/repos/github.com/affaan-m/ECC/main/.opencode/prompts/agents/e2e-runner.txt}",
+      "prompt": "{file:.opencode/prompts/agents/e2e-runner.txt}",
       "tools": { "read": true, "write": true, "edit": true, "bash": true }
     }
   },
