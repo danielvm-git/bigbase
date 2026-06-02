@@ -113,7 +113,20 @@ func (r *Realtime) Hub() *Hub {
 }
 
 func (r *Realtime) Handler() http.Handler {
-	return http.HandlerFunc(r.serveWS)
+	mux := http.NewServeMux()
+	mux.HandleFunc("/realtime", r.serveWS)
+	mux.HandleFunc("/api/realtime/status", r.handleStatus)
+	return mux
+}
+
+func (r *Realtime) handleStatus(w http.ResponseWriter, req *http.Request) {
+	if req.Method != http.MethodGet {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+	stats := r.hub.Stats()
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(stats)
 }
 
 func (r *Realtime) serveWS(w http.ResponseWriter, req *http.Request) {
