@@ -1,3 +1,26 @@
+# [2.0.0](https://github.com/danielvm-git/bigbase/compare/v1.4.0...v2.0.0) (2026-06-02)
+
+
+### Bug Fixes
+
+* **ui:** address code review findings ([f38a037](https://github.com/danielvm-git/bigbase/commit/f38a037ecf76d4a827bd86a363a658da36a6c5e8))
+
+
+### Code Refactoring
+
+* **skills:** decouple from ECC — vendor all deps locally ([7a3a4af](https://github.com/danielvm-git/bigbase/commit/7a3a4af3bc35b376cf9ca1b22ec34d20c1356c01))
+
+
+### Features
+
+* **skills:** upgrade bigpowers skillset to v2.1.0 ([61a8660](https://github.com/danielvm-git/bigbase/commit/61a8660ac7dd2e570410449257e925d04bd3cc81))
+* **ui:** add MetricCard, RequestChart, ComponentHealthGrid, QuickActions dashboard primitives with full test coverage (20 tests) ([5afb8b6](https://github.com/danielvm-git/bigbase/commit/5afb8b6107898634fa39b10ac5ecf096afb6d3fc))
+
+
+### BREAKING CHANGES
+
+* **skills:** opencode.json no longer depends on ECC opensrc cache
+
 # [1.4.0](https://github.com/danielvm-git/bigbase/compare/v1.3.2...v1.4.0) (2026-06-02)
 
 
