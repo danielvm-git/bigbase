@@ -694,3 +694,55 @@ func TestDeployLogsMethodNotAllowed(t *testing.T) {
 		t.Fatalf("expected 405, got %d", w.Code)
 	}
 }
+
+func TestDeployLogStream(t *testing.T) {
+	_, handler, database, gitDir := setupDeploy(t)
+
+	repoID := createTestRepo(t, database, "repo-logstream", gitDir)
+
+	// Create a deployment
+	var buf bytes.Buffer
+	_ = json.NewEncoder(&buf).Encode(map[string]string{"repo_id": repoID})
+	req := httptest.NewRequest("POST", "/api/deploy", &buf)
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+
+	if w.Code != http.StatusCreated {
+		t.Fatalf("expected 201, got %d: %s", w.Code, w.Body.String())
+	}
+
+	var createResp map[string]any
+	if err := json.NewDecoder(w.Body).Decode(&createResp); err != nil {
+		t.Fatalf("decode create resp: %v", err)
+	}
+	depID, ok := createResp["id"].(string)
+	if !ok || depID == "" {
+		t.Fatalf("expected deployment id in response: %v", createResp)
+	}
+
+	// Wait for deployment to reach terminal state
+	waitForDeploymentTerminal(t, handler, depID, 10*time.Second)
+
+	// Fetch logs
+	logReq := httptest.NewRequest("GET", "/api/deploy/"+depID+"/logs", nil)
+	logW := httptest.NewRecorder()
+	handler.ServeHTTP(logW, logReq)
+
+	if logW.Code != http.StatusOK {
+		t.Fatalf("expected 200 for logs, got %d: %s", logW.Code, logW.Body.String())
+	}
+
+	var logResp map[string]any
+	if err := json.NewDecoder(logW.Body).Decode(&logResp); err != nil {
+		t.Fatalf("decode log resp: %v", err)
+	}
+
+	if gotID := logResp["deployment_id"]; gotID != depID {
+		t.Fatalf("expected deployment_id '%s', got '%v'", depID, gotID)
+	}
+
+	if gotStatus := logResp["status"]; gotStatus == "" {
+		t.Fatal("expected non-empty status in log response")
+	}
+}
