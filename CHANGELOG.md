@@ -1,3 +1,10 @@
+## [1.3.2](https://github.com/danielvm-git/bigbase/compare/v1.3.1...v1.3.2) (2026-06-02)
+
+
+### Bug Fixes
+
+* **ui:** resolve TS errors — export ToastVariant, remove unused catch params ([ab90f5d](https://github.com/danielvm-git/bigbase/commit/ab90f5d76436496c78fae4ec8e5a575adf675e52))
+
 ## [1.3.1](https://github.com/danielvm-git/bigbase/compare/v1.3.0...v1.3.1) (2026-06-02)
 
 
