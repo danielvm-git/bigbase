@@ -1,0 +1,44 @@
+type: bug-registry
+context: infra
+bugs:
+  - id: BUG-2026-06-02T163718
+    date: "2026-06-02"
+    severity: medium
+    priority: high
+    scope: visual-dashboard
+    summary: Root URL shows agent waiting page; cockpit and projectDir not used by default after start-server.sh --project-dir
+    file: specs/bugs/BUG-2026-06-02T163718-dashboard-default-route.md
+    status: fixed
+    files_changed:
+      - .opencode/skills/visual-dashboard/scripts/read-specs-status.cjs
+      - .opencode/skills/visual-dashboard/scripts/read-specs-status.test.cjs
+      - .opencode/skills/visual-dashboard/scripts/server.cjs
+      - .opencode/skills/visual-dashboard/scripts/start-server.sh
+      - .opencode/skills/visual-dashboard/scripts/cockpit.html
+    approach: Redirect root to cockpit when BIGPOWERS_PROJECT_DIR set; fix YAML parsers; add tests
+    risk_level: low
+    commit_message: "fix(visual-dashboard): default to YAML cockpit and parse execution-status"
+  - id: BUG-2026-06-01T182800
+    date: "2026-06-01"
+    severity: low
+    priority: medium
+    scope: main.go
+    summary: GitHub App config flags not registered or parsed in serve command
+    file: specs/bugs/BUG-2026-06-01T182800-github-app-flags-missing.md
+    status: open
+  - id: BUG-2026-06-01T193841
+    date: "2026-06-01"
+    severity: medium
+    priority: high
+    scope: "main.go, ui/src/App.tsx"
+    summary: GitHub and Sites components not wired into backend registration, proxy routes, or /deploy routes
+    file: specs/bugs/BUG-2026-06-01T193841.md
+    status: open
+  - id: BUG-2026-06-02T000000
+    date: "2026-06-02"
+    severity: low
+    priority: medium
+    scope: main.go
+    summary: GitHub App CLI flags not registered in serve command
+    file: specs/bugs/BUG-2026-06-02T000000-github-flags-not-wired.md
+    status: open

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>bigpowers cockpit</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: system-ui, sans-serif; margin: 0; display: grid; grid-template-rows: auto 1fr; height: 100vh; }
+    header { padding: 1rem 1.5rem; background: #1a1a2e; color: #eee; display: flex; flex-direction: column; gap: 0.5rem; }
+    .hdr-row { display: flex; flex-wrap: wrap; gap: 1.25rem 2rem; align-items: baseline; }
+    .hdr-row span { opacity: 0.9; font-size: 0.9rem; }
+    .hdr-row .label { opacity: 0.55; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em; margin-right: 0.35rem; }
+    .hdr-title { font-size: 1.1rem; font-weight: 600; }
+    .hdr-sub { opacity: 0.7; font-size: 0.8rem; }
+    main { display: grid; grid-template-columns: 1fr 1fr; gap: 0; min-height: 0; }
+    section { padding: 1rem 1.5rem; overflow: auto; border-top: 1px solid #ddd; }
+    section h2 { margin-top: 0; font-size: 1rem; text-transform: uppercase; letter-spacing: 0.05em; color: #555; }
+    .epic { padding: 0.5rem 0; border-bottom: 1px solid #eee; }
+    .epic strong { color: #1a1a2e; }
+    .done { color: #0a7; }
+    .pending { color: #c80; }
+    #err { color: #c00; padding: 1rem; }
+  </style>
+</head>
+<body>
+  <header id="hdr">Loading…</header>
+  <main>
+    <section id="planning"><h2>Planning</h2><div id="planning-body"></div></section>
+    <section id="build"><h2>Epics &amp; status</h2><div id="build-body"></div></section>
+  </main>
+  <div id="err" hidden></div>
+  <script>
+    const params = new URLSearchParams(location.search);
+    const projectDir = params.get('projectDir') || '';
+    const apiBase = location.origin;
+
+    async function load() {
+      if (!projectDir) {
+        document.getElementById('err').hidden = false;
+        document.getElementById('err').textContent = 'Missing projectDir query param';
+        return;
+      }
+      const res = await fetch(apiBase + '/api/status?projectDir=' + encodeURIComponent(projectDir));
+      if (!res.ok) throw new Error(await res.text());
+      const data = await res.json();
+      const r = data.release || {};
+      const st = data.state || {};
+      const git = st.git || {};
+      const handoff = st.handoff || {};
+      const cycle = st.epic_cycle || {};
+      const sr = st.release || {};
+      const epicLabel = data.active_epic_id
+        ? data.active_epic_id
+        : (data.next_epic_id ? data.next_epic_id + ' (next)' : '—');
+      const hash = git.hash ? String(git.hash).slice(0, 7) : '—';
+      const lastStep = handoff.last_step_completed || '—';
+      const nextSkill = handoff.next_skill || cycle.next_skill || '—';
+
+      document.getElementById('hdr').innerHTML =
+        '<div class="hdr-title">Release ' + (r.version || sr.target_version || '?') +
+        ' <span class="hdr-sub">(' + (r.codename || 'BigBase') + ' · ' + (r.status || '—') + ')</span></div>' +
+        '<div class="hdr-row">' +
+        '<span><span class="label">flow</span>' + (st.active_flow || '—') + '</span>' +
+        '<span><span class="label">epic</span>' + epicLabel + '</span>' +
+        '<span><span class="label">story</span>' + (st.active_story_id || '—') + '</span>' +
+        '<span><span class="label">git</span>' + (git.branch || '—') + '@' + hash + '</span>' +
+        '<span><span class="label">next skill</span>' + nextSkill + '</span>' +
+        '</div>' +
+        '<div class="hdr-sub">Last: ' + lastStep + '</div>';
+
+      const pw = data.planning_status || {};
+      document.getElementById('planning-body').innerHTML = Object.entries(pw).map(([k, v]) => {
+        const st = typeof v === 'string' ? v : (v && typeof v.status === 'string' ? v.status : 'unknown');
+        return '<div class="epic"><strong>' + k + '</strong> — <span class="' + st + '">' + st + '</span></div>';
+      }).join('') || '<p>No planning-status.yaml</p>';
+
+      document.getElementById('build-body').innerHTML = (data.epics || []).map(e =>
+        '<div class="epic"><strong>' + e.id + '</strong> ' + e.title +
+        ' <span class="' + e.status + '">(' + e.status + ')</span> WSJF ' + e.wsjf + '</div>'
+      ).join('');
+    }
+    load().catch(e => {
+      document.getElementById('err').hidden = false;
+      document.getElementById('err').textContent = e.message;
+    });
+  </script>
+</body>
+</html>

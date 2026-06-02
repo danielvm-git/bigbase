@@ -25,6 +25,7 @@ Run a full agentic stack health check for BigBase. For each item, run the shell 
 18. `jq -e '.mcp.ctxo' opencode.json`
 19. `jq -e '.lsp.gopls.command and .lsp.typescript.command' opencode.json`
 20. `npm run preflight` — only if package.json defines scripts.preflight
-21. `gopls version`; `test -f ui/dist/index.html`; `go vet ./...`
+21. `test -f ui/dist/index.html`; `go vet ./...`
+22. gopls: resolve path from `jq -r '.lsp.gopls.command[0]' opencode.json`, then `"$GOPLS_PATH" version`; fallback to `$(go env GOPATH)/bin/gopls version` or `which gopls`
 
 Summarise: | Tool | Status | Version/Detail |. One-line fix per FAIL/MISSING.

@@ -1,0 +1,38 @@
+type: epic-shard
+context: domain
+id: e19
+title: Security Hardening
+wsjf: 3.0
+status: pending
+covers: []
+stories:
+  - id: e19s01
+    title: Rate limiting middleware
+    status: pending
+    tasks:
+      - desc: Token-bucket rate limiter per IP and per user
+        verify: "go test ./components/auth/ -run TestRateLimit -v"
+  - id: e19s02
+    title: Email verification flow
+    status: pending
+    tasks:
+      - desc: Register sends verification email; verify-email endpoint
+        verify: "go test ./components/auth/ -run TestEmailVerify -v"
+  - id: e19s03
+    title: Password reset flow
+    status: pending
+    tasks:
+      - desc: Forgot-password and reset-password with 1-hour token
+        verify: "go test ./components/auth/ -run TestPasswordReset -v"
+  - id: e19s04
+    title: Refresh token rotation
+    status: pending
+    tasks:
+      - desc: POST /api/auth/refresh with rotation and replay prevention
+        verify: "go test ./components/auth/ -run TestRefreshToken -v"
+  - id: e19s05
+    title: Security headers middleware
+    status: pending
+    tasks:
+      - desc: CSP, HSTS, X-Frame-Options, X-Content-Type-Options, Referrer-Policy
+        verify: "curl -sI http://localhost:9999/ | grep -qE 'X-Frame-Options|Content-Security'"

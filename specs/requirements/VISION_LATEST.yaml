@@ -1,0 +1,15 @@
+type: requirements-vision
+context: domain
+version: "2.0.0"
+north_star: >
+  BigBase is a single-binary, open-source Backend-as-a-Service platform using
+  Entity-Component-Construct (ECC) architecture — a lightweight kernel plus
+  pluggable components (auth, db, proxy, storage, deploy, admin UI, and more).
+success_criteria:
+  - Operators run one Go binary with embedded admin UI and SQLite/PostgreSQL
+  - Developers get Appwrite-like APIs without operating a multi-service stack
+  - Components communicate only via the kernel event bus (no cross-imports)
+constraints:
+  - Pure Go where possible (modernc.org/sqlite; lib/pq for PostgreSQL)
+  - MIT license
+  - Semantic-release on merge to main

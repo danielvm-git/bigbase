@@ -1,0 +1,93 @@
+type: requirements-scope
+context: domain
+version: "2.0.0"
+release: BigBase v2.0
+in_scope:
+  - id: e17
+    title: Enhanced Admin UI
+    status: done
+    items:
+      - Realtime inspector page
+      - Function logs viewer
+      - Storage browser with preview
+      - Deploy and CICI pipeline detail viewer
+      - Dashboard overhaul with charts, dark mode, quick actions
+  - id: e18
+    title: Multi-DB Support (PostgreSQL)
+    items:
+      - Generalize DBer interface to kernel-level abstraction
+      - PostgreSQL driver via lib/pq
+      - Config-based driver selection (--db-driver, --db-dsn)
+      - Dual-driver CI test matrix
+      - Versioned migration system
+  - id: e19
+    title: Security Hardening
+    items:
+      - Rate limiting middleware
+      - Email verification flow
+      - Password reset
+      - Refresh token rotation
+      - Security headers middleware
+  - id: e20
+    title: Platform Operations
+    items:
+      - Backup/restore CLI and API
+      - DB migration tooling CLI
+      - Environment variable management
+      - Custom domains for Sites
+      - Outbound webhook system
+  - id: e21
+    title: Testing and Quality Hardening
+    items:
+      - E2E test suite (Playwright)
+      - API contract tests
+      - Performance benchmarks
+      - Coverage gates (80% minimum)
+      - Race condition hardening and fuzz testing
+  - id: e22
+    title: Developer Experience
+    items:
+      - Onboarding checklist UI
+      - 1-click scaffolding
+      - Event Bus visualizer
+      - Sample applications with deploy buttons
+      - Interactive tutorial
+  - id: e23
+    title: Multi-Tenancy and Organizations
+    items:
+      - Organization CRUD and settings
+      - Team membership and invitations
+      - Resource isolation (org-scoped)
+      - API key management per org
+  - id: e24
+    title: Wire Observability
+    items:
+      - Structured logging across all components
+      - Distributed request IDs
+      - Per-component health reporting
+      - Prometheus metrics export
+      - Idempotent setup and health-check scripts
+  - id: e25
+    title: Hardware Monitoring
+    items:
+      - Host metrics (disk, network, load)
+      - Real-time metrics SSE stream
+      - Monitoring page live charts
+      - Process-level monitoring
+      - Configurable alert rules
+out_of_scope:
+  - SDK/client library generation (REST API docs only)
+  - Redis integration
+  - Container/runtime isolation for deploys
+  - Enterprise SSO (SAML, LDAP) beyond Google OAuth
+  - Rate limiting with Redis
+  - PostgreSQL read replicas
+  - Billing/invoicing integration
+  - CGo dependencies
+future_candidates:
+  - Client SDK generation (JS, Go, Python)
+  - Redis for rate limiting, pub/sub, caching
+  - Container-based deployment isolation
+  - Enterprise SSO (SAML, LDAP, OIDC)
+  - PostgreSQL read replicas and sharding
+  - Billing and usage-based metering

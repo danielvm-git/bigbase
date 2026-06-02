@@ -62,6 +62,7 @@ fi
 SESSION_ID="$$-$(date +%s)"
 
 if [[ -n "$PROJECT_DIR" ]]; then
+  PROJECT_DIR="$(cd "$PROJECT_DIR" && pwd)"
   SESSION_DIR="${PROJECT_DIR}/.bigpowers/dashboard/${SESSION_ID}"
 else
   SESSION_DIR="/tmp/bigpowers-dashboard-${SESSION_ID}"
@@ -86,13 +87,23 @@ if [[ -z "$OWNER_PID" || "$OWNER_PID" == "1" ]]; then
   OWNER_PID="$PPID"
 fi
 
+ENV_ARGS=(
+  BIGPOWERS_DASHBOARD_DIR="$SESSION_DIR"
+  BIGPOWERS_DASHBOARD_HOST="$BIND_HOST"
+  BIGPOWERS_DASHBOARD_URL_HOST="$URL_HOST"
+  BIGPOWERS_DASHBOARD_OWNER_PID="$OWNER_PID"
+)
+if [[ -n "$PROJECT_DIR" ]]; then
+  ENV_ARGS+=(BIGPOWERS_PROJECT_DIR="$PROJECT_DIR")
+fi
+
 if [[ "$FOREGROUND" == "true" ]]; then
   echo "$$" > "$PID_FILE"
-  env BIGPOWERS_DASHBOARD_DIR="$SESSION_DIR" BIGPOWERS_DASHBOARD_HOST="$BIND_HOST" BIGPOWERS_DASHBOARD_URL_HOST="$URL_HOST" BIGPOWERS_DASHBOARD_OWNER_PID="$OWNER_PID" node server.cjs
+  env "${ENV_ARGS[@]}" node server.cjs
   exit $?
 fi
 
-nohup env BIGPOWERS_DASHBOARD_DIR="$SESSION_DIR" BIGPOWERS_DASHBOARD_HOST="$BIND_HOST" BIGPOWERS_DASHBOARD_URL_HOST="$URL_HOST" BIGPOWERS_DASHBOARD_OWNER_PID="$OWNER_PID" node server.cjs > "$LOG_FILE" 2>&1 &
+nohup env "${ENV_ARGS[@]}" node server.cjs > "$LOG_FILE" 2>&1 &
 SERVER_PID=$!
 disown "$SERVER_PID" 2>/dev/null
 echo "$SERVER_PID" > "$PID_FILE"

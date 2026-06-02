@@ -1,0 +1,38 @@
+type: epic-shard
+context: domain
+id: e21
+title: Testing and Quality Hardening
+wsjf: 3.5
+status: pending
+covers: []
+stories:
+  - id: e21s01
+    title: Playwright E2E suite
+    status: pending
+    tasks:
+      - desc: E2E scenarios in tests/e2e (login through realtime)
+        verify: "npx playwright test"
+  - id: e21s02
+    title: API contract tests
+    status: pending
+    tasks:
+      - desc: Contract snapshots for SQLite and PostgreSQL drivers
+        verify: "go test ./tests/contract/..."
+  - id: e21s03
+    title: Performance benchmarks
+    status: pending
+    tasks:
+      - desc: Benchmark suite in tests/bench
+        verify: "go test -bench=. ./tests/bench/..."
+  - id: e21s04
+    title: Coverage gates
+    status: pending
+    tasks:
+      - desc: Enforce 80% minimum coverage in CI
+        verify: "go test -coverprofile=coverage.out ./... && go tool cover -func=coverage.out | tail -1"
+  - id: e21s05
+    title: Race detection and fuzz targets
+    status: pending
+    tasks:
+      - desc: go test -race and fuzz targets with 30s minimum
+        verify: "go test -race ./..."

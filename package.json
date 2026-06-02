@@ -9,19 +9,21 @@
     "preflight:ui": "npm run build --prefix ui",
     "preflight:build": "go build -o bigbase .",
     "sync:opencode-skills": "bash specs/agentic-stack-templates/sync-opencode-skills.sh",
+    "validate:specs": "bash scripts/validate-specs-yaml.sh",
+    "test:specs": "node --test scripts/validate-specs-yaml.test.cjs",
+    "test:dashboard": "node --test .opencode/skills/visual-dashboard/scripts/*.test.cjs",
     "semantic-release": "semantic-release"
   },
   "devDependencies": {
-    "bigpowers": "^1.2.3",
-    "opensrc": "^0.7.2",
-    "context-mode": "^1.0.161",
-    
-    "semantic-release": "^24.2.3",
-    "@semantic-release/commit-analyzer": "^13.0.1",
-    "@semantic-release/release-notes-generator": "^14.0.3",
     "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/commit-analyzer": "^13.0.1",
     "@semantic-release/exec": "^7.0.3",
     "@semantic-release/git": "^10.0.1",
-    "@semantic-release/github": "^11.0.1"
+    "@semantic-release/github": "^11.0.1",
+    "@semantic-release/release-notes-generator": "^14.0.3",
+    "bigpowers": "^1.3.2",
+    "context-mode": "^1.0.161",
+    "opensrc": "^0.7.2",
+    "semantic-release": "^24.2.3"
   }
 }

@@ -32,8 +32,12 @@ ECC pattern: Kernel (discovery, lifecycle, event bus, config merge) + pluggable 
 - Expose internal errors or stack traces to API clients
 - Use `any` in Go — prefer concrete types or interfaces
 
+## Specs (bigpowers YAML)
+
+Read `specs/state.yaml`, `specs/release-plan.yaml`, and the active epic under `specs/epics/`. Architecture: `specs/plans/TECH_STACK_LATEST.md`.
+
 ## Agent Rules
-- Read specs/ before writing code.
-- All planning and specifications MUST be written to `specs/` before code.
+- Read specs YAML (not `specs/archive/`) before writing code.
+- All planning specifications MUST be written under `specs/` before code.
 - Write minimum code that solves the stated problem.
 - Run tests after every change. Show evidence before declaring done.

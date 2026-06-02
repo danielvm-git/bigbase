@@ -1,0 +1,54 @@
+type: release-plan
+context: domain
+release:
+  version: "2.0.0"
+  codename: BigBase v2
+  status: in_progress
+  semantic_release: true
+  bump_hint: minor
+epics:
+  - id: e17
+    title: Enhanced Admin UI
+    wsjf: 1.0
+    file: epics/e17-enhanced-admin-ui/epic.yaml
+    mode: folder
+  - id: e18
+    title: Multi-DB Support
+    wsjf: 2.0
+    file: epics/e18-multi-db.yaml
+    mode: flat
+  - id: e19
+    title: Security Hardening
+    wsjf: 3.0
+    file: epics/e19-security.yaml
+    mode: flat
+  - id: e20
+    title: Platform Operations
+    wsjf: 4.0
+    file: epics/e20-platform-ops.yaml
+    mode: flat
+  - id: e21
+    title: Testing and Quality Hardening
+    wsjf: 3.5
+    file: epics/e21-testing.yaml
+    mode: flat
+  - id: e22
+    title: Developer Experience
+    wsjf: 5.0
+    file: epics/e22-developer-experience.yaml
+    mode: flat
+  - id: e23
+    title: Multi-Tenancy and Organizations
+    wsjf: 6.0
+    file: epics/e23-multi-tenancy.yaml
+    mode: flat
+  - id: e24
+    title: Wire Observability
+    wsjf: 5.0
+    file: epics/e24-wire-observability.yaml
+    mode: flat
+  - id: e25
+    title: Hardware Monitoring
+    wsjf: 4.25
+    file: epics/e25-hardware-monitoring.yaml
+    mode: flat

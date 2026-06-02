@@ -1,83 +1,57 @@
-# BigBase Specs
+# BigBase Specs (bigpowers YAML layout)
 
-All planning and architecture documents for the BigBase project.
+YAML files are the **source of truth** for agents. Legacy markdown lives under `specs/archive/` (read-only).
 
-## How to Use
+## Metadata (`type:` / `context:`)
 
-| If you want to... | Read this first |
-|-------------------|-----------------|
-| Understand the full architecture | `CONTEXT.md` |
-| Know what's being built now | `RELEASE-PLAN.md` |
-| See task-level breakdown | `TASKS.md` |
-| Know what's in/out of scope | `SCOPE.md` |
-| Understand domain terms | `UBIQUITOUS_LANGUAGE.md` |
-| Trace stories to code | `TRACEABILITY.md` |
-| Find refactoring opportunities | `REFACTOR.md` |
-| Check session state | `STATE.md` |
-| See architecture decisions | `adr/` |
-| Find bug investigations | `bugs/` |
-| See past component specs | `001-cli-bigbase-breathes.md` through `015-deploy-github-journey.md` |
+Every planning YAML file starts with provenance fields (see `plan-work` skill):
 
----
+| Field | Meaning |
+|-------|---------|
+| `type:` | Artifact kind (`session-state`, `release-plan`, `epic-shard`, `requirements-scope`, …) |
+| `context:` | `domain` (product/requirements) or `infra` (tooling, session, CI) |
 
-## Planning Documents (v2.0)
+Epic shards use `type: epic-shard` and `context: domain`. Dev dependency slopcheck tags live in [`dependencies.yaml`](dependencies.yaml).
 
-| Document | Description |
-|----------|-------------|
-| `CONTEXT.md` | Domain model, architecture, component catalog, event flow, deployment topology |
-| `UBIQUITOUS_LANGUAGE.md` | DDD-style glossary of all domain terms |
-| `SCOPE.md` | v2.0 scope: what's in, what's out, future candidates |
-| `RELEASE-PLAN.md` | 7 epics (017–023) with vertical slices and verify commands — **UI-first order** |
-| `TASKS.md` | Independently grabbable tasks derived from RELEASE-PLAN, with dependency tiers |
-| `STATE.md` | Session state tracker — updated by build agents during work |
-| `TRACEABILITY.md` | Story-to-code mapping for all 14 original slices |
-| `REFACTOR.md` | 6 known refactoring opportunities with severity, scope, and proposed fixes |
-| `IMPACT.md` | Blast radius analysis for Epic 018 (Multi-DB) |
-| `epics/017-enhanced-admin-ui/` | Design system, 8 screen specs, component inventory, and React migration guide for Epic 017 |
+## Quick index
 
----
+| If you want to… | Read |
+|-----------------|------|
+| Session state and next skill | [`state.yaml`](state.yaml) |
+| Epic index (WSJF, no status) | [`release-plan.yaml`](release-plan.yaml) |
+| Story/epic status | [`execution-status.yaml`](execution-status.yaml) |
+| In/out of scope | [`requirements/SCOPE_LATEST.yaml`](requirements/SCOPE_LATEST.yaml) |
+| Domain glossary | [`requirements/GLOSSARY_LATEST.yaml`](requirements/GLOSSARY_LATEST.yaml) |
+| Architecture and stack | [`plans/TECH_STACK_LATEST.md`](plans/TECH_STACK_LATEST.md) |
+| Active epic tasks | [`epics/`](epics/) shard for `active_epic_id` in `state.yaml` |
+| ADRs | [`adr/`](adr/) |
+| Bug investigations | [`bugs/`](bugs/) + [`bugs/registry.yaml`](bugs/registry.yaml) |
 
-## Architecture Decisions
+## Epic ID mapping
 
-| Document | Decision |
-|----------|----------|
-| `adr/001-sqlite-json-blob-api.md` | SQLite + JSON blob for auto-CRUD API |
-| `adr/002-jwt-bcrypt-auth.md` | JWT + bcrypt for auth component |
-| `adr/003-github-app-sites.md` | GitHub App for Sites deployment |
+| Legacy | YAML |
+|--------|------|
+| Epic 017 / slice `017-A` | `e17` / `e17s01` |
+| Epic 018 / `018-A` | `e18` / `e18s01` |
+| … | … |
 
----
+Design docs for Epic 017: [`epics/e17-enhanced-admin-ui/`](epics/e17-enhanced-admin-ui/).
 
-## Original Slice Specs (v1.0 — All Implemented)
+## Visual dashboard (ephemeral)
 
-| Document | Slice | Status |
-|----------|-------|--------|
-| `001-cli-bigbase-breathes.md` | CLI + ECC Kernel | ✅ done |
-| `002-proxy-landing.md` | Proxy + Landing Page | ✅ done |
-| `003-db-auto-api.md` | DB + Auto REST API | ✅ done |
-| `004-auth.md` | Auth (email/password + JWT) | ✅ done |
-| `005-admin-ui.md` | Admin UI (React SPA) | ✅ done |
-| `006-storage.md` | Storage (file upload/download) | ✅ done |
-| `006-appwrite-look-and-feel.md` | Appwrite Design Token Port | ✅ done |
-| `007-git.md` | Git Repo Management | ✅ done |
-| `007-commercial-landing-page.md` | Commercial Landing Page | ✅ done |
-| `008-forge.md` | Forge (Issues, Kanban, Wiki) | ✅ done |
-| `009-cici.md` | CI/CD Pipeline Engine | ✅ done |
-| `010-functions.md` | Functions (JS Runtime) | ✅ done |
-| `011-realtime.md` | Realtime (WebSocket) | ✅ done |
-| `012-messaging.md` | Messaging (Email, SMS, Push) | ✅ done |
-| `013-deploy.md` | Deploy (App Runner) | ✅ done |
-| `014-monitoring.md` | Monitoring (Metrics, Logs, Alerts) | ✅ done |
-| `015-deploy-github-journey.md` | Sites: Deploy from GitHub | ✅ done |
+The [visual-dashboard](.opencode/skills/visual-dashboard/SKILL.md) skill stores **session-only** artifacts under `.bigpowers/dashboard/<pid>-<timestamp>/` (HTML screens, server state). That tree is gitignored and is not source of truth — the cockpit reads YAML from `specs/` via `read-specs-status.cjs`. Safe to delete old session folders when the server is stopped.
 
----
+After `start-server.sh --project-dir $(pwd)`, open the printed **`cockpit_url`** (or root `/`, which redirects there). Optional agent HTML still lives in `content/*.html`.
 
-## Supporting Documents
+## Commands
 
-| Document | Description |
-|----------|-------------|
-| `GOOGLE-OAUTH.md` | Google OAuth social login plan |
-| `PLAN.md` | Slice 11 (Realtime) implementation plan |
-| `DIAGNOSIS.md` | SPA redirect diagnosis (resolved) |
-| `DEPLOY.md` | Production deployment to Contabo VPS |
-| `bugs/BUG-LOG.md` | Bug tracking log |
-| `README.md` | This file |
+```bash
+bash scripts/validate-specs-yaml.sh
+npm run test:specs          # same validator via node:test wrapper
+npm run test:dashboard      # visual-dashboard route + parser tests
+bash scripts/sync-status-from-epics.sh   # refresh execution-status.yaml from epics
+```
+
+## v1.0 slice history
+
+Implemented component specs: [`archive/slices/`](archive/slices/) (`001-cli-*.md` … `015-deploy-github-journey.md`).

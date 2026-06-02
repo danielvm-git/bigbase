@@ -1,0 +1,42 @@
+type: epic-shard
+context: domain
+id: e17
+title: Enhanced Admin UI
+wsjf: 1.0
+status: in_progress
+covers: []
+design_docs:
+- SYSTEM_DESIGN.md
+- COMPONENT_INVENTORY.md
+- IMPLEMENTATION_GUIDE.md
+stories:
+- id: e17s01
+  file: stories/e17s01-realtime.md
+  status: done
+- id: e17s02
+  file: stories/e17s02-function-logs.md
+  status: done
+- id: e17s03
+  file: stories/e17s03-storage.md
+  status: done
+- id: e17s04
+  file: stories/e17s04-deploy-cici.md
+  status: done
+- id: e17s05
+  file: stories/e17s05-dashboard.md
+  status: done
+- id: e17s06
+  file: stories/e17s06-storage-tests.md
+  status: in_progress
+- id: e17s07
+  file: stories/e17s07-deploy-detail.md
+  status: in_progress
+- id: e17s08
+  file: stories/e17s08-dashboard-primitives.md
+  status: in_progress
+- id: e17s09
+  file: stories/e17s09-dashboard-polish.md
+  status: in_progress
+- id: e17s10
+  file: stories/e17s10-site-users.md
+  status: in_progress

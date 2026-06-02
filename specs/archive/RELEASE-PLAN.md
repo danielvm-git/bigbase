@@ -48,6 +48,11 @@ independent and produces immediate visible value.
 | 3 | **017-C** | Storage browser at `#/storage`. File grid/list toggle, preview modal (images, text), folder tree navigation, drag-drop upload. New thumbnail endpoint for image previews | `go test ./components/storage/ -run TestThumbnail -v` |
 | 4 | **017-D** | Deploy detail page at `#/deploy/:id` with build log streaming, status timeline, environment variables editor. CICI pipeline viewer at `#/cici/:id` with workflow DAG | `go test ./components/deploy/ -run TestLogStream -v` |
 | 5 | **017-E** | Dashboard overhaul: real-time request rate chart, error rate gauge, active user count, component health indicators, dark mode toggle with persistence, responsive sidebar (240px → 64px), toast notification system, quick-action buttons (Create Collection, Deploy Site, Run Function) | `cd ui && npm run build` — visual verification across all 8 screens |
+| 6 | **017-F** | Storage page test coverage: `StoragePage.test.tsx` covering grid, list toggle, preview modals, drag-drop, empty state, folder tree | `cd ui && npm test -- StoragePage -- --coverage` |
+| 7 | **017-G** | Deploy/CICI detail completion: SSE log stream backend + `StreamLog` component, extract `StatusTimeline`, `EnvVarEditor`, CICI workflow DAG viz, `DeployPage.test.tsx`, `CiciPage.test.tsx` | `go test ./components/deploy/ -run TestDeployLogStream -v && cd ui && npm test -- StreamLog EnvVarEditor DeployPage CiciPage -- --coverage` |
+| 8 | **017-H** | Dashboard primitives: `MetricCard`, `RequestChart`, `ComponentHealthGrid`, `QuickActions` with full test coverage | `cd ui && npm test -- MetricCard RequestChart ComponentHealthGrid QuickActions -- --coverage` |
+| 9 | **017-I** | Dashboard tests + polish: `DashboardPage.test.tsx`, wire `StatusTimeline` into DeployPage, close CSS var gap (22 → 30+) | `cd ui && npm test -- DashboardPage -- --coverage && grep -c 'var(--' ui/src/styles/tokens.css \| awk '{if($1>=30) print "PASS"; else print "FAIL"}'` |
+| 10 | **017-J** | SiteDetail tabs + Users enhancements: 5-tab navigation (overview/deployments/domains/logs/settings), custom domain input, build settings editor, danger zone, Users invite flow, metric tiles | `cd ui && npm test -- SiteDetailPage UsersPage -- --coverage && npm run build` |
 
 **Acceptance criteria:**
 - All 8 screens render without console errors
@@ -58,6 +63,288 @@ independent and produces immediate visible value.
 - Toast notifications display and auto-dismiss
 - Navigation persists with hash routing
 - `npm run build` passes clean
+
+### Story 017-F: Storage Page Test Coverage
+
+**WSJF:** 6.0 (BV: 5 + TC: 6 + RR: 7) / JS: 3
+
+**Context:** `StoragePage.tsx` exists but has zero test coverage. The plan calls for
+tests covering the file grid, list toggle, preview modal (images + text), drag-drop
+zone, and folder tree navigation.
+
+**Gherkin AC:**
+```gherkin
+Scenario: Storage page renders file grid
+  Given the storage page loads
+  Then the file grid is visible
+  And each file shows its name and type icon
+
+Scenario: Toggle between grid and list view
+  Given the storage page is in grid mode
+  When the user clicks the list toggle
+  Then files are displayed as table rows
+
+Scenario: Image preview modal
+  Given a file with type "image/png" exists
+  When the user clicks the file
+  Then a preview modal opens showing the image
+
+Scenario: Text file preview modal
+  Given a file with type "text/plain" exists
+  When the user clicks the file
+  Then a preview modal opens showing the file contents
+
+Scenario: Drag-drop upload zone
+  Given the storage page is open
+  When a file is dragged onto the drop zone
+  Then the upload zone highlights
+  And the file is added to the upload queue
+
+Scenario: Empty state
+  Given the bucket has no files
+  Then the storage page shows an empty state message
+```
+
+**Tasks:**
+| # | Action | Verify |
+|---|--------|--------|
+| 1 | Write `StoragePage.test.tsx` — cover grid render, list toggle, image preview, text preview, drag-drop zone, empty state, folder tree navigation | `cd ui && npm test -- StoragePage` — **RED** then **GREEN** |
+| 2 | Integrate with existing `npm run preflight:ui` | `npm run preflight:ui` passes |
+
+**Verify:** `cd ui && npm test -- StoragePage -- --coverage && npm run build`
+
+---
+
+### Story 017-G: Deploy & CICI Detail Pages — Full Delivery
+
+**WSJF:** 3.0 (BV: 8 + TC: 7 + RR: 6) / JS: 7
+
+**Context:** `DeployPage.tsx` and `CiciPage.tsx` exist but are basic list views. The
+plan calls for detail pages with SSE log streaming, a deploy status timeline, an env
+variable editor, and a CICI workflow DAG visualization. `TestDeployLogs` exists but
+tests only basic GET/POST — no SSE streaming behavior. All page test files are missing.
+
+**Gherkin AC:**
+```gherkin
+Scenario: Deploy detail page shows status timeline
+  Given a deployment with status "building"
+  When the user navigates to /deploy/:id
+  Then a status timeline shows: queued → building → deploying → live
+  And the current step is highlighted
+
+Scenario: Deploy log stream via SSE
+  Given a deployment is in progress
+  When the user views the deploy detail page
+  Then build logs stream in real-time via SSE
+  And each log line shows a timestamp and stream type (stdout/stderr)
+
+Scenario: Environment variable editor
+  Given the user is on the deploy detail page
+  When they add a new env var KEY=VALUE
+  Then the variable appears in the list
+  And the save button is enabled
+
+Scenario: CICI workflow DAG visualization
+  Given a CICI workflow with 3 steps (build → test → deploy)
+  When the user views the CICI detail page
+  Then a DAG graph renders nodes for each step
+  And edges connect steps in dependency order
+  And step status badges update when a run completes
+```
+
+**Tasks:**
+| # | Action | Verify |
+|---|--------|--------|
+| 1 | Implement SSE log stream in `components/deploy/deploy.go`: `GET /api/deploy/:id/logs/stream` emits `data: {line, stream, timestamp}` events. Use `http.Flusher`. Buffer last 500 lines for late-connecting clients | `go test ./components/deploy/ -run TestDeployLogStream -v` — **RED** then **GREEN** |
+| 2 | Extract `StatusTimeline` from `SiteDetailPage.tsx` into `ui/src/components/StatusTimeline.tsx`. Accept `steps: {label, status}[]` prop. Use in DeployPage and SiteDetailPage | `cd ui && npm run build` — no import errors |
+| 3 | Add `StreamLog` component (`ui/src/components/StreamLog.tsx`): connects to SSE, renders streaming log lines with auto-scroll, shows "connecting"/"live"/"disconnected" status | `cd ui && npm test -- StreamLog` — **RED** then **GREEN** |
+| 4 | Add `EnvVarEditor` component (`ui/src/components/EnvVarEditor.tsx`): key-value pair list with add/remove/edit, validates KEY=VALUE format, save button with loading state | `cd ui && npm test -- EnvVarEditor` — **RED** then **GREEN** |
+| 5 | Overhaul `DeployPage.tsx` with detail view: SSE stream log, status timeline, env var editor, deployment metadata. Write `DeployPage.test.tsx` covering detail view, empty state, error state | `cd ui && npm test -- DeployPage -- --coverage` — **GREEN** |
+| 6 | Add `DAG` visualization to `CiciPage.tsx` detail view: render workflow steps as nodes with SVG/Canvas edges, step status badges. Write `CiciPage.test.tsx` covering DAG render, status updates, run history | `cd ui && npm test -- CiciPage -- --coverage` — **GREEN** |
+
+**Verify:** `go test ./components/deploy/ -run TestDeployLogStream -v && cd ui && npm test -- StreamLog EnvVarEditor DeployPage CiciPage -- --coverage && npm run build`
+
+---
+
+### Story 017-H: Dashboard Primitive Components
+
+**WSJF:** 3.4 (BV: 7 + TC: 6 + RR: 4) / JS: 5
+
+**Context:** `DashboardPage.tsx` uses only `DashboardMetrics` (component health count).
+The plan calls for four additional primitives: `MetricCard` (icon + label + value + trend),
+`RequestChart` (line chart from monitoring API), `ComponentHealthGrid` (16 component
+status cards), and `QuickActions` (Create Collection, Deploy Site, Run Function buttons).
+
+**Gherkin AC:**
+```gherkin
+Scenario: MetricCard displays value with trend indicator
+  Given a MetricCard with label "Requests/min", value 1423, and trend +12%
+  When the card renders
+  Then the value is prominently displayed
+  And the trend shows a green up-arrow with "+12%"
+
+Scenario: RequestChart renders line chart from API data
+  Given the monitoring API returns request rate data points
+  When RequestChart mounts
+  Then a line chart renders with time on X-axis and request count on Y-axis
+  And the chart polls for new data every 5 seconds
+
+Scenario: ComponentHealthGrid shows all 16 components
+  Given the component status API returns 16 component entries
+  When ComponentHealthGrid renders
+  Then 16 cards are displayed
+  And each card shows the component name and status indicator (green/red)
+  And clicking a card navigates to that component's monitoring section
+
+Scenario: QuickActions triggers navigation or modal
+  Given the dashboard page is loaded
+  When the user clicks "Create Collection"
+  Then they navigate to the SQL editor
+  When the user clicks "Deploy Site"
+  Then the site creation wizard opens
+  When the user clicks "Run Function"
+  Then a function execution modal appears
+```
+
+**Tasks:**
+| # | Action | Verify |
+|---|--------|--------|
+| 1 | Create `MetricCard.tsx` (`ui/src/components/MetricCard.tsx`): `icon`, `label`, `value`, `trend?`, `trendUp?` props. Renders card with trend indicator. Write `MetricCard.test.tsx` | `cd ui && npm test -- MetricCard` — **RED** then **GREEN** |
+| 2 | Create `RequestChart.tsx` (`ui/src/components/RequestChart.tsx`): fetches from `GET /api/monitoring/metrics`, renders SVG/Canvas line chart with axes. 5s polling interval. Handles empty/no-data states. Write `RequestChart.test.tsx` | `cd ui && npm test -- RequestChart` — **RED** then **GREEN** |
+| 3 | Create `ComponentHealthGrid.tsx` (`ui/src/components/ComponentHealthGrid.tsx`): fetches component status, renders 16-card grid. Each card: name, status dot, click → route. Handles loading + error states. Write `ComponentHealthGrid.test.tsx` | `cd ui && npm test -- ComponentHealthGrid` — **RED** then **GREEN** |
+| 4 | Create `QuickActions.tsx` (`ui/src/components/QuickActions.tsx`): 3 action buttons — Create Collection (→ `/sql`), Deploy Site (→ `/sites?wizard=1`), Run Function (opens modal). Uses `useNavigate`. Uses `useToast` for feedback. Write `QuickActions.test.tsx` | `cd ui && npm test -- QuickActions` — **RED** then **GREEN** |
+| 5 | Integrate all 4 primitives into `DashboardPage.tsx`. Replace placeholder stats with MetricCards, add RequestChart section, replace component count with ComponentHealthGrid, add QuickActions row | `cd ui && npm run build` — dashboard renders with all primitives |
+
+**Verify:** `cd ui && npm test -- MetricCard RequestChart ComponentHealthGrid QuickActions -- --coverage && npm run build`
+
+---
+
+### Story 017-I: Dashboard Test Coverage + Polish
+
+**WSJF:** 5.3 (BV: 5 + TC: 5 + RR: 6) / JS: 3
+
+**Context:** `DashboardPage.tsx` has no test file. `StatusTimeline` was extracted in 017-G
+but needs usage in DeployPage. CSS custom property `var(--` usage in tokens.css is 22,
+short of the 30 minimum. Close both gaps.
+
+**Gherkin AC:**
+```gherkin
+Scenario: Dashboard page renders all sections
+  Given the user is authenticated
+  When the dashboard page loads
+  Then the health banner is visible
+  And the component health grid shows 16 cards
+  And the request rate chart renders
+  And the quick-action buttons are present
+
+Scenario: Dashboard handles loading state
+  Given API responses are pending
+  When the dashboard page is loading
+  Then skeleton placeholders are shown
+
+Scenario: Dashboard handles error state
+  Given the health API returns a 500 error
+  When the dashboard page loads
+  Then an error banner is displayed
+  And the remaining sections still render
+
+Scenario: Dark mode applies correctly to dashboard
+  Given dark mode is active
+  When the dashboard page renders
+  Then all MetricCards use dark theme colors
+  And the RequestChart background is dark
+
+Scenario: CSS token coverage meets threshold
+  Given the tokens.css file
+  Then at least 30 unique var(-- references exist across the UI
+```
+
+**Tasks:**
+| # | Action | Verify |
+|---|--------|--------|
+| 1 | Write `DashboardPage.test.tsx`: renders all sections (health banner, component grid, chart, quick actions), handles loading spinner, handles API error states, verifies dark mode CSS class application, tests toast on quick-action click | `cd ui && npm test -- DashboardPage` — **RED** then **GREEN** |
+| 2 | Ensure `StatusTimeline` (extracted in 017-G) is wired into `DeployPage.tsx` detail view | `cd ui && npm run build` — DeployPage uses StatusTimeline |
+| 3 | Close CSS var gap: add 8+ new `var(--` usages across page and component styles. Target areas: MetricCard (4), RequestChart (2), ComponentHealthGrid (2), QuickActions (2) | `grep -c 'var(--' ui/src/styles/tokens.css` ≥ 30 |
+
+**Verify:** `cd ui && npm test -- DashboardPage -- --coverage && grep -c 'var(--' ui/src/styles/tokens.css | awk '{if($1>=30) print "PASS: "$1; else print "FAIL: "$1" < 30"}'`
+
+---
+
+### Story 017-J: SiteDetail Tabs + Users Enhancements
+
+**WSJF:** 2.8 (BV: 7 + TC: 6 + RR: 4) / JS: 6
+
+**Context:** The Console HTML prototype defines `SiteDetail` with 5 tabs (overview,
+deployments, domains, logs, settings) and a danger zone for site deletion. `SiteDetailPage.tsx`
+currently renders a single-scroll page with overview + deployments — no tab navigation,
+no domains tab, no settings tab, no danger zone. The Users page exists at 2.4 KB but
+lacks the invite flow and metric tiles shown in the prototype.
+
+**Design reference:** `specs/BigBase Console.html` lines 1324–1437 (SiteDetail with tabs),
+1592–1630 (Users with metric tiles + invite), 1397–1434 (domains + settings + danger zone).
+
+**Gherkin AC:**
+```gherkin
+Scenario: SiteDetail renders 5-tab navigation
+  Given a site detail page is loaded
+  Then 5 tabs are visible: Overview, Deployments, Domains, Logs, Settings
+  And the Overview tab is selected by default
+
+Scenario: SiteDetail overview tab shows production deployment
+  Given the Overview tab is active
+  Then the site name, URL, framework, and latest commit are displayed
+  And a "Redeploy" and "Visit" button are visible
+
+Scenario: SiteDetail deployments tab shows history table
+  Given the Deployments tab is active
+  Then a table lists deployments with status, commit, branch, duration, and timestamp
+
+Scenario: SiteDetail domains tab allows custom domain entry
+  Given the Domains tab is active
+  Then the BigBase subdomain is shown with Active badge
+  And an input field accepts a custom domain name
+  And CNAME setup instructions are displayed
+
+Scenario: SiteDetail logs tab shows build log
+  Given the Logs tab is active
+  Then the build log is displayed in a dark code block
+  And each line shows a timestamp and log message
+
+Scenario: SiteDetail settings tab shows build configuration
+  Given the Settings tab is active
+  Then a "Build settings" card shows framework preset, build command, and output directory
+  And a "Save changes" button is enabled after edits
+
+Scenario: SiteDetail danger zone allows site deletion
+  Given the Settings tab is active
+  When the user clicks "Delete site"
+  Then a confirmation dialog appears
+  And confirming deletes the site and redirects to the sites list
+
+Scenario: Users page shows metric tiles
+  Given the Users page is loaded
+  Then three metric tiles display: Total users, Verified, and Admins
+  And each tile shows a count value
+
+Scenario: Users page invite flow triggers modal
+  Given the Users page is loaded
+  When the user clicks "Invite user"
+  Then an invite modal opens with email input
+  And submitting shows a toast confirmation
+```
+
+**Tasks:**
+| # | Action | Verify |
+|---|--------|--------|
+| 1 | Add `Tabs` container to `SiteDetailPage.tsx`: import existing `Tabs` component, render 5 tab buttons (Overview, Deployments, Domains, Logs, Settings). Move existing single-page content into Overview + Deployments tabs | `cd ui && npm run build` — SiteDetail loads with tabs |
+| 2 | Build Domains tab: BigBase subdomain display with Active badge, custom domain input with "Add domain" button, CNAME setup instructions. Mock-only — no backend changes | `cd ui && npm run build` — Domains tab renders |
+| 3 | Build Logs tab: re-export `BUILD_LOG` mock data from `specs/BigBase Console.html` (or use `window.DATA` equivalent). Render dark code-output block with log lines (timestamp + message). Use existing `.log-line` + `.code-output` CSS classes | `cd ui && npm run build` — Logs tab renders |
+| 4 | Build Settings tab: Build settings card (framework preset dropdown, build command input, output directory input, Save button). Danger zone card (red border, "Delete this site" description, "Delete site" button with confirmation dialog) | `cd ui && npm run build` — Settings tab renders, danger zone styled |
+| 5 | Write `SiteDetailPage.test.tsx`: test all 5 tabs render, test tab switching, test domains input, test settings save, test danger zone confirmation flow, test loading and error states | `cd ui && npm test -- SiteDetailPage` — **RED** then **GREEN** |
+| 6 | Enhance `UsersPage.tsx`: add 3 metric tiles (Total users / Verified / Admins) above the table using prototype's `.metric-grid` + `.metric-tile` patterns. Add "Invite user" button with email modal and toast on submit | `cd ui && npm run build` — Users page shows tiles + invite button |
+| 7 | Write `UsersPage.test.tsx`: test metric tiles render with correct counts, test invite modal opens/closes, test email validation in invite form, test toast on successful invite | `cd ui && npm test -- UsersPage` — **RED** then **GREEN** |
+
+**Verify:** `cd ui && npm test -- SiteDetailPage UsersPage -- --coverage && npm run build`
 
 ---
 
@@ -290,7 +577,7 @@ system.
 
 | Phase | Epics | Gate |
 |-------|-------|------|
-| 1 | **017** (Admin UI) + 021 (Testing) | All 8 screens render, `npm run build` passes, dark mode + responsive |
+| 1 | **017** (Admin UI) + 021 (Testing) | All 8 screens render, `npm run build` passes, dark mode + responsive. **Note:** 017-A–E shipped; 017-F–J are completion stories closing gaps found in audit against source + Console HTML prototype. |
 | 2 | **018** (Multi-DB) | Both SQLite + PG drivers green, migration system in place |
 | 3 | **019** (Security) | Rate limit, email verify, password reset, refresh tokens, security headers |
 | 4 | **020** (Platform Ops) | Backup, migrations CLI, env vars, custom domains, webhooks all green |

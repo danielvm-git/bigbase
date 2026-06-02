@@ -8,7 +8,8 @@
 
   "instructions": [
     "AGENTS.md",
-    "specs/CONTEXT.md",
+    "specs/state.yaml",
+    "specs/plans/TECH_STACK_LATEST.md",
     "CONVENTIONS.md",
     ".opencode/docs/PRINCIPLES.md",
     ".opencode/skills/develop-tdd/SKILL.md",
@@ -38,7 +39,7 @@
   },
 
   "lsp": {
-    "gopls": { "command": ["gopls"] },
+    "gopls": { "command": ["/Users/danielvm/go/bin/gopls"] },
     "typescript": { "command": ["typescript-language-server", "--stdio"] }
   },
 

@@ -1,0 +1,64 @@
+generated_by: scripts/sync-status-from-epics.sh
+type: execution-status
+context: infra
+epics:
+  e17: in_progress
+  e18: pending
+  e19: pending
+  e20: pending
+  e21: pending
+  e22: pending
+  e23: pending
+  e24: pending
+  e25: pending
+stories:
+  e17s01: done
+  e17s02: done
+  e17s03: done
+  e17s04: done
+  e17s05: done
+  e17s06: in_progress
+  e17s07: in_progress
+  e17s08: in_progress
+  e17s09: in_progress
+  e17s10: in_progress
+  e18s01: pending
+  e18s02: pending
+  e18s03: pending
+  e18s04: pending
+  e18s05: pending
+  e19s01: pending
+  e19s02: pending
+  e19s03: pending
+  e19s04: pending
+  e19s05: pending
+  e20s01: pending
+  e20s02: pending
+  e20s03: pending
+  e20s04: pending
+  e20s05: pending
+  e21s01: pending
+  e21s02: pending
+  e21s03: pending
+  e21s04: pending
+  e21s05: pending
+  e22s01: pending
+  e22s02: pending
+  e22s03: pending
+  e22s04: pending
+  e22s05: pending
+  e23s01: pending
+  e23s02: pending
+  e23s03: pending
+  e23s04: pending
+  e23s05: pending
+  e24s01: pending
+  e24s02: pending
+  e24s03: pending
+  e24s04: pending
+  e24s05: pending
+  e25s01: pending
+  e25s02: pending
+  e25s03: pending
+  e25s04: pending
+  e25s05: pending

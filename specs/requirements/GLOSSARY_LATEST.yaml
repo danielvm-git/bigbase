@@ -1,0 +1,43 @@
+type: requirements-glossary
+context: domain
+# From specs/UBIQUITOUS_LANGUAGE.md — canonical domain terms
+terms:
+  BigBase: Single-binary open-source BaaS platform
+  Entity: Running BigBase server instance (ECC pattern)
+  Component: Submodule implementing kernel.Component with Init/Start/Stop lifecycle
+  Construct: Configuration deciding which components run together
+  Kernel: Core orchestrator — discovery, lifecycle, event bus
+  Event Bus: Pub/sub for hook-based component communication
+  Hook: Named event point for subscriptions (onMutation, onRequest, onPush)
+  HookDef: Struct defining a hook — name, priority, subscribe methods
+  Proxy: HTTP server routing requests to internal handlers
+  DB: Database component with migration support
+  Collection: Named table auto-exposed via REST API
+  Migration: Versioned SQL DDL transforming schema idempotently
+  JWT: JSON Web Token (HS256) for stateless authentication
+  Claims: JWT payload — user_id, email, exp, iat
+  bcrypt: Password hashing for credential storage
+  GoogleVerifier: Interface for mockable Google OAuth verification
+  Forge: Issues, labels, kanban, wiki project management
+  CICI: CI/CD pipeline — workflows, runs, steps
+  Function: Serverless JavaScript function (goja runtime)
+  Runtime: Function execution sandbox with timeout and console capture
+  Realtime: WebSocket component for live DB mutation events
+  Messaging: Email, SMS, push notification dispatch
+  Hub: Realtime connection manager for WebSocket clients
+  Channel: Named Realtime subscription topic (e.g. collection:posts)
+  Storage File: Uploaded file with metadata (name, size, MIME, UUID)
+  Thumbnail: Auto-generated smaller image version
+  Deploy: Build and run web app from Git repository
+  Deployment: Single running deployed app instance with port and URL
+  Site: Web app deployed from GitHub with automatic updates
+  Preview URL: Temporary UUID-based deployment URL
+  Git Repo: Internal bare Git repository
+  GitHub App: External app for private repos and webhooks
+  Webhook: Inbound HTTP callback from GitHub
+  Metrics: Numerical system and request measurements
+  MetricsCollector: In-memory request/latency/status tracking
+  Alert: Threshold-based notification rule
+  Admin UI: React SPA embedded in Go binary
+  Dashboard: Admin UI home — stats, navigation, component status
+  Design Token: CSS variable for semantic color, spacing, typography

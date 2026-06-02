@@ -53,9 +53,21 @@ via embedded relay (no user-owned Google app required).
 Logging is structured JSON via `slog.JSONHandler` in serve mode.
 CLI output uses plain text.
 
+## Specs (bigpowers YAML)
+
+| File | Purpose |
+|------|---------|
+| `specs/state.yaml` | Session flow, git, handoff, active epic |
+| `specs/release-plan.yaml` | Epic index (WSJF); no story status |
+| `specs/execution-status.yaml` | Story/epic status (sync via `scripts/sync-status-from-epics.sh`) |
+| `specs/epics/eNN-*.yaml` | Tasks with `verify:` commands |
+| `specs/plans/TECH_STACK_LATEST.md` | Architecture and stack |
+
+Legacy markdown: `specs/archive/` only — not source of truth when YAML exists.
+
 ## Agent Rules
-- Read specs/ before writing code.
-- All planning and specifications MUST be written to `specs/` before code.
+- Read `specs/state.yaml` and the active epic shard before writing code.
+- All planning output goes under `specs/` (YAML + `plans/`); run `bash scripts/validate-specs-yaml.sh` after spec edits.
 - Write minimum code that solves the stated problem.
 - Run tests after every change. Show evidence before declaring done.
 

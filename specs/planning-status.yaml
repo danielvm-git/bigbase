@@ -1,0 +1,10 @@
+type: planning-status
+context: infra
+discover:
+  scope: done
+  vision: done
+  glossary: done
+  tech_stack: done
+  release_plan: done
+  epics_sharded: done
+notes: Migrated from legacy markdown specs on 2026-06-02

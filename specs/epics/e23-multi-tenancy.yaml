@@ -1,0 +1,38 @@
+type: epic-shard
+context: domain
+id: e23
+title: Multi-Tenancy and Organizations
+wsjf: 6.0
+status: pending
+covers: []
+stories:
+  - id: e23s01
+    title: Organization CRUD
+    status: pending
+    tasks:
+      - desc: orgs table and /api/orgs CRUD with default org migration
+        verify: "go test ./components/auth/ -run TestOrganization -v"
+  - id: e23s02
+    title: Team membership and invitations
+    status: pending
+    tasks:
+      - desc: Invite by email with roles and accept-invite flow
+        verify: "go test ./components/auth/ -run TestMembership -v"
+  - id: e23s03
+    title: Resource isolation
+    status: pending
+    tasks:
+      - desc: org_id scoping on all resources; cross-org returns 403
+        verify: "go test ./components/api/ -run TestOrgIsolation -v"
+  - id: e23s04
+    title: API key management
+    status: pending
+    tasks:
+      - desc: Org-scoped API keys via X-API-Key header
+        verify: "go test ./components/auth/ -run TestAPIKeys -v"
+  - id: e23s05
+    title: Usage tracking per org
+    status: pending
+    tasks:
+      - desc: GET /api/orgs/:id/usage with admin UI charts
+        verify: "go test ./components/monitoring/ -run TestOrgUsage -v"
