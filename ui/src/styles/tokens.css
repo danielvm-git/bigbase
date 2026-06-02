@@ -68,6 +68,22 @@
   --border-accent: var(--brand-500);
   --border-error: var(--error);
 
+  /* ── Divider semantic roles ───────────────────────────────── */
+  --divider-default: var(--neutral-100);
+  --divider-strong: var(--neutral-200);
+  --divider-subtle: var(--neutral-40);
+
+  /* ── Surface elevation (light mode) ───────────────────────── */
+  --surface-raised: var(--neutral-0);
+  --surface-overlay: var(--neutral-0);
+  --surface-sunken: var(--neutral-40);
+
+  /* ── Input semantic roles ─────────────────────────────────── */
+  --input-bg: var(--neutral-0);
+  --input-border: var(--neutral-100);
+  --input-focus-border: var(--brand-500);
+  --input-placeholder: var(--neutral-400);
+
   /* ── Overlay ────────────────────────────────────────────── */
   --overlay-hover: rgba(25, 25, 28, 0.04);
   --overlay-pressed: rgba(25, 25, 28, 0.06);
