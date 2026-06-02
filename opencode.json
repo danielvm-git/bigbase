@@ -10,7 +10,8 @@
     "AGENTS.md",
     "specs/CONTEXT.md",
     "CONVENTIONS.md",
-    "/Users/danielvm/.opensrc/repos/github.com/affaan-m/ECC/main/skills/tdd-workflow/SKILL.md",
+    ".opencode/docs/PRINCIPLES.md",
+    "/Users/danielvm/.opensrc/repos/github.com/danielvm-git/bigpowers/main/develop-tdd/SKILL.md",
     "/Users/danielvm/.opensrc/repos/github.com/affaan-m/ECC/main/skills/security-review/SKILL.md",
     "/Users/danielvm/.opensrc/repos/github.com/affaan-m/ECC/main/skills/coding-standards/SKILL.md",
     "/Users/danielvm/.opensrc/repos/github.com/affaan-m/ECC/main/skills/backend-patterns/SKILL.md",
@@ -37,8 +38,8 @@
   },
 
   "lsp": {
-    "gopls": {},
-    "typescript": {}
+    "gopls": { "command": ["gopls"] },
+    "typescript": { "command": ["typescript-language-server", "--stdio"] }
   },
 
   "agent": {

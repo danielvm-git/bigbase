@@ -23,7 +23,7 @@ Run a full agentic stack health check for BigBase. For each item, run the shell 
 16. `jq -e '.plugin | index("context-mode")' opencode.json`
 17. `jq -e '.mcp.sqz and .mcp.context7' opencode.json`
 18. `jq -e '.mcp.ctxo' opencode.json`
-19. `jq -e '.lsp.gopls and .lsp.typescript' opencode.json`
+19. `jq -e '.lsp.gopls.command and .lsp.typescript.command' opencode.json`
 20. `npm run preflight` — only if package.json defines scripts.preflight
 21. `gopls version`; `test -f ui/dist/index.html`; `go vet ./...`
 

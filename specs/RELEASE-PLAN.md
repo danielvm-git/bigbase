@@ -1,6 +1,6 @@
 # BigBase v2.0 — Release Plan
 
-7 epics organized UI-first. Each epic is a vertical slice with
+9 epics organized UI-first. Each epic is a vertical slice with
 independently testable steps. Testing (Epic 021) runs in parallel with all
 other epics — see `specs/TASKS.md` for the dependency graph and parallel
 execution groups.
@@ -193,23 +193,98 @@ Depends on 018-E (migrations) and 019 (security hardening).
 
 ---
 
+## Epic 024: Wire Observability
+
+**type:** feat
+**context:** observability | logging | telemetry
+**WSJF:** 5.0 (after Platform Ops, before DX)
+
+**Context:** The platform currently uses structured JSON logging (`slog.JSONHandler`)
+only in serve mode, and component logging is inconsistent. Health checks exist at
+`/health` and `/api/monitoring/health` but don't cover per-component status.
+There are no distributed request IDs, no log level controls, and no metrics
+export endpoint for external monitoring (Prometheus/Grafana). This epic adds
+production-grade observability: structured logging across all components,
+distributed tracing via request IDs, per-component health reporting, a
+`/metrics` endpoint, and idempotent setup scripts.
+
+### Steps
+
+| # | Slice | Action | Verify |
+|---|-------|--------|--------|
+| 1 | **024-A** | Standardize structured logging: ensure all 16 components use `slog` via injected `Logger` interface. Remove any remaining `fmt.Println` or `log.Printf`. Add `--log-level debug\|info\|warn\|error` flag to `serve` command | `go run . serve --log-level debug 2>&1 \| head -5` shows JSON log entries |
+| 2 | **024-B** | Distributed request ID: add `X-Request-ID` header middleware in proxy component. Generate UUID if missing. Propagate through context. Log request ID in every component handler | `curl -I http://localhost:9999/ \| grep -i x-request-id` returns a UUID |
+| 3 | **024-C** | Per-component health: extend `/health` to return `{"status":"ok","components":{"proxy":"ok","db":"ok",...}}`. Add `/api/monitoring/health/components` with per-component status + uptime | `curl http://localhost:9999/health \| jq '.components'` shows all 16 components |
+| 4 | **024-D** | Metrics export: add `GET /api/monitoring/metrics/prometheus` endpoint with Prometheus text format (counter, gauge, histogram). Export request count, latency p50/p95/p99, error rate, goroutine count, memory | `curl http://localhost:9999/api/monitoring/metrics/prometheus \| grep 'bigbase_'` shows metrics |
+| 5 | **024-E** | Idempotent setup: ensure `scripts/setup.sh` handles all dependencies (Go, Node, Caddy, SQLite). Add `scripts/health-check.sh` that curls `/health` and `/metrics` and exits non-zero on failure | `bash scripts/setup.sh` runs twice with no errors. `bash scripts/health-check.sh` returns 0 |
+
+**Acceptance criteria:**
+- All 16 components log in structured JSON format
+- Every HTTP response includes `X-Request-ID` header
+- `/health` returns per-component status (not just binary ok/fail)
+- `/api/monitoring/metrics/prometheus` serves Prometheus-compatible metrics
+- `scripts/setup.sh` is idempotent (safe to run multiple times)
+- `scripts/health-check.sh` validates the running system
+
+---
+
 ## Dependency Summary
 
 ```
-017 (Admin UI) ── independent, start now ─────────────────┐
-                                                            │
-018 (Multi-DB) ──────────────────────────────────────────┐ │
-    │                                                      │ │
-    ├── 019 (Security) ── needs 018-E (migrations)         │ │
-    │       │                                              │ │
-    │       └── 020 (Platform Ops) ── needs 018-C, 019-E   │ │
-    │               │                                       │ │
-    │               └── 023 (Multi-tenancy) ── needs 018-E  │ │
-    │                                                        │ │
-    └── 022 (DX) ── needs 017-E + 018-E ────────────────────┘ │
+ 017 (Admin UI) ── independent, start now ─────────────────┐
+                                                             │
+ 018 (Multi-DB) ──────────────────────────────────────────┐ │
+     │                                                      │ │
+     ├── 019 (Security) ── needs 018-E (migrations)         │ │
+     │       │                                              │ │
+     │       ├── 020 (Platform Ops) ── needs 018-C, 019-E   │ │
+     │       │       │                                       │ │
+     │       │       └── 023 (Multi-tenancy) ── needs 018-E  │ │
+     │       │                                                │ │
+      │       └── 024 (Observability) ── needs 018-E+019-E    │ │
+      │               │                                        │ │
+      │               └── 025 (HW Monitoring) ── depends 024   │ │
+      │                                                        │ │
+      └── 022 (DX) ── needs 017-E + 018-E ────────────────────┘ │
 
-021 (Testing) ── parallel track, no epic dependencies ─────┘
+ 021 (Testing) ── parallel track, no epic dependencies ─────┘
 ```
+
+---
+
+## Epic 025: Hardware Monitoring — Connect to Real System
+
+**type:** feat
+**context:** monitoring | observability | ui
+**WSJF:** 4.25 (after Observability, before DX)
+
+**Context:** The Monitoring page (`#/monitoring`) and monitoring component already
+collect Go-level metrics (goroutines, memory, request counts, latencies) via
+`/api/monitoring/metrics`, but exposes no host-level hardware data. Operators
+need visibility into disk usage (risk of filling up), network I/O (traffic
+patterns), per-process resource consumption, and real-time graphs on the Admin
+UI. This epic connects the Monitoring page to the real hardware behind the
+system.
+
+### Steps
+
+| # | Slice | Action | Verify |
+|---|-------|--------|--------|
+| 1 | **025-A** | Host metrics collection: add disk usage (`/`, `/opt/bigbase/data`), network I/O (bytes in/out), and system load to `MetricsCollector` in `components/monitoring/`. Use `gopsutil` or `syscall` for cross-platform collection | `curl /api/monitoring/metrics \| jq '.host'` shows `disk_used_pct`, `net_rx_bytes`, `net_tx_bytes`, `load_1m` |
+| 2 | **025-B** | Real-time metrics API: add `GET /api/monitoring/metrics/stream` SSE endpoint for live metrics push. Emit CPU, memory, disk, request rate every 5s | `curl -N /api/monitoring/metrics/stream` shows SSE stream of `data: {"cpu":23.5,"mem":512,...}` |
+| 3 | **025-C** | Monitoring page charts: add real-time CPU/memory graph (line chart), disk usage gauge, network traffic sparkline, and request rate counter to `MonitoringPage.tsx`. Use polling or SSE for live updates | `cd ui && npm run build` — monitoring page shows live charts |
+| 4 | **025-D** | Process-level monitoring: add `/api/monitoring/processes` endpoint showing BigBase and its child processes (deployments, functions). PID, CPU%, memory, uptime per process | `curl /api/monitoring/processes \| jq '.processes'` lists BigBase + child processes |
+| 5 | **025-E** | Alerting rules: add configurable alert rules (disk > 80%, memory > 90%, error rate spike) to monitoring component. Trigger webhook or log alert when threshold crossed. Admin UI alert configuration page | `go test ./components/monitoring/ -run TestAlertRules -v` |
+
+**Acceptance criteria:**
+- `/api/monitoring/metrics` returns host-level metrics (disk, network, load)
+- Monitoring page shows real-time CPU, memory, and disk charts
+- SSE endpoint pushes live metrics to connected clients
+- Process list shows BigBase and its child deployments
+- Alert rules fire when thresholds are crossed
+- All new monitoring endpoints have test coverage
+
+---
 
 ## Execution Order
 
@@ -219,8 +294,10 @@ Depends on 018-E (migrations) and 019 (security hardening).
 | 2 | **018** (Multi-DB) | Both SQLite + PG drivers green, migration system in place |
 | 3 | **019** (Security) | Rate limit, email verify, password reset, refresh tokens, security headers |
 | 4 | **020** (Platform Ops) | Backup, migrations CLI, env vars, custom domains, webhooks all green |
-| 5 | **022** (Developer Experience) | Onboarding flow complete, sample apps deployable, event bus visualizer live |
-| 6 | **023** (Multi-Tenancy) | Full org isolation, API keys, usage tracking |
+| 5 | **024** (Observability) | Structured logging, request IDs, per-component health, Prometheus metrics, idempotent setup |
+| 6 | **025** (Hardware Monitoring) | Host metrics (disk, network, load), real-time charts, SSE stream, process monitoring, alert rules |
+| 7 | **022** (Developer Experience) | Onboarding flow complete, sample apps deployable, event bus visualizer live |
+| 8 | **023** (Multi-Tenancy) | Full org isolation, API keys, usage tracking |
 
 ## Out of Scope (v2.0)
 
