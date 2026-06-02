@@ -26,7 +26,7 @@ export default function FunctionLogsPage() {
         setExecutions(data.data)
         setError(null)
       })
-      .catch(err => {
+      .catch(() => {
         setError('Failed to load execution logs')
       })
   }, [id])

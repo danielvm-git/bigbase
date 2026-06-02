@@ -25,7 +25,7 @@ export default function RealtimePage() {
         setStatus(data)
         setError(null)
       })
-      .catch(err => {
+      .catch(() => {
         setError('Failed to load realtime status')
       })
   }, [])

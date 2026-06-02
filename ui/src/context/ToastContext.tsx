@@ -1,6 +1,6 @@
 import { useCallback, useState, type ReactNode } from 'react'
 import { ToastContext } from './toastState'
-import type { Toast } from './toastState'
+import type { Toast, ToastVariant } from './toastState'
 
 let nextId = 0
 
