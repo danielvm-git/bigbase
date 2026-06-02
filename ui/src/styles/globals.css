@@ -1,0 +1,6 @@
+/* BigBase Global Styles
+   Imports design tokens (light mode default) and dark mode theme overrides.
+   Add reset and utility classes here. */
+
+@import './tokens.css';
+@import './theme.css';
