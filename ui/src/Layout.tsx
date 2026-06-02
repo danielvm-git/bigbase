@@ -134,6 +134,12 @@ export default function Layout() {
                 <span>Monitoring</span>
               </NavLink>
             </li>
+            <li>
+              <NavLink to="/realtime">
+                <SidebarIcon>R</SidebarIcon>
+                <span>Realtime</span>
+              </NavLink>
+            </li>
           </ul>
         </div>
 

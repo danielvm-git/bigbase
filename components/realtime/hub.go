@@ -15,6 +15,23 @@ type subRequest struct {
 	room   string
 }
 
+// HubStats is a snapshot of hub state, returned by Hub.Stats().
+type HubStats struct {
+	TotalConnections int              `json:"total_connections"`
+	TotalRooms       int              `json:"total_rooms"`
+	Connections      []ConnectionInfo `json:"connections"`
+}
+
+// ConnectionInfo describes a single active WebSocket connection.
+type ConnectionInfo struct {
+	UserID int64    `json:"user_id"`
+	Rooms  []string `json:"rooms"`
+}
+
+type statsReq struct {
+	result chan HubStats
+}
+
 type Hub struct {
 	clients    map[*Client]bool
 	rooms      map[string]map[*Client]bool
@@ -24,6 +41,7 @@ type Hub struct {
 	subscribe   chan subRequest
 	unsubscribe chan subRequest
 	broadcast   chan broadcastMsg
+	stats       chan statsReq
 	stop        chan struct{}
 	stopOnce    sync.Once
 }
@@ -37,6 +55,7 @@ func NewHub() *Hub {
 		subscribe:   make(chan subRequest, 256),
 		unsubscribe: make(chan subRequest, 256),
 		broadcast:   make(chan broadcastMsg, 256),
+		stats:       make(chan statsReq),
 		stop:        make(chan struct{}),
 	}
 }
@@ -84,6 +103,24 @@ func (h *Hub) Run() {
 			h.clients = nil
 			h.rooms = nil
 			return
+
+		case req := <-h.stats:
+			s := HubStats{
+				TotalConnections: len(h.clients),
+				TotalRooms:       len(h.rooms),
+				Connections:      make([]ConnectionInfo, 0, len(h.clients)),
+			}
+			for client := range h.clients {
+				rooms := make([]string, 0, len(client.rooms))
+				for room := range client.rooms {
+					rooms = append(rooms, room)
+				}
+				s.Connections = append(s.Connections, ConnectionInfo{
+					UserID: client.userID,
+					Rooms:  rooms,
+				})
+			}
+			req.result <- s
 		}
 	}
 }
@@ -128,4 +165,12 @@ func (h *Hub) Subscribe(client *Client, room string) {
 
 func (h *Hub) Unsubscribe(client *Client, room string) {
 	h.unsubscribe <- subRequest{client: client, room: room}
+}
+
+// Stats returns a snapshot of current hub state: active connections,
+// rooms, and per-connection subscription details.
+func (h *Hub) Stats() HubStats {
+	req := statsReq{result: make(chan HubStats)}
+	h.stats <- req
+	return <-req.result
 }

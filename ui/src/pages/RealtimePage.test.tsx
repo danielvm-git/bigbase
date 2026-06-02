@@ -82,7 +82,9 @@ describe('RealtimePage', () => {
     )
 
     await waitFor(() => {
-      expect(screen.getByText('collection:posts')).toBeInTheDocument()
+      // 'collection:posts' appears for both users — confirm count
+      const postsElements = screen.getAllByText('collection:posts')
+      expect(postsElements).toHaveLength(2)
       expect(screen.getByText('collection:users')).toBeInTheDocument()
     })
   })
@@ -118,7 +120,7 @@ describe('RealtimePage', () => {
     )
 
     await waitFor(() => {
-      expect(screen.getByText(/failed to load/i)).toBeInTheDocument()
+      expect(screen.getByText('Failed to load realtime status')).toBeInTheDocument()
     })
   })
 })
