@@ -1,3 +1,10 @@
+## [1.2.1](https://github.com/danielvm-git/bigbase/compare/v1.2.0...v1.2.1) (2026-06-02)
+
+
+### Bug Fixes
+
+* **opencode:** check-stack references release-deploy.yml, not ci.yml ([3f8f492](https://github.com/danielvm-git/bigbase/commit/3f8f492519d138638c7b0953f74e8c9940ab46f8))
+
 # [1.2.0](https://github.com/danielvm-git/bigbase/compare/v1.1.1...v1.2.0) (2026-06-02)
 
 
