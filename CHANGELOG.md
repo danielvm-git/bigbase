@@ -1,3 +1,10 @@
+## [1.1.1](https://github.com/danielvm-git/bigbase/compare/v1.1.0...v1.1.1) (2026-06-02)
+
+
+### Bug Fixes
+
+* **main:** register GitHub App CLI flags and wire to github component ([0c7fea6](https://github.com/danielvm-git/bigbase/commit/0c7fea6fdf0a635f2a8747d05729b5a65d231e8a))
+
 # [1.1.0](https://github.com/danielvm-git/bigbase/compare/v1.0.2...v1.1.0) (2026-06-01)
 
 
