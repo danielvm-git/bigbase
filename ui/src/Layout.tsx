@@ -41,17 +41,13 @@ export default function Layout() {
       <button
         className="sidebar-toggle"
         onClick={() => setSidebarOpen(o => !o)}
-        style={{
-          display: 'none',
-          position: 'fixed', top: 'var(--space-4)', left: 'var(--space-4)', zIndex: 100,
-          padding: 'var(--space-3)', borderRadius: 'var(--radius-s)',
-          background: 'var(--bg-surface)', border: '1px solid var(--border-default)',
-          cursor: 'pointer', fontSize: '1.2rem',
-        }}
+        aria-label={sidebarOpen ? 'Close sidebar' : 'Open sidebar'}
+        aria-expanded={sidebarOpen}
+        aria-controls="sidebar-nav"
       >
         {sidebarOpen ? '✕' : '☰'}
       </button>
-      <nav className={`sidebar${sidebarOpen ? ' sidebar-open' : ''}`}>
+      <nav id="sidebar-nav" className={`sidebar${sidebarOpen ? ' sidebar-open' : ''}`}>
         <div className="sidebar-logo">
           <div className="sidebar-logo-icon">B</div>
           <span>BigBase</span>

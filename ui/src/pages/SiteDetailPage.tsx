@@ -48,6 +48,7 @@ export default function SiteDetailPage() {
   const [deployments, setDeployments] = useState<Deployment[]>([])
   const [loading, setLoading] = useState(true)
   const [previewMode, setPreviewMode] = useState(false)
+  const [redeployError, setRedeployError] = useState<string | null>(null)
   const pq = previewQuerySuffix()
 
   const load = useCallback(async () => {
@@ -72,6 +73,7 @@ export default function SiteDetailPage() {
 
   const handleRedeploy = async () => {
     if (!site || previewMode) return
+    setRedeployError(null)
     try {
       const res = await fetch(`/api/sites/${site.id}/deploy`, {
         method: 'POST',
@@ -84,10 +86,15 @@ export default function SiteDetailPage() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ repo_id: site.git_repo_id, branch: site.production_branch }),
         })
-        if (!fallback.ok) return
+        if (!fallback.ok) {
+          setRedeployError(`Redeploy failed (HTTP ${fallback.status})`)
+          return
+        }
       }
       load()
-    } catch { /* ignore */ }
+    } catch {
+      setRedeployError('Redeploy failed — network error')
+    }
   }
 
   if (loading) return <SitesListSkeleton />
@@ -109,6 +116,10 @@ export default function SiteDetailPage() {
         <Button variant="secondary" size="sm" onClick={() => load()}>Refresh</Button>
         <Button variant="primary" size="sm" onClick={handleRedeploy}>Redeploy</Button>
       </PageHeader>
+
+      {redeployError && (
+        <p className="input-error-text" style={{ marginBottom: 'var(--space-6)' }}>{redeployError}</p>
+      )}
 
       {(previewMode || isPreviewForced()) && <PreviewBanner />}
 

@@ -134,14 +134,6 @@ export default function DashboardPage() {
           <p className="dim">ID #{user.id}</p>
         </Card>
 
-        {health && (
-          <Card>
-            <CardHeader title="System" />
-            <p className="stat-value">{health.components}</p>
-            <p className="dim">components &middot; {health.status}</p>
-          </Card>
-        )}
-
         <Card>
           <CardHeader title="Storage" />
           <p className="stat-value">{fmtSize(totalBytes)}</p>

@@ -8,7 +8,16 @@ interface MetricsProps {
 }
 
 export function DashboardMetrics({ system, requests, componentCount, healthOk }: MetricsProps) {
-  if (!system) return null
+  if (!system) {
+    return (
+      <div className="dash-grid" style={{ marginBottom: 'var(--space-8)' }}>
+        <Card>
+          <CardHeader title="Metrics" />
+          <p className="dim">Metrics unavailable — server may still be starting.</p>
+        </Card>
+      </div>
+    )
+  }
 
   return (
     <div className="dash-grid" style={{ marginBottom: 'var(--space-8)' }}>
@@ -34,7 +43,7 @@ export function DashboardMetrics({ system, requests, componentCount, healthOk }:
       <Card>
         <CardHeader title="Components" />
         <p className="stat-value" style={{ color: healthOk ? 'var(--success-fg)' : 'var(--warning-fg)' }}>
-          {componentCount}/16
+          {componentCount} healthy
         </p>
         <p className="dim">healthy</p>
       </Card>
