@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Card, CardHeader, PageHeader, Badge, statusBadgeVariant, Button } from '../components'
+import { DashboardMetrics } from '../components/DashboardMetrics'
 import { useToast } from '../hooks/useToast'
 
 interface Stat { label: string; count: number; link: string }
@@ -119,36 +120,12 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {metrics.system && (
-        <div className="dash-grid" style={{ marginBottom: 'var(--space-8)' }}>
-          <Card>
-            <CardHeader title="Request Rate" />
-            <p className="stat-value">{metrics.requests?.total ?? 0}</p>
-            <p className="dim">total requests</p>
-          </Card>
-          <Card>
-            <CardHeader title="Error Rate" />
-            <p className="stat-value" style={{ color: (metrics.requests?.by_status?.['500'] ?? 0) > 0 ? 'var(--error-fg)' : 'var(--success-fg)' }}>
-              {metrics.requests?.by_status?.['500'] ?? 0}
-            </p>
-            <p className="dim">server errors</p>
-          </Card>
-          <Card>
-            <CardHeader title="CPU" />
-            <p className="stat-value">{metrics.system.cpu_percent.toFixed(1)}%</p>
-            <div className="bar-track" style={{ marginTop: 'var(--space-3)' }}>
-              <div className="bar-fill" style={{ width: `${Math.min(metrics.system.cpu_percent, 100)}%`, background: metrics.system.cpu_percent > 80 ? 'var(--error)' : 'var(--brand-500)' }} />
-            </div>
-          </Card>
-          <Card>
-            <CardHeader title="Components" />
-            <p className="stat-value" style={{ color: health?.status === 'ok' ? 'var(--success-fg)' : 'var(--warning-fg)' }}>
-              {health?.components ?? 0}/16
-            </p>
-            <p className="dim">healthy</p>
-          </Card>
-        </div>
-      )}
+      <DashboardMetrics
+        system={metrics.system}
+        requests={metrics.requests}
+        componentCount={health?.components ?? 0}
+        healthOk={health?.status === 'ok'}
+      />
 
       <div className="dash-grid">
         <Card>
