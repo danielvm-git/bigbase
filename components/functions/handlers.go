@@ -1,6 +1,7 @@
 package functions
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"strings"
@@ -33,6 +34,11 @@ func (f *Functions) handleFunctionByID(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
+		return
+	}
+
+	if len(parts) == 2 && parts[1] == "logs" {
+		f.handleFunctionLogs(w, r, id)
 		return
 	}
 
@@ -205,18 +211,99 @@ func (f *Functions) handleRun(w http.ResponseWriter, r *http.Request, id string)
 	}
 
 	output, execErr := rt.Execute(fn.Source, fn.Timeout)
+
+	// Persist execution history
+	execID, saveErr := f.saveExecution(r.Context(), fn.ID, output, execErr)
+	if saveErr != nil {
+		f.logger.Error("save execution", "error", saveErr)
+	}
+
 	if execErr != nil {
 		writeJSON(w, http.StatusOK, map[string]any{
-			"logs":   output.Logs,
-			"error":  execErr.Error(),
-			"result": nil,
+			"execution_id": execID,
+			"logs":         output.Logs,
+			"error":        execErr.Error(),
+			"result":       nil,
 		})
 		return
 	}
 
 	writeJSON(w, http.StatusOK, map[string]any{
-		"logs":   output.Logs,
-		"error":  nil,
-		"result": output.Result,
+		"execution_id": execID,
+		"logs":         output.Logs,
+		"error":        nil,
+		"result":       output.Result,
 	})
+}
+
+func (f *Functions) saveExecution(ctx context.Context, fnID string, output *RunOutput, execErr error) (string, error) {
+	id, err := generateID()
+	if err != nil {
+		return "", err
+	}
+	status := "success"
+	errMsg := ""
+	if execErr != nil {
+		status = "error"
+		errMsg = execErr.Error()
+	}
+	logsJSON, _ := json.Marshal(output.Logs)
+	_, dbErr := f.db.ExecContext(ctx,
+		"INSERT INTO function_executions (id, function_id, status, logs, error, created_at) VALUES (?, ?, ?, ?, ?, datetime('now'))",
+		id, fnID, status, string(logsJSON), errMsg)
+	if dbErr != nil {
+		return "", dbErr
+	}
+	return id, nil
+}
+
+func (f *Functions) handleFunctionLogs(w http.ResponseWriter, r *http.Request, fnID string) {
+	if r.Method != http.MethodGet {
+		writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
+		return
+	}
+
+	// Verify function exists
+	_, err := f.fetchFunctionByID(r.Context(), fnID)
+	if err != nil {
+		writeJSON(w, http.StatusNotFound, map[string]string{"error": "function not found"})
+		return
+	}
+
+	rows, dberr := f.db.QueryContext(r.Context(),
+		"SELECT id, status, logs, error, created_at FROM function_executions WHERE function_id = ? ORDER BY created_at DESC LIMIT 100",
+		fnID)
+	if dberr != nil {
+		f.logger.Error("query logs", "error", dberr)
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		return
+	}
+	defer func() { _ = rows.Close() }()
+
+	type executionEntry struct {
+		ID        string   `json:"id"`
+		Status    string   `json:"status"`
+		Logs      []string `json:"logs"`
+		Error     string   `json:"error,omitempty"`
+		CreatedAt string   `json:"created_at"`
+	}
+
+	results := make([]executionEntry, 0)
+	for rows.Next() {
+		var e executionEntry
+		var logsStr string
+		if scanErr := rows.Scan(&e.ID, &e.Status, &logsStr, &e.Error, &e.CreatedAt); scanErr != nil {
+			f.logger.Error("scan log row", "error", scanErr)
+			continue
+		}
+		if logsStr != "" {
+			_ = json.Unmarshal([]byte(logsStr), &e.Logs)
+		}
+		if e.Logs == nil {
+			e.Logs = []string{}
+		}
+		results = append(results, e)
+	}
+
+	writeJSON(w, http.StatusOK, map[string]any{"data": results})
 }

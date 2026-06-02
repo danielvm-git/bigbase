@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { PageHeader, Button, Input } from '../components'
 
 interface Fn {
@@ -22,6 +23,7 @@ interface RunResult {
 const defaultFn = { name: '', runtime: 'javascript', source: '', trigger: 'http', schedule: '', env: '{}', timeout: 30 }
 
 export default function FunctionsPage() {
+  const navigate = useNavigate()
   const [fns, setFns] = useState<Fn[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -140,6 +142,7 @@ export default function FunctionsPage() {
                   <td>{new Date(fn.created_at).toLocaleString()}</td>
                   <td className="actions-cell">
                     <Button variant="secondary" size="sm" onClick={() => handleRun(fn.id)}>Run</Button>
+                    <Button variant="secondary" size="sm" onClick={() => navigate(`/functions/${fn.id}/logs`)}>Logs</Button>
                     <Button variant="secondary" size="sm" onClick={() => openEdit(fn)}>Edit</Button>
                     <Button variant="danger" size="sm" onClick={() => handleDelete(fn.id)}>Delete</Button>
                   </td>

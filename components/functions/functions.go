@@ -105,6 +105,17 @@ func (f *Functions) Start(ctx *kernel.Context) error {
 	)`); err != nil {
 		return fmt.Errorf("migrate functions table: %w", err)
 	}
+	if err := f.db.Migrate(`CREATE TABLE IF NOT EXISTS function_executions (
+		id TEXT PRIMARY KEY,
+		function_id TEXT NOT NULL,
+		status TEXT NOT NULL DEFAULT 'success',
+		logs TEXT NOT NULL DEFAULT '[]',
+		error TEXT DEFAULT '',
+		created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ','now')),
+		FOREIGN KEY(function_id) REFERENCES functions(id) ON DELETE CASCADE
+	)`); err != nil {
+		return fmt.Errorf("migrate function_executions table: %w", err)
+	}
 	f.logger.Info("functions component ready")
 	return nil
 }
