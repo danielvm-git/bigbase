@@ -206,7 +206,8 @@ jobs:
             exit 0
           fi
           printf '%s\n' "${PEM}" > github-app.pem
-          chmod 600 github-app.pem
+          # Readable by scp-action Docker step; deploy script chmods 600 on VPS
+          chmod 644 github-app.pem
           echo "upload=true" >> "$GITHUB_OUTPUT"
 
       - name: Upload GitHub App private key to VPS
