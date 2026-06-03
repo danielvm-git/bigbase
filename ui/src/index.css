@@ -447,6 +447,16 @@ select.input {
   color: var(--fg-primary);
   letter-spacing: -0.02em;
 }
+.page-subtitle {
+  font-size: var(--text-s);
+  color: var(--fg-secondary);
+  margin-top: var(--space-1);
+}
+.page-header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
 
 /* Table */
 .table-wrap {

@@ -2,14 +2,18 @@ import type { ReactNode } from 'react'
 
 interface PageHeaderProps {
   title: string
+  subtitle?: string
   children?: ReactNode
 }
 
-export function PageHeader({ title, children }: PageHeaderProps) {
+export function PageHeader({ title, subtitle, children }: PageHeaderProps) {
   return (
     <div className="page-header">
-      <h1 className="page-title">{title}</h1>
-      {children}
+      <div>
+        <h1 className="page-title">{title}</h1>
+        {subtitle && <div className="page-subtitle">{subtitle}</div>}
+      </div>
+      {children && <div className="page-header-actions">{children}</div>}
     </div>
   )
 }
