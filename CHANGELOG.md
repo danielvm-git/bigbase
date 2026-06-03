@@ -1,3 +1,10 @@
+## [2.1.4](https://github.com/danielvm-git/bigbase/compare/v2.1.3...v2.1.4) (2026-06-03)
+
+
+### Bug Fixes
+
+* **github:** surface repos API errors in create-site UI ([d47becf](https://github.com/danielvm-git/bigbase/commit/d47becfe6fde594ee1a085942ee4aadc50d4b2a7))
+
 ## [2.1.3](https://github.com/danielvm-git/bigbase/compare/v2.1.2...v2.1.3) (2026-06-03)
 
 
