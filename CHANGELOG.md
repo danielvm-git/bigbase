@@ -1,3 +1,10 @@
+## [2.1.1](https://github.com/danielvm-git/bigbase/compare/v2.1.0...v2.1.1) (2026-06-03)
+
+
+### Bug Fixes
+
+* **deploy:** wire GitHub App secrets to production via env and VPS PEM ([8b76a9a](https://github.com/danielvm-git/bigbase/commit/8b76a9a727a186924646d13c74ec9113aa7e2be9))
+
 # [2.1.0](https://github.com/danielvm-git/bigbase/compare/v2.0.0...v2.1.0) (2026-06-03)
 
 
