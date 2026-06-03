@@ -1,7 +1,7 @@
 ---
 id: e17s14
 title: Functions list and detail
-status: pending
+status: done
 wsjf: 3.0
 tasks:
   - desc: Refactor FunctionsPage to card grid (name, runtime, trigger, created, CTA)

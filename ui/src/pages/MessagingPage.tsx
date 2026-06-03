@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
-import { PageHeader, Button, Input, Tabs } from '../components'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { PageHeader, Button, Input, Tabs, Badge } from '../components'
+import { mockTemplates } from '../mocks/templates'
 
 interface Message {
   id: string
@@ -13,7 +15,16 @@ interface Message {
 
 type Channel = 'email' | 'sms' | 'push'
 
+const pageTabs = [
+  { id: 'templates', label: 'Templates' },
+  { id: 'send', label: 'Send test' },
+  { id: 'history', label: 'History' },
+]
+
 export default function MessagingPage() {
+  const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const pageTab = searchParams.get('tab') || 'templates'
   const [tab, setTab] = useState<Channel>('email')
   const [messages, setMessages] = useState<Message[]>([])
   const [loading, setLoading] = useState(true)
@@ -41,6 +52,8 @@ export default function MessagingPage() {
   }
 
   useEffect(() => { fetchMessages() }, [])
+
+  const setPageTab = (id: string) => setSearchParams({ tab: id })
 
   const sendEmail = async (e: React.FormEvent) => {
     e.preventDefault(); setSending(true); setError('')
@@ -96,64 +109,87 @@ export default function MessagingPage() {
   return (
     <div>
       <PageHeader title="Messaging">
+        <Button variant="primary" size="sm" onClick={() => navigate('/messaging/tpl-welcome')}>Create template</Button>
         <Button variant="secondary" size="sm" onClick={fetchMessages}>Refresh</Button>
       </PageHeader>
       {error && <p className="input-error-text">{error}</p>}
 
-      <Tabs tabs={channelTabs} active={tab} onChange={id => setTab(id as Channel)} />
+      <Tabs tabs={pageTabs} active={pageTab} onChange={setPageTab} />
 
-      <div className="card" style={{ marginBottom: 'var(--space-12)' }}>
-        {tab === 'email' && (
-          <form onSubmit={sendEmail} className="msg-form">
-            <Input placeholder="To" value={emailTo} onChange={e => setEmailTo(e.target.value)} required />
-            <Input placeholder="Subject" value={emailSubject} onChange={e => setEmailSubject(e.target.value)} />
-            <Input as="textarea" placeholder="Body" value={emailBody} onChange={e => setEmailBody(e.target.value)} required rows={4} />
-            <Button type="submit" disabled={sending}>{sending ? 'Sending...' : 'Send Email'}</Button>
-          </form>
-        )}
-        {tab === 'sms' && (
-          <form onSubmit={sendSms} className="msg-form">
-            <Input placeholder="To" value={smsTo} onChange={e => setSmsTo(e.target.value)} required />
-            <Input as="textarea" placeholder="Message" value={smsMsg} onChange={e => setSmsMsg(e.target.value)} required rows={3} />
-            <Button type="submit" disabled={sending}>{sending ? 'Sending...' : 'Send SMS'}</Button>
-          </form>
-        )}
-        {tab === 'push' && (
-          <form onSubmit={sendPush} className="msg-form">
-            <Input placeholder="Device Token" value={pushToken} onChange={e => setPushToken(e.target.value)} required />
-            <Input placeholder="Title" value={pushTitle} onChange={e => setPushTitle(e.target.value)} />
-            <Input as="textarea" placeholder="Body" value={pushBody} onChange={e => setPushBody(e.target.value)} required rows={3} />
-            <Button type="submit" disabled={sending}>{sending ? 'Sending...' : 'Send Push'}</Button>
-          </form>
-        )}
-      </div>
-
-      <h2 className="section-title">History</h2>
-      {loading ? <div className="loading">Loading...</div> : messages.length === 0 ? <p className="dim">No messages sent.</p> : (
-        <div className="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Channel</th>
-                <th>To</th>
-                <th>Subject</th>
-                <th>Status</th>
-                <th>Sent</th>
-              </tr>
-            </thead>
-            <tbody>
-              {messages.map(m => (
-                <tr key={m.id}>
-                  <td><span className={`channel-badge channel-${m.channel}`}>{m.channel}</span></td>
-                  <td>{m.to_addr}</td>
-                  <td className="dim">{m.subject || '—'}</td>
-                  <td>{m.status}</td>
-                  <td>{new Date(m.created_at).toLocaleString()}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      {pageTab === 'templates' && (
+        <div className="template-grid">
+          {mockTemplates.map(t => (
+            <Link key={t.id} to={`/messaging/${t.id}`} className="template-row">
+              <span>{t.name}</span>
+              <Badge variant="neutral">{t.type}</Badge>
+              <Badge variant={t.status === 'active' ? 'success' : 'neutral'}>{t.status}</Badge>
+              <span className="dim">{new Date(t.updated_at).toLocaleDateString()}</span>
+            </Link>
+          ))}
         </div>
+      )}
+
+      {pageTab === 'send' && (
+        <>
+          <Tabs tabs={channelTabs} active={tab} onChange={id => setTab(id as Channel)} />
+          <div className="card" style={{ marginBottom: 'var(--space-12)' }}>
+            {tab === 'email' && (
+              <form onSubmit={sendEmail} className="msg-form">
+                <Input placeholder="To" value={emailTo} onChange={e => setEmailTo(e.target.value)} required />
+                <Input placeholder="Subject" value={emailSubject} onChange={e => setEmailSubject(e.target.value)} />
+                <Input as="textarea" placeholder="Body" value={emailBody} onChange={e => setEmailBody(e.target.value)} required rows={4} />
+                <Button type="submit" disabled={sending}>{sending ? 'Sending...' : 'Send Email'}</Button>
+              </form>
+            )}
+            {tab === 'sms' && (
+              <form onSubmit={sendSms} className="msg-form">
+                <Input placeholder="To" value={smsTo} onChange={e => setSmsTo(e.target.value)} required />
+                <Input as="textarea" placeholder="Message" value={smsMsg} onChange={e => setSmsMsg(e.target.value)} required rows={3} />
+                <Button type="submit" disabled={sending}>{sending ? 'Sending...' : 'Send SMS'}</Button>
+              </form>
+            )}
+            {tab === 'push' && (
+              <form onSubmit={sendPush} className="msg-form">
+                <Input placeholder="Device Token" value={pushToken} onChange={e => setPushToken(e.target.value)} required />
+                <Input placeholder="Title" value={pushTitle} onChange={e => setPushTitle(e.target.value)} />
+                <Input as="textarea" placeholder="Body" value={pushBody} onChange={e => setPushBody(e.target.value)} required rows={3} />
+                <Button type="submit" disabled={sending}>{sending ? 'Sending...' : 'Send Push'}</Button>
+              </form>
+            )}
+          </div>
+        </>
+      )}
+
+      {pageTab === 'history' && (
+        <>
+          <h2 className="section-title">Outbound history</h2>
+          {loading ? <div className="loading">Loading...</div> : messages.length === 0 ? <p className="dim">No messages sent.</p> : (
+            <div className="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Channel</th>
+                    <th>To</th>
+                    <th>Subject</th>
+                    <th>Status</th>
+                    <th>Sent</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {messages.map(m => (
+                    <tr key={m.id}>
+                      <td><span className={`channel-badge channel-${m.channel}`}>{m.channel}</span></td>
+                      <td>{m.to_addr}</td>
+                      <td className="dim">{m.subject || '—'}</td>
+                      <td>{m.status}</td>
+                      <td>{new Date(m.created_at).toLocaleString()}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </>
       )}
     </div>
   )

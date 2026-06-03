@@ -1,6 +1,6 @@
 import type { ButtonHTMLAttributes, AnchorHTMLAttributes, ReactNode } from 'react'
 
-type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'link'
+type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'link' | 'ghost'
 type ButtonSize = 'sm' | 'md'
 
 interface ButtonBase {
@@ -18,6 +18,7 @@ const variantClass: Record<ButtonVariant, string> = {
   secondary: 'btn-secondary',
   danger: 'btn-danger',
   link: 'btn-link',
+  ghost: 'btn-ghost',
 }
 
 export function Button(props: ButtonProps) {

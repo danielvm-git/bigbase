@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { Outlet, NavLink, useNavigate } from 'react-router-dom'
 import { Icon, type IconName } from './components/Icon'
+import { ACCENT_THEMES } from './context/accentThemes'
 import { useTheme } from './hooks/useTheme'
 
 interface UserInfo { id: number; email: string }
@@ -32,7 +33,7 @@ function NavSection({ title, items }: { title: string; items: NavItem[] }) {
 
 export default function Layout() {
   const nav = useNavigate()
-  const { theme, toggle: toggleTheme } = useTheme()
+  const { theme, toggle: toggleTheme, accent, setAccent } = useTheme()
   const [user, setUser] = useState<UserInfo | null>(null)
   const [appVersion, setAppVersion] = useState<string | null>(null)
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -95,8 +96,15 @@ export default function Layout() {
           </button>
           <label className="sidebar-accent-label">
             <span className="dim">Accent</span>
-            <select className="input input-sm" disabled aria-label="Accent theme (coming in e17s12)" title="Accent themes ship in e17s12">
-              <option>Indigo (default)</option>
+            <select
+              className="input input-sm"
+              value={accent}
+              onChange={e => setAccent(e.target.value as typeof accent)}
+              aria-label="Accent theme"
+            >
+              {ACCENT_THEMES.map(t => (
+                <option key={t.id} value={t.id}>{t.label}</option>
+              ))}
             </select>
           </label>
         </div>

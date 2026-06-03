@@ -3,7 +3,7 @@ context: domain
 id: e17
 title: Enhanced Admin UI
 wsjf: 1.0
-status: in_progress
+status: done
 covers: []
 design_docs:
 - SYSTEM_DESIGN.md
@@ -45,22 +45,22 @@ stories:
   status: done
 - id: e17s12
   file: stories/e17s12-accent-themes.md
-  status: pending
+  status: done
 - id: e17s13
   file: stories/e17s13-primitives.md
-  status: pending
+  status: done
 - id: e17s14
   file: stories/e17s14-functions-ui.md
-  status: pending
+  status: done
 - id: e17s15
   file: stories/e17s15-messaging-ui.md
-  status: pending
+  status: done
 - id: e17s16
   file: stories/e17s16-data-studio-schema.md
-  status: pending
+  status: done
 - id: e17s17
   file: stories/e17s17-settings-login.md
-  status: pending
+  status: done
 - id: e17s18
   file: stories/e17s18-responsive-a11y.md
-  status: pending
+  status: done

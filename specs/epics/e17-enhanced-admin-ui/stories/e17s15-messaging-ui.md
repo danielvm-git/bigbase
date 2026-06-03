@@ -1,7 +1,7 @@
 ---
 id: e17s15
 title: Messaging templates
-status: pending
+status: done
 wsjf: 2.6
 tasks:
   - desc: Template list view with type, date, status, Create template CTA

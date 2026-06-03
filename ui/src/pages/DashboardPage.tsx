@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { Card, CardHeader, PageHeader, Badge, statusBadgeVariant, Button } from '../components'
 import { DashboardMetrics } from '../components/DashboardMetrics'
 import { useToast } from '../hooks/useToast'
@@ -42,8 +42,9 @@ export default function DashboardPage() {
       fetch('/api/messaging/messages', opts).then(r => r.json()).catch(() => ({ data: [] })),
       fetch('/api/storage/files', opts).then(r => r.json()).catch(() => ({ data: [] })),
       fetch('/api/functions', opts).then(r => r.json()).catch(() => ({ data: [] })),
+      fetch('/api/users', opts).then(r => r.json()).catch(() => ({ data: [] })),
       fetch('/api/monitoring/metrics', opts).then(r => r.json()).catch(() => ({})),
-    ]).then(([u, h, reposR, depR, msgR, fileR, fnR, metricsR]) => {
+    ]).then(([u, h, reposR, depR, msgR, fileR, fnR, usersR, metricsR]) => {
       setUser(u as { id: number; email: string } | null)
       setHealth(h as { status: string; components: number })
       const deps = (depR as { data: Deployment[] }).data || []
@@ -56,9 +57,10 @@ export default function DashboardPage() {
       setStats([
         { label: 'Git Repos', count: ((reposR as { data: unknown[] }).data || []).length, link: '/repos' },
         { label: 'Deployments', count: deps.length, link: '/deploy' },
+        { label: 'Functions', count: ((fnR as { data: unknown[] }).data || []).length, link: '/functions' },
+        { label: 'Users', count: ((usersR as { data: unknown[] }).data || []).length, link: '/users' },
         { label: 'Messages', count: msgs.length, link: '/messaging' },
         { label: 'Files', count: fils.length, link: '/storage' },
-        { label: 'Functions', count: ((fnR as { data: unknown[] }).data || []).length, link: '/functions' },
       ])
     }).catch(() => {}).finally(() => setLoading(false))
 
@@ -144,10 +146,10 @@ export default function DashboardPage() {
       {stats.length > 0 && (
         <div className="stats-grid">
           {stats.map(s => (
-            <a key={s.label} href={`/admin/#${s.link}`} className="stat-card">
+            <Link key={s.label} to={s.link} className="stat-card">
               <span className="stat-count">{s.count}</span>
               <span className="stat-label">{s.label}</span>
-            </a>
+            </Link>
           ))}
         </div>
       )}

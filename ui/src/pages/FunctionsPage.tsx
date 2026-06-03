@@ -87,7 +87,7 @@ export default function FunctionsPage() {
     <div>
       <PageHeader title="Functions">
         <Button variant="secondary" size="sm" onClick={fetchFns}>Refresh</Button>
-        <Button variant="primary" size="sm" onClick={openCreate}>New Function</Button>
+        <Button variant="primary" size="sm" onClick={openCreate}>Create function</Button>
       </PageHeader>
       {error && <p className="input-error-text">{error}</p>}
 
@@ -120,36 +120,25 @@ export default function FunctionsPage() {
 
       {fns.length === 0 && !error && <p className="dim">No functions yet.</p>}
       {fns.length > 0 && (
-        <div className="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Runtime</th>
-                <th>Trigger</th>
-                <th>Timeout</th>
-                <th>Created</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {fns.map(fn => (
-                <tr key={fn.id}>
-                  <td><code>{fn.name}</code></td>
-                  <td>{fn.runtime}</td>
-                  <td>{fn.trigger}</td>
-                  <td>{fn.timeout}s</td>
-                  <td>{new Date(fn.created_at).toLocaleString()}</td>
-                  <td className="actions-cell">
-                    <Button variant="secondary" size="sm" onClick={() => handleRun(fn.id)}>Run</Button>
-                    <Button variant="secondary" size="sm" onClick={() => navigate(`/functions/${fn.id}/logs`)}>Logs</Button>
-                    <Button variant="secondary" size="sm" onClick={() => openEdit(fn)}>Edit</Button>
-                    <Button variant="danger" size="sm" onClick={() => handleDelete(fn.id)}>Delete</Button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="function-grid">
+          {fns.map(fn => (
+            <article key={fn.id} className="function-card">
+              <div className="function-card-name">{fn.name}</div>
+              <div className="function-card-meta">
+                {fn.runtime} · {fn.trigger} trigger
+              </div>
+              <div className="function-card-meta dim">
+                Created {new Date(fn.created_at).toLocaleDateString()}
+              </div>
+              <div className="function-card-actions">
+                <Button variant="primary" size="sm" onClick={() => navigate(`/functions/${fn.id}`)}>Open</Button>
+                <Button variant="secondary" size="sm" onClick={() => handleRun(fn.id)}>Run</Button>
+                <Button variant="ghost" size="sm" onClick={() => navigate(`/functions/${fn.id}?tab=logs`)}>Logs</Button>
+                <Button variant="ghost" size="sm" onClick={() => openEdit(fn)}>Edit</Button>
+                <Button variant="danger" size="sm" onClick={() => handleDelete(fn.id)}>Delete</Button>
+              </div>
+            </article>
+          ))}
         </div>
       )}
 
