@@ -33,7 +33,10 @@ export default function CreateSitePage() {
   const [source, setSource] = useState<SiteSource>(preRepo ? 'existing' : 'github')
   const [previewMode, setPreviewMode] = useState(false)
   const [ghConnected, setGhConnected] = useState(false)
+  const [ghConfigured, setGhConfigured] = useState(false)
   const [ghRepos, setGhRepos] = useState<GitHubRepo[]>([])
+  const [ghReposError, setGhReposError] = useState('')
+  const [ghLoading, setGhLoading] = useState(true)
   const [localRepos, setLocalRepos] = useState<GitRepo[]>([])
   const [selectedGh, setSelectedGh] = useState<GitHubRepo | null>(null)
   const [selectedLocalId, setSelectedLocalId] = useState(preRepo)
@@ -47,16 +50,25 @@ export default function CreateSitePage() {
   const [doneUrl, setDoneUrl] = useState('')
   const [doneStatus, setDoneStatus] = useState('building')
 
+  const loadGitHub = async () => {
+    setGhLoading(true)
+    setGhReposError('')
+    const st = await getGitHubStatus()
+    setGhConnected(st.data.connected)
+    setGhConfigured(st.data.configured)
+    setPreviewMode(p => p || st.previewMode)
+    const repos = await getGitHubRepos()
+    setGhRepos(repos.data)
+    setGhReposError(repos.error ?? '')
+    setPreviewMode(p => p || repos.previewMode)
+    setGhLoading(false)
+  }
+
   useEffect(() => {
     const init = async () => {
       const force = isPreviewForced()
       setPreviewMode(force)
-      const st = await getGitHubStatus()
-      setGhConnected(st.data.connected)
-      setPreviewMode(p => p || st.previewMode)
-      const repos = await getGitHubRepos()
-      setGhRepos(repos.data)
-      setPreviewMode(p => p || repos.previewMode)
+      await loadGitHub()
       const local = await getGitRepos()
       setLocalRepos(local.data)
       if (preRepo) {
@@ -69,6 +81,11 @@ export default function CreateSitePage() {
     }
     init()
   }, [preRepo])
+
+  const showGitHubConnect =
+    source === 'github' && !previewMode && (!ghConnected || !!ghReposError || !ghConfigured)
+  const showGitHubRepoPicker =
+    source === 'github' && (previewMode || (ghConnected && !ghReposError))
 
   const filteredGh = ghRepos.filter(r =>
     r.full_name.toLowerCase().includes(repoFilter.toLowerCase()),
@@ -197,9 +214,14 @@ export default function CreateSitePage() {
 
           {source === 'github' && (
             <div style={{ marginTop: 'var(--space-12)' }}>
-              {!ghConnected && !previewMode && (
+              {showGitHubConnect && (
                 <Card>
-                  <CardHeader title="Connect GitHub" />
+                  <CardHeader title={ghReposError ? 'Reconnect GitHub' : 'Connect GitHub'} />
+                  {ghReposError && (
+                    <p className="input-error-text" style={{ marginBottom: 'var(--space-6)' }}>
+                      {ghReposError}
+                    </p>
+                  )}
                   <p className="dim" style={{ marginBottom: 'var(--space-6)' }}>
                     Install the BigBase GitHub App to list and deploy your repositories.
                   </p>
@@ -208,36 +230,58 @@ export default function CreateSitePage() {
                     size="sm"
                     onClick={() => { window.location.href = githubInstallURL() }}
                   >
-                    Connect GitHub
+                    {ghReposError ? 'Reconnect GitHub' : 'Connect GitHub'}
                   </Button>
                 </Card>
               )}
-              {(ghConnected || previewMode) && (
+              {showGitHubRepoPicker && (
                 <>
-                  <Input
-                    placeholder="Search repositories…"
-                    value={repoFilter}
-                    onChange={e => setRepoFilter(e.target.value)}
-                  />
-                  <div className="repo-picker" style={{ marginTop: 'var(--space-4)' }}>
-                    {filteredGh.map(r => (
-                      <button
-                        key={r.id}
-                        type="button"
-                        className={[
-                          'repo-picker-item',
-                          selectedGh?.id === r.id ? 'repo-picker-item--selected' : '',
-                        ].filter(Boolean).join(' ')}
-                        onClick={() => setSelectedGh(r)}
-                      >
-                        <span className="repo-picker-name">{r.full_name}</span>
-                        {r.description && <span className="dim">{r.description}</span>}
-                      </button>
-                    ))}
-                    {filteredGh.length === 0 && (
-                      <p className="dim" style={{ padding: 'var(--space-6)' }}>No repositories match.</p>
-                    )}
-                  </div>
+                  {ghLoading && <p className="dim">Loading repositories…</p>}
+                  {!ghLoading && (
+                    <>
+                      <Input
+                        placeholder="Search repositories…"
+                        value={repoFilter}
+                        onChange={e => setRepoFilter(e.target.value)}
+                      />
+                      <div className="repo-picker" style={{ marginTop: 'var(--space-4)' }}>
+                        {filteredGh.map(r => (
+                          <button
+                            key={r.id}
+                            type="button"
+                            className={[
+                              'repo-picker-item',
+                              selectedGh?.id === r.id ? 'repo-picker-item--selected' : '',
+                            ].filter(Boolean).join(' ')}
+                            onClick={() => setSelectedGh(r)}
+                          >
+                            <span className="repo-picker-name">{r.full_name}</span>
+                            {r.description && <span className="dim">{r.description}</span>}
+                          </button>
+                        ))}
+                        {filteredGh.length === 0 && ghRepos.length === 0 && (
+                          <p className="dim" style={{ padding: 'var(--space-6)' }}>
+                            No repositories found. Grant the app access to repos on GitHub, then reconnect.
+                          </p>
+                        )}
+                        {filteredGh.length === 0 && ghRepos.length > 0 && (
+                          <p className="dim" style={{ padding: 'var(--space-6)' }}>
+                            No repositories match your search.
+                          </p>
+                        )}
+                      </div>
+                      {!previewMode && (
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          style={{ marginTop: 'var(--space-4)' }}
+                          onClick={() => { window.location.href = githubInstallURL() }}
+                        >
+                          Add more repositories on GitHub
+                        </Button>
+                      )}
+                    </>
+                  )}
                 </>
               )}
             </div>

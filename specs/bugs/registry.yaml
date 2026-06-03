@@ -1,6 +1,17 @@
 type: bug-registry
 context: infra
 bugs:
+  - id: BUG-2026-06-03T122114
+    date: "2026-06-03"
+    severity: medium
+    priority: high
+    scope: ui,github
+    summary: Create site hides Connect GitHub when connected but /api/github/repos returns 500 — empty repo search only
+    file: specs/bugs/BUG-2026-06-03T122114-github-repos-empty-ui.md
+    status: fixed
+    related:
+      - BUG-2026-06-03T120000
+      - BUG-2026-06-02T211731
   - id: BUG-2026-06-03T120000
     date: "2026-06-03"
     severity: medium

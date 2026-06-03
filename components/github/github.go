@@ -256,8 +256,11 @@ func (g *GitHub) handleRepos(w http.ResponseWriter, r *http.Request) {
 
 	repos, err := g.listInstallationRepos(r.Context(), instID)
 	if err != nil {
-		g.logger.Error("list github repos", "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "failed to list repositories"})
+		g.logger.Error("list github repos", "error", err, "installation_id", instID)
+		writeJSON(w, http.StatusBadGateway, map[string]string{
+			"error":   "failed to list repositories from GitHub",
+			"code":    "github_api_error",
+		})
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]any{"data": repos})

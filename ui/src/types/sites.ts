@@ -49,4 +49,5 @@ export type SiteSource = 'github' | 'existing' | 'empty' | 'template'
 export interface SitesDataResult<T> {
   data: T
   previewMode: boolean
+  error?: string
 }

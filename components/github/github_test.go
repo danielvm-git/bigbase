@@ -1,6 +1,7 @@
 package github_test
 
 import (
+	"context"
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/hex"
@@ -9,6 +10,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/danielvm/bigbase/components/db"
 	"github.com/danielvm/bigbase/components/github"
@@ -161,6 +163,57 @@ func TestGitHubCallbackPublicNoAuth(t *testing.T) {
 	}
 	if loc := w.Header().Get("Location"); loc != "/admin/#/deploy/new" {
 		t.Fatalf("unexpected redirect: %q", loc)
+	}
+}
+
+func seedGitHubInstallation(t *testing.T, d *db.DB) {
+	t.Helper()
+	ctx := context.Background()
+	if err := d.Migrate(`CREATE TABLE IF NOT EXISTS github_installations (
+		installation_id INTEGER PRIMARY KEY,
+		account_login TEXT NOT NULL,
+		account_type TEXT NOT NULL DEFAULT 'User',
+		created_at TEXT NOT NULL DEFAULT (datetime('now'))
+	)`); err != nil {
+		t.Fatalf("migrate: %v", err)
+	}
+	_, err := d.ExecContext(ctx,
+		`INSERT INTO github_installations (installation_id, account_login, account_type, created_at)
+		 VALUES (?, ?, 'User', ?)`, 99, "testuser", time.Now().UTC().Format(time.RFC3339))
+	if err != nil {
+		t.Fatalf("seed installation: %v", err)
+	}
+}
+
+func TestGitHubReposReturnsBadGatewayWhenGitHubAPIFails(t *testing.T) {
+	logger := testLogger{}
+	memDB := db.New(db.Options{Path: ":memory:", Logger: logger})
+	ctx := &kernel.Context{}
+	if err := memDB.Start(ctx); err != nil {
+		t.Fatalf("db start: %v", err)
+	}
+	t.Cleanup(func() { _ = memDB.Stop(ctx) })
+	seedGitHubInstallation(t, memDB)
+
+	handler := github.New(github.Options{
+		DB:             memDB,
+		Logger:         logger,
+		AppID:          "12345",
+		AppSlug:        "test-app",
+		PrivateKeyPath: "/nonexistent/github-app.pem",
+	}).Handler()
+
+	w2, r2 := httptest.NewRecorder(), httptest.NewRequest(http.MethodGet, "/api/github/repos", nil)
+	handler.ServeHTTP(w2, r2)
+	if w2.Code != http.StatusBadGateway {
+		t.Fatalf("expected 502 when GitHub API fails, got %d body=%s", w2.Code, w2.Body.String())
+	}
+	var body map[string]string
+	if err := json.NewDecoder(w2.Body).Decode(&body); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	if body["code"] != "github_api_error" {
+		t.Fatalf("expected github_api_error code, got %v", body)
 	}
 }
 

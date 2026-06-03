@@ -134,12 +134,17 @@ export async function getGitHubRepos(): Promise<SitesDataResult<GitHubRepo[]>> {
   if (isPreviewForced()) {
     return { data: mockGitHubRepos, previewMode: true }
   }
-  const { ok, status, data } = await fetchJSON<{ data: GitHubRepo[] }>('/api/github/repos')
+  const { ok, status, data } = await fetchJSON<{ data: GitHubRepo[]; error?: string }>(
+    '/api/github/repos',
+  )
   if (ok) return { data: data.data || [], previewMode: false }
   if (status === 404 || status === 0) {
     return { data: mockGitHubRepos, previewMode: true }
   }
-  return { data: [], previewMode: false }
+  const msg =
+    (data && typeof data === 'object' && 'error' in data && data.error) ||
+    'Could not load GitHub repositories. Try reconnecting.'
+  return { data: [], previewMode: false, error: String(msg) }
 }
 
 export interface CreateSiteInput {
