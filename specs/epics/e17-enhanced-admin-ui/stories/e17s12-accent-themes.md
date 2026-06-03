@@ -2,6 +2,7 @@
 id: e17s12
 title: Twelve accent themes
 status: done
+implemented_in: dff889f
 wsjf: 2.4
 tasks:
   - desc: Extend ThemeContext with accent id (default + 12 months) persisted to localStorage

@@ -2,6 +2,7 @@
 id: e17s18
 title: Responsive cross-links and accessibility
 status: done
+implemented_in: dff889f
 wsjf: 2.0
 tasks:
   - desc: Add max-width 1024px and 375px media rules per Responsive spec

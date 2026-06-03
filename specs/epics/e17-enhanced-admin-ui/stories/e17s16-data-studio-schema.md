@@ -2,6 +2,7 @@
 id: e17s16
 title: Data Studio schema mode
 status: done
+implemented_in: dff889f
 wsjf: 2.5
 tasks:
   - desc: Add Data/Schema toggle on DataStudioPage

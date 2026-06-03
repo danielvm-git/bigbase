@@ -2,6 +2,7 @@
 id: e17s17
 title: Settings and login polish
 status: done
+implemented_in: dff889f
 wsjf: 2.2
 tasks:
   - desc: Add SettingsPage with Account Workspace Billing tabs (stubs OK)

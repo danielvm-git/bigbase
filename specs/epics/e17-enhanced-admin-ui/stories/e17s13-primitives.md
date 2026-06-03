@@ -2,6 +2,7 @@
 id: e17s13
 title: Primitive and state parity
 status: done
+implemented_in: dff889f
 wsjf: 2.8
 tasks:
   - desc: Add ghost variant to Button.tsx and .btn-ghost styles

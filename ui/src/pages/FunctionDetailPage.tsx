@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
-import { useParams, useSearchParams, Navigate } from 'react-router-dom'
+import { useCallback, useEffect, useState } from 'react'
+import { useParams, useSearchParams, Navigate, useNavigate } from 'react-router-dom'
 import { PageHeader, Button, Input, Tabs, Breadcrumb, FunctionLogsPanel } from '../components'
 
 interface Fn {
@@ -21,8 +21,24 @@ const detailTabs = [
   { id: 'logs', label: 'Logs' },
 ]
 
+async function loadFunction(id: string): Promise<Fn> {
+  const res = await fetch(`/api/functions/${id}`)
+  if (!res.ok) throw new Error('not found')
+  return res.json() as Promise<Fn>
+}
+
+async function saveFunction(id: string, fn: Fn): Promise<boolean> {
+  const res = await fetch(`/api/functions/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(fn),
+  })
+  return res.ok
+}
+
 export default function FunctionDetailPage() {
   const { id } = useParams<{ id: string }>()
+  const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const tab = searchParams.get('tab') || 'code'
   const [fn, setFn] = useState<Fn | null>(null)
@@ -32,23 +48,28 @@ export default function FunctionDetailPage() {
 
   useEffect(() => {
     if (!id) return
-    fetch('/api/functions')
-      .then(r => r.json())
-      .then(d => {
-        const list = (d as { data: Fn[] }).data || []
-        const found = list.find(f => f.id === id)
-        if (!found) {
-          setError('Function not found')
-          return
-        }
+    loadFunction(id)
+      .then(found => {
         setFn(found)
         setSource(found.source)
         setEnv(found.env)
       })
-      .catch(() => setError('Failed to load function'))
+      .catch(() => setError('Function not found'))
   }, [id])
 
   const setTab = (next: string) => setSearchParams({ tab: next })
+
+  const saveSource = useCallback(async () => {
+    if (!id || !fn) return
+    const ok = await saveFunction(id, { ...fn, source })
+    if (!ok) setError('Save failed')
+  }, [id, fn, source])
+
+  const saveEnv = useCallback(async () => {
+    if (!id || !fn) return
+    const ok = await saveFunction(id, { ...fn, env })
+    if (!ok) setError('Save failed')
+  }, [id, fn, env])
 
   if (!id) return null
   if (error) return <p className="input-error-text">{error}</p>
@@ -61,7 +82,7 @@ export default function FunctionDetailPage() {
         { label: fn.name },
       ]} />
       <PageHeader title={fn.name}>
-        <Button variant="secondary" size="sm" onClick={() => window.history.back()}>Back</Button>
+        <Button variant="secondary" size="sm" onClick={() => navigate('/functions')}>Back</Button>
       </PageHeader>
 
       <Tabs tabs={detailTabs} active={tab} onChange={setTab} />
@@ -70,14 +91,7 @@ export default function FunctionDetailPage() {
         <div className="card">
           <Input as="textarea" value={source} onChange={e => setSource(e.target.value)} rows={16} className="code-textarea" />
           <div className="form-actions" style={{ marginTop: 'var(--space-6)' }}>
-            <Button size="sm" onClick={async () => {
-              const res = await fetch(`/api/functions/${id}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ...fn, source }),
-              })
-              if (!res.ok) setError('Save failed')
-            }}>Save code</Button>
+            <Button size="sm" onClick={() => { void saveSource() }}>Save code</Button>
           </div>
         </div>
       )}
@@ -94,14 +108,7 @@ export default function FunctionDetailPage() {
         <div className="card">
           <Input as="textarea" value={env} onChange={e => setEnv(e.target.value)} rows={8} className="code-textarea" />
           <div className="form-actions" style={{ marginTop: 'var(--space-6)' }}>
-            <Button size="sm" onClick={async () => {
-              const res = await fetch(`/api/functions/${id}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ...fn, env }),
-              })
-              if (!res.ok) setError('Save failed')
-            }}>Save variables</Button>
+            <Button size="sm" onClick={() => { void saveEnv() }}>Save variables</Button>
           </div>
         </div>
       )}

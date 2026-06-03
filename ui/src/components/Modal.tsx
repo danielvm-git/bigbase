@@ -8,6 +8,26 @@ interface ModalProps {
   children: ReactNode
 }
 
+const FOCUSABLE =
+  'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+
+function trapTabKey(e: KeyboardEvent, dialog: HTMLDivElement) {
+  if (e.key !== 'Tab') return
+  const focusable = Array.from(
+    dialog.querySelectorAll<HTMLElement>(FOCUSABLE),
+  ).filter(el => !el.hasAttribute('disabled'))
+  if (focusable.length === 0) return
+  const first = focusable[0]
+  const last = focusable[focusable.length - 1]
+  if (e.shiftKey && document.activeElement === first) {
+    e.preventDefault()
+    last.focus()
+  } else if (!e.shiftKey && document.activeElement === last) {
+    e.preventDefault()
+    first.focus()
+  }
+}
+
 export function Modal({ open, onClose, title, children }: ModalProps) {
   const dialogRef = useRef<HTMLDivElement>(null)
   const triggerRef = useRef<Element | null>(null)
@@ -15,12 +35,18 @@ export function Modal({ open, onClose, title, children }: ModalProps) {
   useEffect(() => {
     if (!open) return
     triggerRef.current = document.activeElement
+    const dialog = dialogRef.current
 
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
+      if (e.key === 'Escape') {
+        onClose()
+        return
+      }
+      if (dialog) trapTabKey(e, dialog)
     }
+
     document.addEventListener('keydown', onKey)
-    dialogRef.current?.focus()
+    dialog?.focus()
 
     return () => {
       document.removeEventListener('keydown', onKey)
