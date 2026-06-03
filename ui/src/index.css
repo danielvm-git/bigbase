@@ -105,6 +105,11 @@ body {
   border-radius: var(--radius-xs);
 }
 
+.btn-block {
+  display: flex;
+  width: 100%;
+}
+
 .btn-link {
   background: none;
   border: none;

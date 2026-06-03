@@ -1,7 +1,7 @@
 import type { ButtonHTMLAttributes, AnchorHTMLAttributes, ReactNode } from 'react'
 
 type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'link' | 'ghost'
-type ButtonSize = 'sm' | 'md'
+type ButtonSize = 'sm' | 'md' | 'block'
 
 interface ButtonBase {
   variant?: ButtonVariant
@@ -23,7 +23,7 @@ const variantClass: Record<ButtonVariant, string> = {
 
 export function Button(props: ButtonProps) {
   const { variant = 'primary', size = 'md', children, className = '' } = props
-  const classes = ['btn', variantClass[variant], size === 'sm' ? 'btn-sm' : '', className]
+  const classes = ['btn', variantClass[variant], size === 'sm' ? 'btn-sm' : '', size === 'block' ? 'btn-block' : '', className]
     .filter(Boolean)
     .join(' ')
 
