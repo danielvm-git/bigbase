@@ -293,6 +293,75 @@ body {
   border-color: var(--border-accent);
   box-shadow: var(--shadow-m);
 }
+
+/* Settings Page */
+.settings-section {
+  margin-top: var(--space-8);
+  max-width: 720px;
+}
+.settings-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-4) 0;
+  font-size: var(--text-s);
+}
+.settings-divider {
+  border: none;
+  border-top: 1px solid var(--divider-default);
+  margin: var(--space-8) 0;
+}
+.settings-subhead {
+  font-size: var(--text-s);
+  font-weight: 600;
+  color: var(--fg-primary);
+  margin-bottom: var(--space-4);
+}
+.settings-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+.settings-form-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+.settings-member-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.settings-member {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--divider-subtle);
+  border-radius: var(--radius-s);
+  font-size: var(--text-s);
+}
+.settings-usage {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-4);
+}
+.settings-usage-cell {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  background: var(--bg-subtle);
+  border-radius: var(--radius-s);
+  font-size: var(--text-s);
+}
+.settings-usage-cell strong {
+  font-size: var(--text-l);
+  color: var(--fg-primary);
+}
 .card-header {
   display: flex;
   align-items: center;
