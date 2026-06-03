@@ -342,8 +342,32 @@ body {
   color: var(--fg-tertiary);
 }
 .input-error-text {
-  font-size: var(--text-xs);
   color: var(--error);
+  font-size: var(--text-xs);
+}
+.input-with-prefix {
+  display: flex;
+  align-items: stretch;
+  position: relative;
+}
+.input-with-prefix .input {
+  flex: 1;
+  padding-left: var(--space-12);
+}
+.input-prefix {
+  position: absolute;
+  top: 50%;
+  left: var(--space-4);
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  color: var(--fg-tertiary);
+  pointer-events: none;
+  font-size: var(--text-xs);
+  z-index: 1;
+}
+.input-mono {
+  font-family: var(--font-mono);
 }
 
 textarea.input {

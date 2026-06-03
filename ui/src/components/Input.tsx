@@ -1,26 +1,45 @@
-import type { InputHTMLAttributes, TextareaHTMLAttributes, SelectHTMLAttributes, ReactNode } from 'react'
+import type {
+  InputHTMLAttributes,
+  TextareaHTMLAttributes,
+  SelectHTMLAttributes,
+  ReactElement,
+} from 'react'
 
-interface InputBase {
+interface CommonProps {
   label?: string
   error?: string
   hint?: string
+  /** Render the input value in a monospace font (SQL editors, env vars). */
+  mono?: boolean
 }
 
-type InputAsInput = InputBase &
-  InputHTMLAttributes<HTMLInputElement> & { as?: 'input' }
+type InputAsInput = Omit<CommonProps, 'prefix'> &
+  Omit<InputHTMLAttributes<HTMLInputElement>, 'prefix'> & {
+    as?: 'input'
+    /** Icon or short text rendered inside the input field, before the value. */
+    prefix?: ReactElement
+  }
 
-type InputAsTextarea = InputBase &
+type InputAsTextarea = CommonProps &
   TextareaHTMLAttributes<HTMLTextAreaElement> & { as: 'textarea' }
 
-type InputAsSelect = InputBase &
-  SelectHTMLAttributes<HTMLSelectElement> & { as: 'select'; children: ReactNode }
+type InputAsSelect = CommonProps &
+  SelectHTMLAttributes<HTMLSelectElement> & { as: 'select' }
 
 type InputProps = InputAsInput | InputAsTextarea | InputAsSelect
 
 export function Input(props: InputProps) {
-  const { label, error, hint, className = '', ...rest } = props
-  const inputClass = `input ${error ? 'input-error' : ''} ${className}`.trim()
+  const { label, error, hint, mono = false, className = '', ...rest } = props
   const id = props.id || props.name
+  const inputClass =
+    `input ${error ? 'input-error ' : ''}${mono ? 'input-mono ' : ''}${className}`.trim()
+
+  // prefix is only valid for the input variant
+  const prefix =
+    props.as !== 'textarea' && props.as !== 'select' ? props.prefix : undefined
+
+  // Strip the custom `prefix` prop before passing to the underlying input
+  const { prefix: _ignored, ...inputAttrs } = rest as InputAsInput & { prefix?: ReactElement }
 
   const inputElement =
     props.as === 'textarea' ? (
@@ -30,7 +49,7 @@ export function Input(props: InputProps) {
         {(rest as InputAsSelect).children}
       </select>
     ) : (
-      <input id={id} className={inputClass} {...(rest as InputAsInput)} />
+      <input id={id} className={inputClass} {...inputAttrs} />
     )
 
   return (
@@ -40,7 +59,16 @@ export function Input(props: InputProps) {
           {label}
         </label>
       )}
-      {inputElement}
+      {prefix ? (
+        <div className="input-with-prefix">
+          <span className="input-prefix" aria-hidden="true">
+            {prefix}
+          </span>
+          {inputElement}
+        </div>
+      ) : (
+        inputElement
+      )}
       {hint && !error && <span className="input-hint">{hint}</span>}
       {error && <span className="input-error-text">{error}</span>}
     </div>
