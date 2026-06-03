@@ -1,7 +1,7 @@
 ---
 id: e17s07
 title: Deploy and CICI detail completion
-status: in_progress
+status: done
 legacy_slice: "017-G"
 tasks:
   - desc: Add TestDeployLogStream to deploy_test.go — test SSE log stream endpoint

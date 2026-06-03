@@ -1,18 +1,12 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { PageHeader, Button, Input } from '../components'
-
-interface Fn {
-  id: string
-  name: string
-  runtime: string
-  source: string
-  trigger: string
-  schedule: string
-  env: string
-  timeout: number
-  created_at: string
-}
+import {
+  type FunctionRecord,
+  type FunctionFormFields,
+  formEnvFromRecord,
+  functionPayloadFromForm,
+} from '../lib/functionEnv'
 
 interface RunResult {
   logs: string[]
@@ -20,16 +14,24 @@ interface RunResult {
   error: string | null
 }
 
-const defaultFn = { name: '', runtime: 'javascript', source: '', trigger: 'http', schedule: '', env: '{}', timeout: 30 }
+const defaultForm: FunctionFormFields = {
+  name: '',
+  runtime: 'javascript',
+  source: '',
+  trigger: 'http',
+  schedule: '',
+  env: '{}',
+  timeout: 30,
+}
 
 export default function FunctionsPage() {
   const navigate = useNavigate()
-  const [fns, setFns] = useState<Fn[]>([])
+  const [fns, setFns] = useState<FunctionRecord[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [showForm, setShowForm] = useState(false)
-  const [editing, setEditing] = useState<Fn | null>(null)
-  const [form, setForm] = useState(defaultFn)
+  const [editing, setEditing] = useState<FunctionRecord | null>(null)
+  const [form, setForm] = useState(defaultForm)
   const [runResult, setRunResult] = useState<Record<string, RunResult>>({})
 
   const fetchFns = async () => {
@@ -38,23 +40,45 @@ export default function FunctionsPage() {
       const res = await fetch('/api/functions')
       const d = await res.json()
       if (!res.ok) { setError(d.error || `error: ${res.status}`); setFns([]) }
-      else { setFns((d as { data: Fn[] }).data || []) }
+      else { setFns((d as { data: FunctionRecord[] }).data || []) }
     } catch { setError('network error') }
     finally { setLoading(false) }
   }
 
   useEffect(() => { fetchFns() }, [])
 
-  const openCreate = () => { setEditing(null); setForm(defaultFn); setShowForm(true) }
-  const openEdit = (fn: Fn) => { setEditing(fn); setForm({ name: fn.name, runtime: fn.runtime, source: fn.source, trigger: fn.trigger, schedule: fn.schedule, env: fn.env, timeout: fn.timeout }); setShowForm(true) }
+  const openCreate = () => { setEditing(null); setForm(defaultForm); setShowForm(true) }
+  const openEdit = (fn: FunctionRecord) => {
+    setEditing(fn)
+    setForm({
+      name: fn.name,
+      runtime: fn.runtime,
+      source: fn.source,
+      trigger: fn.trigger,
+      schedule: fn.schedule,
+      env: formEnvFromRecord(fn.env),
+      timeout: fn.timeout,
+    })
+    setShowForm(true)
+  }
 
   const handleSave = async (e: React.FormEvent) => {
-    e.preventDefault(); setError('')
+    e.preventDefault()
+    setError('')
+    const built = functionPayloadFromForm(form)
+    if (!built.ok) {
+      setError(built.error)
+      return
+    }
     const isNew = !editing
     const url = isNew ? '/api/functions' : `/api/functions/${editing.id}`
     const method = isNew ? 'POST' : 'PUT'
     try {
-      const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) })
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(built.payload),
+      })
       const d = await res.json()
       if (!res.ok) { setError(d.error || 'save failed'); return }
       setShowForm(false)
@@ -87,7 +111,7 @@ export default function FunctionsPage() {
     <div>
       <PageHeader title="Functions">
         <Button variant="secondary" size="sm" onClick={fetchFns}>Refresh</Button>
-        <Button variant="primary" size="sm" onClick={openCreate}>New Function</Button>
+        <Button variant="primary" size="sm" onClick={openCreate}>Create function</Button>
       </PageHeader>
       {error && <p className="input-error-text">{error}</p>}
 
@@ -120,36 +144,25 @@ export default function FunctionsPage() {
 
       {fns.length === 0 && !error && <p className="dim">No functions yet.</p>}
       {fns.length > 0 && (
-        <div className="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Runtime</th>
-                <th>Trigger</th>
-                <th>Timeout</th>
-                <th>Created</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {fns.map(fn => (
-                <tr key={fn.id}>
-                  <td><code>{fn.name}</code></td>
-                  <td>{fn.runtime}</td>
-                  <td>{fn.trigger}</td>
-                  <td>{fn.timeout}s</td>
-                  <td>{new Date(fn.created_at).toLocaleString()}</td>
-                  <td className="actions-cell">
-                    <Button variant="secondary" size="sm" onClick={() => handleRun(fn.id)}>Run</Button>
-                    <Button variant="secondary" size="sm" onClick={() => navigate(`/functions/${fn.id}/logs`)}>Logs</Button>
-                    <Button variant="secondary" size="sm" onClick={() => openEdit(fn)}>Edit</Button>
-                    <Button variant="danger" size="sm" onClick={() => handleDelete(fn.id)}>Delete</Button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="function-grid">
+          {fns.map(fn => (
+            <article key={fn.id} className="function-card">
+              <div className="function-card-name">{fn.name}</div>
+              <div className="function-card-meta">
+                {fn.runtime} · {fn.trigger} trigger
+              </div>
+              <div className="function-card-meta dim">
+                Created {new Date(fn.created_at).toLocaleDateString()}
+              </div>
+              <div className="function-card-actions">
+                <Button variant="primary" size="sm" onClick={() => navigate(`/functions/${fn.id}`)}>Open</Button>
+                <Button variant="secondary" size="sm" onClick={() => handleRun(fn.id)}>Run</Button>
+                <Button variant="ghost" size="sm" onClick={() => navigate(`/functions/${fn.id}?tab=logs`)}>Logs</Button>
+                <Button variant="ghost" size="sm" onClick={() => openEdit(fn)}>Edit</Button>
+                <Button variant="danger" size="sm" onClick={() => handleDelete(fn.id)}>Delete</Button>
+              </div>
+            </article>
+          ))}
         </div>
       )}
 

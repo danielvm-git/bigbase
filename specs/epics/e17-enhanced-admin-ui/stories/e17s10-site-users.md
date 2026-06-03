@@ -1,7 +1,7 @@
 ---
 id: e17s10
 title: Site detail and Users enhancements
-status: in_progress
+status: done
 legacy_slice: "017-J"
 tasks:
   - desc: Write SiteDetailPage.test.tsx — render, status timeline, deployments, redeploy

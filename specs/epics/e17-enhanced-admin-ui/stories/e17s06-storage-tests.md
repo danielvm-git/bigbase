@@ -1,7 +1,7 @@
 ---
 id: e17s06
 title: Storage page test coverage
-status: in_progress
+status: done
 legacy_slice: "017-F"
 tasks:
   - desc: Create StoragePage.test.tsx — render, empty state, upload error

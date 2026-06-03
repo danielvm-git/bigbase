@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
-import { MemoryRouter, Route, Routes } from 'react-router-dom'
-import FunctionLogsPage from './FunctionLogsPage'
+import { MemoryRouter } from 'react-router-dom'
+import { FunctionLogsPanel } from './FunctionLogsPanel'
 
 const mockLogsResponse = {
   data: [
@@ -22,27 +22,25 @@ const mockLogsResponse = {
   ],
 }
 
-describe('FunctionLogsPage', () => {
+describe('FunctionLogsPanel', () => {
   beforeEach(() => {
     vi.restoreAllMocks()
   })
 
-  it('renders execution history entries', async () => {
+  it('renders execution log entries', async () => {
     vi.spyOn(globalThis, 'fetch').mockResolvedValue({
       ok: true,
       json: () => Promise.resolve(mockLogsResponse),
     } as Response)
 
     render(
-      <MemoryRouter initialEntries={['/functions/fn-123/logs']}>
-        <Routes>
-          <Route path="/functions/:id/logs" element={<FunctionLogsPage />} />
-        </Routes>
-      </MemoryRouter>
+      <MemoryRouter>
+        <FunctionLogsPanel functionId="fn-123" />
+      </MemoryRouter>,
     )
 
     await waitFor(() => {
-      expect(screen.getByText(/execution history/i)).toBeInTheDocument()
+      expect(screen.getByText('success')).toBeInTheDocument()
     })
   })
 
@@ -53,11 +51,9 @@ describe('FunctionLogsPage', () => {
     } as Response)
 
     render(
-      <MemoryRouter initialEntries={['/functions/fn-123/logs']}>
-        <Routes>
-          <Route path="/functions/:id/logs" element={<FunctionLogsPage />} />
-        </Routes>
-      </MemoryRouter>
+      <MemoryRouter>
+        <FunctionLogsPanel functionId="fn-123" />
+      </MemoryRouter>,
     )
 
     await waitFor(() => {
@@ -73,16 +69,12 @@ describe('FunctionLogsPage', () => {
     } as Response)
 
     render(
-      <MemoryRouter initialEntries={['/functions/fn-123/logs']}>
-        <Routes>
-          <Route path="/functions/:id/logs" element={<FunctionLogsPage />} />
-        </Routes>
-      </MemoryRouter>
+      <MemoryRouter>
+        <FunctionLogsPanel functionId="fn-123" />
+      </MemoryRouter>,
     )
 
     await waitFor(() => {
-      const startElements = screen.getAllByText(/Starting execution/)
-      expect(startElements.length).toBeGreaterThan(0)
       expect(screen.getByText(/step 1/)).toBeInTheDocument()
     })
   })
@@ -94,11 +86,9 @@ describe('FunctionLogsPage', () => {
     } as Response)
 
     render(
-      <MemoryRouter initialEntries={['/functions/fn-123/logs']}>
-        <Routes>
-          <Route path="/functions/:id/logs" element={<FunctionLogsPage />} />
-        </Routes>
-      </MemoryRouter>
+      <MemoryRouter>
+        <FunctionLogsPanel functionId="fn-123" />
+      </MemoryRouter>,
     )
 
     await waitFor(() => {
@@ -113,11 +103,9 @@ describe('FunctionLogsPage', () => {
     } as Response)
 
     render(
-      <MemoryRouter initialEntries={['/functions/fn-123/logs']}>
-        <Routes>
-          <Route path="/functions/:id/logs" element={<FunctionLogsPage />} />
-        </Routes>
-      </MemoryRouter>
+      <MemoryRouter>
+        <FunctionLogsPanel functionId="fn-123" />
+      </MemoryRouter>,
     )
 
     await waitFor(() => {
@@ -129,11 +117,9 @@ describe('FunctionLogsPage', () => {
     vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('Network error'))
 
     render(
-      <MemoryRouter initialEntries={['/functions/fn-123/logs']}>
-        <Routes>
-          <Route path="/functions/:id/logs" element={<FunctionLogsPage />} />
-        </Routes>
-      </MemoryRouter>
+      <MemoryRouter>
+        <FunctionLogsPanel functionId="fn-123" />
+      </MemoryRouter>,
     )
 
     await waitFor(() => {

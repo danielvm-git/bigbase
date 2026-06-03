@@ -1,7 +1,7 @@
 ---
 id: e17s09
 title: Dashboard tests and polish
-status: in_progress
+status: done
 legacy_slice: "017-I"
 tasks:
   - desc: Write DashboardPage.test.tsx — user card, health banner, quick actions, stat cards

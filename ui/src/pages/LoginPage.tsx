@@ -7,13 +7,23 @@ interface AuthResponse {
   error?: string
 }
 
+function isValidEmail(value: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
+}
+
 export default function LoginPage() {
   const nav = useNavigate()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
+  const [emailError, setEmailError] = useState('')
+  const [passwordError, setPasswordError] = useState('')
   const [isRegister, setIsRegister] = useState(false)
   const [googleEnabled, setGoogleEnabled] = useState(false)
+  const [showForgot, setShowForgot] = useState(false)
+  const [resetEmail, setResetEmail] = useState('')
+  const [resetEmailError, setResetEmailError] = useState('')
+  const [resetSent, setResetSent] = useState(false)
 
   useEffect(() => {
     fetch('/api/auth/oauth/google', { redirect: 'manual' })
@@ -21,9 +31,33 @@ export default function LoginPage() {
       .catch(() => {})
   }, [])
 
+  const validateLogin = (): boolean => {
+    let ok = true
+    if (!email.trim()) {
+      setEmailError('Email is required')
+      ok = false
+    } else if (!isValidEmail(email)) {
+      setEmailError('Enter a valid email address')
+      ok = false
+    } else {
+      setEmailError('')
+    }
+    if (!password) {
+      setPasswordError('Password is required')
+      ok = false
+    } else if (password.length < 6) {
+      setPasswordError('Password must be at least 6 characters')
+      ok = false
+    } else {
+      setPasswordError('')
+    }
+    return ok
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
+    if (!validateLogin()) return
 
     const endpoint = isRegister ? '/api/auth/register' : '/api/auth/login'
     try {
@@ -43,6 +77,52 @@ export default function LoginPage() {
     }
   }
 
+  const handleForgotSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!resetEmail.trim()) {
+      setResetEmailError('Email is required')
+      return
+    }
+    if (!isValidEmail(resetEmail)) {
+      setResetEmailError('Enter a valid email address')
+      return
+    }
+    setResetEmailError('')
+    setResetSent(true)
+  }
+
+  if (showForgot) {
+    return (
+      <div className="login-page">
+        <Card className="login-card">
+          <div className="login-brand">
+            <h1>Reset password</h1>
+            <p>Enter your email and we will send reset instructions.</p>
+          </div>
+          {resetSent ? (
+            <p className="dim">If an account exists for {resetEmail}, you will receive an email shortly.</p>
+          ) : (
+            <form onSubmit={handleForgotSubmit} className="login-form">
+              <Input
+                type="email"
+                placeholder="Email"
+                value={resetEmail}
+                onChange={e => { setResetEmail(e.target.value); setResetEmailError('') }}
+                error={resetEmailError}
+              />
+              <Button type="submit" variant="primary">Send reset link</Button>
+            </form>
+          )}
+          <p className="login-toggle">
+            <button className="btn-link" type="button" onClick={() => { setShowForgot(false); setResetSent(false) }}>
+              Back to sign in
+            </button>
+          </p>
+        </Card>
+      </div>
+    )
+  }
+
   return (
     <div className="login-page">
       <Card className="login-card">
@@ -57,17 +137,23 @@ export default function LoginPage() {
             type="email"
             placeholder="Email"
             value={email}
-            onChange={e => setEmail(e.target.value)}
-            required
+            onChange={e => { setEmail(e.target.value); setEmailError('') }}
+            error={emailError}
           />
           <Input
             type="password"
             placeholder="Password"
             value={password}
-            onChange={e => setPassword(e.target.value)}
-            required
-            minLength={6}
+            onChange={e => { setPassword(e.target.value); setPasswordError('') }}
+            error={passwordError}
           />
+          {!isRegister && (
+            <p style={{ textAlign: 'right', marginTop: '-var(--space-2)' }}>
+              <button type="button" className="btn-link" onClick={() => setShowForgot(true)}>
+                Forgot password?
+              </button>
+            </p>
+          )}
           {error && <p className="input-error-text">{error}</p>}
           <Button type="submit" variant="primary">
             {isRegister ? 'Register' : 'Sign In'}

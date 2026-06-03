@@ -1,15 +1,32 @@
 import { useEffect, useState } from 'react'
-import { PageHeader } from '../components'
+import { useNavigate } from 'react-router-dom'
+import { PageHeader, Button, Input, Modal } from '../components'
+import { useToast } from '../hooks/useToast'
 
 type ColName = string
 type ColRecord = { id: number } & Record<string, unknown>
 
+interface SchemaColumn {
+  name: string
+  type: string
+}
+
+type StudioMode = 'data' | 'schema'
+
 export default function DataStudioPage() {
+  const navigate = useNavigate()
+  const toast = useToast()
   const [collections, setCollections] = useState<ColName[]>([])
   const [selected, setSelected] = useState<string | null>(null)
   const [records, setRecords] = useState<ColRecord[]>([])
   const [loading, setLoading] = useState(true)
   const [recordError, setRecordError] = useState('')
+  const [mode, setMode] = useState<StudioMode>('data')
+  const [columns, setColumns] = useState<SchemaColumn[]>([])
+  const [modalOpen, setModalOpen] = useState(false)
+  const [editCol, setEditCol] = useState<SchemaColumn | null>(null)
+  const [colName, setColName] = useState('')
+  const [colType, setColType] = useState('text')
 
   useEffect(() => {
     fetch('/api/collections/')
@@ -19,6 +36,15 @@ export default function DataStudioPage() {
       .finally(() => setLoading(false))
   }, [])
 
+  const inferSchema = (recs: ColRecord[]): SchemaColumn[] => {
+    if (recs.length === 0) return []
+    const keys = Array.from(new Set(recs.flatMap(r => Object.keys(r))))
+    return keys.map(name => ({
+      name,
+      type: name === 'id' ? 'integer' : typeof recs[0][name] === 'number' ? 'number' : 'text',
+    }))
+  }
+
   const loadRecords = async (name: string) => {
     setSelected(name)
     setRecordError('')
@@ -27,14 +53,56 @@ export default function DataStudioPage() {
       if (!res.ok) {
         setRecordError(`error: ${res.status}`)
         setRecords([])
+        setColumns([])
         return
       }
       const d = (await res.json()) as { data: ColRecord[] }
-      setRecords(d.data || [])
+      const recs = d.data || []
+      setRecords(recs)
+      setColumns(inferSchema(recs))
     } catch {
       setRecordError('network error')
       setRecords([])
+      setColumns([])
     }
+  }
+
+  const openAddColumn = () => {
+    setEditCol(null)
+    setColName('')
+    setColType('text')
+    setModalOpen(true)
+  }
+
+  const openEditColumn = (col: SchemaColumn) => {
+    setEditCol(col)
+    setColName(col.name)
+    setColType(col.type)
+    setModalOpen(true)
+  }
+
+  const saveColumn = () => {
+    if (!colName.trim()) return
+    if (editCol) {
+      setColumns(prev => prev.map(c => c.name === editCol.name ? { name: colName, type: colType } : c))
+      toast.show('Column updated (preview — DDL not wired)', 'info')
+    } else {
+      setColumns(prev => [...prev, { name: colName, type: colType }])
+      toast.show('Column added (preview — DDL not wired)', 'info')
+    }
+    setModalOpen(false)
+  }
+
+  const deleteColumn = (name: string) => {
+    if (!confirm(`Remove column "${name}" from schema view?`)) return
+    setColumns(prev => prev.filter(c => c.name !== name))
+    toast.show('Column removed (preview — DDL not wired)', 'info')
+  }
+
+  const queryThis = () => {
+    if (!selected) return
+    const quoted = `"${selected.replace(/"/g, '""')}"`
+    navigate('/sql', { state: { collection: selected, hint: `SELECT * FROM ${quoted} LIMIT 100` } })
   }
 
   const allKeys = records.length > 0
@@ -45,7 +113,25 @@ export default function DataStudioPage() {
 
   return (
     <div className="data-studio">
-      <PageHeader title="Data Studio" />
+      <PageHeader title="Data Studio">
+        {selected && mode === 'schema' && (
+          <Button variant="secondary" size="sm" onClick={queryThis}>Query this</Button>
+        )}
+      </PageHeader>
+
+      {selected && mode === 'schema' && (
+        <p className="dim" style={{ marginBottom: 'var(--space-6)' }}>
+          Schema preview only — column changes are not persisted until DDL API ships.
+        </p>
+      )}
+
+      {selected && (
+        <div className="studio-mode-toggle">
+          <Button variant={mode === 'data' ? 'primary' : 'secondary'} size="sm" onClick={() => setMode('data')}>Data</Button>
+          <Button variant={mode === 'schema' ? 'primary' : 'secondary'} size="sm" onClick={() => setMode('schema')}>Schema</Button>
+        </div>
+      )}
+
       <div className="studio-layout">
         <aside className="collection-list">
           <div className="collection-list-title">Collections</div>
@@ -66,10 +152,43 @@ export default function DataStudioPage() {
         <section className="record-view">
           {!selected && <p className="dim">Select a collection to browse.</p>}
           {recordError && <p className="input-error-text">{recordError}</p>}
-          {selected && !recordError && records.length === 0 && (
+
+          {selected && mode === 'schema' && !recordError && (
+            <>
+              <div className="schema-actions">
+                <Button variant="primary" size="sm" onClick={openAddColumn}>Add column</Button>
+                <Button variant="secondary" size="sm" onClick={queryThis}>Query this</Button>
+              </div>
+              {columns.length === 0 ? (
+                <p className="dim">No columns inferred yet.</p>
+              ) : (
+                <div className="table-wrap">
+                  <table>
+                    <thead>
+                      <tr><th>Name</th><th>Type</th><th>Actions</th></tr>
+                    </thead>
+                    <tbody>
+                      {columns.map(col => (
+                        <tr key={col.name}>
+                          <td><code>{col.name}</code></td>
+                          <td>{col.type}</td>
+                          <td className="actions-cell">
+                            <Button variant="ghost" size="sm" onClick={() => openEditColumn(col)}>Edit</Button>
+                            <Button variant="danger" size="sm" onClick={() => deleteColumn(col.name)}>Delete</Button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </>
+          )}
+
+          {selected && mode === 'data' && !recordError && records.length === 0 && (
             <p className="dim">No records found.</p>
           )}
-          {selected && records.length > 0 && (
+          {selected && mode === 'data' && records.length > 0 && (
             <div className="table-wrap">
               <table>
                 <thead>
@@ -89,6 +208,20 @@ export default function DataStudioPage() {
           )}
         </section>
       </div>
+
+      <Modal open={modalOpen} onClose={() => setModalOpen(false)} title={editCol ? 'Edit column' : 'Add column'}>
+        <Input placeholder="Column name" value={colName} onChange={e => setColName(e.target.value)} />
+        <Input as="select" value={colType} onChange={e => setColType(e.target.value)} style={{ marginTop: 'var(--space-4)' }}>
+          <option value="text">text</option>
+          <option value="integer">integer</option>
+          <option value="number">number</option>
+          <option value="boolean">boolean</option>
+        </Input>
+        <div className="form-actions" style={{ marginTop: 'var(--space-6)' }}>
+          <Button onClick={saveColumn}>Save</Button>
+          <Button variant="secondary" onClick={() => setModalOpen(false)}>Cancel</Button>
+        </div>
+      </Modal>
     </div>
   )
 }

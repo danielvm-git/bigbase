@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useLocation } from 'react-router-dom'
 import { PageHeader, Button } from '../components'
 
 interface SqlResult {
@@ -6,8 +7,17 @@ interface SqlResult {
   rows: Record<string, unknown>[]
 }
 
+interface SqlLocationState {
+  collection?: string
+  hint?: string
+}
+
 export default function SqlEditorPage() {
-  const [query, setQuery] = useState("SELECT name FROM sqlite_master WHERE type = 'table' ORDER BY name")
+  const location = useLocation()
+  const navState = (location.state as SqlLocationState | null) ?? {}
+  const [query, setQuery] = useState(
+    navState.hint ?? "SELECT name FROM sqlite_master WHERE type = 'table' ORDER BY name",
+  )
   const [result, setResult] = useState<SqlResult | null>(null)
   const [error, setError] = useState('')
   const [running, setRunning] = useState(false)

@@ -3,7 +3,7 @@ context: domain
 id: e17
 title: Enhanced Admin UI
 wsjf: 1.0
-status: in_progress
+status: done
 covers: []
 design_docs:
 - SYSTEM_DESIGN.md
@@ -27,16 +27,40 @@ stories:
   status: done
 - id: e17s06
   file: stories/e17s06-storage-tests.md
-  status: in_progress
+  status: done
 - id: e17s07
   file: stories/e17s07-deploy-detail.md
-  status: in_progress
+  status: done
 - id: e17s08
   file: stories/e17s08-dashboard-primitives.md
-  status: in_progress
+  status: done
 - id: e17s09
   file: stories/e17s09-dashboard-polish.md
-  status: in_progress
+  status: done
 - id: e17s10
   file: stories/e17s10-site-users.md
-  status: in_progress
+  status: done
+- id: e17s11
+  file: stories/e17s11-ia-shell.md
+  status: done
+- id: e17s12
+  file: stories/e17s12-accent-themes.md
+  status: done
+- id: e17s13
+  file: stories/e17s13-primitives.md
+  status: done
+- id: e17s14
+  file: stories/e17s14-functions-ui.md
+  status: done
+- id: e17s15
+  file: stories/e17s15-messaging-ui.md
+  status: done
+- id: e17s16
+  file: stories/e17s16-data-studio-schema.md
+  status: done
+- id: e17s17
+  file: stories/e17s17-settings-login.md
+  status: done
+- id: e17s18
+  file: stories/e17s18-responsive-a11y.md
+  status: done
