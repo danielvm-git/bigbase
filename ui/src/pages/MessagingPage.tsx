@@ -109,7 +109,9 @@ export default function MessagingPage() {
   return (
     <div>
       <PageHeader title="Messaging">
-        <Button variant="primary" size="sm" onClick={() => navigate('/messaging/tpl-welcome')}>Create template</Button>
+        <Button variant="primary" size="sm" onClick={() => navigate('/messaging/tpl-welcome')}>
+          Open sample template
+        </Button>
         <Button variant="secondary" size="sm" onClick={fetchMessages}>Refresh</Button>
       </PageHeader>
       {error && <p className="input-error-text">{error}</p>}

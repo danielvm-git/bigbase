@@ -1,18 +1,11 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useParams, useSearchParams, Navigate, useNavigate } from 'react-router-dom'
 import { PageHeader, Button, Input, Tabs, Breadcrumb, FunctionLogsPanel } from '../components'
-
-interface Fn {
-  id: string
-  name: string
-  runtime: string
-  source: string
-  trigger: string
-  schedule: string
-  env: string
-  timeout: number
-  created_at: string
-}
+import {
+  type FunctionRecord,
+  formatFunctionEnv,
+  parseFunctionEnv,
+} from '../lib/functionEnv'
 
 const detailTabs = [
   { id: 'code', label: 'Code' },
@@ -21,13 +14,13 @@ const detailTabs = [
   { id: 'logs', label: 'Logs' },
 ]
 
-async function loadFunction(id: string): Promise<Fn> {
+async function loadFunction(id: string): Promise<FunctionRecord> {
   const res = await fetch(`/api/functions/${id}`)
   if (!res.ok) throw new Error('not found')
-  return res.json() as Promise<Fn>
+  return res.json() as Promise<FunctionRecord>
 }
 
-async function saveFunction(id: string, fn: Fn): Promise<boolean> {
+async function saveFunction(id: string, fn: FunctionRecord): Promise<boolean> {
   const res = await fetch(`/api/functions/${id}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
@@ -40,9 +33,14 @@ export default function FunctionDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
-  const tab = searchParams.get('tab') || 'code'
-  const [fn, setFn] = useState<Fn | null>(null)
+  const tabParam = searchParams.get('tab') || 'code'
+  const tab = useMemo(
+    () => (detailTabs.some(t => t.id === tabParam) ? tabParam : 'code'),
+    [tabParam],
+  )
+  const [fn, setFn] = useState<FunctionRecord | null>(null)
   const [error, setError] = useState('')
+  const [envError, setEnvError] = useState('')
   const [source, setSource] = useState('')
   const [env, setEnv] = useState('{}')
 
@@ -52,7 +50,7 @@ export default function FunctionDetailPage() {
       .then(found => {
         setFn(found)
         setSource(found.source)
-        setEnv(found.env)
+        setEnv(formatFunctionEnv(found.env))
       })
       .catch(() => setError('Function not found'))
   }, [id])
@@ -67,8 +65,15 @@ export default function FunctionDetailPage() {
 
   const saveEnv = useCallback(async () => {
     if (!id || !fn) return
-    const ok = await saveFunction(id, { ...fn, env })
+    const parsed = parseFunctionEnv(env)
+    if (!parsed.ok) {
+      setEnvError(parsed.error)
+      return
+    }
+    setEnvError('')
+    const ok = await saveFunction(id, { ...fn, env: parsed.env })
     if (!ok) setError('Save failed')
+    else setFn(prev => (prev ? { ...prev, env: parsed.env } : prev))
   }, [id, fn, env])
 
   if (!id) return null
@@ -106,7 +111,14 @@ export default function FunctionDetailPage() {
 
       {tab === 'variables' && (
         <div className="card">
-          <Input as="textarea" value={env} onChange={e => setEnv(e.target.value)} rows={8} className="code-textarea" />
+          <Input
+            as="textarea"
+            value={env}
+            onChange={e => { setEnv(e.target.value); setEnvError('') }}
+            rows={8}
+            className="code-textarea"
+            error={envError}
+          />
           <div className="form-actions" style={{ marginTop: 'var(--space-6)' }}>
             <Button size="sm" onClick={() => { void saveEnv() }}>Save variables</Button>
           </div>

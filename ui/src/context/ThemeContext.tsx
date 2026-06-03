@@ -32,16 +32,13 @@ export function applyAccentToDocument(accent: AccentId) {
 
   if (theme.rainbow) {
     root.setAttribute('data-accent-rainbow', 'true')
-    root.style.setProperty('--brand-500', `rgb(${theme.brand500})`)
-    root.style.setProperty('--brand-600', `rgb(${theme.brand600})`)
-    root.style.setProperty('--brand-700', `rgb(${theme.brand700})`)
   } else {
     root.removeAttribute('data-accent-rainbow')
-    root.style.setProperty('--brand-500', `rgb(${theme.brand500})`)
-    root.style.setProperty('--brand-600', `rgb(${theme.brand600})`)
-    root.style.setProperty('--brand-700', `rgb(${theme.brand700})`)
   }
 
+  root.style.setProperty('--brand-500', `rgb(${theme.brand500})`)
+  root.style.setProperty('--brand-600', `rgb(${theme.brand600})`)
+  root.style.setProperty('--brand-700', `rgb(${theme.brand700})`)
   root.style.setProperty('--border-accent', `rgb(${theme.brand500})`)
   root.style.setProperty('--bg-accent', `rgb(${theme.brand500})`)
   root.style.setProperty('--bg-accent-hover', `rgb(${theme.brand600})`)

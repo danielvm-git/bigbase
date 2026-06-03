@@ -50,7 +50,7 @@ describe('Modal', () => {
       <>
         <button type="button">Trigger</button>
         <Modal open title="Dialog" onClose={onClose}>
-          <p>Content</p>
+          <button type="button">Inside</button>
         </Modal>
       </>,
     )
@@ -58,10 +58,24 @@ describe('Modal', () => {
       <>
         <button type="button">Trigger</button>
         <Modal open={false} title="Dialog" onClose={onClose}>
-          <p>Content</p>
+          <button type="button">Inside</button>
         </Modal>
       </>,
     )
     expect(document.activeElement).toBe(trigger)
+  })
+
+  it('wraps Tab from last focusable back to first', () => {
+    render(
+      <Modal open title="Dialog" onClose={() => {}}>
+        <button type="button">First</button>
+        <button type="button">Last</button>
+      </Modal>,
+    )
+    const close = screen.getByRole('button', { name: 'Close dialog' })
+    const last = screen.getByRole('button', { name: 'Last' })
+    last.focus()
+    fireEvent.keyDown(document, { key: 'Tab' })
+    expect(document.activeElement).toBe(close)
   })
 })

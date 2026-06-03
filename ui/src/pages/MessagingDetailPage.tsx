@@ -50,6 +50,9 @@ export default function MessagingDetailPage() {
         <Button variant="secondary" size="sm" onClick={() => navigate('/messaging')}>Back</Button>
         <Button variant="primary" size="sm" onClick={() => navigate('/messaging?tab=send')}>Send test</Button>
       </PageHeader>
+      <p className="dim" style={{ marginBottom: 'var(--space-6)' }}>
+        Preview only — edits are not saved until the template API ships.
+      </p>
 
       <Tabs tabs={detailTabs} active={tab} onChange={setTab} />
 

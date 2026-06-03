@@ -11,18 +11,27 @@ interface ModalProps {
 const FOCUSABLE =
   'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
 
+function getFocusable(dialog: HTMLDivElement): HTMLElement[] {
+  return Array.from(dialog.querySelectorAll<HTMLElement>(FOCUSABLE))
+    .filter(el => !el.hasAttribute('disabled'))
+}
+
 function trapTabKey(e: KeyboardEvent, dialog: HTMLDivElement) {
   if (e.key !== 'Tab') return
-  const focusable = Array.from(
-    dialog.querySelectorAll<HTMLElement>(FOCUSABLE),
-  ).filter(el => !el.hasAttribute('disabled'))
+  const focusable = getFocusable(dialog)
   if (focusable.length === 0) return
   const first = focusable[0]
   const last = focusable[focusable.length - 1]
-  if (e.shiftKey && document.activeElement === first) {
+  const active = document.activeElement
+  if (!dialog.contains(active)) {
+    e.preventDefault()
+    first.focus()
+    return
+  }
+  if (e.shiftKey && active === first) {
     e.preventDefault()
     last.focus()
-  } else if (!e.shiftKey && document.activeElement === last) {
+  } else if (!e.shiftKey && active === last) {
     e.preventDefault()
     first.focus()
   }
@@ -36,6 +45,8 @@ export function Modal({ open, onClose, title, children }: ModalProps) {
     if (!open) return
     triggerRef.current = document.activeElement
     const dialog = dialogRef.current
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
 
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
@@ -46,10 +57,16 @@ export function Modal({ open, onClose, title, children }: ModalProps) {
     }
 
     document.addEventListener('keydown', onKey)
-    dialog?.focus()
+    const focusable = dialog ? getFocusable(dialog) : []
+    if (focusable.length > 0) {
+      focusable[0].focus()
+    } else {
+      dialog?.focus()
+    }
 
     return () => {
       document.removeEventListener('keydown', onKey)
+      document.body.style.overflow = previousOverflow
       if (triggerRef.current instanceof HTMLElement) {
         triggerRef.current.focus()
       }

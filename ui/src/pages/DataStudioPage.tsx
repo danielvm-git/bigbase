@@ -101,7 +101,8 @@ export default function DataStudioPage() {
 
   const queryThis = () => {
     if (!selected) return
-    navigate('/sql', { state: { collection: selected, hint: `SELECT * FROM ${selected} LIMIT 100` } })
+    const quoted = `"${selected.replace(/"/g, '""')}"`
+    navigate('/sql', { state: { collection: selected, hint: `SELECT * FROM ${quoted} LIMIT 100` } })
   }
 
   const allKeys = records.length > 0
@@ -117,6 +118,12 @@ export default function DataStudioPage() {
           <Button variant="secondary" size="sm" onClick={queryThis}>Query this</Button>
         )}
       </PageHeader>
+
+      {selected && mode === 'schema' && (
+        <p className="dim" style={{ marginBottom: 'var(--space-6)' }}>
+          Schema preview only — column changes are not persisted until DDL API ships.
+        </p>
+      )}
 
       {selected && (
         <div className="studio-mode-toggle">
