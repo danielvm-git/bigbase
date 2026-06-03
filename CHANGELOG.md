@@ -1,3 +1,10 @@
+## [2.1.2](https://github.com/danielvm-git/bigbase/compare/v2.1.1...v2.1.2) (2026-06-03)
+
+
+### Bug Fixes
+
+* **deploy:** allow scp-action to read GitHub App PEM on runner ([c6d647e](https://github.com/danielvm-git/bigbase/commit/c6d647e76128c5cf554c6e539498d6148b5b97ea))
+
 ## [2.1.1](https://github.com/danielvm-git/bigbase/compare/v2.1.0...v2.1.1) (2026-06-03)
 
 
