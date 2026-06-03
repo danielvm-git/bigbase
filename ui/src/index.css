@@ -458,6 +458,64 @@ select.input {
   gap: var(--space-3);
 }
 
+/* Wizard Steps */
+.wizard-steps {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin-bottom: var(--space-12);
+}
+.wizard-step {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-shrink: 0;
+}
+.wizard-step-num {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-full);
+  border: 2px solid var(--border-default);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--fg-secondary);
+  background: var(--bg-surface);
+}
+.wizard-step--active .wizard-step-num {
+  border-color: var(--fg-accent);
+  color: var(--fg-accent);
+  background: var(--brand-tint);
+}
+.wizard-step--done .wizard-step-num {
+  border-color: var(--success);
+  background: var(--success-bg);
+  color: var(--success-fg);
+}
+.wizard-step-label {
+  font-size: var(--text-s);
+  color: var(--fg-secondary);
+}
+.wizard-step--active .wizard-step-label {
+  color: var(--fg-primary);
+  font-weight: 500;
+}
+.wizard-step--done .wizard-step-label {
+  color: var(--fg-primary);
+}
+.wizard-step-line {
+  flex: 1;
+  min-width: 32px;
+  height: 2px;
+  background: var(--border-default);
+  margin: 0 var(--space-2);
+}
+.wizard-step-line.done {
+  background: var(--success);
+}
+
 /* Table */
 .table-wrap {
   overflow-x: auto;
