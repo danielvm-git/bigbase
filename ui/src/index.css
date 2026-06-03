@@ -283,8 +283,15 @@ body {
   background: var(--bg-surface);
   border: 1px solid var(--border-default);
   border-radius: var(--radius-m);
-  padding: var(--space-10);
-  box-shadow: var(--shadow-s);
+  padding: var(--space-8);
+}
+.card-interactive {
+  cursor: pointer;
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+.card-interactive:hover {
+  border-color: var(--border-accent);
+  box-shadow: var(--shadow-m);
 }
 .card-header {
   display: flex;

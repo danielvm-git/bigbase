@@ -2,11 +2,19 @@ import type { ReactNode, HTMLAttributes } from 'react'
 
 interface CardProps extends HTMLAttributes<HTMLDivElement> {
   children: ReactNode
+  /** Render as a clickable card with hover affordance. */
+  interactive?: boolean
 }
 
-export function Card({ children, className = '', ...rest }: CardProps) {
+export function Card({
+  children,
+  className = '',
+  interactive = false,
+  ...rest
+}: CardProps) {
+  const cls = `card ${interactive ? 'card-interactive ' : ''}${className}`.trim()
   return (
-    <div className={`card ${className}`} {...rest}>
+    <div className={cls} {...rest}>
       {children}
     </div>
   )
