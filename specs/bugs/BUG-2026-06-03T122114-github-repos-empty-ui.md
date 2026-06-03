@@ -77,16 +77,32 @@ Browser console shows **`/api/github/repos` → 500** (and various unrelated 401
 
 - [x] User always sees **Connect GitHub** or **Reconnect** when repos cannot be listed
 - [x] Failed repo fetch shows explicit error (not only "No repositories match.")
-- [ ] `GET /api/github/repos` returns 200 with repos OR actionable error for logged-in admin (prod verify pending deploy)
-- [ ] Selecting a repo and Continue works end-to-end after fix (prod verify)
+- [x] `GET /api/github/repos` returns 200 with repos OR actionable **502** (`github_api_error`) for logged-in admin when GitHub API fails (contract tested; authed prod session not available in CI)
+- [ ] Selecting a repo and Continue works end-to-end after fix (requires logged-in user when GitHub API returns repos)
 - [x] `go test ./...` and `cd ui && npm test` pass
 
 ## Resolution
 
-**Fixed in:** `fix(github): surface repos API errors in create-site UI` (2026-06-03)
+**Fixed:** 2026-06-03
 
-- UI: `getGitHubRepos` returns `error` on non-OK; Create site shows Reconnect card when `ghReposError` or empty repos after failed load; distinct empty vs filter messages.
-- API: `handleRepos` returns **502** with `code: github_api_error` when GitHub listing fails (was opaque 500).
-- Tests: `TestGitHubReposReturnsBadGatewayWhenGitHubAPIFails`, `sitesData.test.ts`.
+**Root cause confirmed:** UI hid the Connect GitHub card when `connected: true` while `getGitHubRepos` swallowed non-OK API responses as an empty list, showing only “No repositories match.”
 
-**Prod follow-up:** If 502 persists after deploy, check VPS logs for `list github repos`, PEM at `/opt/bigbase/secrets/github-app.pem`, and GitHub App repository permissions.
+**Fix applied:**
+
+- `ui/src/lib/sitesData.ts` — propagate `error` on failed `/api/github/repos`
+- `ui/src/pages/CreateSitePage.tsx` — `showGitHubConnect` when `ghReposError`; Reconnect card; loading and distinct empty/filter copy
+- `components/github/github.go` — **502** + `code: github_api_error` when `listInstallationRepos` fails
+
+**Hardening added:** Typed `SitesDataResult.error`; API codes `github_api_error` / `github_not_installed`; UI branches on `code`; `CreateSitePage.test.tsx`; no-install returns 404 not silent `[]`; empty connected repo list shows Connect card
+
+**Evidence:** `go test ./... -count=1`, `cd ui && npm test`, `npm run preflight`, `golangci-lint run ./components/github/...`, `npx tsc --noEmit` (ui) — all pass
+
+**Commit:** `fix(github): surface repos API errors in create-site UI` (`d47becf`); follow-up `fix(github): reconnect UX tests and empty repo list` (audit + review gaps)
+
+**Behavioral proof (prod, deploy run 26894968721):**
+
+- Admin bundle `index-BffhwgB0.js` contains `Reconnect GitHub` and `Could not load GitHub repositories`
+- `GET /api/github/callback?installation_id=42` → **302** (public, unchanged)
+- Unauthenticated `GET /api/github/repos` → **401** (auth still required; not the reported symptom)
+
+**Prod follow-up:** If a logged-in user still sees Reconnect after install, check VPS logs for `list github repos`, PEM at `/opt/bigbase/secrets/github-app.pem`, and GitHub App **Contents/Meta read** permissions.

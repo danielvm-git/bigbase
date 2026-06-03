@@ -82,10 +82,15 @@ export default function CreateSitePage() {
     init()
   }, [preRepo])
 
+  const ghReposUnavailable =
+    ghConnected && !ghLoading && ghRepos.length === 0 && !ghReposError
   const showGitHubConnect =
-    source === 'github' && !previewMode && (!ghConnected || !!ghReposError || !ghConfigured)
+    source === 'github' &&
+    !previewMode &&
+    (!ghConnected || !!ghReposError || !ghConfigured || ghReposUnavailable)
   const showGitHubRepoPicker =
-    source === 'github' && (previewMode || (ghConnected && !ghReposError))
+    source === 'github' &&
+    (previewMode || (ghConnected && !ghReposError && !ghReposUnavailable))
 
   const filteredGh = ghRepos.filter(r =>
     r.full_name.toLowerCase().includes(repoFilter.toLowerCase()),

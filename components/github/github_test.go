@@ -185,6 +185,27 @@ func seedGitHubInstallation(t *testing.T, d *db.DB) {
 	}
 }
 
+func TestGitHubReposReturnsNotFoundWhenNoInstallation(t *testing.T) {
+	handler := setupGitHub(t, github.Options{
+		AppID:          "12345",
+		AppSlug:        "test-app",
+		PrivateKeyPath: "/tmp/key.pem",
+	})
+
+	w, r := httptest.NewRecorder(), httptest.NewRequest(http.MethodGet, "/api/github/repos", nil)
+	handler.ServeHTTP(w, r)
+	if w.Code != http.StatusNotFound {
+		t.Fatalf("expected 404 when no installation, got %d body=%s", w.Code, w.Body.String())
+	}
+	var body map[string]string
+	if err := json.NewDecoder(w.Body).Decode(&body); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	if body["code"] != "github_not_installed" {
+		t.Fatalf("expected github_not_installed, got %v", body)
+	}
+}
+
 func TestGitHubReposReturnsBadGatewayWhenGitHubAPIFails(t *testing.T) {
 	logger := testLogger{}
 	memDB := db.New(db.Options{Path: ":memory:", Logger: logger})

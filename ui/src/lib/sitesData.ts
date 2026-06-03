@@ -138,13 +138,22 @@ export async function getGitHubRepos(): Promise<SitesDataResult<GitHubRepo[]>> {
     '/api/github/repos',
   )
   if (ok) return { data: data.data || [], previewMode: false }
-  if (status === 404 || status === 0) {
+  const body = data && typeof data === 'object' ? data : null
+  const apiCode = body && 'code' in body ? String(body.code) : ''
+  const apiError = body && 'error' in body && body.error ? String(body.error) : ''
+  if (status === 0) {
+    return { data: [], previewMode: false, error: 'Could not reach the server. Try again.' }
+  }
+  if (status === 404 && (apiCode === 'github_not_installed' || apiError)) {
+    return { data: [], previewMode: false, error: apiError || 'GitHub App is not installed' }
+  }
+  if (status === 404) {
     return { data: mockGitHubRepos, previewMode: true }
   }
-  const msg =
-    (data && typeof data === 'object' && 'error' in data && data.error) ||
-    'Could not load GitHub repositories. Try reconnecting.'
-  return { data: [], previewMode: false, error: String(msg) }
+  if (apiCode === 'github_api_error' || apiError) {
+    return { data: [], previewMode: false, error: apiError || 'Could not load GitHub repositories. Try reconnecting.' }
+  }
+  return { data: [], previewMode: false, error: 'Could not load GitHub repositories. Try reconnecting.' }
 }
 
 export interface CreateSiteInput {

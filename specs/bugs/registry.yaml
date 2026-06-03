@@ -9,6 +9,17 @@ bugs:
     summary: Create site hides Connect GitHub when connected but /api/github/repos returns 500 — empty repo search only
     file: specs/bugs/BUG-2026-06-03T122114-github-repos-empty-ui.md
     status: fixed
+    files_changed:
+      - components/github/github.go
+      - components/github/github_test.go
+      - ui/src/lib/sitesData.ts
+      - ui/src/lib/sitesData.test.ts
+      - ui/src/pages/CreateSitePage.tsx
+      - ui/src/pages/CreateSitePage.test.tsx
+      - ui/src/types/sites.ts
+    approach: Surface repos errors; 502/404 API codes; Reconnect on failure; Connect when connected with empty list; CreateSitePage regression tests
+    risk_level: low
+    commit_message: "fix(github): surface repos API errors in create-site UI"
     related:
       - BUG-2026-06-03T120000
       - BUG-2026-06-02T211731

@@ -250,7 +250,10 @@ func (g *GitHub) handleRepos(w http.ResponseWriter, r *http.Request) {
 
 	instID, err := g.latestInstallationID(r.Context())
 	if err != nil {
-		writeJSON(w, http.StatusOK, map[string]any{"data": []Repo{}})
+		writeJSON(w, http.StatusNotFound, map[string]string{
+			"error": "GitHub App is not installed",
+			"code":  "github_not_installed",
+		})
 		return
 	}
 
