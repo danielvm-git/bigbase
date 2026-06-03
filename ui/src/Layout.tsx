@@ -1,7 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { Outlet, NavLink, useNavigate } from 'react-router-dom'
 import { Icon, type IconName } from './components/Icon'
-import { ACCENT_THEMES } from './context/accentThemes'
+import { ThemePicker } from './components/ThemePicker'
 import { useTheme } from './hooks/useTheme'
 
 interface UserInfo { id: number; email: string }
@@ -96,16 +96,7 @@ export default function Layout() {
           </button>
           <label className="sidebar-accent-label">
             <span className="dim">Accent</span>
-            <select
-              className="input input-sm"
-              value={accent}
-              onChange={e => setAccent(e.target.value as typeof accent)}
-              aria-label="Accent theme"
-            >
-              {ACCENT_THEMES.map(t => (
-                <option key={t.id} value={t.id}>{t.label}</option>
-              ))}
-            </select>
+            <ThemePicker value={accent} onChange={setAccent} />
           </label>
         </div>
         <ul className="sidebar-nav sidebar-footer-nav">
