@@ -34,6 +34,11 @@ describe('Badge', () => {
     render(<Badge variant="accent">New</Badge>)
     expect(screen.getByText('New').className).toContain('badge-accent')
   })
+
+  it('applies info variant', () => {
+    render(<Badge variant="info">Heads up</Badge>)
+    expect(screen.getByText('Heads up').className).toContain('badge-info')
+  })
 })
 
 describe('statusBadgeVariant', () => {

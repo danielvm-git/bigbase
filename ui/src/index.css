@@ -389,6 +389,10 @@ select.input {
   background: rgba(79, 70, 229, 0.1);
   color: var(--fg-accent);
 }
+.badge-info {
+  background: var(--info-bg);
+  color: var(--info-fg);
+}
 
 /* Tabs */
 .tabs {
