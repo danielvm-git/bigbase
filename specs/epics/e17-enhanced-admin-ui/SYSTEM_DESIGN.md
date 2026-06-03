@@ -282,6 +282,28 @@ GET  /api/v1/monitoring/components # Component status
 }
 ```
 
+## Design Decisions
+
+### localStorage key naming — `bigbase-theme` (unified)
+
+**Decision:** Use a single `bigbase-theme` key whose value is the string
+`'light' | 'dark'` rather than two separate boolean-flavored keys
+(`bigbase-dark` + `bigbase-theme`).
+
+**Why:** The prototype (`react-stubs/ThemeContext.tsx`) wrote the dark flag as
+`bigbase-dark` and the theme name as `bigbase-theme`, requiring two `getItem`
+reads on boot. The current implementation collapses both into one key with a
+typed enum value, halving boot reads and giving us a single migration surface.
+
+**Trade-off:** Existing users with `bigbase-dark` set in their browser will be
+treated as light-mode on first load after upgrade. Acceptable: a) the product
+is pre-1.0, b) the user can flip back with one click in the sidebar, c) the
+old key is still readable for one release so we can log a soft migration
+warning.
+
+**Status:** Implemented in `ui/src/context/ThemeContext.tsx`. No code change
+required from the prototype-fidelity-parity work — only this documentation.
+
 ## Version & License
 
 - **Current Version**: v1.1.0
