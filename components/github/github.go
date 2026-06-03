@@ -133,14 +133,33 @@ func (g *GitHub) configured() bool {
 	return g.appID != "" && g.privateKeyPath != "" && g.appSlug != ""
 }
 
-func (g *GitHub) Handler() http.Handler {
+// PublicHandler serves routes called by GitHub without a BigBase session (install
+// callback redirect and webhooks). Must not be wrapped in auth middleware.
+func (g *GitHub) PublicHandler() http.Handler {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/api/github/callback", g.handleCallback)
+	mux.HandleFunc("/api/github/webhook", g.handleWebhook)
+	return mux
+}
+
+// ProtectedHandler serves GitHub API routes that require an authenticated admin user.
+func (g *GitHub) ProtectedHandler() http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/api/github/status", g.handleStatus)
 	mux.HandleFunc("/api/github/install", g.handleInstall)
-	mux.HandleFunc("/api/github/callback", g.handleCallback)
 	mux.HandleFunc("/api/github/repos/connect", g.handleConnect)
 	mux.HandleFunc("/api/github/repos", g.handleRepos)
+	return mux
+}
+
+func (g *GitHub) Handler() http.Handler {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/api/github/callback", g.handleCallback)
 	mux.HandleFunc("/api/github/webhook", g.handleWebhook)
+	mux.HandleFunc("/api/github/status", g.handleStatus)
+	mux.HandleFunc("/api/github/install", g.handleInstall)
+	mux.HandleFunc("/api/github/repos/connect", g.handleConnect)
+	mux.HandleFunc("/api/github/repos", g.handleRepos)
 	return mux
 }
 

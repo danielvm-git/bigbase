@@ -1,6 +1,16 @@
 type: bug-registry
 context: infra
 bugs:
+  - id: BUG-2026-06-03T120000
+    date: "2026-06-03"
+    severity: medium
+    priority: high
+    scope: main.go,auth,github
+    summary: GitHub install callback and webhook behind auth middleware — returns authorization required after GitHub redirect
+    file: specs/bugs/BUG-2026-06-03T120000-github-callback-requires-auth.md
+    status: fixed
+    related:
+      - BUG-2026-06-02T211731
   - id: BUG-2026-06-02T211731
     date: "2026-06-02"
     severity: medium

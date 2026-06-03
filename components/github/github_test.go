@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/danielvm/bigbase/components/db"
@@ -127,4 +128,48 @@ func TestGitHubFlagsUnconfigured(t *testing.T) {
 			t.Fatalf("expected 503 when unconfigured, got %d", w.Code)
 		}
 	})
+}
+
+func setupGitHubPublic(t *testing.T, opts github.Options) http.Handler {
+	t.Helper()
+	logger := testLogger{}
+	opts.DB = db.New(db.Options{Path: ":memory:", Logger: logger})
+	opts.Logger = logger
+	ctx := &kernel.Context{}
+	if err := opts.DB.(*db.DB).Start(ctx); err != nil {
+		t.Fatalf("db start: %v", err)
+	}
+	t.Cleanup(func() { _ = opts.DB.(*db.DB).Stop(ctx) })
+	return github.New(opts).PublicHandler()
+}
+
+// BUG-2026-06-03T120000: callback must work without session after GitHub redirect.
+func TestGitHubCallbackPublicNoAuth(t *testing.T) {
+	handler := setupGitHubPublic(t, github.Options{
+		AppID:          "12345",
+		AppSlug:        "test-app",
+		PrivateKeyPath: "/tmp/key.pem",
+	})
+
+	w, r := httptest.NewRecorder(), httptest.NewRequest(http.MethodGet, "/api/github/callback?installation_id=42", nil)
+	handler.ServeHTTP(w, r)
+	if w.Code == http.StatusUnauthorized {
+		t.Fatal("callback must not require auth")
+	}
+	if w.Code != http.StatusFound {
+		t.Fatalf("expected 302 redirect, got %d body=%s", w.Code, w.Body.String())
+	}
+	if loc := w.Header().Get("Location"); loc != "/admin/#/deploy/new" {
+		t.Fatalf("unexpected redirect: %q", loc)
+	}
+}
+
+func TestGitHubWebhookPublicNotUnauthorized(t *testing.T) {
+	handler := setupGitHubPublic(t, github.Options{WebhookSecret: "secret"})
+
+	w, r := httptest.NewRecorder(), httptest.NewRequest(http.MethodPost, "/api/github/webhook", nil)
+	handler.ServeHTTP(w, r)
+	if strings.Contains(w.Body.String(), "authorization required") {
+		t.Fatalf("webhook must not use auth middleware, got %s", w.Body.String())
+	}
 }
