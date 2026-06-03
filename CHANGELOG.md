@@ -1,3 +1,10 @@
+## [2.1.3](https://github.com/danielvm-git/bigbase/compare/v2.1.2...v2.1.3) (2026-06-03)
+
+
+### Bug Fixes
+
+* **github:** allow install callback and webhook without JWT auth ([485181f](https://github.com/danielvm-git/bigbase/commit/485181f51bdedb65be6e5f686470bff51fce3d90))
+
 ## [2.1.2](https://github.com/danielvm-git/bigbase/compare/v2.1.1...v2.1.2) (2026-06-03)
 
 
