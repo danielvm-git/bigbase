@@ -1,3 +1,10 @@
+# [2.1.0](https://github.com/danielvm-git/bigbase/compare/v2.0.0...v2.1.0) (2026-06-03)
+
+
+### Features
+
+* **ui:** complete epic e17 Enhanced Admin UI prototype parity ([#10](https://github.com/danielvm-git/bigbase/issues/10)) ([f610b14](https://github.com/danielvm-git/bigbase/commit/f610b14da299314c0471e960126666d168f34a32))
+
 # [2.0.0](https://github.com/danielvm-git/bigbase/compare/v1.4.0...v2.0.0) (2026-06-02)
 
 
