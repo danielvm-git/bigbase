@@ -11,6 +11,7 @@ import (
 	"syscall"
 	"text/tabwriter"
 
+	"github.com/danielvm/bigbase/config"
 	"github.com/danielvm/bigbase/components/admin"
 	"github.com/danielvm/bigbase/components/api"
 	"github.com/danielvm/bigbase/components/auth"
@@ -89,6 +90,13 @@ func startProxy() {
 	githubWebhookSecret := serveFS.String("github-webhook-secret", "", "GitHub App webhook secret")
 	_ = serveFS.Parse(os.Args[2:])
 
+	googleID := config.FlagOrEnv(*googleClientID, "GOOGLE_CLIENT_ID")
+	googleSecret := config.FlagOrEnv(*googleClientSecret, "GOOGLE_CLIENT_SECRET")
+	ghAppID := config.FlagOrEnv(*githubAppID, "GITHUB_APP_ID")
+	ghAppSlug := config.FlagOrEnv(*githubAppSlug, "GITHUB_APP_SLUG")
+	ghPrivateKeyPath := config.FlagOrEnv(*githubPrivateKeyPath, "GITHUB_APP_PRIVATE_KEY_PATH")
+	ghWebhookSecret := config.FlagOrEnv(*githubWebhookSecret, "GITHUB_WEBHOOK_SECRET")
+
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo}))
 	k := kernel.New(logger)
 
@@ -106,10 +114,10 @@ func startProxy() {
 		Logger: logger,
 	})
 	authComp := auth.New(auth.Options{
-		DB:                d,
-		Logger:            logger,
-		GoogleClientID:    *googleClientID,
-		GoogleClientSecret: *googleClientSecret,
+		DB:                 d,
+		Logger:             logger,
+		GoogleClientID:     googleID,
+		GoogleClientSecret: googleSecret,
 	})
 
 	ad := admin.New(admin.Options{Logger: logger})
@@ -133,10 +141,10 @@ func startProxy() {
 	gh := github.New(github.Options{
 		DB:             d,
 		Logger:         logger,
-		AppID:          *githubAppID,
-		AppSlug:        *githubAppSlug,
-		PrivateKeyPath: *githubPrivateKeyPath,
-		WebhookSecret:  *githubWebhookSecret,
+		AppID:          ghAppID,
+		AppSlug:        ghAppSlug,
+		PrivateKeyPath: ghPrivateKeyPath,
+		WebhookSecret:  ghWebhookSecret,
 	})
 	st := sites.New(sites.Options{
 		DB:     d,

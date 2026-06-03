@@ -1,6 +1,17 @@
 type: bug-registry
 context: infra
 bugs:
+  - id: BUG-2026-06-02T211731
+    date: "2026-06-02"
+    severity: medium
+    priority: high
+    scope: deploy,main.go,github
+    summary: Production VPS never receives GitHub App credentials — /api/github/install returns 503 on bigbase.click
+    file: specs/bugs/BUG-2026-06-02T211731-github-app-not-configured-prod.md
+    status: fixed
+    related:
+      - BUG-2026-06-02T000000
+      - BUG-2026-06-01T182800
   - id: BUG-2026-06-02T163718
     date: "2026-06-02"
     severity: medium

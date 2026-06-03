@@ -43,6 +43,8 @@ env:
   VPS_BACKUPS_DIR: '/opt/bigbase/backups'
   VPS_DATA_DIR: '/opt/bigbase/data'
   VPS_ENV_FILE: '/opt/bigbase/.env'
+  VPS_SECRETS_DIR: '/opt/bigbase/secrets'
+  GITHUB_APP_PEM_PATH: '/opt/bigbase/secrets/github-app.pem'
   HEALTH_URL: 'http://localhost:8080/api/monitoring/health'
   MAX_BACKUPS_TO_KEEP: 7
 
@@ -192,6 +194,33 @@ jobs:
           target: /tmp/
           strip_components: 0
 
+      - name: Prepare GitHub App private key
+        id: github-pem
+        if: steps.detect-release.outputs.new_release == 'true'
+        env:
+          PEM: ${{ secrets.BIGBASE_GITHUB_APP_PRIVATE_KEY }}
+        run: |
+          if [ -z "${PEM}" ]; then
+            echo "upload=false" >> "$GITHUB_OUTPUT"
+            echo "No BIGBASE_GITHUB_APP_PRIVATE_KEY secret — skip PEM upload"
+            exit 0
+          fi
+          printf '%s\n' "${PEM}" > github-app.pem
+          chmod 600 github-app.pem
+          echo "upload=true" >> "$GITHUB_OUTPUT"
+
+      - name: Upload GitHub App private key to VPS
+        if: steps.detect-release.outputs.new_release == 'true' && steps.github-pem.outputs.upload == 'true'
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.CONTABO_HOST }}
+          username: ${{ secrets.CONTABO_USER }}
+          key: ${{ secrets.CONTABO_SSH_KEY }}
+          port: ${{ secrets.CONTABO_SSH_PORT || 22 }}
+          source: github-app.pem
+          target: /tmp/
+          strip_components: 0
+
       # --- Deploy via SSH ---
       - name: Deploy binary and restart service
         if: steps.detect-release.outputs.new_release == 'true'
@@ -207,6 +236,11 @@ jobs:
           MAX_BACKUPS: ${{ env.MAX_BACKUPS_TO_KEEP }}
           GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
           GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          BIGBASE_GITHUB_APP_ID: ${{ secrets.BIGBASE_GITHUB_APP_ID }}
+          BIGBASE_GITHUB_APP_SLUG: ${{ secrets.BIGBASE_GITHUB_APP_SLUG }}
+          BIGBASE_GITHUB_WEBHOOK_SECRET: ${{ secrets.BIGBASE_GITHUB_WEBHOOK_SECRET }}
+          VPS_SECRETS_DIR: ${{ env.VPS_SECRETS_DIR }}
+          GITHUB_APP_PEM_PATH: ${{ env.GITHUB_APP_PEM_PATH }}
         with:
           host: ${{ secrets.CONTABO_HOST }}
           username: ${{ secrets.CONTABO_USER }}
@@ -215,8 +249,11 @@ jobs:
           envs: >-
             BINARY_PATH,VPS_BIN_DIR,VPS_RELEASES_DIR,
             VPS_BACKUPS_DIR,VPS_DATA_DIR,VPS_ENV_FILE,
+            VPS_SECRETS_DIR,GITHUB_APP_PEM_PATH,
             HEALTH_URL,MAX_BACKUPS,
-            GOOGLE_CLIENT_ID,GOOGLE_CLIENT_SECRET
+            GOOGLE_CLIENT_ID,GOOGLE_CLIENT_SECRET,
+            BIGBASE_GITHUB_APP_ID,BIGBASE_GITHUB_APP_SLUG,
+            BIGBASE_GITHUB_WEBHOOK_SECRET
           # -------- Script executed on VPS --------
           script: |
             set -euo pipefail
@@ -267,21 +304,60 @@ jobs:
             fi
 
             # ----------------------------------------------------------------
-            # Phase 4: Write OAuth env file if secrets provided
+            # Phase 4: Configure environment (.env) and GitHub App PEM
             # ----------------------------------------------------------------
             echo "=== Phase 4: Configure environment ==="
 
+            mkdir -p "${VPS_SECRETS_DIR}"
+
+            if [ -f /tmp/github-app.pem ]; then
+              mv /tmp/github-app.pem "${GITHUB_APP_PEM_PATH}"
+              chmod 600 "${GITHUB_APP_PEM_PATH}"
+              chown bigbase:bigbase "${GITHUB_APP_PEM_PATH}" 2>/dev/null || true
+              echo "  GitHub App private key installed: ${GITHUB_APP_PEM_PATH}"
+            fi
+
+            ENV_TMP=$(mktemp)
+            if [ -f "${VPS_ENV_FILE}" ]; then
+              grep -v '^GOOGLE_CLIENT_ID=' "${VPS_ENV_FILE}" | \
+                grep -v '^GOOGLE_CLIENT_SECRET=' | \
+                grep -v '^GITHUB_APP_ID=' | \
+                grep -v '^GITHUB_APP_SLUG=' | \
+                grep -v '^GITHUB_WEBHOOK_SECRET=' | \
+                grep -v '^GITHUB_APP_PRIVATE_KEY_PATH=' > "${ENV_TMP}" || true
+            else
+              : > "${ENV_TMP}"
+            fi
+
             if [ -n "${GOOGLE_CLIENT_ID:-}" ] && [ -n "${GOOGLE_CLIENT_SECRET:-}" ]; then
-              cat > "${VPS_ENV_FILE}" << EOENV
-            GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
-            GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
-            EOENV
+              printf 'GOOGLE_CLIENT_ID=%s\nGOOGLE_CLIENT_SECRET=%s\n' \
+                "${GOOGLE_CLIENT_ID}" "${GOOGLE_CLIENT_SECRET}" >> "${ENV_TMP}"
+              echo "  Google OAuth vars added to ${VPS_ENV_FILE}"
+            else
+              echo "  No Google OAuth credentials in repo secrets"
+            fi
+
+            if [ -n "${BIGBASE_GITHUB_APP_ID:-}" ] && [ -n "${BIGBASE_GITHUB_APP_SLUG:-}" ] \
+                && [ -f "${GITHUB_APP_PEM_PATH}" ]; then
+              printf 'GITHUB_APP_ID=%s\nGITHUB_APP_SLUG=%s\n' \
+                "${BIGBASE_GITHUB_APP_ID}" "${BIGBASE_GITHUB_APP_SLUG}" >> "${ENV_TMP}"
+              if [ -n "${BIGBASE_GITHUB_WEBHOOK_SECRET:-}" ]; then
+                printf 'GITHUB_WEBHOOK_SECRET=%s\n' "${BIGBASE_GITHUB_WEBHOOK_SECRET}" >> "${ENV_TMP}"
+              fi
+              printf 'GITHUB_APP_PRIVATE_KEY_PATH=%s\n' "${GITHUB_APP_PEM_PATH}" >> "${ENV_TMP}"
+              echo "  GitHub App vars added to ${VPS_ENV_FILE}"
+            else
+              echo "  GitHub App not fully configured (need BIGBASE_GITHUB_* secrets and PEM on VPS)"
+            fi
+
+            if [ -s "${ENV_TMP}" ]; then
+              mv "${ENV_TMP}" "${VPS_ENV_FILE}"
               chmod 600 "${VPS_ENV_FILE}"
               chown bigbase:bigbase "${VPS_ENV_FILE}" 2>/dev/null || true
               echo "  Environment file written: ${VPS_ENV_FILE}"
             else
-              echo "  No Google OAuth credentials — deploying without social login"
-              rm -f "${VPS_ENV_FILE}" 2>/dev/null || true
+              rm -f "${ENV_TMP}"
+              echo "  No environment variables to write"
             fi
 
             # ----------------------------------------------------------------

@@ -174,6 +174,7 @@ ProtectSystem=full
 ProtectHome=yes
 ReadWritePaths=${BIGBASE_HOME}/data
 ReadWritePaths=${BIGBASE_HOME}/backups
+ReadWritePaths=${BIGBASE_HOME}/secrets
 
 [Install]
 WantedBy=multi-user.target
@@ -281,6 +282,10 @@ echo "       - CONTABO_USER     → $(whoami)"
 echo "       - CONTABO_SSH_KEY  → Your SSH private key (deploy key)"
 echo "       - GOOGLE_CLIENT_ID     → (optional) Google OAuth client ID"
 echo "       - GOOGLE_CLIENT_SECRET → (optional) Google OAuth client secret"
+echo "       - BIGBASE_GITHUB_APP_ID → GitHub App ID (repo secret; not GITHUB_* prefix)"
+echo "       - BIGBASE_GITHUB_APP_SLUG → GitHub App slug (e.g. bigbaseguthubapp)"
+echo "       - BIGBASE_GITHUB_APP_PRIVATE_KEY → GitHub App PEM (multiline)"
+echo "       - BIGBASE_GITHUB_WEBHOOK_SECRET → GitHub App webhook secret"
 echo "  2. Push to main — GitHub Actions will build and deploy"
 echo "  3. Domain bigbase.click is pre-configured in the Caddyfile"
 echo "================================================================================"
