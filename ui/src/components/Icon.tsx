@@ -17,6 +17,21 @@ export type IconName =
   | 'radio'
   | 'moon'
   | 'sun'
+  | 'check'
+  | 'chevron-down'
+  | 'chevron-right'
+  | 'x'
+  | 'plus'
+  | 'search'
+  | 'trash-2'
+  | 'pencil'
+  | 'refresh-cw'
+  | 'external-link'
+  | 'arrow-right'
+  | 'arrow-left'
+  | 'eye'
+  | 'eye-off'
+  | 'circle'
 
 const paths: Record<IconName, ReactNode> = {
   'layout-dashboard': (
@@ -117,6 +132,80 @@ const paths: Record<IconName, ReactNode> = {
       <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
     </>
   ),
+  check: <polyline points="20 6 9 17 4 12" />,
+  'chevron-down': <polyline points="6 9 12 15 18 9" />,
+  'chevron-right': <polyline points="9 18 15 12 9 6" />,
+  x: (
+    <>
+      <line x1="18" y1="6" x2="6" y2="18" />
+      <line x1="6" y1="6" x2="18" y2="18" />
+    </>
+  ),
+  plus: (
+    <>
+      <line x1="12" y1="5" x2="12" y2="19" />
+      <line x1="5" y1="12" x2="19" y2="12" />
+    </>
+  ),
+  search: (
+    <>
+      <circle cx="11" cy="11" r="8" />
+      <line x1="21" y1="21" x2="16.65" y2="16.65" />
+    </>
+  ),
+  'trash-2': (
+    <>
+      <polyline points="3 6 5 6 21 6" />
+      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+      <line x1="10" y1="11" x2="10" y2="17" />
+      <line x1="14" y1="11" x2="14" y2="17" />
+    </>
+  ),
+  pencil: (
+    <>
+      <path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+      <line x1="15" y1="5" x2="19" y2="9" />
+    </>
+  ),
+  'refresh-cw': (
+    <>
+      <polyline points="23 4 23 10 17 10" />
+      <polyline points="1 20 1 14 7 14" />
+      <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+    </>
+  ),
+  'external-link': (
+    <>
+      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+      <polyline points="15 3 21 3 21 9" />
+      <line x1="10" y1="14" x2="21" y2="3" />
+    </>
+  ),
+  'arrow-right': (
+    <>
+      <line x1="5" y1="12" x2="19" y2="12" />
+      <polyline points="12 5 19 12 12 19" />
+    </>
+  ),
+  'arrow-left': (
+    <>
+      <line x1="19" y1="12" x2="5" y2="12" />
+      <polyline points="12 19 5 12 12 5" />
+    </>
+  ),
+  eye: (
+    <>
+      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+      <circle cx="12" cy="12" r="3" />
+    </>
+  ),
+  'eye-off': (
+    <>
+      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+      <line x1="1" y1="1" x2="23" y2="23" />
+    </>
+  ),
+  circle: <circle cx="12" cy="12" r="10" />,
 }
 
 interface IconProps extends SVGProps<SVGSVGElement> {
