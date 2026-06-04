@@ -7,19 +7,26 @@ function mockDashboardAPIs() {
   vi.spyOn(globalThis, 'fetch').mockImplementation((input) => {
     const url = typeof input === 'string' ? input : input instanceof URL ? input.toString() : input?.toString?.() ?? ''
     if (url.includes('/api/auth/me')) return okJson({ id: 1, email: 'admin@example.com' })
-    if (url.includes('/health')) return okJson({ status: 'ok', components: 16 })
+    if (url.includes('/health')) return okJson({ status: 'ok', components: 16, running: 16 })
+    if (url.includes('/api/sites')) return okJson({ data: [{ id: 's1', name: 'web-app' }] })
     if (url.includes('/api/git/repos')) return okJson({ data: [{ id: 'r1', name: 'repo' }] })
     if (url.includes('/api/deploy')) return okJson({
-      data: [{ id: 'd1', repo_id: 'r1', branch: 'main', status: 'running', app_type: 'static', url: 'http://localhost:4000', created_at: '2026-06-01T10:00:00Z' }],
+      data: [{
+        id: 'd1',
+        repo_id: 'repo-main',
+        branch: 'main',
+        commit_sha: 'a8d4517',
+        status: 'running',
+        app_type: 'static',
+        url: 'http://localhost:4000',
+        created_at: new Date(Date.now() - 120000).toISOString(),
+      }],
     })
-    if (url.includes('/api/messaging/messages')) return okJson({
-      data: [{ id: 'm1', channel: 'email', to_addr: 'a@b.com', subject: 'Welcome', status: 'sent', created_at: '2026-06-01T10:00:00Z' }],
-    })
-    if (url.includes('/api/storage/files')) return okJson({ data: [{ id: 'f1', name: 'test.png', size: 1024, mime_type: 'image/png', created_at: '2026-06-01T10:00:00Z' }] })
     if (url.includes('/api/functions')) return okJson({ data: [{ id: 'fn1', name: 'hello', runtime: 'node', status: 'active' }] })
+    if (url.includes('/api/users')) return okJson({ data: [{ id: 'u1', email: 'u@test.com' }] })
     if (url.includes('/api/monitoring/metrics')) return okJson({
       system: { cpu_percent: 23.5, memory_mb: 512, goroutines: 42, uptime_seconds: 3600 },
-      requests: { total: 142, avg_latency_ms: 45, by_status: { '200': 130, '404': 10, '500': 2 } },
+      requests: { total: 142, avg_latency_ms: 45, by_status: { '200': 130, '500': 2 } },
     })
     return Promise.reject(new Error(`Unmocked fetch: ${url}`))
   })
@@ -29,7 +36,10 @@ function mockDashboardAPIsHealthWarning() {
   vi.spyOn(globalThis, 'fetch').mockImplementation((input) => {
     const url = typeof input === 'string' ? input : input instanceof URL ? input.toString() : input?.toString?.() ?? ''
     if (url.includes('/api/auth/me')) return okJson({ id: 1, email: 'admin@example.com' })
-    if (url.includes('/health')) return okJson({ status: 'degraded', components: 12 })
+    if (url.includes('/health')) return okJson({ status: 'degraded', components: 16, running: 12 })
+    if (url.includes('/api/monitoring/metrics')) return okJson({
+      system: { cpu_percent: 10, memory_mb: 128, goroutines: 10, uptime_seconds: 60 },
+    })
     return okJson({ data: [] })
   })
 }
@@ -38,7 +48,7 @@ function mockDashboardAPIsNoUser() {
   vi.spyOn(globalThis, 'fetch').mockImplementation((input) => {
     const url = typeof input === 'string' ? input : input instanceof URL ? input.toString() : input?.toString?.() ?? ''
     if (url.includes('/api/auth/me')) return okJson({}, false)
-    if (url.includes('/health')) return okJson({ status: 'ok', components: 16 })
+    if (url.includes('/health')) return okJson({ status: 'ok', components: 16, running: 16 })
     return okJson({ data: [] })
   })
 }
@@ -52,117 +62,83 @@ describe('DashboardPage', () => {
     vi.restoreAllMocks()
   })
 
-  it('renders page header and user info', async () => {
+  it('renders welcome header and create site action', async () => {
     mockDashboardAPIs()
-
     render(<MemoryRouter><DashboardPage /></MemoryRouter>)
-
     await waitFor(() => {
-      expect(screen.getByText('Dashboard')).toBeInTheDocument()
-      expect(screen.getByText('admin@example.com')).toBeInTheDocument()
+      expect(screen.getByText(/Welcome back, admin/)).toBeInTheDocument()
+      expect(screen.getByText(/what's running on your BigBase instance/i)).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: /create site/i })).toBeInTheDocument()
     })
   })
 
-  it('shows health banner with OK status', async () => {
+  it('shows system status with CPU and Memory', async () => {
     mockDashboardAPIs()
-
     render(<MemoryRouter><DashboardPage /></MemoryRouter>)
-
     await waitFor(() => {
       expect(screen.getByText('All systems operational')).toBeInTheDocument()
-      expect(screen.getByText(/16 components? running/)).toBeInTheDocument()
+      expect(screen.getByText('CPU')).toBeInTheDocument()
+      expect(screen.getByText('Memory')).toBeInTheDocument()
+      expect(screen.getByText('23.5')).toBeInTheDocument()
+      expect(screen.getByText('512 MB')).toBeInTheDocument()
     })
   })
 
-  it('shows warning banner when health degraded', async () => {
+  it('shows warning when health degraded', async () => {
     mockDashboardAPIsHealthWarning()
-
     render(<MemoryRouter><DashboardPage /></MemoryRouter>)
-
     await waitFor(() => {
       expect(screen.getByText('System issues detected')).toBeInTheDocument()
+      expect(screen.getByText('some components offline')).toBeInTheDocument()
     })
   })
 
-  it('shows quick action buttons', async () => {
+  it('warms metrics with a second fetch for CPU sampling', async () => {
     mockDashboardAPIs()
-
     render(<MemoryRouter><DashboardPage /></MemoryRouter>)
-
     await waitFor(() => {
-      expect(screen.getByText('+ Deploy Site')).toBeInTheDocument()
-      expect(screen.getByText('⚡ Run Function')).toBeInTheDocument()
-      expect(screen.getByText('📦 Create Collection')).toBeInTheDocument()
+      expect(screen.getByText('Welcome back, admin')).toBeInTheDocument()
     })
+    const metricCalls = vi.mocked(fetch).mock.calls.filter(c => String(c[0]).includes('/api/monitoring/metrics'))
+    expect(metricCalls.length).toBeGreaterThanOrEqual(2)
   })
 
-  it('shows stat cards for resources', async () => {
+  it('shows four prototype stat cards', async () => {
     mockDashboardAPIs()
-
     render(<MemoryRouter><DashboardPage /></MemoryRouter>)
-
     await waitFor(() => {
-      expect(screen.getByText('Git Repos')).toBeInTheDocument()
-      expect(screen.getByText('Deployments')).toBeInTheDocument()
-      expect(screen.getByText('Messages')).toBeInTheDocument()
-      expect(screen.getByText('Files')).toBeInTheDocument()
+      expect(screen.getByText('Sites')).toBeInTheDocument()
       expect(screen.getByText('Functions')).toBeInTheDocument()
+      expect(screen.getByText('Git Repos')).toBeInTheDocument()
+      expect(screen.getByText('Users')).toBeInTheDocument()
+      expect(screen.queryByText('Messages')).not.toBeInTheDocument()
+      expect(screen.queryByText('Files')).not.toBeInTheDocument()
     })
   })
 
-  it('shows request rate and error rate from metrics', async () => {
+  it('shows recent deployments and jump back in', async () => {
     mockDashboardAPIs()
-
     render(<MemoryRouter><DashboardPage /></MemoryRouter>)
-
     await waitFor(() => {
-      expect(screen.getByText('Request Rate')).toBeInTheDocument()
-      expect(screen.getByText('Error Rate')).toBeInTheDocument()
-      // 500 count is 2
-      expect(screen.getByText('2')).toBeInTheDocument()
+      expect(screen.getByText('Recent deployments')).toBeInTheDocument()
+      expect(screen.getByText('Jump back in')).toBeInTheDocument()
+      expect(screen.getByText(/Deploy a site from GitHub/)).toBeInTheDocument()
+      expect(screen.getByText(/a8d4517/)).toBeInTheDocument()
     })
   })
 
-  it('shows CPU and component count from metrics', async () => {
+  it('shows activity from recent deployments', async () => {
     mockDashboardAPIs()
-
     render(<MemoryRouter><DashboardPage /></MemoryRouter>)
-
     await waitFor(() => {
-      expect(screen.getByText('CPU')).toBeInTheDocument()
-      expect(screen.getByText('Components')).toBeInTheDocument()
-      expect(screen.getByText('23.5%')).toBeInTheDocument()
-    })
-  })
-
-  it('shows recent deployments table', async () => {
-    mockDashboardAPIs()
-
-    render(<MemoryRouter><DashboardPage /></MemoryRouter>)
-
-    await waitFor(() => {
-      expect(screen.getByText('Recent Deployments')).toBeInTheDocument()
-      // "static" appears inside an activity-text span alongside <code>repo_id</code>
-      expect(screen.getByText(/static/)).toBeInTheDocument()
-    })
-  })
-
-  it('shows recent messages table', async () => {
-    mockDashboardAPIs()
-
-    render(<MemoryRouter><DashboardPage /></MemoryRouter>)
-
-    await waitFor(() => {
-      expect(screen.getByText('Recent Messages')).toBeInTheDocument()
-      expect(screen.getByText('a@b.com')).toBeInTheDocument()
+      expect(screen.getByText('Activity')).toBeInTheDocument()
+      expect(screen.getByText(/Deploy repo-ma/)).toBeInTheDocument()
     })
   })
 
   it('shows loading state when user not loaded', async () => {
     mockDashboardAPIsNoUser()
-
     render(<MemoryRouter><DashboardPage /></MemoryRouter>)
-
     await waitFor(() => {
       expect(screen.getByText(/loading/i)).toBeInTheDocument()
     })
@@ -170,11 +146,8 @@ describe('DashboardPage', () => {
 
   it('shows loading state when all fetches fail', async () => {
     vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('Network error'))
-
     render(<MemoryRouter><DashboardPage /></MemoryRouter>)
-
     await waitFor(() => {
-      // Should still render without crashing
       expect(screen.getByText(/loading/i)).toBeInTheDocument()
     })
   })

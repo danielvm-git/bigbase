@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/danielvm/bigbase/components/db"
 	"github.com/danielvm/bigbase/components/monitoring"
@@ -211,7 +212,9 @@ func TestMonitoringLogByID(t *testing.T) {
 		t.Fatalf("expected 201, got %d", w.Code)
 	}
 	var created map[string]string
-	json.NewDecoder(w.Body).Decode(&created)
+	if err := json.NewDecoder(w.Body).Decode(&created); err != nil {
+		t.Fatalf("decode created: %v", err)
+	}
 	logID := created["id"]
 
 	getReq := httptest.NewRequest("GET", "/api/monitoring/logs/"+logID, nil)
@@ -221,7 +224,9 @@ func TestMonitoringLogByID(t *testing.T) {
 		t.Fatalf("expected 200, got %d: %s", gw.Code, gw.Body.String())
 	}
 	var got map[string]any
-	json.NewDecoder(gw.Body).Decode(&got)
+	if err := json.NewDecoder(gw.Body).Decode(&got); err != nil {
+		t.Fatalf("decode got: %v", err)
+	}
 	if got["id"] != logID {
 		t.Fatalf("expected id '%s', got '%s'", logID, got["id"])
 	}
@@ -249,7 +254,9 @@ func TestMonitoringLogSearchByQuery(t *testing.T) {
 		t.Fatalf("expected 200, got %d", sw.Code)
 	}
 	var result map[string]any
-	json.NewDecoder(sw.Body).Decode(&result)
+	if err := json.NewDecoder(sw.Body).Decode(&result); err != nil {
+		t.Fatalf("decode result: %v", err)
+	}
 	logs, _ := result["data"].([]any)
 	if len(logs) != 2 {
 		t.Fatalf("expected 2 logs matching 'hello', got %d", len(logs))
@@ -335,5 +342,18 @@ func TestMonitoringSystemMetrics(t *testing.T) {
 	}
 	if metrics.CPUPercent < 0 {
 		t.Fatalf("expected non-negative cpu, got %f", metrics.CPUPercent)
+	}
+}
+
+func TestSystemMetricsCPUPercentAfterSecondSample(t *testing.T) {
+	m, _ := setupMonitoring(t)
+	_ = m.SystemMetrics()
+	time.Sleep(15 * time.Millisecond)
+	for i := 0; i < 5000; i++ {
+		_ = i * i
+	}
+	metrics := m.SystemMetrics()
+	if metrics.CPUPercent <= 0 || metrics.CPUPercent > 100 {
+		t.Fatalf("expected cpu percent in (0,100], got %f", metrics.CPUPercent)
 	}
 }

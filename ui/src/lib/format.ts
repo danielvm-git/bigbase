@@ -36,3 +36,25 @@ export function mapDeployStatus(status: string): string {
   if (status === 'failed') return 'failed'
   return status
 }
+
+/** Human-readable process uptime from seconds. */
+export function fmtUptime(seconds: number): string {
+  const d = Math.floor(seconds / 86400)
+  const h = Math.floor((seconds % 86400) / 3600)
+  const m = Math.floor((seconds % 3600) / 60)
+  if (d > 0) return `${d}d ${h}h`
+  if (h > 0) return `${h}h ${m}m`
+  if (m > 0) return `${m}m`
+  return `${Math.floor(seconds)}s`
+}
+
+/** Display allocated memory; input is megabytes from monitoring API. */
+export function fmtMemoryMB(mb: number): string {
+  if (mb >= 1024) return `${(mb / 1024).toFixed(1)} GB`
+  return `${Math.round(mb)} MB`
+}
+
+/** Bar fill percent for Go heap Alloc (API memory_mb), using 1 GiB as visual full scale. */
+export function memoryBarPercent(memoryMB: number): number {
+  return Math.min(100, Math.round((memoryMB / 1024) * 100))
+}

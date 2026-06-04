@@ -1,3 +1,4 @@
+/** Legacy metrics row; dashboard uses SystemStatusPanel. Tests guard request-rate rendering. */
 import { Card, CardHeader } from './index'
 
 interface MetricsProps {

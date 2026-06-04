@@ -1,6 +1,45 @@
 type: bug-registry
 context: infra
 bugs:
+  - id: BUG-2026-06-04T120000
+    date: "2026-06-04"
+    severity: medium
+    priority: high
+    scope: ui,monitoring
+    summary: Dashboard diverged from prototype — CPU always 0%, no Memory tile, wrong layout, footer not sticky
+    file: specs/bugs/BUG-2026-06-04T120000-dashboard-prototype-drift.md
+    status: fixed
+    files_changed:
+      - components/monitoring/monitoring.go
+      - components/monitoring/monitoring_test.go
+      - components/proxy/proxy.go
+      - components/proxy/proxy_test.go
+      - ui/src/lib/metrics.ts
+      - ui/src/lib/metrics.test.ts
+      - ui/src/components/SystemStatusPanel.tsx
+      - ui/src/components/SystemStatusPanel.test.tsx
+      - ui/src/components/PageHeader.tsx
+      - ui/src/pages/DashboardPage.tsx
+      - ui/src/pages/DashboardPage.test.tsx
+      - ui/src/pages/MonitoringPage.tsx
+      - ui/src/Layout.tsx
+      - ui/src/Layout.test.tsx
+      - ui/src/index.css
+      - ui/src/lib/format.ts
+      - ui/src/lib/format.test.ts
+      - ui/src/components/index.ts
+    approach: Rusage CPU sampling + SystemStatusPanel + prototype DashboardPage + sticky app-footer with BigPowers attribution
+    risk_level: medium
+    commit_message: "fix(ui): align dashboard with prototype and live CPU/memory metrics"
+    regression_guards:
+      - components/monitoring/monitoring_test.go TestSystemMetricsCPUPercentAfterSecondSample
+      - components/proxy/proxy_test.go TestProxyHealthEndpoint
+      - ui/src/lib/metrics.test.ts
+      - ui/src/components/SystemStatusPanel.test.tsx
+      - ui/src/pages/DashboardPage.test.tsx
+      - ui/src/Layout.test.tsx
+    related:
+      - BUG-2026-06-04T112700
   - id: BUG-2026-06-04T114000
     date: "2026-06-04"
     severity: high

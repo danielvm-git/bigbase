@@ -227,9 +227,19 @@ func (p *Proxy) handleHome(w http.ResponseWriter, r *http.Request) {
 
 func (p *Proxy) handleHealth(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
+	statuses := p.kernel.ListComponents()
+	total := len(statuses)
+	running := 0
+	for _, s := range statuses {
+		if s.Running {
+			running++
+		}
+	}
 	status := "ok"
-	compCount := len(p.kernel.Components())
-	_, _ = fmt.Fprintf(w, `{"status":"%s","components":%d}`, status, compCount)
+	if total > 0 && running < total {
+		status = "degraded"
+	}
+	_, _ = fmt.Fprintf(w, `{"status":"%s","components":%d,"running":%d}`, status, total, running)
 }
 
 func (p *Proxy) handleVersion(w http.ResponseWriter, r *http.Request) {
