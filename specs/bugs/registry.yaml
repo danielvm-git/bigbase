@@ -1,6 +1,127 @@
 type: bug-registry
 context: infra
 bugs:
+  - id: BUG-2026-06-04T120800
+    date: "2026-06-04"
+    severity: high
+    priority: high
+    scope: deploy,scripts
+    summary: Node deploy fails — npm EACCES (no HOME) and Node 18 too old for Vite 8
+    file: specs/bugs/BUG-2026-06-04T120800-deploy-npm-eacces-node20.md
+    status: fixed
+    related:
+      - BUG-2026-06-04T120500
+      - BUG-2026-06-04T114000
+  - id: BUG-2026-06-04T120500
+    date: "2026-06-04"
+    severity: high
+    priority: high
+    scope: deploy,ui,scripts
+    summary: Node deploy fails on VPS — npm not in PATH; create-site wizard shows "Your site is live" when failed
+    file: specs/bugs/BUG-2026-06-04T120500-deploy-node-npm-missing.md
+    status: fixed
+    related:
+      - BUG-2026-06-04T120800
+      - BUG-2026-06-04T114000
+  - id: BUG-2026-06-04T120000
+    date: "2026-06-04"
+    severity: medium
+    priority: high
+    scope: ui,monitoring
+    summary: Dashboard diverged from prototype — CPU always 0%, no Memory tile, wrong layout, footer not sticky
+    file: specs/bugs/BUG-2026-06-04T120000-dashboard-prototype-drift.md
+    status: fixed
+    files_changed:
+      - components/monitoring/monitoring.go
+      - components/monitoring/monitoring_test.go
+      - components/proxy/proxy.go
+      - components/proxy/proxy_test.go
+      - ui/src/lib/metrics.ts
+      - ui/src/lib/metrics.test.ts
+      - ui/src/components/SystemStatusPanel.tsx
+      - ui/src/components/SystemStatusPanel.test.tsx
+      - ui/src/components/PageHeader.tsx
+      - ui/src/pages/DashboardPage.tsx
+      - ui/src/pages/DashboardPage.test.tsx
+      - ui/src/pages/MonitoringPage.tsx
+      - ui/src/Layout.tsx
+      - ui/src/Layout.test.tsx
+      - ui/src/index.css
+      - ui/src/lib/format.ts
+      - ui/src/lib/format.test.ts
+      - ui/src/components/index.ts
+    approach: Rusage CPU sampling + SystemStatusPanel + prototype DashboardPage + sticky app-footer with BigPowers attribution
+    risk_level: medium
+    commit_message: "fix(ui): align dashboard with prototype and live CPU/memory metrics"
+    regression_guards:
+      - components/monitoring/monitoring_test.go TestSystemMetricsCPUPercentAfterSecondSample
+      - components/proxy/proxy_test.go TestProxyHealthEndpoint
+      - ui/src/lib/metrics.test.ts
+      - ui/src/components/SystemStatusPanel.test.tsx
+      - ui/src/pages/DashboardPage.test.tsx
+      - ui/src/Layout.test.tsx
+    related:
+      - BUG-2026-06-04T112700
+  - id: BUG-2026-06-04T114000
+    date: "2026-06-04"
+    severity: high
+    priority: high
+    scope: deploy,proxy,main.go
+    summary: Production site deployments store localhost URL instead of https://slug.bigbase.click subdomain
+    file: specs/bugs/BUG-2026-06-04T114000-prod-site-localhost-url.md
+    status: fixed
+    files_changed:
+      - components/deploy/deploy.go
+      - components/deploy/urls.go
+      - components/deploy/urls_test.go
+      - components/deploy/deploy_test.go
+      - components/proxy/proxy.go
+      - components/proxy/hosts.go
+      - components/proxy/hosts_test.go
+      - components/sites/sites_test.go
+      - main.go
+      - scripts/setup-vps.sh
+      - specs/plans/DEPLOY.md
+      - ui/src/lib/format.ts
+      - ui/src/lib/format.test.ts
+    approach: Public URL builder + proxy Host registry + sites TriggerDeploy + Caddy wildcard + --sites-domain
+    risk_level: medium
+    commit_message: "fix(deploy): use https://slug.bigbase.click for production site URLs"
+    regression_guards:
+      - components/deploy/deploy_test.go TestDeployPublicURL
+      - components/deploy/urls_test.go TestDeploymentURL
+      - components/proxy/hosts_test.go TestProxyDeploymentHost
+      - components/sites/sites_test.go TestSitesCreateTriggersDeploy
+    related:
+      - BUG-2026-06-04T112700
+  - id: BUG-2026-06-04T112700
+    date: "2026-06-04"
+    severity: high
+    priority: high
+    scope: ui
+    summary: Sites/Create site UI missing prototype CSS — mashed text, broken stepper, legacy deploy table
+    file: specs/bugs/BUG-2026-06-04T112700-sites-ui-missing-css.md
+    status: fixed
+    files_changed:
+      - ui/src/styles/sites.css
+      - ui/src/index.css
+      - ui/src/components/ChoiceCard.tsx
+      - ui/src/components/WizardSteps.tsx
+      - ui/src/components/Icon.tsx
+      - ui/src/components/SiteCard.tsx
+      - ui/src/pages/CreateSitePage.tsx
+      - ui/src/pages/DeployPage.tsx
+      - ui/src/lib/format.ts
+      - ui/vite.config.ts
+      - ui/src/test-setup.ts
+    approach: Port prototype sites CSS; 3-step wizard; Sites card grid; sites.contract.test.ts; verify-sites-css-in-dist.mjs on build
+    risk_level: low
+    regression_guards:
+      - ui/src/styles/sites.contract.test.ts
+      - ui/scripts/verify-sites-css-in-dist.mjs
+    related:
+      - BUG-2026-06-01T143800
+      - BUG-2026-06-03T122114
   - id: BUG-2026-06-03T122114
     date: "2026-06-03"
     severity: medium

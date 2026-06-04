@@ -9,6 +9,7 @@ import (
 	"runtime"
 	"strings"
 	"sync"
+	"syscall"
 	"time"
 
 	"github.com/danielvm/bigbase/kernel"
@@ -85,6 +86,10 @@ type Monitoring struct {
 	db      DBer
 	logger  Logger
 	metrics *MetricsCollector
+
+	cpuMu        sync.Mutex
+	cpuSampleAt  time.Time
+	cpuTotalNano int64
 }
 
 type Options struct {
@@ -180,6 +185,54 @@ func (m *Monitoring) Middleware(next http.Handler) http.Handler {
 	})
 }
 
+func (m *Monitoring) processCPUTime() time.Duration {
+	var ru syscall.Rusage
+	if err := syscall.Getrusage(syscall.RUSAGE_SELF, &ru); err != nil {
+		m.logger.Warn("read process CPU time failed", "error", err)
+		return 0
+	}
+	user := time.Duration(ru.Utime.Sec)*time.Second + time.Duration(ru.Utime.Usec)*time.Microsecond
+	sys := time.Duration(ru.Stime.Sec)*time.Second + time.Duration(ru.Stime.Usec)*time.Microsecond
+	return user + sys
+}
+
+func (m *Monitoring) sampleCPUPercent() float64 {
+	total := m.processCPUTime()
+	now := time.Now()
+	totalNano := total.Nanoseconds()
+
+	m.cpuMu.Lock()
+	defer m.cpuMu.Unlock()
+
+	if m.cpuSampleAt.IsZero() {
+		m.cpuSampleAt = now
+		m.cpuTotalNano = totalNano
+		return 0
+	}
+
+	elapsed := now.Sub(m.cpuSampleAt).Seconds()
+	if elapsed <= 0 {
+		return 0
+	}
+
+	delta := float64(totalNano - m.cpuTotalNano)
+	m.cpuSampleAt = now
+	m.cpuTotalNano = totalNano
+
+	cpus := runtime.NumCPU()
+	if cpus < 1 {
+		cpus = 1
+	}
+	pct := (delta / 1e9) / elapsed * 100 / float64(cpus)
+	if pct < 0 {
+		pct = 0
+	}
+	if pct > 100 {
+		pct = 100
+	}
+	return pct
+}
+
 func (m *Monitoring) SystemMetrics() SystemMetrics {
 	m.metrics.mu.RLock()
 	uptime := time.Since(m.metrics.startedAt).Seconds()
@@ -189,6 +242,7 @@ func (m *Monitoring) SystemMetrics() SystemMetrics {
 	runtime.ReadMemStats(&mem)
 
 	return SystemMetrics{
+		CPUPercent:    m.sampleCPUPercent(),
 		Goroutines:    runtime.NumGoroutine(),
 		UptimeSeconds: uptime,
 		MemoryMB:      float64(mem.Alloc) / 1024 / 1024,
@@ -322,7 +376,7 @@ func (m *Monitoring) handleLogSearch(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	logs := make([]LogEntry, 0)
 	for rows.Next() {
@@ -416,7 +470,7 @@ func (m *Monitoring) handleAlertList(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	alerts := make([]Alert, 0)
 	for rows.Next() {

@@ -12,6 +12,17 @@
 
 HTTPS is handled automatically by Caddy (Let's Encrypt). Update `/etc/caddy/Caddyfile` on the VPS if the domain changes.
 
+### Deployed sites (subdomains)
+
+| Item | Value |
+|------|--------|
+| Site URL pattern | `https://<site-slug>.bigbase.click/` |
+| DNS | Wildcard A record `*.bigbase.click` → VPS IPv4 (`89.116.26.187`) |
+| Caddy | `*.bigbase.click` block in `scripts/setup-vps.sh` (proxies to BigBase on `:8080`) |
+| BigBase flag | `--sites-domain bigbase.click` or env `BIGBASE_SITES_DOMAIN` |
+
+After deploying code, **redeploy each site** once so stored URLs and proxy host routes refresh (old rows may still say `http://localhost:…`).
+
 ## Infrastructure
 
 | Item | Value |
@@ -44,10 +55,14 @@ HTTPS is handled automatically by Caddy (Let's Encrypt). Update `/etc/caddy/Cadd
 
 ## One-time setup
 
+`scripts/setup-vps.sh` installs **Node.js 20 LTS** (NodeSource), creates `/opt/bigbase/.npm`, and sets `HOME` / `NPM_CONFIG_CACHE` on the `bigbase` systemd unit so `npm install` works for the `--no-create-home` service user.
+
 ```bash
 export CONTABO_HOST=89.116.26.187
 ssh root@$CONTABO_HOST 'bash -s' < scripts/setup-vps.sh
 ```
+
+After upgrading an existing VPS, re-run the script (idempotent), then `systemctl daemon-reload && systemctl restart bigbase`, and redeploy Node sites.
 
 ## Operations
 

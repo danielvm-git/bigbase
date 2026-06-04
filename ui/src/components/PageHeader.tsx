@@ -11,7 +11,7 @@ export function PageHeader({ title, subtitle, children }: PageHeaderProps) {
     <div className="page-header">
       <div>
         <h1 className="page-title">{title}</h1>
-        {subtitle && <div className="page-subtitle">{subtitle}</div>}
+        {subtitle && <p className="page-subtitle">{subtitle}</p>}
       </div>
       {children && <div className="page-header-actions">{children}</div>}
     </div>

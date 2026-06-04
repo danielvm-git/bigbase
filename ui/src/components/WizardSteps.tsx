@@ -1,4 +1,4 @@
-import { Fragment } from 'react'
+import { Icon } from './Icon'
 
 interface WizardStepsProps {
   steps: string[]
@@ -12,26 +12,29 @@ export function WizardSteps({ steps, current }: WizardStepsProps) {
         const n = i + 1
         const done = n < current
         const active = n === current
-        const lineDone = done
+        const isLast = i === steps.length - 1
         return (
-          <Fragment key={label}>
-            <li
+          <li key={label} className="wizard-steps-item" style={{ display: 'contents' }}>
+            <div
               className={[
                 'wizard-step',
                 done ? 'wizard-step--done' : '',
                 active ? 'wizard-step--active' : '',
               ].filter(Boolean).join(' ')}
+              aria-current={active ? 'step' : undefined}
             >
-              <span className="wizard-step-num">{done ? '✓' : n}</span>
+              <span className="wizard-step-num">
+                {done ? <Icon name="check" size={14} /> : n}
+              </span>
               <span className="wizard-step-label">{label}</span>
-            </li>
-            {i < steps.length - 1 && (
-              <div
-                className={`wizard-step-line${lineDone ? ' done' : ''}`}
-                aria-hidden="true"
+            </div>
+            {!isLast && (
+              <span
+                className={['wizard-step-line', done ? 'wizard-step-line--done' : ''].filter(Boolean).join(' ')}
+                aria-hidden
               />
             )}
-          </Fragment>
+          </li>
         )
       })}
     </ol>

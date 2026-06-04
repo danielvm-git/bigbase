@@ -30,6 +30,76 @@ function renderPage() {
   )
 }
 
+describe('CreateSitePage layout', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    getGitRepos.mockResolvedValue({ data: [], previewMode: false })
+    getGitHubStatus.mockResolvedValue({
+      data: { connected: true, configured: true, login: 'testuser' },
+      previewMode: false,
+    })
+    getGitHubRepos.mockResolvedValue({
+      data: [
+        { id: 1, full_name: 'acme/one', default_branch: 'main', private: false },
+        { id: 2, full_name: 'acme/two', default_branch: 'main', private: true, description: 'Second' },
+      ],
+      previewMode: false,
+    })
+  })
+
+  it('applies grid layout to choice cards', async () => {
+    const { container } = renderPage()
+    await waitFor(() => {
+      expect(screen.getByText("Where's your code?")).toBeInTheDocument()
+    })
+    const grid = container.querySelector('.choice-grid')
+    expect(grid).toBeTruthy()
+    expect(getComputedStyle(grid!).display).toBe('grid')
+  })
+
+  it('renders repo picker as a vertical list', async () => {
+    const { container } = renderPage()
+    await waitFor(() => {
+      expect(screen.getByText('acme/one')).toBeInTheDocument()
+    })
+    const picker = container.querySelector('.repo-picker')
+    expect(picker).toBeTruthy()
+    expect(getComputedStyle(picker!).flexDirection).toBe('column')
+    expect(container.querySelectorAll('.repo-picker-item').length).toBe(2)
+  })
+
+  it('uses a 3-step wizard rail', async () => {
+    renderPage()
+    await waitFor(() => {
+      expect(screen.getByText('Source')).toBeInTheDocument()
+    })
+    expect(screen.getByText('Configure')).toBeInTheDocument()
+    expect(screen.getByText('Deploy')).toBeInTheDocument()
+    expect(screen.queryByText('Review')).not.toBeInTheDocument()
+  })
+
+  it('does not render pre-fix copy or 4-step review wizard', async () => {
+    renderPage()
+    await waitFor(() => {
+      expect(screen.getByText("Where's your code?")).toBeInTheDocument()
+    })
+    expect(screen.queryByText('How do you want to add your app?')).not.toBeInTheDocument()
+    expect(screen.queryByText('Manual upload')).not.toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Create a new site' })).toBeInTheDocument()
+  })
+
+  it('wizard step rail uses horizontal flex (not stacked ol numbers)', async () => {
+    const { container } = renderPage()
+    await waitFor(() => {
+      expect(screen.getByText('Source')).toBeInTheDocument()
+    })
+    const steps = container.querySelector('.wizard-steps')
+    expect(steps).toBeTruthy()
+    expect(getComputedStyle(steps!).display).toBe('flex')
+    expect(container.querySelectorAll('.wizard-step-label').length).toBe(3)
+  })
+})
+
 describe('CreateSitePage GitHub source', () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -53,11 +123,10 @@ describe('CreateSitePage GitHub source', () => {
       expect(screen.getByText('failed to list repositories from GitHub')).toBeInTheDocument()
     })
     expect(screen.getByRole('button', { name: 'Reconnect GitHub' })).toBeInTheDocument()
-    expect(screen.getAllByText('Reconnect GitHub').length).toBeGreaterThanOrEqual(1)
     expect(screen.queryByPlaceholderText('Search repositories…')).not.toBeInTheDocument()
   })
 
-  it('shows Connect when connected but repo list is empty', async () => {
+  it('shows Authorize when connected but repo list is empty', async () => {
     getGitHubStatus.mockResolvedValue({
       data: { connected: true, configured: true, login: 'testuser' },
       previewMode: false,
@@ -67,12 +136,12 @@ describe('CreateSitePage GitHub source', () => {
     renderPage()
 
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: 'Connect GitHub' })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: 'Authorize GitHub' })).toBeInTheDocument()
     })
     expect(screen.queryByPlaceholderText('Search repositories…')).not.toBeInTheDocument()
   })
 
-  it('shows Connect GitHub when not connected', async () => {
+  it('shows Authorize GitHub when not connected', async () => {
     getGitHubStatus.mockResolvedValue({
       data: { connected: false, configured: true },
       previewMode: false,
@@ -82,8 +151,10 @@ describe('CreateSitePage GitHub source', () => {
     renderPage()
 
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: 'Connect GitHub' })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: 'Authorize GitHub' })).toBeInTheDocument()
     })
-    expect(screen.getByText('Install the BigBase GitHub App to list and deploy your repositories.')).toBeInTheDocument()
+    expect(
+      screen.getByText(/Choose which repositories BigBase can deploy/i),
+    ).toBeInTheDocument()
   })
 })

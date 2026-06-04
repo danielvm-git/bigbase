@@ -1,142 +1,124 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { PageHeader, Button, Input, Badge, statusBadgeVariant } from '../components'
+import { PageHeader, Button, Input, PreviewBanner, SitesListSkeleton } from '../components'
+import { SiteCard } from '../components/SiteCard'
+import { Icon } from '../components/Icon'
+import { getSites } from '../lib/sitesData'
+import { isPreviewForced, previewQuerySuffix } from '../lib/previewMode'
+import type { Site } from '../types/sites'
 
-interface Deployment {
-  id: string
-  repo_id: string
-  branch: string
-  commit_sha: string
-  status: string
-  url: string
-  port: number
-  app_type: string
-  created_at: string
-}
-
-interface Repo {
-  id: string
-  name: string
-}
+type EnvFilter = 'all' | 'production' | 'preview'
 
 export default function DeployPage() {
   const navigate = useNavigate()
-  const [deployments, setDeployments] = useState<Deployment[]>([])
-  const [repos, setRepos] = useState<Repo[]>([])
+  const [sites, setSites] = useState<Site[]>([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
-  const [showForm, setShowForm] = useState(false)
-  const [selectedRepoId, setSelectedRepoId] = useState('')
-  const [branch, setBranch] = useState('main')
+  const [previewMode, setPreviewMode] = useState(false)
+  const [filter, setFilter] = useState<EnvFilter>('all')
+  const [search, setSearch] = useState('')
 
-  const fetchDeployments = useCallback(async () => {
-    try {
-      const res = await fetch('/api/deploy')
-      const d = await res.json()
-      if (!res.ok) { setError(d.error || `error: ${res.status}`) }
-      else { setDeployments((d as { data: Deployment[] }).data || []) }
-    } catch { setError('network error') }
-    finally { setLoading(false) }
-  }, [])
-
-  const fetchRepos = useCallback(async () => {
-    try {
-      const res = await fetch('/api/git/repos')
-      const d = await res.json()
-      if (res.ok) { setRepos((d as { data: Repo[] }).data || []) }
-    } catch {}
+  const load = useCallback(async () => {
+    setLoading(true)
+    const result = await getSites()
+    setSites(result.data)
+    setPreviewMode(result.previewMode || isPreviewForced())
+    setLoading(false)
   }, [])
 
   useEffect(() => {
-    fetchDeployments()
-    fetchRepos()
-  }, [fetchDeployments, fetchRepos])
+    load()
+  }, [load])
 
-  useEffect(() => {
-    const hasActive = deployments.some(d => d.status === 'pending' || d.status === 'building')
-    if (!hasActive) return
-    const timer = setInterval(fetchDeployments, 3000)
-    return () => clearInterval(timer)
-  }, [deployments, fetchDeployments])
+  const pq = previewQuerySuffix()
+  const shown = sites.filter(s => {
+    const env = s.production_branch === 'main' ? 'production' : 'preview'
+    const matchesFilter = filter === 'all' || env === filter
+    const q = search.toLowerCase()
+    const matchesSearch =
+      !q ||
+      s.name.toLowerCase().includes(q) ||
+      (s.full_name || '').toLowerCase().includes(q)
+    return matchesFilter && matchesSearch
+  })
 
-  const handleCreate = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!selectedRepoId) return
-    setError('')
-    try {
-      const res = await fetch('/api/deploy', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ repo_id: selectedRepoId, branch }),
-      })
-      const d = await res.json()
-      if (!res.ok) { setError(d.error || 'create failed'); return }
-      setShowForm(false)
-      setSelectedRepoId('')
-      setBranch('main')
-      fetchDeployments()
-    } catch { setError('network error') }
+  if (loading) {
+    return (
+      <div>
+        <PageHeader title="Sites" />
+        <SitesListSkeleton />
+      </div>
+    )
   }
-
-  if (loading) return <div className="loading">Loading deployments...</div>
 
   return (
     <div>
-      <PageHeader title="Deployments">
-        <Button variant="secondary" size="sm" onClick={fetchDeployments}>Refresh</Button>
-        <Button variant="primary" size="sm" onClick={() => setShowForm(!showForm)}>
-          {showForm ? 'Cancel' : 'New Deployment'}
+      {(previewMode || isPreviewForced()) && <PreviewBanner />}
+
+      <PageHeader title="Sites">
+        <Button variant="primary" size="sm" onClick={() => navigate(`/deploy/new${pq}`)}>
+          <Icon name="plus" size={16} />
+          Create site
         </Button>
       </PageHeader>
-      {error && <p className="input-error-text">{error}</p>}
+      <p className="page-subtitle" style={{ marginTop: 'calc(-1 * var(--space-8))', marginBottom: 'var(--space-12)' }}>
+        Deploy and host web apps straight from Git.
+      </p>
 
-      {showForm && (
-        <div className="card" style={{ marginBottom: 'var(--space-8)' }}>
-          <form onSubmit={handleCreate} className="form-row">
-            <select className="input" value={selectedRepoId} onChange={e => setSelectedRepoId(e.target.value)} required style={{ flex: 1, minWidth: 140 }}>
-              <option value="">Select repo...</option>
-              {repos.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
-            </select>
-            <Input placeholder="Branch" value={branch} onChange={e => setBranch(e.target.value)} />
-            <Button type="submit" size="sm">Deploy</Button>
-          </form>
+      {sites.length === 0 ? (
+        <div className="empty-state">
+          <div className="empty-state-icon">
+            <Icon name="rocket" size={28} />
+          </div>
+          <div className="empty-state-title">Create your first site</div>
+          <div className="empty-state-text">
+            Connect a Git repository and BigBase builds, deploys, and serves it with a live preview URL —
+            auto-redeploying on every push.
+          </div>
+          <Button variant="primary" size="sm" onClick={() => navigate(`/deploy/new${pq}`)}>
+            <Icon name="plus" size={16} />
+            Create site
+          </Button>
         </div>
-      )}
-
-      {deployments.length === 0 && !error && <p className="dim">No deployments yet.</p>}
-      {deployments.length > 0 && (
-        <div className="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Status</th>
-                <th>Repo</th>
-                <th>Branch</th>
-                <th>Type</th>
-                <th>URL</th>
-                <th>Commit</th>
-                <th>Created</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {deployments.map(d => (
-                <tr key={d.id}>
-                  <td><Badge variant={statusBadgeVariant(d.status)}>{d.status}</Badge></td>
-                  <td><code>{d.repo_id.slice(0, 8)}</code></td>
-                  <td>{d.branch}</td>
-                  <td>{d.app_type || '—'}</td>
-                  <td>{d.url ? <a href={d.url} target="_blank" rel="noreferrer">{d.url}</a> : '—'}</td>
-                  <td><code>{d.commit_sha ? d.commit_sha.slice(0, 7) : '—'}</code></td>
-                  <td>{new Date(d.created_at).toLocaleString()}</td>
-                  <td>
-                    <Button variant="secondary" size="sm" onClick={() => navigate(`/deploy/${d.id}`)}>Logs</Button>
-                  </td>
-                </tr>
+      ) : (
+        <>
+          <div className="sites-toolbar">
+            <div className="segmented-control" role="tablist" aria-label="Environment filter">
+              {(['all', 'production', 'preview'] as const).map(f => (
+                <button
+                  key={f}
+                  type="button"
+                  role="tab"
+                  aria-selected={filter === f}
+                  className={filter === f ? 'segmented-control--active' : ''}
+                  onClick={() => setFilter(f)}
+                >
+                  {f}
+                </button>
               ))}
-            </tbody>
-          </table>
-        </div>
+            </div>
+            <div className="sites-search input-with-prefix">
+              <span className="input-prefix" aria-hidden>
+                <Icon name="search" size={14} />
+              </span>
+              <Input
+                placeholder="Search sites"
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                aria-label="Search sites"
+              />
+            </div>
+          </div>
+
+          {shown.length === 0 ? (
+            <p className="dim">No sites match your filters.</p>
+          ) : (
+            <div className="site-grid">
+              {shown.map(s => (
+                <SiteCard key={s.id} site={s} />
+              ))}
+            </div>
+          )}
+        </>
       )}
     </div>
   )

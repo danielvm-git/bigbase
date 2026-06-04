@@ -1,3 +1,38 @@
+## [2.1.9](https://github.com/danielvm-git/bigbase/compare/v2.1.8...v2.1.9) (2026-06-04)
+
+
+### Bug Fixes
+
+* **deploy:** Node 20 VPS setup, npm HOME env, and deploy error UX ([2c7d660](https://github.com/danielvm-git/bigbase/commit/2c7d660114245e9ab0c7375e7f37cd1411fdf9cf))
+
+## [2.1.8](https://github.com/danielvm-git/bigbase/compare/v2.1.7...v2.1.8) (2026-06-04)
+
+
+### Bug Fixes
+
+* **ui:** align dashboard with prototype and live CPU/memory metrics ([4f55e00](https://github.com/danielvm-git/bigbase/commit/4f55e004c707db49ad243a84a13dad60defc95ea))
+
+## [2.1.7](https://github.com/danielvm-git/bigbase/compare/v2.1.6...v2.1.7) (2026-06-04)
+
+
+### Bug Fixes
+
+* **deploy:** use https://slug.bigbase.click for production site URLs ([#11](https://github.com/danielvm-git/bigbase/issues/11)) ([582d143](https://github.com/danielvm-git/bigbase/commit/582d143bfc592df61011280941d06e6354326c1e))
+
+## [2.1.6](https://github.com/danielvm-git/bigbase/compare/v2.1.5...v2.1.6) (2026-06-04)
+
+
+### Bug Fixes
+
+* **ui:** port Sites prototype CSS and block unstyled deploy regressions ([26aba30](https://github.com/danielvm-git/bigbase/commit/26aba30a291f16ae2a8c97dd336ccb99ee1b1a01))
+
+## [2.1.5](https://github.com/danielvm-git/bigbase/compare/v2.1.4...v2.1.5) (2026-06-03)
+
+
+### Bug Fixes
+
+* **github:** close audit gaps for create-site reconnect UX ([4767cf7](https://github.com/danielvm-git/bigbase/commit/4767cf7da869c8f79685797139184e344cb22057))
+
 ## [2.1.4](https://github.com/danielvm-git/bigbase/compare/v2.1.3...v2.1.4) (2026-06-03)
 
 

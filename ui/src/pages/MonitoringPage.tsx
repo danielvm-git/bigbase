@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react'
 import { PageHeader, Button, Input, Tabs, Badge } from '../components'
+import { fetchMonitoringMetricsWarmed } from '../lib/metrics'
 
 interface SystemMetrics {
   cpu_percent: number
@@ -49,8 +50,18 @@ export default function MonitoringPage() {
 
   const fetchMetrics = useCallback(async () => {
     try {
-      const res = await fetch('/api/monitoring/metrics')
-      if (res.ok) setMetrics(await res.json())
+      const data = await fetchMonitoringMetricsWarmed()
+      if (!data.system) return
+      const requests = data.requests ?? { total: 0, by_endpoint: {}, by_status: {}, avg_latency_ms: 0 }
+      setMetrics({
+        system: data.system,
+        requests: {
+          total: requests.total,
+          by_endpoint: requests.by_endpoint ?? {},
+          by_status: requests.by_status ?? {},
+          avg_latency_ms: requests.avg_latency_ms,
+        },
+      })
     } catch {}
   }, [])
 
@@ -122,7 +133,8 @@ export default function MonitoringPage() {
         <>
           <h2 className="section-title">System</h2>
           <div className="stats-grid">
-            <div className="stat-card"><span className="stat-count">{metrics.system.memory_mb.toFixed(1)}</span><span className="stat-label">Memory MB</span></div>
+            <div className="stat-card"><span className="stat-count">{metrics.system.cpu_percent.toFixed(1)}%</span><span className="stat-label">CPU</span></div>
+            <div className="stat-card"><span className="stat-count">{metrics.system.memory_mb.toFixed(1)}</span><span className="stat-label">Heap MB</span></div>
             <div className="stat-card"><span className="stat-count">{metrics.system.goroutines}</span><span className="stat-label">Goroutines</span></div>
             <div className="stat-card"><span className="stat-count">{fmtUptime(metrics.system.uptime_seconds)}</span><span className="stat-label">Uptime</span></div>
           </div>

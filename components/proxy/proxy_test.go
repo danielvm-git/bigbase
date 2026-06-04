@@ -350,6 +350,24 @@ func TestProxyHealthEndpoint(t *testing.T) {
 	if len(body) == 0 {
 		t.Fatal("expected non-empty health response")
 	}
+
+	var health struct {
+		Status     string `json:"status"`
+		Components int    `json:"components"`
+		Running    int    `json:"running"`
+	}
+	if err := json.Unmarshal(body, &health); err != nil {
+		t.Fatalf("decode health: %v", err)
+	}
+	if health.Running > health.Components {
+		t.Fatalf("expected running <= components, got running=%d components=%d", health.Running, health.Components)
+	}
+	if health.Components > 0 && health.Running < 1 {
+		t.Fatalf("expected running >= 1 when components registered, got running=%d components=%d", health.Running, health.Components)
+	}
+	if health.Status != "ok" && health.Status != "degraded" {
+		t.Fatalf("unexpected status %q", health.Status)
+	}
 }
 
 func TestProxyVersionEndpoint(t *testing.T) {

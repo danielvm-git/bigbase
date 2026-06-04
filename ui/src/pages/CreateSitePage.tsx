@@ -1,17 +1,18 @@
 import { useEffect, useState } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useNavigate, useSearchParams, Link } from 'react-router-dom'
 import {
   PageHeader,
   Button,
   Input,
   Card,
-  CardHeader,
   ChoiceCard,
   WizardSteps,
   PreviewBanner,
   Badge,
   statusBadgeVariant,
+  Breadcrumb,
 } from '../components'
+import { Icon } from '../components/Icon'
 import {
   createSite,
   getGitHubRepos,
@@ -20,9 +21,11 @@ import {
   githubInstallURL,
 } from '../lib/sitesData'
 import { isPreviewForced, previewQuerySuffix } from '../lib/previewMode'
+import { siteDisplayUrl } from '../lib/format'
+import { deployWizardTitle } from '../lib/deployWizard'
 import type { GitHubRepo, GitRepo, SiteSource } from '../types/sites'
 
-const WIZARD_STEPS = ['Source', 'Configure', 'Review', 'Deploy']
+const WIZARD_STEPS = ['Source', 'Configure', 'Deploy']
 
 export default function CreateSitePage() {
   const nav = useNavigate()
@@ -34,6 +37,7 @@ export default function CreateSitePage() {
   const [previewMode, setPreviewMode] = useState(false)
   const [ghConnected, setGhConnected] = useState(false)
   const [ghConfigured, setGhConfigured] = useState(false)
+  const [ghLogin, setGhLogin] = useState<string | undefined>()
   const [ghRepos, setGhRepos] = useState<GitHubRepo[]>([])
   const [ghReposError, setGhReposError] = useState('')
   const [ghLoading, setGhLoading] = useState(true)
@@ -49,6 +53,7 @@ export default function CreateSitePage() {
   const [doneSiteId, setDoneSiteId] = useState('')
   const [doneUrl, setDoneUrl] = useState('')
   const [doneStatus, setDoneStatus] = useState('building')
+  const [doneError, setDoneError] = useState('')
 
   const loadGitHub = async () => {
     setGhLoading(true)
@@ -56,6 +61,7 @@ export default function CreateSitePage() {
     const st = await getGitHubStatus()
     setGhConnected(st.data.connected)
     setGhConfigured(st.data.configured)
+    setGhLogin(st.data.login)
     setPreviewMode(p => p || st.previewMode)
     const repos = await getGitHubRepos()
     setGhRepos(repos.data)
@@ -103,9 +109,13 @@ export default function CreateSitePage() {
   }
 
   const goConfigure = () => {
-    if (source === 'github' && selectedGh) {
-      setName(selectedGh.full_name.split('/').pop() ?? selectedGh.full_name)
-      setBranch(selectedGh.default_branch || 'main')
+    if (source === 'github') {
+      const repo = selectedGh ?? (previewMode && ghRepos[0] ? ghRepos[0] : null)
+      if (repo) {
+        setSelectedGh(repo)
+        setName(repo.full_name.split('/').pop() ?? repo.full_name)
+        setBranch(repo.default_branch || 'main')
+      }
     }
     if (source === 'existing') {
       const r = localRepos.find(x => x.id === selectedLocalId)
@@ -119,8 +129,11 @@ export default function CreateSitePage() {
 
   const handleDeploy = async () => {
     setError('')
+    setDoneError('')
     setDeploying(true)
-    setStep(4)
+    setStep(3)
+
+    const gh = selectedGh ?? (previewMode ? ghRepos[0] : null)
 
     const result = await createSite({
       source: source === 'github' ? 'github' : 'existing',
@@ -128,8 +141,8 @@ export default function CreateSitePage() {
       branch,
       root_path: rootPath,
       git_repo_id: source === 'existing' ? selectedLocalId : undefined,
-      github_repo_id: source === 'github' ? selectedGh?.id : undefined,
-      github_full_name: source === 'github' ? selectedGh?.full_name : undefined,
+      github_repo_id: source === 'github' ? gh?.id : undefined,
+      github_full_name: source === 'github' ? gh?.full_name : undefined,
     })
 
     if (result.previewMode) {
@@ -146,36 +159,62 @@ export default function CreateSitePage() {
     if (result.error) {
       setError(result.error)
       setDeploying(false)
-      setStep(3)
+      setStep(2)
       return
     }
 
     const dep = result.deployment ?? result.site?.latest_deployment
     setDoneSiteId(result.site?.id ?? selectedLocalId)
-    setDoneStatus(dep?.status ?? 'building')
+    const initialStatus = dep?.status ?? 'building'
+    setDoneStatus(initialStatus)
     setDoneUrl(dep?.url ?? '')
-    setDeploying(false)
+    if (initialStatus === 'running' || initialStatus === 'failed') {
+      setDeploying(false)
+      if (initialStatus === 'failed' && dep && 'error_message' in dep) {
+        setDoneError(String((dep as { error_message?: string }).error_message ?? ''))
+      }
+    }
 
-    if (dep?.status === 'building' || dep?.status === 'pending') {
+    if (dep?.id && (initialStatus === 'building' || initialStatus === 'pending')) {
       const poll = setInterval(async () => {
         try {
-          const res = await fetch(`/api/deploy/${dep?.id}`)
+          const res = await fetch(`/api/deploy/${dep.id}`)
           if (!res.ok) return
-          const d = await res.json()
-          setDoneStatus(d.status)
+          const d = (await res.json()) as {
+            status?: string
+            url?: string
+            error_message?: string
+          }
+          if (d.status) setDoneStatus(d.status)
           if (d.url) setDoneUrl(d.url)
-          if (d.status === 'running' || d.status === 'failed') clearInterval(poll)
+          if (d.error_message) setDoneError(d.error_message)
+          if (d.status === 'running' || d.status === 'failed') {
+            setDeploying(false)
+            clearInterval(poll)
+          }
         } catch { /* ignore */ }
       }, 3000)
     }
   }
 
   const pq = previewQuerySuffix()
+  const sourceLabel =
+    source === 'github'
+      ? (selectedGh ?? ghRepos[0])?.full_name
+      : localRepos.find(r => r.id === selectedLocalId)?.name
 
   return (
     <div className="wizard">
-      <PageHeader title="Create site">
-        <Button variant="secondary" size="sm" onClick={() => nav(`/deploy${pq}`)}>
+      <Breadcrumb
+        items={[
+          { label: 'Sites', to: `/deploy${pq}` },
+          { label: 'Create site' },
+        ]}
+      />
+
+      <PageHeader title="Create a new site">
+        <Button variant="ghost" size="sm" onClick={() => nav(`/deploy${pq}`)}>
+          <Icon name="x" size={16} />
           Cancel
         </Button>
       </PageHeader>
@@ -186,70 +225,92 @@ export default function CreateSitePage() {
 
       {step === 1 && (
         <div className="wizard-panel">
-          <h2 className="section-title">How do you want to add your app?</h2>
+          <div className="wizard-intro">
+            <h2 className="wizard-intro-title">Where&apos;s your code?</h2>
+            <p className="wizard-intro-desc">
+              Pick a source. We detect the stack and build it for you.
+            </p>
+          </div>
+
           <div className="choice-grid">
             <ChoiceCard
-              icon="⎇"
-              title="Connect GitHub"
-              description="Import from a repository on GitHub. Recommended for ongoing deploys."
-              badge="Recommended"
+              icon={<Icon name="github" size={22} />}
+              title="Connect Git"
+              description="Deploy from GitHub. Redeploys automatically on push."
               selected={source === 'github'}
               onClick={() => setSource('github')}
             />
             <ChoiceCard
-              icon="◆"
-              title="BigBase git repo"
-              description="Deploy code already hosted on this server's git service."
+              icon={<Icon name="box" size={22} />}
+              title="Existing BigBase repo"
+              description="Use a repository already on this instance."
               selected={source === 'existing'}
               onClick={() => setSource('existing')}
             />
             <ChoiceCard
-              icon="▣"
-              title="Clone template"
-              description="Start from a starter template."
-              disabled
-            />
-            <ChoiceCard
-              icon="↑"
-              title="Manual upload"
-              description="Upload a tarball of your built site."
+              icon={<Icon name="rocket" size={22} />}
+              title="Start from template"
+              description="Astro, Next.js & more."
+              badge="Coming soon"
               disabled
             />
           </div>
 
           {source === 'github' && (
-            <div style={{ marginTop: 'var(--space-12)' }}>
+            <div className="source-panel">
               {showGitHubConnect && (
                 <Card>
-                  <CardHeader title={ghReposError ? 'Reconnect GitHub' : 'Connect GitHub'} />
                   {ghReposError && (
                     <p className="input-error-text" style={{ marginBottom: 'var(--space-6)' }}>
                       {ghReposError}
                     </p>
                   )}
-                  <p className="dim" style={{ marginBottom: 'var(--space-6)' }}>
-                    Install the BigBase GitHub App to list and deploy your repositories.
-                  </p>
-                  <Button
-                    variant="primary"
-                    size="sm"
-                    onClick={() => { window.location.href = githubInstallURL() }}
-                  >
-                    {ghReposError ? 'Reconnect GitHub' : 'Connect GitHub'}
-                  </Button>
+                  <div className="github-connect-panel">
+                    <div className="choice-card-icon">
+                      <Icon name="github" size={26} />
+                    </div>
+                    <h3 className="github-connect-title">
+                      {ghReposError ? 'Reconnect GitHub' : 'Connect your GitHub account'}
+                    </h3>
+                    <p className="github-connect-desc">
+                      Choose which repositories BigBase can deploy from your GitHub account.
+                    </p>
+                    <p className="github-connect-perms">
+                      We read repo metadata and listen for pushes to trigger builds—no write access to your code.
+                    </p>
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      onClick={() => { window.location.href = githubInstallURL() }}
+                    >
+                      <Icon name="github" size={16} />
+                      {ghReposError ? 'Reconnect GitHub' : 'Authorize GitHub'}
+                    </Button>
+                  </div>
                 </Card>
               )}
               {showGitHubRepoPicker && (
-                <>
+                <Card>
                   {ghLoading && <p className="dim">Loading repositories…</p>}
                   {!ghLoading && (
                     <>
-                      <Input
-                        placeholder="Search repositories…"
-                        value={repoFilter}
-                        onChange={e => setRepoFilter(e.target.value)}
-                      />
-                      <div className="repo-picker" style={{ marginTop: 'var(--space-4)' }}>
+                      {ghLogin && (
+                        <p className="dim" style={{ marginBottom: 'var(--space-4)' }}>
+                          Connected as <strong>{ghLogin}</strong>
+                        </p>
+                      )}
+                      <div className="input-with-prefix" style={{ marginBottom: 'var(--space-4)' }}>
+                        <span className="input-prefix" aria-hidden>
+                          <Icon name="search" size={14} />
+                        </span>
+                        <Input
+                          placeholder="Search repositories…"
+                          value={repoFilter}
+                          onChange={e => setRepoFilter(e.target.value)}
+                          aria-label="Search repositories"
+                        />
+                      </div>
+                      <div className="repo-picker">
                         {filteredGh.map(r => (
                           <button
                             key={r.id}
@@ -260,63 +321,84 @@ export default function CreateSitePage() {
                             ].filter(Boolean).join(' ')}
                             onClick={() => setSelectedGh(r)}
                           >
-                            <span className="repo-picker-name">{r.full_name}</span>
-                            {r.description && <span className="dim">{r.description}</span>}
+                            <div className="repo-picker-row">
+                              <Icon name="git-branch" size={16} className="dim" />
+                              <span className="repo-picker-name">{r.full_name}</span>
+                              {r.private && <Badge variant="neutral">Private</Badge>}
+                              {selectedGh?.id === r.id && <Badge variant="accent">Selected</Badge>}
+                            </div>
+                            {r.description && (
+                              <span className="repo-picker-desc">{r.description}</span>
+                            )}
                           </button>
                         ))}
                         {filteredGh.length === 0 && ghRepos.length === 0 && (
-                          <p className="dim" style={{ padding: 'var(--space-6)' }}>
-                            No repositories found. Grant the app access to repos on GitHub, then reconnect.
+                          <p className="repo-picker-empty">
+                            No repos yet—grant access on GitHub, then reconnect.
                           </p>
                         )}
                         {filteredGh.length === 0 && ghRepos.length > 0 && (
-                          <p className="dim" style={{ padding: 'var(--space-6)' }}>
-                            No repositories match your search.
+                          <p className="repo-picker-empty">
+                            {repoFilter
+                              ? `No repositories match "${repoFilter}".`
+                              : 'No repositories match your search.'}
                           </p>
                         )}
                       </div>
                       {!previewMode && (
                         <Button
-                          variant="secondary"
+                          variant="link"
                           size="sm"
                           style={{ marginTop: 'var(--space-4)' }}
                           onClick={() => { window.location.href = githubInstallURL() }}
                         >
-                          Add more repositories on GitHub
+                          Manage repository access on GitHub
                         </Button>
                       )}
                     </>
                   )}
-                </>
+                </Card>
               )}
             </div>
           )}
 
           {source === 'existing' && (
-            <div className="repo-picker" style={{ marginTop: 'var(--space-12)' }}>
-              {localRepos.length === 0 && (
-                <p className="dim">No git repos yet. Create one under Git Repos first.</p>
-              )}
-              {localRepos.map(r => (
-                <button
-                  key={r.id}
-                  type="button"
-                  className={[
-                    'repo-picker-item',
-                    selectedLocalId === r.id ? 'repo-picker-item--selected' : '',
-                  ].filter(Boolean).join(' ')}
-                  onClick={() => setSelectedLocalId(r.id)}
-                >
-                  <span className="repo-picker-name">{r.name}</span>
-                  <span className="dim">default: {r.default_branch}</span>
-                </button>
-              ))}
-            </div>
+            <Card>
+              <div className="repo-picker">
+                {localRepos.length === 0 && (
+                  <p className="repo-picker-empty">
+                    No git repos yet.{' '}
+                    <Link to="/repos">Create one under Git Repos</Link> first.
+                  </p>
+                )}
+                {localRepos.map(r => (
+                  <button
+                    key={r.id}
+                    type="button"
+                    className={[
+                      'repo-picker-item',
+                      selectedLocalId === r.id ? 'repo-picker-item--selected' : '',
+                    ].filter(Boolean).join(' ')}
+                    onClick={() => setSelectedLocalId(r.id)}
+                  >
+                    <div className="repo-picker-row">
+                      <Icon name="box" size={16} className="dim" />
+                      <span className="repo-picker-name">{r.name}</span>
+                      {selectedLocalId === r.id && <Badge variant="accent">Selected</Badge>}
+                    </div>
+                    <span className="repo-picker-desc">on this instance · default: {r.default_branch}</span>
+                  </button>
+                ))}
+              </div>
+            </Card>
           )}
 
           <div className="wizard-actions">
+            <Button variant="secondary" size="sm" onClick={() => nav(`/deploy${pq}`)}>
+              Cancel
+            </Button>
             <Button variant="primary" size="sm" disabled={!canNextSource()} onClick={goConfigure}>
-              Continue
+              Continue →
             </Button>
           </div>
         </div>
@@ -324,7 +406,15 @@ export default function CreateSitePage() {
 
       {step === 2 && (
         <div className="wizard-panel">
-          <h2 className="section-title">Configure your site</h2>
+          <div className="wizard-intro">
+            <h2 className="wizard-intro-title">Configure your site</h2>
+            <p className="wizard-intro-desc">
+              Review settings, then deploy. URL preview:{' '}
+              <span className="mono" style={{ fontFamily: 'var(--font-mono)' }}>
+                {siteDisplayUrl(name || 'your-site')}
+              </span>
+            </p>
+          </div>
           <div className="card">
             <div className="form-row" style={{ flexDirection: 'column', alignItems: 'stretch' }}>
               <Input label="Site name" value={name} onChange={e => setName(e.target.value)} required />
@@ -332,10 +422,24 @@ export default function CreateSitePage() {
               <Input label="Root directory" value={rootPath} onChange={e => setRootPath(e.target.value)} />
             </div>
           </div>
+          <Card>
+            <p><strong>Source:</strong> {sourceLabel}</p>
+            <p><strong>Branch:</strong> {branch}</p>
+            <p><strong>Root:</strong> <code>{rootPath}</code></p>
+            <p style={{ marginTop: 'var(--space-6)' }}>
+              <Badge variant="neutral">Stack detected after build</Badge>
+              <span className="dim" style={{ marginLeft: 'var(--space-4)' }}>
+                Node, Go, Python, or static
+              </span>
+            </p>
+          </Card>
+          {error && <p className="input-error-text">{error}</p>}
           <div className="wizard-actions">
-            <Button variant="secondary" size="sm" onClick={() => setStep(1)}>Back</Button>
-            <Button variant="primary" size="sm" disabled={!name.trim()} onClick={() => setStep(3)}>
-              Continue
+            <Button variant="secondary" size="sm" onClick={() => setStep(1)}>
+              ← Back
+            </Button>
+            <Button variant="primary" size="sm" disabled={!name.trim()} onClick={handleDeploy}>
+              Deploy
             </Button>
           </div>
         </div>
@@ -343,34 +447,21 @@ export default function CreateSitePage() {
 
       {step === 3 && (
         <div className="wizard-panel">
-          <h2 className="section-title">Review and deploy</h2>
-          <Card>
-            <CardHeader title={name} />
-            <p><strong>Source:</strong> {source === 'github' ? selectedGh?.full_name : localRepos.find(r => r.id === selectedLocalId)?.name}</p>
-            <p><strong>Branch:</strong> {branch}</p>
-            <p><strong>Root:</strong> <code>{rootPath}</code></p>
-            <p style={{ marginTop: 'var(--space-6)' }}>
-              <Badge variant="neutral">Stack detected after build</Badge>
-              <span className="dim" style={{ marginLeft: 'var(--space-4)' }}>Node, Go, Python, or static</span>
-            </p>
-          </Card>
-          {error && <p className="input-error-text">{error}</p>}
-          <div className="wizard-actions">
-            <Button variant="secondary" size="sm" onClick={() => setStep(2)}>Back</Button>
-            <Button variant="primary" size="sm" onClick={handleDeploy}>Deploy</Button>
-          </div>
-        </div>
-      )}
-
-      {step === 4 && (
-        <div className="wizard-panel">
           <Card>
             <div className="deploy-progress-card">
               {deploying && <div className="spinner" aria-hidden />}
               <h2 className="section-title" style={{ marginTop: 0 }}>
-                {deploying ? 'Building your site…' : 'Deployment ready'}
+                {deployWizardTitle(deploying, doneStatus)}
               </h2>
+              <p className="dim">
+                {siteDisplayUrl(name)} · {branch}
+              </p>
               <Badge variant={statusBadgeVariant(doneStatus)}>{doneStatus}</Badge>
+              {doneError && (
+                <p className="input-error-text" style={{ marginTop: 'var(--space-6)' }}>
+                  {doneError}
+                </p>
+              )}
               {doneUrl && (
                 <p style={{ marginTop: 'var(--space-8)' }}>
                   <Button as="a" href={doneUrl} target="_blank" rel="noreferrer" variant="primary" size="sm">
@@ -379,7 +470,7 @@ export default function CreateSitePage() {
                 </p>
               )}
               {!deploying && doneSiteId && (
-                <div className="wizard-actions" style={{ justifyContent: 'center', marginTop: 'var(--space-12)' }}>
+                <div className="wizard-actions" style={{ justifyContent: 'center', width: '100%' }}>
                   <Button variant="secondary" size="sm" onClick={() => nav(`/deploy/${doneSiteId}${pq}`)}>
                     View site
                   </Button>
