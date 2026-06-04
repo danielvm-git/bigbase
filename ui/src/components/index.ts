@@ -1,6 +1,8 @@
 export { Button } from './Button'
 export { Modal } from './Modal'
 export { Breadcrumb } from './Breadcrumb'
+export { Icon } from './Icon'
+export { SiteCard } from './SiteCard'
 export { Card, CardHeader } from './Card'
 export { Input } from './Input'
 export { Badge, statusBadgeVariant } from './Badge'

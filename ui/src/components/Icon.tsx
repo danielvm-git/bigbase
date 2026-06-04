@@ -4,6 +4,12 @@ export type IconName =
   | 'layout-dashboard'
   | 'rocket'
   | 'box'
+  | 'github'
+  | 'check'
+  | 'search'
+  | 'globe'
+  | 'plus'
+  | 'x'
   | 'database'
   | 'terminal'
   | 'hard-drive'
@@ -36,6 +42,28 @@ const paths: Record<IconName, ReactNode> = {
     </>
   ),
   box: <path d="M21 8v13H3V8M1 6h22v2H1zM10 12h4" />,
+  github: (
+    <>
+      <path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3-1 4.5-2.5 4.5-5.5a4.5 4.5 0 0 0-1.25-3.12A4.2 4.2 0 0 0 16 3.5a4.2 4.2 0 0 0-4.2 4.2c0 .28.03.56.08.83A4.5 4.5 0 0 0 10.5 11c0 3 1.5 4.5 4.5 5.5a4.8 4.8 0 0 0-1 3.5v4" />
+      <path d="M9 18c-4.51 2-5-2-7-2" />
+    </>
+  ),
+  check: <path d="M20 6 9 17l-5-5" />,
+  search: (
+    <>
+      <circle cx="11" cy="11" r="8" />
+      <path d="m21 21-4.3-4.3" />
+    </>
+  ),
+  globe: (
+    <>
+      <circle cx="12" cy="12" r="10" />
+      <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" />
+      <path d="M2 12h20" />
+    </>
+  ),
+  plus: <path d="M5 12h14M12 5v14" />,
+  x: <path d="M18 6 6 18M6 6l12 12" />,
   database: (
     <>
       <ellipse cx="12" cy="5" rx="9" ry="3" />

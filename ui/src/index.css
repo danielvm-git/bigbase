@@ -4,6 +4,7 @@
    Token reference: specs/epics/e17-enhanced-admin-ui/SYSTEM_DESIGN.md */
 
 @import './styles/globals.css';
+@import './styles/sites.css';
 
 /* ── Reset ──────────────────────────────────────────────────── */
 *,

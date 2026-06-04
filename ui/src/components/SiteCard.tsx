@@ -1,7 +1,9 @@
 import { Link } from 'react-router-dom'
 import type { Site } from '../types/sites'
 import { Badge, statusBadgeVariant } from './Badge'
+import { Icon } from './Icon'
 import { previewQuerySuffix } from '../lib/previewMode'
+import { mapDeployStatus, siteDisplayUrl, siteThumbStyle, timeAgo } from '../lib/format'
 
 interface SiteCardProps {
   site: Site
@@ -9,25 +11,44 @@ interface SiteCardProps {
 
 export function SiteCard({ site }: SiteCardProps) {
   const dep = site.latest_deployment
-  const status = dep?.status ?? '—'
+  const rawStatus = dep?.status ?? '—'
+  const displayStatus = dep ? mapDeployStatus(String(rawStatus)) : '—'
   const pq = previewQuerySuffix()
+  const url = dep?.url || siteDisplayUrl(site.name)
+  const commitShort = dep?.commit_sha?.slice(0, 7) ?? '—'
 
   return (
     <Link to={`/deploy/${site.id}${pq}`} className="site-card">
-      <div className="site-card-main">
-        <span className="site-card-name">{site.name}</span>
-        <span className="site-card-repo dim">{site.full_name || site.name}</span>
-      </div>
-      <div className="site-card-meta">
-        <span className="dim">{site.production_branch}</span>
-        {dep && (
-          <Badge variant={statusBadgeVariant(status)}>{status}</Badge>
-        )}
-        {dep?.created_at && (
-          <span className="site-card-time dim">
-            {new Date(dep.created_at).toLocaleDateString()}
+      <div className="site-card-thumb" style={siteThumbStyle(site.id)}>
+        {(displayStatus === 'building' || rawStatus === 'building' || rawStatus === 'pending') && (
+          <span className="site-card-thumb-badge">
+            <Badge variant="warning">Building</Badge>
           </span>
         )}
+        {(displayStatus === 'failed' || rawStatus === 'failed') && (
+          <span className="site-card-thumb-badge">
+            <Badge variant="error">Failed</Badge>
+          </span>
+        )}
+      </div>
+      <div className="site-card-body">
+        <div className="site-card-row">
+          <span className="site-card-name">{site.name}</span>
+          {dep && (
+            <Badge variant={statusBadgeVariant(rawStatus)}>{displayStatus}</Badge>
+          )}
+        </div>
+        <span className="site-card-url">
+          <Icon name="globe" size={12} />
+          {url.replace(/^https?:\/\//, '')}
+        </span>
+        <div className="site-card-meta">
+          <Icon name="git-branch" size={13} />
+          <span>
+            {site.production_branch} · {commitShort}
+            {dep?.created_at ? ` · ${timeAgo(dep.created_at)}` : ''}
+          </span>
+        </div>
       </div>
     </Link>
   )

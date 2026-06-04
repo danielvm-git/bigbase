@@ -1,6 +1,34 @@
 type: bug-registry
 context: infra
 bugs:
+  - id: BUG-2026-06-04T112700
+    date: "2026-06-04"
+    severity: high
+    priority: high
+    scope: ui
+    summary: Sites/Create site UI missing prototype CSS — mashed text, broken stepper, legacy deploy table
+    file: specs/bugs/BUG-2026-06-04T112700-sites-ui-missing-css.md
+    status: fixed
+    files_changed:
+      - ui/src/styles/sites.css
+      - ui/src/index.css
+      - ui/src/components/ChoiceCard.tsx
+      - ui/src/components/WizardSteps.tsx
+      - ui/src/components/Icon.tsx
+      - ui/src/components/SiteCard.tsx
+      - ui/src/pages/CreateSitePage.tsx
+      - ui/src/pages/DeployPage.tsx
+      - ui/src/lib/format.ts
+      - ui/vite.config.ts
+      - ui/src/test-setup.ts
+    approach: Port prototype sites CSS; 3-step wizard; Sites card grid; sites.contract.test.ts; verify-sites-css-in-dist.mjs on build
+    risk_level: low
+    regression_guards:
+      - ui/src/styles/sites.contract.test.ts
+      - ui/scripts/verify-sites-css-in-dist.mjs
+    related:
+      - BUG-2026-06-01T143800
+      - BUG-2026-06-03T122114
   - id: BUG-2026-06-03T122114
     date: "2026-06-03"
     severity: medium
