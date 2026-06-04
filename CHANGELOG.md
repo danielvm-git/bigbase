@@ -1,3 +1,10 @@
+## [2.1.7](https://github.com/danielvm-git/bigbase/compare/v2.1.6...v2.1.7) (2026-06-04)
+
+
+### Bug Fixes
+
+* **deploy:** use https://slug.bigbase.click for production site URLs ([#11](https://github.com/danielvm-git/bigbase/issues/11)) ([582d143](https://github.com/danielvm-git/bigbase/commit/582d143bfc592df61011280941d06e6354326c1e))
+
 ## [2.1.6](https://github.com/danielvm-git/bigbase/compare/v2.1.5...v2.1.6) (2026-06-04)
 
 
