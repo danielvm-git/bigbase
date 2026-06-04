@@ -1,9 +1,9 @@
+import { SkeletonCard } from './SkeletonCard'
+
 export function SitesListSkeleton() {
   return (
     <div className="sites-skeleton-list" aria-busy="true" aria-label="Loading sites">
-      {[1, 2, 3].map(i => (
-        <div key={i} className="skeleton site-card-skeleton" />
-      ))}
+      <SkeletonCard count={3} />
     </div>
   )
 }
