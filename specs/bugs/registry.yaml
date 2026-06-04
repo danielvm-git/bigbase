@@ -1,6 +1,28 @@
 type: bug-registry
 context: infra
 bugs:
+  - id: BUG-2026-06-04T120800
+    date: "2026-06-04"
+    severity: high
+    priority: high
+    scope: deploy,scripts
+    summary: Node deploy fails — npm EACCES (no HOME) and Node 18 too old for Vite 8
+    file: specs/bugs/BUG-2026-06-04T120800-deploy-npm-eacces-node20.md
+    status: fixed
+    related:
+      - BUG-2026-06-04T120500
+      - BUG-2026-06-04T114000
+  - id: BUG-2026-06-04T120500
+    date: "2026-06-04"
+    severity: high
+    priority: high
+    scope: deploy,ui,scripts
+    summary: Node deploy fails on VPS — npm not in PATH; create-site wizard shows "Your site is live" when failed
+    file: specs/bugs/BUG-2026-06-04T120500-deploy-node-npm-missing.md
+    status: fixed
+    related:
+      - BUG-2026-06-04T120800
+      - BUG-2026-06-04T114000
   - id: BUG-2026-06-04T120000
     date: "2026-06-04"
     severity: medium

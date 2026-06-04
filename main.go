@@ -136,6 +136,7 @@ func startProxy() {
 	depComp := deploy.New(deploy.Options{
 		DB:           d,
 		Logger:       logger,
+		BuildHome:    os.Getenv("BIGBASE_HOME"),
 		PublicDomain: sitesDomainVal,
 		HostRouter:   p,
 	})

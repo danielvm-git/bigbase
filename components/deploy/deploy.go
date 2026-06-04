@@ -1,6 +1,7 @@
 package deploy
 
 import (
+	"bytes"
 	"context"
 	"crypto/rand"
 	"database/sql"
@@ -52,15 +53,16 @@ const (
 )
 
 type Deployment struct {
-	ID        string  `json:"id"`
-	RepoID    string  `json:"repo_id"`
-	Branch    string  `json:"branch"`
-	CommitSHA string  `json:"commit_sha"`
-	Status    string  `json:"status"`
-	URL       string  `json:"url"`
-	Port      int     `json:"port"`
-	AppType   AppType `json:"app_type"`
-	CreatedAt string  `json:"created_at"`
+	ID           string  `json:"id"`
+	RepoID       string  `json:"repo_id"`
+	Branch       string  `json:"branch"`
+	CommitSHA    string  `json:"commit_sha"`
+	Status       string  `json:"status"`
+	URL          string  `json:"url"`
+	Port         int     `json:"port"`
+	AppType      AppType `json:"app_type"`
+	ErrorMessage string  `json:"error_message,omitempty"`
+	CreatedAt    string  `json:"created_at"`
 }
 
 type runningApp struct {
@@ -82,6 +84,7 @@ type Deploy struct {
 	logger        Logger
 	buildsDir     string
 	gitDir        string
+	buildHome     string
 	basePort      int
 	publicDomain  string
 	useHTTPS      bool
@@ -97,6 +100,7 @@ type Options struct {
 	Logger       Logger
 	BuildsDir    string
 	GitDir       string
+	BuildHome    string
 	BasePort     int
 	PublicDomain string
 	UseHTTPS     bool
@@ -137,6 +141,7 @@ func New(opts Options) *Deploy {
 		logger:       logger,
 		buildsDir:    dir,
 		gitDir:       gitDir,
+		buildHome:    strings.TrimSpace(opts.BuildHome),
 		basePort:     basePort,
 		publicDomain: strings.TrimSpace(opts.PublicDomain),
 		useHTTPS:     useHTTPS,
@@ -169,9 +174,13 @@ func (d *Deploy) Start(ctx *kernel.Context) error {
 		url TEXT DEFAULT '',
 		port INTEGER DEFAULT 0,
 		app_type TEXT DEFAULT '',
+		error_message TEXT NOT NULL DEFAULT '',
 		created_at TEXT NOT NULL DEFAULT (datetime('now'))
 	)`); err != nil {
 		return fmt.Errorf("migrate deployments table: %w", err)
+	}
+	if err := d.ensureErrorMessageColumn(); err != nil {
+		return err
 	}
 	d.logger.Info("deploy component ready", "dir", d.buildsDir)
 	return nil
@@ -352,7 +361,7 @@ func (d *Deploy) runDeployment(deploy *Deployment, buildDir, repoName string) {
 
 	if err := d.buildApp(ctx, buildDir, appType); err != nil {
 		d.logger.Error("build app", "type", appType, "error", err)
-		d.updateStatus(deploy.ID, "failed")
+		d.failDeployment(deploy.ID, err)
 		return
 	}
 
@@ -409,25 +418,33 @@ func (d *Deploy) getCommitSHA(buildDir string) (string, error) {
 func (d *Deploy) buildApp(ctx context.Context, buildDir string, appType AppType) error {
 	switch appType {
 	case AppNode:
-		install := exec.CommandContext(ctx, "npm", "install")
-		install.Dir = buildDir
-		install.Stderr = nil
-		if err := install.Run(); err != nil {
+		if err := d.runBuildCommand(ctx, buildDir, "npm", "install"); err != nil {
 			return fmt.Errorf("npm install: %w", err)
 		}
-		build := exec.CommandContext(ctx, "npm", "run", "build")
-		build.Dir = buildDir
-		build.Stderr = nil
-		return build.Run()
+		if err := d.runBuildCommand(ctx, buildDir, "npm", "run", "build"); err != nil {
+			return fmt.Errorf("npm run build: %w", err)
+		}
+		return nil
 	case AppGo:
-		cmd := exec.CommandContext(ctx, "go", "build", "-o", "app", ".")
-		cmd.Dir = buildDir
-		cmd.Stderr = nil
-		return cmd.Run()
+		return d.runBuildCommand(ctx, buildDir, "go", "build", "-o", "app", ".")
 	case AppPython:
-		cmd := exec.CommandContext(ctx, "pip", "install", "-r", "requirements.txt")
-		cmd.Dir = buildDir
-		return cmd.Run()
+		return d.runBuildCommand(ctx, buildDir, "pip", "install", "-r", "requirements.txt")
+	}
+	return nil
+}
+
+func (d *Deploy) runBuildCommand(ctx context.Context, dir, name string, args ...string) error {
+	var stderr bytes.Buffer
+	cmd := exec.CommandContext(ctx, name, args...)
+	cmd.Dir = dir
+	cmd.Env = d.buildCmdEnv()
+	cmd.Stderr = &stderr
+	if err := cmd.Run(); err != nil {
+		detail := strings.TrimSpace(stderr.String())
+		if detail != "" {
+			return fmt.Errorf("%w: %s", err, detail)
+		}
+		return err
 	}
 	return nil
 }
@@ -498,6 +515,30 @@ func (d *Deploy) updateStatus(id, status string) {
 		"UPDATE deployments SET status = ? WHERE id = ?", status, id)
 }
 
+func (d *Deploy) failDeployment(id string, buildErr error) {
+	msg := buildErr.Error()
+	const maxLen = 2000
+	if len(msg) > maxLen {
+		msg = msg[:maxLen]
+	}
+	d.mu.Lock()
+	defer d.mu.Unlock()
+	_, _ = d.db.ExecContext(context.Background(),
+		"UPDATE deployments SET status = ?, error_message = ? WHERE id = ?", "failed", msg, id)
+}
+
+func (d *Deploy) ensureErrorMessageColumn() error {
+	_, err := d.db.ExecContext(context.Background(),
+		`ALTER TABLE deployments ADD COLUMN error_message TEXT NOT NULL DEFAULT ''`)
+	if err == nil {
+		return nil
+	}
+	if strings.Contains(strings.ToLower(err.Error()), "duplicate column") {
+		return nil
+	}
+	return fmt.Errorf("add error_message column: %w", err)
+}
+
 func (d *Deploy) finalizeDeploymentURL(deploy *Deployment, repoName string) {
 	url := deploymentURL(d.publicDomain, d.useHTTPS, repoName, deploy.Port)
 	host := deploymentHost(d.publicDomain, repoName)
@@ -566,7 +607,7 @@ func (d *Deploy) HandleList(w http.ResponseWriter, r *http.Request) {
 	}
 
 	rows, err := d.db.QueryContext(r.Context(),
-		"SELECT id, repo_id, COALESCE(branch,'main'), COALESCE(commit_sha,''), COALESCE(status,'pending'), COALESCE(url,''), COALESCE(port,0), COALESCE(app_type,''), created_at FROM deployments ORDER BY created_at DESC")
+		"SELECT id, repo_id, COALESCE(branch,'main'), COALESCE(commit_sha,''), COALESCE(status,'pending'), COALESCE(url,''), COALESCE(port,0), COALESCE(app_type,''), COALESCE(error_message,''), created_at FROM deployments ORDER BY created_at DESC")
 	if err != nil {
 		d.logger.Error("list deployments", "error", err)
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
@@ -577,7 +618,7 @@ func (d *Deploy) HandleList(w http.ResponseWriter, r *http.Request) {
 	deployments := make([]Deployment, 0)
 	for rows.Next() {
 		var dep Deployment
-		if err := rows.Scan(&dep.ID, &dep.RepoID, &dep.Branch, &dep.CommitSHA, &dep.Status, &dep.URL, &dep.Port, &dep.AppType, &dep.CreatedAt); err != nil {
+		if err := rows.Scan(&dep.ID, &dep.RepoID, &dep.Branch, &dep.CommitSHA, &dep.Status, &dep.URL, &dep.Port, &dep.AppType, &dep.ErrorMessage, &dep.CreatedAt); err != nil {
 			d.logger.Error("scan deployment", "error", err)
 			continue
 		}
@@ -620,8 +661,8 @@ func (d *Deploy) handleDeployByID(w http.ResponseWriter, r *http.Request) {
 	var dep Deployment
 	var appType string
 	err := d.db.QueryRowContext(r.Context(),
-		"SELECT id, repo_id, branch, commit_sha, status, url, port, app_type, created_at FROM deployments WHERE id = ?", id).
-		Scan(&dep.ID, &dep.RepoID, &dep.Branch, &dep.CommitSHA, &dep.Status, &dep.URL, &dep.Port, &appType, &dep.CreatedAt)
+		"SELECT id, repo_id, branch, commit_sha, status, url, port, app_type, COALESCE(error_message,''), created_at FROM deployments WHERE id = ?", id).
+		Scan(&dep.ID, &dep.RepoID, &dep.Branch, &dep.CommitSHA, &dep.Status, &dep.URL, &dep.Port, &appType, &dep.ErrorMessage, &dep.CreatedAt)
 	if err != nil {
 		writeJSON(w, http.StatusNotFound, map[string]string{"error": "deployment not found"})
 		return
@@ -647,12 +688,23 @@ func (d *Deploy) handleDeployLogs(w http.ResponseWriter, r *http.Request, id str
 		return
 	}
 
-	writeJSON(w, http.StatusOK, map[string]any{
+	var errMsg string
+	_ = d.db.QueryRowContext(r.Context(),
+		"SELECT COALESCE(error_message,'') FROM deployments WHERE id = ?", id).
+		Scan(&errMsg)
+
+	payload := map[string]any{
 		"deployment_id": id,
 		"status":        status,
-		"log_available": false,
-		"message":       "Build log persistence not yet implemented",
-	})
+		"log_available": errMsg != "",
+	}
+	if errMsg != "" {
+		payload["error_message"] = errMsg
+		payload["message"] = errMsg
+	} else {
+		payload["message"] = "Build log persistence not yet implemented"
+	}
+	writeJSON(w, http.StatusOK, payload)
 }
 
 var _ kernel.Component = (*Deploy)(nil)

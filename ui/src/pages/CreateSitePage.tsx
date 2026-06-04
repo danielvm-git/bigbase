@@ -22,6 +22,7 @@ import {
 } from '../lib/sitesData'
 import { isPreviewForced, previewQuerySuffix } from '../lib/previewMode'
 import { siteDisplayUrl } from '../lib/format'
+import { deployWizardTitle } from '../lib/deployWizard'
 import type { GitHubRepo, GitRepo, SiteSource } from '../types/sites'
 
 const WIZARD_STEPS = ['Source', 'Configure', 'Deploy']
@@ -52,6 +53,7 @@ export default function CreateSitePage() {
   const [doneSiteId, setDoneSiteId] = useState('')
   const [doneUrl, setDoneUrl] = useState('')
   const [doneStatus, setDoneStatus] = useState('building')
+  const [doneError, setDoneError] = useState('')
 
   const loadGitHub = async () => {
     setGhLoading(true)
@@ -127,6 +129,7 @@ export default function CreateSitePage() {
 
   const handleDeploy = async () => {
     setError('')
+    setDoneError('')
     setDeploying(true)
     setStep(3)
 
@@ -162,19 +165,33 @@ export default function CreateSitePage() {
 
     const dep = result.deployment ?? result.site?.latest_deployment
     setDoneSiteId(result.site?.id ?? selectedLocalId)
-    setDoneStatus(dep?.status ?? 'building')
+    const initialStatus = dep?.status ?? 'building'
+    setDoneStatus(initialStatus)
     setDoneUrl(dep?.url ?? '')
-    setDeploying(false)
+    if (initialStatus === 'running' || initialStatus === 'failed') {
+      setDeploying(false)
+      if (initialStatus === 'failed' && dep && 'error_message' in dep) {
+        setDoneError(String((dep as { error_message?: string }).error_message ?? ''))
+      }
+    }
 
-    if (dep?.status === 'building' || dep?.status === 'pending') {
+    if (dep?.id && (initialStatus === 'building' || initialStatus === 'pending')) {
       const poll = setInterval(async () => {
         try {
-          const res = await fetch(`/api/deploy/${dep?.id}`)
+          const res = await fetch(`/api/deploy/${dep.id}`)
           if (!res.ok) return
-          const d = await res.json()
-          setDoneStatus(d.status)
+          const d = (await res.json()) as {
+            status?: string
+            url?: string
+            error_message?: string
+          }
+          if (d.status) setDoneStatus(d.status)
           if (d.url) setDoneUrl(d.url)
-          if (d.status === 'running' || d.status === 'failed') clearInterval(poll)
+          if (d.error_message) setDoneError(d.error_message)
+          if (d.status === 'running' || d.status === 'failed') {
+            setDeploying(false)
+            clearInterval(poll)
+          }
         } catch { /* ignore */ }
       }, 3000)
     }
@@ -434,12 +451,17 @@ export default function CreateSitePage() {
             <div className="deploy-progress-card">
               {deploying && <div className="spinner" aria-hidden />}
               <h2 className="section-title" style={{ marginTop: 0 }}>
-                {deploying ? 'Building your site…' : 'Your site is live'}
+                {deployWizardTitle(deploying, doneStatus)}
               </h2>
               <p className="dim">
                 {siteDisplayUrl(name)} · {branch}
               </p>
               <Badge variant={statusBadgeVariant(doneStatus)}>{doneStatus}</Badge>
+              {doneError && (
+                <p className="input-error-text" style={{ marginTop: 'var(--space-6)' }}>
+                  {doneError}
+                </p>
+              )}
               {doneUrl && (
                 <p style={{ marginTop: 'var(--space-8)' }}>
                   <Button as="a" href={doneUrl} target="_blank" rel="noreferrer" variant="primary" size="sm">

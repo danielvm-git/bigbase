@@ -99,6 +99,47 @@ func (g *gitStub) Init(ctx *kernel.Context, config json.RawMessage) error { retu
 func (g *gitStub) Start(ctx *kernel.Context) error               { return os.MkdirAll(g.dir, 0755) }
 func (g *gitStub) Stop(ctx *kernel.Context) error                { return nil }
 
+func createTestNodeRepo(t *testing.T, database *db.DB, repoID, gitDir string) string {
+	t.Helper()
+
+	_, err := database.ExecContext(context.Background(),
+		`CREATE TABLE IF NOT EXISTS git_repos (
+			id TEXT PRIMARY KEY, name TEXT NOT NULL UNIQUE, owner_id INTEGER NOT NULL,
+			private INTEGER NOT NULL DEFAULT 1, default_branch TEXT NOT NULL DEFAULT 'main',
+			description TEXT DEFAULT '', created_at TEXT NOT NULL DEFAULT (datetime('now'))
+		)`)
+	if err != nil {
+		t.Fatalf("create git_repos table: %v", err)
+	}
+
+	_, err = database.ExecContext(context.Background(),
+		"INSERT INTO git_repos (id, name, owner_id, private, default_branch, description, created_at) VALUES (?, ?, ?, ?, ?, ?, datetime('now'))",
+		repoID, "node-fail-repo", 0, 1, "main", "node repo")
+	if err != nil {
+		t.Fatalf("insert repo: %v", err)
+	}
+
+	repoPath := filepath.Join(gitDir, repoID+".git")
+	mustRun(t, "git", "init", "--bare", "-b", "main", repoPath)
+	mustRun(t, "git", "config", "--global", "--add", "safe.directory", repoPath)
+
+	sourceDir := t.TempDir()
+	mustRun(t, "git", "init", "-b", "main", sourceDir)
+	mustRun(t, "git", "config", "--global", "--add", "safe.directory", sourceDir)
+	mustRun(t, "git", "-C", sourceDir, "config", "user.email", "test@test.com")
+	mustRun(t, "git", "-C", sourceDir, "config", "user.name", "test")
+	pkg := `{"name":"fail-build","private":true,"scripts":{"build":"false"}}`
+	if err := os.WriteFile(filepath.Join(sourceDir, "package.json"), []byte(pkg), 0644); err != nil {
+		t.Fatalf("write package.json: %v", err)
+	}
+	mustRun(t, "git", "-C", sourceDir, "add", ".")
+	mustRun(t, "git", "-C", sourceDir, "commit", "-m", "initial commit")
+	mustRun(t, "git", "-C", sourceDir, "remote", "add", "origin", repoPath)
+	mustRun(t, "git", "-C", sourceDir, "push", "-u", "origin", "main")
+
+	return repoID
+}
+
 func createTestRepo(t *testing.T, database *db.DB, repoID, gitDir string) string {
 	t.Helper()
 
@@ -808,5 +849,68 @@ func TestDeployPublicURL(t *testing.T) {
 	}
 	if url != "https://test-repo.bigbase.click" {
 		t.Fatalf("running url = %q", url)
+	}
+}
+
+func TestDeployBuildError(t *testing.T) {
+	if _, err := exec.LookPath("npm"); err != nil {
+		t.Skip("npm not in PATH")
+	}
+
+	_, handler, database, gitDir := setupDeploy(t)
+	repoID := createTestNodeRepo(t, database, "repo-node-fail", gitDir)
+
+	var buf bytes.Buffer
+	_ = json.NewEncoder(&buf).Encode(map[string]string{"repo_id": repoID})
+	req := httptest.NewRequest("POST", "/api/deploy", &buf)
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+	if w.Code != http.StatusCreated {
+		t.Fatalf("expected 201, got %d: %s", w.Code, w.Body.String())
+	}
+
+	var created map[string]any
+	if err := json.NewDecoder(w.Body).Decode(&created); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	depID, _ := created["id"].(string)
+
+	waitForDeploymentTerminal(t, handler, depID, 30*time.Second)
+
+	getReq := httptest.NewRequest("GET", "/api/deploy/"+depID, nil)
+	getW := httptest.NewRecorder()
+	handler.ServeHTTP(getW, getReq)
+	if getW.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d", getW.Code)
+	}
+
+	var got map[string]any
+	if err := json.NewDecoder(getW.Body).Decode(&got); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	if got["status"] != "failed" {
+		t.Fatalf("expected failed, got %v", got["status"])
+	}
+	errMsg, _ := got["error_message"].(string)
+	if errMsg == "" {
+		t.Fatalf("expected error_message, got %#v", got)
+	}
+	if !strings.Contains(errMsg, "npm") {
+		t.Fatalf("error_message should mention npm build, got %q", errMsg)
+	}
+
+	logReq := httptest.NewRequest("GET", "/api/deploy/"+depID+"/logs", nil)
+	logW := httptest.NewRecorder()
+	handler.ServeHTTP(logW, logReq)
+	if logW.Code != http.StatusOK {
+		t.Fatalf("logs expected 200, got %d", logW.Code)
+	}
+	var logs map[string]any
+	if err := json.NewDecoder(logW.Body).Decode(&logs); err != nil {
+		t.Fatalf("decode logs: %v", err)
+	}
+	if logs["log_available"] != true {
+		t.Fatalf("expected log_available true, got %v", logs["log_available"])
 	}
 }

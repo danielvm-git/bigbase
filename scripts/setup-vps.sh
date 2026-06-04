@@ -56,7 +56,20 @@ apt-get install -y -qq \
   gnupg \
   ufw \
   caddy \
-  rsync
+  rsync \
+  ca-certificates
+
+# Node.js 20+ for Vite/npm site builds (requires Node >= 20.19)
+NODE_MAJOR=0
+if command -v node >/dev/null 2>&1; then
+  NODE_MAJOR=$(node -v 2>/dev/null | sed -E 's/^v([0-9]+).*/\1/')
+fi
+if [ "${NODE_MAJOR:-0}" -lt 20 ]; then
+  info "  Installing Node.js 20 LTS (NodeSource)..."
+  curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+  apt-get install -y -qq nodejs
+fi
+info "  Node $(node -v), npm $(npm -v)"
 
 # ============================================================================
 # Step 2: Create bigbase user
@@ -77,7 +90,9 @@ mkdir -p "${BIGBASE_HOME}/bin"
 mkdir -p "${BIGBASE_HOME}/data"
 mkdir -p "${BIGBASE_HOME}/backups"
 mkdir -p "${BIGBASE_HOME}/releases"
+mkdir -p "${BIGBASE_HOME}/.npm"
 chown -R "${BIGBASE_USER}:${BIGBASE_GROUP}" "${BIGBASE_HOME}"
+chmod 700 "${BIGBASE_HOME}/.npm"
 
 # ============================================================================
 # Step 4: Configure firewall (UFW)
@@ -178,6 +193,12 @@ ExecStart=${BIGBASE_HOME}/bin/bigbase serve \\
 # Environment variables for Google OAuth (set from GitHub Secrets)
 EnvironmentFile=-${BIGBASE_HOME}/.env
 
+# npm builds (user has --no-create-home; Vite needs Node 24 LTS on PATH)
+Environment=BIGBASE_HOME=${BIGBASE_HOME}
+Environment=HOME=${BIGBASE_HOME}
+Environment=NPM_CONFIG_CACHE=${BIGBASE_HOME}/.npm
+Environment=PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
 # Restart behavior
 Restart=always
 RestartSec=5
@@ -196,6 +217,7 @@ ProtectHome=yes
 ReadWritePaths=${BIGBASE_HOME}/data
 ReadWritePaths=${BIGBASE_HOME}/backups
 ReadWritePaths=${BIGBASE_HOME}/secrets
+ReadWritePaths=${BIGBASE_HOME}/.npm
 
 [Install]
 WantedBy=multi-user.target
