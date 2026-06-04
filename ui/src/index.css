@@ -734,11 +734,6 @@ select.input {
 @keyframes status-pulse {
   to { transform: rotate(360deg); }
 }
-=======
-  gap: var(--space-4);
-  flex-shrink: 0;
-}
->>>>>>> origin/main
 
 /* Table */
 .table-wrap {

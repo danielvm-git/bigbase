@@ -14,27 +14,33 @@ describe('WizardSteps', () => {
   })
 
   it('marks current step with --active class', () => {
-    render(<WizardSteps steps={steps} current={2} />)
-    const items = screen.getAllByRole('listitem')
-    expect(items[1].className).toContain('wizard-step--active')
+    const { container } = render(<WizardSteps steps={steps} current={2} />)
+    // Each step is a .wizard-steps-item <li> with a .wizard-step child div
+    // whose className encodes the --active / --done modifier.
+    const stepDivs = container.querySelectorAll('.wizard-step')
+    expect(stepDivs[1].className).toContain('wizard-step--active')
   })
 
   it('marks earlier steps with --done class', () => {
-    render(<WizardSteps steps={steps} current={3} />)
-    const items = screen.getAllByRole('listitem')
-    expect(items[0].className).toContain('wizard-step--done')
-    expect(items[1].className).toContain('wizard-step--done')
-    expect(items[2].className).toContain('wizard-step--active')
+    const { container } = render(<WizardSteps steps={steps} current={3} />)
+    const stepDivs = container.querySelectorAll('.wizard-step')
+    expect(stepDivs[0].className).toContain('wizard-step--done')
+    expect(stepDivs[1].className).toContain('wizard-step--done')
+    expect(stepDivs[2].className).toContain('wizard-step--active')
   })
 
-  it('renders a check glyph for done steps', () => {
-    render(<WizardSteps steps={steps} current={3} />)
-    expect(screen.getAllByText('✓').length).toBe(2)
+  it('renders a check icon for done steps', () => {
+    const { container } = render(<WizardSteps steps={steps} current={3} />)
+    // Main version renders <Icon name="check" size={14} /> inside .wizard-step-num
+    const checkIcons = container.querySelectorAll('.wizard-step-num svg')
+    expect(checkIcons.length).toBe(2)
   })
 
   it('renders number for current step', () => {
-    render(<WizardSteps steps={steps} current={2} />)
-    expect(screen.getByText('2')).toBeInTheDocument()
+    const { container } = render(<WizardSteps steps={steps} current={2} />)
+    // Current step's .wizard-step-num should contain the literal "2"
+    const numSpans = container.querySelectorAll('.wizard-step-num')
+    expect(numSpans[1].textContent).toBe('2')
   })
 
   it('renders connector lines between every adjacent step pair', () => {
@@ -47,9 +53,9 @@ describe('WizardSteps', () => {
   it('marks connector line as done when source step is past', () => {
     const { container } = render(<WizardSteps steps={steps} current={3} />)
     const lines = container.querySelectorAll('.wizard-step-line')
-    expect(lines[0].className).toContain('done')
-    expect(lines[1].className).toContain('done')
-    expect(lines[2].className).not.toContain('done')
+    expect(lines[0].className).toContain('wizard-step-line--done')
+    expect(lines[1].className).toContain('wizard-step-line--done')
+    expect(lines[2].className).not.toContain('wizard-step-line--done')
   })
 
   it('exposes aria-label Progress on the list', () => {
