@@ -68,4 +68,21 @@ describe('SettingsPage', () => {
     // Use a data-testid to avoid the /12/ regex matching the date.
     expect(screen.getByTestId('usage-functions')).toHaveTextContent('12')
   })
+
+  it('ChangePasswordForm surfaces a demo-mode message and never an internal API path (security hardening)', () => {
+    // This guard prevents a recurrence of the bug where the form's
+    // mock submit used to fake a success and leak the internal
+    // '/api/auth' path to end users.
+    render(<SettingsPage />)
+    const currentPw = screen.getByLabelText('Current password')
+    const newPw = screen.getByLabelText('New password')
+    fireEvent.change(currentPw, { target: { value: 'old-password-123' } })
+    fireEvent.change(newPw, { target: { value: 'new-password-456' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Update password' }))
+    const status = screen.getByText(/Demo mode/i)
+    expect(status).toBeInTheDocument()
+    // Guard: no internal-API path strings in any user-visible text.
+    expect(document.body.textContent).not.toMatch(/\/api\//)
+    expect(document.body.textContent).not.toMatch(/\.go\b/)
+  })
 })
