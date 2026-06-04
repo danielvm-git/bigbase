@@ -9,7 +9,7 @@ architecture. Stack: Go 1.22+ / ECC Kernel + Plugins / SQLite + PostgreSQL.
 ## Commands
 | Action | Command |
 |--------|---------|
-| Run (serve) | `go run . serve [--port PORT] [--db PATH] [--google-client-id ID] [--google-client-secret SECRET]` |
+| Run (serve) | `go run . serve [--port PORT] [--db PATH] [--sites-domain DOMAIN] [--google-client-id ID] [--google-client-secret SECRET]` |
 | Run (CLI)   | `go run . status` / `go run . version` / `go run . components list` |
 | Test   | `go test ./...` |
 | Build  | `go build -o bigbase .` |

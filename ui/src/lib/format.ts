@@ -27,7 +27,7 @@ export function siteThumbStyle(siteId: string): { background: string } {
 
 export function siteDisplayUrl(name: string): string {
   const slug = name.replace(/[^a-z0-9-]/gi, '-').toLowerCase() || 'site'
-  return `${slug}.bigbase.local`
+  return `https://${slug}.bigbase.click`
 }
 
 export function mapDeployStatus(status: string): string {

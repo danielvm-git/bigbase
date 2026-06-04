@@ -11,6 +11,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -744,5 +745,68 @@ func TestDeployLogStream(t *testing.T) {
 
 	if gotStatus := logResp["status"]; gotStatus == "" {
 		t.Fatal("expected non-empty status in log response")
+	}
+}
+
+func TestDeployPublicURL(t *testing.T) {
+	logger := testLogger{}
+	k := kernel.New(logger)
+	database := db.New(db.Options{Path: ":memory:", Logger: logger})
+	gitDir := t.TempDir()
+	buildsDir := t.TempDir()
+	gitComp := newGitStub(gitDir)
+
+	dep := deploy.New(deploy.Options{
+		DB:           database,
+		Logger:       logger,
+		BuildsDir:    buildsDir,
+		GitDir:       gitDir,
+		PublicDomain: "bigbase.click",
+	})
+	k.Register(database)
+	k.Register(gitComp)
+	k.Register(dep)
+	if err := k.Start(); err != nil {
+		t.Fatalf("kernel start: %v", err)
+	}
+	t.Cleanup(func() { _ = k.Stop() })
+
+	handler := dep.Handler()
+	repoID := createTestRepo(t, database, "repo-public", gitDir)
+
+	var buf bytes.Buffer
+	_ = json.NewEncoder(&buf).Encode(map[string]string{"repo_id": repoID, "branch": "main"})
+	req := httptest.NewRequest("POST", "/api/deploy", &buf)
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+	if w.Code != http.StatusCreated {
+		t.Fatalf("create failed: %d: %s", w.Code, w.Body.String())
+	}
+
+	var created map[string]any
+	_ = json.NewDecoder(w.Body).Decode(&created)
+	depID, _ := created["id"].(string)
+	initialURL, _ := created["url"].(string)
+	if strings.Contains(initialURL, "localhost") {
+		t.Fatalf("initial url should be public, got %q", initialURL)
+	}
+	if !strings.HasPrefix(initialURL, "https://test-repo.bigbase.click") {
+		t.Fatalf("initial url = %q, want https://test-repo.bigbase.click", initialURL)
+	}
+
+	waitForDeploymentTerminal(t, handler, depID, 10*time.Second)
+
+	getReq := httptest.NewRequest("GET", "/api/deploy/"+depID, nil)
+	getW := httptest.NewRecorder()
+	handler.ServeHTTP(getW, getReq)
+	var got map[string]any
+	_ = json.NewDecoder(getW.Body).Decode(&got)
+	url, _ := got["url"].(string)
+	if strings.Contains(url, "localhost") {
+		t.Fatalf("running url should be public, got %q", url)
+	}
+	if url != "https://test-repo.bigbase.click" {
+		t.Fatalf("running url = %q", url)
 	}
 }

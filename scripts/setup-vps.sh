@@ -126,10 +126,30 @@ bigbase.click {
         format json
     }
 }
+
+# Deployed sites: https://<site-slug>.bigbase.click (requires DNS wildcard *.bigbase.click → VPS)
+*.bigbase.click {
+    reverse_proxy 127.0.0.1:${BIGBASE_PORT} {
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-Proto {scheme}
+    }
+
+    header {
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "SAMEORIGIN"
+        Referrer-Policy "strict-origin-when-cross-origin"
+        -Server
+    }
+
+    log {
+        output file /var/log/caddy/bigbase-sites-access.log
+        format json
+    }
+}
 CADDYEOF
 
 systemctl enable caddy
-info "  Caddy configured — https://bigbase.click → localhost:${BIGBASE_PORT}"
+info "  Caddy configured — https://bigbase.click and https://*.bigbase.click → localhost:${BIGBASE_PORT}"
 
 # ============================================================================
 # Step 6: Create systemd service for BigBase
@@ -152,7 +172,8 @@ WorkingDirectory=${BIGBASE_HOME}
 # The binary is deployed by GitHub Actions
 ExecStart=${BIGBASE_HOME}/bin/bigbase serve \\
     --port ${BIGBASE_PORT} \\
-    --db ${BIGBASE_DB}
+    --db ${BIGBASE_DB} \\
+    --sites-domain bigbase.click
 
 # Environment variables for Google OAuth (set from GitHub Secrets)
 EnvironmentFile=-${BIGBASE_HOME}/.env

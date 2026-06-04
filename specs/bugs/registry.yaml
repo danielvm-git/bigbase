@@ -1,6 +1,38 @@
 type: bug-registry
 context: infra
 bugs:
+  - id: BUG-2026-06-04T114000
+    date: "2026-06-04"
+    severity: high
+    priority: high
+    scope: deploy,proxy,main.go
+    summary: Production site deployments store localhost URL instead of https://slug.bigbase.click subdomain
+    file: specs/bugs/BUG-2026-06-04T114000-prod-site-localhost-url.md
+    status: fixed
+    files_changed:
+      - components/deploy/deploy.go
+      - components/deploy/urls.go
+      - components/deploy/urls_test.go
+      - components/deploy/deploy_test.go
+      - components/proxy/proxy.go
+      - components/proxy/hosts.go
+      - components/proxy/hosts_test.go
+      - components/sites/sites_test.go
+      - main.go
+      - scripts/setup-vps.sh
+      - specs/plans/DEPLOY.md
+      - ui/src/lib/format.ts
+      - ui/src/lib/format.test.ts
+    approach: Public URL builder + proxy Host registry + sites TriggerDeploy + Caddy wildcard + --sites-domain
+    risk_level: medium
+    commit_message: "fix(deploy): use https://slug.bigbase.click for production site URLs"
+    regression_guards:
+      - components/deploy/deploy_test.go TestDeployPublicURL
+      - components/deploy/urls_test.go TestDeploymentURL
+      - components/proxy/hosts_test.go TestProxyDeploymentHost
+      - components/sites/sites_test.go TestSitesCreateTriggersDeploy
+    related:
+      - BUG-2026-06-04T112700
   - id: BUG-2026-06-04T112700
     date: "2026-06-04"
     severity: high
