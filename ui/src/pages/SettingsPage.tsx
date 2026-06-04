@@ -1,4 +1,4 @@
-import { useState, useEffect, type FormEvent } from 'react'
+import { useState, type FormEvent } from 'react'
 import { PageHeader, Tabs, Card, CardHeader, Input, Button, Badge } from '../components'
 import { useCurrentUser } from '../hooks/useAuth'
 import { useWorkspace, useMembers } from '../hooks/useWorkspace'
@@ -67,7 +67,6 @@ function ChangePasswordForm() {
     // Stub: the form is demo-only. Do NOT signal success to the user
     // and never leak internal API paths. Real submit lands in a
     // follow-up batch that wires /api/auth.
-    // eslint-disable-next-line no-console
     console.info('[SettingsPage] ChangePasswordForm submit (stub):', {
       currentLen: current.length,
       nextLen: next.length,
@@ -109,25 +108,15 @@ function ChangePasswordForm() {
 function WorkspaceSection() {
   const { data: ws } = useWorkspace()
   const { data: members } = useMembers()
-  const [name, setName] = useState(ws?.name ?? '')
-  // When the real hook lands and re-emits (e.g. async data), keep the
-  // input in sync. Stubs return synchronously, so this is a no-op today.
-  useEffect(() => setName(ws?.name ?? ''), [ws?.name])
 
   return (
     <>
       <Card className="settings-section">
         <CardHeader title="Workspace" />
-        <Input
-          as="input"
-          label="Workspace name"
-          value={name}
-          onChange={e => setName(e.target.value)}
-          name="workspace-name"
-        />
-        <div className="settings-form-actions">
-          <Button variant="primary">Save</Button>
-        </div>
+        {/* `key` remounts the form when the workspace name changes,
+            which is the React-blessed way to "reset" local form state
+            from a prop without a setState-in-useEffect pattern. */}
+        <WorkspaceNameForm key={ws?.name ?? 'empty'} initialName={ws?.name ?? ''} />
       </Card>
       <Card className="settings-section">
         <CardHeader title={`Members (${members?.length ?? 0})`} />
@@ -140,6 +129,24 @@ function WorkspaceSection() {
           ))}
         </ul>
       </Card>
+    </>
+  )
+}
+
+function WorkspaceNameForm({ initialName }: { initialName: string }) {
+  const [name, setName] = useState(initialName)
+  return (
+    <>
+      <Input
+        as="input"
+        label="Workspace name"
+        value={name}
+        onChange={e => setName(e.target.value)}
+        name="workspace-name"
+      />
+      <div className="settings-form-actions">
+        <Button variant="primary">Save</Button>
+      </div>
     </>
   )
 }

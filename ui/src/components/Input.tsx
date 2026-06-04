@@ -34,12 +34,24 @@ export function Input(props: InputProps) {
   const inputClass =
     `input ${error ? 'input-error ' : ''}${mono ? 'input-mono ' : ''}${className}`.trim()
 
-  // prefix is only valid for the input variant
-  const prefix =
-    props.as !== 'textarea' && props.as !== 'select' ? props.prefix : undefined
+  // `prefix` is only valid for the input variant; we render it as a
+  // sibling element above the field rather than as an HTML attribute
+  // (and we have to Omit it from the spread because React 19's
+  // InputHTMLAttributes includes a native `prefix: string` HTML
+  // attribute that would type-conflict with our `prefix?: ReactElement`).
+  // textarea and select variants don't carry `prefix` in their type.
+  const isInputVariant = props.as !== 'textarea' && props.as !== 'select'
+  const prefix = isInputVariant ? props.prefix : undefined
 
-  // Strip the custom `prefix` prop before passing to the underlying input
-  const { prefix: _ignored, ...inputAttrs } = rest as InputAsInput & { prefix?: ReactElement }
+  // Strip `prefix` from the rest object before spreading onto the
+  // native <input>. The `_` rename flags the intent (this is the
+  // standard "I know I'm dropping this key" convention); the eslint
+  // disable is the project's own noUnusedLocals not honouring that
+  // convention yet. Tracked to lift when the lint config catches up.
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { prefix: _stripPrefix, ...inputAttrs } =
+    (rest as InputAsInput & { prefix?: ReactElement })
+  void _stripPrefix
 
   const inputElement =
     props.as === 'textarea' ? (
