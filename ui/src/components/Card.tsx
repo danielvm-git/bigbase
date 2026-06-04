@@ -2,7 +2,12 @@ import type { ReactNode, HTMLAttributes } from 'react'
 
 interface CardProps extends HTMLAttributes<HTMLDivElement> {
   children: ReactNode
-  /** Render as a clickable card with hover affordance. */
+  /**
+   * Add a hover affordance (cursor + border + shadow). The Card itself
+   * stays a non-interactive `<div>` — wrap it in a `<button>` or `<a>`
+   * (or pass `onClick` + `role="button"` + a key handler through
+   * `...rest`) for clickable use. Decorative only by default.
+   */
   interactive?: boolean
 }
 

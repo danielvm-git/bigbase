@@ -64,8 +64,8 @@ describe('SettingsPage', () => {
     render(<SettingsPage />)
     fireEvent.click(screen.getByRole('button', { name: 'Billing' }))
     expect(screen.getByText(/pro/i)).toBeInTheDocument()
-    // Functions usage (12), not the renews date (2026-12-31)
-    const functionsCell = screen.getByText('Functions').parentElement
-    expect(functionsCell).toHaveTextContent('12')
+    // Functions usage (12), not the renews date (2026-12-31).
+    // Use a data-testid to avoid the /12/ regex matching the date.
+    expect(screen.getByTestId('usage-functions')).toHaveTextContent('12')
   })
 })
