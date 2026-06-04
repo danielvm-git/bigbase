@@ -39,9 +39,11 @@ type Proxy struct {
 	server *http.Server
 	mux    *http.ServeMux
 
-	starsMu   sync.Mutex
-	starsVal  string
-	starsTime time.Time
+	starsMu       sync.Mutex
+	starsVal      string
+	starsTime     time.Time
+	deployHostsMu sync.RWMutex
+	deployHosts   map[string]int
 }
 
 func (p *Proxy) GitHubStars() string {
@@ -119,7 +121,7 @@ func (p *Proxy) Start(ctx *kernel.Context) error {
 
 	p.server = &http.Server{
 		Addr:    ":" + p.port,
-		Handler: p.loggingMiddleware(p.mux),
+		Handler: p.loggingMiddleware(p.deploymentHostMiddleware(p.mux)),
 	}
 
 	go func() {

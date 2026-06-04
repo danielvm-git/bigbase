@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"log/slog"
@@ -88,6 +89,7 @@ func startProxy() {
 	githubAppSlug := serveFS.String("github-app-slug", "", "GitHub App slug")
 	githubPrivateKeyPath := serveFS.String("github-app-private-key-path", "", "GitHub App private key path")
 	githubWebhookSecret := serveFS.String("github-webhook-secret", "", "GitHub App webhook secret")
+	sitesDomain := serveFS.String("sites-domain", "", "Parent domain for deployed site subdomains (e.g. bigbase.click)")
 	_ = serveFS.Parse(os.Args[2:])
 
 	googleID := config.FlagOrEnv(*googleClientID, "GOOGLE_CLIENT_ID")
@@ -96,6 +98,7 @@ func startProxy() {
 	ghAppSlug := config.FlagOrEnv(*githubAppSlug, "GITHUB_APP_SLUG")
 	ghPrivateKeyPath := config.FlagOrEnv(*githubPrivateKeyPath, "GITHUB_APP_PRIVATE_KEY_PATH")
 	ghWebhookSecret := config.FlagOrEnv(*githubWebhookSecret, "GITHUB_WEBHOOK_SECRET")
+	sitesDomainVal := config.FlagOrEnv(*sitesDomain, "BIGBASE_SITES_DOMAIN")
 
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo}))
 	k := kernel.New(logger)
@@ -131,8 +134,10 @@ func startProxy() {
 		Logger: logger,
 	})
 	depComp := deploy.New(deploy.Options{
-		DB:     d,
-		Logger: logger,
+		DB:           d,
+		Logger:       logger,
+		PublicDomain: sitesDomainVal,
+		HostRouter:   p,
 	})
 	mComp := monitoring.New(monitoring.Options{
 		DB:     d,
@@ -149,6 +154,23 @@ func startProxy() {
 	st := sites.New(sites.Options{
 		DB:     d,
 		Logger: logger,
+		TriggerDeploy: func(ctx context.Context, repoID, branch string) (*sites.Deployment, error) {
+			dep, err := depComp.Trigger(ctx, repoID, branch)
+			if err != nil {
+				return nil, err
+			}
+			return &sites.Deployment{
+				ID:        dep.ID,
+				RepoID:    dep.RepoID,
+				Branch:    dep.Branch,
+				CommitSHA: dep.CommitSHA,
+				Status:    dep.Status,
+				URL:       dep.URL,
+				Port:      dep.Port,
+				AppType:   string(dep.AppType),
+				CreatedAt: dep.CreatedAt,
+			}, nil
+		},
 	})
 	rt := realtime.New(realtime.Options{
 		Logger: logger,

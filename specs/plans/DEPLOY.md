@@ -12,6 +12,17 @@
 
 HTTPS is handled automatically by Caddy (Let's Encrypt). Update `/etc/caddy/Caddyfile` on the VPS if the domain changes.
 
+### Deployed sites (subdomains)
+
+| Item | Value |
+|------|--------|
+| Site URL pattern | `https://<site-slug>.bigbase.click/` |
+| DNS | Wildcard A record `*.bigbase.click` → VPS IPv4 (`89.116.26.187`) |
+| Caddy | `*.bigbase.click` block in `scripts/setup-vps.sh` (proxies to BigBase on `:8080`) |
+| BigBase flag | `--sites-domain bigbase.click` or env `BIGBASE_SITES_DOMAIN` |
+
+After deploying code, **redeploy each site** once so stored URLs and proxy host routes refresh (old rows may still say `http://localhost:…`).
+
 ## Infrastructure
 
 | Item | Value |

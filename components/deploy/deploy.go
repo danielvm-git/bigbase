@@ -68,26 +68,39 @@ type runningApp struct {
 	server  *http.Server
 	port    int
 	buildID string
+	host    string
+}
+
+// DeploymentHostRegistry routes public hostnames to local deployment ports.
+type DeploymentHostRegistry interface {
+	RegisterDeploymentHost(host string, port int) error
+	UnregisterDeploymentHost(host string)
 }
 
 type Deploy struct {
-	db           DBer
-	logger       Logger
-	buildsDir    string
-	gitDir       string
-	basePort     int
-	mu           sync.Mutex
-	nextPort     int
-	apps         map[string]*runningApp
-	unsubscribe  func()
+	db            DBer
+	logger        Logger
+	buildsDir     string
+	gitDir        string
+	basePort      int
+	publicDomain  string
+	useHTTPS      bool
+	hostRouter    DeploymentHostRegistry
+	mu            sync.Mutex
+	nextPort      int
+	apps          map[string]*runningApp
+	unsubscribe   func()
 }
 
 type Options struct {
-	DB        DBer
-	Logger    Logger
-	BuildsDir string
-	GitDir    string
-	BasePort  int
+	DB           DBer
+	Logger       Logger
+	BuildsDir    string
+	GitDir       string
+	BasePort     int
+	PublicDomain string
+	UseHTTPS     bool
+	HostRouter   DeploymentHostRegistry
 }
 
 func New(opts Options) *Deploy {
@@ -115,14 +128,21 @@ func New(opts Options) *Deploy {
 	if basePort == 0 {
 		basePort = 10000
 	}
+	useHTTPS := opts.UseHTTPS
+	if strings.TrimSpace(opts.PublicDomain) != "" {
+		useHTTPS = true
+	}
 	return &Deploy{
-		db:        opts.DB,
-		logger:    logger,
-		buildsDir: dir,
-		gitDir:    gitDir,
-		basePort:  basePort,
-		nextPort:  basePort,
-		apps:      make(map[string]*runningApp),
+		db:           opts.DB,
+		logger:       logger,
+		buildsDir:    dir,
+		gitDir:       gitDir,
+		basePort:     basePort,
+		publicDomain: strings.TrimSpace(opts.PublicDomain),
+		useHTTPS:     useHTTPS,
+		hostRouter:   opts.HostRouter,
+		nextPort:     basePort,
+		apps:         make(map[string]*runningApp),
 	}
 }
 
@@ -165,6 +185,9 @@ func (d *Deploy) Stop(ctx *kernel.Context) error {
 	defer d.mu.Unlock()
 	
 	for id, app := range d.apps {
+		if app.host != "" && d.hostRouter != nil {
+			d.hostRouter.UnregisterDeploymentHost(app.host)
+		}
 		// Shutdown static HTTP servers
 		if app.server != nil {
 			shutdownCtx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
@@ -228,18 +251,38 @@ func (d *Deploy) HandleCreate(w http.ResponseWriter, r *http.Request) {
 		req.Branch = "main"
 	}
 
-	var repoName string
-	err := d.db.QueryRowContext(r.Context(), "SELECT name FROM git_repos WHERE id = ?", req.RepoID).Scan(&repoName)
+	deploy, err := d.Trigger(r.Context(), req.RepoID, req.Branch)
 	if err != nil {
-		writeJSON(w, http.StatusNotFound, map[string]string{"error": "repo not found"})
+		switch err.Error() {
+		case "repo not found":
+			writeJSON(w, http.StatusNotFound, map[string]string{"error": err.Error()})
+		default:
+			d.logger.Error("create deployment", "error", err)
+			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		}
 		return
+	}
+	writeJSON(w, http.StatusCreated, deploy)
+}
+
+// Trigger starts a deployment for a git repo without going through HTTP.
+func (d *Deploy) Trigger(ctx context.Context, repoID, branch string) (*Deployment, error) {
+	if repoID == "" {
+		return nil, fmt.Errorf("repo_id is required")
+	}
+	if branch == "" {
+		branch = "main"
+	}
+
+	var repoName string
+	err := d.db.QueryRowContext(ctx, "SELECT name FROM git_repos WHERE id = ?", repoID).Scan(&repoName)
+	if err != nil {
+		return nil, fmt.Errorf("repo not found")
 	}
 
 	id, err := generateID()
 	if err != nil {
-		d.logger.Error("generate id", "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
-		return
+		return nil, err
 	}
 
 	buildDir := filepath.Join(d.buildsDir, id)
@@ -247,25 +290,22 @@ func (d *Deploy) HandleCreate(w http.ResponseWriter, r *http.Request) {
 
 	deploy := &Deployment{
 		ID:        id,
-		RepoID:    req.RepoID,
-		Branch:    req.Branch,
+		RepoID:    repoID,
+		Branch:    branch,
 		Status:    "pending",
 		Port:      port,
+		URL:       deploymentURL(d.publicDomain, d.useHTTPS, repoName, port),
 		CreatedAt: time.Now().UTC().Format(time.RFC3339),
 	}
 
-	if _, err := d.db.ExecContext(r.Context(),
-		"INSERT INTO deployments (id, repo_id, branch, status, port, created_at) VALUES (?, ?, ?, ?, ?, ?)",
-		id, req.RepoID, req.Branch, deploy.Status, deploy.Port, deploy.CreatedAt); err != nil {
-		d.logger.Error("insert deployment", "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
-		return
+	if _, err := d.db.ExecContext(ctx,
+		"INSERT INTO deployments (id, repo_id, branch, status, port, url, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
+		id, repoID, branch, deploy.Status, deploy.Port, deploy.URL, deploy.CreatedAt); err != nil {
+		return nil, err
 	}
 
 	go d.runDeployment(deploy, buildDir, repoName)
-
-	deploy.URL = fmt.Sprintf("http://localhost:%d", port)
-	writeJSON(w, http.StatusCreated, deploy)
+	return deploy, nil
 }
 
 func (d *Deploy) runDeployment(deploy *Deployment, buildDir, repoName string) {
@@ -305,8 +345,8 @@ func (d *Deploy) runDeployment(deploy *Deployment, buildDir, repoName string) {
 
 	if appType == AppStatic {
 		d.updateStatus(deploy.ID, "running")
-		d.updateURL(deploy.ID, deploy.Port)
-		go d.serveStatic(context.Background(), buildDir, deploy)
+		d.finalizeDeploymentURL(deploy, repoName)
+		go d.serveStatic(context.Background(), buildDir, deploy, repoName)
 		return
 	}
 
@@ -328,12 +368,12 @@ func (d *Deploy) runDeployment(deploy *Deployment, buildDir, repoName string) {
 	}
 
 	d.updateStatus(deploy.ID, "running")
-	d.updateURL(deploy.ID, deploy.Port)
+	d.finalizeDeploymentURL(deploy, repoName)
 
 	if appType == AppStatic {
-		go d.serveStatic(context.Background(), serveDir, deploy)
+		go d.serveStatic(context.Background(), serveDir, deploy, repoName)
 	} else {
-		go d.startApp(context.Background(), serveDir, deploy, appType)
+		go d.startApp(context.Background(), serveDir, deploy, appType, repoName)
 	}
 }
 
@@ -392,7 +432,7 @@ func (d *Deploy) buildApp(ctx context.Context, buildDir string, appType AppType)
 	return nil
 }
 
-func (d *Deploy) startApp(ctx context.Context, buildDir string, deploy *Deployment, appType AppType) {
+func (d *Deploy) startApp(ctx context.Context, buildDir string, deploy *Deployment, appType AppType, repoName string) {
 	var cmd *exec.Cmd
 
 	switch appType {
@@ -418,8 +458,9 @@ func (d *Deploy) startApp(ctx context.Context, buildDir string, deploy *Deployme
 	cmd.Stdout = nil
 	cmd.Stderr = nil
 
+	host := deploymentHost(d.publicDomain, repoName)
 	d.mu.Lock()
-	d.apps[deploy.ID] = &runningApp{cmd: cmd, port: deploy.Port, buildID: deploy.ID}
+	d.apps[deploy.ID] = &runningApp{cmd: cmd, port: deploy.Port, buildID: deploy.ID, host: host}
 	d.mu.Unlock()
 
 	if err := cmd.Start(); err != nil {
@@ -431,7 +472,7 @@ func (d *Deploy) startApp(ctx context.Context, buildDir string, deploy *Deployme
 	_ = cmd.Wait()
 }
 
-func (d *Deploy) serveStatic(ctx context.Context, buildDir string, deploy *Deployment) {
+func (d *Deploy) serveStatic(ctx context.Context, buildDir string, deploy *Deployment, repoName string) {
 	mux := http.NewServeMux()
 	mux.Handle("/", http.FileServer(http.Dir(buildDir)))
 	server := &http.Server{
@@ -439,8 +480,9 @@ func (d *Deploy) serveStatic(ctx context.Context, buildDir string, deploy *Deplo
 		Handler: mux,
 	}
 
+	host := deploymentHost(d.publicDomain, repoName)
 	d.mu.Lock()
-	d.apps[deploy.ID] = &runningApp{port: deploy.Port, buildID: deploy.ID, server: server}
+	d.apps[deploy.ID] = &runningApp{port: deploy.Port, buildID: deploy.ID, server: server, host: host}
 	d.mu.Unlock()
 
 	d.logger.Info("serving static site", "id", deploy.ID, "port", deploy.Port, "url", deploy.URL)
@@ -456,10 +498,20 @@ func (d *Deploy) updateStatus(id, status string) {
 		"UPDATE deployments SET status = ? WHERE id = ?", status, id)
 }
 
-func (d *Deploy) updateURL(id string, port int) {
+func (d *Deploy) finalizeDeploymentURL(deploy *Deployment, repoName string) {
+	url := deploymentURL(d.publicDomain, d.useHTTPS, repoName, deploy.Port)
+	host := deploymentHost(d.publicDomain, repoName)
+	deploy.URL = url
+
 	_, _ = d.db.ExecContext(context.Background(),
 		"UPDATE deployments SET url = ?, port = ? WHERE id = ?",
-		fmt.Sprintf("http://localhost:%d", port), port, id)
+		url, deploy.Port, deploy.ID)
+
+	if d.hostRouter != nil && host != "" {
+		if err := d.hostRouter.RegisterDeploymentHost(host, deploy.Port); err != nil {
+			d.logger.Warn("register deployment host", "host", host, "error", err)
+		}
+	}
 }
 
 func DetectAppType(buildDir string) AppType {

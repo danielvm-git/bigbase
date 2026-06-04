@@ -7,8 +7,8 @@ describe('format helpers', () => {
     expect(timeAgo(recent)).toMatch(/ago|just now/)
   })
 
-  it('siteDisplayUrl builds local hostname', () => {
-    expect(siteDisplayUrl('My App')).toBe('my-app.bigbase.local')
+  it('siteDisplayUrl builds production subdomain', () => {
+    expect(siteDisplayUrl('My App')).toBe('https://my-app.bigbase.click')
   })
 
   it('mapDeployStatus normalizes running to ready', () => {
