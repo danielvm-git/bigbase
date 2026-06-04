@@ -304,6 +304,22 @@ warning.
 **Status:** Implemented in `ui/src/context/ThemeContext.tsx`. No code change
 required from the prototype-fidelity-parity work — only this documentation.
 
+## Component Spec References
+
+Two large screens shipped in e17 are not covered by the original prototype
+bundle. The following design specs document their current implementation:
+
+- **Forge** (issues, kanban, wiki, milestones, runs) — see
+  `specs/archive/assets/bigbase-prototype 2/project/Component Spec - Forge.html`.
+  Pages: `ui/src/pages/forge/*`.
+- **Realtime** (channels, presence, broadcast, schemas) — see
+  `specs/archive/assets/bigbase-prototype 2/project/Component Spec - Realtime.html`.
+  Page: `ui/src/pages/realtime/RealtimePage.tsx`.
+
+These specs are living documents: the engine implements first, the spec
+records what exists. When the implementation changes, update the spec
+in the same PR.
+
 ## Version & License
 
 - **Current Version**: v1.1.0
