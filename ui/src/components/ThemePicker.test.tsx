@@ -14,7 +14,7 @@ describe('ThemePicker', () => {
   it('trigger has aria-haspopup and aria-expanded=false initially', () => {
     render(<ThemePicker value="default" onChange={() => {}} />)
     const trigger = screen.getByRole('button', { name: /Accent theme/ })
-    expect(trigger.getAttribute('aria-haspopup')).toBe('listbox')
+    expect(trigger.getAttribute('aria-haspopup')).toBe('menu')
     expect(trigger.getAttribute('aria-expanded')).toBe('false')
   })
 
@@ -23,21 +23,21 @@ describe('ThemePicker', () => {
     const trigger = screen.getByRole('button', { name: /Accent theme/ })
     fireEvent.click(trigger)
     expect(trigger.getAttribute('aria-expanded')).toBe('true')
-    expect(screen.getByRole('listbox')).toBeInTheDocument()
+    expect(screen.getByRole('menu')).toBeInTheDocument()
   })
 
   it('lists all accent themes as options', () => {
     render(<ThemePicker value="default" onChange={() => {}} />)
     fireEvent.click(screen.getByRole('button', { name: /Accent theme/ }))
-    const options = screen.getAllByRole('option')
+    const options = screen.getAllByRole('menuitem')
     expect(options.length).toBe(13) // default + 12 months
   })
 
-  it('marks current value as aria-selected=true', () => {
+  it('marks current value as aria-current=true', () => {
     render(<ThemePicker value="march" onChange={() => {}} />)
     fireEvent.click(screen.getByRole('button', { name: /Accent theme/ }))
-    const options = screen.getAllByRole('option')
-    const selected = options.filter(o => o.getAttribute('aria-selected') === 'true')
+    const options = screen.getAllByRole('menuitem')
+    const selected = options.filter(o => o.getAttribute('aria-current') === 'true')
     expect(selected).toHaveLength(1)
     expect(selected[0]).toHaveTextContent('March — Purple')
   })
@@ -46,18 +46,18 @@ describe('ThemePicker', () => {
     const onChange = vi.fn()
     render(<ThemePicker value="default" onChange={onChange} />)
     fireEvent.click(screen.getByRole('button', { name: /Accent theme/ }))
-    const options = screen.getAllByRole('option')
+    const options = screen.getAllByRole('menuitem')
     fireEvent.click(options[1]) // january
     expect(onChange).toHaveBeenCalledWith('january')
-    expect(screen.queryByRole('listbox')).toBeNull()
+    expect(screen.queryByRole('menu')).toBeNull()
   })
 
   it('closes on Escape', () => {
     render(<ThemePicker value="default" onChange={() => {}} />)
     fireEvent.click(screen.getByRole('button', { name: /Accent theme/ }))
-    expect(screen.getByRole('listbox')).toBeInTheDocument()
+    expect(screen.getByRole('menu')).toBeInTheDocument()
     fireEvent.keyDown(document, { key: 'Escape' })
-    expect(screen.queryByRole('listbox')).toBeNull()
+    expect(screen.queryByRole('menu')).toBeNull()
   })
 
   it('closes on outside click', () => {
@@ -68,8 +68,39 @@ describe('ThemePicker', () => {
       </div>,
     )
     fireEvent.click(screen.getByRole('button', { name: /Accent theme/ }))
-    expect(screen.getByRole('listbox')).toBeInTheDocument()
+    expect(screen.getByRole('menu')).toBeInTheDocument()
     fireEvent.mouseDown(screen.getByTestId('outside'))
-    expect(screen.queryByRole('listbox')).toBeNull()
+    expect(screen.queryByRole('menu')).toBeNull()
+  })
+
+  it('returns focus to trigger after selecting an option (a11y)', () => {
+    render(<ThemePicker value="default" onChange={() => {}} />)
+    const trigger = screen.getByRole('button', { name: /Accent theme/ })
+    fireEvent.click(trigger)
+    const options = screen.getAllByRole('menuitem')
+    fireEvent.click(options[1]) // january
+    expect(document.activeElement).toBe(trigger)
+  })
+
+  it('returns focus to trigger after Escape (a11y)', () => {
+    render(<ThemePicker value="default" onChange={() => {}} />)
+    const trigger = screen.getByRole('button', { name: /Accent theme/ })
+    fireEvent.click(trigger)
+    expect(screen.getByRole('menu')).toBeInTheDocument()
+    fireEvent.keyDown(document, { key: 'Escape' })
+    expect(document.activeElement).toBe(trigger)
+  })
+
+  it('returns focus to trigger after outside click (a11y)', () => {
+    render(
+      <div>
+        <ThemePicker value="default" onChange={() => {}} />
+        <button type="button" data-testid="outside">Outside</button>
+      </div>,
+    )
+    const trigger = screen.getByRole('button', { name: /Accent theme/ })
+    fireEvent.click(trigger)
+    fireEvent.mouseDown(screen.getByTestId('outside'))
+    expect(document.activeElement).toBe(trigger)
   })
 })

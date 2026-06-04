@@ -4,6 +4,24 @@ import { Icon, type IconName } from './Icon'
 
 // Names that must exist per the prototype-fidelity gap (G19).
 const EXPECTED_ICONS: IconName[] = [
+  // Original 16 still present (smoke check for regressions).
+  'layout-dashboard',
+  'rocket',
+  'box',
+  'database',
+  'terminal',
+  'hard-drive',
+  'users',
+  'mail',
+  'git-branch',
+  'git-pull-request',
+  'activity',
+  'settings',
+  'hammer',
+  'radio',
+  'moon',
+  'sun',
+  // 15 new names from B4.3 (plan section 4.3 "Where used" column).
   'check',
   'chevron-down',
   'x',
@@ -12,13 +30,13 @@ const EXPECTED_ICONS: IconName[] = [
   'trash-2',
   'pencil',
   'refresh-cw',
-  'external-link',
   'arrow-right',
-  'arrow-left',
-  'chevron-right',
-  'eye',
-  'eye-off',
-  'circle',
+  'external-link',
+  'download',
+  'upload',
+  'copy',
+  'more-horizontal',
+  'github',
 ]
 
 describe('Icon', () => {
@@ -30,10 +48,10 @@ describe('Icon', () => {
     }
   })
 
-  it('exposes at least 15 icon names (closing G19)', () => {
+  it('exposes 31 icon names (16 original + 15 new, closing G19)', () => {
     // B4.3 added 15 new names to the IconName union.
-    // Combined with the original 16, the type should have at least 15.
-    expect(EXPECTED_ICONS.length).toBeGreaterThanOrEqual(15)
+    // 16 original + 15 new = 31 total.
+    expect(EXPECTED_ICONS.length).toBe(31)
   })
 
   it('renders the default size of 18', () => {

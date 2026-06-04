@@ -11,15 +11,23 @@ interface ThemePickerProps {
 export function ThemePicker({ value, onChange, label = 'Accent theme' }: ThemePickerProps) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
+  const triggerRef = useRef<HTMLButtonElement>(null)
   const current = ACCENT_THEMES.find(t => t.id === value) ?? ACCENT_THEMES[0]
 
   useEffect(() => {
     if (!open) return
+    const close = () => {
+      setOpen(false)
+      // a11y: return focus to the trigger so keyboard users don't get
+      // dropped on <body> when the popover (or the option they
+      // selected) is unmounted.
+      triggerRef.current?.focus()
+    }
     const handleClick = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+      if (ref.current && !ref.current.contains(e.target as Node)) close()
     }
     const handleKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setOpen(false)
+      if (e.key === 'Escape') close()
     }
     document.addEventListener('mousedown', handleClick)
     document.addEventListener('keydown', handleKey)
@@ -40,9 +48,10 @@ export function ThemePicker({ value, onChange, label = 'Accent theme' }: ThemePi
   return (
     <div className="theme-picker" ref={ref}>
       <button
+        ref={triggerRef}
         type="button"
         className="theme-trigger"
-        aria-haspopup="listbox"
+        aria-haspopup="menu"
         aria-expanded={open}
         aria-label={label}
         onClick={() => setOpen(o => !o)}
@@ -52,17 +61,18 @@ export function ThemePicker({ value, onChange, label = 'Accent theme' }: ThemePi
         <span className="theme-trigger-chev" aria-hidden="true">▾</span>
       </button>
       {open && (
-        <div className="theme-menu" role="listbox" aria-label={label}>
+        <div className="theme-menu" role="menu" aria-label={label}>
           {ACCENT_THEMES.map(t => (
             <button
               type="button"
               key={t.id}
-              role="option"
-              aria-selected={t.id === value}
+              role="menuitem"
+              aria-current={t.id === value}
               className={`theme-menu-item${t.id === value ? ' active' : ''}`}
               onClick={() => {
                 onChange(t.id)
                 setOpen(false)
+                triggerRef.current?.focus()
               }}
             >
               <span className="theme-dot" style={dotStyle(t.brand500)} />

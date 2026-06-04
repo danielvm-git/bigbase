@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useState, useEffect, type FormEvent } from 'react'
 import { PageHeader, Tabs, Card, CardHeader, Input, Button, Badge } from '../components'
 import { useCurrentUser } from '../hooks/useAuth'
 import { useWorkspace, useMembers } from '../hooks/useWorkspace'
@@ -64,7 +64,15 @@ function ChangePasswordForm() {
       setStatus('Password must be at least 8 characters')
       return
     }
-    setStatus('Password updated (mock — wire to /api/auth in production)')
+    // Stub: the form is demo-only. Do NOT signal success to the user
+    // and never leak internal API paths. Real submit lands in a
+    // follow-up batch that wires /api/auth.
+    // eslint-disable-next-line no-console
+    console.info('[SettingsPage] ChangePasswordForm submit (stub):', {
+      currentLen: current.length,
+      nextLen: next.length,
+    })
+    setStatus('Demo mode — password change is not persisted')
     setCurrent('')
     setNext('')
   }
@@ -102,6 +110,9 @@ function WorkspaceSection() {
   const { data: ws } = useWorkspace()
   const { data: members } = useMembers()
   const [name, setName] = useState(ws?.name ?? '')
+  // When the real hook lands and re-emits (e.g. async data), keep the
+  // input in sync. Stubs return synchronously, so this is a no-op today.
+  useEffect(() => setName(ws?.name ?? ''), [ws?.name])
 
   return (
     <>
@@ -150,15 +161,15 @@ function BillingSection() {
       <hr className="settings-divider" />
       <h3 className="settings-subhead">Usage this month</h3>
       <div className="settings-usage">
-        <div className="settings-usage-cell">
+        <div className="settings-usage-cell" data-testid="usage-functions">
           <span className="dim">Functions</span>
           <strong>{usage?.functions}</strong>
         </div>
-        <div className="settings-usage-cell">
+        <div className="settings-usage-cell" data-testid="usage-storage">
           <span className="dim">Storage</span>
           <strong>{usage?.storage_mb} MB</strong>
         </div>
-        <div className="settings-usage-cell">
+        <div className="settings-usage-cell" data-testid="usage-sites">
           <span className="dim">Sites</span>
           <strong>{usage?.sites}</strong>
         </div>
