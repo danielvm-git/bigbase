@@ -262,7 +262,7 @@ func startProxy() {
 	p.Handle("DELETE /api/auth/users/", mComp.Middleware(authComp.ProtectedHandler()).ServeHTTP)
 	p.Handle("/api/monitoring/health", mComp.Handler().ServeHTTP)
 	p.Handle("/api/monitoring/metrics", authComp.Middleware(mComp.Handler()).ServeHTTP)
-	p.Handle("/api/monitoring/metrics/prometheus", authComp.Middleware(mComp.Handler()).ServeHTTP)
+	p.Handle("/api/monitoring/metrics/prometheus", mComp.Handler().ServeHTTP)
 	p.Handle("/api/monitoring/logs", authComp.Middleware(mComp.Handler()).ServeHTTP)
 	p.Handle("/api/monitoring/logs/", authComp.Middleware(mComp.Handler()).ServeHTTP)
 	p.Handle("/api/monitoring/alerts", authComp.Middleware(mComp.Handler()).ServeHTTP)
