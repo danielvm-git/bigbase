@@ -24,25 +24,25 @@ stories:
         verify: "go test ./components/auth/ -run TestOrganization/default_org_backfill -v"
   - id: e23s02
     title: Team membership and invitations
-    status: pending
+    status: done
     tasks:
       - desc: Invite by email with roles and accept-invite flow
         verify: "go test ./components/auth/ -run TestMembership -v"
   - id: e23s03
     title: Resource isolation
-    status: pending
+    status: done
     tasks:
       - desc: org_id scoping on all resources; cross-org returns 403
         verify: "go test ./components/api/ -run TestOrgIsolation -v"
   - id: e23s04
     title: API key management
-    status: pending
+    status: done
     tasks:
       - desc: Org-scoped API keys via X-API-Key header
         verify: "go test ./components/auth/ -run TestAPIKeys -v"
   - id: e23s05
     title: Usage tracking per org
-    status: pending
+    status: done
     tasks:
       - desc: GET /api/orgs/:id/usage with admin UI charts
         verify: "go test ./components/monitoring/ -run TestOrgUsage -v"
