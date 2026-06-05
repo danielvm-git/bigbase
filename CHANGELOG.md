@@ -1,3 +1,10 @@
+## [2.5.1](https://github.com/danielvm-git/bigbase/compare/v2.5.0...v2.5.1) (2026-06-05)
+
+
+### Bug Fixes
+
+* **auth:** address review gaps — slug validation, PATCH body check, DRY refactors ([29cf9b9](https://github.com/danielvm-git/bigbase/commit/29cf9b9c10e351c18a80566540e7f0572b08442f))
+
 # [2.5.0](https://github.com/danielvm-git/bigbase/compare/v2.4.2...v2.5.0) (2026-06-05)
 
 
