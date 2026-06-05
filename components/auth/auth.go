@@ -165,6 +165,11 @@ func (a *Auth) Start(ctx *kernel.Context) error {
 		return fmt.Errorf("migrate email verify: %w", err)
 	}
 
+	// Password reset tokens table.
+	if err := a.migratePasswordReset(context.Background()); err != nil {
+		return fmt.Errorf("migrate password reset: %w", err)
+	}
+
 	a.logger.Info("auth component ready")
 	return nil
 }
@@ -230,6 +235,8 @@ func (a *Auth) Handler() http.Handler {
 	mux.HandleFunc("/api/auth/oauth/google", a.handleGoogleOAuth)
 	mux.HandleFunc("/api/auth/oauth/google/callback", a.handleGoogleCallback)
 	mux.HandleFunc("/api/auth/verify-email", a.handleVerifyEmail)
+	mux.HandleFunc("/api/auth/forgot-password", a.handleForgotPassword)
+	mux.HandleFunc("/api/auth/reset-password", a.handleResetPassword)
 	return mux
 }
 
