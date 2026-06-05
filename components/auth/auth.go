@@ -157,6 +157,9 @@ func (a *Auth) Start(ctx *kernel.Context) error {
 	if err := a.migrateInvitesTable(); err != nil {
 		return err
 	}
+	if err := a.migrateAPIKeysTable(); err != nil {
+		return fmt.Errorf("migrate api keys table: %w", err)
+	}
 
 	// Backfill: create personal orgs for existing users with NULL default_org_id
 	a.BackfillDefaultOrgs()
@@ -241,6 +244,9 @@ func (a *Auth) ProtectedHandler() http.Handler {
 	mux.HandleFunc("POST /api/orgs/{id}/invites", a.handleCreateInvite)
 	mux.HandleFunc("POST /api/orgs/{id}/invites/{token}/accept", a.handleAcceptInvite)
 	mux.HandleFunc("GET /api/orgs/{id}/members", a.handleListMembers)
+	mux.HandleFunc("POST /api/orgs/{id}/api-keys", a.handleCreateAPIKey)
+	mux.HandleFunc("GET /api/orgs/{id}/api-keys", a.handleListAPIKeys)
+	mux.HandleFunc("DELETE /api/orgs/{id}/api-keys/{keyID}", a.handleDeleteAPIKey)
 	return a.Middleware(mux)
 }
 
@@ -1023,6 +1029,97 @@ func (a *Auth) handleListMembers(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSON(w, http.StatusOK, map[string]any{"data": members})
+}
+
+func (a *Auth) handleCreateAPIKey(w http.ResponseWriter, r *http.Request) {
+	userID, _ := UserIDFromContext(r.Context())
+	idStr := r.PathValue("id")
+
+	orgID, err := parseOrgID(idStr)
+	if err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid id"})
+		return
+	}
+	if _, orgErr := a.lookupOwnedOrg(r.Context(), orgID, userID); orgErr != nil {
+		writeJSON(w, orgErr.code, map[string]string{"error": orgErr.message})
+		return
+	}
+
+	var req struct {
+		Name   string   `json:"name"`
+		Scopes []string `json:"scopes"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json"})
+		return
+	}
+	if req.Name == "" {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "name required"})
+		return
+	}
+
+	created, err := a.CreateAPIKey(r.Context(), orgID, req.Name, req.Scopes)
+	if err != nil {
+		a.logger.Error("create api key", "error", err)
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		return
+	}
+
+	writeJSON(w, http.StatusCreated, map[string]any{"data": created})
+}
+
+func (a *Auth) handleListAPIKeys(w http.ResponseWriter, r *http.Request) {
+	userID, _ := UserIDFromContext(r.Context())
+	idStr := r.PathValue("id")
+
+	orgID, err := parseOrgID(idStr)
+	if err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid id"})
+		return
+	}
+	if _, orgErr := a.lookupOwnedOrg(r.Context(), orgID, userID); orgErr != nil {
+		writeJSON(w, orgErr.code, map[string]string{"error": orgErr.message})
+		return
+	}
+
+	keys, err := a.ListAPIKeys(r.Context(), orgID)
+	if err != nil {
+		a.logger.Error("list api keys", "error", err)
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		return
+	}
+
+	writeJSON(w, http.StatusOK, map[string]any{"data": keys})
+}
+
+func (a *Auth) handleDeleteAPIKey(w http.ResponseWriter, r *http.Request) {
+	userID, _ := UserIDFromContext(r.Context())
+	idStr := r.PathValue("id")
+	keyIDStr := r.PathValue("keyID")
+
+	orgID, err := parseOrgID(idStr)
+	if err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid id"})
+		return
+	}
+	if _, orgErr := a.lookupOwnedOrg(r.Context(), orgID, userID); orgErr != nil {
+		writeJSON(w, orgErr.code, map[string]string{"error": orgErr.message})
+		return
+	}
+
+	keyID, err := parseOrgID(keyIDStr)
+	if err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid key id"})
+		return
+	}
+
+	if err := a.DeleteAPIKey(r.Context(), orgID, keyID); err != nil {
+		a.logger.Error("delete api key", "error", err)
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		return
+	}
+
+	writeJSON(w, http.StatusOK, map[string]string{"status": "deleted"})
 }
 
 func writeJSON(w http.ResponseWriter, status int, data any) {

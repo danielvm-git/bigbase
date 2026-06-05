@@ -1,0 +1,194 @@
+package auth
+
+import (
+	"context"
+	"crypto/rand"
+	"crypto/sha256"
+	"database/sql"
+	"encoding/hex"
+	"fmt"
+	"time"
+)
+
+// OrgAPIKey holds metadata about an org-scoped API key.
+// The raw key is only available at creation time; stored as a hash.
+type OrgAPIKey struct {
+	ID         int64    `json:"id"`
+	OrgID      int64    `json:"org_id"`
+	Name       string   `json:"name"`
+	Scopes     []string `json:"scopes"`
+	LastUsedAt *string  `json:"last_used_at,omitempty"`
+	CreatedAt  string   `json:"created_at"`
+}
+
+// OrgAPIKeyCreated is the response for a new key — includes the raw key once.
+type OrgAPIKeyCreated struct {
+	OrgAPIKey
+	Key string `json:"key"`
+}
+
+// migrateAPIKeysTable ensures the org_api_keys table exists.
+func (a *Auth) migrateAPIKeysTable() error {
+	return a.db.Migrate(`CREATE TABLE IF NOT EXISTS org_api_keys (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		org_id INTEGER NOT NULL,
+		key_hash TEXT NOT NULL UNIQUE,
+		name TEXT NOT NULL,
+		scopes TEXT NOT NULL DEFAULT '',
+		last_used_at TEXT,
+		created_at TEXT NOT NULL
+	)`)
+}
+
+// CreateAPIKey generates a new API key for the org, stores its hash, and returns the raw key once.
+func (a *Auth) CreateAPIKey(ctx context.Context, orgID int64, name string, scopes []string) (*OrgAPIKeyCreated, error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	raw, err := generateRawAPIKey()
+	if err != nil {
+		return nil, fmt.Errorf("generate api key: %w", err)
+	}
+
+	keyHash := hashAPIKey(raw)
+	scopesStr := joinScopes(scopes)
+	now := time.Now().UTC().Format(time.RFC3339)
+
+	res, err := a.db.ExecContext(ctx,
+		`INSERT INTO org_api_keys (org_id, key_hash, name, scopes, created_at)
+		 VALUES (?, ?, ?, ?, ?)`,
+		orgID, keyHash, name, scopesStr, now)
+	if err != nil {
+		return nil, fmt.Errorf("insert api key: %w", err)
+	}
+
+	id, err := res.LastInsertId()
+	if err != nil {
+		return nil, fmt.Errorf("api key last insert id: %w", err)
+	}
+
+	return &OrgAPIKeyCreated{
+		OrgAPIKey: OrgAPIKey{
+			ID:        id,
+			OrgID:     orgID,
+			Name:      name,
+			Scopes:    scopes,
+			CreatedAt: now,
+		},
+		Key: raw,
+	}, nil
+}
+
+// ListAPIKeys returns all API keys for an org (without raw keys).
+func (a *Auth) ListAPIKeys(ctx context.Context, orgID int64) ([]OrgAPIKey, error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	rows, err := a.db.QueryContext(ctx,
+		`SELECT id, org_id, name, scopes, last_used_at, created_at
+		 FROM org_api_keys WHERE org_id = ? ORDER BY id`,
+		orgID)
+	if err != nil {
+		return nil, fmt.Errorf("list api keys: %w", err)
+	}
+	defer func() { _ = rows.Close() }()
+
+	keys := make([]OrgAPIKey, 0)
+	for rows.Next() {
+		var k OrgAPIKey
+		var scopesStr string
+		var lastUsedAt sql.NullString
+		if err := rows.Scan(&k.ID, &k.OrgID, &k.Name, &scopesStr, &lastUsedAt, &k.CreatedAt); err != nil {
+			return nil, fmt.Errorf("scan api key: %w", err)
+		}
+		k.Scopes = splitScopes(scopesStr)
+		if lastUsedAt.Valid {
+			k.LastUsedAt = &lastUsedAt.String
+		}
+		keys = append(keys, k)
+	}
+	return keys, rows.Err()
+}
+
+// DeleteAPIKey removes an API key by ID, scoped to the org.
+func (a *Auth) DeleteAPIKey(ctx context.Context, orgID, keyID int64) error {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	_, err := a.db.ExecContext(ctx,
+		`DELETE FROM org_api_keys WHERE id = ? AND org_id = ?`,
+		keyID, orgID)
+	return err
+}
+
+// ResolveAPIKey looks up the org_id for a raw API key. Returns an error when not found.
+func (a *Auth) ResolveAPIKey(rawKey string) (int64, error) {
+	keyHash := hashAPIKey(rawKey)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	var orgID int64
+	var keyID int64
+	err := a.db.QueryRowContext(ctx,
+		`SELECT id, org_id FROM org_api_keys WHERE key_hash = ?`, keyHash,
+	).Scan(&keyID, &orgID)
+	if err == sql.ErrNoRows {
+		return 0, fmt.Errorf("api key not found")
+	}
+	if err != nil {
+		return 0, fmt.Errorf("resolve api key: %w", err)
+	}
+
+	// Update last_used_at asynchronously (best-effort, no error propagation)
+	now := time.Now().UTC().Format(time.RFC3339)
+	_, _ = a.db.ExecContext(context.Background(),
+		`UPDATE org_api_keys SET last_used_at = ? WHERE id = ?`, now, keyID)
+
+	return orgID, nil
+}
+
+// generateRawAPIKey creates a 32-byte hex-encoded random key prefixed with "bb_".
+func generateRawAPIKey() (string, error) {
+	b := make([]byte, 32)
+	if _, err := rand.Read(b); err != nil {
+		return "", err
+	}
+	return "bb_" + hex.EncodeToString(b), nil
+}
+
+// hashAPIKey produces a SHA-256 hex digest of the raw key.
+func hashAPIKey(rawKey string) string {
+	sum := sha256.Sum256([]byte(rawKey))
+	return hex.EncodeToString(sum[:])
+}
+
+// joinScopes converts a scopes slice to a comma-separated string.
+func joinScopes(scopes []string) string {
+	result := ""
+	for i, s := range scopes {
+		if i > 0 {
+			result += ","
+		}
+		result += s
+	}
+	return result
+}
+
+// splitScopes converts a comma-separated scopes string to a slice.
+func splitScopes(s string) []string {
+	if s == "" {
+		return []string{}
+	}
+	var scopes []string
+	start := 0
+	for i := 0; i <= len(s); i++ {
+		if i == len(s) || s[i] == ',' {
+			if i > start {
+				scopes = append(scopes, s[start:i])
+			}
+			start = i + 1
+		}
+	}
+	return scopes
+}
