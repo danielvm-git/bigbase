@@ -1,3 +1,10 @@
+# [2.3.0](https://github.com/danielvm-git/bigbase/compare/v2.2.0...v2.3.0) (2026-06-05)
+
+
+### Features
+
+* **deploy:** live build terminal on create-site step 3 ([#13](https://github.com/danielvm-git/bigbase/issues/13)) ([c3794be](https://github.com/danielvm-git/bigbase/commit/c3794be59a2ccb9431dba427d9cd749aa97d464f))
+
 # [2.2.0](https://github.com/danielvm-git/bigbase/compare/v2.1.9...v2.2.0) (2026-06-04)
 
 
