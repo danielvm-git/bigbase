@@ -81,6 +81,7 @@ type MetricsCollector struct {
 	mu        sync.RWMutex
 	startedAt time.Time
 	requests  map[string]*EndpointMetrics
+	host      HostMetrics
 }
 
 type Monitoring struct {
@@ -91,6 +92,8 @@ type Monitoring struct {
 	cpuMu        sync.Mutex
 	cpuSampleAt  time.Time
 	cpuTotalNano int64
+
+	stopHost chan struct{}
 }
 
 type Options struct {
@@ -113,6 +116,8 @@ func New(opts Options) *Monitoring {
 	}
 }
 
+const hostCollectInterval = 15 * time.Second
+
 func (m *Monitoring) Name() string                  { return "monitoring" }
 func (m *Monitoring) Version() string               { return version }
 func (m *Monitoring) Dependencies() []string         { return []string{"db"} }
@@ -120,27 +125,71 @@ func (m *Monitoring) ConfigSchema() json.RawMessage { return nil }
 func (m *Monitoring) Hooks() []kernel.HookDef        { return nil }
 func (m *Monitoring) Init(ctx *kernel.Context, config json.RawMessage) error { return nil }
 func (m *Monitoring) Start(ctx *kernel.Context) error {
-	if m.db == nil {
-		return nil
+	if m.db != nil {
+		if err := m.db.Migrate(`CREATE TABLE IF NOT EXISTS monitoring_logs (
+			id TEXT PRIMARY KEY,
+			level TEXT NOT NULL DEFAULT 'info',
+			message TEXT NOT NULL,
+			created_at TEXT NOT NULL DEFAULT (datetime('now'))
+		)`); err != nil {
+			return err
+		}
+		if err := m.db.Migrate(`CREATE TABLE IF NOT EXISTS monitoring_alerts (
+			id TEXT PRIMARY KEY,
+			name TEXT NOT NULL,
+			metric TEXT NOT NULL,
+			threshold REAL NOT NULL DEFAULT 0,
+			operator TEXT NOT NULL DEFAULT 'gt',
+			enabled INTEGER NOT NULL DEFAULT 1,
+			duration_seconds INTEGER NOT NULL DEFAULT 300
+		)`); err != nil {
+			return err
+		}
 	}
-	if err := m.db.Migrate(`CREATE TABLE IF NOT EXISTS monitoring_logs (
-		id TEXT PRIMARY KEY,
-		level TEXT NOT NULL DEFAULT 'info',
-		message TEXT NOT NULL,
-		created_at TEXT NOT NULL DEFAULT (datetime('now'))
-	)`); err != nil {
-		return err
-	}
-	return m.db.Migrate(`CREATE TABLE IF NOT EXISTS monitoring_alerts (
-		id TEXT PRIMARY KEY,
-		name TEXT NOT NULL,
-		metric TEXT NOT NULL,
-		threshold REAL NOT NULL DEFAULT 0,
-		operator TEXT NOT NULL DEFAULT 'gt',
-		enabled INTEGER NOT NULL DEFAULT 1
-	)`)
+
+	m.stopHost = make(chan struct{})
+	go m.runHostCollector()
+	return nil
 }
-func (m *Monitoring) Stop(ctx *kernel.Context) error { return nil }
+
+func (m *Monitoring) Stop(ctx *kernel.Context) error {
+	if m.stopHost != nil {
+		close(m.stopHost)
+	}
+	return nil
+}
+
+// runHostCollector collects host metrics immediately (non-blocking), then every
+// hostCollectInterval using a blocking 1-second CPU sample.
+func (m *Monitoring) runHostCollector() {
+	// Initial fast collection so the endpoint is populated immediately.
+	m.storeHostMetrics(collectHostMetricsNonBlocking(m.logger))
+
+	ticker := time.NewTicker(hostCollectInterval)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ticker.C:
+			m.storeHostMetrics(collectHostMetrics(m.logger))
+		case <-m.stopHost:
+			return
+		}
+	}
+}
+
+// storeHostMetrics stores a host metrics snapshot under the write lock.
+func (m *Monitoring) storeHostMetrics(h HostMetrics) {
+	m.metrics.mu.Lock()
+	m.metrics.host = h
+	m.metrics.mu.Unlock()
+}
+
+// LatestHostMetrics returns the most recently collected host metrics snapshot.
+func (m *Monitoring) LatestHostMetrics() HostMetrics {
+	m.metrics.mu.RLock()
+	defer m.metrics.mu.RUnlock()
+	return m.metrics.host
+}
 
 type statusRecorder struct {
 	http.ResponseWriter
@@ -254,10 +303,13 @@ func (m *Monitoring) Handler() http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/api/monitoring/health", m.handleHealth)
 	mux.HandleFunc("/api/monitoring/metrics", m.handleMetrics)
+	mux.HandleFunc("/api/monitoring/metrics/stream", m.handleMetricsStream)
 	mux.HandleFunc("/api/monitoring/metrics/prometheus", m.handlePrometheusMetrics)
 	mux.HandleFunc("/api/monitoring/logs", m.handleLogs)
 	mux.HandleFunc("/api/monitoring/logs/", m.handleLogByID)
 	mux.HandleFunc("/api/monitoring/alerts", m.handleAlerts)
+	mux.HandleFunc("/api/monitoring/alerts/", m.handleAlertByID)
+	mux.HandleFunc("/api/monitoring/processes", m.handleProcesses)
 	return mux
 }
 
@@ -315,6 +367,7 @@ func (m *Monitoring) handleMetrics(w http.ResponseWriter, r *http.Request) {
 			"by_status":      byStatus,
 			"avg_latency_ms": avgLatency,
 		},
+		"host": m.LatestHostMetrics(),
 	})
 }
 
@@ -599,5 +652,7 @@ func writeJSON(w http.ResponseWriter, status int, data any) {
 	w.WriteHeader(status)
 	_ = json.NewEncoder(w).Encode(data)
 }
+
+// handleMetricsStream, handleAlertByID, handleProcesses are implemented in separate files.
 
 var _ kernel.Component = (*Monitoring)(nil)
