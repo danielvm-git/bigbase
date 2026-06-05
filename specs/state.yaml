@@ -1,20 +1,19 @@
 type: session-state
 context: infra
 active_flow: build_epic
-active_epic_id: e21
-active_story_id: e21s02
+active_epic_id: e24
+active_story_id: e24s01
 active_bug_id: null
 release:
   target_version: 2.0.0
   last_tag: null
   last_publish: null
 epic_cycle:
-  current_step: 4
-  next_skill: develop-tdd
+  current_step: 3
+  next_skill: kickoff-branch
   completed_steps:
   - survey-context
   - plan-work
-  - kickoff-branch
 bug_cycle:
   current_step: null
   completed_steps: []
@@ -27,5 +26,5 @@ handoff:
   required_reading:
   - CONVENTIONS.md
   - specs/release-plan.yaml
-  - specs/epics/e21-testing.yaml
-  next_skill: null
+  - specs/epics/e24-wire-observability.yaml
+  next_skill: survey-context

@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>BigBase — Tokens &amp; Export · Spec</title>
+<link rel="stylesheet" href="spec/spec.css" />
+<link rel="stylesheet" href="spec/doc.css" />
+<script src="spec/icons.js"></script>
+<style>
+  .tok-table { width: 100%; border-collapse: collapse; font-size: var(--text-s); border: 1px solid var(--border-default); border-radius: var(--radius-m); overflow: hidden; margin-top: var(--space-8); }
+  .tok-table th { text-align: left; background: var(--bg-subtle); padding: var(--space-5) var(--space-8); font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--fg-tertiary); font-weight: 700; border-bottom: 1px solid var(--border-default); }
+  .tok-table td { padding: var(--space-5) var(--space-8); border-bottom: 1px solid var(--border-default); vertical-align: middle; }
+  .tok-table tr:last-child td { border-bottom: none; }
+  .tok-table td.var { font-family: var(--font-mono); font-size: 12.5px; color: var(--fg-accent); white-space: nowrap; }
+  .tok-table td.val { font-family: var(--font-mono); font-size: 12px; color: var(--fg-secondary); white-space: nowrap; }
+  .tok-table td.use { color: var(--fg-secondary); }
+  .sw { width: 26px; height: 26px; border-radius: var(--radius-xs); box-shadow: inset 0 0 0 1px rgba(0,0,0,.12); flex-shrink: 0; }
+  .sw-cell { display: flex; align-items: center; gap: var(--space-5); }
+  .sp-bar { height: 14px; background: var(--brand-500); border-radius: 2px; }
+  .rad-demo { width: 44px; height: 28px; background: var(--brand-tint); border: 1.5px solid var(--fg-accent); }
+  .sh-demo { width: 60px; height: 34px; background: var(--bg-surface); border-radius: var(--radius-s); border: 1px solid var(--border-default); }
+  .codeblock { background: var(--neutral-900); color: #d4d4d4; font-family: var(--font-mono); font-size: 12.5px; line-height: 1.7; padding: var(--space-10) var(--space-12); border-radius: var(--radius-m); overflow-x: auto; margin-top: var(--space-8); white-space: pre; }
+  .codeblock .c { color: #7d8590; }
+  .codeblock .k { color: #ff9e64; }
+  .codeblock .s { color: #9ece6a; }
+  .codeblock .f { color: #7aa2f7; }
+  .type-row { display: flex; align-items: baseline; gap: var(--space-8); padding: var(--space-6) 0; border-bottom: 1px solid var(--border-default); }
+  .type-row .tr-meta { width: 150px; flex-shrink: 0; font-family: var(--font-mono); font-size: 12px; color: var(--fg-tertiary); }
+</style>
+</head>
+<body>
+<div class="doc">
+  <aside class="doc-rail">
+    <div class="doc-brand">
+      <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Crect width='120' height='120' rx='28' fill='%234F46E5'/%3E%3Cpath d='M40 34h22.5c11.3 0 18.5 5.4 18.5 14.6 0 6-3.3 10.2-8.7 11.9 6.8 1.4 10.9 6 10.9 12.8C83.2 81.6 75.6 87 63.4 87H40V34Zm12.4 21.1h8.8c4.6 0 7.3-2.1 7.3-5.8 0-3.6-2.6-5.6-7.3-5.6h-8.8v11.4Zm0 22h9.8c4.9 0 7.7-2.2 7.7-6.1 0-3.8-2.8-6-7.8-6h-9.7v12.1Z' fill='%23fff'/%3E%3C/svg%3E" alt="" />
+      <span><b>BigBase</b><span class="doc-brand-sub">Design spec</span></span>
+    </div>
+    <div>
+      <div class="doc-railgroup-title">Handoff</div>
+      <nav>
+        <a href="Component Spec - States.html"><span class="icon" data-icon="square-stack" data-size="16"></span> Component states</a>
+        <a href="Component Spec - Information Architecture.html"><span class="icon" data-icon="layers" data-size="16"></span> Information architecture</a>
+        <a href="Component Spec - Responsive.html"><span class="icon" data-icon="smartphone" data-size="16"></span> Responsive specs</a>
+        <a href="Component Spec - Accessibility.html"><span class="icon" data-icon="check-circle" data-size="16"></span> Accessibility report</a>
+        <a class="active" href="Component Spec - Tokens.html"><span class="icon" data-icon="book-open" data-size="16"></span> Tokens &amp; export</a>
+        <a href="BigBase Console.html"><span class="icon" data-icon="external-link" data-size="16"></span> Live console</a>
+      </nav>
+    </div>
+    <div>
+      <div class="doc-railgroup-title">On this page</div>
+      <nav id="onthispage">
+        <a href="#color">Color</a>
+        <a href="#type">Typography</a>
+        <a href="#spacing">Spacing</a>
+        <a href="#radius">Radius</a>
+        <a href="#shadow">Shadow</a>
+        <a href="#motion">Motion</a>
+        <a href="#dark">Dark-mode remap</a>
+        <a href="#theming">Theme switching</a>
+      </nav>
+    </div>
+    <div class="doc-rail-foot">
+      <div class="doc-railgroup-title">Preview as</div>
+      <div class="doc-toggles"><button id="spec-dark" type="button"></button></div>
+      <select id="spec-accent" class="input" aria-label="Accent theme">
+        <option value="default">Indigo (default)</option>
+        <option value="march">March · Purple</option>
+        <option value="november">November · Blue</option>
+        <option value="december">December · Red</option>
+      </select>
+    </div>
+  </aside>
+
+  <main class="doc-main">
+    <div class="doc-hero">
+      <span class="eyebrow">Engineering handoff · §9</span>
+      <h1>Tokens &amp; export specs</h1>
+      <p>The complete token reference, named exactly as in the codebase (<code>colors_and_type.css</code>). Spacing, color, type, radius, shadow, and motion are all CSS custom properties — components reference roles (<code>--bg-accent</code>), roles reference primitives (<code>--brand-500</code>), so a theme only has to remap primitives. 99 tokens total.</p>
+    </div>
+
+    <section class="doc-section" id="color">
+      <h2><span class="num">9.1</span> Color</h2>
+      <div class="doc-group-label">Brand ramp (the only thing themes remap)</div>
+      <table class="tok-table">
+        <thead><tr><th>Token</th><th>Value (default)</th><th>Swatch</th><th>Role</th></tr></thead>
+        <tbody>
+          <tr><td class="var">--brand-50</td><td class="val">rgb(238,236,252)</td><td><div class="sw-cell"><span class="sw" style="background:rgb(238,236,252)"></span></div></td><td class="use">Tint backgrounds</td></tr>
+          <tr><td class="var">--brand-100</td><td class="val">rgb(224,221,250)</td><td><div class="sw-cell"><span class="sw" style="background:rgb(224,221,250)"></span></div></td><td class="use">Hover tints</td></tr>
+          <tr><td class="var">--brand-500</td><td class="val">rgb(79,70,229) · #4F46E5</td><td><div class="sw-cell"><span class="sw" style="background:rgb(79,70,229)"></span></div></td><td class="use">Primary — fills, active, focus</td></tr>
+          <tr><td class="var">--brand-600</td><td class="val">rgb(67,56,202) · #4338CA</td><td><div class="sw-cell"><span class="sw" style="background:rgb(67,56,202)"></span></div></td><td class="use">Hover fill</td></tr>
+          <tr><td class="var">--brand-700</td><td class="val">rgb(55,48,163) · #3730A3</td><td><div class="sw-cell"><span class="sw" style="background:rgb(55,48,163)"></span></div></td><td class="use">Active fill · light-mode link text</td></tr>
+          <tr><td class="var">--brand-tint</td><td class="val">rgba(79,70,229,.10)</td><td><div class="sw-cell"><span class="sw" style="background:var(--brand-tint)"></span></div></td><td class="use">Active-nav bg, badge bg</td></tr>
+        </tbody>
+      </table>
+
+      <div class="doc-group-label">Semantic roles — backgrounds, foregrounds, borders</div>
+      <table class="tok-table">
+        <thead><tr><th>Token</th><th>Maps to (light)</th><th>Swatch</th><th>Use</th></tr></thead>
+        <tbody>
+          <tr><td class="var">--bg-default</td><td class="val">--neutral-25</td><td><div class="sw-cell"><span class="sw" style="background:var(--bg-default)"></span></div></td><td class="use">App background</td></tr>
+          <tr><td class="var">--bg-surface</td><td class="val">--neutral-0</td><td><div class="sw-cell"><span class="sw" style="background:var(--bg-surface)"></span></div></td><td class="use">Cards, panels, inputs</td></tr>
+          <tr><td class="var">--bg-subtle</td><td class="val">--neutral-40</td><td><div class="sw-cell"><span class="sw" style="background:var(--bg-subtle)"></span></div></td><td class="use">Table head, code chips, tracks</td></tr>
+          <tr><td class="var">--bg-accent</td><td class="val">--brand-500</td><td><div class="sw-cell"><span class="sw" style="background:var(--bg-accent)"></span></div></td><td class="use">Primary button fill</td></tr>
+          <tr><td class="var">--fg-primary</td><td class="val">--neutral-800</td><td><div class="sw-cell"><span class="sw" style="background:var(--fg-primary)"></span></div></td><td class="use">Headings, body</td></tr>
+          <tr><td class="var">--fg-secondary</td><td class="val">--neutral-600</td><td><div class="sw-cell"><span class="sw" style="background:var(--fg-secondary)"></span></div></td><td class="use">Subtitles, secondary</td></tr>
+          <tr><td class="var">--fg-tertiary</td><td class="val">--neutral-400</td><td><div class="sw-cell"><span class="sw" style="background:var(--fg-tertiary)"></span></div></td><td class="use">Metadata, hints</td></tr>
+          <tr><td class="var">--fg-accent</td><td class="val">--brand-500</td><td><div class="sw-cell"><span class="sw" style="background:var(--fg-accent)"></span></div></td><td class="use">Links, active text</td></tr>
+          <tr><td class="var">--fg-on-accent</td><td class="val">--neutral-0</td><td><div class="sw-cell"><span class="sw" style="background:var(--fg-on-accent)"></span></div></td><td class="use">Text on accent fills</td></tr>
+          <tr><td class="var">--border-default</td><td class="val">--neutral-100</td><td><div class="sw-cell"><span class="sw" style="background:var(--border-default)"></span></div></td><td class="use">Hairline structure</td></tr>
+          <tr><td class="var">--border-strong</td><td class="val">--neutral-200</td><td><div class="sw-cell"><span class="sw" style="background:var(--border-strong)"></span></div></td><td class="use">Inputs, secondary buttons</td></tr>
+          <tr><td class="var">--border-accent</td><td class="val">--brand-500</td><td><div class="sw-cell"><span class="sw" style="background:var(--border-accent)"></span></div></td><td class="use">Focused / selected outline</td></tr>
+        </tbody>
+      </table>
+
+      <div class="doc-group-label">Status — solid · tint bg · darkened fg</div>
+      <table class="tok-table">
+        <thead><tr><th>Token group</th><th>Solid</th><th>bg / fg</th><th>Preview</th></tr></thead>
+        <tbody>
+          <tr><td class="var">--success-*</td><td class="val">rgb(16,185,129)</td><td class="val">bg .12 · fg #065F46</td><td><span class="badge badge-success"><span class="dot"></span>Ready</span></td></tr>
+          <tr><td class="var">--warning-*</td><td class="val">rgb(245,158,11)</td><td class="val">bg .12 · fg #92400E</td><td><span class="badge badge-warning"><span class="dot"></span>Building</span></td></tr>
+          <tr><td class="var">--error-*</td><td class="val">rgb(239,68,68)</td><td class="val">bg .08 · fg #991B1B</td><td><span class="badge badge-error"><span class="dot"></span>Failed</span></td></tr>
+          <tr><td class="var">--info-*</td><td class="val">rgb(59,130,246)</td><td class="val">bg .10 · fg #1E40AF</td><td><span class="badge badge-info">Public</span></td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="doc-section" id="type">
+      <h2><span class="num">9.2</span> Typography</h2>
+      <p class="lead"><code>--font-sans</code>: <b>Inter</b> (400 / 450 / 500 / 600 / 700, −0.02em tracking on headings). <code>--font-mono</code>: <b>Fira Code</b> for URLs, SHAs, branches, IDs, SQL, logs. Body line-height 1.55.</p>
+      <div style="border:1px solid var(--border-default);border-radius:var(--radius-m);padding:var(--space-10) var(--space-12);background:var(--bg-surface)">
+        <div class="type-row"><span class="tr-meta">--text-3xl · 40 / 700</span><span style="font-size:40px;font-weight:700;letter-spacing:-0.03em">Deploy in minutes</span></div>
+        <div class="type-row"><span class="tr-meta">--text-2xl · 32 / 700</span><span style="font-size:32px;font-weight:700;letter-spacing:-0.02em">Page title</span></div>
+        <div class="type-row"><span class="tr-meta">--text-xl · 24 / 600</span><span style="font-size:24px;font-weight:600;letter-spacing:-0.02em">Section heading</span></div>
+        <div class="type-row"><span class="tr-meta">--text-l · 20 / 600</span><span style="font-size:20px;font-weight:600">Card title</span></div>
+        <div class="type-row"><span class="tr-meta">--text-m · 16 / 400</span><span style="font-size:16px">Body — connect a repository and BigBase builds it.</span></div>
+        <div class="type-row"><span class="tr-meta">--text-s · 14 / 450</span><span style="font-size:14px">Default UI text and controls.</span></div>
+        <div class="type-row" style="border-bottom:none"><span class="tr-meta">--text-xs · 12 / 600</span><span style="font-size:12px;text-transform:uppercase;letter-spacing:0.06em;color:var(--fg-tertiary);font-weight:600">OVERLINE / LABEL</span></div>
+      </div>
+    </section>
+
+    <section class="doc-section" id="spacing">
+      <h2><span class="num">9.3</span> Spacing</h2>
+      <p class="lead">4px base scale. The numeric suffix is roughly the step, not the pixel value — always reference the token, never a raw px.</p>
+      <table class="tok-table">
+        <thead><tr><th>Token</th><th>px</th><th>Scale</th><th>Typical use</th></tr></thead>
+        <tbody>
+          <tr><td class="var">--space-1</td><td class="val">2</td><td><div class="sp-bar" style="width:2px"></div></td><td class="use">Hairline nudges</td></tr>
+          <tr><td class="var">--space-2</td><td class="val">4</td><td><div class="sp-bar" style="width:4px"></div></td><td class="use">Badge gap, dot spacing</td></tr>
+          <tr><td class="var">--space-3</td><td class="val">6</td><td><div class="sp-bar" style="width:6px"></div></td><td class="use">Button icon gap</td></tr>
+          <tr><td class="var">--space-4</td><td class="val">8</td><td><div class="sp-bar" style="width:8px"></div></td><td class="use">Nav item gap, btn y-pad</td></tr>
+          <tr><td class="var">--space-5</td><td class="val">10</td><td><div class="sp-bar" style="width:10px"></div></td><td class="use">Input y-pad</td></tr>
+          <tr><td class="var">--space-6</td><td class="val">12</td><td><div class="sp-bar" style="width:12px"></div></td><td class="use">Input x-pad, choice gap</td></tr>
+          <tr><td class="var">--space-8</td><td class="val">16</td><td><div class="sp-bar" style="width:16px"></div></td><td class="use">Btn x-pad, table cell, card body</td></tr>
+          <tr><td class="var">--space-10</td><td class="val">20</td><td><div class="sp-bar" style="width:20px"></div></td><td class="use">Card padding</td></tr>
+          <tr><td class="var">--space-12</td><td class="val">24</td><td><div class="sp-bar" style="width:24px"></div></td><td class="use">Section gaps</td></tr>
+          <tr><td class="var">--space-16</td><td class="val">32</td><td><div class="sp-bar" style="width:32px"></div></td><td class="use">Content padding</td></tr>
+          <tr><td class="var">--space-20</td><td class="val">40</td><td><div class="sp-bar" style="width:40px"></div></td><td class="use">Content x-padding, hero</td></tr>
+          <tr><td class="var">--space-24 / 32</td><td class="val">48 / 64</td><td><div class="sp-bar" style="width:48px"></div></td><td class="use">Empty-state, large blocks</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="doc-section" id="radius">
+      <h2><span class="num">9.4</span> Border radius</h2>
+      <table class="tok-table">
+        <thead><tr><th>Token</th><th>px</th><th>Demo</th><th>Use</th></tr></thead>
+        <tbody>
+          <tr><td class="var">--radius-xs</td><td class="val">4</td><td><div class="rad-demo" style="border-radius:4px"></div></td><td class="use">Badges, small buttons, code chips</td></tr>
+          <tr><td class="var">--radius-s</td><td class="val">8</td><td><div class="rad-demo" style="border-radius:8px"></div></td><td class="use">Buttons, inputs, nav items</td></tr>
+          <tr><td class="var">--radius-m</td><td class="val">12</td><td><div class="rad-demo" style="border-radius:12px"></div></td><td class="use">Cards, panels, menus</td></tr>
+          <tr><td class="var">--radius-l</td><td class="val">16</td><td><div class="rad-demo" style="border-radius:16px"></div></td><td class="use">Login card, modals</td></tr>
+          <tr><td class="var">--radius-full</td><td class="val">9999</td><td><div class="rad-demo" style="border-radius:9999px"></div></td><td class="use">Pills, avatars, dots</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="doc-section" id="shadow">
+      <h2><span class="num">9.5</span> Shadow / elevation</h2>
+      <p class="lead">Subtle, reserved for genuine elevation. Shadows deepen in dark mode (higher alpha) so cards still read against near-black.</p>
+      <table class="tok-table">
+        <thead><tr><th>Token</th><th>Demo</th><th>Use</th></tr></thead>
+        <tbody>
+          <tr><td class="var">--shadow-xs</td><td><div class="sh-demo" style="box-shadow:var(--shadow-xs)"></div></td><td class="use">Resting cards, stat cards</td></tr>
+          <tr><td class="var">--shadow-s</td><td><div class="sh-demo" style="box-shadow:var(--shadow-s)"></div></td><td class="use">Default card elevation</td></tr>
+          <tr><td class="var">--shadow-m</td><td><div class="sh-demo" style="box-shadow:var(--shadow-m)"></div></td><td class="use">Hover-lifted site cards</td></tr>
+          <tr><td class="var">--shadow-l</td><td><div class="sh-demo" style="box-shadow:var(--shadow-l)"></div></td><td class="use">Dropdowns, toasts, theme menu</td></tr>
+          <tr><td class="var">--shadow-xl</td><td><div class="sh-demo" style="box-shadow:var(--shadow-xl)"></div></td><td class="use">Modals</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="doc-section" id="motion">
+      <h2><span class="num">9.6</span> Motion</h2>
+      <table class="tok-table">
+        <thead><tr><th>Token</th><th>Value</th><th>Use</th></tr></thead>
+        <tbody>
+          <tr><td class="var">--duration-fast</td><td class="val">150ms</td><td class="use">Hover, focus, color shifts</td></tr>
+          <tr><td class="var">--duration-medium</td><td class="val">200ms</td><td class="use">Card lift, menu open</td></tr>
+          <tr><td class="var">--duration-slow</td><td class="val">300ms</td><td class="use">Toast slide, wizard steps</td></tr>
+          <tr><td class="var">--ease-standard</td><td class="val">ease</td><td class="use">Default UI transitions</td></tr>
+          <tr><td class="var">--ease-emphasized</td><td class="val">cubic-bezier(.32,.72,0,1)</td><td class="use">Signature — things that travel (toast, progress)</td></tr>
+        </tbody>
+      </table>
+      <div class="callout"><span class="icon" data-icon="info"></span><p>No bounces or springy overshoot. Fades + small translates only. All entrance animation gates behind <code>prefers-reduced-motion: no-preference</code>.</p></div>
+    </section>
+
+    <section class="doc-section" id="dark">
+      <h2><span class="num">9.7</span> Dark-mode remap</h2>
+      <p class="lead">Dark mode is a single <code>[data-theme="dark"]</code> block that remaps role tokens — primitives and components are untouched. The notable special case: the indigo accent text is too dark on near-black, so it lightens.</p>
+      <table class="tok-table">
+        <thead><tr><th>Token</th><th>Light</th><th>Dark</th><th>Note</th></tr></thead>
+        <tbody>
+          <tr><td class="var">--bg-default</td><td class="val">neutral-25</td><td class="val">neutral-900</td><td class="use">App bg</td></tr>
+          <tr><td class="var">--bg-surface</td><td class="val">neutral-0</td><td class="val">neutral-850</td><td class="use">Cards</td></tr>
+          <tr><td class="var">--fg-primary</td><td class="val">neutral-800</td><td class="val">neutral-25</td><td class="use">Inverts</td></tr>
+          <tr><td class="var">--fg-accent</td><td class="val">brand-500</td><td class="val">rgb(128,122,236)</td><td class="use">Lightened — 2.67:1 → 4.7:1</td></tr>
+          <tr><td class="var">--border-default</td><td class="val">neutral-100</td><td class="val">neutral-750</td><td class="use">Hairlines</td></tr>
+          <tr><td class="var">--success-fg</td><td class="val">#065F46</td><td class="val">rgb(110,231,183)</td><td class="use">Status fg lightens</td></tr>
+          <tr><td class="var">--shadow-*</td><td class="val">alpha .04–.10</td><td class="val">alpha .25–.50</td><td class="use">Deeper for contrast</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="doc-section" id="theming">
+      <h2><span class="num">9.8</span> Theme switching &amp; persistence</h2>
+      <p class="lead">Accent themes are applied by setting <code>data-accent</code> on <code>&lt;html&gt;</code>; dark mode by <code>data-theme</code>. Both persist to <code>localStorage</code>. Because every component reads role tokens, a theme switch is instant and global with zero re-render of component CSS.</p>
+      <div class="codeblock"><span class="c">// Apply + persist accent theme (12 months, or 'default')</span>
+<span class="k">function</span> <span class="f">setAccent</span>(month) {
+  <span class="k">const</span> root = document.documentElement;
+  <span class="k">if</span> (month && month !== <span class="s">'default'</span>) root.<span class="f">setAttribute</span>(<span class="s">'data-accent'</span>, month);
+  <span class="k">else</span> root.<span class="f">removeAttribute</span>(<span class="s">'data-accent'</span>);
+  localStorage.<span class="f">setItem</span>(<span class="s">'bigbase-theme'</span>, month);
+}
+
+<span class="c">// Apply + persist dark mode</span>
+<span class="k">function</span> <span class="f">setDark</span>(on) {
+  document.documentElement.<span class="f">setAttribute</span>(<span class="s">'data-theme'</span>, on ? <span class="s">'dark'</span> : <span class="s">'light'</span>);
+  localStorage.<span class="f">setItem</span>(<span class="s">'bigbase-dark'</span>, on ? <span class="s">'1'</span> : <span class="s">'0'</span>);
+}
+
+<span class="c">// Rehydrate on load (run before first paint to avoid flash)</span>
+<span class="k">const</span> saved = localStorage.<span class="f">getItem</span>(<span class="s">'bigbase-theme'</span>) || <span class="s">'default'</span>;
+<span class="k">const</span> dark  = localStorage.<span class="f">getItem</span>(<span class="s">'bigbase-dark'</span>) === <span class="s">'1'</span>;
+<span class="f">setAccent</span>(saved);
+<span class="f">setDark</span>(dark);</div>
+      <div class="callout"><span class="icon" data-icon="info"></span><p>This is exactly what the live console ships — open it, change the footer theme picker, reload, and the choice survives. The doc pages on this site use the same keys so your selection follows you across them.</p></div>
+      <div style="margin-top:var(--space-12)"><a class="btn btn-primary" href="Component Spec - Accessibility.html"><span class="icon" data-icon="check-circle" data-size="16"></span> See the contrast proof for all 12 themes</a></div>
+    </section>
+
+    <p style="font-size:var(--text-xs);color:var(--fg-tertiary);margin-top:var(--space-16);text-align:center">BigBase design system · §9 · token names match <code>colors_and_type.css</code> verbatim</p>
+  </main>
+</div>
+<script>
+(function () {
+  var links = {};
+  document.querySelectorAll('#onthispage a').forEach(function (a) { links[a.getAttribute('href').slice(1)] = a; });
+  var obs = new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) {
+      if (e.isIntersecting) {
+        Object.values(links).forEach(function (l) { l.classList.remove('active'); });
+        if (links[e.target.id]) links[e.target.id].classList.add('active');
+      }
+    });
+  }, { rootMargin: '-12% 0px -80% 0px' });
+  ['color','type','spacing','radius','shadow','motion','dark','theming'].forEach(function (id) { var el = document.getElementById(id); if (el) obs.observe(el); });
+})();
+</script>
+</body>
+</html>

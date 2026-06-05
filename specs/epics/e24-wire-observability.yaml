@@ -10,29 +10,34 @@ stories:
     title: Standardize structured logging
     status: pending
     tasks:
-      - desc: All components use slog via injected Logger; --log-level flag
+      - desc: "Add --log-level flag to serve command (debug|info|warn|error) and wire into slog.JSONHandler level"
+        notes: "main.go startProxy(): add flag, parse to slog.Level via slog.LevelVar for dynamic adjustment"
         verify: "go run . serve --log-level debug 2>&1 | head -5 | grep -q '{'"
   - id: e24s02
     title: Distributed request ID
     status: pending
     tasks:
-      - desc: X-Request-ID middleware in proxy with context propagation
+      - desc: "X-Request-ID middleware in proxy: generate via crypto/rand hex, store in context, log as field"
+        notes: "components/proxy/proxy.go: new requestIDMiddleware before loggingMiddleware + context key"
         verify: "curl -sI http://localhost:9999/ | grep -qi x-request-id"
   - id: e24s03
     title: Per-component health
     status: pending
     tasks:
-      - desc: Extend /health with per-component status map
+      - desc: "Extend /health with per-component status map including name, version, running, deps, hooks for each"
+        notes: "components/proxy/proxy.go: handleHealth() — enrich JSON with component_status_map array"
         verify: "curl -sf http://localhost:9999/health | grep -q components"
   - id: e24s04
     title: Prometheus metrics export
     status: pending
     tasks:
-      - desc: GET /api/monitoring/metrics/prometheus text format
+      - desc: "GET /api/monitoring/metrics/prometheus — manual text format, export bigbase_* counters/gauges"
+        notes: "components/monitoring/monitoring.go: new handler, convert MetricsCollector + SystemMetrics into Prometheus text format (no external deps); register in main.go proxy"
         verify: "curl -sf http://localhost:9999/api/monitoring/metrics/prometheus | grep -q bigbase_"
   - id: e24s05
     title: Idempotent setup scripts
     status: pending
     tasks:
-      - desc: scripts/setup.sh idempotent and scripts/health-check.sh
+      - desc: "Create scripts/health-check.sh that curls /health and validates JSON; verify setup.sh idempotency (run twice)"
+        notes: "scripts/health-check.sh: new file using curl + jq or grep for health JSON validation"
         verify: "bash scripts/setup.sh && bash scripts/health-check.sh"

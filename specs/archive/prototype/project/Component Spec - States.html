@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>BigBase — Component States · Spec</title>
+<link rel="stylesheet" href="spec/spec.css" />
+<link rel="stylesheet" href="spec/doc.css" />
+<script src="spec/icons.js"></script>
+<style>
+  .matrix-wrap { overflow-x: auto; border: 1px solid var(--border-default); border-radius: var(--radius-m); background: var(--bg-surface); box-shadow: var(--shadow-xs); margin-top: var(--space-8); }
+  .matrix { border-collapse: collapse; width: 100%; font-size: 12px; min-width: 940px; }
+  .matrix th, .matrix td { padding: 9px 6px; text-align: center; border-bottom: 1px solid var(--border-default); }
+  .matrix thead th { position: sticky; top: 0; background: var(--bg-subtle); font-size: 10px; text-transform: uppercase; letter-spacing: 0.03em; color: var(--fg-tertiary); font-weight: 700; white-space: nowrap; }
+  .matrix th.rowhead, .matrix td.rowhead { text-align: left; position: sticky; left: 0; background: var(--bg-surface); font-weight: 600; color: var(--fg-primary); white-space: nowrap; min-width: 168px; padding-left: var(--space-10); }
+  .matrix thead th.rowhead { background: var(--bg-subtle); z-index: 2; }
+  .matrix tbody tr:hover td { background: var(--overlay-hover); }
+  .matrix tbody tr:hover td.rowhead { background: var(--bg-surface-hover); }
+  .matrix .yes { color: var(--fg-accent); font-weight: 700; }
+  .matrix .no { color: var(--fg-tertiary); opacity: 0.35; }
+  .matrix td.cnt { font-family: var(--font-mono); color: var(--fg-secondary); font-weight: 600; }
+  .matrix-legend { display: flex; gap: var(--space-10); margin-top: var(--space-8); font-size: var(--text-s); color: var(--fg-secondary); flex-wrap: wrap; }
+  .matrix-legend span { display: inline-flex; align-items: center; gap: var(--space-3); }
+</style>
+</head>
+<body>
+<div class="doc">
+  <aside class="doc-rail">
+    <div class="doc-brand">
+      <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Crect width='120' height='120' rx='28' fill='%234F46E5'/%3E%3Cpath d='M40 34h22.5c11.3 0 18.5 5.4 18.5 14.6 0 6-3.3 10.2-8.7 11.9 6.8 1.4 10.9 6 10.9 12.8C83.2 81.6 75.6 87 63.4 87H40V34Zm12.4 21.1h8.8c4.6 0 7.3-2.1 7.3-5.8 0-3.6-2.6-5.6-7.3-5.6h-8.8v11.4Zm0 22h9.8c4.9 0 7.7-2.2 7.7-6.1 0-3.8-2.8-6-7.8-6h-9.7v12.1Z' fill='%23fff'/%3E%3C/svg%3E" alt="" />
+      <span><b>BigBase</b><span class="doc-brand-sub">Design spec</span></span>
+    </div>
+    <div>
+      <div class="doc-railgroup-title">Handoff</div>
+      <nav>
+        <a class="active" href="Component Spec - States.html"><span class="icon" data-icon="square-stack" data-size="16"></span> Component states</a>
+        <a href="Component Spec - Information Architecture.html"><span class="icon" data-icon="layers" data-size="16"></span> Information architecture</a>
+        <a href="Component Spec - Responsive.html"><span class="icon" data-icon="smartphone" data-size="16"></span> Responsive specs</a>
+        <a href="Component Spec - Accessibility.html"><span class="icon" data-icon="check-circle" data-size="16"></span> Accessibility report</a>
+        <a href="Component Spec - Tokens.html"><span class="icon" data-icon="book-open" data-size="16"></span> Tokens &amp; export</a>
+        <a href="BigBase Console.html"><span class="icon" data-icon="external-link" data-size="16"></span> Live console</a>
+      </nav>
+    </div>
+    <div>
+      <div class="doc-railgroup-title">On this page</div>
+      <nav id="onthispage">
+        <a href="#matrix">State matrix</a>
+        <a href="#actions">Actions</a>
+        <a href="#forms">Forms &amp; inputs</a>
+        <a href="#nav">Navigation</a>
+        <a href="#containers">Containers</a>
+        <a href="#data">Data display</a>
+        <a href="#feedback">Feedback &amp; status</a>
+      </nav>
+    </div>
+    <div class="doc-rail-foot">
+      <div class="doc-railgroup-title">Preview as</div>
+      <div class="doc-toggles">
+        <button id="spec-dark" type="button"></button>
+      </div>
+      <select id="spec-accent" class="input" aria-label="Accent theme">
+        <option value="default">Indigo (default)</option>
+        <option value="january">January · Teal</option>
+        <option value="february">February · Orange</option>
+        <option value="march">March · Purple</option>
+        <option value="april">April · Green</option>
+        <option value="may">May · Lavender</option>
+        <option value="june">June · Rainbow</option>
+        <option value="july">July · Peach</option>
+        <option value="august">August · Silver</option>
+        <option value="september">September · Yellow</option>
+        <option value="october">October · Pink</option>
+        <option value="november">November · Blue</option>
+        <option value="december">December · Red</option>
+      </select>
+    </div>
+  </aside>
+
+  <main class="doc-main">
+    <div class="doc-hero">
+      <span class="eyebrow">Engineering handoff · §4</span>
+      <h1>Component states</h1>
+      <p>Every interactive component in the BigBase Console, documented across its full state range — default, hover, focus, active, disabled, loading, error, and empty. Each row lists the exact token, spacing, and transition. All values are read live from <code>spec.css</code>; flip dark mode or an accent theme (sidebar) to verify contrast. States shown in the tables are <em>pinned</em> for reference; the preview strips are fully interactive.</p>
+    </div>
+
+    <!-- ============================ STATE MATRIX ============================ -->
+    <section class="doc-section" id="matrix">
+      <h2><span class="num">4.0</span> State coverage matrix</h2>
+      <p class="lead">Every component checked against the <strong>12 canonical states</strong> of the system. A <span style="color:var(--fg-accent);font-weight:700">✓</span> means the state is defined in <code>spec.css</code> and demonstrated below; a muted <span style="color:var(--fg-tertiary)">·</span> means it does not apply to that component (e.g. a Divider has no loading state, a Badge no focus). This makes the full range explicit per component — the detailed cards that follow document the tokens and transitions for each ✓.</p>
+      <div class="matrix-wrap"><table class="matrix" id="matrix-table"></table></div>
+      <div class="matrix-legend">
+        <span><span class="yes">✓</span> supported &amp; demonstrated</span>
+        <span><span class="no">·</span> not applicable to this component</span>
+        <span><b>States:</b> Default · Hover · Focus · Active · Disabled · Loading · Error · Empty · Selected · Read-only · Filled · Skeleton</span>
+      </div>
+    </section>
+
+    <!-- ============================ ACTIONS ============================ -->
+    <section class="doc-section" id="actions">
+      <h2><span class="num">A</span> Actions</h2>
+      <p class="lead">Buttons share one base: <code>display:inline-flex</code>, gap <code>--space-3</code>, padding <code>--space-4 --space-8</code> (8/16px), radius <code>--radius-s</code>, <code>--text-s</code> / 500, border <code>1px solid transparent</code>. Press nudges <code>translateY(0.5px)</code> — never a scale. Transition: <code class="tok">background-color · border-color · opacity · transform</code> @ <code>--duration-fast</code> (150ms) <code>--ease-standard</code>.</p>
+
+      <div class="doc-group-label">Button · Primary</div>
+      <article class="spec">
+        <div class="spec-head">
+          <div>
+            <h3>Button — Primary</h3>
+            <p class="spec-desc">The single highest-emphasis action on a view. Reserve one per screen region. Accent-filled; text token flips to near-black automatically under light accent themes.</p>
+          </div>
+          <div class="spec-states"><span class="tag">Default</span><span class="tag">Hover</span><span class="tag">Focus</span><span class="tag">Active</span><span class="tag">Disabled</span><span class="tag">Loading</span></div>
+        </div>
+        <div class="spec-preview">
+          <span class="pv-label">Interactive — hover / focus / press me</span>
+          <button class="btn btn-primary"><span class="icon" data-icon="plus" data-size="16"></span> Create site</button>
+          <button class="btn btn-primary" disabled>Create site</button>
+          <button class="btn btn-primary" disabled><span class="spinner spinner-sm"></span> Deploying…</button>
+        </div>
+        <div class="state-table has-trans">
+          <div class="state-row state-head"><div>State</div><div>Pinned preview</div><div>Tokens &amp; spacing</div><div>Transition</div></div>
+          <div class="state-row"><div class="state-name">Default</div><div class="state-demo"><button class="btn btn-primary">Create site</button></div><div class="state-tokens">bg <span class="tok tok-accent">--bg-accent</span> → <span class="tok">--brand-500</span> · text <span class="tok">--fg-on-accent</span> · pad <span class="tok">8 / 16</span> · radius <span class="tok">--radius-s</span></div><div class="state-trans">—</div></div>
+          <div class="state-row"><div class="state-name">Hover</div><div class="state-demo"><button class="btn btn-primary pin-hover">Create site</button></div><div class="state-tokens">bg → <span class="tok">--bg-accent-hover</span> (<span class="tok">--brand-600</span>), one step darker</div><div class="state-trans">background-color 150ms</div></div>
+          <div class="state-row"><div class="state-name">Focus</div><div class="state-demo"><button class="btn btn-primary pin-focus">Create site</button></div><div class="state-tokens">+ <span class="tok">--focus-ring</span> (3px indigo @18%) · keyboard <code>:focus-visible</code> only</div><div class="state-trans">box-shadow 150ms</div></div>
+          <div class="state-row"><div class="state-name">Active</div><div class="state-demo"><button class="btn btn-primary pin-press">Create site</button></div><div class="state-tokens">bg → <span class="tok">--bg-accent-active</span> (<span class="tok">--brand-700</span>) · <span class="tok">translateY(.5px)</span></div><div class="state-trans">transform 150ms</div></div>
+          <div class="state-row"><div class="state-name">Disabled</div><div class="state-demo"><button class="btn btn-primary" disabled>Create site</button></div><div class="state-tokens"><span class="tok">opacity .5</span> · <span class="tok">cursor not-allowed</span> · no hover/press</div><div class="state-trans">none</div></div>
+          <div class="state-row"><div class="state-name">Loading</div><div class="state-demo"><button class="btn btn-primary" disabled><span class="spinner spinner-sm"></span> Deploying…</button></div><div class="state-tokens"><code>.spinner-sm</code> (14px, border-top <span class="tok">--fg-accent</span>) + verb-ing label · disabled while pending</div><div class="state-trans">spin 0.6s linear</div></div>
+        </div>
+      </article>
+
+      <div class="doc-group-label">Button · Secondary, Danger, Ghost, Link</div>
+      <article class="spec">
+        <div class="spec-head">
+          <div>
+            <h3>Button — Secondary</h3>
+            <p class="spec-desc">Neutral companion to a primary action (Cancel, Redeploy, Send test). Surface fill + hairline border.</p>
+          </div>
+          <div class="spec-states"><span class="tag">Default</span><span class="tag">Hover</span><span class="tag">Focus</span><span class="tag">Active</span><span class="tag">Disabled</span></div>
+        </div>
+        <div class="spec-preview"><span class="pv-label">Interactive</span>
+          <button class="btn btn-secondary"><span class="icon" data-icon="refresh-cw" data-size="15"></span> Redeploy</button>
+          <button class="btn btn-secondary" disabled>Manage plan</button>
+        </div>
+        <div class="state-table has-trans">
+          <div class="state-row state-head"><div>State</div><div>Pinned preview</div><div>Tokens &amp; spacing</div><div>Transition</div></div>
+          <div class="state-row"><div class="state-name">Default</div><div class="state-demo"><button class="btn btn-secondary">Redeploy</button></div><div class="state-tokens">bg <span class="tok">--bg-surface</span> · text <span class="tok">--fg-primary</span> · border <span class="tok">--border-strong</span></div><div class="state-trans">—</div></div>
+          <div class="state-row"><div class="state-name">Hover</div><div class="state-demo"><button class="btn btn-secondary pin-hover">Redeploy</button></div><div class="state-tokens">bg <span class="tok">--bg-surface-hover</span> · border <span class="tok">--border-focus</span></div><div class="state-trans">bg + border 150ms</div></div>
+          <div class="state-row"><div class="state-name">Focus</div><div class="state-demo"><button class="btn btn-secondary pin-focus">Redeploy</button></div><div class="state-tokens">+ <span class="tok">--focus-ring</span></div><div class="state-trans">box-shadow 150ms</div></div>
+          <div class="state-row"><div class="state-name">Active</div><div class="state-demo"><button class="btn btn-secondary pin-press" style="background:var(--bg-subtle);transform:translateY(.5px)">Redeploy</button></div><div class="state-tokens">bg <span class="tok">--bg-subtle</span> · <span class="tok">translateY(.5px)</span></div><div class="state-trans">transform 150ms</div></div>
+          <div class="state-row"><div class="state-name">Disabled</div><div class="state-demo"><button class="btn btn-secondary" disabled>Redeploy</button></div><div class="state-tokens"><span class="tok">opacity .5</span> · not-allowed</div><div class="state-trans">none</div></div>
+        </div>
+      </article>
+
+      <article class="spec">
+        <div class="spec-head">
+          <div>
+            <h3>Button — Danger · Ghost · Link</h3>
+            <p class="spec-desc">Three lower-frequency variants. <b>Danger</b> for destructive confirms, <b>Ghost</b> for toolbar/icon actions, <b>Link</b> for inline navigation ("View all", "Forgot password?").</p>
+          </div>
+          <div class="spec-states"><span class="tag">Default</span><span class="tag">Hover</span><span class="tag">Focus</span><span class="tag">Disabled</span></div>
+        </div>
+        <div class="spec-preview"><span class="pv-label">Interactive</span>
+          <button class="btn btn-danger">Delete site</button>
+          <button class="btn btn-ghost"><span class="icon" data-icon="copy" data-size="15"></span> Copy</button>
+          <button class="btn btn-link">View all</button>
+        </div>
+        <div class="state-table has-trans">
+          <div class="state-row state-head"><div>Variant</div><div>Hover (pinned)</div><div>Tokens</div><div>Transition</div></div>
+          <div class="state-row"><div class="state-name"><span class="swatch-dot" style="background:var(--error)"></span>Danger</div><div class="state-demo"><button class="btn btn-danger pin-hover">Delete site</button></div><div class="state-tokens">bg <span class="tok">--error</span> · text <code>#fff</code> · hover <span class="tok">opacity .9</span></div><div class="state-trans">opacity 150ms</div></div>
+          <div class="state-row"><div class="state-name">Ghost</div><div class="state-demo"><button class="btn btn-ghost pin-hover">Copy</button></div><div class="state-tokens">transparent · text <span class="tok">--fg-secondary</span> · hover bg <span class="tok">--overlay-hover</span>, text <span class="tok">--fg-primary</span></div><div class="state-trans">bg + color 150ms</div></div>
+          <div class="state-row"><div class="state-name">Link</div><div class="state-demo"><button class="btn btn-link pin-hover">View all</button></div><div class="state-tokens">no bg/pad · color <span class="tok">--fg-accent</span> · hover <span class="tok">underline</span></div><div class="state-trans">color 150ms</div></div>
+        </div>
+      </article>
+
+      <article class="spec">
+        <div class="spec-head">
+          <div><h3>Button — Sizes &amp; layout</h3><p class="spec-desc">Three sizing modifiers compose with any variant.</p></div>
+          <div class="spec-states"><span class="tag">Default</span><span class="tag">sm</span><span class="tag">block</span></div>
+        </div>
+        <div class="spec-preview" style="flex-direction:column;align-items:stretch">
+          <span class="pv-label">Sizes</span>
+          <div class="row" style="display:flex;gap:16px;align-items:center;flex-wrap:wrap">
+            <button class="btn btn-primary">Default — 8/16</button>
+            <button class="btn btn-secondary btn-sm">Small — 4/10</button>
+          </div>
+          <button class="btn btn-primary btn-block" style="margin-top:12px">Block — full width (login, modals)</button>
+        </div>
+        <div class="state-table">
+          <div class="state-row state-head"><div>Modifier</div><div>Padding</div><div>Notes</div></div>
+          <div class="state-row"><div class="state-name">.btn</div><div class="state-demo"><code>--space-4 --space-8</code></div><div class="state-tokens">14px / 500 · radius <span class="tok">--radius-s</span> · min hit ≥ 36px</div></div>
+          <div class="state-row"><div class="state-name">.btn-sm</div><div class="state-demo"><code>--space-2 --space-5</code></div><div class="state-tokens">12px · radius <span class="tok">--radius-xs</span> · table row + card actions</div></div>
+          <div class="state-row"><div class="state-name">.btn-block</div><div class="state-demo"><code>width:100%</code></div><div class="state-tokens">stacks full-width in narrow containers</div></div>
+        </div>
+      </article>
+    </section>
+
+    <!-- ============================ FORMS ============================ -->
+    <section class="doc-section" id="forms">
+      <h2><span class="num">B</span> Forms &amp; inputs</h2>
+      <p class="lead">Fields are built from <code>.input-group</code> (label + control + hint/error, gap <code>--space-3</code>). Controls: pad <code>--space-5 --space-6</code> (10/12px), border <code>--border-strong</code>, radius <code>--radius-s</code>, <code>--text-s</code>. Errors surface inline beneath the field, never as a tooltip.</p>
+
+      <article class="spec">
+        <div class="spec-head">
+          <div><h3>Text input</h3><p class="spec-desc">Single-line field. Focus draws the accent border + focus ring together.</p></div>
+          <div class="spec-states"><span class="tag">Default</span><span class="tag">Focus</span><span class="tag">Disabled</span><span class="tag">Error</span></div>
+        </div>
+        <div class="spec-preview"><span class="pv-label">Interactive — focus to see ring</span>
+          <input class="input" style="max-width:220px" placeholder="www.yourdomain.com" />
+          <input class="input" style="max-width:220px" value="locked-value" disabled />
+        </div>
+        <div class="state-table has-trans">
+          <div class="state-row state-head"><div>State</div><div>Pinned preview</div><div>Tokens &amp; spacing</div><div>Transition</div></div>
+          <div class="state-row"><div class="state-name">Default</div><div class="state-demo"><input class="input" style="max-width:200px" placeholder="Placeholder" /></div><div class="state-tokens">border <span class="tok">--border-strong</span> · bg <span class="tok">--bg-surface</span> · placeholder <span class="tok">--fg-tertiary</span></div><div class="state-trans">—</div></div>
+          <div class="state-row"><div class="state-name">Focus</div><div class="state-demo"><input class="input pin-focus" style="max-width:200px" value="acme" /></div><div class="state-tokens">border <span class="tok">--border-accent</span> + <span class="tok">--focus-ring</span></div><div class="state-trans">border + box-shadow 150ms</div></div>
+          <div class="state-row"><div class="state-name">Disabled</div><div class="state-demo"><input class="input" style="max-width:200px" value="locked" disabled /></div><div class="state-tokens">bg <span class="tok">--bg-subtle</span> · text <span class="tok">--fg-tertiary</span> · not-allowed</div><div class="state-trans">none</div></div>
+          <div class="state-row"><div class="state-name">Error</div><div class="state-demo"><div class="input-group" style="max-width:240px;gap:4px"><input class="input input-error" value="not-an-email" /><div class="input-error-text"><span class="icon" data-icon="alert-triangle" data-size="13" style="vertical-align:-2px;margin-right:4px"></span>Enter a valid email address.</div></div></div><div class="state-tokens">border <span class="tok">--border-error</span> · ring <code>rgba(239,68,68,.15)</code> · message <span class="tok">--error</span> / <span class="tok">--text-xs</span></div><div class="state-trans">border 150ms</div></div>
+        </div>
+      </article>
+
+      <article class="spec">
+        <div class="spec-head">
+          <div><h3>Textarea · Select · Input&nbsp;+&nbsp;prefix</h3><p class="spec-desc">Same control tokens as text input. Textarea resizes vertically; select uses a custom caret; prefix groups a non-editable affix (POST, <code>bigbase.local/</code>).</p></div>
+          <div class="spec-states"><span class="tag">Default</span><span class="tag">Focus</span><span class="tag">Disabled</span></div>
+        </div>
+        <div class="spec-preview" style="align-items:flex-start">
+          <span class="pv-label">Interactive</span>
+          <textarea class="input" style="max-width:240px;min-height:72px" placeholder="Template body…"></textarea>
+          <select class="input" style="max-width:200px"><option>HTTP</option><option>Schedule</option><option>Event</option></select>
+          <div class="input-with-prefix" style="max-width:240px"><span class="input-prefix">POST</span><input class="input" value="fn.bigbase.local/resize" /></div>
+        </div>
+        <div class="state-table">
+          <div class="state-row state-head"><div>Control</div><div>Key tokens</div><div>Notes</div></div>
+          <div class="state-row"><div class="state-name">Textarea</div><div class="state-demo"><code>min-height 80px</code> · <code>resize:vertical</code></div><div class="state-tokens">line-height 1.6 · same focus ring as input</div></div>
+          <div class="state-row"><div class="state-name">Select</div><div class="state-demo"><code>appearance:none</code> + caret SVG</div><div class="state-tokens">padding-right <span class="tok">--space-12</span> for caret · cursor pointer</div></div>
+          <div class="state-row"><div class="state-name">Prefix</div><div class="state-demo"><span class="tok">--bg-subtle</span> affix, joined radius</div><div class="state-tokens">affix text <span class="tok">--fg-tertiary</span> · input radius collapses on shared edge</div></div>
+        </div>
+      </article>
+
+      <article class="spec">
+        <div class="spec-head">
+          <div><h3>Segmented control</h3><p class="spec-desc">Inline switch for 2–3 mutually-exclusive views (Data / Schema, Sites: All / Production / Preview). Track is <code>--bg-subtle</code>; the selected thumb lifts onto a surface.</p></div>
+          <div class="spec-states"><span class="tag">Default</span><span class="tag">Selected</span><span class="tag">Hover</span></div>
+        </div>
+        <div class="spec-preview"><span class="pv-label">Interactive pattern</span>
+          <div class="row" style="display:flex;gap:4px;background:var(--bg-subtle);padding:3px;border-radius:var(--radius-s)">
+            <button class="btn btn-sm" style="background:var(--bg-surface);color:var(--fg-primary);box-shadow:var(--shadow-xs);border:none">Data</button>
+            <button class="btn btn-sm" style="background:transparent;color:var(--fg-secondary);border:none">Schema</button>
+          </div>
+        </div>
+        <div class="state-table">
+          <div class="state-row state-head"><div>State</div><div>Tokens</div><div>Notes</div></div>
+          <div class="state-row"><div class="state-name">Default item</div><div class="state-demo">transparent · <span class="tok">--fg-secondary</span></div><div class="state-tokens">3px track padding · radius <span class="tok">--radius-s</span></div></div>
+          <div class="state-row"><div class="state-name">Selected</div><div class="state-demo">bg <span class="tok">--bg-surface</span> · text <span class="tok">--fg-primary</span> · <span class="tok">--shadow-xs</span></div><div class="state-tokens">only one selected; persists view choice</div></div>
+          <div class="state-row"><div class="state-name">Hover</div><div class="state-demo">text → <span class="tok">--fg-primary</span></div><div class="state-tokens">no bg change on unselected hover</div></div>
+        </div>
+      </article>
+    </section>
+
+    <!-- ============================ NAVIGATION ============================ -->
+    <section class="doc-section" id="nav">
+      <h2><span class="num">C</span> Navigation</h2>
+      <p class="lead">Active state is communicated with an accent-tint background + accent text — never a heavy fill. Transition is <code>background-color · color</code> @ <code>--duration-fast</code> (the <code>background</code> shorthand is deliberately avoided to prevent stuck var-transitions).</p>
+
+      <article class="spec">
+        <div class="spec-head">
+          <div><h3>Sidebar nav item</h3><p class="spec-desc">Grouped under uppercase section labels. Icon opacity rises on hover/active.</p></div>
+          <div class="spec-states"><span class="tag">Default</span><span class="tag">Hover</span><span class="tag">Active</span><span class="tag">Focus</span></div>
+        </div>
+        <div class="spec-preview" style="flex-direction:column;align-items:stretch;gap:2px">
+          <span class="pv-label">Pinned states</span>
+          <a class="demo-navitem"><span class="icon" data-icon="rocket"></span> Sites</a>
+          <a class="demo-navitem pin-hover"><span class="icon" data-icon="box"></span> Functions <span style="margin-left:auto;font-size:11px;color:var(--fg-tertiary)">hover</span></a>
+          <a class="demo-navitem pin-active"><span class="icon" data-icon="database"></span> Data Studio <span style="margin-left:auto;font-size:11px;color:var(--fg-accent)">active</span></a>
+        </div>
+        <div class="state-table has-trans">
+          <div class="state-row state-head"><div>State</div><div>Pinned preview</div><div>Tokens</div><div>Transition</div></div>
+          <div class="state-row"><div class="state-name">Default</div><div class="state-demo"><a class="demo-navitem"><span class="icon" data-icon="rocket"></span> Sites</a></div><div class="state-tokens">text <span class="tok">--fg-secondary</span> · icon opacity .75 · pad <span class="tok">--space-4</span> · radius <span class="tok">--radius-s</span></div><div class="state-trans">—</div></div>
+          <div class="state-row"><div class="state-name">Hover</div><div class="state-demo"><a class="demo-navitem pin-hover"><span class="icon" data-icon="rocket"></span> Sites</a></div><div class="state-tokens">bg <span class="tok">--overlay-hover</span> · text <span class="tok">--fg-primary</span> · icon opacity 1</div><div class="state-trans">bg + color 150ms</div></div>
+          <div class="state-row"><div class="state-name">Active</div><div class="state-demo"><a class="demo-navitem pin-active"><span class="icon" data-icon="rocket"></span> Sites</a></div><div class="state-tokens">bg <span class="tok tok-accent">--brand-tint</span> · text <span class="tok">--fg-accent</span> · weight 550</div><div class="state-trans">bg + color 150ms</div></div>
+          <div class="state-row"><div class="state-name">Focus</div><div class="state-demo"><a class="demo-navitem pin-focus"><span class="icon" data-icon="rocket"></span> Sites</a></div><div class="state-tokens">+ <span class="tok">--focus-ring</span> on keyboard focus</div><div class="state-trans">box-shadow 150ms</div></div>
+        </div>
+      </article>
+
+      <article class="spec">
+        <div class="spec-head">
+          <div><h3>Tabs</h3><p class="spec-desc">Section switcher inside a detail view (Site, Function, Settings). Underline rides the active tab; bottom hairline unifies the row.</p></div>
+          <div class="spec-states"><span class="tag">Default</span><span class="tag">Hover</span><span class="tag">Active</span></div>
+        </div>
+        <div class="spec-preview" style="background:var(--bg-surface)">
+          <span class="pv-label">Interactive</span>
+          <div class="tabs" style="width:100%;margin:0">
+            <button class="tab active">Code</button>
+            <button class="tab">Triggers</button>
+            <button class="tab">Variables</button>
+            <button class="tab">Logs</button>
+          </div>
+        </div>
+        <div class="state-table has-trans">
+          <div class="state-row state-head"><div>State</div><div>Pinned preview</div><div>Tokens</div><div>Transition</div></div>
+          <div class="state-row"><div class="state-name">Default</div><div class="state-demo" style="background:var(--bg-surface)"><div class="tabs" style="margin:0;border:none"><button class="tab">Triggers</button></div></div><div class="state-tokens">text <span class="tok">--fg-secondary</span> · border-bottom transparent · pad <span class="tok">--space-5 --space-4</span></div><div class="state-trans">—</div></div>
+          <div class="state-row"><div class="state-name">Hover</div><div class="state-demo" style="background:var(--bg-surface)"><div class="tabs" style="margin:0;border:none"><button class="tab pin-hover">Triggers</button></div></div><div class="state-tokens">text → <span class="tok">--fg-primary</span></div><div class="state-trans">color 150ms</div></div>
+          <div class="state-row"><div class="state-name">Active</div><div class="state-demo" style="background:var(--bg-surface)"><div class="tabs" style="margin:0;border:none"><button class="tab active">Code</button></div></div><div class="state-tokens">text <span class="tok">--fg-accent</span> · 2px border-bottom <span class="tok">--fg-accent</span></div><div class="state-trans">color + border 150ms</div></div>
+        </div>
+      </article>
+
+      <article class="spec">
+        <div class="spec-head">
+          <div><h3>Breadcrumb &amp; theme picker</h3><p class="spec-desc">Breadcrumb sits above detail titles. Theme picker is the sidebar-footer dropdown driving the 12 accent themes.</p></div>
+          <div class="spec-states"><span class="tag">Default</span><span class="tag">Hover</span><span class="tag">Open</span></div>
+        </div>
+        <div class="spec-preview" style="flex-direction:column;align-items:flex-start;gap:14px">
+          <span class="pv-label">Breadcrumb (link hover → accent) &amp; theme trigger</span>
+          <div class="breadcrumb" style="margin:0"><a href="#nav">Functions</a><span class="sep">/</span><span class="mono" style="color:var(--fg-primary)">image-resize</span></div>
+          <div class="theme-picker" style="max-width:210px;position:static">
+            <button class="theme-trigger" type="button"><span class="theme-dot" style="background:var(--brand-500)"></span><span class="theme-trigger-label">October · Pink</span><span class="theme-trigger-chev"><span class="icon" data-icon="chevron-down" data-size="15"></span></span></button>
+          </div>
+        </div>
+        <div class="state-table">
+          <div class="state-row state-head"><div>Element</div><div>Tokens</div><div>Notes</div></div>
+          <div class="state-row"><div class="state-name">Crumb link</div><div class="state-demo">text <span class="tok">--fg-secondary</span> → hover <span class="tok">--fg-accent</span></div><div class="state-tokens">separator <span class="tok">--fg-tertiary</span> · current page <span class="tok">--fg-primary</span></div></div>
+          <div class="state-row"><div class="state-name">Theme trigger</div><div class="state-demo">border <span class="tok">--border-strong</span> → hover <span class="tok">--border-focus</span></div><div class="state-tokens">swatch dot = <span class="tok">--brand-500</span> (gradient for June) · chevron rotates 180° when open</div></div>
+          <div class="state-row"><div class="state-name">Menu (open)</div><div class="state-demo"><span class="tok">--shadow-l</span> · selected row <span class="tok">--brand-tint</span></div><div class="state-tokens">animates in 200ms <span class="tok">--ease-emphasized</span> · persists to <code>localStorage</code></div></div>
+        </div>
+      </article>
+    </section>
+
+    <!-- ============================ CONTAINERS ============================ -->
+    <section class="doc-section" id="containers">
+      <h2><span class="num">D</span> Containers</h2>
+      <p class="lead">Cards do the structural work: <code>--bg-surface</code>, 1px <code>--border-default</code>, radius <code>--radius-m</code>, <code>--shadow-s</code>. They only lift on hover when interactive. No colored left-borders.</p>
+
+      <article class="spec">
+        <div class="spec-head">
+          <div><h3>Card · Site card · Stat card</h3><p class="spec-desc">Static <code>.card</code> never moves. <code>.site-card</code> and <code>.stat-card</code> are clickable entries — they lift / outline on hover.</p></div>
+          <div class="spec-states"><span class="tag">Default</span><span class="tag">Hover</span><span class="tag">Focus</span></div>
+        </div>
+        <div class="spec-preview" style="align-items:stretch">
+          <span class="pv-label">Interactive — hover the right two</span>
+          <div class="card" style="max-width:200px">Static card — no lift</div>
+          <a class="stat-card" href="#containers" style="max-width:180px;text-decoration:none">
+            <div class="stat-card-top"><div class="stat-icon"><span class="icon" data-icon="box"></span></div><span class="icon" data-icon="chevron-right" style="color:var(--fg-tertiary)"></span></div>
+            <div class="stat-count">3</div><div class="stat-label">Functions</div>
+          </a>
+        </div>
+        <div class="state-table has-trans">
+          <div class="state-row state-head"><div>Component</div><div>Hover (pinned)</div><div>Tokens</div><div>Transition</div></div>
+          <div class="state-row"><div class="state-name">Card</div><div class="state-demo"><div class="card" style="max-width:150px;padding:12px">No hover</div></div><div class="state-tokens">radius <span class="tok">--radius-m</span> · pad <span class="tok">--space-10</span> · <span class="tok">--shadow-s</span></div><div class="state-trans">static</div></div>
+          <div class="state-row"><div class="state-name">Site card</div><div class="state-demo"><div class="site-card pin-hover" style="max-width:150px"><div class="site-card-thumb" style="height:46px;background:linear-gradient(135deg,#4F46E5,#7C73F0)"></div><div class="site-card-body" style="padding:10px"><span class="site-card-name">marketing</span></div></div></div><div class="state-tokens">border → <span class="tok">--border-accent</span> · <span class="tok">--shadow-m</span> · <span class="tok">translateY(-2px)</span></div><div class="state-trans">transform + shadow 200ms</div></div>
+          <div class="state-row"><div class="state-name">Stat card</div><div class="state-demo"><a class="stat-card pin-hover" style="max-width:150px"><div class="stat-count">3</div><div class="stat-label">Functions</div></a></div><div class="state-tokens">border → <span class="tok">--border-accent</span> · <span class="tok">--shadow-s</span> (no lift)</div><div class="state-trans">border + shadow 150ms</div></div>
+        </div>
+      </article>
+
+      <article class="spec">
+        <div class="spec-head">
+          <div><h3>Choice card</h3><p class="spec-desc">Large selectable option in wizards (source = Git / existing repo / template). Selected draws border + focus ring and tints the icon.</p></div>
+          <div class="spec-states"><span class="tag">Default</span><span class="tag">Hover</span><span class="tag">Selected</span><span class="tag">Disabled</span></div>
+        </div>
+        <div class="spec-preview" style="align-items:stretch">
+          <span class="pv-label">Pinned states</span>
+          <div class="choice-card" style="max-width:200px"><div class="choice-card-icon"><span class="icon" data-icon="github" data-size="22"></span></div><div class="choice-card-title">Connect Git</div><div class="choice-card-desc">Default</div></div>
+          <div class="choice-card selected" style="max-width:200px"><div class="choice-card-check"><span class="icon" data-icon="check" data-size="18"></span></div><div class="choice-card-icon"><span class="icon" data-icon="box" data-size="22"></span></div><div class="choice-card-title">Existing repo</div><div class="choice-card-desc">Selected</div></div>
+          <div class="choice-card disabled" style="max-width:200px"><div class="choice-card-icon"><span class="icon" data-icon="rocket" data-size="22"></span></div><div class="choice-card-title">Template</div><div class="choice-card-desc">Disabled</div></div>
+        </div>
+        <div class="state-table has-trans">
+          <div class="state-row state-head"><div>State</div><div>Tokens</div><div>Transition</div></div>
+          <div class="state-row"><div class="state-name">Default</div><div class="state-tokens">border <span class="tok">--border-strong</span> · icon chip <span class="tok">--bg-subtle</span> · pad <span class="tok">--space-10</span></div><div class="state-trans">—</div></div>
+          <div class="state-row"><div class="state-name">Hover</div><div class="state-tokens">border <span class="tok">--border-accent</span> · <span class="tok">--shadow-s</span></div><div class="state-trans">border + shadow 150ms</div></div>
+          <div class="state-row"><div class="state-name">Selected</div><div class="state-tokens">border <span class="tok">--border-accent</span> + <span class="tok">--focus-ring</span> · check fades in · icon → <span class="tok">--brand-tint</span>/<span class="tok">--fg-accent</span></div><div class="state-trans">opacity 150ms</div></div>
+          <div class="state-row"><div class="state-name">Disabled</div><div class="state-tokens"><span class="tok">opacity .55</span> · not-allowed · "Coming soon" badge</div><div class="state-trans">none</div></div>
+        </div>
+      </article>
+
+      <article class="spec">
+        <div class="spec-head">
+          <div><h3>Empty state &amp; preview banner</h3><p class="spec-desc">Empty state is the zero-data invitation (icon chip + title + payoff + one CTA). Preview banner is the persistent demo-mode notice.</p></div>
+          <div class="spec-states"><span class="tag">Empty</span><span class="tag">Static</span></div>
+        </div>
+        <div class="spec-preview" style="flex-direction:column;align-items:stretch;background:var(--bg-default)">
+          <span class="pv-label">Empty state (≤380px copy) &amp; banner</span>
+          <div class="empty-state" style="padding:24px 16px"><div class="empty-state-icon"><span class="icon" data-icon="rocket" data-size="28"></span></div><div class="empty-state-title">Create your first site</div><div class="empty-state-text">Connect a Git repository and BigBase builds, deploys, and serves it — auto-redeploying on every push.</div><button class="btn btn-primary"><span class="icon" data-icon="plus" data-size="16"></span> Create site</button></div>
+          <div class="preview-banner" style="margin-top:12px;border-radius:var(--radius-s)"><span class="icon" data-icon="alert-triangle" data-size="16"></span> Preview mode — showing mock data.</div>
+        </div>
+        <div class="state-table">
+          <div class="state-row state-head"><div>Component</div><div>Tokens</div><div>Notes</div></div>
+          <div class="state-row"><div class="state-name">Empty state</div><div class="state-demo">icon chip <span class="tok">--brand-tint</span>/<span class="tok">--fg-accent</span> · dashed <span class="tok">--border-strong</span></div><div class="state-tokens">title <span class="tok">--text-l</span>/600 · body max 380px · exactly one primary CTA</div></div>
+          <div class="state-row"><div class="state-name">Preview banner</div><div class="state-demo">bg <span class="tok">--warning-bg</span> · text <span class="tok">--warning-fg</span></div><div class="state-tokens">full-bleed at top of app · <span class="tok">--text-s</span></div></div>
+        </div>
+      </article>
+    </section>
+
+    <!-- ============================ DATA DISPLAY ============================ -->
+    <section class="doc-section" id="data">
+      <h2><span class="num">E</span> Data display</h2>
+      <p class="lead">Quiet neutrals; color carries meaning only. Status is always a word + a dot/spinner + a color — never color alone.</p>
+
+      <article class="spec">
+        <div class="spec-head">
+          <div><h3>Badge</h3><p class="spec-desc">Compact label in six semantic variants. Tinted background + darkened foreground; uppercase, pill radius.</p></div>
+          <div class="spec-states"><span class="tag">6 variants</span><span class="tag">+ dot</span></div>
+        </div>
+        <div class="spec-preview">
+          <span class="pv-label">All variants</span>
+          <span class="badge badge-neutral">Neutral</span>
+          <span class="badge badge-accent">Accent</span>
+          <span class="badge badge-success" ><span class="dot"></span>Success</span>
+          <span class="badge badge-warning"><span class="dot"></span>Warning</span>
+          <span class="badge badge-error"><span class="dot"></span>Error</span>
+          <span class="badge badge-info">Info</span>
+        </div>
+        <div class="state-table">
+          <div class="state-row state-head"><div>Variant</div><div>bg / fg tokens</div><div>Usage</div></div>
+          <div class="state-row"><div class="state-name">Neutral</div><div class="state-demo"><span class="tok">--bg-surface-secondary</span> / <span class="tok">--fg-secondary</span></div><div class="state-tokens">type, runtime, counts</div></div>
+          <div class="state-row"><div class="state-name"><span class="swatch-dot" style="background:var(--fg-accent)"></span>Accent</div><div class="state-demo"><span class="tok">--brand-tint</span> / <span class="tok">--fg-accent</span></div><div class="state-tokens">PK, selected, owner role, env</div></div>
+          <div class="state-row"><div class="state-name"><span class="swatch-dot" style="background:var(--success)"></span>Success</div><div class="state-demo"><span class="tok">--success-bg</span> / <span class="tok">--success-fg</span></div><div class="state-tokens">Ready / Active / Healthy</div></div>
+          <div class="state-row"><div class="state-name"><span class="swatch-dot" style="background:var(--warning)"></span>Warning</div><div class="state-demo"><span class="tok">--warning-bg</span> / <span class="tok">--warning-fg</span></div><div class="state-tokens">Building / Paused / Pending</div></div>
+          <div class="state-row"><div class="state-name"><span class="swatch-dot" style="background:var(--error)"></span>Error</div><div class="state-demo"><span class="tok">--error-bg</span> / <span class="tok">--error-fg</span></div><div class="state-tokens">Failed</div></div>
+          <div class="state-row"><div class="state-name"><span class="swatch-dot" style="background:var(--info)"></span>Info</div><div class="state-demo"><span class="tok">--info-bg</span> / <span class="tok">--info-fg</span></div><div class="state-tokens">neutral informational</div></div>
+        </div>
+      </article>
+
+      <article class="spec">
+        <div class="spec-head">
+          <div><h3>Status badge &amp; avatar</h3><p class="spec-desc">Status badge maps a lifecycle word to a variant + indicator (spinner while building). Avatar is an initial chip on the accent.</p></div>
+          <div class="spec-states"><span class="tag">Ready</span><span class="tag">Building</span><span class="tag">Failed</span><span class="tag">Pending</span></div>
+        </div>
+        <div class="spec-preview">
+          <span class="pv-label">Status lifecycle &amp; avatar sizes</span>
+          <span class="badge badge-success"><span class="dot"></span>Ready</span>
+          <span class="badge badge-warning"><span class="spinner spinner-sm" style="width:10px;height:10px;border-width:1.5px"></span>Building</span>
+          <span class="badge badge-error"><span class="dot"></span>Failed</span>
+          <span class="badge badge-warning"><span class="dot"></span>Pending</span>
+          <span class="avatar" style="margin-left:8px">D</span>
+          <span class="avatar" style="width:40px;height:40px;font-size:16px">M</span>
+        </div>
+        <div class="state-table">
+          <div class="state-row state-head"><div>Status</div><div>Indicator</div><div>Variant</div></div>
+          <div class="state-row"><div class="state-name">Ready</div><div class="state-demo">static dot</div><div class="state-tokens">success</div></div>
+          <div class="state-row"><div class="state-name">Building</div><div class="state-demo">10px spinner</div><div class="state-tokens">warning · animated</div></div>
+          <div class="state-row"><div class="state-name">Failed</div><div class="state-demo">dot</div><div class="state-tokens">error</div></div>
+          <div class="state-row"><div class="state-name">Avatar</div><div class="state-demo">initial, uppercase</div><div class="state-tokens">bg <span class="tok">--bg-accent</span> · text <span class="tok">--fg-on-accent</span> · radius full · size×0.42 font</div></div>
+        </div>
+      </article>
+
+      <article class="spec">
+        <div class="spec-head">
+          <div><h3>Table</h3><p class="spec-desc">Dense list with sticky-styled header, hairline row borders, and a hover wash. Rows are clickable where they lead to a detail.</p></div>
+          <div class="spec-states"><span class="tag">Default</span><span class="tag">Row hover</span><span class="tag">Loading</span><span class="tag">Empty</span></div>
+        </div>
+        <div class="spec-preview" style="align-items:stretch;background:var(--bg-default)">
+          <span class="pv-label">Interactive — hover a row</span>
+          <div class="table-wrap" style="width:100%">
+            <table><thead><tr><th>Template</th><th>Type</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr><td><b>Welcome email</b></td><td><span class="badge badge-neutral">Email</span></td><td><span class="badge badge-success"><span class="dot"></span>Active</span></td></tr>
+              <tr class="tr-pin-hover"><td><b>Login code</b></td><td><span class="badge badge-neutral">SMS</span></td><td><span class="badge badge-neutral"><span class="dot"></span>Draft</span></td></tr>
+            </tbody></table>
+          </div>
+        </div>
+        <div class="state-table has-trans">
+          <div class="state-row state-head"><div>State</div><div>Tokens</div><div>Notes</div><div>Transition</div></div>
+          <div class="state-row"><div class="state-name">Header</div><div class="state-tokens">bg <span class="tok">--bg-subtle</span> · <span class="tok">--text-xs</span> uppercase <span class="tok">--fg-tertiary</span></div><div class="state-tokens">cell pad <span class="tok">--space-5 --space-8</span></div><div class="state-trans">—</div></div>
+          <div class="state-row"><div class="state-name">Row hover</div><div class="state-tokens">td bg <span class="tok">--overlay-hover</span></div><div class="state-tokens">cursor pointer when row navigates</div><div class="state-trans">background-color 150ms</div></div>
+          <div class="state-row"><div class="state-name">Loading</div><div class="state-tokens">skeleton rows / shimmer</div><div class="state-tokens">see Skeleton →</div><div class="state-trans">shimmer 1.4s</div></div>
+          <div class="state-row"><div class="state-name">Empty</div><div class="state-tokens">swap for <code>.empty-state</code></div><div class="state-tokens">never show a 0-row table head alone</div><div class="state-trans">—</div></div>
+        </div>
+      </article>
+
+      <article class="spec">
+        <div class="spec-head">
+          <div><h3>Metric tile · Code output · Divider</h3><p class="spec-desc">Metric tile = dashboard KPI with progress bar. Code/log output = dark mono panel for logs &amp; SQL results. Divider separates groups inline or with an "or" label.</p></div>
+          <div class="spec-states"><span class="tag">Default</span><span class="tag">ok / warn / err lines</span></div>
+        </div>
+        <div class="spec-preview" style="align-items:stretch;flex-direction:column">
+          <span class="pv-label">Code output (always dark) &amp; divider</span>
+          <div class="code-output" style="max-height:120px"><div class="log-line"><span class="log-time">00:37</span><span class="log-ok">Completed in 14.82s — 18 pages built</span></div><div class="log-line"><span class="log-time">00:38</span><span style="color:#d4d4d4">Uploading dist → edge</span></div></div>
+          <div class="divider"><span>or</span></div>
+        </div>
+        <div class="state-table">
+          <div class="state-row state-head"><div>Element</div><div>Tokens</div><div>Notes</div></div>
+          <div class="state-row"><div class="state-name">Metric tile</div><div class="state-demo">value <span class="tok">--text-2xl</span>/700 · bar track <span class="tok">--bg-subtle</span>, fill <span class="tok">--brand-500</span></div><div class="state-tokens">label <span class="tok">--text-xs</span> uppercase</div></div>
+          <div class="state-row"><div class="state-name">Code output</div><div class="state-demo">bg <span class="tok">--neutral-900</span> · <span class="tok">--font-mono</span> · time <span class="tok">--neutral-500</span></div><div class="state-tokens">ok line <span class="tok">--success</span> · err <span class="tok">--error</span> · stays dark in both themes</div></div>
+          <div class="state-row"><div class="state-name">Divider</div><div class="state-demo">1px <span class="tok">--border-default</span> · label <span class="tok">--fg-tertiary</span></div><div class="state-tokens">vertical margin <span class="tok">--space-8</span></div></div>
+        </div>
+      </article>
+    </section>
+
+    <!-- ============================ FEEDBACK ============================ -->
+    <section class="doc-section" id="feedback">
+      <h2><span class="num">F</span> Feedback &amp; status</h2>
+      <p class="lead">Motion is quick (150–300ms) and purposeful. Things that travel use <code>--ease-emphasized</code>; loading uses skeleton shimmer or a spinner. No bounces.</p>
+
+      <article class="spec">
+        <div class="spec-head">
+          <div><h3>Toast</h3><p class="spec-desc">Transient confirmation, top-right. Three types; auto-dismiss ~4.2s with a manual close. Slides in on emphasized easing.</p></div>
+          <div class="spec-states"><span class="tag">Success</span><span class="tag">Error</span><span class="tag">Info</span></div>
+        </div>
+        <div class="spec-preview" style="flex-direction:column;align-items:stretch;gap:10px">
+          <span class="pv-label">Three types</span>
+          <div class="toast toast-success" style="position:static;animation:none"><span class="icon toast-icon" data-icon="check-circle"></span><div class="toast-body"><div class="toast-title">Deployment ready</div><div class="toast-msg">marketing-site is live at marketing-site.bigbase.local</div></div><button class="toast-close"><span class="icon" data-icon="x" data-size="15"></span></button></div>
+          <div class="toast toast-error" style="position:static;animation:none"><span class="icon toast-icon" data-icon="alert-triangle"></span><div class="toast-body"><div class="toast-title">Build failed — exit code 1</div><div class="toast-msg">Check logs for details.</div></div><button class="toast-close"><span class="icon" data-icon="x" data-size="15"></span></button></div>
+        </div>
+        <div class="state-table has-trans">
+          <div class="state-row state-head"><div>Type</div><div>Icon token</div><div>Behavior</div><div>Transition</div></div>
+          <div class="state-row"><div class="state-name">Success</div><div class="state-demo">icon <span class="tok">--success</span></div><div class="state-tokens">surface card · <span class="tok">--shadow-l</span> · auto 4.2s</div><div class="state-trans">toast-in 300ms emphasized</div></div>
+          <div class="state-row"><div class="state-name">Error</div><div class="state-demo">icon <span class="tok">--error</span></div><div class="state-tokens">stays until dismissed for failures</div><div class="state-trans">toast-in 300ms</div></div>
+          <div class="state-row"><div class="state-name">Info</div><div class="state-demo">icon <span class="tok">--fg-accent</span></div><div class="state-tokens">neutral updates (redeploy started)</div><div class="state-trans">toast-in 300ms</div></div>
+        </div>
+      </article>
+
+      <article class="spec">
+        <div class="spec-head">
+          <div><h3>Spinner &amp; skeleton</h3><p class="spec-desc">Spinner for in-button / inline waits; skeleton shimmer for first-load page scaffolds (Sites grid, lists).</p></div>
+          <div class="spec-states"><span class="tag">Loading</span></div>
+        </div>
+        <div class="spec-preview" style="align-items:center">
+          <span class="pv-label">Loading primitives</span>
+          <span class="spinner"></span>
+          <span class="spinner spinner-sm"></span>
+          <div class="card" style="max-width:200px;display:flex;flex-direction:column;gap:12px"><div class="skeleton skeleton-card" style="height:70px"></div><div class="skeleton skeleton-text" style="width:70%"></div><div class="skeleton skeleton-text" style="width:45%"></div></div>
+        </div>
+        <div class="state-table has-trans">
+          <div class="state-row state-head"><div>Element</div><div>Tokens</div><div>Notes</div><div>Transition</div></div>
+          <div class="state-row"><div class="state-name">Spinner</div><div class="state-demo">2px ring <span class="tok">--border-strong</span> · top <span class="tok">--fg-accent</span></div><div class="state-tokens">18px / sm 14px · re-tints per accent theme</div><div class="state-trans">spin 0.6s linear</div></div>
+          <div class="state-row"><div class="state-name">Skeleton</div><div class="state-demo">gradient <span class="tok">--bg-subtle</span> → <span class="tok">--bg-surface-hover</span></div><div class="state-tokens">text 13px · card 132px · circle for avatars</div><div class="state-trans">shimmer 1.4s ease</div></div>
+        </div>
+      </article>
+
+      <article class="spec">
+        <div class="spec-head">
+          <div><h3>Wizard steps &amp; focus ring</h3><p class="spec-desc">Wizard rail tracks Source → Configure → Deploy (no dead ends). Focus ring is the one global focus token across every interactive element.</p></div>
+          <div class="spec-states"><span class="tag">Upcoming</span><span class="tag">Active</span><span class="tag">Done</span><span class="tag">Focus</span></div>
+        </div>
+        <div class="spec-preview" style="flex-direction:column;align-items:flex-start;gap:16px">
+          <span class="pv-label">Wizard rail (step 2 of 3) &amp; focus ring</span>
+          <div class="wizard-steps" style="margin:0">
+            <div class="wizard-step done"><div class="wizard-step-num"><span class="icon" data-icon="check" data-size="14"></span></div><div class="wizard-step-label">Source</div></div>
+            <div class="wizard-step-line done"></div>
+            <div class="wizard-step active"><div class="wizard-step-num">2</div><div class="wizard-step-label">Configure</div></div>
+            <div class="wizard-step-line"></div>
+            <div class="wizard-step"><div class="wizard-step-num">3</div><div class="wizard-step-label">Deploy</div></div>
+          </div>
+          <button class="btn btn-secondary pin-focus">Tab-focused element</button>
+        </div>
+        <div class="state-table">
+          <div class="state-row state-head"><div>State</div><div>Tokens</div><div>Notes</div></div>
+          <div class="state-row"><div class="state-name">Upcoming</div><div class="state-demo">num border <span class="tok">--border-strong</span> · label <span class="tok">--fg-tertiary</span></div><div class="state-tokens">26px circle</div></div>
+          <div class="state-row"><div class="state-name">Active</div><div class="state-demo">num bg <span class="tok">--bg-accent</span> / <span class="tok">--fg-on-accent</span> · label <span class="tok">--fg-primary</span></div><div class="state-tokens">connector line fills as you progress</div></div>
+          <div class="state-row"><div class="state-name">Done</div><div class="state-demo">num bg <span class="tok">--success</span> + check · line <span class="tok">--success</span></div><div class="state-tokens">past steps remain clickable</div></div>
+          <div class="state-row"><div class="state-name">Focus ring</div><div class="state-demo"><span class="tok">--focus-ring</span> = 3px accent @18%</div><div class="state-tokens">applied via <code>:focus-visible</code> on every control</div></div>
+        </div>
+      </article>
+    </section>
+
+    <p style="font-size:var(--text-xs);color:var(--fg-tertiary);margin-top:var(--space-16);text-align:center">BigBase design system · 34 component specs · values sourced from <code>spec.css</code> · §4 of the engineering handoff</p>
+  </main>
+</div>
+
+<script>
+(function () {
+  // ── Build the state-coverage matrix ──
+  var STATES = ['Default','Hover','Focus','Active','Disabled','Loading','Error','Empty','Selected','Read-only','Filled','Skeleton'];
+  var ROWS = [
+    ['Button · Primary',        ['Default','Hover','Focus','Active','Disabled','Loading']],
+    ['Button · Secondary',      ['Default','Hover','Focus','Active','Disabled','Loading']],
+    ['Button · Danger',         ['Default','Hover','Focus','Active','Disabled','Loading']],
+    ['Button · Ghost',          ['Default','Hover','Focus','Active','Disabled']],
+    ['Button · Link',           ['Default','Hover','Focus','Active','Disabled']],
+    ['Text input',              ['Default','Hover','Focus','Disabled','Error','Empty','Read-only','Filled']],
+    ['Textarea',                ['Default','Hover','Focus','Disabled','Error','Empty','Read-only','Filled']],
+    ['Select',                  ['Default','Hover','Focus','Disabled','Error','Filled']],
+    ['Input + prefix',          ['Default','Focus','Disabled','Error','Read-only','Filled']],
+    ['Segmented control',       ['Default','Hover','Focus','Selected','Disabled']],
+    ['Sidebar nav item',        ['Default','Hover','Focus','Active','Selected']],
+    ['Tabs',                    ['Default','Hover','Focus','Active','Selected']],
+    ['Breadcrumb link',         ['Default','Hover','Focus']],
+    ['Theme picker',            ['Default','Hover','Focus','Selected','Disabled']],
+    ['Card',                    ['Default','Empty']],
+    ['Site card',               ['Default','Hover','Focus','Loading','Skeleton']],
+    ['Stat card',               ['Default','Hover','Focus']],
+    ['Choice card',             ['Default','Hover','Focus','Selected','Disabled']],
+    ['Empty state',             ['Empty']],
+    ['Preview banner',          ['Default']],
+    ['Badge',                   ['Default']],
+    ['Status badge',            ['Default','Loading']],
+    ['Avatar',                  ['Default']],
+    ['Table',                   ['Default','Loading','Empty','Skeleton']],
+    ['Table row',               ['Default','Hover','Focus','Selected']],
+    ['Metric tile',             ['Default','Loading','Skeleton']],
+    ['Code / log output',       ['Default','Empty']],
+    ['Toast',                   ['Default']],
+    ['Spinner',                 ['Loading']],
+    ['Skeleton',                ['Loading','Skeleton']],
+    ['Wizard steps',            ['Default','Active','Selected','Disabled']],
+    ['Focus ring (global)',     ['Focus']]
+  ];
+  var tbl = document.getElementById('matrix-table');
+  if (tbl) {
+    var abbr = {Default:'Def',Hover:'Hov',Focus:'Foc',Active:'Act',Disabled:'Dis',Loading:'Load',Error:'Err',Empty:'Emp',Selected:'Sel','Read-only':'R-O',Filled:'Fill',Skeleton:'Skel'};
+    var thead = '<thead><tr><th class="rowhead">Component</th>';
+    STATES.forEach(function (s) { thead += '<th title="' + s + '">' + abbr[s] + '</th>'; });
+    thead += '<th>n</th></tr></thead>';
+    var tbody = '<tbody>';
+    ROWS.forEach(function (r) {
+      tbody += '<tr><td class="rowhead">' + r[0] + '</td>';
+      STATES.forEach(function (s) {
+        var on = r[1].indexOf(s) !== -1;
+        tbody += '<td class="' + (on ? 'yes' : 'no') + '">' + (on ? '✓' : '·') + '</td>';
+      });
+      tbody += '<td class="cnt">' + r[1].length + '</td></tr>';
+    });
+    tbody += '</tbody>';
+    tbl.innerHTML = thead + tbody;
+  }
+
+  var ids = ['matrix', 'actions', 'forms', 'nav', 'containers', 'data', 'feedback'];
+  var links = {};
+  document.querySelectorAll('#onthispage a').forEach(function (a) { links[a.getAttribute('href').slice(1)] = a; });
+  var obs = new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) {
+      if (e.isIntersecting) {
+        Object.values(links).forEach(function (l) { l.classList.remove('active'); });
+        if (links[e.target.id]) links[e.target.id].classList.add('active');
+      }
+    });
+  }, { rootMargin: '-20% 0px -70% 0px' });
+  ids.forEach(function (id) { var el = document.getElementById(id); if (el) obs.observe(el); });
+})();
+</script>
+</body>
+</html>

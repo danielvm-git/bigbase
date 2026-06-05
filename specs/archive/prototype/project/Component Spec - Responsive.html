@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>BigBase — Responsive · Spec</title>
+<link rel="stylesheet" href="spec/spec.css" />
+<link rel="stylesheet" href="spec/doc.css" />
+<script src="spec/icons.js"></script>
+</head>
+<body>
+<div class="doc">
+  <aside class="doc-rail">
+    <div class="doc-brand">
+      <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Crect width='120' height='120' rx='28' fill='%234F46E5'/%3E%3Cpath d='M40 34h22.5c11.3 0 18.5 5.4 18.5 14.6 0 6-3.3 10.2-8.7 11.9 6.8 1.4 10.9 6 10.9 12.8C83.2 81.6 75.6 87 63.4 87H40V34Zm12.4 21.1h8.8c4.6 0 7.3-2.1 7.3-5.8 0-3.6-2.6-5.6-7.3-5.6h-8.8v11.4Zm0 22h9.8c4.9 0 7.7-2.2 7.7-6.1 0-3.8-2.8-6-7.8-6h-9.7v12.1Z' fill='%23fff'/%3E%3C/svg%3E" alt="" />
+      <span><b>BigBase</b><span class="doc-brand-sub">Design spec</span></span>
+    </div>
+    <div>
+      <div class="doc-railgroup-title">Handoff</div>
+      <nav>
+        <a href="Component Spec - States.html"><span class="icon" data-icon="square-stack" data-size="16"></span> Component states</a>
+        <a href="Component Spec - Information Architecture.html"><span class="icon" data-icon="layers" data-size="16"></span> Information architecture</a>
+        <a class="active" href="Component Spec - Responsive.html"><span class="icon" data-icon="smartphone" data-size="16"></span> Responsive specs</a>
+        <a href="Component Spec - Accessibility.html"><span class="icon" data-icon="check-circle" data-size="16"></span> Accessibility report</a>
+        <a href="Component Spec - Tokens.html"><span class="icon" data-icon="book-open" data-size="16"></span> Tokens &amp; export</a>
+        <a href="BigBase Console.html"><span class="icon" data-icon="external-link" data-size="16"></span> Live console</a>
+      </nav>
+    </div>
+    <div>
+      <div class="doc-railgroup-title">On this page</div>
+      <nav id="onthispage">
+        <a href="#breakpoints">Breakpoints</a>
+        <a href="#shell">Shell &amp; sidebar</a>
+        <a href="#rules">Layout rules</a>
+        <a href="#decisions">Modal vs page</a>
+      </nav>
+    </div>
+    <div class="doc-rail-foot">
+      <div class="doc-railgroup-title">Preview as</div>
+      <div class="doc-toggles"><button id="spec-dark" type="button"></button></div>
+      <select id="spec-accent" class="input" aria-label="Accent theme">
+        <option value="default">Indigo (default)</option>
+        <option value="april">April · Green</option>
+        <option value="november">November · Blue</option>
+        <option value="october">October · Pink</option>
+      </select>
+    </div>
+  </aside>
+
+  <main class="doc-main">
+    <div class="doc-hero">
+      <span class="eyebrow">Engineering handoff · §6</span>
+      <h1>Responsive specs</h1>
+      <p>Four breakpoints carry the console from a 1440px workstation down to a 375px phone. The content column is capped at <code>~1180px</code> beside a <code>252px</code> sidebar; below tablet the sidebar collapses to an icon rail and every multi-column grid folds to one. Spacing tightens in steps — never a fluid blur.</p>
+    </div>
+
+    <section class="doc-section" id="breakpoints">
+      <h2><span class="num">6.1</span> Breakpoints</h2>
+      <p class="lead">Mobile-considerate, desktop-first. Max-width queries; the named tiers below are the design targets.</p>
+      <div class="bp-grid">
+        <div class="bp-card">
+          <div class="bp-w">≥ 1440px</div>
+          <div class="bp-name"><span class="icon" data-icon="monitor" data-size="14" style="vertical-align:-2px"></span> Desktop</div>
+          <ul>
+            <li>Full 252px sidebar with labels</li>
+            <li>Content capped ~1180px, centered gutters</li>
+            <li>Dashboard 1.4fr / 1fr two-column</li>
+            <li>Card grids 3–4 across</li>
+          </ul>
+        </div>
+        <div class="bp-card">
+          <div class="bp-w">≤ 1024px</div>
+          <div class="bp-name"><span class="icon" data-icon="tablet" data-size="14" style="vertical-align:-2px"></span> Tablet</div>
+          <ul>
+            <li>Sidebar stays full, content padding eases to <code>--space-12</code></li>
+            <li>Card grids reflow to 2 across (<code>auto-fill minmax</code>)</li>
+            <li>Detail two-columns may stack</li>
+            <li>Tables begin horizontal scroll</li>
+          </ul>
+        </div>
+        <div class="bp-card">
+          <div class="bp-w">≤ 768px</div>
+          <div class="bp-name"><span class="icon" data-icon="smartphone" data-size="14" style="vertical-align:-2px"></span> Mobile</div>
+          <ul>
+            <li>Sidebar → 64px <b>icon rail</b> (labels hidden)</li>
+            <li>All grids collapse to single column</li>
+            <li><code>.dash-cols</code> &amp; <code>.metric-grid</code> → 1fr</li>
+            <li>Content padding <code>--space-12 --space-8</code></li>
+          </ul>
+        </div>
+        <div class="bp-card">
+          <div class="bp-w">≤ 375px</div>
+          <div class="bp-name"><span class="icon" data-icon="smartphone" data-size="14" style="vertical-align:-2px"></span> Tiny</div>
+          <ul>
+            <li>Page header actions wrap below title</li>
+            <li>Buttons go <code>.btn-block</code> in forms/modals</li>
+            <li>Toasts span near-full width</li>
+            <li>Min hit target held at 44px</li>
+          </ul>
+        </div>
+      </div>
+      <div class="callout"><span class="icon" data-icon="info"></span><p>The live console ships the primary fold at <code>@media (max-width: 768px)</code> (sidebar → icon rail, grids → 1fr, tighter padding). The 1024px and 375px tiers are refinement targets layered on the same query model.</p></div>
+    </section>
+
+    <section class="doc-section" id="shell">
+      <h2><span class="num">6.2</span> Shell &amp; sidebar transformation</h2>
+      <p class="lead">The sidebar is the biggest moving piece. It never disappears — it shrinks to an icon rail so navigation stays one tap away.</p>
+      <div class="frames">
+        <div class="frame">
+          <div class="wf"><div class="wf-side full"></div><div class="wf-body"><div class="wf-bar" style="width:50%"></div><div class="wf-row"><div class="wf-cell"></div><div class="wf-cell"></div><div class="wf-cell"></div></div><div class="wf-row"><div class="wf-cell"></div><div class="wf-cell"></div><div class="wf-cell"></div></div></div></div>
+          <div class="frame-cap"><span>Desktop</span><b>≥1440 · 252px nav</b></div>
+        </div>
+        <div class="frame">
+          <div class="wf"><div class="wf-side full" style="width:24%"></div><div class="wf-body"><div class="wf-bar" style="width:55%"></div><div class="wf-row"><div class="wf-cell"></div><div class="wf-cell"></div></div><div class="wf-row"><div class="wf-cell"></div><div class="wf-cell"></div></div></div></div>
+          <div class="frame-cap"><span>Tablet</span><b>≤1024 · 2-up</b></div>
+        </div>
+        <div class="frame">
+          <div class="wf"><div class="wf-side rail"></div><div class="wf-body"><div class="wf-bar" style="width:70%"></div><div class="wf-row"><div class="wf-cell"></div></div><div class="wf-row"><div class="wf-cell"></div></div></div></div>
+          <div class="frame-cap"><span>Mobile</span><b>≤768 · icon rail</b></div>
+        </div>
+        <div class="frame">
+          <div class="wf"><div class="wf-side rail" style="width:18%"></div><div class="wf-body" style="padding:6px"><div class="wf-topbar"><span class="wf-dot"></span><div class="wf-bar" style="flex:1;height:6px"></div></div><div class="wf-bar" style="width:80%"></div><div class="wf-row"><div class="wf-cell" style="height:24px"></div></div></div></div>
+          <div class="frame-cap"><span>Tiny</span><b>≤375 · stacked</b></div>
+        </div>
+      </div>
+      <table class="resp-table">
+        <thead><tr><th>Property</th><th>≥1440</th><th>≤768 (mobile)</th></tr></thead>
+        <tbody>
+          <tr><td>Sidebar width</td><td><code>252px</code> + labels</td><td><code>64px</code> icon rail (labels, section titles, user meta hidden)</td></tr>
+          <tr><td>Nav item</td><td>icon + label, left-aligned</td><td>icon only, centered (<code>justify-content:center</code>)</td></tr>
+          <tr><td>Content padding</td><td><code>--space-16 --space-20</code></td><td><code>--space-12 --space-8</code></td></tr>
+          <tr><td>Theme picker</td><td>full dropdown in footer</td><td>collapses with rail; dark toggle persists as icon</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="doc-section" id="rules">
+      <h2><span class="num">6.3</span> Grid &amp; table collapse rules</h2>
+      <p class="lead">Every grid is built on <code>auto-fill / auto-fit minmax()</code>, so reflow is largely automatic; the table below names the explicit folds.</p>
+      <table class="resp-table">
+        <thead><tr><th>Surface</th><th>Desktop</th><th>Tablet ≤1024</th><th>Mobile ≤768</th></tr></thead>
+        <tbody>
+          <tr><td>Site / Function cards</td><td><code>minmax(320px,1fr)</code> · 3-up</td><td>2-up</td><td>1 column</td></tr>
+          <tr><td>Stat cards (dashboard)</td><td><code>minmax(180px,1fr)</code> · 4-up</td><td>2–3-up</td><td>1–2-up</td></tr>
+          <tr><td>Dashboard columns</td><td><code>1.4fr / 1fr</code></td><td>stacks if cramped</td><td><code>1fr</code> (forced)</td></tr>
+          <tr><td>Detail two-column</td><td><code>1.5fr / 1fr</code></td><td>stacks</td><td><code>1fr</code></td></tr>
+          <tr><td>Metric grid</td><td>auto-fill tiles</td><td>2-up</td><td><code>1fr</code></td></tr>
+          <tr><td>Tables</td><td>full width</td><td><code>.table-wrap</code> horizontal scroll</td><td>horizontal scroll (no column hiding — preserves data)</td></tr>
+          <tr><td>Data Studio</td><td>collections rail + table side-by-side</td><td>rail narrows</td><td>rail stacks above table</td></tr>
+          <tr><td>Page header</td><td>title ↔ actions on one row</td><td>same</td><td>actions wrap below title (<code>flex-wrap</code>)</td></tr>
+        </tbody>
+      </table>
+      <div class="callout"><span class="icon" data-icon="info"></span><p><b>Tables scroll, they don't truncate.</b> Wrapping every table in <code>.table-wrap</code> (<code>overflow-x:auto</code>) keeps all columns reachable on small screens rather than dropping data. Sticky first column is a future enhancement, not a column-hide.</p></div>
+    </section>
+
+    <section class="doc-section" id="decisions">
+      <h2><span class="num">6.4</span> Modal vs. full-page &amp; touch</h2>
+      <p class="lead">Overlays are reserved for short, focused decisions. Anything multi-step or content-heavy becomes a page.</p>
+      <table class="resp-table">
+        <thead><tr><th>Pattern</th><th>Desktop</th><th>Mobile ≤768</th></tr></thead>
+        <tbody>
+          <tr><td>Create site / function</td><td>full-page wizard (Source→Configure→Deploy)</td><td>full-page, steps stack; rail becomes a compact progress line</td></tr>
+          <tr><td>Confirm destructive</td><td>centered modal + scrim <code>--overlay-scrim</code></td><td>centered modal, near-full-width, buttons <code>.btn-block</code></td></tr>
+          <tr><td>Template / function detail</td><td>side-by-side editor + preview</td><td>full-page, preview stacks under editor</td></tr>
+          <tr><td>Toast</td><td>top-right, max 400px</td><td>top, near-full width inset by gutters</td></tr>
+          <tr><td>Theme picker menu</td><td>popover above trigger (<code>--shadow-l</code>)</td><td>popover; tap-outside + Esc to close</td></tr>
+        </tbody>
+      </table>
+      <table class="resp-table">
+        <thead><tr><th>Touch target</th><th>Minimum</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td>Buttons</td><td>36px desktop / 44px touch</td><td><code>.btn</code> padding holds ≥36; touch tiers pad to 44</td></tr>
+          <tr><td>Nav items &amp; rail icons</td><td>44px</td><td>icon rail centers a 44px hit area</td></tr>
+          <tr><td>Table row actions</td><td>32px (<code>.btn-sm</code>)</td><td>spaced ≥8px apart (<code>--space-4</code> gap)</td></tr>
+          <tr><td>Form controls</td><td>40px height</td><td>10/12px padding keeps comfortable tap height</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <p style="font-size:var(--text-xs);color:var(--fg-tertiary);margin-top:var(--space-16);text-align:center">BigBase design system · §6 of the engineering handoff · resize this window to watch the doc itself reflow</p>
+  </main>
+</div>
+<script>
+(function () {
+  var links = {};
+  document.querySelectorAll('#onthispage a').forEach(function (a) { links[a.getAttribute('href').slice(1)] = a; });
+  var obs = new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) {
+      if (e.isIntersecting) {
+        Object.values(links).forEach(function (l) { l.classList.remove('active'); });
+        if (links[e.target.id]) links[e.target.id].classList.add('active');
+      }
+    });
+  }, { rootMargin: '-15% 0px -75% 0px' });
+  ['breakpoints','shell','rules','decisions'].forEach(function (id) { var el = document.getElementById(id); if (el) obs.observe(el); });
+})();
+</script>
+</body>
+</html>
