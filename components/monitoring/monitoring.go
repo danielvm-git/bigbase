@@ -131,14 +131,17 @@ func (m *Monitoring) Start(ctx *kernel.Context) error {
 	)`); err != nil {
 		return err
 	}
-	return m.db.Migrate(`CREATE TABLE IF NOT EXISTS monitoring_alerts (
+	if err := m.db.Migrate(`CREATE TABLE IF NOT EXISTS monitoring_alerts (
 		id TEXT PRIMARY KEY,
 		name TEXT NOT NULL,
 		metric TEXT NOT NULL,
 		threshold REAL NOT NULL DEFAULT 0,
 		operator TEXT NOT NULL DEFAULT 'gt',
 		enabled INTEGER NOT NULL DEFAULT 1
-	)`)
+	)`); err != nil {
+		return err
+	}
+	return m.migrateOrgUsageTable()
 }
 func (m *Monitoring) Stop(ctx *kernel.Context) error { return nil }
 
@@ -258,6 +261,7 @@ func (m *Monitoring) Handler() http.Handler {
 	mux.HandleFunc("/api/monitoring/logs", m.handleLogs)
 	mux.HandleFunc("/api/monitoring/logs/", m.handleLogByID)
 	mux.HandleFunc("/api/monitoring/alerts", m.handleAlerts)
+	mux.HandleFunc("GET /api/orgs/{id}/usage", m.handleOrgUsage)
 	return mux
 }
 
