@@ -437,6 +437,78 @@ func TestProxyHealthEndpoint(t *testing.T) {
 	}
 }
 
+func TestPerComponentHealth(t *testing.T) {
+	comp := &testComponents{}
+	logger := testLogger{}
+	k := kernel.New(logger)
+	k.Register(comp)
+
+	if err := k.Start(); err != nil {
+		t.Fatalf("failed to start kernel: %v", err)
+	}
+	defer func() { _ = k.Stop() }()
+
+	port := freePort(t)
+	p := proxy.New(proxy.Options{
+		Port:   port,
+		Kernel: k,
+		Logger: logger,
+	})
+
+	if err := p.Start(&kernel.Context{}); err != nil {
+		t.Fatalf("failed to start proxy: %v", err)
+	}
+	defer func() { _ = p.Stop(&kernel.Context{}) }()
+
+	waitForServer(t, port, "/health")
+
+	resp, err := http.Get("http://localhost:" + port + "/health")
+	if err != nil {
+		t.Fatalf("failed to GET /health: %v", err)
+	}
+	defer func() { _ = resp.Body.Close() }()
+
+	var result struct {
+		Status             string `json:"status"`
+		Running            int    `json:"running"`
+		ComponentStatusMap []struct {
+			Name         string   `json:"name"`
+			Version      string   `json:"version"`
+			Running      bool     `json:"running"`
+			Dependencies []string `json:"dependencies"`
+			Hooks        []string `json:"hooks"`
+		} `json:"component_status_map"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		t.Fatalf("decode health: %v", err)
+	}
+
+	if len(result.ComponentStatusMap) == 0 {
+		t.Fatal("expected non-empty component_status_map")
+	}
+
+	found := false
+	for _, c := range result.ComponentStatusMap {
+		if c.Name == "testcomp" {
+			found = true
+			if !c.Running {
+				t.Error("expected testcomp to be running")
+			}
+			if c.Version == "" {
+				t.Error("expected non-empty version for testcomp")
+			}
+			break
+		}
+	}
+	if !found {
+		t.Fatal("expected testcomp in component_status_map")
+	}
+
+	if result.Running != len(result.ComponentStatusMap) {
+		t.Fatalf("expected running=%d to match component_status_map count=%d", result.Running, len(result.ComponentStatusMap))
+	}
+}
+
 func TestProxyVersionEndpoint(t *testing.T) {
 	comp := &testComponents{}
 	logger := testLogger{}

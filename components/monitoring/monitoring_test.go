@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
@@ -355,5 +356,43 @@ func TestSystemMetricsCPUPercentAfterSecondSample(t *testing.T) {
 	metrics := m.SystemMetrics()
 	if metrics.CPUPercent <= 0 || metrics.CPUPercent > 100 {
 		t.Fatalf("expected cpu percent in (0,100], got %f", metrics.CPUPercent)
+	}
+}
+
+func TestPrometheusMetricsEndpoint(t *testing.T) {
+	_, handler := setupMonitoring(t)
+	req := httptest.NewRequest("GET", "/api/monitoring/metrics/prometheus", nil)
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", w.Code, w.Body.String())
+	}
+
+	contentType := w.Header().Get("Content-Type")
+	if contentType != "text/plain; version=0.0.4" {
+		t.Fatalf("expected text/plain; version=0.0.4, got %q", contentType)
+	}
+
+	body := w.Body.String()
+
+	// Must contain bigbase_ prefixed metrics
+	if !strings.Contains(body, "bigbase_") {
+		t.Fatal("expected metrics with bigbase_ prefix")
+	}
+
+	// Must have HELP/TYPE lines
+	if !strings.Contains(body, "# HELP") {
+		t.Fatal("expected # HELP lines in Prometheus output")
+	}
+	if !strings.Contains(body, "# TYPE") {
+		t.Fatal("expected # TYPE lines in Prometheus output")
+	}
+
+	// Must include key metric families
+	for _, name := range []string{"bigbase_goroutines", "bigbase_memory_mb", "bigbase_cpu_percent"} {
+		if !strings.Contains(body, name) {
+			t.Fatalf("expected metric %q in output", name)
+		}
 	}
 }

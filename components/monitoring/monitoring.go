@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"runtime"
+	"sort"
 	"strings"
 	"sync"
 	"syscall"
@@ -253,6 +254,7 @@ func (m *Monitoring) Handler() http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/api/monitoring/health", m.handleHealth)
 	mux.HandleFunc("/api/monitoring/metrics", m.handleMetrics)
+	mux.HandleFunc("/api/monitoring/metrics/prometheus", m.handlePrometheusMetrics)
 	mux.HandleFunc("/api/monitoring/logs", m.handleLogs)
 	mux.HandleFunc("/api/monitoring/logs/", m.handleLogByID)
 	mux.HandleFunc("/api/monitoring/alerts", m.handleAlerts)
@@ -314,6 +316,112 @@ func (m *Monitoring) handleMetrics(w http.ResponseWriter, r *http.Request) {
 			"avg_latency_ms": avgLatency,
 		},
 	})
+}
+
+// prometheusSnapshot holds a point-in-time view of metrics for Prometheus export.
+type prometheusSnapshot struct {
+	byStatus      map[int]int64
+	avgLatency    float64
+	p99Latency    float64
+	endpointStats map[string]endpointMetric
+	sys           SystemMetrics
+}
+
+type endpointMetric struct {
+	count        int64
+	avgLatencyMs float64
+}
+
+// collectPrometheusSnapshot locks metrics, aggregates data, and returns a snapshot.
+func (m *Monitoring) collectPrometheusSnapshot() prometheusSnapshot {
+	s := prometheusSnapshot{
+		byStatus:      make(map[int]int64),
+		endpointStats: make(map[string]endpointMetric),
+		sys:           m.SystemMetrics(),
+	}
+
+	m.metrics.mu.RLock()
+	defer m.metrics.mu.RUnlock()
+
+	var allLatencies []float64
+	for path, ep := range m.metrics.requests {
+		for code, count := range ep.StatusCount {
+			s.byStatus[code] += count
+		}
+		allLatencies = append(allLatencies, ep.Latencies...)
+		s.endpointStats[path] = endpointMetric{
+			count:        ep.Count,
+			avgLatencyMs: ep.AvgLatency,
+		}
+	}
+
+	if len(allLatencies) > 0 {
+		var sum float64
+		for _, l := range allLatencies {
+			sum += l
+		}
+		s.avgLatency = sum / float64(len(allLatencies))
+
+		sorted := make([]float64, len(allLatencies))
+		copy(sorted, allLatencies)
+		sort.Float64s(sorted)
+		idx := int(float64(len(sorted)) * 0.99)
+		if idx >= len(sorted) {
+			idx = len(sorted) - 1
+		}
+		s.p99Latency = sorted[idx]
+	}
+
+	return s
+}
+
+func (m *Monitoring) handlePrometheusMetrics(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/plain; version=0.0.4")
+	w.WriteHeader(http.StatusOK)
+
+	s := m.collectPrometheusSnapshot()
+
+	writePromCounter(w, "bigbase_requests_total", "Total HTTP requests processed", s.byStatus)
+	writePromGauge(w, "bigbase_request_duration_ms", "Request duration in milliseconds", s.avgLatency)
+	writePromGauge(w, "bigbase_request_duration_p99_ms", "Request P99 latency in milliseconds", s.p99Latency)
+	writePromGauge(w, "bigbase_goroutines", "Number of goroutines", float64(s.sys.Goroutines))
+	writePromGauge(w, "bigbase_memory_mb", "Memory usage in MB", s.sys.MemoryMB)
+	writePromGauge(w, "bigbase_cpu_percent", "CPU usage percent", s.sys.CPUPercent)
+
+	for path, ep := range s.endpointStats {
+		writePromLinef(w, "bigbase_endpoint_requests_total{path=\"%s\"} %d\n", path, ep.count)
+		if ep.avgLatencyMs > 0 {
+			writePromLinef(w, "bigbase_endpoint_duration_ms{path=\"%s\"} %.2f\n", path, ep.avgLatencyMs)
+		}
+	}
+}
+
+// writePromLine is a helper that writes a line to the response, discarding errors.
+func writePromLine(w http.ResponseWriter, s string) {
+	_, _ = w.Write([]byte(s))
+}
+
+// writePromLinef is a helper that formats and writes a line, discarding errors.
+func writePromLinef(w http.ResponseWriter, format string, args ...any) {
+	_, _ = fmt.Fprintf(w, format, args...)
+}
+
+// writePromCounter writes a Prometheus counter metric with optional labels.
+func writePromCounter(w http.ResponseWriter, name, help string, values map[int]int64) {
+	writePromLine(w, fmt.Sprintf("# HELP %s %s\n", name, help))
+	writePromLine(w, fmt.Sprintf("# TYPE %s counter\n", name))
+	for labelValue, count := range values {
+		writePromLinef(w, "%s{status=\"%d\"} %d\n", name, labelValue, count)
+	}
+	writePromLine(w, "\n")
+}
+
+// writePromGauge writes a single-value Prometheus gauge metric.
+func writePromGauge(w http.ResponseWriter, name, help string, value float64) {
+	writePromLine(w, fmt.Sprintf("# HELP %s %s\n", name, help))
+	writePromLine(w, fmt.Sprintf("# TYPE %s gauge\n", name))
+	writePromLinef(w, "%s %.2f\n", name, value)
+	writePromLine(w, "\n")
 }
 
 func (m *Monitoring) handleLogs(w http.ResponseWriter, r *http.Request) {

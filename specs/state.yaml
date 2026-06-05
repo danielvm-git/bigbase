@@ -2,23 +2,24 @@ type: session-state
 context: infra
 active_flow: build_epic
 active_epic_id: e24
-active_story_id: e24s01
+active_story_id: e24s04
 active_bug_id: null
 release:
   target_version: 2.0.0
   last_tag: null
   last_publish: null
 epic_cycle:
-  current_step: 3
-  next_skill: kickoff-branch
+  current_step: 4
+  next_skill: develop-tdd
   completed_steps:
   - survey-context
   - plan-work
+  - kickoff-branch
 bug_cycle:
   current_step: null
   completed_steps: []
 git:
-  branch: main
+  branch: e24/wire-observability
   hash: HEAD
 handoff:
   last_step_completed: null
@@ -27,4 +28,4 @@ handoff:
   - CONVENTIONS.md
   - specs/release-plan.yaml
   - specs/epics/e24-wire-observability.yaml
-  next_skill: survey-context
+  next_skill: develop-tdd
