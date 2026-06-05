@@ -185,10 +185,7 @@ func (a *Auth) BackfillDefaultOrgs() {
 }
 
 // collectLegacyUsers returns users whose default_org_id is NULL.
-func (a *Auth) collectLegacyUsers(ctx context.Context) []struct {
-	id    int64
-	email string
-} {
+func (a *Auth) collectLegacyUsers(ctx context.Context) []legacyUser {
 	rows, err := a.db.QueryContext(ctx,
 		"SELECT id, email FROM users WHERE default_org_id IS NULL")
 	if err != nil {
@@ -197,15 +194,9 @@ func (a *Auth) collectLegacyUsers(ctx context.Context) []struct {
 	}
 	defer func() { _ = rows.Close() }()
 
-	var users []struct {
-		id    int64
-		email string
-	}
+	var users []legacyUser
 	for rows.Next() {
-		var u struct {
-			id    int64
-			email string
-		}
+		var u legacyUser
 		if err := rows.Scan(&u.id, &u.email); err != nil {
 			a.logger.Error("backfill scan", "error", err)
 			continue
@@ -213,6 +204,11 @@ func (a *Auth) collectLegacyUsers(ctx context.Context) []struct {
 		users = append(users, u)
 	}
 	return users
+}
+
+type legacyUser struct {
+	id    int64
+	email string
 }
 
 func (a *Auth) Stop(ctx *kernel.Context) error {
@@ -348,17 +344,13 @@ func (a *Auth) insertUser(ctx context.Context, email, passwordHash string) (int6
 	}
 	id, _ := res.LastInsertId()
 
-	// Auto-create personal org with email as slug
-	orgRes, err := a.db.ExecContext(ctx,
-		`INSERT INTO orgs (name, slug, owner_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?)`,
-		email, email, id, now, now)
+	// Auto-create personal org with email as slug (use CreateOrg for consistency)
+	org, err := a.CreateOrg(ctx, email, email, id)
 	if err != nil {
 		a.logger.Error("create personal org", "error", err)
 		return id, role, nil // don't fail registration if org creation fails
 	}
-
-	orgID, _ := orgRes.LastInsertId()
-	_, _ = a.db.ExecContext(ctx, "UPDATE users SET default_org_id = ? WHERE id = ?", orgID, id)
+	_, _ = a.db.ExecContext(ctx, "UPDATE users SET default_org_id = ? WHERE id = ?", org.ID, id)
 
 	return id, role, nil
 }
@@ -640,16 +632,12 @@ func (a *Auth) findOrCreateGoogleUser(ctx context.Context, gu *GoogleUser) (int6
 	}
 
 	// Auto-create personal org for Google OAuth users
-	orgRes, err := a.db.ExecContext(ctx,
-		`INSERT INTO orgs (name, slug, owner_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?)`,
-		gu.Email, gu.Email, userID, now, now)
+	org, err := a.CreateOrg(ctx, gu.Email, gu.Email, userID)
 	if err != nil {
 		a.logger.Error("create personal org for google user", "error", err)
 		return userID, nil
 	}
-
-	orgID, _ := orgRes.LastInsertId()
-	_, _ = a.db.ExecContext(ctx, "UPDATE users SET default_org_id = ? WHERE id = ?", orgID, userID)
+	_, _ = a.db.ExecContext(ctx, "UPDATE users SET default_org_id = ? WHERE id = ?", org.ID, userID)
 
 	return userID, nil
 }
@@ -759,6 +747,10 @@ func (a *Auth) handleCreateOrg(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "name and slug required"})
 		return
 	}
+	if !isValidSlug(req.Slug) {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "slug must be lowercase letters, numbers, and hyphens"})
+		return
+	}
 
 	org, err := a.CreateOrg(r.Context(), req.Name, req.Slug, userID)
 	if err != nil {
@@ -827,6 +819,14 @@ func (a *Auth) handleUpdateOrg(w http.ResponseWriter, r *http.Request) {
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json"})
+		return
+	}
+	if req.Name == "" && req.Slug == "" {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "name or slug required"})
+		return
+	}
+	if req.Slug != "" && !isValidSlug(req.Slug) {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "slug must be lowercase letters, numbers, and hyphens"})
 		return
 	}
 
@@ -898,6 +898,16 @@ func parseOrgID(idStr string) (int64, error) {
 		return 0, fmt.Errorf("invalid id: %s", idStr)
 	}
 	return id, nil
+}
+
+// isValidSlug returns true if s contains only lowercase letters, digits, and hyphens.
+func isValidSlug(s string) bool {
+	for _, r := range s {
+		if (r < 'a' || r > 'z') && (r < '0' || r > '9') && r != '-' {
+			return false
+		}
+	}
+	return len(s) > 0
 }
 
 func generateTempPass() string {

@@ -1096,6 +1096,28 @@ func TestOrganization(t *testing.T) {
 			t.Errorf("duplicate slug: expected 409, got %d: %s", dupW.Code, dupW.Body.String())
 		}
 
+		// POST with invalid slug (contains spaces)
+		badSlugReq := httptest.NewRequest("POST", "/api/orgs",
+			strings.NewReader(`{"name":"Bad Slug","slug":"my bad slug"}`))
+		badSlugReq.Header.Set("Content-Type", "application/json")
+		badSlugReq.Header.Set("Authorization", "Bearer "+token)
+		badSlugW := httptest.NewRecorder()
+		protected.ServeHTTP(badSlugW, badSlugReq)
+		if badSlugW.Code != http.StatusBadRequest {
+			t.Errorf("bad slug: expected 400, got %d: %s", badSlugW.Code, badSlugW.Body.String())
+		}
+
+		// POST with invalid slug (uppercase)
+		upperSlugReq := httptest.NewRequest("POST", "/api/orgs",
+			strings.NewReader(`{"name":"Upper Slug","slug":"UPPER-SLUG"}`))
+		upperSlugReq.Header.Set("Content-Type", "application/json")
+		upperSlugReq.Header.Set("Authorization", "Bearer "+token)
+		upperSlugW := httptest.NewRecorder()
+		protected.ServeHTTP(upperSlugW, upperSlugReq)
+		if upperSlugW.Code != http.StatusBadRequest {
+			t.Errorf("uppercase slug: expected 400, got %d: %s", upperSlugW.Code, upperSlugW.Body.String())
+		}
+
 		// GET /api/orgs — list orgs
 		listReq := httptest.NewRequest("GET", "/api/orgs", nil)
 		listReq.Header.Set("Authorization", "Bearer "+token)
@@ -1169,6 +1191,39 @@ func TestOrganization(t *testing.T) {
 		patched := patchResp["data"].(map[string]any)
 		if patched["name"] != "Updated Org" {
 			t.Errorf("expected 'Updated Org', got %v", patched["name"])
+		}
+
+		// PATCH with empty body — should reject
+		emptyPatch := httptest.NewRequest("PATCH", "/api/orgs/"+fmt.Sprintf("%.0f", newOrgID),
+			strings.NewReader(`{}`))
+		emptyPatch.Header.Set("Content-Type", "application/json")
+		emptyPatch.Header.Set("Authorization", "Bearer "+token)
+		emptyPatchW := httptest.NewRecorder()
+		protected.ServeHTTP(emptyPatchW, emptyPatch)
+		if emptyPatchW.Code != http.StatusBadRequest {
+			t.Errorf("empty patch body: expected 400, got %d: %s", emptyPatchW.Code, emptyPatchW.Body.String())
+		}
+
+		// PATCH with invalid json — should reject
+		badPatch := httptest.NewRequest("PATCH", "/api/orgs/"+fmt.Sprintf("%.0f", newOrgID),
+			strings.NewReader(`not json`))
+		badPatch.Header.Set("Content-Type", "application/json")
+		badPatch.Header.Set("Authorization", "Bearer "+token)
+		badPatchW := httptest.NewRecorder()
+		protected.ServeHTTP(badPatchW, badPatch)
+		if badPatchW.Code != http.StatusBadRequest {
+			t.Errorf("bad json patch: expected 400, got %d", badPatchW.Code)
+		}
+
+		// PATCH with invalid slug
+		badSlugPatch := httptest.NewRequest("PATCH", "/api/orgs/"+fmt.Sprintf("%.0f", newOrgID),
+			strings.NewReader(`{"slug":"bad slug"}`))
+		badSlugPatch.Header.Set("Content-Type", "application/json")
+		badSlugPatch.Header.Set("Authorization", "Bearer "+token)
+		badSlugPatchW := httptest.NewRecorder()
+		protected.ServeHTTP(badSlugPatchW, badSlugPatch)
+		if badSlugPatchW.Code != http.StatusBadRequest {
+			t.Errorf("bad slug patch: expected 400, got %d", badSlugPatchW.Code)
 		}
 
 		// PATCH — non-owner should get 403
