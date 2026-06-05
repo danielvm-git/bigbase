@@ -221,7 +221,7 @@ bugs:
     severity: high
     priority: high
     scope: ui
-    summary: Reviewer must-fix findings on prototype-fidelity-parity: mock success leaks /api/auth, ThemePicker loses focus on close, 5 of 15 planned icon names were silently substituted
+    summary: "Reviewer must-fix findings on prototype-fidelity-parity: mock success leaks /api/auth, ThemePicker loses focus on close, 5 of 15 planned icon names were silently substituted"
     file: specs/bugs/BUG-2026-06-04T100000-reviewer-must-fix-on-prototype-fidelity.md
     status: fixed
     files_changed:

@@ -1,3 +1,5 @@
+type: execution-status
+context: release
 generated_by: scripts/sync-status-from-epics.sh
 epics:
   e17: done
