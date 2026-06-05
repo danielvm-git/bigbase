@@ -36,6 +36,25 @@ var (
 	version = kernel.Version
 )
 
+// parseLogLevel converts a case-insensitive log level string to slog.Level.
+// Returns an error for unknown or empty values.
+func parseLogLevel(level string) (slog.Level, error) {
+	switch level {
+	case "debug", "DEBUG":
+		return slog.LevelDebug, nil
+	case "info", "INFO":
+		return slog.LevelInfo, nil
+	case "warn", "WARN":
+		return slog.LevelWarn, nil
+	case "error", "ERROR":
+		return slog.LevelError, nil
+	case "":
+		return slog.LevelInfo, fmt.Errorf("empty log level")
+	default:
+		return slog.LevelInfo, fmt.Errorf("unknown log level: %q (valid: debug, info, warn, error)", level)
+	}
+}
+
 func main() {
 	if len(os.Args) < 2 {
 		printUsage()
@@ -90,6 +109,7 @@ func startProxy() {
 	githubPrivateKeyPath := serveFS.String("github-app-private-key-path", "", "GitHub App private key path")
 	githubWebhookSecret := serveFS.String("github-webhook-secret", "", "GitHub App webhook secret")
 	sitesDomain := serveFS.String("sites-domain", "", "Parent domain for deployed site subdomains (e.g. bigbase.click)")
+	logLevel := serveFS.String("log-level", "info", "Log level: debug, info, warn, error")
 	_ = serveFS.Parse(os.Args[2:])
 
 	googleID := config.FlagOrEnv(*googleClientID, "GOOGLE_CLIENT_ID")
@@ -100,7 +120,13 @@ func startProxy() {
 	ghWebhookSecret := config.FlagOrEnv(*githubWebhookSecret, "GITHUB_WEBHOOK_SECRET")
 	sitesDomainVal := config.FlagOrEnv(*sitesDomain, "BIGBASE_SITES_DOMAIN")
 
-	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo}))
+	level, err := parseLogLevel(*logLevel)
+	if err != nil {
+		logger := slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: slog.LevelWarn}))
+		logger.Error("invalid log level, defaulting", "provided", *logLevel, "error", err)
+		level = slog.LevelInfo
+	}
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: level}))
 	k := kernel.New(logger)
 
 	p := proxy.New(proxy.Options{
