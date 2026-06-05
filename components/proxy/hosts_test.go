@@ -60,3 +60,41 @@ func TestProxyDeploymentHost(t *testing.T) {
 		t.Fatalf("body = %q", body)
 	}
 }
+
+func TestCaddyAllow(t *testing.T) {
+	logger := testLogger{}
+	k := kernel.New(logger)
+	port := freePort(t)
+	p := proxy.New(proxy.Options{Port: port, Kernel: k, Logger: logger})
+	if err := p.Start(&kernel.Context{}); err != nil {
+		t.Fatalf("start proxy: %v", err)
+	}
+	t.Cleanup(func() { _ = p.Stop(&kernel.Context{}) })
+
+	waitForServer(t, port, "/health")
+	base := "http://127.0.0.1:" + port + "/api/internal/caddy-allow"
+
+	denyURL := base + "?domain=unknown.bigbase.click"
+	resp, err := http.Get(denyURL)
+	if err != nil {
+		t.Fatalf("deny request: %v", err)
+	}
+	_ = resp.Body.Close()
+	if resp.StatusCode != http.StatusForbidden {
+		t.Fatalf("unregistered domain status = %d, want 403", resp.StatusCode)
+	}
+
+	if err := p.RegisterDeploymentHost("myapp.bigbase.click", 9999); err != nil {
+		t.Fatalf("register host: %v", err)
+	}
+
+	allowURL := base + "?domain=myapp.bigbase.click"
+	resp, err = http.Get(allowURL)
+	if err != nil {
+		t.Fatalf("allow request: %v", err)
+	}
+	_ = resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("registered domain status = %d, want 200", resp.StatusCode)
+	}
+}

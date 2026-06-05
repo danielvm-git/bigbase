@@ -787,6 +787,99 @@ func TestDeployLogStream(t *testing.T) {
 	if gotStatus := logResp["status"]; gotStatus == "" {
 		t.Fatal("expected non-empty status in log response")
 	}
+	lines, ok := logResp["lines"].([]any)
+	if !ok || len(lines) == 0 {
+		t.Fatalf("expected non-empty lines in log response, got %#v", logResp["lines"])
+	}
+}
+
+func TestDeployLogsReturnsBuildLines(t *testing.T) {
+	_, handler, database, gitDir := setupDeploy(t)
+	repoID := createTestRepo(t, database, "repo-log-lines", gitDir)
+
+	var buf bytes.Buffer
+	_ = json.NewEncoder(&buf).Encode(map[string]string{"repo_id": repoID})
+	req := httptest.NewRequest("POST", "/api/deploy", &buf)
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+	if w.Code != http.StatusCreated {
+		t.Fatalf("expected 201, got %d: %s", w.Code, w.Body.String())
+	}
+
+	var created map[string]any
+	_ = json.NewDecoder(w.Body).Decode(&created)
+	depID, _ := created["id"].(string)
+	waitForDeploymentTerminal(t, handler, depID, 10*time.Second)
+
+	logReq := httptest.NewRequest("GET", "/api/deploy/"+depID+"/logs", nil)
+	logW := httptest.NewRecorder()
+	handler.ServeHTTP(logW, logReq)
+	if logW.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d", logW.Code)
+	}
+
+	var logResp map[string]any
+	_ = json.NewDecoder(logW.Body).Decode(&logResp)
+	lines, ok := logResp["lines"].([]any)
+	if !ok || len(lines) == 0 {
+		t.Fatalf("expected lines, got %#v", logResp["lines"])
+	}
+	if logResp["log_available"] != true {
+		t.Fatalf("expected log_available true, got %v", logResp["log_available"])
+	}
+	joined := ""
+	for _, line := range lines {
+		if s, ok := line.(string); ok {
+			joined += s + "\n"
+		}
+	}
+	if !strings.Contains(joined, "Cloning repository") {
+		t.Fatalf("expected clone step in logs, got %q", joined)
+	}
+}
+
+func TestDeployLogsFailedIncludesStderr(t *testing.T) {
+	if _, err := exec.LookPath("npm"); err != nil {
+		t.Skip("npm not in PATH")
+	}
+
+	_, handler, database, gitDir := setupDeploy(t)
+	repoID := createTestNodeRepo(t, database, "repo-log-stderr", gitDir)
+
+	var buf bytes.Buffer
+	_ = json.NewEncoder(&buf).Encode(map[string]string{"repo_id": repoID})
+	req := httptest.NewRequest("POST", "/api/deploy", &buf)
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+	if w.Code != http.StatusCreated {
+		t.Fatalf("expected 201, got %d", w.Code)
+	}
+
+	var created map[string]any
+	_ = json.NewDecoder(w.Body).Decode(&created)
+	depID, _ := created["id"].(string)
+	waitForDeploymentTerminal(t, handler, depID, 30*time.Second)
+
+	logReq := httptest.NewRequest("GET", "/api/deploy/"+depID+"/logs", nil)
+	logW := httptest.NewRecorder()
+	handler.ServeHTTP(logW, logReq)
+	var logs map[string]any
+	_ = json.NewDecoder(logW.Body).Decode(&logs)
+	lines, ok := logs["lines"].([]any)
+	if !ok || len(lines) == 0 {
+		t.Fatalf("expected lines on failed deploy, got %#v", logs["lines"])
+	}
+	joined := ""
+	for _, line := range lines {
+		if s, ok := line.(string); ok {
+			joined += s + "\n"
+		}
+	}
+	if !strings.Contains(joined, "npm") && !strings.Contains(joined, "Deploy failed") {
+		t.Fatalf("expected npm or failure in logs, got %q", joined)
+	}
 }
 
 func TestDeployPublicURL(t *testing.T) {
@@ -912,5 +1005,9 @@ func TestDeployBuildError(t *testing.T) {
 	}
 	if logs["log_available"] != true {
 		t.Fatalf("expected log_available true, got %v", logs["log_available"])
+	}
+	lines, ok := logs["lines"].([]any)
+	if !ok || len(lines) == 0 {
+		t.Fatalf("expected lines on failed deploy, got %#v", logs["lines"])
 	}
 }

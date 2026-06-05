@@ -2,6 +2,7 @@ package deploy
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 )
 
@@ -30,6 +31,22 @@ func deploymentHost(publicDomain, repoName string) string {
 		return ""
 	}
 	return SiteSlug(repoName) + "." + publicDomain
+}
+
+// HostFromDeploymentURL extracts the hostname from a stored deployment URL.
+func HostFromDeploymentURL(raw string) string {
+	raw = strings.TrimSpace(raw)
+	if raw == "" {
+		return ""
+	}
+	if !strings.Contains(raw, "://") {
+		return strings.ToLower(raw)
+	}
+	u, err := url.Parse(raw)
+	if err != nil {
+		return ""
+	}
+	return strings.ToLower(u.Hostname())
 }
 
 func deploymentURL(publicDomain string, useHTTPS bool, repoName string, port int) string {

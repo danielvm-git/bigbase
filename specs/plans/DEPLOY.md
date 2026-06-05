@@ -18,10 +18,20 @@ HTTPS is handled automatically by Caddy (Let's Encrypt). Update `/etc/caddy/Cadd
 |------|--------|
 | Site URL pattern | `https://<site-slug>.bigbase.click/` |
 | DNS | Wildcard A record `*.bigbase.click` → VPS IPv4 (`89.116.26.187`) |
-| Caddy | `*.bigbase.click` block in `scripts/setup-vps.sh` (proxies to BigBase on `:8080`) |
+| Caddy | `*.bigbase.click` with **on-demand TLS** (per-host HTTP-01, not wildcard DNS-01) |
+| Caddy ask | `GET http://127.0.0.1:8080/api/internal/caddy-allow?domain=<host>` — 200 only if deploy registered the host |
 | BigBase flag | `--sites-domain bigbase.click` or env `BIGBASE_SITES_DOMAIN` |
 
 After deploying code, **redeploy each site** once so stored URLs and proxy host routes refresh (old rows may still say `http://localhost:…`).
+
+**Site HTTPS smoke** (after `setup-vps.sh` or Caddy reload, site status RUNNING):
+
+```bash
+# First HTTPS request may take up to ~60s while Let's Encrypt issues the cert
+curl -sfI "https://<site-slug>.bigbase.click/" | head -1
+```
+
+Re-run `scripts/setup-vps.sh` on an existing VPS to apply the on-demand Caddyfile and reload Caddy (`caddy validate` + `systemctl reload caddy` are built into the script).
 
 ## Infrastructure
 

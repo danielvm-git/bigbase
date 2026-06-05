@@ -118,6 +118,7 @@ func (p *Proxy) Start(ctx *kernel.Context) error {
 	p.mux.HandleFunc("/docs", p.handleDocs)
 	p.mux.HandleFunc("/health", p.handleHealth)
 	p.mux.HandleFunc("/api/version", p.handleVersion)
+	p.mux.HandleFunc("/api/internal/caddy-allow", p.handleCaddyAllow)
 
 	p.server = &http.Server{
 		Addr:    ":" + p.port,

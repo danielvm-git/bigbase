@@ -26,3 +26,12 @@ func TestDeploymentHost(t *testing.T) {
 		t.Fatalf("host = %q", got)
 	}
 }
+
+func TestHostFromDeploymentURL(t *testing.T) {
+	if got := HostFromDeploymentURL("https://my-app.bigbase.click"); got != "my-app.bigbase.click" {
+		t.Fatalf("host = %q", got)
+	}
+	if got := HostFromDeploymentURL(""); got != "" {
+		t.Fatalf("empty = %q", got)
+	}
+}

@@ -42,6 +42,33 @@ func normalizeHost(host string) string {
 	return host
 }
 
+func (p *Proxy) isDeploymentHostRegistered(host string) bool {
+	host = normalizeHost(host)
+	p.deployHostsMu.RLock()
+	_, ok := p.deployHosts[host]
+	p.deployHostsMu.RUnlock()
+	return ok
+}
+
+// handleCaddyAllow implements Caddy on_demand_tls ask (GET ?domain=host).
+// Returns 200 only when the host is registered for a running deployment.
+func (p *Proxy) handleCaddyAllow(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	domain := normalizeHost(r.URL.Query().Get("domain"))
+	if domain == "" {
+		http.Error(w, "missing domain", http.StatusBadRequest)
+		return
+	}
+	if !p.isDeploymentHostRegistered(domain) {
+		http.Error(w, "forbidden", http.StatusForbidden)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+}
+
 func (p *Proxy) deploymentHostMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		host := normalizeHost(r.Host)

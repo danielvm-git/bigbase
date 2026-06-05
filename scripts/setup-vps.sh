@@ -59,14 +59,14 @@ apt-get install -y -qq \
   rsync \
   ca-certificates
 
-# Node.js 20+ for Vite/npm site builds (requires Node >= 20.19)
+# Node.js 24 LTS for Vite/npm site builds (Vite 8: Node >= 20.19; platform standard is 24 LTS)
 NODE_MAJOR=0
 if command -v node >/dev/null 2>&1; then
   NODE_MAJOR=$(node -v 2>/dev/null | sed -E 's/^v([0-9]+).*/\1/')
 fi
-if [ "${NODE_MAJOR:-0}" -lt 20 ]; then
-  info "  Installing Node.js 20 LTS (NodeSource)..."
-  curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+if [ "${NODE_MAJOR:-0}" -lt 24 ]; then
+  info "  Installing Node.js 24 LTS (NodeSource)..."
+  curl -fsSL https://deb.nodesource.com/setup_24.x | bash -
   apt-get install -y -qq nodejs
 fi
 info "  Node $(node -v), npm $(npm -v)"
@@ -116,9 +116,18 @@ cat > /etc/caddy/Caddyfile << CADDYEOF
 # BigBase — Caddy reverse proxy configuration
 # ============================================
 #
-# HTTPS via automatic Let's Encrypt:
-#   Caddy auto-provisions TLS certificates for the domain.
-#   HTTP requests are automatically redirected to HTTPS.
+# Apex: automatic HTTPS (HTTP-01).
+# Site subdomains: on-demand per-host certs (HTTP-01), allowed only when BigBase
+# registers the host for a running deployment (see /api/internal/caddy-allow).
+
+{
+    email admin@bigbase.click
+    on_demand_tls {
+        ask http://127.0.0.1:${BIGBASE_PORT}/api/internal/caddy-allow
+        interval 2m
+        burst 5
+    }
+}
 
 bigbase.click {
     reverse_proxy 127.0.0.1:${BIGBASE_PORT} {
@@ -142,8 +151,12 @@ bigbase.click {
     }
 }
 
-# Deployed sites: https://<site-slug>.bigbase.click (requires DNS wildcard *.bigbase.click → VPS)
+# Deployed sites: https://<site-slug>.bigbase.click (DNS wildcard *.bigbase.click → VPS)
 *.bigbase.click {
+    tls {
+        on_demand
+    }
+
     reverse_proxy 127.0.0.1:${BIGBASE_PORT} {
         header_up X-Real-IP {remote_host}
         header_up X-Forwarded-Proto {scheme}
@@ -164,7 +177,13 @@ bigbase.click {
 CADDYEOF
 
 systemctl enable caddy
-info "  Caddy configured — https://bigbase.click and https://*.bigbase.click → localhost:${BIGBASE_PORT}"
+if caddy validate --config /etc/caddy/Caddyfile; then
+  systemctl reload caddy 2>/dev/null || systemctl restart caddy
+  info "  Caddy reloaded — on-demand TLS for site subdomains"
+else
+  warn "  Caddyfile validation failed — fix /etc/caddy/Caddyfile and run: systemctl reload caddy"
+fi
+info "  Caddy configured — https://bigbase.click and https://<slug>.bigbase.click → localhost:${BIGBASE_PORT}"
 
 # ============================================================================
 # Step 6: Create systemd service for BigBase
