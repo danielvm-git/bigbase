@@ -29,19 +29,16 @@ Two independent bugs in the deploy pipeline:
 - **Fix**: Stop the service before copying (`systemctl stop bigbase`), then copy, then restart.
 - **Risk**: Low — this is a straightforward script fix.
 
-### Bug B: Health check returns 502 immediately (environment/transient)
-- **Module**: Components involved: proxy (routes `/api/monitoring/health`), monitoring (handler returns 200)
-- **Mechanism**: The health handler in the monitoring component explicitly returns `HTTP 200` with `{"status":"ok"}`. The proxy's `loggingMiddleware` captures 502, meaning something in the middleware or mux chain returns 502 before reaching the handler. Response time of ~500µs rules out timeouts.
-- **Hypotheses** (ranked by probability):
-  1. **Route shadowing**: A prior deploy might have registered deployment hosts that shadow `/api/monitoring/health` on certain host headers (unlikely for `localhost`).
-  2. **Mux registration order**: The proxy's `Start()` registers `/` (catch-all) after `main.go` registers `/api/monitoring/health`. On Go 1.26 `http.ServeMux`, this should still work (longest-prefix wins), but the order could matter if the mux behavior changed.
-  3. **Transient environment issue**: The VPS may have been under load or the Caddy frontend interfered (though the health check goes directly to port 8080).
-- **Risk**: High — without SSH access to the VPS, the root cause of the 502 cannot be definitively confirmed. The fix for Bug A makes the pipeline more robust regardless.
+### Bug B: Stale localhost deployment host records cause 502 (confirmed)
+- **Module**: `components/proxy/hosts.go` — `deploymentHostMiddleware` and `RegisterDeploymentHost`
+- **Mechanism**: Old deployments created before the public domain fix (BUG-2026-06-04T114000) stored `http://localhost:PORT` URLs. On VPS restart, the deploy component's `restoreRunningDeploymentHosts()` reads these records from the database and calls `RegisterDeploymentHost("localhost", port)`. The health check request to `localhost:8080` then hits the middleware, finds `localhost` registered, and the reverse proxy error handler returns `"deployment unavailable"` (HTTP 502, 23 bytes).
+- **Confirmed by**: Verbose curl output in the fixed deploy log showing `HTTP/1.1 502 Bad Gateway` with body `deployment unavailable` — matching the error handler in `hosts.go` line 90.
+- **Fix**: Skip loopback addresses (`localhost`, `127.0.0.1`, `::1`) in `deploymentHostMiddleware` before checking registered hosts. Also reject loopback addresses in `RegisterDeploymentHost` to prevent recurrence.
 
 ### Prior related bugs
 - `BUG-2026-06-04T114000` (production site URL bug) also involved deploy script changes.
 - `BUG-2026-06-04T120500` and `BUG-2026-06-04T120800` involved Node/VPS deploy failures.
-- This is **novel** — previous deploy bugs were about missing tools or wrong URLs, not a healthy service failing health checks.
+- This is a **direct recurrence** of BUG-2026-06-04T114000 (production site localhost URL) — the fix created proper public URLs for new deployments, but old localhost records in the database were never cleaned up, causing the deployment host registry to include `localhost` on restart.
 
 ## TDD Fix Plan
 
