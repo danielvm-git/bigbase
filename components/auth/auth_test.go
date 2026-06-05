@@ -2,6 +2,7 @@ package auth_test
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -705,7 +706,7 @@ func TestOrganization(t *testing.T) {
 		t.Cleanup(func() { _ = k.Stop() })
 
 		// Verify orgs table exists with correct schema
-		var nameCol, slugCol, ownerIDCol, createdAtCol, updatedAtCol string
+		var nameCol string
 		err := d.QueryRowContext(context.Background(),
 			`SELECT name FROM sqlite_master WHERE type='table' AND name='orgs'`,
 		).Scan(&nameCol)
@@ -713,7 +714,6 @@ func TestOrganization(t *testing.T) {
 			t.Fatalf("orgs table not found: %v", err)
 		}
 
-		// Verify columns exist
 		rows, err := d.QueryContext(context.Background(), "PRAGMA table_info('orgs')")
 		if err != nil {
 			t.Fatalf("pragma orgs: %v", err)
@@ -731,16 +731,99 @@ func TestOrganization(t *testing.T) {
 			}
 			columns[name] = true
 		}
-		_ = nameCol
-		_ = slugCol
-		_ = ownerIDCol
-		_ = createdAtCol
-		_ = updatedAtCol
 
 		for _, col := range []string{"id", "name", "slug", "owner_id", "created_at", "updated_at"} {
 			if !columns[col] {
 				t.Errorf("expected column %q in orgs table, but not found", col)
 			}
+		}
+
+		// Verify users.default_org_id column exists
+		rows2, err := d.QueryContext(context.Background(), "PRAGMA table_info('users')")
+		if err != nil {
+			t.Fatalf("pragma users: %v", err)
+		}
+		defer func() { _ = rows2.Close() }()
+
+		hasDefaultOrgID := false
+		for rows2.Next() {
+			var cid int
+			var name, coltype string
+			var notnull, pk int
+			var defaultVal *string
+			if err := rows2.Scan(&cid, &name, &coltype, &notnull, &defaultVal, &pk); err != nil {
+				t.Fatalf("scan column: %v", err)
+			}
+			if name == "default_org_id" {
+				hasDefaultOrgID = true
+			}
+		}
+		if !hasDefaultOrgID {
+			t.Error("expected default_org_id column in users table")
+		}
+	})
+
+	t.Run("personal_org_created_on_register", func(t *testing.T) {
+		logger := testLogger{}
+		k := kernel.New(logger)
+
+		d := db.New(db.Options{Path: ":memory:", Logger: logger})
+		a := auth.New(auth.Options{DB: d, Logger: logger, Secret: "test-secret-32-chars!!!"})
+
+		k.Register(a)
+		k.Register(d)
+
+		if err := k.Start(); err != nil {
+			t.Fatalf("kernel start: %v", err)
+		}
+		t.Cleanup(func() { _ = k.Stop() })
+
+		handler := a.Handler()
+
+		// Register a user
+		regReq := httptest.NewRequest("POST", "/api/auth/register",
+			strings.NewReader(`{"email":"alice@test.com","password":"secret123"}`))
+		regReq.Header.Set("Content-Type", "application/json")
+		regW := httptest.NewRecorder()
+		handler.ServeHTTP(regW, regReq)
+
+		if regW.Code != http.StatusCreated {
+			t.Fatalf("expected 201, got %d: %s", regW.Code, regW.Body.String())
+		}
+
+		// Verify a personal org was created for the user
+		var orgID int64
+		var orgName, orgSlug string
+		var orgOwnerID int64
+		err := d.QueryRowContext(context.Background(),
+			"SELECT id, name, slug, owner_id FROM orgs WHERE slug = ?",
+			"alice@test.com",
+		).Scan(&orgID, &orgName, &orgSlug, &orgOwnerID)
+		if err != nil {
+			t.Fatalf("personal org not created: %v", err)
+		}
+
+		if orgName != "alice@test.com" {
+			t.Errorf("expected org name 'alice@test.com', got %q", orgName)
+		}
+
+		// Verify user's default_org_id is set
+		var userID int64
+		var defaultOrgID sql.NullInt64
+		err = d.QueryRowContext(context.Background(),
+			"SELECT id, default_org_id FROM users WHERE email = ?",
+			"alice@test.com",
+		).Scan(&userID, &defaultOrgID)
+		if err != nil {
+			t.Fatalf("user not found: %v", err)
+		}
+
+		if !defaultOrgID.Valid || defaultOrgID.Int64 != orgID {
+			t.Errorf("expected default_org_id=%d, got %v", orgID, defaultOrgID)
+		}
+
+		if orgOwnerID != userID {
+			t.Errorf("expected org owner_id=%d, got %d", userID, orgOwnerID)
 		}
 	})
 }

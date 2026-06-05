@@ -276,13 +276,27 @@ func (a *Auth) insertUser(ctx context.Context, email, passwordHash string) (int6
 		role = "admin"
 	}
 
+	now := time.Now().UTC().Format(time.RFC3339)
 	res, err := a.db.ExecContext(ctx,
 		"INSERT INTO users (email, password_hash, role, created_at) VALUES (?, ?, ?, ?)",
-		email, passwordHash, role, time.Now().UTC().Format(time.RFC3339))
+		email, passwordHash, role, now)
 	if err != nil {
 		return 0, "", err
 	}
 	id, _ := res.LastInsertId()
+
+	// Auto-create personal org with email as slug
+	orgRes, err := a.db.ExecContext(ctx,
+		`INSERT INTO orgs (name, slug, owner_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?)`,
+		email, email, id, now, now)
+	if err != nil {
+		a.logger.Error("create personal org", "error", err)
+		return id, role, nil // don't fail registration if org creation fails
+	}
+
+	orgID, _ := orgRes.LastInsertId()
+	_, _ = a.db.ExecContext(ctx, "UPDATE users SET default_org_id = ? WHERE id = ?", orgID, id)
+
 	return id, role, nil
 }
 
