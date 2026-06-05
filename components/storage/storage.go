@@ -380,8 +380,8 @@ func (s *Storage) handleFileDelete(w http.ResponseWriter, r *http.Request, id st
 
 func sanitizeFilename(name string) string {
 	r := strings.NewReplacer(
-		`"`, "", `\`, "", "\n", "", "\r", "",
-		"\t", "", "\x00", "", "\x1f", "",
+		`"`, "", `\`, "", "/", "", "\n", "", "\r", "",
+		"\t", "", "\x00", "", "\x1f", "", "..", "",
 	)
 	return r.Replace(name)
 }

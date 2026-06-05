@@ -4,10 +4,12 @@
   "version": "0.0.0-dev",
   "description": "Single-binary BaaS platform",
   "scripts": {
-    "preflight": "npm run preflight:ui && npm run preflight:go",
-    "preflight:go": "go vet ./... && go test ./... -count=1 && test -f ui/dist/index.html",
+    "preflight": "npm run preflight:ui && npm run preflight:go && npm run preflight:e2e",
+    "preflight:go": "go vet ./... && go test ./... -count=1 && bash scripts/check-coverage.sh 59 && test -f ui/dist/index.html",
     "preflight:ui": "npm run build --prefix ui",
     "preflight:build": "go build -o bigbase .",
+    "preflight:e2e": "npx playwright test --config=tests/e2e/playwright.config.ts",
+    "test:e2e": "npx playwright test --config=tests/e2e/playwright.config.ts",
     "sync:opencode-skills": "bash specs/agentic-stack-templates/sync-opencode-skills.sh",
     "validate:specs": "bash scripts/validate-specs-yaml.sh",
     "test:specs": "node --test scripts/validate-specs-yaml.test.cjs",
@@ -15,6 +17,7 @@
     "semantic-release": "semantic-release"
   },
   "devDependencies": {
+    "@playwright/test": "^1.60.0",
     "@semantic-release/changelog": "^6.0.3",
     "@semantic-release/commit-analyzer": "^13.0.1",
     "@semantic-release/exec": "^7.0.3",

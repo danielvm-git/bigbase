@@ -1,36 +1,31 @@
 type: session-state
 context: infra
-active_flow: null
-active_epic_id: null
-active_story_id: null
+active_flow: build_epic
+active_epic_id: e21
+active_story_id: e21s02
 active_bug_id: null
 release:
   target_version: 2.0.0
   last_tag: null
   last_publish: null
 epic_cycle:
-  current_step: release-branch
-  next_skill: null
+  current_step: 4
+  next_skill: develop-tdd
   completed_steps:
   - survey-context
   - plan-work
   - kickoff-branch
-  - develop-tdd
-  - verify-work
-  - audit-code
-  - commit-message
-  - release-branch
 bug_cycle:
   current_step: null
   completed_steps: []
 git:
-  branch: prototype-fidelity-parity
-  hash: b8b47f2
+  branch: main
+  hash: HEAD
 handoff:
-  last_step_completed: 'release-branch — 19/19 prototype-vs-codebase gaps closed; reviewer must-fix + should-fix + hardening complete; preflight green; build artifacts refreshed; ready to integrate'
+  last_step_completed: null
   open_decisions: []
   required_reading:
   - CONVENTIONS.md
   - specs/release-plan.yaml
-  - specs/PROTOTYPE-VS-CODEBASE.md
-  next_skill: release-branch
+  - specs/epics/e21-testing.yaml
+  next_skill: null

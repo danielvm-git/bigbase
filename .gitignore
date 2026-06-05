@@ -33,3 +33,7 @@ node_modules/
 # Environment (secrets)
 .env
 
+# Playwright E2E
+test-results/
+playwright-report/
+
