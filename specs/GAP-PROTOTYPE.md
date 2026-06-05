@@ -1,6 +1,15 @@
-# Prototype ↔ codebase gap matrix
+# Prototype ↔ codebase gap matrix (legacy)
 
-Maps [bigbase-prototype](archive/assets/bigbase-prototype/) handoff assets to epic **e17** stories (prototype parity extension).
+> **Superseded by [`PROTOTYPE-VS-CODEBASE.md`](PROTOTYPE-VS-CODEBASE.md)** — the
+> new doc covers the `bigbase-prototype 2` bundle (with `react-stubs/`,
+> design tokens, IA/state/responsive/a11y spec pages) and enumerates 20
+> actionable gaps (P0–P5) against the current `ui/src/` codebase.
+>
+> This file is preserved as a short pointer to the existing e17 stories. Keep
+> it for trace-back; do not edit it for new gaps.
+
+Maps the original [bigbase-prototype](archive/assets/bigbase-prototype/) handoff
+assets to epic **e17** stories (prototype parity extension).
 
 | Prototype asset | Story | Notes |
 |-----------------|-------|-------|

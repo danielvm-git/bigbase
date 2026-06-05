@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>BigBase — Forge · Component Spec</title>
+<link rel="stylesheet" href="spec/spec.css" />
+<link rel="stylesheet" href="spec/doc.css" />
+<script src="spec/icons.js"></script>
+<style>
+  .forge-board { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-8); margin: var(--space-8) 0; }
+  .forge-col { background: var(--bg-subtle); border-radius: var(--radius-s); padding: var(--space-4); min-height: 240px; }
+  .forge-col-head { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--fg-tertiary); padding: var(--space-3) var(--space-4); display: flex; justify-content: space-between; }
+  .forge-card { background: var(--bg-surface); border: 1px solid var(--border-default); border-radius: var(--radius-s); padding: var(--space-4); margin-bottom: var(--space-3); font-size: var(--text-s); }
+  .forge-card-title { font-weight: 600; color: var(--fg-primary); margin-bottom: var(--space-2); }
+  .forge-card-meta { display: flex; gap: var(--space-3); font-size: 11px; color: var(--fg-tertiary); }
+  .forge-issue-table { width: 100%; border-collapse: collapse; font-size: var(--text-s); margin: var(--space-8) 0; }
+  .forge-issue-table th { text-align: left; background: var(--bg-subtle); padding: var(--space-4); font-size: 11px; text-transform: uppercase; color: var(--fg-tertiary); font-weight: 700; border-bottom: 1px solid var(--border-default); }
+  .forge-issue-table td { padding: var(--space-4); border-bottom: 1px solid var(--divider-subtle); }
+  .label-chip { display: inline-block; padding: 2px 8px; border-radius: var(--radius-full); font-size: 11px; font-weight: 600; color: white; }
+  .label-bug { background: var(--error); }
+  .label-feature { background: var(--brand-500); }
+  .label-chore { background: var(--neutral-500); }
+  .label-docs { background: var(--info); }
+  .forge-labels-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-4); margin: var(--space-8) 0; }
+  .forge-label-editor { background: var(--bg-surface); border: 1px solid var(--border-default); border-radius: var(--radius-s); padding: var(--space-4); }
+  .forge-swatches { display: flex; gap: var(--space-2); margin: var(--space-3) 0; }
+  .forge-swatch { width: 24px; height: 24px; border-radius: var(--radius-xs); cursor: pointer; border: 2px solid transparent; }
+  .forge-swatch.active { border-color: var(--fg-primary); }
+  .forge-empty { border: 2px dashed var(--border-default); border-radius: var(--radius-m); padding: var(--space-16); text-align: center; color: var(--fg-tertiary); }
+  @media (max-width: 768px) {
+    .forge-board { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="doc">
+  <aside class="doc-rail">
+    <div class="doc-brand">
+      <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Crect width='120' height='120' rx='28' fill='%234F46E5'/%3E%3Cpath d='M40 34h22.5c11.3 0 18.5 5.4 18.5 14.6 0 6-3.3 10.2-8.7 11.9 6.8 1.4 10.9 6 10.9 12.8C83.2 81.6 75.6 87 63.4 87H40V34Zm12.4 21.1h8.8c4.6 0 7.3-2.1 7.3-5.8 0-3.6-2.6-5.6-7.3-5.6h-8.8v11.4Zm0 22h9.8c4.9 0 7.7-2.2 7.7-6.1 0-3.8-2.8-6-7.8-6h-9.7v12.1Z' fill='%23fff'/%3E%3C/svg%3E" alt="" />
+      <span><b>BigBase</b><span class="doc-brand-sub">Forge spec</span></span>
+    </div>
+    <div>
+      <div class="doc-railgroup-title">Forge views</div>
+      <nav>
+        <a class="active" href="#issues-list"><span class="icon" data-icon="list" data-size="16"></span> Issues list</a>
+        <a href="#issue-detail"><span class="icon" data-icon="file" data-size="16"></span> Issue detail</a>
+        <a href="#kanban"><span class="icon" data-icon="kanban" data-size="16"></span> Kanban board</a>
+        <a href="#labels"><span class="icon" data-icon="tag" data-size="16"></span> Labels</a>
+        <a href="#wiki"><span class="icon" data-icon="book" data-size="16"></span> Wiki</a>
+        <a href="#empty"><span class="icon" data-icon="inbox" data-size="16"></span> Empty states</a>
+        <a href="#responsive"><span class="icon" data-icon="smartphone" data-size="16"></span> Responsive</a>
+      </nav>
+    </div>
+  </aside>
+  <main class="doc-main">
+    <header class="doc-header">
+      <span class="doc-eyebrow">Component spec</span>
+      <h1>Forge — Issues, board &amp; labels</h1>
+      <p class="doc-lede">Forge is the workspace where engineering work is tracked. It exposes five top-level views: a list of issues, a single-issue detail page, a four-column kanban board, a label manager, and an optional wiki. This spec covers the data shapes, IA, states, and responsive behavior for each.</p>
+    </header>
+
+    <section id="issues-list">
+      <h2>1. Issues list</h2>
+      <p>The default landing view. Rendered as a dense table — the same pattern as the prototype's <code>Issues</code> page. Clicking a row opens the detail view (section 2).</p>
+      <table class="forge-issue-table">
+        <thead>
+          <tr><th>#</th><th>Title</th><th>Labels</th><th>Status</th><th>Author</th><th>Created</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>#142</td><td>Rate-limit /api/auth/login</td><td><span class="label-chip label-bug">bug</span> <span class="label-chip label-feature">security</span></td><td>open</td><td>@daniel</td><td>2 days ago</td></tr>
+          <tr><td>#141</td><td>Add SQLite WAL mode toggle</td><td><span class="label-chip label-chore">chore</span></td><td>in progress</td><td>@alice</td><td>3 days ago</td><td>
+          <tr><td>#140</td><td>Document environment variables</td><td><span class="label-chip label-docs">docs</span></td><td>open</td><td>@bob</td><td>1 week ago</td></tr>
+        </tbody>
+      </table>
+      <h3>Columns</h3>
+      <ul>
+        <li><strong>#</strong> — auto-increment ID, monospace, fg-accent</li>
+        <li><strong>Title</strong> — truncated to one line; full text on hover</li>
+        <li><strong>Labels</strong> — chip stack (max 3 visible, "+N" overflow)</li>
+        <li><strong>Status</strong> — open / in progress / review / closed</li>
+        <li><strong>Author</strong> — @username</li>
+        <li><strong>Created</strong> — relative time (2 days ago)</li>
+      </ul>
+    </section>
+
+    <section id="issue-detail">
+      <h2>2. Issue detail</h2>
+      <p>Single-issue page. Composed of three regions: header (title + status selector), body (markdown description), and a comments thread anchored at the bottom.</p>
+      <h3>Header</h3>
+      <ul>
+        <li>Title — large, editable inline (click to edit)</li>
+        <li>Status selector — 4-option dropdown (open / in progress / review / closed)</li>
+        <li>Label editor — opens the Labels modal (section 4)</li>
+        <li>Assignee — avatar + name</li>
+      </ul>
+      <h3>Body</h3>
+      <p>Markdown-rendered description. Edit mode swaps to a textarea with live preview. Supports code blocks (Monaco editor with syntax highlighting — uses the existing <code>Editor</code> component from the <code>storage</code> slice).</p>
+      <h3>Comments thread</h3>
+      <ul>
+        <li>Each comment shows author, timestamp, body (markdown)</li>
+        <li>Markdown editor at the bottom for new comments</li>
+        <li>Inline reply and edit for own comments</li>
+      </ul>
+    </section>
+
+    <section id="kanban">
+      <h2>3. Kanban board</h2>
+      <p>Visual alternative to the list. Four columns by default; columns are configurable per workspace.</p>
+      <div class="forge-board">
+        <div class="forge-col">
+          <div class="forge-col-head">Open <span>3</span></div>
+          <div class="forge-card">
+            <div class="forge-card-title">Rate-limit /api/auth/login</div>
+            <div class="forge-card-meta"><span>#142</span><span>@daniel</span></div>
+          </div>
+          <div class="forge-card">
+            <div class="forge-card-title">Document environment variables</div>
+            <div class="forge-card-meta"><span>#140</span><span>@bob</span></div>
+          </div>
+        </div>
+        <div class="forge-col">
+          <div class="forge-col-head">In progress <span>1</span></div>
+          <div class="forge-card">
+            <div class="forge-card-title">Add SQLite WAL mode toggle</div>
+            <div class="forge-card-meta"><span>#141</span><span>@alice</span></div>
+          </div>
+        </div>
+        <div class="forge-col">
+          <div class="forge-col-head">Review <span>0</span></div>
+        </div>
+        <div class="forge-col">
+          <div class="forge-col-head">Closed <span>12</span></div>
+        </div>
+      </div>
+      <h3>Drag &amp; drop</h3>
+      <p>Cards are draggable across columns. The status field updates on drop. Optimistic UI with rollback on server error.</p>
+    </section>
+
+    <section id="labels">
+      <h2>4. Labels management</h2>
+      <p>Each workspace owns a flat list of labels. Each label has a name and a color (from a fixed palette to keep visual coherence).</p>
+      <div class="forge-labels-grid">
+        <div class="forge-label-editor">
+          <strong>bug</strong>
+          <div class="forge-swatches">
+            <div class="forge-swatch active" style="background: var(--error)"></div>
+            <div class="forge-swatch" style="background: var(--warning)"></div>
+            <div class="forge-swatch" style="background: var(--info)"></div>
+            <div class="forge-swatch" style="background: var(--neutral-500)"></div>
+          </div>
+        </div>
+        <div class="forge-label-editor">
+          <strong>feature</strong>
+          <div class="forge-swatches">
+            <div class="forge-swatch active" style="background: var(--brand-500)"></div>
+            <div class="forge-swatch" style="background: var(--success)"></div>
+            <div class="forge-swatch" style="background: var(--info)"></div>
+            <div class="forge-swatch" style="background: var(--neutral-500)"></div>
+          </div>
+        </div>
+        <div class="forge-label-editor">
+          <strong>chore</strong>
+          <div class="forge-swatches">
+            <div class="forge-swatch active" style="background: var(--neutral-500)"></div>
+            <div class="forge-swatch" style="background: var(--error)"></div>
+            <div class="forge-swatch" style="background: var(--warning)"></div>
+            <div class="forge-swatch" style="background: var(--info)"></div>
+          </div>
+        </div>
+        <div class="forge-label-editor">
+          <strong>docs</strong>
+          <div class="forge-swatches">
+            <div class="forge-swatch active" style="background: var(--info)"></div>
+            <div class="forge-swatch" style="background: var(--success)"></div>
+            <div class="forge-swatch" style="background: var(--brand-500)"></div>
+            <div class="forge-swatch" style="background: var(--neutral-500)"></div>
+          </div>
+        </div>
+      </div>
+      <h3>Editor</h3>
+      <ul>
+        <li>Add new label: name (required, unique), color (from palette)</li>
+        <li>Edit existing: same controls, with a Delete button</li>
+        <li>Delete confirms before removing (deletes the label from all issues too)</li>
+      </ul>
+    </section>
+
+    <section id="wiki">
+      <h2>5. Wiki (optional, v2)</h2>
+      <p>Per-workspace markdown wiki. Out of scope for the v1 release. The v2 design includes a tree-view sidebar (page hierarchy), a markdown editor (Monaco), and a side-by-side preview pane.</p>
+    </section>
+
+    <section id="empty">
+      <h2>6. Empty states</h2>
+      <p>Each view has a tailored empty state. Use the existing <code>EmptyState</code> component.</p>
+      <div class="forge-empty">
+        <h3>No issues yet</h3>
+        <p>Create your first issue to start tracking work.</p>
+      </div>
+      <ul>
+        <li><strong>Issues list</strong> — "No issues yet — Create your first issue to start tracking work." (CTA: + New issue)</li>
+        <li><strong>Kanban</strong> — four empty columns, each labeled with the status name; same CTA</li>
+        <li><strong>Labels</strong> — "No labels — Create labels to categorize issues"</li>
+        <li><strong>Issue detail</strong> — n/a (always at least the issue you opened)</li>
+      </ul>
+    </section>
+
+    <section id="responsive">
+      <h2>7. Responsive</h2>
+      <p>Forge is desktop-first. The kanban board collapses to a single-column stack on screens &lt; 768px. The issues list drops the Author and Created columns on narrow viewports.</p>
+      <pre class="codeblock"><span class="c">/* ui/src/index.css */</span>
+<span class="k">@media</span> (max-width: <span class="s">768px</span>) {
+  .forge-board { grid-template-columns: <span class="s">1fr</span>; }
+  .forge-issue-table th:nth-child(5),
+  .forge-issue-table td:nth-child(5),
+  .forge-issue-table th:nth-child(6),
+  .forge-issue-table td:nth-child(6) { display: <span class="s">none</span>; }
+}</pre>
+    </section>
+  </main>
+</div>
+</body>
+</html>

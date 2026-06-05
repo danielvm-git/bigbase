@@ -23,6 +23,21 @@ export type IconName =
   | 'radio'
   | 'moon'
   | 'sun'
+  | 'chevron-down'
+  | 'chevron-right'
+  | 'trash-2'
+  | 'pencil'
+  | 'refresh-cw'
+  | 'external-link'
+  | 'arrow-right'
+  | 'arrow-left'
+  | 'eye'
+  | 'eye-off'
+  | 'circle'
+  | 'download'
+  | 'upload'
+  | 'copy'
+  | 'more-horizontal'
 
 const paths: Record<IconName, ReactNode> = {
   'layout-dashboard': (
@@ -42,19 +57,6 @@ const paths: Record<IconName, ReactNode> = {
     </>
   ),
   box: <path d="M21 8v13H3V8M1 6h22v2H1zM10 12h4" />,
-  github: (
-    <>
-      <path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3-1 4.5-2.5 4.5-5.5a4.5 4.5 0 0 0-1.25-3.12A4.2 4.2 0 0 0 16 3.5a4.2 4.2 0 0 0-4.2 4.2c0 .28.03.56.08.83A4.5 4.5 0 0 0 10.5 11c0 3 1.5 4.5 4.5 5.5a4.8 4.8 0 0 0-1 3.5v4" />
-      <path d="M9 18c-4.51 2-5-2-7-2" />
-    </>
-  ),
-  check: <path d="M20 6 9 17l-5-5" />,
-  search: (
-    <>
-      <circle cx="11" cy="11" r="8" />
-      <path d="m21 21-4.3-4.3" />
-    </>
-  ),
   globe: (
     <>
       <circle cx="12" cy="12" r="10" />
@@ -62,8 +64,6 @@ const paths: Record<IconName, ReactNode> = {
       <path d="M2 12h20" />
     </>
   ),
-  plus: <path d="M5 12h14M12 5v14" />,
-  x: <path d="M18 6 6 18M6 6l12 12" />,
   database: (
     <>
       <ellipse cx="12" cy="5" rx="9" ry="3" />
@@ -144,6 +144,110 @@ const paths: Record<IconName, ReactNode> = {
       <circle cx="12" cy="12" r="4" />
       <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
     </>
+  ),
+  check: <polyline points="20 6 9 17 4 12" />,
+  'chevron-down': <polyline points="6 9 12 15 18 9" />,
+  'chevron-right': <polyline points="9 18 15 12 9 6" />,
+  x: (
+    <>
+      <line x1="18" y1="6" x2="6" y2="18" />
+      <line x1="6" y1="6" x2="18" y2="18" />
+    </>
+  ),
+  plus: (
+    <>
+      <line x1="12" y1="5" x2="12" y2="19" />
+      <line x1="5" y1="12" x2="19" y2="12" />
+    </>
+  ),
+  search: (
+    <>
+      <circle cx="11" cy="11" r="8" />
+      <line x1="21" y1="21" x2="16.65" y2="16.65" />
+    </>
+  ),
+  'trash-2': (
+    <>
+      <polyline points="3 6 5 6 21 6" />
+      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+      <line x1="10" y1="11" x2="10" y2="17" />
+      <line x1="14" y1="11" x2="14" y2="17" />
+    </>
+  ),
+  pencil: (
+    <>
+      <path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+      <line x1="15" y1="5" x2="19" y2="9" />
+    </>
+  ),
+  'refresh-cw': (
+    <>
+      <polyline points="23 4 23 10 17 10" />
+      <polyline points="1 20 1 14 7 14" />
+      <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+    </>
+  ),
+  'external-link': (
+    <>
+      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+      <polyline points="15 3 21 3 21 9" />
+      <line x1="10" y1="14" x2="21" y2="3" />
+    </>
+  ),
+  'arrow-right': (
+    <>
+      <line x1="5" y1="12" x2="19" y2="12" />
+      <polyline points="12 5 19 12 12 19" />
+    </>
+  ),
+  'arrow-left': (
+    <>
+      <line x1="19" y1="12" x2="5" y2="12" />
+      <polyline points="12 19 5 12 12 5" />
+    </>
+  ),
+  eye: (
+    <>
+      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+      <circle cx="12" cy="12" r="3" />
+    </>
+  ),
+  'eye-off': (
+    <>
+      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+      <line x1="1" y1="1" x2="23" y2="23" />
+    </>
+  ),
+  circle: <circle cx="12" cy="12" r="10" />,
+  download: (
+    <>
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+      <polyline points="7 10 12 15 17 10" />
+      <line x1="12" y1="15" x2="12" y2="3" />
+    </>
+  ),
+  upload: (
+    <>
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+      <polyline points="17 8 12 3 7 8" />
+      <line x1="12" y1="3" x2="12" y2="15" />
+    </>
+  ),
+  copy: (
+    <>
+      <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
+      <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+    </>
+  ),
+  'more-horizontal': (
+    <>
+      <circle cx="12" cy="12" r="1" />
+      <circle cx="19" cy="12" r="1" />
+      <circle cx="5" cy="12" r="1" />
+    </>
+  ),
+  github: (
+    <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22" />
   ),
 }
 

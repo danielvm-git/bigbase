@@ -1,3 +1,17 @@
+# [2.2.0](https://github.com/danielvm-git/bigbase/compare/v2.1.9...v2.2.0) (2026-06-04)
+
+
+### Features
+
+* **ui:** close all 19 prototype-vs-codebase gaps ([#12](https://github.com/danielvm-git/bigbase/issues/12)) ([ef3caac](https://github.com/danielvm-git/bigbase/commit/ef3caacacb9f34a66513687ba295a7ceab40bbce)), closes [#4](https://github.com/danielvm-git/bigbase/issues/4) [#6](https://github.com/danielvm-git/bigbase/issues/6)
+
+## [2.1.9](https://github.com/danielvm-git/bigbase/compare/v2.1.8...v2.1.9) (2026-06-04)
+
+
+### Bug Fixes
+
+* **deploy:** Node 20 VPS setup, npm HOME env, and deploy error UX ([2c7d660](https://github.com/danielvm-git/bigbase/commit/2c7d660114245e9ab0c7375e7f37cd1411fdf9cf))
+
 ## [2.1.8](https://github.com/danielvm-git/bigbase/compare/v2.1.7...v2.1.8) (2026-06-04)
 
 

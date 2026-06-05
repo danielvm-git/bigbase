@@ -1,5 +1,6 @@
 /** Legacy metrics row; dashboard uses SystemStatusPanel. Tests guard request-rate rendering. */
 import { Card, CardHeader } from './index'
+import { MetricCard } from './MetricCard'
 
 interface MetricsProps {
   system?: { cpu_percent: number; memory_mb: number; goroutines: number; uptime_seconds: number }
@@ -20,34 +21,29 @@ export function DashboardMetrics({ system, requests, componentCount, healthOk }:
     )
   }
 
+  const errorCount = requests?.by_status?.['500'] ?? 0
+
   return (
     <div className="dash-grid" style={{ marginBottom: 'var(--space-8)' }}>
-      <Card>
-        <CardHeader title="Request Rate" />
-        <p className="stat-value">{requests?.total ?? 0}</p>
-        <p className="dim">total requests</p>
-      </Card>
-      <Card>
-        <CardHeader title="Error Rate" />
-        <p className="stat-value" style={{ color: (requests?.by_status?.['500'] ?? 0) > 0 ? 'var(--error-fg)' : 'var(--success-fg)' }}>
-          {requests?.by_status?.['500'] ?? 0}
-        </p>
-        <p className="dim">server errors</p>
-      </Card>
-      <Card>
-        <CardHeader title="CPU" />
-        <p className="stat-value">{system.cpu_percent.toFixed(1)}%</p>
-        <div className="bar-track" style={{ marginTop: 'var(--space-3)' }}>
-          <div className="bar-fill" style={{ width: `${Math.min(system.cpu_percent, 100)}%`, background: system.cpu_percent > 80 ? 'var(--error)' : 'var(--brand-500)' }} />
-        </div>
-      </Card>
-      <Card>
-        <CardHeader title="Components" />
-        <p className="stat-value" style={{ color: healthOk ? 'var(--success-fg)' : 'var(--warning-fg)' }}>
-          {componentCount} healthy
-        </p>
-        <p className="dim">healthy</p>
-      </Card>
+      <MetricCard label="Request Rate" value={requests?.total ?? 0} subtitle="total requests" />
+      <MetricCard
+        label="Error Rate"
+        value={errorCount}
+        color={errorCount > 0 ? 'error' : 'success'}
+        subtitle="server errors"
+      />
+      <MetricCard
+        label="CPU"
+        value={`${system.cpu_percent.toFixed(1)}%`}
+        color={system.cpu_percent > 80 ? 'error' : 'neutral'}
+        subtitle={`${system.memory_mb.toFixed(0)} MB memory`}
+      />
+      <MetricCard
+        label="Components"
+        value={`${componentCount} healthy`}
+        color={healthOk ? 'success' : 'warning'}
+        subtitle={`${system.goroutines} goroutines`}
+      />
     </div>
   )
 }

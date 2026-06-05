@@ -1,6 +1,9 @@
 import type { HTMLAttributes } from 'react'
 
-type BadgeVariant = 'neutral' | 'success' | 'warning' | 'error' | 'accent'
+type BadgeVariant = 'neutral' | 'success' | 'warning' | 'error' | 'accent' | 'info'
+
+/** Mirrors prototype react-stubs/tokens.ts StatusKind. */
+export type StatusKind = 'ready' | 'building' | 'failed' | 'pending'
 
 interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
   variant?: BadgeVariant
@@ -12,6 +15,7 @@ const variantClass: Record<BadgeVariant, string> = {
   warning: 'badge-warning',
   error: 'badge-error',
   accent: 'badge-accent',
+  info: 'badge-info',
 }
 
 export function Badge({ variant = 'neutral', className = '', ...rest }: BadgeProps) {

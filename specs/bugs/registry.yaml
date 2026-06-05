@@ -216,3 +216,25 @@ bugs:
     summary: GitHub App CLI flags not registered in serve command
     file: specs/bugs/BUG-2026-06-02T000000-github-flags-not-wired.md
     status: open
+  - id: BUG-2026-06-04T100000
+    date: "2026-06-04"
+    severity: high
+    priority: high
+    scope: ui
+    summary: Reviewer must-fix findings on prototype-fidelity-parity: mock success leaks /api/auth, ThemePicker loses focus on close, 5 of 15 planned icon names were silently substituted
+    file: specs/bugs/BUG-2026-06-04T100000-reviewer-must-fix-on-prototype-fidelity.md
+    status: fixed
+    files_changed:
+      - ui/src/pages/SettingsPage.tsx
+      - ui/src/components/ThemePicker.tsx
+      - ui/src/components/ThemePicker.test.tsx
+      - ui/src/components/Icon.tsx
+      - ui/src/components/Icon.test.tsx
+      - ui/src/components/Card.tsx
+      - ui/src/components/index.ts
+      - ui/src/pages/SettingsPage.test.tsx
+      - ui/src/components/Input.tsx
+      - specs/epics/e17-enhanced-admin-ui/SYSTEM_DESIGN.md
+    approach: Strip user-visible internal API path; add triggerRef + 3 a11y tests for focus return; add 5 missing icon names + exhaustive render test; key-based remount for prop-sync state; barrel export Icon; data-testid for fragile DOM walk; rewrite Card.interactive JSDoc
+    risk_level: low
+    commit_message: "fix(ui): address reviewer must-fix findings"
