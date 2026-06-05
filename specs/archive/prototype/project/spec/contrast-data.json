@@ -1,0 +1,90 @@
+{
+  "themes": {
+    "January": {
+      "onAccent": "black",
+      "btn": 4.65,
+      "linkLight": 5.47,
+      "linkDark": 11.36
+    },
+    "February": {
+      "onAccent": "black",
+      "btn": 4.89,
+      "linkLight": 7.31,
+      "linkDark": 9.96
+    },
+    "March": {
+      "onAccent": "white",
+      "btn": 5.7,
+      "linkLight": 8.98,
+      "linkDark": 9.1
+    },
+    "April": {
+      "onAccent": "black",
+      "btn": 5.28,
+      "linkLight": 6.51,
+      "linkDark": 11.97
+    },
+    "May": {
+      "onAccent": "black",
+      "btn": 6.4,
+      "linkLight": 7.1,
+      "linkDark": 9.1
+    },
+    "June": {
+      "onAccent": "white",
+      "btn": 5.7,
+      "linkLight": 8.98,
+      "linkDark": 9.1
+    },
+    "July": {
+      "onAccent": "black",
+      "btn": 10.32,
+      "linkLight": 5.02,
+      "linkDark": 9.96
+    },
+    "August": {
+      "onAccent": "black",
+      "btn": 6.86,
+      "linkLight": 7.56,
+      "linkDark": 11.4
+    },
+    "September": {
+      "onAccent": "black",
+      "btn": 9.08,
+      "linkLight": 6.85,
+      "linkDark": 12.74
+    },
+    "October": {
+      "onAccent": "black",
+      "btn": 4.93,
+      "linkLight": 6.04,
+      "linkDark": 9.26
+    },
+    "November": {
+      "onAccent": "white",
+      "btn": 5.17,
+      "linkLight": 8.72,
+      "linkDark": 9.32
+    },
+    "December": {
+      "onAccent": "white",
+      "btn": 4.83,
+      "linkLight": 8.31,
+      "linkDark": 8.85
+    },
+    "Indigo": {
+      "onAccent": "white",
+      "btn": 6.29,
+      "linkLight": 9.93,
+      "linkDark": 8.43
+    }
+  },
+  "neutrals": {
+    "fg-primary/bg-default light": 16.98,
+    "fg-secondary/bg-surface light": 7.73,
+    "fg-tertiary/bg-surface light": 4.83,
+    "fg-primary/bg-default dark": 17.02,
+    "fg-secondary/bg-surface dark": 6.56,
+    "fg-tertiary/bg-surface dark": 3.48
+  }
+}

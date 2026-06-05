@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>BigBase — Information Architecture · Spec</title>
+<link rel="stylesheet" href="spec/spec.css" />
+<link rel="stylesheet" href="spec/doc.css" />
+<script src="spec/icons.js"></script>
+</head>
+<body>
+<div class="doc">
+  <aside class="doc-rail">
+    <div class="doc-brand">
+      <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Crect width='120' height='120' rx='28' fill='%234F46E5'/%3E%3Cpath d='M40 34h22.5c11.3 0 18.5 5.4 18.5 14.6 0 6-3.3 10.2-8.7 11.9 6.8 1.4 10.9 6 10.9 12.8C83.2 81.6 75.6 87 63.4 87H40V34Zm12.4 21.1h8.8c4.6 0 7.3-2.1 7.3-5.8 0-3.6-2.6-5.6-7.3-5.6h-8.8v11.4Zm0 22h9.8c4.9 0 7.7-2.2 7.7-6.1 0-3.8-2.8-6-7.8-6h-9.7v12.1Z' fill='%23fff'/%3E%3C/svg%3E" alt="" />
+      <span><b>BigBase</b><span class="doc-brand-sub">Design spec</span></span>
+    </div>
+    <div>
+      <div class="doc-railgroup-title">Handoff</div>
+      <nav>
+        <a href="Component Spec - States.html"><span class="icon" data-icon="square-stack" data-size="16"></span> Component states</a>
+        <a class="active" href="Component Spec - Information Architecture.html"><span class="icon" data-icon="layers" data-size="16"></span> Information architecture</a>
+        <a href="Component Spec - Responsive.html"><span class="icon" data-icon="smartphone" data-size="16"></span> Responsive specs</a>
+        <a href="Component Spec - Accessibility.html"><span class="icon" data-icon="check-circle" data-size="16"></span> Accessibility report</a>
+        <a href="Component Spec - Tokens.html"><span class="icon" data-icon="book-open" data-size="16"></span> Tokens &amp; export</a>
+        <a href="BigBase Console.html"><span class="icon" data-icon="external-link" data-size="16"></span> Live console</a>
+      </nav>
+    </div>
+    <div>
+      <div class="doc-railgroup-title">On this page</div>
+      <nav id="onthispage">
+        <a href="#tree">Sidebar structure</a>
+        <a href="#routes">Route map</a>
+        <a href="#crosslinks">Cross-links</a>
+      </nav>
+    </div>
+    <div class="doc-rail-foot">
+      <div class="doc-railgroup-title">Preview as</div>
+      <div class="doc-toggles"><button id="spec-dark" type="button"></button></div>
+      <select id="spec-accent" class="input" aria-label="Accent theme">
+        <option value="default">Indigo (default)</option>
+        <option value="march">March · Purple</option>
+        <option value="june">June · Rainbow</option>
+        <option value="october">October · Pink</option>
+        <option value="november">November · Blue</option>
+        <option value="december">December · Red</option>
+      </select>
+    </div>
+  </aside>
+
+  <main class="doc-main">
+    <div class="doc-hero">
+      <span class="eyebrow">Engineering handoff · §5</span>
+      <h1>Information architecture</h1>
+      <p>The sidebar groups every surface by <em>product area</em>, mirroring the Appwrite Console mental model with BigBase's own scope. Five required groups — Overview, Build, Data, Auth, DevOps — plus one addition (<b>Engage</b>) that gives Messaging a home. Settings and appearance live in the footer. Below: the confirmed tree, the full route map, and the cross-links that stitch flows together.</p>
+    </div>
+
+    <section class="doc-section" id="tree">
+      <h2><span class="num">5.1</span> Sidebar structure</h2>
+      <p class="lead">Confirmed and shipping in the live console. Order is fixed; section labels are uppercase overlines. Each leaf maps to one route.</p>
+      <div class="ia-tree">
+        <div class="ia-group">OVERVIEW</div>
+        <div>&nbsp;&nbsp;└─ <span class="ia-item"><span class="icon" data-icon="layout-dashboard"></span>Dashboard</span></div>
+        <div>&nbsp;</div>
+        <div class="ia-group">BUILD</div>
+        <div>&nbsp;&nbsp;├─ <span class="ia-item"><span class="icon" data-icon="rocket"></span>Sites</span></div>
+        <div>&nbsp;&nbsp;└─ <span class="ia-item"><span class="icon" data-icon="box"></span>Functions</span></div>
+        <div>&nbsp;</div>
+        <div class="ia-group">DATA</div>
+        <div>&nbsp;&nbsp;├─ <span class="ia-item"><span class="icon" data-icon="database"></span>Data Studio</span></div>
+        <div>&nbsp;&nbsp;├─ <span class="ia-item"><span class="icon" data-icon="terminal"></span>SQL Editor</span></div>
+        <div>&nbsp;&nbsp;└─ <span class="ia-item"><span class="icon" data-icon="hard-drive"></span>Storage</span></div>
+        <div>&nbsp;</div>
+        <div class="ia-group">AUTH</div>
+        <div>&nbsp;&nbsp;└─ <span class="ia-item"><span class="icon" data-icon="users"></span>Users</span></div>
+        <div>&nbsp;</div>
+        <div class="ia-group">ENGAGE<span class="ia-new">added</span></div>
+        <div>&nbsp;&nbsp;└─ <span class="ia-item"><span class="icon" data-icon="mail"></span>Messaging</span></div>
+        <div>&nbsp;</div>
+        <div class="ia-group">DEVOPS</div>
+        <div>&nbsp;&nbsp;├─ <span class="ia-item"><span class="icon" data-icon="git-branch"></span>Git Repos</span></div>
+        <div>&nbsp;&nbsp;├─ <span class="ia-item"><span class="icon" data-icon="git-pull-request"></span>CI / CD</span></div>
+        <div>&nbsp;&nbsp;└─ <span class="ia-item"><span class="icon" data-icon="activity"></span>Monitoring</span></div>
+        <div>&nbsp;</div>
+        <div class="ia-group" style="border-top:1px solid var(--border-default);padding-top:10px;margin-top:6px">FOOTER</div>
+        <div>&nbsp;&nbsp;├─ <span class="ia-item"><span class="icon" data-icon="settings"></span>Settings</span> · Account / Workspace / Billing</div>
+        <div>&nbsp;&nbsp;└─ <span class="ia-item">Appearance</span> · theme picker + dark toggle</div>
+      </div>
+      <div class="callout"><span class="icon" data-icon="info"></span><p><b>Why Engage?</b> The prescribed IA listed no home for the new Messaging screens. Rather than overload Build or Auth, Messaging gets a dedicated <code>ENGAGE</code> group — consistent with how Appwrite treats Messaging as a top-level product. All five required groups remain intact and in order; this is purely additive.</p></div>
+    </section>
+
+    <section class="doc-section" id="routes">
+      <h2><span class="num">5.2</span> Route map</h2>
+      <p class="lead">Internal route keys handled by the app shell's state machine. Detail routes carry an id segment.</p>
+      <table class="resp-table">
+        <thead><tr><th>Group</th><th>Label</th><th>Route key</th><th>Screen</th></tr></thead>
+        <tbody>
+          <tr><td>Overview</td><td>Dashboard</td><td><code>dashboard</code></td><td>Hub — status, stat cards, recent deploys, quick actions</td></tr>
+          <tr><td>Build</td><td>Sites</td><td><code>sites</code> · <code>sites/new</code> · <code>sites/:id</code></td><td>Card grid · Create wizard · Detail (overview/deployments/domains/logs/settings)</td></tr>
+          <tr><td>Build</td><td>Functions</td><td><code>functions</code> · <code>functions/:id</code></td><td>Card grid · Detail (code/triggers/variables/logs)</td></tr>
+          <tr><td>Data</td><td>Data Studio</td><td><code>data</code></td><td>Collections + Data/Schema toggle + column ops</td></tr>
+          <tr><td>Data</td><td>SQL Editor</td><td><code>sql</code></td><td>Query editor + result grid</td></tr>
+          <tr><td>Data</td><td>Storage</td><td><code>storage</code></td><td>Buckets + file list</td></tr>
+          <tr><td>Auth</td><td>Users</td><td><code>users</code></td><td>User table + management</td></tr>
+          <tr><td>Engage</td><td>Messaging</td><td><code>messaging</code> · <code>messaging/:id</code></td><td>Template list · Editor + live preview</td></tr>
+          <tr><td>DevOps</td><td>Git Repos</td><td><code>repos</code></td><td>Repository list</td></tr>
+          <tr><td>DevOps</td><td>CI / CD</td><td><code>cici</code></td><td>Pipeline runs</td></tr>
+          <tr><td>DevOps</td><td>Monitoring</td><td><code>monitoring</code></td><td>Component health, CPU/memory, activity</td></tr>
+          <tr><td>Footer</td><td>Settings</td><td><code>settings</code></td><td>Account · Workspace · Billing tabs</td></tr>
+          <tr><td>—</td><td>Login</td><td><code>(unauthed)</code></td><td>Sign in · forgot-password reset flow</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="doc-section" id="crosslinks">
+      <h2><span class="num">5.3</span> Cross-links</h2>
+      <p class="lead">Surfaces don't live in isolation — these are the documented jumps between areas. Each is a real navigation the shell supports (or should, when wired).</p>
+      <div class="crosslink-grid">
+        <div class="crosslink">
+          <div class="cl-route"><span class="icon" data-icon="rocket"></span>Sites <span class="cl-arrow">→</span> <span class="icon" data-icon="git-branch"></span>Git Repos</div>
+          <div class="cl-desc">The Create-site wizard's <b>Source</b> step pulls from connected Git repositories — "Existing BigBase repo" lists the same repos surfaced under Git Repos. Authorizing GitHub here registers the connection globally.</div>
+        </div>
+        <div class="crosslink">
+          <div class="cl-route"><span class="icon" data-icon="box"></span>Functions <span class="cl-arrow">→</span> <span class="icon" data-icon="activity"></span>Monitoring</div>
+          <div class="cl-desc">A function's <b>Logs</b> tab shows recent executions; "View all" / observability deep-links into Monitoring filtered to the <code>functions</code> component for CPU, error rate, and full history.</div>
+        </div>
+        <div class="crosslink">
+          <div class="cl-route"><span class="icon" data-icon="layout-dashboard"></span>Dashboard <span class="cl-arrow">→</span> <span class="icon" data-icon="rocket"></span>All areas</div>
+          <div class="cl-desc">Stat cards (Sites, Functions, Git Repos, Users) and the "Jump back in" list are the primary launch points — each routes straight to its area or to <code>sites/new</code>.</div>
+        </div>
+        <div class="crosslink">
+          <div class="cl-route"><span class="icon" data-icon="database"></span>Data Studio <span class="cl-arrow">↔</span> <span class="icon" data-icon="terminal"></span>SQL Editor</div>
+          <div class="cl-desc">Both read the same collections. The Schema view's tables mirror SQL Editor's table rail; a "Query this" affordance hands a collection to SQL Editor pre-filled.</div>
+        </div>
+        <div class="crosslink">
+          <div class="cl-route"><span class="icon" data-icon="git-pull-request"></span>CI / CD <span class="cl-arrow">→</span> <span class="icon" data-icon="git-branch"></span>Git Repos</div>
+          <div class="cl-desc">Each pipeline run names its source repo + branch + commit; the repo link resolves to Git Repos, and a failed run cross-references the triggering site's deployment.</div>
+        </div>
+        <div class="crosslink">
+          <div class="cl-route"><span class="icon" data-icon="users"></span>Users <span class="cl-arrow">→</span> <span class="icon" data-icon="settings"></span>Settings · Workspace</div>
+          <div class="cl-desc">End-users (auth) are distinct from workspace <b>members</b>. The Workspace tab manages team roles (Owner/Admin/Member); inviting a member lives there, not in Users.</div>
+        </div>
+        <div class="crosslink">
+          <div class="cl-route"><span class="icon" data-icon="mail"></span>Messaging <span class="cl-arrow">→</span> <span class="icon" data-icon="box"></span>Functions</div>
+          <div class="cl-desc">Transactional templates are dispatched from functions &amp; events (e.g. <code>nightly-digest</code> sends the digest email). A template's variables map to the payload a function provides at send time.</div>
+        </div>
+        <div class="crosslink">
+          <div class="cl-route"><span class="icon" data-icon="rocket"></span>Sites <span class="cl-arrow">→</span> <span class="icon" data-icon="hard-drive"></span>Storage</div>
+          <div class="cl-desc">Static build output and uploaded assets resolve against Storage buckets (<code>public-assets</code>); a site's domain serves files the bucket holds.</div>
+        </div>
+      </div>
+      <div class="callout"><span class="icon" data-icon="info"></span><p>Cross-links are <b>navigation</b>, not duplication. Each piece of data has exactly one home; links are read-only jumps that preserve context (breadcrumb back-path intact).</p></div>
+    </section>
+
+    <p style="font-size:var(--text-xs);color:var(--fg-tertiary);margin-top:var(--space-16);text-align:center">BigBase design system · §5 of the engineering handoff</p>
+  </main>
+</div>
+<script>
+(function () {
+  var links = {};
+  document.querySelectorAll('#onthispage a').forEach(function (a) { links[a.getAttribute('href').slice(1)] = a; });
+  var obs = new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) {
+      if (e.isIntersecting) {
+        Object.values(links).forEach(function (l) { l.classList.remove('active'); });
+        if (links[e.target.id]) links[e.target.id].classList.add('active');
+      }
+    });
+  }, { rootMargin: '-15% 0px -75% 0px' });
+  ['tree','routes','crosslinks'].forEach(function (id) { var el = document.getElementById(id); if (el) obs.observe(el); });
+})();
+</script>
+</body>
+</html>
