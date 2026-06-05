@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Card, CardHeader, PageHeader, Badge, statusBadgeVariant, Button } from '../components'
+import { Card, CardHeader, PageHeader, Badge, statusBadgeVariant, Button, OnboardingChecklist } from '../components'
 import { Icon, type IconName } from '../components/Icon'
 import { SystemStatusPanel, type ActivityItem } from '../components/SystemStatusPanel'
 import { timeAgo, mapDeployStatus } from '../lib/format'
@@ -113,6 +113,8 @@ export default function DashboardPage() {
           <Icon name="plus" size={16} /> Create site
         </Button>
       </PageHeader>
+
+      <OnboardingChecklist />
 
       <SystemStatusPanel
         healthOk={healthOk}
