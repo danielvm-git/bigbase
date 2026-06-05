@@ -4,7 +4,7 @@ epics:
   e18: pending
   e19: pending
   e20: pending
-  e21: pending
+  e21: done
   e22: pending
   e23: pending
   e24: pending
@@ -43,11 +43,11 @@ stories:
   e20s03: pending
   e20s04: pending
   e20s05: pending
-  e21s01: pending
-  e21s02: pending
-  e21s03: pending
-  e21s04: pending
-  e21s05: pending
+  e21s01: done
+  e21s02: done
+  e21s03: done
+  e21s04: done
+  e21s05: done
   e22s01: pending
   e22s02: pending
   e22s03: pending

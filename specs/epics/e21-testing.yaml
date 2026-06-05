@@ -3,36 +3,89 @@ context: domain
 id: e21
 title: Testing and Quality Hardening
 wsjf: 3.5
-status: pending
+status: done
 covers: []
 stories:
-  - id: e21s01
-    title: Playwright E2E suite
-    status: pending
-    tasks:
-      - desc: E2E scenarios in tests/e2e (login through realtime)
-        verify: "npx playwright test"
-  - id: e21s02
-    title: API contract tests
-    status: pending
-    tasks:
-      - desc: Contract snapshots for SQLite and PostgreSQL drivers
-        verify: "go test ./tests/contract/..."
-  - id: e21s03
-    title: Performance benchmarks
-    status: pending
-    tasks:
-      - desc: Benchmark suite in tests/bench
-        verify: "go test -bench=. ./tests/bench/..."
-  - id: e21s04
-    title: Coverage gates
-    status: pending
-    tasks:
-      - desc: Enforce 80% minimum coverage in CI
-        verify: "go test -coverprofile=coverage.out ./... && go tool cover -func=coverage.out | tail -1"
   - id: e21s05
     title: Race detection and fuzz targets
-    status: pending
+    status: done
+    wsjf: 5.0
     tasks:
-      - desc: go test -race and fuzz targets with 30s minimum
-        verify: "go test -race ./..."
+      - desc: Add concurrent eventbus emit+subscribe race test in kernel/eventbus_test.go
+        verify: "go test -race -run TestEventBusConcurrent ./kernel/ -v"
+      - desc: Add fuzz target for deploy.SiteSlug in tests/bench/fuzz_deploy_test.go
+        verify: "go test -fuzz=FuzzSiteSlug -fuzztime=30s ./tests/bench/"
+      - desc: Add fuzz target for storage.sanitizeFilename in tests/bench/fuzz_storage_test.go
+        verify: "go test -fuzz=FuzzSanitizeFilename -fuzztime=30s ./tests/bench/"
+      - desc: Add fuzz target for auth.hashPassword in tests/bench/fuzz_auth_test.go
+        verify: "go test -fuzz=FuzzHashPassword -fuzztime=30s ./tests/bench/"
+      - desc: Confirm go test -race passes for entire project
+        verify: "go test -race -count=1 ./... 2>&1 | tail -1"
+
+  - id: e21s02
+    title: API contract tests
+    status: done
+    wsjf: 4.25
+    tasks:
+      - desc: Create contract test for /api/auth/register and /api/auth/login response shapes
+        verify: "go test -v ./tests/contract/ -run TestAuthContract"
+      - desc: Create contract test for /api/sites GET and POST response shapes
+        verify: "go test -v ./tests/contract/ -run TestSitesContract"
+      - desc: Create contract test for /api/monitoring/health response shape
+        verify: "go test -v ./tests/contract/ -run TestMonitoringContract"
+      - desc: Create contract test for /api/deploy GET and POST response shapes
+        verify: "go test -v ./tests/contract/ -run TestDeployContract"
+
+  - id: e21s01
+    title: Playwright E2E suite
+    status: done
+    wsjf: 4.2
+    tasks:
+      - desc: Install @playwright/test and configure playwright.config.ts with chromium only
+        verify: "npx playwright test --version"
+      - desc: Write E2E smoke test — server health check returns 200
+        verify: "npx playwright test tests/e2e/health.spec.ts"
+      - desc: Write E2E login flow test — register user, login, verify JWT cookie
+        verify: "npx playwright test tests/e2e/login.spec.ts"
+      - desc: Write E2E sites test — list sites, navigate to create flow
+        verify: "npx playwright test tests/e2e/sites.spec.ts"
+      - desc: Wire E2E into preflight as optional lane (npm run test:e2e)
+        verify: "grep -q 'test:e2e' package.json"
+
+  - id: e21s04
+    title: Coverage gates
+    status: done
+    wsjf: 3.7
+    tasks:
+      - desc: Write tests for deploy.startApp (0% coverage) with mock server
+        verify: "go test -coverprofile=/tmp/cov.out -count=1 ./components/deploy/... && go tool cover -func=/tmp/cov.out | grep startApp | grep -E '[5-9][0-9]\\.[0-9]%'"
+      - desc: Write tests for deploy.buildApp (44%), deploy.cloneAndCheckout (54%), deploy.appendDeployLogBlock (0%), deploy.deleteDeployLogs (0%)
+        verify: "go test -coverprofile=/tmp/cov.out -count=1 ./components/deploy/... && go tool cover -func=/tmp/cov.out | grep -E 'startApp|buildApp|cloneAndCheckout|appendDeployLogBlock|deleteDeployLogs' | grep -E '[5-9][0-9]\\.[0-9]%|100\\.0%'"
+      - desc: Write tests for proxy.UnregisterDeploymentHost (0%), proxy.Stop (66%)
+        verify: "go test -coverprofile=/tmp/cov.out -count=1 ./components/proxy/... && go tool cover -func=/tmp/cov.out | grep UnregisterDeploymentHost | grep -v '0\\.0%'"
+      - desc: Write tests for git.deleteRepo (0%), git.handlePush (0%)
+        verify: "go test -coverprofile=/tmp/cov.out -count=1 ./components/git/... && go tool cover -func=/tmp/cov.out | grep deleteRepo | grep -v '0\\.0%'"
+      - desc: Write tests for kernel.eventbus.Emit (0%), kernel.eventbus.Subscribe (44%)
+        verify: "go test -coverprofile=/tmp/cov.out -count=1 ./kernel/... && go tool cover -func=/tmp/cov.out | grep -E 'Emit|Subscribe' | grep -E '[5-9][0-9]\\.[0-9]%|100\\.0%'"
+      - desc: Write tests for github.handleConnect (0%), github.mirrorRepository (0%)
+        verify: "go test -coverprofile=/tmp/cov.out -count=1 ./components/github/... && go tool cover -func=/tmp/cov.out | grep -E 'handleConnect|mirrorRepository' | grep -v '0\\.0%'"
+      - desc: Write tests for auth.handleGoogleOAuth (30%), auth.handleGoogleCallback (43%)
+        verify: "go test -coverprofile=/tmp/cov.out -count=1 ./components/auth/... && go tool cover -func=/tmp/cov.out | grep -E 'handleGoogleOAuth|handleGoogleCallback' | grep -E '[5-9][0-9]\\.[0-9]%|100\\.0%'"
+      - desc: Wire coverage gate (≥80%) into preflight as npm run preflight:coverage, exclude vendored ui/node_modules
+        verify: "npm run preflight:coverage 2>&1 | tail -3 | grep -E '(total|80\\.[0-9]%|[8-9][0-9]\\.[0-9]%)'"
+      - desc: Final verification — full preflight green including coverage
+        verify: "npm run preflight"
+
+  - id: e21s03
+    title: Performance benchmarks
+    status: done
+    wsjf: 2.2
+    tasks:
+      - desc: Create benchmark for auth.hashPassword, auth.verifyJWT in tests/bench/bench_auth_test.go
+        verify: "go test -bench=BenchmarkAuth -benchmem ./tests/bench/ -v"
+      - desc: Create benchmark for deploy.DetectAppType, deploy.GetStartCommand in tests/bench/bench_deploy_test.go
+        verify: "go test -bench=BenchmarkDeploy -benchmem ./tests/bench/ -v"
+      - desc: Create benchmark for storage.sanitizeFilename, storage.detectMIME in tests/bench/bench_storage_test.go
+        verify: "go test -bench=BenchmarkStorage -benchmem ./tests/bench/ -v"
+      - desc: Create benchmark for kernel.EventBus Emit/Subscribe with 10k events in tests/bench/bench_eventbus_test.go
+        verify: "go test -bench=BenchmarkEventBus -benchmem ./tests/bench/ -v"

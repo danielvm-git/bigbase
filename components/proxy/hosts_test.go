@@ -61,6 +61,35 @@ func TestProxyDeploymentHost(t *testing.T) {
 	}
 }
 
+func TestProxyUnregisterDeploymentHost(t *testing.T) {
+	logger := testLogger{}
+	k := kernel.New(logger)
+	port := freePort(t)
+	p := proxy.New(proxy.Options{Port: port, Kernel: k, Logger: logger})
+	if err := p.Start(&kernel.Context{}); err != nil {
+		t.Fatalf("start proxy: %v", err)
+	}
+	t.Cleanup(func() { _ = p.Stop(&kernel.Context{}) })
+
+	waitForServer(t, port, "/health")
+
+	if err := p.RegisterDeploymentHost("test-unreg.bigbase.click", 19999); err != nil {
+		t.Fatalf("register host: %v", err)
+	}
+
+	p.UnregisterDeploymentHost("test-unreg.bigbase.click")
+
+	denyURL := "http://127.0.0.1:" + port + "/api/internal/caddy-allow?domain=test-unreg.bigbase.click"
+	resp, err := http.Get(denyURL)
+	if err != nil {
+		t.Fatalf("request: %v", err)
+	}
+	_ = resp.Body.Close()
+	if resp.StatusCode != http.StatusForbidden {
+		t.Fatalf("after unregister status = %d, want 403", resp.StatusCode)
+	}
+}
+
 func TestCaddyAllow(t *testing.T) {
 	logger := testLogger{}
 	k := kernel.New(logger)
