@@ -21,6 +21,7 @@ const (
 	version        = "0.1.0"
 	maxBodyBytes   = 1 << 20
 	minPasswordLen = 6
+	backfillTimeout = 30 * time.Second
 )
 
 type contextKey string
@@ -162,32 +163,10 @@ func (a *Auth) Start(ctx *kernel.Context) error {
 
 // BackfillDefaultOrgs creates personal orgs for all users with NULL default_org_id.
 func (a *Auth) BackfillDefaultOrgs() {
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), backfillTimeout)
 	defer cancel()
 
-	rows, err := a.db.QueryContext(ctx,
-		"SELECT id, email FROM users WHERE default_org_id IS NULL")
-	if err != nil {
-		a.logger.Error("backfill query", "error", err)
-		return
-	}
-
-	// Collect all users first, then close rows before doing writes
-	type legacyUser struct {
-		id    int64
-		email string
-	}
-	var users []legacyUser
-	for rows.Next() {
-		var u legacyUser
-		if err := rows.Scan(&u.id, &u.email); err != nil {
-			a.logger.Error("backfill scan", "error", err)
-			continue
-		}
-		users = append(users, u)
-	}
-	_ = rows.Close()
-
+	users := a.collectLegacyUsers(ctx)
 	for _, u := range users {
 		now := time.Now().UTC().Format(time.RFC3339)
 		res, err := a.db.ExecContext(ctx,
@@ -203,6 +182,37 @@ func (a *Auth) BackfillDefaultOrgs() {
 			"UPDATE users SET default_org_id = ? WHERE id = ?", orgID, u.id)
 		a.logger.Info("backfill created default org", "user_id", u.id, "org_id", orgID)
 	}
+}
+
+// collectLegacyUsers returns users whose default_org_id is NULL.
+func (a *Auth) collectLegacyUsers(ctx context.Context) []struct {
+	id    int64
+	email string
+} {
+	rows, err := a.db.QueryContext(ctx,
+		"SELECT id, email FROM users WHERE default_org_id IS NULL")
+	if err != nil {
+		a.logger.Error("backfill query", "error", err)
+		return nil
+	}
+	defer func() { _ = rows.Close() }()
+
+	var users []struct {
+		id    int64
+		email string
+	}
+	for rows.Next() {
+		var u struct {
+			id    int64
+			email string
+		}
+		if err := rows.Scan(&u.id, &u.email); err != nil {
+			a.logger.Error("backfill scan", "error", err)
+			continue
+		}
+		users = append(users, u)
+	}
+	return users
 }
 
 func (a *Auth) Stop(ctx *kernel.Context) error {
@@ -787,18 +797,9 @@ func (a *Auth) handleGetOrg(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	org, err := a.GetOrgByID(r.Context(), id)
-	if err != nil {
-		a.logger.Error("get org", "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
-		return
-	}
-	if org == nil {
-		writeJSON(w, http.StatusNotFound, map[string]string{"error": "org not found"})
-		return
-	}
-	if org.OwnerID != userID {
-		writeJSON(w, http.StatusForbidden, map[string]string{"error": "insufficient permissions"})
+	org, orgErr := a.lookupOwnedOrg(r.Context(), id, userID)
+	if orgErr != nil {
+		writeJSON(w, orgErr.code, map[string]string{"error": orgErr.message})
 		return
 	}
 
@@ -815,18 +816,8 @@ func (a *Auth) handleUpdateOrg(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	org, err := a.GetOrgByID(r.Context(), id)
-	if err != nil {
-		a.logger.Error("get org for update", "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
-		return
-	}
-	if org == nil {
-		writeJSON(w, http.StatusNotFound, map[string]string{"error": "org not found"})
-		return
-	}
-	if org.OwnerID != userID {
-		writeJSON(w, http.StatusForbidden, map[string]string{"error": "insufficient permissions"})
+	if _, orgErr := a.lookupOwnedOrg(r.Context(), id, userID); orgErr != nil {
+		writeJSON(w, orgErr.code, map[string]string{"error": orgErr.message})
 		return
 	}
 
@@ -863,18 +854,8 @@ func (a *Auth) handleDeleteOrg(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	org, err := a.GetOrgByID(r.Context(), id)
-	if err != nil {
-		a.logger.Error("get org for delete", "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
-		return
-	}
-	if org == nil {
-		writeJSON(w, http.StatusNotFound, map[string]string{"error": "org not found"})
-		return
-	}
-	if org.OwnerID != userID {
-		writeJSON(w, http.StatusForbidden, map[string]string{"error": "insufficient permissions"})
+	if _, orgErr := a.lookupOwnedOrg(r.Context(), id, userID); orgErr != nil {
+		writeJSON(w, orgErr.code, map[string]string{"error": orgErr.message})
 		return
 	}
 
@@ -885,6 +866,29 @@ func (a *Auth) handleDeleteOrg(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSON(w, http.StatusOK, map[string]string{"status": "deleted"})
+}
+
+// orgError is a structured error returned by lookupOwnedOrg.
+type orgError struct {
+	code    int
+	message string
+}
+
+// lookupOwnedOrg fetches an org by ID and ensures the caller is the owner.
+// Returns the org on success, or an orgError when not found/forbidden/errored.
+func (a *Auth) lookupOwnedOrg(ctx context.Context, orgID, userID int64) (*Organization, *orgError) {
+	org, err := a.GetOrgByID(ctx, orgID)
+	if err != nil {
+		a.logger.Error("lookup org", "error", err)
+		return nil, &orgError{http.StatusInternalServerError, "internal error"}
+	}
+	if org == nil {
+		return nil, &orgError{http.StatusNotFound, "org not found"}
+	}
+	if org.OwnerID != userID {
+		return nil, &orgError{http.StatusForbidden, "insufficient permissions"}
+	}
+	return org, nil
 }
 
 func parseOrgID(idStr string) (int64, error) {
