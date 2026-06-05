@@ -1,3 +1,10 @@
+## [2.4.1](https://github.com/danielvm-git/bigbase/compare/v2.4.0...v2.4.1) (2026-06-05)
+
+
+### Bug Fixes
+
+* **deploy:** stop service before rollback binary copy and add health check diagnostics ([#15](https://github.com/danielvm-git/bigbase/issues/15)) ([dbaed0b](https://github.com/danielvm-git/bigbase/commit/dbaed0bd979d1e82c636943ce9a5eb707ff34355))
+
 # [2.4.0](https://github.com/danielvm-git/bigbase/compare/v2.3.0...v2.4.0) (2026-06-05)
 
 
