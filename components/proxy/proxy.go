@@ -2,6 +2,8 @@ package proxy
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"html/template"
@@ -14,6 +16,26 @@ import (
 
 	"github.com/danielvm/bigbase/kernel"
 )
+
+// requestIDKey is the context key for request-scoped request IDs.
+type requestIDKey struct{}
+
+// RequestIDFromContext extracts the request ID from a context, returning empty string if absent.
+func RequestIDFromContext(ctx context.Context) string {
+	if id, ok := ctx.Value(requestIDKey{}).(string); ok {
+		return id
+	}
+	return ""
+}
+
+// generateRequestID produces a 32-hex-char random string (16 bytes) for request tracing.
+func generateRequestID() string {
+	b := make([]byte, 16)
+	if _, err := rand.Read(b); err != nil {
+		return ""
+	}
+	return hex.EncodeToString(b)
+}
 
 var templateFuncs = template.FuncMap{
 	"join": strings.Join,
@@ -122,7 +144,7 @@ func (p *Proxy) Start(ctx *kernel.Context) error {
 
 	p.server = &http.Server{
 		Addr:    ":" + p.port,
-		Handler: p.loggingMiddleware(p.deploymentHostMiddleware(p.mux)),
+		Handler: p.loggingMiddleware(p.requestIDMiddleware(p.deploymentHostMiddleware(p.mux))),
 	}
 
 	go func() {
@@ -145,17 +167,34 @@ func (rw *responseWriter) WriteHeader(code int) {
 	rw.ResponseWriter.WriteHeader(code)
 }
 
+func (p *Proxy) requestIDMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		rid := r.Header.Get("X-Request-ID")
+		if rid == "" {
+			rid = generateRequestID()
+		}
+		ctx := context.WithValue(r.Context(), requestIDKey{}, rid)
+		w.Header().Set("X-Request-ID", rid)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
+
 func (p *Proxy) loggingMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
+		rid := RequestIDFromContext(r.Context())
 		rw := &responseWriter{ResponseWriter: w, status: http.StatusOK}
 		next.ServeHTTP(rw, r)
-		p.logger.Info("HTTP request",
+		args := []any{
 			"method", r.Method,
 			"path", r.URL.Path,
 			"status", rw.status,
 			"duration", time.Since(start).String(),
-		)
+		}
+		if rid != "" {
+			args = append(args, "request_id", rid)
+		}
+		p.logger.Info("HTTP request", args...)
 	})
 }
 
@@ -231,16 +270,38 @@ func (p *Proxy) handleHealth(w http.ResponseWriter, r *http.Request) {
 	statuses := p.kernel.ListComponents()
 	total := len(statuses)
 	running := 0
+	compMap := make([]map[string]any, 0, total)
 	for _, s := range statuses {
 		if s.Running {
 			running++
 		}
+		deps := s.Dependencies
+		if deps == nil {
+			deps = []string{}
+		}
+		hooks := s.Hooks
+		if hooks == nil {
+			hooks = []string{}
+		}
+		compMap = append(compMap, map[string]any{
+			"name":         s.Name,
+			"version":      s.Version,
+			"running":      s.Running,
+			"dependencies": deps,
+			"hooks":        hooks,
+		})
 	}
 	status := "ok"
 	if total > 0 && running < total {
 		status = "degraded"
 	}
-	_, _ = fmt.Fprintf(w, `{"status":"%s","components":%d,"running":%d}`, status, total, running)
+	resp := map[string]any{
+		"status":               status,
+		"components":           total,
+		"running":              running,
+		"component_status_map": compMap,
+	}
+	_ = json.NewEncoder(w).Encode(resp)
 }
 
 func (p *Proxy) handleVersion(w http.ResponseWriter, r *http.Request) {

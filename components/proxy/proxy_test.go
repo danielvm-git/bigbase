@@ -14,6 +14,73 @@ import (
 	"github.com/danielvm/bigbase/kernel"
 )
 
+func TestRequestIDMiddleware(t *testing.T) {
+	logger := testLogger{}
+	k := kernel.New(logger)
+
+	port := freePort(t)
+	p := proxy.New(proxy.Options{
+		Port:   port,
+		Kernel: k,
+		Logger: logger,
+	})
+
+	if err := p.Start(&kernel.Context{}); err != nil {
+		t.Fatalf("failed to start proxy: %v", err)
+	}
+	defer func() { _ = p.Stop(&kernel.Context{}) }()
+
+	waitForServer(t, port, "/health")
+
+	t.Run("generates request ID when header absent", func(t *testing.T) {
+		resp, err := http.Get("http://localhost:" + port + "/health")
+		if err != nil {
+			t.Fatalf("GET /health: %v", err)
+		}
+		defer func() { _ = resp.Body.Close() }()
+
+		rid := resp.Header.Get("X-Request-ID")
+		if rid == "" {
+			t.Fatal("expected X-Request-ID header in response")
+		}
+		if len(rid) < 16 {
+			t.Fatalf("expected request ID of at least 16 hex chars, got %q (len=%d)", rid, len(rid))
+		}
+	})
+
+	t.Run("preserves client-provided request ID", func(t *testing.T) {
+		req, err := http.NewRequest("GET", "http://localhost:"+port+"/health", nil)
+		if err != nil {
+			t.Fatalf("create request: %v", err)
+		}
+		req.Header.Set("X-Request-ID", "my-test-id-123")
+
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			t.Fatalf("GET /health: %v", err)
+		}
+		defer func() { _ = resp.Body.Close() }()
+
+		rid := resp.Header.Get("X-Request-ID")
+		if rid != "my-test-id-123" {
+			t.Fatalf("expected X-Request-ID 'my-test-id-123', got %q", rid)
+		}
+	})
+
+	t.Run("request ID is present on all routes", func(t *testing.T) {
+		resp, err := http.Get("http://localhost:" + port + "/")
+		if err != nil {
+			t.Fatalf("GET /: %v", err)
+		}
+		defer func() { _ = resp.Body.Close() }()
+
+		rid := resp.Header.Get("X-Request-ID")
+		if rid == "" {
+			t.Fatal("expected X-Request-ID on home page route")
+		}
+	})
+}
+
 type testLogger struct{}
 
 func (testLogger) Info(msg string, args ...any)  {}
@@ -367,6 +434,78 @@ func TestProxyHealthEndpoint(t *testing.T) {
 	}
 	if health.Status != "ok" && health.Status != "degraded" {
 		t.Fatalf("unexpected status %q", health.Status)
+	}
+}
+
+func TestPerComponentHealth(t *testing.T) {
+	comp := &testComponents{}
+	logger := testLogger{}
+	k := kernel.New(logger)
+	k.Register(comp)
+
+	if err := k.Start(); err != nil {
+		t.Fatalf("failed to start kernel: %v", err)
+	}
+	defer func() { _ = k.Stop() }()
+
+	port := freePort(t)
+	p := proxy.New(proxy.Options{
+		Port:   port,
+		Kernel: k,
+		Logger: logger,
+	})
+
+	if err := p.Start(&kernel.Context{}); err != nil {
+		t.Fatalf("failed to start proxy: %v", err)
+	}
+	defer func() { _ = p.Stop(&kernel.Context{}) }()
+
+	waitForServer(t, port, "/health")
+
+	resp, err := http.Get("http://localhost:" + port + "/health")
+	if err != nil {
+		t.Fatalf("failed to GET /health: %v", err)
+	}
+	defer func() { _ = resp.Body.Close() }()
+
+	var result struct {
+		Status             string `json:"status"`
+		Running            int    `json:"running"`
+		ComponentStatusMap []struct {
+			Name         string   `json:"name"`
+			Version      string   `json:"version"`
+			Running      bool     `json:"running"`
+			Dependencies []string `json:"dependencies"`
+			Hooks        []string `json:"hooks"`
+		} `json:"component_status_map"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		t.Fatalf("decode health: %v", err)
+	}
+
+	if len(result.ComponentStatusMap) == 0 {
+		t.Fatal("expected non-empty component_status_map")
+	}
+
+	found := false
+	for _, c := range result.ComponentStatusMap {
+		if c.Name == "testcomp" {
+			found = true
+			if !c.Running {
+				t.Error("expected testcomp to be running")
+			}
+			if c.Version == "" {
+				t.Error("expected non-empty version for testcomp")
+			}
+			break
+		}
+	}
+	if !found {
+		t.Fatal("expected testcomp in component_status_map")
+	}
+
+	if result.Running != len(result.ComponentStatusMap) {
+		t.Fatalf("expected running=%d to match component_status_map count=%d", result.Running, len(result.ComponentStatusMap))
 	}
 }
 
