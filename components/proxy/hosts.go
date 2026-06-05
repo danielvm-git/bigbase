@@ -2,6 +2,7 @@ package proxy
 
 import (
 	"fmt"
+	"net"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
@@ -13,6 +14,9 @@ func (p *Proxy) RegisterDeploymentHost(host string, port int) error {
 	host = normalizeHost(host)
 	if host == "" || port < 1 || port > 65535 {
 		return fmt.Errorf("invalid deployment host or port")
+	}
+	if loopbackHosts[host] || net.ParseIP(host) != nil {
+		return fmt.Errorf("cannot register loopback address %q as deployment host", host)
 	}
 	p.deployHostsMu.Lock()
 	defer p.deployHostsMu.Unlock()
@@ -69,9 +73,24 @@ func (p *Proxy) handleCaddyAllow(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
+// loopbackHosts are local addresses that should never be routed as deployment hosts.
+var loopbackHosts = map[string]bool{
+	"localhost": true,
+	"127.0.0.1": true,
+	"::1":       true,
+}
+
 func (p *Proxy) deploymentHostMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		host := normalizeHost(r.Host)
+		if loopbackHosts[host] {
+			next.ServeHTTP(w, r)
+			return
+		}
+		if net.ParseIP(host) != nil {
+			next.ServeHTTP(w, r)
+			return
+		}
 		p.deployHostsMu.RLock()
 		port, ok := p.deployHosts[host]
 		p.deployHostsMu.RUnlock()
