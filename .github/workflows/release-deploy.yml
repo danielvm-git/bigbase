@@ -408,18 +408,33 @@ jobs:
               echo ""
               echo "=== HEALTH CHECK FAILED! Rolling back... ==="
               journalctl -u bigbase --no-pager -n 50 || true
+              echo "--- Verbose health check response ---"
+              curl -v "${HEALTH_URL}" 2>&1 || true
+              echo "--- End of health check response ---"
 
               if [ -f "${VPS_RELEASES_DIR}/previous/bigbase" ]; then
+                echo "  Stopping service before rollback..."
+                systemctl stop bigbase 2>/dev/null || true
+                sleep 1
                 cp "${VPS_RELEASES_DIR}/previous/bigbase" "${VPS_BIN_DIR}/bigbase"
                 chmod +x "${VPS_BIN_DIR}/bigbase"
                 chown bigbase:bigbase "${VPS_BIN_DIR}/bigbase" 2>/dev/null || true
-                systemctl restart bigbase
-                echo "  Rolled back to previous release"
-                sleep 3
-                if curl -sf "${HEALTH_URL}" > /dev/null 2>&1; then
-                  echo "  Rollback successful — previous release is running"
-                else
+                systemctl start bigbase
+                echo "  Rolled back to previous release (stop → copy → start)"
+                sleep 4
+                ROLLBACK_HEALTH=false
+                for j in 1 2 3; do
+                  sleep 2
+                  if curl -sf "${HEALTH_URL}" > /dev/null 2>&1; then
+                    ROLLBACK_HEALTH=true
+                    echo "  Rollback successful — previous release is running"
+                    break
+                  fi
+                  echo "  Rollback health check attempt ${j}/3..."
+                done
+                if [ "${ROLLBACK_HEALTH}" = false ]; then
                   echo "  CRITICAL: Rollback also failed. Manual intervention required!"
+                  curl -v "${HEALTH_URL}" 2>&1 || true
                 fi
               else
                 echo "  CRITICAL: No previous release to rollback to. Manual intervention required!"

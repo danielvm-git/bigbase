@@ -238,3 +238,11 @@ bugs:
     approach: Strip user-visible internal API path; add triggerRef + 3 a11y tests for focus return; add 5 missing icon names + exhaustive render test; key-based remount for prop-sync state; barrel export Icon; data-testid for fragile DOM walk; rewrite Card.interactive JSDoc
     risk_level: low
     commit_message: "fix(ui): address reviewer must-fix findings"
+  - id: BUG-2026-06-05T172800
+    date: "2026-06-05"
+    severity: high
+    priority: high
+    scope: deploy,scripts,infra
+    summary: Deploy health check returns 502 and rollback fails with "Text file busy"
+    file: specs/bugs/BUG-2026-06-05T172800-deploy-health-check-502.md
+    status: open
