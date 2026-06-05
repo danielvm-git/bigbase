@@ -1,3 +1,10 @@
+# [2.4.0](https://github.com/danielvm-git/bigbase/compare/v2.3.0...v2.4.0) (2026-06-05)
+
+
+### Features
+
+* **specs:** add BigBase Console design prototype bundle ([#14](https://github.com/danielvm-git/bigbase/issues/14)) ([a23e055](https://github.com/danielvm-git/bigbase/commit/a23e0557dfbac224329c12e39bd2439b37f2a8e8))
+
 # [2.3.0](https://github.com/danielvm-git/bigbase/compare/v2.2.0...v2.3.0) (2026-06-05)
 
 
