@@ -87,6 +87,7 @@ type Monitoring struct {
 	db      DBer
 	logger  Logger
 	metrics *MetricsCollector
+	stream  *eventStream
 
 	cpuMu        sync.Mutex
 	cpuSampleAt  time.Time
@@ -120,6 +121,12 @@ func (m *Monitoring) ConfigSchema() json.RawMessage { return nil }
 func (m *Monitoring) Hooks() []kernel.HookDef        { return nil }
 func (m *Monitoring) Init(ctx *kernel.Context, config json.RawMessage) error { return nil }
 func (m *Monitoring) Start(ctx *kernel.Context) error {
+	m.stream = newEventStream()
+	if ctx != nil && ctx.Kernel != nil {
+		// Subscribe to common event bus hooks for the visualizer.
+		knownHooks := []string{"mutation", "request", "deploy", "scaffold_db", "scaffold_repo", "scaffold_function"}
+		m.WithEventBus(ctx.Kernel.EventBus(), knownHooks)
+	}
 	if m.db == nil {
 		return nil
 	}
@@ -262,6 +269,7 @@ func (m *Monitoring) Handler() http.Handler {
 	mux.HandleFunc("/api/monitoring/logs/", m.handleLogByID)
 	mux.HandleFunc("/api/monitoring/alerts", m.handleAlerts)
 	mux.HandleFunc("GET /api/orgs/{id}/usage", m.handleOrgUsage)
+	mux.HandleFunc("/api/monitoring/events", m.handleSSEEvents)
 	return mux
 }
 

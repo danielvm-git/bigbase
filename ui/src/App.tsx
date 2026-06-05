@@ -15,6 +15,7 @@ import ForgePage from './pages/ForgePage'
 import CiciPage from './pages/CiciPage'
 import CreateSitePage from './pages/CreateSitePage'
 import MonitoringPage from './pages/MonitoringPage'
+import EventsPage from './pages/EventsPage'
 import SiteDetailPage from './pages/SiteDetailPage'
 import RealtimePage from './pages/RealtimePage'
 import SettingsPage from './pages/SettingsPage'
@@ -42,6 +43,7 @@ function App() {
         <Route path="forge" element={<ForgePage />} />
         <Route path="cici" element={<CiciPage />} />
         <Route path="monitoring" element={<MonitoringPage />} />
+        <Route path="events" element={<EventsPage />} />
         <Route path="realtime" element={<RealtimePage />} />
         <Route path="settings" element={<SettingsPage />} />
         <Route path="*" element={<NotFoundPage />} />
