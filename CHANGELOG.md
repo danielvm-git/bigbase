@@ -1,3 +1,10 @@
+## [2.4.2](https://github.com/danielvm-git/bigbase/compare/v2.4.1...v2.4.2) (2026-06-05)
+
+
+### Bug Fixes
+
+* **proxy:** skip loopback addresses in deployment host middleware ([#16](https://github.com/danielvm-git/bigbase/issues/16)) ([72688fe](https://github.com/danielvm-git/bigbase/commit/72688feeac156a40beb14426af7e74fc14f75ae8))
+
 ## [2.4.1](https://github.com/danielvm-git/bigbase/compare/v2.4.0...v2.4.1) (2026-06-05)
 
 
