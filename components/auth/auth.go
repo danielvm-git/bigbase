@@ -153,8 +153,56 @@ func (a *Auth) Start(ctx *kernel.Context) error {
 		return fmt.Errorf("migrate orgs table: %w", err)
 	}
 
+	// Backfill: create personal orgs for existing users with NULL default_org_id
+	a.BackfillDefaultOrgs()
+
 	a.logger.Info("auth component ready")
 	return nil
+}
+
+// BackfillDefaultOrgs creates personal orgs for all users with NULL default_org_id.
+func (a *Auth) BackfillDefaultOrgs() {
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	rows, err := a.db.QueryContext(ctx,
+		"SELECT id, email FROM users WHERE default_org_id IS NULL")
+	if err != nil {
+		a.logger.Error("backfill query", "error", err)
+		return
+	}
+
+	// Collect all users first, then close rows before doing writes
+	type legacyUser struct {
+		id    int64
+		email string
+	}
+	var users []legacyUser
+	for rows.Next() {
+		var u legacyUser
+		if err := rows.Scan(&u.id, &u.email); err != nil {
+			a.logger.Error("backfill scan", "error", err)
+			continue
+		}
+		users = append(users, u)
+	}
+	_ = rows.Close()
+
+	for _, u := range users {
+		now := time.Now().UTC().Format(time.RFC3339)
+		res, err := a.db.ExecContext(ctx,
+			`INSERT INTO orgs (name, slug, owner_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?)`,
+			u.email, u.email, u.id, now, now)
+		if err != nil {
+			a.logger.Error("backfill create org", "user_id", u.id, "error", err)
+			continue
+		}
+
+		orgID, _ := res.LastInsertId()
+		_, _ = a.db.ExecContext(ctx,
+			"UPDATE users SET default_org_id = ? WHERE id = ?", orgID, u.id)
+		a.logger.Info("backfill created default org", "user_id", u.id, "org_id", orgID)
+	}
 }
 
 func (a *Auth) Stop(ctx *kernel.Context) error {

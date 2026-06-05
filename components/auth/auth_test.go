@@ -1225,6 +1225,64 @@ func TestOrganization(t *testing.T) {
 			t.Errorf("get after delete: expected 404, got %d", getAfterDelW.Code)
 		}
 	})
+
+	t.Run("default_org_backfill", func(t *testing.T) {
+		logger := testLogger{}
+		k := kernel.New(logger)
+
+		d := db.New(db.Options{Path: ":memory:", Logger: logger})
+		a := auth.New(auth.Options{DB: d, Logger: logger, Secret: "test-secret-32-chars!!!"})
+
+		k.Register(a)
+		k.Register(d)
+
+		if err := k.Start(); err != nil {
+			t.Fatalf("kernel start: %v", err)
+		}
+		t.Cleanup(func() { _ = k.Stop() })
+
+		ctx := context.Background()
+
+		// Manually insert a user with NULL default_org_id (simulating pre-migration state)
+		_, err := d.ExecContext(ctx,
+			`INSERT INTO users (email, password_hash, role, created_at) VALUES (?, ?, 'user', ?)`,
+			"legacy@test.com", "hash", "2024-01-01T00:00:00Z")
+		if err != nil {
+			t.Fatalf("insert legacy user: %v", err)
+		}
+
+		// Verify default_org_id is NULL
+		var defaultOrgID sql.NullInt64
+		err = d.QueryRowContext(ctx, "SELECT default_org_id FROM users WHERE email = ?", "legacy@test.com").Scan(&defaultOrgID)
+		if err != nil {
+			t.Fatalf("query legacy user: %v", err)
+		}
+		if defaultOrgID.Valid {
+			t.Error("expected NULL default_org_id for legacy user before backfill")
+		}
+
+		// Run backfill
+		a.BackfillDefaultOrgs()
+
+		// Verify backfill created a personal org and set default_org_id
+		err = d.QueryRowContext(ctx, "SELECT default_org_id FROM users WHERE email = ?", "legacy@test.com").Scan(&defaultOrgID)
+		if err != nil {
+			t.Fatalf("query legacy user after backfill: %v", err)
+		}
+		if !defaultOrgID.Valid {
+			t.Fatal("expected default_org_id to be set after backfill")
+		}
+
+		// Verify the org exists
+		var orgName string
+		err = d.QueryRowContext(ctx, "SELECT name FROM orgs WHERE id = ?", defaultOrgID.Int64).Scan(&orgName)
+		if err != nil {
+			t.Fatalf("query backfilled org: %v", err)
+		}
+		if orgName != "legacy@test.com" {
+			t.Errorf("expected org name 'legacy@test.com', got %q", orgName)
+		}
+	})
 }
 
 func TestMiddlewareBadToken(t *testing.T) {
