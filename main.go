@@ -16,6 +16,7 @@ import (
 	"github.com/danielvm/bigbase/components/admin"
 	"github.com/danielvm/bigbase/components/api"
 	"github.com/danielvm/bigbase/components/auth"
+	"github.com/danielvm/bigbase/components/backup"
 	"github.com/danielvm/bigbase/components/cici"
 	"github.com/danielvm/bigbase/components/deploy"
 	"github.com/danielvm/bigbase/components/db"
@@ -71,6 +72,15 @@ func main() {
 		return
 	case "serve":
 		startProxy()
+		return
+	case "backup":
+		runBackup()
+		return
+	case "restore":
+		runRestore()
+		return
+	case "migrate":
+		runMigrate()
 		return
 	}
 
@@ -303,11 +313,14 @@ func printUsage() {
 	fmt.Println(`bigbase - BigBase BaaS Platform
 
 Usage:
-  bigbase version              Show version
-  bigbase status               Show kernel and component status
-  bigbase components list      List registered components
-  bigbase serve [--port PORT] [--db PATH]  Start HTTP server (default :8080)
-  bigbase help                 Show this help`)
+  bigbase version                               Show version
+  bigbase status                                Show kernel and component status
+  bigbase components list                       List registered components
+  bigbase serve [--port PORT] [--db PATH]       Start HTTP server (default :8080)
+  bigbase backup --db PATH --output FILE        Dump database to SQL file
+  bigbase restore --input FILE --db PATH        Replay SQL dump into database
+  bigbase migrate up|down|status [--db PATH]    Run database migrations
+  bigbase help                                  Show this help`)
 }
 
 func printStatus(k *kernel.Kernel) {
@@ -354,6 +367,122 @@ func printTable(components []kernel.ComponentStatus, header string, row func(ker
 		_, _ = fmt.Fprintln(w, row(c))
 	}
 	_ = w.Flush()
+}
+
+func runBackup() {
+	fs := flag.NewFlagSet("backup", flag.ExitOnError)
+	dbPath := fs.String("db", "bigbase.db", "SQLite database path")
+	output := fs.String("output", "", "Output SQL file path (required)")
+	_ = fs.Parse(os.Args[2:])
+
+	if *output == "" {
+		fmt.Fprintln(os.Stderr, "error: --output is required")
+		fs.Usage()
+		os.Exit(1)
+	}
+
+	sqldb, err := openSQLite(*dbPath)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "error: open db: %v\n", err)
+		os.Exit(1)
+	}
+	defer func() { _ = sqldb.Close() }()
+
+	f, err := os.Create(*output)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "error: create output file: %v\n", err)
+		os.Exit(1)
+	}
+	defer func() { _ = f.Close() }()
+
+	if err := backup.Dump(context.Background(), sqldb, f); err != nil {
+		fmt.Fprintf(os.Stderr, "error: dump: %v\n", err)
+		os.Exit(1)
+	}
+	fmt.Fprintf(os.Stdout, "backup written to %s\n", *output)
+}
+
+func runRestore() {
+	fs := flag.NewFlagSet("restore", flag.ExitOnError)
+	input := fs.String("input", "", "Input SQL dump file (required)")
+	dbPath := fs.String("db", "bigbase.db", "SQLite database path")
+	_ = fs.Parse(os.Args[2:])
+
+	if *input == "" {
+		fmt.Fprintln(os.Stderr, "error: --input is required")
+		fs.Usage()
+		os.Exit(1)
+	}
+
+	data, err := os.ReadFile(*input)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "error: read input: %v\n", err)
+		os.Exit(1)
+	}
+
+	sqldb, err := openSQLite(*dbPath)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "error: open db: %v\n", err)
+		os.Exit(1)
+	}
+	defer func() { _ = sqldb.Close() }()
+
+	if err := backup.Restore(context.Background(), sqldb, string(data)); err != nil {
+		fmt.Fprintf(os.Stderr, "error: restore: %v\n", err)
+		os.Exit(1)
+	}
+	fmt.Fprintln(os.Stdout, "restore complete")
+}
+
+func runMigrate() {
+	if len(os.Args) < 3 {
+		fmt.Fprintln(os.Stderr, "Usage: bigbase migrate up|down|status [--db PATH]")
+		os.Exit(1)
+	}
+	subCmd := os.Args[2]
+	fs := flag.NewFlagSet("migrate", flag.ExitOnError)
+	dbPath := fs.String("db", "bigbase.db", "SQLite database path")
+	_ = fs.Parse(os.Args[3:])
+
+	logger := slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: slog.LevelWarn}))
+	k := kernel.New(logger)
+	d := db.New(db.Options{Path: *dbPath, Logger: logger})
+	k.Register(d)
+	if err := k.Start(); err != nil {
+		fmt.Fprintf(os.Stderr, "error: start db: %v\n", err)
+		os.Exit(1)
+	}
+	defer func() { _ = k.Stop() }()
+
+	m := backup.NewMigrationRunner(d.DB(), "migrations")
+	switch subCmd {
+	case "up":
+		if err := m.Up(context.Background()); err != nil {
+			fmt.Fprintf(os.Stderr, "error: migrate up: %v\n", err)
+			os.Exit(1)
+		}
+		fmt.Fprintln(os.Stdout, "migrations applied")
+	case "down":
+		if err := m.Down(context.Background()); err != nil {
+			fmt.Fprintf(os.Stderr, "error: migrate down: %v\n", err)
+			os.Exit(1)
+		}
+		fmt.Fprintln(os.Stdout, "migrations rolled back")
+	case "status":
+		ver, dirty, err := m.Status(context.Background())
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "error: migrate status: %v\n", err)
+			os.Exit(1)
+		}
+		fmt.Printf("version: %d  dirty: %v\n", ver, dirty)
+	default:
+		fmt.Fprintf(os.Stderr, "unknown migrate subcommand: %s\n", subCmd)
+		os.Exit(1)
+	}
+}
+
+func openSQLite(path string) (backup.SQLiteDB, error) {
+	return backup.OpenSQLite(path)
 }
 
 func joinOrNone(items []string) string {

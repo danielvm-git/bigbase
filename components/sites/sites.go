@@ -104,6 +104,9 @@ func (s *Sites) Start(ctx *kernel.Context) error {
 	)`); err != nil {
 		return fmt.Errorf("migrate sites: %w", err)
 	}
+	if err := s.migrateDomains(); err != nil {
+		return fmt.Errorf("migrate site_domains: %w", err)
+	}
 	s.logger.Info("sites component ready")
 	return nil
 }
@@ -118,6 +121,7 @@ func (s *Sites) Handler() http.Handler {
 	mux.HandleFunc("/api/sites/", s.handleSiteByID)
 	return mux
 }
+
 
 func generateID() (string, error) {
 	b := make([]byte, 16)
@@ -149,6 +153,12 @@ func (s *Sites) handleSiteByID(w http.ResponseWriter, r *http.Request) {
 
 	if len(parts) == 2 && parts[1] == "deploy" && r.Method == http.MethodPost {
 		s.redeploySite(w, r, id)
+		return
+	}
+
+	// Route domain sub-paths: /api/sites/{id}/domains[/{domain}/verify]
+	if len(parts) >= 2 && parts[1] == "domains" {
+		s.handleDomains(w, r)
 		return
 	}
 
