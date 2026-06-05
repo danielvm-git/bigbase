@@ -68,20 +68,22 @@ type DBer interface {
 }
 
 type Options struct {
-	DB                DBer
-	Logger            Logger
-	Secret            string
-	GoogleClientID    string
+	DB                 DBer
+	Logger             Logger
+	Secret             string
+	GoogleClientID     string
 	GoogleClientSecret string
+	EmailSender        EmailSender
 }
 
 type Auth struct {
-	db                DBer
-	logger            Logger
-	secret            []byte
-	googleClientID    string
+	db                 DBer
+	logger             Logger
+	secret             []byte
+	googleClientID     string
 	googleClientSecret string
-	googleVerifier    GoogleVerifier
+	googleVerifier     GoogleVerifier
+	emailSender        EmailSender
 }
 
 func (a *Auth) SetGoogleVerifier(v GoogleVerifier) {
@@ -106,11 +108,12 @@ func New(opts Options) *Auth {
 		secret = []byte(hex.EncodeToString(raw))
 	}
 	return &Auth{
-		db:                opts.DB,
-		logger:            logger,
-		secret:            secret,
-		googleClientID:    opts.GoogleClientID,
+		db:                 opts.DB,
+		logger:             logger,
+		secret:             secret,
+		googleClientID:     opts.GoogleClientID,
 		googleClientSecret: opts.GoogleClientSecret,
+		emailSender:        opts.EmailSender,
 	}
 }
 
@@ -156,6 +159,11 @@ func (a *Auth) Start(ctx *kernel.Context) error {
 
 	// Backfill: create personal orgs for existing users with NULL default_org_id
 	a.BackfillDefaultOrgs()
+
+	// Email verification columns (idempotent ALTER TABLE).
+	if err := a.migrateEmailVerify(context.Background()); err != nil {
+		return fmt.Errorf("migrate email verify: %w", err)
+	}
 
 	a.logger.Info("auth component ready")
 	return nil
@@ -221,6 +229,7 @@ func (a *Auth) Handler() http.Handler {
 	mux.HandleFunc("/api/auth/login", a.handleLogin)
 	mux.HandleFunc("/api/auth/oauth/google", a.handleGoogleOAuth)
 	mux.HandleFunc("/api/auth/oauth/google/callback", a.handleGoogleCallback)
+	mux.HandleFunc("/api/auth/verify-email", a.handleVerifyEmail)
 	return mux
 }
 
@@ -258,6 +267,19 @@ func (a *Auth) Middleware(next http.Handler) http.Handler {
 		ctx := context.WithValue(r.Context(), ctxUserID, claims.UserID)
 		ctx = context.WithValue(ctx, ctxUserEmail, claims.Email)
 		ctx = context.WithValue(ctx, ctxUserRole, claims.Role)
+
+		// Block unverified users when email verification is enabled.
+		verified, vErr := a.isEmailVerified(ctx, claims.UserID)
+		if vErr != nil {
+			a.logger.Error("check email verified", "user_id", claims.UserID, "error", vErr)
+			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+			return
+		}
+		if !verified {
+			writeJSON(w, http.StatusForbidden, map[string]string{"error": "email not verified"})
+			return
+		}
+
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
@@ -389,6 +411,20 @@ func (a *Auth) handleRegister(w http.ResponseWriter, r *http.Request) {
 		a.logger.Error("insert user", "error", err)
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
+	}
+
+	// If an email sender is configured, generate and store a verification token.
+	if a.emailSender != nil {
+		vToken, vErr := generateVerifyToken()
+		if vErr != nil {
+			a.logger.Error("generate verify token", "error", vErr)
+		} else {
+			if sErr := a.storeVerifyToken(r.Context(), userID, vToken); sErr != nil {
+				a.logger.Error("store verify token", "error", sErr)
+			} else {
+				a.sendVerificationEmail(email, vToken)
+			}
+		}
 	}
 
 	token, err := createJWT(userID, email, role, a.secret)
