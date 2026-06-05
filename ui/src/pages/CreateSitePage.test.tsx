@@ -1,16 +1,18 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, waitFor } from '@testing-library/react'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { render, screen, waitFor, fireEvent } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 
 const getGitHubStatus = vi.fn()
 const getGitHubRepos = vi.fn()
 const getGitRepos = vi.fn()
 
+const createSite = vi.fn()
+
 vi.mock('../lib/sitesData', () => ({
   getGitHubStatus: (...args: unknown[]) => getGitHubStatus(...args),
   getGitHubRepos: (...args: unknown[]) => getGitHubRepos(...args),
   getGitRepos: (...args: unknown[]) => getGitRepos(...args),
-  createSite: vi.fn(),
+  createSite: (...args: unknown[]) => createSite(...args),
   githubInstallURL: () => '/api/github/install',
 }))
 
@@ -97,6 +99,81 @@ describe('CreateSitePage layout', () => {
     expect(steps).toBeTruthy()
     expect(getComputedStyle(steps!).display).toBe('flex')
     expect(container.querySelectorAll('.wizard-step-label').length).toBe(3)
+  })
+})
+
+describe('CreateSitePage deploy step', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    getGitRepos.mockResolvedValue({ data: [], previewMode: false })
+    getGitHubStatus.mockResolvedValue({
+      data: { connected: true, configured: true, login: 'testuser' },
+      previewMode: false,
+    })
+    getGitHubRepos.mockResolvedValue({
+      data: [{ id: 1, full_name: 'acme/app', default_branch: 'main', private: false }],
+      previewMode: false,
+    })
+    vi.stubGlobal('fetch', vi.fn())
+  })
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  it('shows build terminal on deploy step', async () => {
+    createSite.mockResolvedValue({
+      previewMode: false,
+      site: { id: 'site-1', name: 'my-app', git_repo_id: 'repo-1', production_branch: 'main' },
+      deployment: {
+        id: 'dep-1',
+        status: 'building',
+        url: 'https://my-app.bigbase.click',
+      },
+    })
+    vi.mocked(fetch).mockImplementation(async (input: RequestInfo | URL) => {
+      const path = typeof input === 'string' ? input : input instanceof URL ? input.pathname : input.url
+      if (path.includes('/logs')) {
+        return {
+          ok: true,
+          json: async () => ({
+            deployment_id: 'dep-1',
+            status: 'building',
+            lines: ['→ Cloning repository'],
+            log_available: true,
+          }),
+        } as Response
+      }
+      return {
+        ok: true,
+        json: async () => ({ status: 'building', url: 'https://my-app.bigbase.click' }),
+      } as Response
+    })
+
+    const { container } = renderPage()
+    await waitFor(() => {
+      expect(screen.getByText('acme/app')).toBeInTheDocument()
+    })
+
+    fireEvent.click(screen.getByText('acme/app').closest('button')!)
+    fireEvent.click(screen.getByRole('button', { name: /Continue →/i }))
+
+    await waitFor(() => {
+      expect(screen.getByText('Configure your site')).toBeInTheDocument()
+    })
+    const nameInput = document.querySelector('.input-group input.input') as HTMLInputElement
+    fireEvent.change(nameInput, { target: { value: 'my-app' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Deploy' }))
+
+    await waitFor(() => {
+      expect(screen.getByTestId('stream-log')).toBeInTheDocument()
+    })
+    expect(container.querySelector('.deploy-step-layout')).toBeTruthy()
+    expect(screen.getByText('Build output')).toBeInTheDocument()
+    await waitFor(() => {
+      expect(screen.getByText('→ Cloning repository')).toBeInTheDocument()
+    })
+    expect(screen.getByText('Live')).toBeInTheDocument()
   })
 })
 

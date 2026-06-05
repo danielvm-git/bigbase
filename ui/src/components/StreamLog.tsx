@@ -1,18 +1,31 @@
-import type { ReactNode } from 'react'
+import { useEffect, useRef, type ReactNode } from 'react'
 
 interface StreamLogProps {
   logs: string[]
   isStreaming?: boolean
   className?: string
+  autoScroll?: boolean
 }
 
-export function StreamLog({ logs, isStreaming = false, className = '' }: StreamLogProps): ReactNode {
+export function StreamLog({
+  logs,
+  isStreaming = false,
+  className = '',
+  autoScroll = true,
+}: StreamLogProps): ReactNode {
+  const scrollRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!autoScroll || !scrollRef.current) return
+    scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+  }, [logs, isStreaming, autoScroll])
+
   if (logs.length === 0 && !isStreaming) {
     return <p className="dim" data-testid="stream-log-empty">No logs</p>
   }
 
   return (
-    <div className={`stream-log ${className}`} data-testid="stream-log">
+    <div ref={scrollRef} className={`stream-log ${className}`} data-testid="stream-log">
       {logs.map((line, i) => (
         <div key={`line-${i}-${line.slice(0, 12)}`} className="stream-log-line" data-testid="stream-log-line">
           <span className="stream-log-ln">{i + 1}</span>

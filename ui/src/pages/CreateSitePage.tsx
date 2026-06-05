@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useSearchParams, Link } from 'react-router-dom'
 import {
   PageHeader,
@@ -11,6 +11,7 @@ import {
   Badge,
   statusBadgeVariant,
   Breadcrumb,
+  StreamLog,
 } from '../components'
 import { Icon } from '../components/Icon'
 import {
@@ -23,9 +24,20 @@ import {
 import { isPreviewForced, previewQuerySuffix } from '../lib/previewMode'
 import { siteDisplayUrl } from '../lib/format'
 import { deployWizardTitle } from '../lib/deployWizard'
+import { useDeployLogs } from '../lib/useDeployLogs'
 import type { GitHubRepo, GitRepo, SiteSource } from '../types/sites'
 
 const WIZARD_STEPS = ['Source', 'Configure', 'Deploy']
+
+const PREVIEW_DEPLOY_LINES = [
+  '→ Deployment started (branch: main)',
+  '→ Status: building',
+  '→ Cloning repository (branch: main)',
+  '→ Clone complete',
+  '→ Detected app type: static',
+  '→ Serving static files',
+  '→ Deployed at http://localhost:10001',
+]
 
 export default function CreateSitePage() {
   const nav = useNavigate()
@@ -54,6 +66,19 @@ export default function CreateSitePage() {
   const [doneUrl, setDoneUrl] = useState('')
   const [doneStatus, setDoneStatus] = useState('building')
   const [doneError, setDoneError] = useState('')
+  const [deploymentId, setDeploymentId] = useState('')
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  const { lines: deployLines, errorMessage: logError, fetchError: logFetchError, isStreaming } = useDeployLogs({
+    deploymentId: previewMode ? '' : deploymentId,
+    enabled: deploying && !previewMode,
+    deployStatus: doneStatus,
+    previewLines: previewMode ? PREVIEW_DEPLOY_LINES : undefined,
+  })
+
+  useEffect(() => {
+    if (logError) setDoneError(logError)
+  }, [logError])
 
   const loadGitHub = async () => {
     setGhLoading(true)
@@ -131,7 +156,14 @@ export default function CreateSitePage() {
     setError('')
     setDoneError('')
     setDeploying(true)
+    setDeploymentId('')
+    setDoneStatus('building')
+    setDoneUrl('')
     setStep(3)
+    if (pollRef.current) {
+      clearInterval(pollRef.current)
+      pollRef.current = null
+    }
 
     const gh = selectedGh ?? (previewMode ? ghRepos[0] : null)
 
@@ -168,15 +200,16 @@ export default function CreateSitePage() {
     const initialStatus = dep?.status ?? 'building'
     setDoneStatus(initialStatus)
     setDoneUrl(dep?.url ?? '')
+    if (dep?.id) setDeploymentId(dep.id)
     if (initialStatus === 'running' || initialStatus === 'failed') {
       setDeploying(false)
-      if (initialStatus === 'failed' && dep && 'error_message' in dep) {
-        setDoneError(String((dep as { error_message?: string }).error_message ?? ''))
+      if (initialStatus === 'failed' && dep?.error_message) {
+        setDoneError(dep.error_message)
       }
     }
 
     if (dep?.id && (initialStatus === 'building' || initialStatus === 'pending')) {
-      const poll = setInterval(async () => {
+      pollRef.current = setInterval(async () => {
         try {
           const res = await fetch(`/api/deploy/${dep.id}`)
           if (!res.ok) return
@@ -190,12 +223,21 @@ export default function CreateSitePage() {
           if (d.error_message) setDoneError(d.error_message)
           if (d.status === 'running' || d.status === 'failed') {
             setDeploying(false)
-            clearInterval(poll)
+            if (pollRef.current) {
+              clearInterval(pollRef.current)
+              pollRef.current = null
+            }
           }
         } catch { /* ignore */ }
       }, 3000)
     }
   }
+
+  useEffect(() => {
+    return () => {
+      if (pollRef.current) clearInterval(pollRef.current)
+    }
+  }, [])
 
   const pq = previewQuerySuffix()
   const sourceLabel =
@@ -204,7 +246,7 @@ export default function CreateSitePage() {
       : localRepos.find(r => r.id === selectedLocalId)?.name
 
   return (
-    <div className="wizard">
+    <div className={`wizard${step === 3 ? ' wizard--deploy' : ''}`}>
       <Breadcrumb
         items={[
           { label: 'Sites', to: `/deploy${pq}` },
@@ -447,40 +489,58 @@ export default function CreateSitePage() {
 
       {step === 3 && (
         <div className="wizard-panel">
-          <Card>
-            <div className="deploy-progress-card">
-              {deploying && <div className="spinner" aria-hidden />}
-              <h2 className="section-title" style={{ marginTop: 0 }}>
-                {deployWizardTitle(deploying, doneStatus)}
-              </h2>
-              <p className="dim">
-                {siteDisplayUrl(name)} · {branch}
-              </p>
-              <Badge variant={statusBadgeVariant(doneStatus)}>{doneStatus}</Badge>
-              {doneError && (
-                <p className="input-error-text" style={{ marginTop: 'var(--space-6)' }}>
-                  {doneError}
+          <div className="deploy-step-layout">
+            <Card className="deploy-status-card">
+              <div className="deploy-progress-card deploy-progress-card--split">
+                {deploying && <div className="spinner" aria-hidden />}
+                <h2 className="section-title" style={{ marginTop: 0 }}>
+                  {deployWizardTitle(deploying, doneStatus)}
+                </h2>
+                <p className="dim">
+                  {siteDisplayUrl(name)} · {branch}
                 </p>
+                <Badge variant={statusBadgeVariant(doneStatus)}>{doneStatus}</Badge>
+                {doneError && (
+                  <p className="input-error-text deploy-status-error">
+                    {doneError}
+                  </p>
+                )}
+                {doneUrl && doneStatus === 'running' && (
+                  <p className="deploy-status-actions">
+                    <Button as="a" href={doneUrl} target="_blank" rel="noreferrer" variant="primary" size="sm">
+                      Open app
+                    </Button>
+                  </p>
+                )}
+                {!deploying && doneSiteId && (
+                  <div className="wizard-actions deploy-status-footer">
+                    <Button variant="secondary" size="sm" onClick={() => nav(`/deploy/${doneSiteId}${pq}`)}>
+                      View site
+                    </Button>
+                    <Button variant="primary" size="sm" onClick={() => nav(`/deploy${pq}`)}>
+                      All sites
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </Card>
+            <div className="deploy-log-panel">
+              <div className="deploy-log-header">
+                <span className="deploy-log-title">Build output</span>
+                {(deploying || isStreaming) && (
+                  <span className="deploy-log-live" aria-live="polite">Live</span>
+                )}
+              </div>
+              {logFetchError && (
+                <p className="dim deploy-log-fetch-error">{logFetchError}</p>
               )}
-              {doneUrl && (
-                <p style={{ marginTop: 'var(--space-8)' }}>
-                  <Button as="a" href={doneUrl} target="_blank" rel="noreferrer" variant="primary" size="sm">
-                    Open app
-                  </Button>
-                </p>
-              )}
-              {!deploying && doneSiteId && (
-                <div className="wizard-actions" style={{ justifyContent: 'center', width: '100%' }}>
-                  <Button variant="secondary" size="sm" onClick={() => nav(`/deploy/${doneSiteId}${pq}`)}>
-                    View site
-                  </Button>
-                  <Button variant="primary" size="sm" onClick={() => nav(`/deploy${pq}`)}>
-                    All sites
-                  </Button>
-                </div>
-              )}
+              <StreamLog
+                logs={deployLines}
+                isStreaming={deploying || isStreaming}
+                className="deploy-log-terminal"
+              />
             </div>
-          </Card>
+          </div>
         </div>
       )}
     </div>

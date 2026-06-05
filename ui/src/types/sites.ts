@@ -10,6 +10,7 @@ export interface Deployment {
   port: number
   app_type: string
   created_at: string
+  error_message?: string
 }
 
 export interface GitRepo {
