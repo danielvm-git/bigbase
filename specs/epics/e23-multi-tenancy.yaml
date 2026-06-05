@@ -10,8 +10,18 @@ stories:
     title: Organization CRUD
     status: pending
     tasks:
-      - desc: orgs table and /api/orgs CRUD with default org migration
-        verify: "go test ./components/auth/ -run TestOrganization -v"
+      - desc: "Add orgs table migration in auth.Start() — CREATE TABLE IF NOT EXISTS orgs (id, name, slug UNIQUE, owner_id, created_at, updated_at); add default_org_id column to users; auto-create personal org on register"
+        notes: "components/auth/auth.go: Start() — add Migrate() calls for orgs table + users.default_org_id; handleRegister() — INSERT default org for new user"
+        verify: "go test ./components/auth/ -run TestOrganization/orgs_table_migration -v"
+      - desc: "Add Organization struct + DB operations (CreateOrg, GetOrg, ListOrgs, UpdateOrg, DeleteOrg) with slug uniqueness and owner validation"
+        notes: "components/auth/orgs.go — new file: Organization type, OrgStore methods on *Auth with SQL queries"
+        verify: "go test ./components/auth/ -run TestOrganization/org_store -v"
+      - desc: "Add CRUD HTTP handlers: POST /api/orgs, GET /api/orgs, GET /api/orgs/{id}, PATCH /api/orgs/{id}, DELETE /api/orgs/{id} — only owner can update/delete"
+        notes: "components/auth/auth.go: Handler() — add routes under ProtectedHandler; new handleCreateOrg, handleListOrgs, handleGetOrg, handleUpdateOrg, handleDeleteOrg"
+        verify: "go test ./components/auth/ -run TestOrganization/org_handlers -v"
+      - desc: "Add default org migration for existing users (backfill); wire org routes in main.go proxy registration"
+        notes: "components/auth/auth.go: Start() — backfill default org for rows with default_org_id NULL; main.go: register POST /api/orgs etc. in proxy"
+        verify: "go test ./components/auth/ -run TestOrganization/default_org_backfill -v"
   - id: e23s02
     title: Team membership and invitations
     status: pending
