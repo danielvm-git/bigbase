@@ -570,7 +570,25 @@ func (a *Auth) findOrCreateGoogleUser(ctx context.Context, gu *GoogleUser) (int6
 	if err != nil {
 		return 0, fmt.Errorf("insert google user: %w", err)
 	}
-	return res.LastInsertId()
+
+	userID, err := res.LastInsertId()
+	if err != nil {
+		return 0, fmt.Errorf("google user last insert id: %w", err)
+	}
+
+	// Auto-create personal org for Google OAuth users
+	orgRes, err := a.db.ExecContext(ctx,
+		`INSERT INTO orgs (name, slug, owner_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?)`,
+		gu.Email, gu.Email, userID, now, now)
+	if err != nil {
+		a.logger.Error("create personal org for google user", "error", err)
+		return userID, nil
+	}
+
+	orgID, _ := orgRes.LastInsertId()
+	_, _ = a.db.ExecContext(ctx, "UPDATE users SET default_org_id = ? WHERE id = ?", orgID, userID)
+
+	return userID, nil
 }
 
 type realGoogleVerifier struct {

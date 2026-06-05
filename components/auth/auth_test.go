@@ -826,6 +826,72 @@ func TestOrganization(t *testing.T) {
 			t.Errorf("expected org owner_id=%d, got %d", userID, orgOwnerID)
 		}
 	})
+
+	t.Run("personal_org_created_on_google_oauth", func(t *testing.T) {
+		logger := testLogger{}
+		k := kernel.New(logger)
+
+		d := db.New(db.Options{Path: ":memory:", Logger: logger})
+		a := auth.New(auth.Options{
+			DB:                d,
+			Logger:            logger,
+			Secret:            "test-secret-32-chars!!!",
+			GoogleClientID:    "test-client-id",
+			GoogleClientSecret: "test-client-secret",
+		})
+
+		k.Register(a)
+		k.Register(d)
+
+		if err := k.Start(); err != nil {
+			t.Fatalf("kernel start: %v", err)
+		}
+		t.Cleanup(func() { _ = k.Stop() })
+
+		a.SetGoogleVerifier(&mockGoogleVerifier{
+			user: &auth.GoogleUser{GoogleID: "google-456", Email: "oauth@test.com", Name: "OAuth User", Avatar: ""},
+		})
+
+		handler := a.Handler()
+
+		// Simulate Google OAuth callback
+		req := httptest.NewRequest("GET", "/api/auth/oauth/google/callback?code=testcode", nil)
+		w := httptest.NewRecorder()
+		handler.ServeHTTP(w, req)
+
+		if w.Code != http.StatusFound {
+			t.Fatalf("expected 302 redirect, got %d: %s", w.Code, w.Body.String())
+		}
+
+		// Verify a personal org was created for the OAuth user
+		var orgID int64
+		var orgName string
+		err := d.QueryRowContext(context.Background(),
+			"SELECT id, name FROM orgs WHERE slug = ?",
+			"oauth@test.com",
+		).Scan(&orgID, &orgName)
+		if err != nil {
+			t.Fatalf("personal org not created for OAuth user: %v", err)
+		}
+
+		if orgName != "oauth@test.com" {
+			t.Errorf("expected org name 'oauth@test.com', got %q", orgName)
+		}
+
+		// Verify user's default_org_id is set
+		var defaultOrgID sql.NullInt64
+		err = d.QueryRowContext(context.Background(),
+			"SELECT default_org_id FROM users WHERE email = ?",
+			"oauth@test.com",
+		).Scan(&defaultOrgID)
+		if err != nil {
+			t.Fatalf("user not found: %v", err)
+		}
+
+		if !defaultOrgID.Valid || defaultOrgID.Int64 != orgID {
+			t.Errorf("expected default_org_id=%d, got %v", orgID, defaultOrgID)
+		}
+	})
 }
 
 func TestMiddlewareBadToken(t *testing.T) {
