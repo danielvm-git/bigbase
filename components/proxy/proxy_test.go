@@ -14,6 +14,73 @@ import (
 	"github.com/danielvm/bigbase/kernel"
 )
 
+func TestRequestIDMiddleware(t *testing.T) {
+	logger := testLogger{}
+	k := kernel.New(logger)
+
+	port := freePort(t)
+	p := proxy.New(proxy.Options{
+		Port:   port,
+		Kernel: k,
+		Logger: logger,
+	})
+
+	if err := p.Start(&kernel.Context{}); err != nil {
+		t.Fatalf("failed to start proxy: %v", err)
+	}
+	defer func() { _ = p.Stop(&kernel.Context{}) }()
+
+	waitForServer(t, port, "/health")
+
+	t.Run("generates request ID when header absent", func(t *testing.T) {
+		resp, err := http.Get("http://localhost:" + port + "/health")
+		if err != nil {
+			t.Fatalf("GET /health: %v", err)
+		}
+		defer func() { _ = resp.Body.Close() }()
+
+		rid := resp.Header.Get("X-Request-ID")
+		if rid == "" {
+			t.Fatal("expected X-Request-ID header in response")
+		}
+		if len(rid) < 16 {
+			t.Fatalf("expected request ID of at least 16 hex chars, got %q (len=%d)", rid, len(rid))
+		}
+	})
+
+	t.Run("preserves client-provided request ID", func(t *testing.T) {
+		req, err := http.NewRequest("GET", "http://localhost:"+port+"/health", nil)
+		if err != nil {
+			t.Fatalf("create request: %v", err)
+		}
+		req.Header.Set("X-Request-ID", "my-test-id-123")
+
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			t.Fatalf("GET /health: %v", err)
+		}
+		defer func() { _ = resp.Body.Close() }()
+
+		rid := resp.Header.Get("X-Request-ID")
+		if rid != "my-test-id-123" {
+			t.Fatalf("expected X-Request-ID 'my-test-id-123', got %q", rid)
+		}
+	})
+
+	t.Run("request ID is present on all routes", func(t *testing.T) {
+		resp, err := http.Get("http://localhost:" + port + "/")
+		if err != nil {
+			t.Fatalf("GET /: %v", err)
+		}
+		defer func() { _ = resp.Body.Close() }()
+
+		rid := resp.Header.Get("X-Request-ID")
+		if rid == "" {
+			t.Fatal("expected X-Request-ID on home page route")
+		}
+	})
+}
+
 type testLogger struct{}
 
 func (testLogger) Info(msg string, args ...any)  {}
