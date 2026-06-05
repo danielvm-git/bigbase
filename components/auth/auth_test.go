@@ -892,6 +892,134 @@ func TestOrganization(t *testing.T) {
 			t.Errorf("expected default_org_id=%d, got %v", orgID, defaultOrgID)
 		}
 	})
+
+	t.Run("org_store", func(t *testing.T) {
+		logger := testLogger{}
+		k := kernel.New(logger)
+
+		d := db.New(db.Options{Path: ":memory:", Logger: logger})
+		a := auth.New(auth.Options{DB: d, Logger: logger, Secret: "test-secret-32-chars!!!"})
+
+		k.Register(a)
+		k.Register(d)
+
+		if err := k.Start(); err != nil {
+			t.Fatalf("kernel start: %v", err)
+		}
+		t.Cleanup(func() { _ = k.Stop() })
+
+		ctx := context.Background()
+
+		// Test CreateOrg
+		org, err := a.CreateOrg(ctx, "Test Org", "test-org", 1)
+		if err != nil {
+			t.Fatalf("CreateOrg: %v", err)
+		}
+
+		if org.ID == 0 {
+			t.Error("expected non-zero org ID")
+		}
+		if org.Name != "Test Org" {
+			t.Errorf("expected name 'Test Org', got %q", org.Name)
+		}
+		if org.Slug != "test-org" {
+			t.Errorf("expected slug 'test-org', got %q", org.Slug)
+		}
+		if org.OwnerID != 1 {
+			t.Errorf("expected owner_id 1, got %d", org.OwnerID)
+		}
+		if org.CreatedAt == "" {
+			t.Error("expected non-empty created_at")
+		}
+		if org.UpdatedAt == "" {
+			t.Error("expected non-empty updated_at")
+		}
+
+		// Test slug uniqueness
+		_, err = a.CreateOrg(ctx, "Duplicate", "test-org", 2)
+		if err == nil {
+			t.Error("expected error for duplicate slug")
+		}
+
+		// Test GetOrgByID
+		fetched, err := a.GetOrgByID(ctx, org.ID)
+		if err != nil {
+			t.Fatalf("GetOrgByID: %v", err)
+		}
+		if fetched == nil {
+			t.Fatal("expected org, got nil")
+		}
+		if fetched.Name != org.Name {
+			t.Errorf("expected name %q, got %q", org.Name, fetched.Name)
+		}
+
+		// Test GetOrgByID not found
+		notFound, err := a.GetOrgByID(ctx, 99999)
+		if err != nil {
+			t.Fatalf("GetOrgByID: %v", err)
+		}
+		if notFound != nil {
+			t.Error("expected nil for non-existent org")
+		}
+
+		// Test ListOrgsByOwner
+		_, _ = a.CreateOrg(ctx, "Org 2", "org-2", 1)
+		_, _ = a.CreateOrg(ctx, "Org 3", "org-3", 1)
+
+		orgs, err := a.ListOrgsByOwner(ctx, 1)
+		if err != nil {
+			t.Fatalf("ListOrgsByOwner: %v", err)
+		}
+		if len(orgs) != 3 {
+			t.Errorf("expected 3 orgs, got %d", len(orgs))
+		}
+
+		// List orgs for owner with no orgs
+		empty, err := a.ListOrgsByOwner(ctx, 99999)
+		if err != nil {
+			t.Fatalf("ListOrgsByOwner: %v", err)
+		}
+		if len(empty) != 0 {
+			t.Errorf("expected 0 orgs, got %d", len(empty))
+		}
+
+		// Test UpdateOrg
+		updated, err := a.UpdateOrg(ctx, org.ID, "Updated Org", "updated-org")
+		if err != nil {
+			t.Fatalf("UpdateOrg: %v", err)
+		}
+		if updated.Name != "Updated Org" {
+			t.Errorf("expected name 'Updated Org', got %q", updated.Name)
+		}
+		if updated.Slug != "updated-org" {
+			t.Errorf("expected slug 'updated-org', got %q", updated.Slug)
+		}
+
+		// Update to existing slug should fail
+		_, err = a.UpdateOrg(ctx, org.ID, "Collision", "org-2")
+		if err == nil {
+			t.Error("expected error updating to existing slug")
+		}
+
+		// Test DeleteOrg
+		if err := a.DeleteOrg(ctx, org.ID); err != nil {
+			t.Fatalf("DeleteOrg: %v", err)
+		}
+
+		// Verify deleted
+		deleted, err := a.GetOrgByID(ctx, org.ID)
+		if err != nil {
+			t.Fatalf("GetOrgByID after delete: %v", err)
+		}
+		if deleted != nil {
+			t.Error("expected nil after delete")
+		}
+
+		// Delete non-existent org should not error
+		if err := a.DeleteOrg(ctx, 99999); err != nil {
+			t.Errorf("DeleteOrg non-existent: %v", err)
+		}
+	})
 }
 
 func TestMiddlewareBadToken(t *testing.T) {
