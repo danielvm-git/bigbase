@@ -688,6 +688,63 @@ func TestHandleMeUnauthenticated(t *testing.T) {
 	}
 }
 
+func TestOrganization(t *testing.T) {
+	t.Run("orgs_table_migration", func(t *testing.T) {
+		logger := testLogger{}
+		k := kernel.New(logger)
+
+		d := db.New(db.Options{Path: ":memory:", Logger: logger})
+		a := auth.New(auth.Options{DB: d, Logger: logger, Secret: "test-secret-32-chars!!!"})
+
+		k.Register(a)
+		k.Register(d)
+
+		if err := k.Start(); err != nil {
+			t.Fatalf("kernel start: %v", err)
+		}
+		t.Cleanup(func() { _ = k.Stop() })
+
+		// Verify orgs table exists with correct schema
+		var nameCol, slugCol, ownerIDCol, createdAtCol, updatedAtCol string
+		err := d.QueryRowContext(context.Background(),
+			`SELECT name FROM sqlite_master WHERE type='table' AND name='orgs'`,
+		).Scan(&nameCol)
+		if err != nil {
+			t.Fatalf("orgs table not found: %v", err)
+		}
+
+		// Verify columns exist
+		rows, err := d.QueryContext(context.Background(), "PRAGMA table_info('orgs')")
+		if err != nil {
+			t.Fatalf("pragma orgs: %v", err)
+		}
+		defer func() { _ = rows.Close() }()
+
+		columns := map[string]bool{}
+		for rows.Next() {
+			var cid int
+			var name, coltype string
+			var notnull, pk int
+			var defaultVal *string
+			if err := rows.Scan(&cid, &name, &coltype, &notnull, &defaultVal, &pk); err != nil {
+				t.Fatalf("scan column: %v", err)
+			}
+			columns[name] = true
+		}
+		_ = nameCol
+		_ = slugCol
+		_ = ownerIDCol
+		_ = createdAtCol
+		_ = updatedAtCol
+
+		for _, col := range []string{"id", "name", "slug", "owner_id", "created_at", "updated_at"} {
+			if !columns[col] {
+				t.Errorf("expected column %q in orgs table, but not found", col)
+			}
+		}
+	})
+}
+
 func TestMiddlewareBadToken(t *testing.T) {
 	a, _, _ := setupAuth(t)
 

@@ -140,6 +140,19 @@ func (a *Auth) Start(ctx *kernel.Context) error {
 	_ = a.db.Migrate("ALTER TABLE users ADD COLUMN role TEXT NOT NULL DEFAULT 'user'")
 	_ = a.db.Migrate("ALTER TABLE users ADD COLUMN google_id TEXT DEFAULT ''")
 	_ = a.db.Migrate("ALTER TABLE users ADD COLUMN avatar_url TEXT DEFAULT ''")
+	_ = a.db.Migrate("ALTER TABLE users ADD COLUMN default_org_id INTEGER")
+
+	if err := a.db.Migrate(`CREATE TABLE IF NOT EXISTS orgs (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		name TEXT NOT NULL,
+		slug TEXT NOT NULL UNIQUE,
+		owner_id INTEGER NOT NULL,
+		created_at TEXT NOT NULL,
+		updated_at TEXT NOT NULL
+	)`); err != nil {
+		return fmt.Errorf("migrate orgs table: %w", err)
+	}
+
 	a.logger.Info("auth component ready")
 	return nil
 }
