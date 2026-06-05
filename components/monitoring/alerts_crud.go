@@ -34,8 +34,8 @@ func (m *Monitoring) handleAlertGet(w http.ResponseWriter, r *http.Request, id s
 	var a Alert
 	var enabled int
 	err := m.db.QueryRowContext(r.Context(),
-		"SELECT id, name, metric, threshold, operator, enabled FROM monitoring_alerts WHERE id = ?", id).
-		Scan(&a.ID, &a.Name, &a.Metric, &a.Threshold, &a.Operator, &enabled)
+		"SELECT id, name, metric, threshold, operator, enabled, duration_seconds FROM monitoring_alerts WHERE id = ?", id).
+		Scan(&a.ID, &a.Name, &a.Metric, &a.Threshold, &a.Operator, &enabled, &a.DurationSeconds)
 	if err != nil {
 		writeJSON(w, http.StatusNotFound, map[string]string{"error": "alert not found"})
 		return

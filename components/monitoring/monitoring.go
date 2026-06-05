@@ -40,12 +40,13 @@ func (noopLogger) Error(msg string, args ...any) {}
 func (noopLogger) Debug(msg string, args ...any) {}
 
 type Alert struct {
-	ID        string  `json:"id"`
-	Name      string  `json:"name"`
-	Metric    string  `json:"metric"`
-	Threshold float64 `json:"threshold"`
-	Operator  string  `json:"operator"`
-	Enabled   bool    `json:"enabled"`
+	ID              string  `json:"id"`
+	Name            string  `json:"name"`
+	Metric          string  `json:"metric"`
+	Threshold       float64 `json:"threshold"`
+	Operator        string  `json:"operator"`
+	Enabled         bool    `json:"enabled"`
+	DurationSeconds int64   `json:"duration_seconds"`
 }
 
 type LogEntry struct {
@@ -93,7 +94,9 @@ type Monitoring struct {
 	cpuSampleAt  time.Time
 	cpuTotalNano int64
 
-	stopHost chan struct{}
+	stopHost   chan struct{}
+	stopAlerts chan struct{}
+	kctx       *kernel.Context // set in Start; used by alert checker to emit events
 }
 
 type Options struct {
@@ -147,14 +150,20 @@ func (m *Monitoring) Start(ctx *kernel.Context) error {
 		}
 	}
 
+	m.kctx = ctx
 	m.stopHost = make(chan struct{})
+	m.stopAlerts = make(chan struct{})
 	go m.runHostCollector()
+	go m.runAlertChecker()
 	return nil
 }
 
 func (m *Monitoring) Stop(ctx *kernel.Context) error {
 	if m.stopHost != nil {
 		close(m.stopHost)
+	}
+	if m.stopAlerts != nil {
+		close(m.stopAlerts)
 	}
 	return nil
 }
@@ -589,11 +598,12 @@ func (m *Monitoring) handleAlertCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var alert struct {
-		Name      string  `json:"name"`
-		Metric    string  `json:"metric"`
-		Threshold float64 `json:"threshold"`
-		Operator  string  `json:"operator"`
-		Enabled   bool    `json:"enabled"`
+		Name            string  `json:"name"`
+		Metric          string  `json:"metric"`
+		Threshold       float64 `json:"threshold"`
+		Operator        string  `json:"operator"`
+		Enabled         bool    `json:"enabled"`
+		DurationSeconds int64   `json:"duration_seconds"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&alert); err != nil {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid JSON"})
@@ -603,14 +613,17 @@ func (m *Monitoring) handleAlertCreate(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "name and metric are required"})
 		return
 	}
+	if alert.DurationSeconds <= 0 {
+		alert.DurationSeconds = 300 // default 5 minutes
+	}
 	id := fmt.Sprintf("%d", time.Now().UnixNano())
 	enabled := 0
 	if alert.Enabled {
 		enabled = 1
 	}
 	_, err := m.db.ExecContext(r.Context(),
-		"INSERT INTO monitoring_alerts (id, name, metric, threshold, operator, enabled) VALUES (?, ?, ?, ?, ?, ?)",
-		id, alert.Name, alert.Metric, alert.Threshold, alert.Operator, enabled)
+		"INSERT INTO monitoring_alerts (id, name, metric, threshold, operator, enabled, duration_seconds) VALUES (?, ?, ?, ?, ?, ?, ?)",
+		id, alert.Name, alert.Metric, alert.Threshold, alert.Operator, enabled, alert.DurationSeconds)
 	if err != nil {
 		m.logger.Error("insert alert", "error", err)
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
@@ -625,7 +638,7 @@ func (m *Monitoring) handleAlertList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	rows, err := m.db.QueryContext(r.Context(),
-		"SELECT id, name, metric, threshold, operator, enabled FROM monitoring_alerts ORDER BY name")
+		"SELECT id, name, metric, threshold, operator, enabled, duration_seconds FROM monitoring_alerts ORDER BY name")
 	if err != nil {
 		m.logger.Error("list alerts", "error", err)
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
@@ -637,7 +650,7 @@ func (m *Monitoring) handleAlertList(w http.ResponseWriter, r *http.Request) {
 	for rows.Next() {
 		var a Alert
 		var enabled int
-		if err := rows.Scan(&a.ID, &a.Name, &a.Metric, &a.Threshold, &a.Operator, &enabled); err != nil {
+		if err := rows.Scan(&a.ID, &a.Name, &a.Metric, &a.Threshold, &a.Operator, &enabled, &a.DurationSeconds); err != nil {
 			m.logger.Error("scan alert", "error", err)
 			continue
 		}
