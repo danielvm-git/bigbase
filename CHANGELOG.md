@@ -1,3 +1,18 @@
+# [2.5.0](https://github.com/danielvm-git/bigbase/compare/v2.4.2...v2.5.0) (2026-06-05)
+
+
+### Bug Fixes
+
+* **monitoring:** make Prometheus metrics endpoint publicly accessible ([101d4b5](https://github.com/danielvm-git/bigbase/commit/101d4b59a63216b074c6013b4548aa72ae77cde5))
+* **proxy:** skip loopback addresses in deployment host middleware ([88f46fe](https://github.com/danielvm-git/bigbase/commit/88f46fea9023450b3e800a3cff01c6c759065239))
+
+
+### Features
+
+* **observability:** add --log-level flag to serve command ([de076b7](https://github.com/danielvm-git/bigbase/commit/de076b77d5de30e6fde3cb5fa9df29bf4a3aa857))
+* **observability:** add X-Request-ID middleware with context propagation ([16aa0c2](https://github.com/danielvm-git/bigbase/commit/16aa0c25d8818bc321925e53cc7a36273f113441))
+* **observability:** complete wire observability epic ([62800c1](https://github.com/danielvm-git/bigbase/commit/62800c1fe20f6eeea728d59a5f838a31794f22c3))
+
 ## [2.4.2](https://github.com/danielvm-git/bigbase/compare/v2.4.1...v2.4.2) (2026-06-05)
 
 
