@@ -9,12 +9,16 @@ release:
   last_tag: null
   last_publish: null
 epic_cycle:
-  current_step: 4
-  next_skill: develop-tdd
+  current_step: 8
+  next_skill: release-branch
   completed_steps:
   - survey-context
   - plan-work
   - kickoff-branch
+  - develop-tdd
+  - verify-work
+  - audit-code
+  - commit-message
 bug_cycle:
   current_step: null
   completed_steps: []

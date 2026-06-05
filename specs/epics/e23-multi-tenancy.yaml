@@ -8,7 +8,7 @@ covers: []
 stories:
   - id: e23s01
     title: Organization CRUD
-    status: pending
+    status: done
     tasks:
       - desc: "Add orgs table migration in auth.Start() — CREATE TABLE IF NOT EXISTS orgs (id, name, slug UNIQUE, owner_id, created_at, updated_at); add default_org_id column to users; auto-create personal org on register"
         notes: "components/auth/auth.go: Start() — add Migrate() calls for orgs table + users.default_org_id; handleRegister() — INSERT default org for new user"
