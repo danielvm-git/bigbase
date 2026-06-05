@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -1018,6 +1019,210 @@ func TestOrganization(t *testing.T) {
 		// Delete non-existent org should not error
 		if err := a.DeleteOrg(ctx, 99999); err != nil {
 			t.Errorf("DeleteOrg non-existent: %v", err)
+		}
+	})
+
+	t.Run("org_handlers", func(t *testing.T) {
+		logger := testLogger{}
+		k := kernel.New(logger)
+
+		d := db.New(db.Options{Path: ":memory:", Logger: logger})
+		a := auth.New(auth.Options{DB: d, Logger: logger, Secret: "test-secret-32-chars!!!"})
+
+		k.Register(a)
+		k.Register(d)
+
+		if err := k.Start(); err != nil {
+			t.Fatalf("kernel start: %v", err)
+		}
+		t.Cleanup(func() { _ = k.Stop() })
+
+		handler := a.Handler()
+		protected := a.ProtectedHandler()
+
+		// Register and login
+		regReq := httptest.NewRequest("POST", "/api/auth/register",
+			strings.NewReader(`{"email":"org@test.com","password":"secret123"}`))
+		regReq.Header.Set("Content-Type", "application/json")
+		regW := httptest.NewRecorder()
+		handler.ServeHTTP(regW, regReq)
+		if regW.Code != http.StatusCreated {
+			t.Fatalf("register: expected 201, got %d: %s", regW.Code, regW.Body.String())
+		}
+
+		loginReq := httptest.NewRequest("POST", "/api/auth/login",
+			strings.NewReader(`{"email":"org@test.com","password":"secret123"}`))
+		loginReq.Header.Set("Content-Type", "application/json")
+		loginW := httptest.NewRecorder()
+		handler.ServeHTTP(loginW, loginReq)
+		resp := parseResponse(t, loginW.Body.Bytes())
+		token, _ := resp["token"].(string)
+		if token == "" {
+			t.Fatal("expected non-empty token")
+		}
+
+		// POST /api/orgs — create a new org
+		createReq := httptest.NewRequest("POST", "/api/orgs",
+			strings.NewReader(`{"name":"My New Org","slug":"my-new-org"}`))
+		createReq.Header.Set("Content-Type", "application/json")
+		createReq.Header.Set("Authorization", "Bearer "+token)
+		createW := httptest.NewRecorder()
+		protected.ServeHTTP(createW, createReq)
+
+		if createW.Code != http.StatusCreated {
+			t.Fatalf("create org: expected 201, got %d: %s", createW.Code, createW.Body.String())
+		}
+
+		var createResp map[string]any
+		if err := json.NewDecoder(createW.Body).Decode(&createResp); err != nil {
+			t.Fatalf("decode create: %v", err)
+		}
+		orgData, ok := createResp["data"].(map[string]any)
+		if !ok {
+			t.Fatalf("expected data in response, got %v", createResp)
+		}
+		if orgData["name"] != "My New Org" {
+			t.Errorf("expected name 'My New Org', got %v", orgData["name"])
+		}
+
+		// POST /api/orgs — duplicate slug should fail
+		dupReq := httptest.NewRequest("POST", "/api/orgs",
+			strings.NewReader(`{"name":"Duplicate","slug":"my-new-org"}`))
+		dupReq.Header.Set("Content-Type", "application/json")
+		dupReq.Header.Set("Authorization", "Bearer "+token)
+		dupW := httptest.NewRecorder()
+		protected.ServeHTTP(dupW, dupReq)
+		if dupW.Code != http.StatusConflict {
+			t.Errorf("duplicate slug: expected 409, got %d: %s", dupW.Code, dupW.Body.String())
+		}
+
+		// GET /api/orgs — list orgs
+		listReq := httptest.NewRequest("GET", "/api/orgs", nil)
+		listReq.Header.Set("Authorization", "Bearer "+token)
+		listW := httptest.NewRecorder()
+		protected.ServeHTTP(listW, listReq)
+
+		if listW.Code != http.StatusOK {
+			t.Fatalf("list orgs: expected 200, got %d: %s", listW.Code, listW.Body.String())
+		}
+
+		var listResp map[string]any
+		if err := json.NewDecoder(listW.Body).Decode(&listResp); err != nil {
+			t.Fatalf("decode list: %v", err)
+		}
+		data, ok := listResp["data"].([]any)
+		if !ok {
+			t.Fatalf("expected data array, got %v", listResp)
+		}
+		// Should include the personal org + the new org
+		if len(data) < 2 {
+			t.Errorf("expected at least 2 orgs (personal + created), got %d", len(data))
+		}
+
+		// Get the new org's ID from the list
+		var newOrgID float64
+		for _, item := range data {
+			org := item.(map[string]any)
+			if org["slug"] == "my-new-org" {
+				newOrgID = org["id"].(float64)
+			}
+		}
+		if newOrgID == 0 {
+			t.Fatal("could not find created org in list")
+		}
+
+		// GET /api/orgs/{id}
+		getReq := httptest.NewRequest("GET", "/api/orgs/"+fmt.Sprintf("%.0f", newOrgID), nil)
+		getReq.Header.Set("Authorization", "Bearer "+token)
+		getW := httptest.NewRecorder()
+		protected.ServeHTTP(getW, getReq)
+
+		if getW.Code != http.StatusOK {
+			t.Fatalf("get org: expected 200, got %d: %s", getW.Code, getW.Body.String())
+		}
+
+		var getResp map[string]any
+		if err := json.NewDecoder(getW.Body).Decode(&getResp); err != nil {
+			t.Fatalf("decode get: %v", err)
+		}
+		gotOrg := getResp["data"].(map[string]any)
+		if gotOrg["name"] != "My New Org" {
+			t.Errorf("expected 'My New Org', got %v", gotOrg["name"])
+		}
+
+		// PATCH /api/orgs/{id} — update org
+		patchReq := httptest.NewRequest("PATCH", "/api/orgs/"+fmt.Sprintf("%.0f", newOrgID),
+			strings.NewReader(`{"name":"Updated Org","slug":"updated-org"}`))
+		patchReq.Header.Set("Content-Type", "application/json")
+		patchReq.Header.Set("Authorization", "Bearer "+token)
+		patchW := httptest.NewRecorder()
+		protected.ServeHTTP(patchW, patchReq)
+
+		if patchW.Code != http.StatusOK {
+			t.Fatalf("patch org: expected 200, got %d: %s", patchW.Code, patchW.Body.String())
+		}
+
+		var patchResp map[string]any
+		if err := json.NewDecoder(patchW.Body).Decode(&patchResp); err != nil {
+			t.Fatalf("decode patch: %v", err)
+		}
+		patched := patchResp["data"].(map[string]any)
+		if patched["name"] != "Updated Org" {
+			t.Errorf("expected 'Updated Org', got %v", patched["name"])
+		}
+
+		// PATCH — non-owner should get 403
+		// Register another user
+		reg2Req := httptest.NewRequest("POST", "/api/auth/register",
+			strings.NewReader(`{"email":"other@test.com","password":"secret123"}`))
+		reg2Req.Header.Set("Content-Type", "application/json")
+		reg2W := httptest.NewRecorder()
+		handler.ServeHTTP(reg2W, reg2Req)
+
+		login2Req := httptest.NewRequest("POST", "/api/auth/login",
+			strings.NewReader(`{"email":"other@test.com","password":"secret123"}`))
+		login2Req.Header.Set("Content-Type", "application/json")
+		login2W := httptest.NewRecorder()
+		handler.ServeHTTP(login2W, login2Req)
+		resp2 := parseResponse(t, login2W.Body.Bytes())
+		token2, _ := resp2["token"].(string)
+
+		nonOwnerPatch := httptest.NewRequest("PATCH", "/api/orgs/"+fmt.Sprintf("%.0f", newOrgID),
+			strings.NewReader(`{"name":"Hacked"}`))
+		nonOwnerPatch.Header.Set("Content-Type", "application/json")
+		nonOwnerPatch.Header.Set("Authorization", "Bearer "+token2)
+		nonOwnerW := httptest.NewRecorder()
+		protected.ServeHTTP(nonOwnerW, nonOwnerPatch)
+		if nonOwnerW.Code != http.StatusForbidden {
+			t.Errorf("non-owner patch: expected 403, got %d: %s", nonOwnerW.Code, nonOwnerW.Body.String())
+		}
+
+		// DELETE /api/orgs/{id} — non-owner should get 403
+		nonOwnerDel := httptest.NewRequest("DELETE", "/api/orgs/"+fmt.Sprintf("%.0f", newOrgID), nil)
+		nonOwnerDel.Header.Set("Authorization", "Bearer "+token2)
+		nonOwnerDelW := httptest.NewRecorder()
+		protected.ServeHTTP(nonOwnerDelW, nonOwnerDel)
+		if nonOwnerDelW.Code != http.StatusForbidden {
+			t.Errorf("non-owner delete: expected 403, got %d", nonOwnerDelW.Code)
+		}
+
+		// DELETE /api/orgs/{id} — owner can delete
+		delReq := httptest.NewRequest("DELETE", "/api/orgs/"+fmt.Sprintf("%.0f", newOrgID), nil)
+		delReq.Header.Set("Authorization", "Bearer "+token)
+		delW := httptest.NewRecorder()
+		protected.ServeHTTP(delW, delReq)
+
+		if delW.Code != http.StatusOK {
+			t.Fatalf("delete org: expected 200, got %d: %s", delW.Code, delW.Body.String())
+		}
+
+		// Verify org is gone
+		getAfterDel := httptest.NewRequest("GET", "/api/orgs/"+fmt.Sprintf("%.0f", newOrgID), nil)
+		getAfterDel.Header.Set("Authorization", "Bearer "+token)
+		getAfterDelW := httptest.NewRecorder()
+		protected.ServeHTTP(getAfterDelW, getAfterDel)
+		if getAfterDelW.Code != http.StatusNotFound {
+			t.Errorf("get after delete: expected 404, got %d", getAfterDelW.Code)
 		}
 	})
 }

@@ -175,6 +175,11 @@ func (a *Auth) ProtectedHandler() http.Handler {
 	mux.HandleFunc("GET /api/auth/users", a.handleUsers)
 	mux.HandleFunc("DELETE /api/auth/users/{id}", a.handleUserByID)
 	mux.HandleFunc("GET /api/auth/me", a.handleMe)
+	mux.HandleFunc("POST /api/orgs", a.handleCreateOrg)
+	mux.HandleFunc("GET /api/orgs", a.handleListOrgs)
+	mux.HandleFunc("GET /api/orgs/{id}", a.handleGetOrg)
+	mux.HandleFunc("PATCH /api/orgs/{id}", a.handleUpdateOrg)
+	mux.HandleFunc("DELETE /api/orgs/{id}", a.handleDeleteOrg)
 	return a.Middleware(mux)
 }
 
@@ -679,6 +684,168 @@ func generateID() (string, error) {
 		return "", err
 	}
 	return hex.EncodeToString(b), nil
+}
+
+func (a *Auth) handleCreateOrg(w http.ResponseWriter, r *http.Request) {
+	userID, _ := UserIDFromContext(r.Context())
+
+	var req struct {
+		Name string `json:"name"`
+		Slug string `json:"slug"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json"})
+		return
+	}
+	if req.Name == "" || req.Slug == "" {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "name and slug required"})
+		return
+	}
+
+	org, err := a.CreateOrg(r.Context(), req.Name, req.Slug, userID)
+	if err != nil {
+		if strings.Contains(err.Error(), "UNIQUE constraint") {
+			writeJSON(w, http.StatusConflict, map[string]string{"error": "slug already exists"})
+			return
+		}
+		a.logger.Error("create org", "error", err)
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		return
+	}
+
+	writeJSON(w, http.StatusCreated, map[string]any{"data": org})
+}
+
+func (a *Auth) handleListOrgs(w http.ResponseWriter, r *http.Request) {
+	userID, _ := UserIDFromContext(r.Context())
+
+	orgs, err := a.ListOrgsByOwner(r.Context(), userID)
+	if err != nil {
+		a.logger.Error("list orgs", "error", err)
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		return
+	}
+
+	writeJSON(w, http.StatusOK, map[string]any{"data": orgs})
+}
+
+func (a *Auth) handleGetOrg(w http.ResponseWriter, r *http.Request) {
+	userID, _ := UserIDFromContext(r.Context())
+	idStr := r.PathValue("id")
+
+	id, err := parseOrgID(idStr)
+	if err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid id"})
+		return
+	}
+
+	org, err := a.GetOrgByID(r.Context(), id)
+	if err != nil {
+		a.logger.Error("get org", "error", err)
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		return
+	}
+	if org == nil {
+		writeJSON(w, http.StatusNotFound, map[string]string{"error": "org not found"})
+		return
+	}
+	if org.OwnerID != userID {
+		writeJSON(w, http.StatusForbidden, map[string]string{"error": "insufficient permissions"})
+		return
+	}
+
+	writeJSON(w, http.StatusOK, map[string]any{"data": org})
+}
+
+func (a *Auth) handleUpdateOrg(w http.ResponseWriter, r *http.Request) {
+	userID, _ := UserIDFromContext(r.Context())
+	idStr := r.PathValue("id")
+
+	id, err := parseOrgID(idStr)
+	if err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid id"})
+		return
+	}
+
+	org, err := a.GetOrgByID(r.Context(), id)
+	if err != nil {
+		a.logger.Error("get org for update", "error", err)
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		return
+	}
+	if org == nil {
+		writeJSON(w, http.StatusNotFound, map[string]string{"error": "org not found"})
+		return
+	}
+	if org.OwnerID != userID {
+		writeJSON(w, http.StatusForbidden, map[string]string{"error": "insufficient permissions"})
+		return
+	}
+
+	var req struct {
+		Name string `json:"name"`
+		Slug string `json:"slug"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json"})
+		return
+	}
+
+	updatedOrg, err := a.UpdateOrg(r.Context(), id, req.Name, req.Slug)
+	if err != nil {
+		if strings.Contains(err.Error(), "UNIQUE constraint") {
+			writeJSON(w, http.StatusConflict, map[string]string{"error": "slug already exists"})
+			return
+		}
+		a.logger.Error("update org", "error", err)
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		return
+	}
+
+	writeJSON(w, http.StatusOK, map[string]any{"data": updatedOrg})
+}
+
+func (a *Auth) handleDeleteOrg(w http.ResponseWriter, r *http.Request) {
+	userID, _ := UserIDFromContext(r.Context())
+	idStr := r.PathValue("id")
+
+	id, err := parseOrgID(idStr)
+	if err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid id"})
+		return
+	}
+
+	org, err := a.GetOrgByID(r.Context(), id)
+	if err != nil {
+		a.logger.Error("get org for delete", "error", err)
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		return
+	}
+	if org == nil {
+		writeJSON(w, http.StatusNotFound, map[string]string{"error": "org not found"})
+		return
+	}
+	if org.OwnerID != userID {
+		writeJSON(w, http.StatusForbidden, map[string]string{"error": "insufficient permissions"})
+		return
+	}
+
+	if err := a.DeleteOrg(r.Context(), id); err != nil {
+		a.logger.Error("delete org", "error", err)
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		return
+	}
+
+	writeJSON(w, http.StatusOK, map[string]string{"status": "deleted"})
+}
+
+func parseOrgID(idStr string) (int64, error) {
+	var id int64
+	_, err := fmt.Sscanf(idStr, "%d", &id)
+	if err != nil || id <= 0 {
+		return 0, fmt.Errorf("invalid id: %s", idStr)
+	}
+	return id, nil
 }
 
 func generateTempPass() string {
