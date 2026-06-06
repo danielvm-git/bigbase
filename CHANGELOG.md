@@ -1,3 +1,14 @@
+# [2.6.0](https://github.com/danielvm-git/bigbase/compare/v2.5.1...v2.6.0) (2026-06-06)
+
+
+### Features
+
+* **api:** e23s03 resource isolation by org_id ([1c166ca](https://github.com/danielvm-git/bigbase/commit/1c166ca28e806b03a2650bec72e78e4dac852cfd))
+* **auth:** e23s02 team membership and invitations ([2b832f8](https://github.com/danielvm-git/bigbase/commit/2b832f86b6764d2c8b3f7e3ff1ca409c181d7ad5))
+* **auth:** e23s04 org-scoped API key management ([1ba1550](https://github.com/danielvm-git/bigbase/commit/1ba155058b50663cb4f418461310d56315ddd36b))
+* **e23:** Multi-Tenancy — team membership, isolation, API keys, usage ([60e267e](https://github.com/danielvm-git/bigbase/commit/60e267e669606b72a49d45efc94b609c121f5c86))
+* **monitoring:** e23s05 usage tracking per org ([e4c4fe0](https://github.com/danielvm-git/bigbase/commit/e4c4fe0096ce679ba367dc9579aefd7474a02128))
+
 ## [2.5.1](https://github.com/danielvm-git/bigbase/compare/v2.5.0...v2.5.1) (2026-06-05)
 
 
