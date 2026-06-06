@@ -144,7 +144,7 @@ func (p *Proxy) Start(ctx *kernel.Context) error {
 
 	p.server = &http.Server{
 		Addr:    ":" + p.port,
-		Handler: p.loggingMiddleware(p.requestIDMiddleware(p.deploymentHostMiddleware(p.mux))),
+		Handler: p.securityHeadersMiddleware(p.loggingMiddleware(p.requestIDMiddleware(p.deploymentHostMiddleware(p.mux)))),
 	}
 
 	go func() {
