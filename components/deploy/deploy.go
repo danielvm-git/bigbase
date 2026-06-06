@@ -327,6 +327,8 @@ func (d *Deploy) Handler() http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/api/deploy", d.handleDeploy)
 	mux.HandleFunc("/api/deploy/", d.handleDeployByID)
+	mux.HandleFunc("/api/samples", d.handleSamples)
+	mux.HandleFunc("/api/samples/", d.handleSamples)
 	return mux
 }
 

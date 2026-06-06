@@ -2,6 +2,7 @@ import { useEffect, useState, type ReactNode } from 'react'
 import { Outlet, NavLink, useNavigate } from 'react-router-dom'
 import { Icon, type IconName } from './components/Icon'
 import { ThemePicker } from './components/ThemePicker'
+import { TutorialOverlay, useTutorialTrigger } from './components/TutorialOverlay'
 import { useTheme } from './hooks/useTheme'
 
 interface UserInfo { id: number; email: string }
@@ -37,6 +38,7 @@ export default function Layout() {
   const [user, setUser] = useState<UserInfo | null>(null)
   const [appVersion, setAppVersion] = useState<string | null>(null)
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const tutorial = useTutorialTrigger()
 
   useEffect(() => {
     fetch('/api/auth/me')
@@ -147,6 +149,8 @@ export default function Layout() {
         {footerBlock}
       </nav>
 
+      {tutorial.visible && <TutorialOverlay onClose={tutorial.close} />}
+
       <div className="layout-body">
         <main className="content">
           <Outlet />
@@ -158,6 +162,16 @@ export default function Layout() {
             <span>© 2026 BigBase · MIT License</span>
           </div>
           <div className="app-footer-meta">
+            {!tutorial.isDone && (
+              <button
+                type="button"
+                className="btn btn-secondary btn-sm"
+                onClick={tutorial.open}
+                data-testid="tutorial-btn"
+              >
+                Help
+              </button>
+            )}
             {appVersion && <span className="mono">v{appVersion}</span>}
             <span className="app-footer-sep" aria-hidden />
             <span>

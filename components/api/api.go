@@ -100,6 +100,10 @@ func (a *API) Handler() http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/api/collections/", a.handleCollection)
 	mux.HandleFunc("/api/sql", a.handleSQL)
+	mux.HandleFunc("/api/onboarding", a.handleOnboarding)
+	mux.HandleFunc("/api/scaffold/db", a.handleScaffoldDB)
+	mux.HandleFunc("/api/scaffold/repo", a.handleScaffoldRepo)
+	mux.HandleFunc("/api/scaffold/function", a.handleScaffoldFunction)
 	return mux
 }
 
