@@ -5,14 +5,32 @@ export interface SystemMetricsSlice {
   uptime_seconds: number
 }
 
+export interface HostMetricsSlice {
+  cpu_percent: number
+  mem_used_bytes: number
+  mem_total_bytes: number
+  disk_used_bytes: number
+  disk_total_bytes: number
+  net_bytes_in: number
+  net_bytes_out: number
+  collected_at: string
+}
+
 export interface MonitoringMetricsPayload {
   system?: SystemMetricsSlice
+  host?: HostMetricsSlice
   requests?: {
     total: number
     avg_latency_ms: number
     by_status: Record<string, number>
     by_endpoint: Record<string, { count: number; status_count: Record<string, number>; avg_latency_ms: number }>
   }
+}
+
+export interface SSEMetricsEvent {
+  system: SystemMetricsSlice
+  host: HostMetricsSlice
+  sent_at: string
 }
 
 /** Fetch /api/monitoring/metrics (CPU needs a prior server sample for non-zero percent). */

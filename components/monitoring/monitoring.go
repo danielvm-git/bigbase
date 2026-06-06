@@ -40,12 +40,13 @@ func (noopLogger) Error(msg string, args ...any) {}
 func (noopLogger) Debug(msg string, args ...any) {}
 
 type Alert struct {
-	ID        string  `json:"id"`
-	Name      string  `json:"name"`
-	Metric    string  `json:"metric"`
-	Threshold float64 `json:"threshold"`
-	Operator  string  `json:"operator"`
-	Enabled   bool    `json:"enabled"`
+	ID              string  `json:"id"`
+	Name            string  `json:"name"`
+	Metric          string  `json:"metric"`
+	Threshold       float64 `json:"threshold"`
+	Operator        string  `json:"operator"`
+	Enabled         bool    `json:"enabled"`
+	DurationSeconds int64   `json:"duration_seconds"`
 }
 
 type LogEntry struct {
@@ -81,6 +82,7 @@ type MetricsCollector struct {
 	mu        sync.RWMutex
 	startedAt time.Time
 	requests  map[string]*EndpointMetrics
+	host      HostMetrics
 }
 
 type Monitoring struct {
@@ -92,6 +94,10 @@ type Monitoring struct {
 	cpuMu        sync.Mutex
 	cpuSampleAt  time.Time
 	cpuTotalNano int64
+
+	stopHost   chan struct{}
+	stopAlerts chan struct{}
+	kctx       *kernel.Context // set in Start; used by alert checker to emit events
 }
 
 type Options struct {
@@ -114,6 +120,8 @@ func New(opts Options) *Monitoring {
 	}
 }
 
+const hostCollectInterval = 15 * time.Second
+
 func (m *Monitoring) Name() string                  { return "monitoring" }
 func (m *Monitoring) Version() string               { return version }
 func (m *Monitoring) Dependencies() []string         { return []string{"db"} }
@@ -123,34 +131,77 @@ func (m *Monitoring) Init(ctx *kernel.Context, config json.RawMessage) error { r
 func (m *Monitoring) Start(ctx *kernel.Context) error {
 	m.stream = newEventStream()
 	if ctx != nil && ctx.Kernel != nil {
-		// Subscribe to common event bus hooks for the visualizer.
 		knownHooks := []string{"mutation", "request", "deploy", "scaffold_db", "scaffold_repo", "scaffold_function"}
 		m.WithEventBus(ctx.Kernel.EventBus(), knownHooks)
 	}
-	if m.db == nil {
-		return nil
+	if m.db != nil {
+		if err := m.db.Migrate(`CREATE TABLE IF NOT EXISTS monitoring_logs (
+			id TEXT PRIMARY KEY,
+			level TEXT NOT NULL DEFAULT 'info',
+			message TEXT NOT NULL,
+			created_at TEXT NOT NULL DEFAULT (datetime('now'))
+		)`); err != nil {
+			return err
+		}
+		if err := m.db.Migrate(`CREATE TABLE IF NOT EXISTS monitoring_alerts (
+			id TEXT PRIMARY KEY,
+			name TEXT NOT NULL,
+			metric TEXT NOT NULL,
+			threshold REAL NOT NULL DEFAULT 0,
+			operator TEXT NOT NULL DEFAULT 'gt',
+			enabled INTEGER NOT NULL DEFAULT 1,
+			duration_seconds INTEGER NOT NULL DEFAULT 300
+		)`); err != nil {
+			return err
+		}
+		if err := m.migrateOrgUsageTable(); err != nil {
+			return err
+		}
 	}
-	if err := m.db.Migrate(`CREATE TABLE IF NOT EXISTS monitoring_logs (
-		id TEXT PRIMARY KEY,
-		level TEXT NOT NULL DEFAULT 'info',
-		message TEXT NOT NULL,
-		created_at TEXT NOT NULL DEFAULT (datetime('now'))
-	)`); err != nil {
-		return err
-	}
-	if err := m.db.Migrate(`CREATE TABLE IF NOT EXISTS monitoring_alerts (
-		id TEXT PRIMARY KEY,
-		name TEXT NOT NULL,
-		metric TEXT NOT NULL,
-		threshold REAL NOT NULL DEFAULT 0,
-		operator TEXT NOT NULL DEFAULT 'gt',
-		enabled INTEGER NOT NULL DEFAULT 1
-	)`); err != nil {
-		return err
-	}
-	return m.migrateOrgUsageTable()
+
+	m.kctx = ctx
+	m.stopHost = make(chan struct{})
+	m.stopAlerts = make(chan struct{})
+	go m.runHostCollector()
+	go m.runAlertChecker()
+	return nil
 }
-func (m *Monitoring) Stop(ctx *kernel.Context) error { return nil }
+
+func (m *Monitoring) Stop(ctx *kernel.Context) error {
+	if m.stopHost != nil {
+		close(m.stopHost)
+	}
+	if m.stopAlerts != nil {
+		close(m.stopAlerts)
+	}
+	return nil
+}
+
+func (m *Monitoring) runHostCollector() {
+	m.storeHostMetrics(collectHostMetricsNonBlocking(m.logger))
+	ticker := time.NewTicker(hostCollectInterval)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ticker.C:
+			m.storeHostMetrics(collectHostMetrics(m.logger))
+		case <-m.stopHost:
+			return
+		}
+	}
+}
+
+func (m *Monitoring) storeHostMetrics(h HostMetrics) {
+	m.metrics.mu.Lock()
+	m.metrics.host = h
+	m.metrics.mu.Unlock()
+}
+
+func (m *Monitoring) LatestHostMetrics() HostMetrics {
+	m.metrics.mu.RLock()
+	defer m.metrics.mu.RUnlock()
+	return m.metrics.host
+}
 
 type statusRecorder struct {
 	http.ResponseWriter
@@ -264,12 +315,15 @@ func (m *Monitoring) Handler() http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/api/monitoring/health", m.handleHealth)
 	mux.HandleFunc("/api/monitoring/metrics", m.handleMetrics)
+	mux.HandleFunc("/api/monitoring/metrics/stream", m.handleMetricsStream)
 	mux.HandleFunc("/api/monitoring/metrics/prometheus", m.handlePrometheusMetrics)
 	mux.HandleFunc("/api/monitoring/logs", m.handleLogs)
 	mux.HandleFunc("/api/monitoring/logs/", m.handleLogByID)
 	mux.HandleFunc("/api/monitoring/alerts", m.handleAlerts)
 	mux.HandleFunc("GET /api/orgs/{id}/usage", m.handleOrgUsage)
 	mux.HandleFunc("/api/monitoring/events", m.handleSSEEvents)
+	mux.HandleFunc("/api/monitoring/alerts/", m.handleAlertByID)
+	mux.HandleFunc("/api/monitoring/processes", m.handleProcesses)
 	return mux
 }
 
@@ -327,6 +381,7 @@ func (m *Monitoring) handleMetrics(w http.ResponseWriter, r *http.Request) {
 			"by_status":      byStatus,
 			"avg_latency_ms": avgLatency,
 		},
+		"host": m.LatestHostMetrics(),
 	})
 }
 
@@ -548,11 +603,12 @@ func (m *Monitoring) handleAlertCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var alert struct {
-		Name      string  `json:"name"`
-		Metric    string  `json:"metric"`
-		Threshold float64 `json:"threshold"`
-		Operator  string  `json:"operator"`
-		Enabled   bool    `json:"enabled"`
+		Name            string  `json:"name"`
+		Metric          string  `json:"metric"`
+		Threshold       float64 `json:"threshold"`
+		Operator        string  `json:"operator"`
+		Enabled         bool    `json:"enabled"`
+		DurationSeconds int64   `json:"duration_seconds"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&alert); err != nil {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid JSON"})
@@ -562,14 +618,17 @@ func (m *Monitoring) handleAlertCreate(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "name and metric are required"})
 		return
 	}
+	if alert.DurationSeconds <= 0 {
+		alert.DurationSeconds = 300 // default 5 minutes
+	}
 	id := fmt.Sprintf("%d", time.Now().UnixNano())
 	enabled := 0
 	if alert.Enabled {
 		enabled = 1
 	}
 	_, err := m.db.ExecContext(r.Context(),
-		"INSERT INTO monitoring_alerts (id, name, metric, threshold, operator, enabled) VALUES (?, ?, ?, ?, ?, ?)",
-		id, alert.Name, alert.Metric, alert.Threshold, alert.Operator, enabled)
+		"INSERT INTO monitoring_alerts (id, name, metric, threshold, operator, enabled, duration_seconds) VALUES (?, ?, ?, ?, ?, ?, ?)",
+		id, alert.Name, alert.Metric, alert.Threshold, alert.Operator, enabled, alert.DurationSeconds)
 	if err != nil {
 		m.logger.Error("insert alert", "error", err)
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
@@ -584,7 +643,7 @@ func (m *Monitoring) handleAlertList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	rows, err := m.db.QueryContext(r.Context(),
-		"SELECT id, name, metric, threshold, operator, enabled FROM monitoring_alerts ORDER BY name")
+		"SELECT id, name, metric, threshold, operator, enabled, duration_seconds FROM monitoring_alerts ORDER BY name")
 	if err != nil {
 		m.logger.Error("list alerts", "error", err)
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
@@ -596,7 +655,7 @@ func (m *Monitoring) handleAlertList(w http.ResponseWriter, r *http.Request) {
 	for rows.Next() {
 		var a Alert
 		var enabled int
-		if err := rows.Scan(&a.ID, &a.Name, &a.Metric, &a.Threshold, &a.Operator, &enabled); err != nil {
+		if err := rows.Scan(&a.ID, &a.Name, &a.Metric, &a.Threshold, &a.Operator, &enabled, &a.DurationSeconds); err != nil {
 			m.logger.Error("scan alert", "error", err)
 			continue
 		}
@@ -611,5 +670,7 @@ func writeJSON(w http.ResponseWriter, status int, data any) {
 	w.WriteHeader(status)
 	_ = json.NewEncoder(w).Encode(data)
 }
+
+// handleMetricsStream, handleAlertByID, handleProcesses are implemented in separate files.
 
 var _ kernel.Component = (*Monitoring)(nil)
