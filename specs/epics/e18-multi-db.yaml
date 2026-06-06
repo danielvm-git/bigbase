@@ -3,36 +3,36 @@ context: domain
 id: e18
 title: Multi-DB Support (PostgreSQL)
 wsjf: 2.0
-status: pending
+status: done
 covers: []
 stories:
   - id: e18s01
     title: Extract shared DBer interface
-    status: pending
+    status: done
     tasks:
       - desc: Extract shared DBer interface into kernel/dber.go
         verify: "go build ./..."
   - id: e18s02
     title: PostgreSQL driver
-    status: pending
+    status: done
     tasks:
       - desc: Implement PostgreSQL driver in components/db/postgres.go
         verify: "go test ./components/db/ -run TestPostgres -v"
   - id: e18s03
     title: Config-based driver selection
-    status: pending
+    status: done
     tasks:
       - desc: Add --db-driver and --db-dsn flags; db.New selects driver
         verify: "go run . serve --db-driver postgres --db-dsn postgres://localhost/bigbase && curl -sf http://localhost:9999/health"
   - id: e18s04
     title: Dual-driver CI matrix
-    status: pending
+    status: done
     tasks:
       - desc: GitHub Actions matrix for SQLite and PostgreSQL
         verify: "grep -q matrix .github/workflows/ci.yml && echo OK"
   - id: e18s05
     title: Versioned migration system
-    status: pending
+    status: done
     tasks:
       - desc: db.Migrate with up/down, version tracking, rollback
         verify: "go test ./components/db/ -run TestMigration -v"

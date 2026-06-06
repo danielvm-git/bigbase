@@ -1,9 +1,9 @@
 type: release-plan
 context: domain
 release:
-  version: "2.0.0"
+  version: "2.7.0"
   codename: BigBase v2
-  status: in_progress
+  status: done
   semantic_release: true
   bump_hint: minor
 epics:

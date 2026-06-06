@@ -3,36 +3,36 @@ context: domain
 id: e20
 title: Platform Operations
 wsjf: 4.0
-status: pending
+status: done
 covers: []
 stories:
   - id: e20s01
     title: Backup and restore CLI and API
-    status: pending
+    status: done
     tasks:
       - desc: bigbase backup/restore CLI and POST /api/backup, /api/restore
         verify: "go run . backup --db bigbase.db --output /tmp/backup.sql && test -f /tmp/backup.sql"
   - id: e20s02
     title: Migration tooling CLI
-    status: pending
+    status: done
     tasks:
       - desc: bigbase migrate up|down|status with migrations/ directory
         verify: "go test ./components/db/ -run TestMigrationTool -v"
   - id: e20s03
     title: Environment variable management
-    status: pending
+    status: done
     tasks:
       - desc: CRUD /api/env with AES-256-GCM at rest and admin UI editor
         verify: "go test ./components/api/ -run TestEnvVars -v"
   - id: e20s04
     title: Custom domains for Sites
-    status: pending
+    status: done
     tasks:
       - desc: POST /api/sites/:id/domains with DNS TXT verification and TLS
         verify: "go test ./components/sites/ -run TestCustomDomain -v"
   - id: e20s05
     title: Outbound webhook system
-    status: pending
+    status: done
     tasks:
       - desc: components/webhooks with retry and exponential backoff
         verify: "go test ./components/webhooks/ -run TestWebhookDelivery -v"

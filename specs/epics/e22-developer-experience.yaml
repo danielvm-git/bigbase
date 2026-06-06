@@ -3,36 +3,36 @@ context: domain
 id: e22
 title: Developer Experience
 wsjf: 5.0
-status: pending
+status: done
 covers: []
 stories:
   - id: e22s01
     title: Onboarding checklist UI
-    status: pending
+    status: done
     tasks:
       - desc: Dashboard checklist card with progress tracking
         verify: "cd ui && npm run build"
   - id: e22s02
     title: 1-click scaffolding API
-    status: pending
+    status: done
     tasks:
       - desc: POST /api/scaffold/db, repo, function endpoints
         verify: "go test ./components/api/ -run TestScaffold -v"
   - id: e22s03
     title: Event Bus visualizer
-    status: pending
+    status: done
     tasks:
       - desc: GET /api/monitoring/events SSE and #/events canvas
         verify: "curl -sf -N --max-time 2 http://localhost:9999/api/monitoring/events | head -1"
   - id: e22s04
     title: Sample apps with deploy buttons
-    status: pending
+    status: done
     tasks:
       - desc: Three sample repos and POST /api/samples/:name/deploy
         verify: "go test ./components/deploy/ -run TestSampleDeploy -v"
   - id: e22s05
     title: Interactive tutorial overlay
-    status: pending
+    status: done
     tasks:
       - desc: Step-by-step tutorial on admin UI
         verify: "cd ui && npm run build"

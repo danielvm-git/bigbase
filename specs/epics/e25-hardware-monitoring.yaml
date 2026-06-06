@@ -3,36 +3,36 @@ context: domain
 id: e25
 title: Hardware Monitoring
 wsjf: 4.25
-status: pending
+status: done
 covers: []
 stories:
   - id: e25s01
     title: Host metrics collection
-    status: pending
+    status: done
     tasks:
       - desc: Disk, network I/O, load in MetricsCollector
         verify: "curl -sf http://localhost:9999/api/monitoring/metrics | grep -q host"
   - id: e25s02
     title: Real-time metrics SSE
-    status: pending
+    status: done
     tasks:
       - desc: GET /api/monitoring/metrics/stream SSE every 5s
         verify: "curl -sf -N --max-time 3 http://localhost:9999/api/monitoring/metrics/stream | head -1"
   - id: e25s03
     title: Monitoring page charts
-    status: pending
+    status: done
     tasks:
       - desc: CPU/memory charts, disk gauge, network sparkline on MonitoringPage
         verify: "cd ui && npm run build"
   - id: e25s04
     title: Process-level monitoring
-    status: pending
+    status: done
     tasks:
       - desc: GET /api/monitoring/processes for BigBase and child processes
         verify: "curl -sf http://localhost:9999/api/monitoring/processes | grep -q processes"
   - id: e25s05
     title: Alerting rules
-    status: pending
+    status: done
     tasks:
       - desc: Configurable alert rules and admin UI configuration
         verify: "go test ./components/monitoring/ -run TestAlertRules -v"
