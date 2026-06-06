@@ -1,0 +1,71 @@
+# ============================================================================
+# ci.yml — Continuous Integration for BigBase
+#
+# Runs on every pull request and push to main.
+# Tests both SQLite and PostgreSQL drivers via a matrix strategy.
+# ============================================================================
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+env:
+  GO_VERSION: '1.26'
+
+jobs:
+  test:
+    name: Test (${{ matrix.db }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    strategy:
+      fail-fast: false
+      matrix:
+        db: [sqlite, postgres]
+
+    services:
+      postgres:
+        image: postgres:16
+        # Only start the container for the postgres matrix leg.
+        # GitHub Actions doesn't support conditional services, so we start it
+        # for both but only connect from the postgres leg (sqlite leg ignores it).
+        env:
+          POSTGRES_DB: bigbase_test
+          POSTGRES_USER: bigbase
+          POSTGRES_PASSWORD: bigbase_test_pw
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      BIGBASE_DB_DRIVER: ${{ matrix.db }}
+      BIGBASE_DB_DSN: ${{ matrix.db == 'postgres' && 'postgres://bigbase:bigbase_test_pw@localhost:5432/bigbase_test' || ':memory:' }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go ${{ env.GO_VERSION }}
+        uses: actions/setup-go@v5
+        with:
+          go-version: '${{ env.GO_VERSION }}'
+          cache: true
+
+      - name: Download modules
+        run: go mod download
+
+      - name: Build
+        run: go build ./...
+
+      - name: Run tests
+        run: go test ./... -count=1 -timeout 120s

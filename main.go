@@ -111,7 +111,9 @@ func main() {
 func startProxy() {
 	serveFS := flag.NewFlagSet("serve", flag.ContinueOnError)
 	port := serveFS.String("port", "8080", "HTTP server port")
-	dbPath := serveFS.String("db", "bigbase.db", "SQLite database path")
+	dbPath := serveFS.String("db", "bigbase.db", "SQLite database path (legacy; use --db-dsn)")
+	dbDriver := serveFS.String("db-driver", "", "Database driver: sqlite (default) or postgres")
+	dbDSN := serveFS.String("db-dsn", "", "Database DSN (file path for sqlite, connection URL for postgres)")
 	googleClientID := serveFS.String("google-client-id", "", "Google OAuth client ID")
 	googleClientSecret := serveFS.String("google-client-secret", "", "Google OAuth client secret")
 	githubAppID := serveFS.String("github-app-id", "", "GitHub App ID")
@@ -129,6 +131,8 @@ func startProxy() {
 	ghPrivateKeyPath := config.FlagOrEnv(*githubPrivateKeyPath, "GITHUB_APP_PRIVATE_KEY_PATH")
 	ghWebhookSecret := config.FlagOrEnv(*githubWebhookSecret, "GITHUB_WEBHOOK_SECRET")
 	sitesDomainVal := config.FlagOrEnv(*sitesDomain, "BIGBASE_SITES_DOMAIN")
+	dbDriverVal := config.FlagOrEnv(*dbDriver, "BIGBASE_DB_DRIVER")
+	dbDSNVal := config.FlagOrEnv(*dbDSN, "BIGBASE_DB_DSN")
 
 	level, err := parseLogLevel(*logLevel)
 	if err != nil {
@@ -145,7 +149,9 @@ func startProxy() {
 		Logger: logger,
 	})
 	d := db.New(db.Options{
-		Path:   *dbPath,
+		Driver: dbDriverVal,
+		DSN:    dbDSNVal,
+		Path:   *dbPath, // legacy fallback when --db-dsn not provided
 		Logger: logger,
 	})
 	a := api.New(api.Options{
@@ -297,7 +303,11 @@ func startProxy() {
 		os.Exit(1)
 	}
 
-	logger.Info("bigbase running", "port", *port, "db", *dbPath)
+	effectiveDSN := dbDSNVal
+	if effectiveDSN == "" {
+		effectiveDSN = *dbPath
+	}
+	logger.Info("bigbase running", "port", *port, "db-driver", dbDriverVal, "dsn", effectiveDSN)
 
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)

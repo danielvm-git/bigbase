@@ -5,7 +5,6 @@ import (
 	"crypto/hmac"
 	"crypto/rand"
 	"crypto/sha256"
-	"database/sql"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -37,12 +36,8 @@ func (noopLogger) Warn(msg string, args ...any)   {}
 func (noopLogger) Error(msg string, args ...any)  {}
 func (noopLogger) Debug(msg string, args ...any)  {}
 
-type DBer interface {
-	ExecContext(ctx context.Context, query string, args ...any) (sql.Result, error)
-	QueryContext(ctx context.Context, query string, args ...any) (*sql.Rows, error)
-	QueryRowContext(ctx context.Context, query string, args ...any) *sql.Row
-	Migrate(migration string) error
-}
+// DBer is an alias for kernel.DBer — the shared database abstraction.
+type DBer = kernel.DBer
 
 type GitHub struct {
 	db             DBer
