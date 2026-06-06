@@ -170,6 +170,11 @@ func (a *Auth) Start(ctx *kernel.Context) error {
 		return fmt.Errorf("migrate password reset: %w", err)
 	}
 
+	// Refresh tokens table.
+	if err := a.migrateRefreshTokens(context.Background()); err != nil {
+		return fmt.Errorf("migrate refresh tokens: %w", err)
+	}
+
 	a.logger.Info("auth component ready")
 	return nil
 }
@@ -237,6 +242,7 @@ func (a *Auth) Handler() http.Handler {
 	mux.HandleFunc("/api/auth/verify-email", a.handleVerifyEmail)
 	mux.HandleFunc("/api/auth/forgot-password", a.handleForgotPassword)
 	mux.HandleFunc("/api/auth/reset-password", a.handleResetPassword)
+	mux.HandleFunc("/api/auth/refresh", a.handleRefresh)
 	return mux
 }
 
@@ -334,8 +340,24 @@ func (a *Auth) writeAuthResponse(w http.ResponseWriter, r *http.Request, status 
 		Path:     "/",
 		MaxAge:   86400,
 	})
+
+	// Issue a refresh token for every successful auth response.
+	refreshToken := ""
+	familyID, famErr := generateFamilyID()
+	if famErr == nil {
+		rt, rtErr := a.issueRefreshToken(r.Context(), userID, familyID)
+		if rtErr != nil {
+			a.logger.Error("issue refresh token", "error", rtErr)
+		} else {
+			refreshToken = rt
+		}
+	} else {
+		a.logger.Error("generate family id", "error", famErr)
+	}
+
 	writeJSON(w, status, map[string]any{
-		"token": token,
+		"token":         token,
+		"refresh_token": refreshToken,
 		"user": map[string]any{
 			"id":    userID,
 			"email": email,
