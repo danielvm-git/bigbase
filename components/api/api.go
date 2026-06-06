@@ -15,6 +15,22 @@ import (
 
 const version = "0.1.0"
 
+type contextKey string
+
+const ctxOrgID contextKey = "org_id"
+
+// WithOrgID stores the org_id in the request context.
+func WithOrgID(ctx context.Context, orgID int64) context.Context {
+	return context.WithValue(ctx, ctxOrgID, orgID)
+}
+
+// OrgIDFromContext retrieves the org_id from the request context.
+// Returns (0, false) when no org_id is set.
+func OrgIDFromContext(ctx context.Context) (int64, bool) {
+	id, ok := ctx.Value(ctxOrgID).(int64)
+	return id, ok
+}
+
 var internalTables = map[string]bool{
 	"users": true, "storage_files": true,
 	"git_repos": true, "git_ssh_keys": true,
@@ -96,11 +112,14 @@ func (a *API) ensureTable(collection string) error {
 	}
 	query := fmt.Sprintf(`CREATE TABLE IF NOT EXISTS %s (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		org_id INTEGER NOT NULL DEFAULT 0,
 		data TEXT
 	)`, collection)
 	if err := a.db.Migrate(query); err != nil {
 		return err
 	}
+	// Best-effort: add org_id to pre-existing tables (ignored if column already exists)
+	_ = a.db.Migrate(fmt.Sprintf("ALTER TABLE %s ADD COLUMN org_id INTEGER NOT NULL DEFAULT 0", collection))
 	a.tables[collection] = true
 	return nil
 }
@@ -173,7 +192,17 @@ func (a *API) listRecords(w http.ResponseWriter, r *http.Request, collection str
 	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 	defer cancel()
 
-	rows, err := a.db.QueryContext(ctx, fmt.Sprintf("SELECT id, data FROM %s ORDER BY id LIMIT ? OFFSET ?", collection), limit, offset)
+	var rows *sql.Rows
+	var err error
+	if orgID, ok := OrgIDFromContext(r.Context()); ok {
+		rows, err = a.db.QueryContext(ctx,
+			fmt.Sprintf("SELECT id, data FROM %s WHERE org_id = ? ORDER BY id LIMIT ? OFFSET ?", collection),
+			orgID, limit, offset)
+	} else {
+		rows, err = a.db.QueryContext(ctx,
+			fmt.Sprintf("SELECT id, data FROM %s ORDER BY id LIMIT ? OFFSET ?", collection),
+			limit, offset)
+	}
 	if err != nil {
 		a.logger.Error("list records query", "collection", collection, "error", err)
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
@@ -221,11 +250,16 @@ func (a *API) getRecord(w http.ResponseWriter, r *http.Request, collection, id s
 	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 	defer cancel()
 
-	row := a.db.QueryRowContext(ctx, fmt.Sprintf("SELECT id, data FROM %s WHERE id = ?", collection), id)
-	var recordID int64
+	// Fetch record with org_id for isolation check
+	row := a.db.QueryRowContext(ctx, fmt.Sprintf("SELECT id, org_id, data FROM %s WHERE id = ?", collection), id)
+	var recordID, recordOrgID int64
 	var dataStr string
-	if err := row.Scan(&recordID, &dataStr); err != nil {
+	if err := row.Scan(&recordID, &recordOrgID, &dataStr); err != nil {
 		writeJSON(w, http.StatusNotFound, map[string]string{"error": "not found"})
+		return
+	}
+	if orgID, ok := OrgIDFromContext(r.Context()); ok && recordOrgID != orgID {
+		writeJSON(w, http.StatusForbidden, map[string]string{"error": "access denied"})
 		return
 	}
 	record := map[string]any{"id": recordID}
@@ -270,7 +304,10 @@ func (a *API) createRecord(w http.ResponseWriter, r *http.Request, collection st
 	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 	defer cancel()
 
-	res, err := a.db.ExecContext(ctx, fmt.Sprintf("INSERT INTO %s (data) VALUES (?)", collection), string(dataBytes))
+	orgID, _ := OrgIDFromContext(r.Context())
+	res, err := a.db.ExecContext(ctx,
+		fmt.Sprintf("INSERT INTO %s (org_id, data) VALUES (?, ?)", collection),
+		orgID, string(dataBytes))
 	if err != nil {
 		a.logger.Error("insert record", "collection", collection, "error", err)
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
@@ -300,10 +337,15 @@ func (a *API) updateRecord(w http.ResponseWriter, r *http.Request, collection, i
 	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 	defer cancel()
 
-	row := a.db.QueryRowContext(ctx, fmt.Sprintf("SELECT data FROM %s WHERE id = ?", collection), id)
+	row := a.db.QueryRowContext(ctx, fmt.Sprintf("SELECT org_id, data FROM %s WHERE id = ?", collection), id)
+	var existingOrgID int64
 	var existingStr string
-	if err := row.Scan(&existingStr); err != nil {
+	if err := row.Scan(&existingOrgID, &existingStr); err != nil {
 		writeJSON(w, http.StatusNotFound, map[string]string{"error": "not found"})
+		return
+	}
+	if orgID, ok := OrgIDFromContext(r.Context()); ok && existingOrgID != orgID {
+		writeJSON(w, http.StatusForbidden, map[string]string{"error": "access denied"})
 		return
 	}
 
@@ -334,6 +376,21 @@ func (a *API) deleteRecord(w http.ResponseWriter, r *http.Request, collection, i
 
 	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 	defer cancel()
+
+	// Enforce org isolation: check ownership before deleting
+	if orgID, ok := OrgIDFromContext(r.Context()); ok {
+		var ownerOrgID int64
+		err := a.db.QueryRowContext(ctx,
+			fmt.Sprintf("SELECT org_id FROM %s WHERE id = ?", collection), id).Scan(&ownerOrgID)
+		if err != nil {
+			writeJSON(w, http.StatusNotFound, map[string]string{"error": "not found"})
+			return
+		}
+		if ownerOrgID != orgID {
+			writeJSON(w, http.StatusForbidden, map[string]string{"error": "access denied"})
+			return
+		}
+	}
 
 	res, err := a.db.ExecContext(ctx, fmt.Sprintf("DELETE FROM %s WHERE id = ?", collection), id)
 	if err != nil {
