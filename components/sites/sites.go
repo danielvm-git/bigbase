@@ -55,7 +55,7 @@ type Site struct {
 	LatestDeployment  *Deployment `json:"latest_deployment,omitempty"`
 }
 
-type DeployTrigger func(ctx context.Context, repoID, branch string) (*Deployment, error)
+type DeployTrigger func(ctx context.Context, repoID, branch, siteName string) (*Deployment, error)
 
 type Sites struct {
 	db            DBer
@@ -340,7 +340,7 @@ func (s *Sites) createSite(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if s.triggerDeploy != nil {
-		dep, err := s.triggerDeploy(r.Context(), req.GitRepoID, req.ProductionBranch)
+		dep, err := s.triggerDeploy(r.Context(), req.GitRepoID, req.ProductionBranch, req.Name)
 		if err != nil {
 			writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
 			return
@@ -360,14 +360,14 @@ func (s *Sites) redeploySite(w http.ResponseWriter, r *http.Request, id string) 
 	}
 	_ = json.NewDecoder(r.Body).Decode(&req)
 
-	var gitRepoID, branch string
+	var gitRepoID, branch, siteName string
 	err := s.db.QueryRowContext(ctx,
-		"SELECT git_repo_id, production_branch FROM sites WHERE id = ? OR git_repo_id = ?", id, id).
-		Scan(&gitRepoID, &branch)
+		"SELECT git_repo_id, production_branch, name FROM sites WHERE id = ? OR git_repo_id = ?", id, id).
+		Scan(&gitRepoID, &branch, &siteName)
 	if err != nil {
 		gitRepoID = id
 		branch = "main"
-		_ = s.db.QueryRowContext(ctx, "SELECT default_branch FROM git_repos WHERE id = ?", id).Scan(&branch)
+		_ = s.db.QueryRowContext(ctx, "SELECT name, default_branch FROM git_repos WHERE id = ?", id).Scan(&siteName, &branch)
 	}
 	if req.Branch != "" {
 		branch = req.Branch
@@ -378,7 +378,7 @@ func (s *Sites) redeploySite(w http.ResponseWriter, r *http.Request, id string) 
 		return
 	}
 
-	dep, err := s.triggerDeploy(ctx, gitRepoID, branch)
+	dep, err := s.triggerDeploy(ctx, gitRepoID, branch, siteName)
 	if err != nil {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
 		return

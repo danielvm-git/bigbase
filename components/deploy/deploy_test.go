@@ -945,6 +945,53 @@ func TestDeployPublicURL(t *testing.T) {
 	}
 }
 
+func TestDeployCustomSiteName(t *testing.T) {
+	logger := testLogger{}
+	k := kernel.New(logger)
+	database := db.New(db.Options{Path: ":memory:", Logger: logger})
+	gitDir := t.TempDir()
+	buildsDir := t.TempDir()
+	gitComp := newGitStub(gitDir)
+
+	dep := deploy.New(deploy.Options{
+		DB:           database,
+		Logger:       logger,
+		BuildsDir:    buildsDir,
+		GitDir:       gitDir,
+		PublicDomain: "bigbase.click",
+	})
+	k.Register(database)
+	k.Register(gitComp)
+	k.Register(dep)
+	if err := k.Start(); err != nil {
+		t.Fatalf("kernel start: %v", err)
+	}
+	t.Cleanup(func() { _ = k.Stop() })
+
+	handler := dep.Handler()
+	repoID := createTestRepo(t, database, "repo-custom", gitDir)
+
+	var buf bytes.Buffer
+	_ = json.NewEncoder(&buf).Encode(map[string]string{
+		"repo_id":   repoID,
+		"site_name": "my-custom-slug",
+	})
+	req := httptest.NewRequest("POST", "/api/deploy", &buf)
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+	if w.Code != http.StatusCreated {
+		t.Fatalf("create failed: %d: %s", w.Code, w.Body.String())
+	}
+
+	var created map[string]any
+	_ = json.NewDecoder(w.Body).Decode(&created)
+	url, _ := created["url"].(string)
+	if !strings.HasPrefix(url, "https://my-custom-slug.bigbase.click") {
+		t.Fatalf("url = %q, want prefix https://my-custom-slug.bigbase.click", url)
+	}
+}
+
 func TestDeployBuildError(t *testing.T) {
 	if _, err := exec.LookPath("npm"); err != nil {
 		t.Skip("npm not in PATH")

@@ -47,10 +47,10 @@ func TestSitesCreateTriggersDeploy(t *testing.T) {
 	s := sites.New(sites.Options{
 		DB:     d,
 		Logger: logger,
-		TriggerDeploy: func(_ context.Context, repoID, branch string) (*sites.Deployment, error) {
+		TriggerDeploy: func(_ context.Context, repoID, branch, siteName string) (*sites.Deployment, error) {
 			triggered = true
-			if repoID != "repo-1" || branch != "main" {
-				t.Fatalf("trigger args repoID=%s branch=%s", repoID, branch)
+			if repoID != "repo-1" || branch != "main" || siteName != "my-site" {
+				t.Fatalf("trigger args repoID=%s branch=%s siteName=%s", repoID, branch, siteName)
 			}
 			return &sites.Deployment{
 				ID: "dep-1", RepoID: repoID, Branch: branch, Status: "pending",
@@ -88,6 +88,49 @@ func TestSitesCreateTriggersDeploy(t *testing.T) {
 	_ = json.NewDecoder(w.Body).Decode(&site)
 	if site.LatestDeployment == nil || site.LatestDeployment.URL != "https://my-site.bigbase.click" {
 		t.Fatalf("unexpected deployment: %+v", site.LatestDeployment)
+	}
+}
+
+func TestSitesCreateTriggersDeployWithCustomName(t *testing.T) {
+	logger := testLogger{}
+	k := kernel.New(logger)
+	d := db.New(db.Options{Path: ":memory:", Logger: logger})
+	g := git.New(git.Options{DB: d, Logger: logger, Dir: t.TempDir()})
+	var receivedSiteName string
+	s := sites.New(sites.Options{
+		DB:     d,
+		Logger: logger,
+		TriggerDeploy: func(_ context.Context, repoID, branch, siteName string) (*sites.Deployment, error) {
+			receivedSiteName = siteName
+			return &sites.Deployment{
+				ID: "dep-1", RepoID: repoID, Branch: branch, Status: "pending",
+				URL: "https://" + siteName + ".bigbase.click", Port: 10001, CreatedAt: "2026-06-04T00:00:00Z",
+			}, nil
+		},
+	})
+	k.Register(d)
+	k.Register(g)
+	k.Register(s)
+	if err := k.Start(); err != nil {
+		t.Fatalf("kernel start: %v", err)
+	}
+	t.Cleanup(func() { _ = k.Stop() })
+
+	_, _ = d.ExecContext(context.Background(),
+		`INSERT INTO git_repos (id, name, owner_id, private, default_branch, description, created_at)
+		 VALUES ('repo-1', 'original-repo-name', 0, 1, 'main', '', datetime('now'))`)
+
+	body := bytes.NewBufferString(`{"name":"custom-site-name","git_repo_id":"repo-1","production_branch":"main","root_path":"./"}`)
+	req := httptest.NewRequest(http.MethodPost, "/api/sites", body)
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	s.Handler().ServeHTTP(w, req)
+
+	if w.Code != http.StatusCreated {
+		t.Fatalf("expected 201, got %d: %s", w.Code, w.Body.String())
+	}
+	if receivedSiteName != "custom-site-name" {
+		t.Fatalf("expected siteName 'custom-site-name', got '%s'", receivedSiteName)
 	}
 }
 

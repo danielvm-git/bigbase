@@ -15,7 +15,7 @@ epic_cycle:
   story_bcps: 2
 bug_cycle:
   current_step: null
-  completed_steps: []
+  completed_steps: [investigate-bug, fix-bug]
 git:
   branch: feat/e29-security-fixes
   hash: 03cf4b8be4cb7de8450b0019b2e71dd4f3743f80

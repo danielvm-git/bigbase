@@ -353,8 +353,9 @@ func (d *Deploy) HandleCreate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var req struct {
-		RepoID string `json:"repo_id"`
-		Branch string `json:"branch"`
+		RepoID   string `json:"repo_id"`
+		Branch   string `json:"branch"`
+		SiteName string `json:"site_name"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid JSON"})
@@ -368,7 +369,7 @@ func (d *Deploy) HandleCreate(w http.ResponseWriter, r *http.Request) {
 		req.Branch = "main"
 	}
 
-	deploy, err := d.Trigger(r.Context(), req.RepoID, req.Branch)
+	deploy, err := d.Trigger(r.Context(), req.RepoID, req.Branch, req.SiteName)
 	if err != nil {
 		switch err.Error() {
 		case "repo not found":
@@ -383,7 +384,7 @@ func (d *Deploy) HandleCreate(w http.ResponseWriter, r *http.Request) {
 }
 
 // Trigger starts a deployment for a git repo without going through HTTP.
-func (d *Deploy) Trigger(ctx context.Context, repoID, branch string) (*Deployment, error) {
+func (d *Deploy) Trigger(ctx context.Context, repoID, branch, siteName string) (*Deployment, error) {
 	if repoID == "" {
 		return nil, fmt.Errorf("repo_id is required")
 	}
@@ -395,6 +396,10 @@ func (d *Deploy) Trigger(ctx context.Context, repoID, branch string) (*Deploymen
 	err := d.db.QueryRowContext(ctx, "SELECT name FROM git_repos WHERE id = ?", repoID).Scan(&repoName)
 	if err != nil {
 		return nil, fmt.Errorf("repo not found")
+	}
+
+	if siteName == "" {
+		siteName = repoName
 	}
 
 	id, err := generateID()
@@ -411,7 +416,7 @@ func (d *Deploy) Trigger(ctx context.Context, repoID, branch string) (*Deploymen
 		Branch:    branch,
 		Status:    "pending",
 		Port:      port,
-		URL:       deploymentURL(d.publicDomain, d.useHTTPS, repoName, port),
+		URL:       deploymentURL(d.publicDomain, d.useHTTPS, siteName, port),
 		CreatedAt: time.Now().UTC().Format(time.RFC3339),
 	}
 
@@ -424,7 +429,7 @@ func (d *Deploy) Trigger(ctx context.Context, repoID, branch string) (*Deploymen
 	d.initDeployLogs(id)
 	d.appendDeployLog(id, fmt.Sprintf("→ Deployment started (branch: %s)", branch))
 
-	go d.runDeployment(deploy, buildDir, repoName)
+	go d.runDeployment(deploy, buildDir, siteName)
 	return deploy, nil
 }
 
