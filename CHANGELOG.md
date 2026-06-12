@@ -1,3 +1,12 @@
+# [2.11.0](https://github.com/danielvm-git/bigbase/compare/v2.10.2...v2.11.0) (2026-06-12)
+
+
+### Features
+
+* **deploy,sites,proxy:** implement site build and request logs ([6704606](https://github.com/danielvm-git/bigbase/commit/670460601bdcbd5a72dfb21f475ab3b1f336a58a))
+* **ui:** add tabs to SiteDetailPage (Deployments, Build Logs) ([2b15f00](https://github.com/danielvm-git/bigbase/commit/2b15f008e4bbf1534e565a55d24f4217aedb4c8b))
+* **ui:** add useBuildLogs hook for fetching deployment logs ([c9b75a5](https://github.com/danielvm-git/bigbase/commit/c9b75a516e2849adc92a44875ba458177e9a302f))
+
 ## [2.10.2](https://github.com/danielvm-git/bigbase/compare/v2.10.1...v2.10.2) (2026-06-12)
 
 
