@@ -51,7 +51,13 @@ export default function SiteDetailPage() {
   const [redeployError, setRedeployError] = useState<string | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [deleteError, setDeleteError] = useState<string | null>(null)
+  const [activeTab, setActiveTab] = useState('deployments')
   const pq = previewQuerySuffix()
+
+  const tabs = [
+    { id: 'deployments', label: 'Deployments' },
+    { id: 'logs', label: 'Build Logs' },
+  ]
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -179,47 +185,60 @@ export default function SiteDetailPage() {
         </Card>
       </div>
 
-      <h2 className="section-title">Deployments</h2>
-      {deployments.length === 0 && <p className="dim">No deployment history.</p>}
-      {deployments.length > 0 && (
-        <div className="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Status</th>
-                <th>Branch</th>
-                <th>Commit</th>
-                <th>URL</th>
-                <th>Created</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {deployments.map(d => (
-                <tr key={d.id}>
-                  <td><Badge variant={statusBadgeVariant(d.status)}>{d.status}</Badge></td>
-                  <td>{d.branch}</td>
-                  <td><code>{d.commit_sha ? d.commit_sha.slice(0, 7) : '—'}</code></td>
-                  <td>
-                    {d.url ? (
-                      <a href={d.url} target="_blank" rel="noreferrer">{d.url}</a>
-                    ) : '—'}
-                  </td>
-                  <td>{new Date(d.created_at).toLocaleString()}</td>
-                  <td>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      disabled={deletingId === d.id || d.status === 'pending' || d.status === 'building'}
-                      onClick={() => handleDelete(d.id)}
-                    >
-                      {deletingId === d.id ? '…' : 'Delete'}
-                    </Button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      <Tabs tabs={tabs} active={activeTab} onChange={setActiveTab} />
+
+      {activeTab === 'deployments' && (
+        <>
+          <h2 className="section-title">Deployment History</h2>
+          {deployments.length === 0 && <p className="dim">No deployment history.</p>}
+          {deployments.length > 0 && (
+            <div className="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Status</th>
+                    <th>Branch</th>
+                    <th>Commit</th>
+                    <th>URL</th>
+                    <th>Created</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {deployments.map(d => (
+                    <tr key={d.id}>
+                      <td><Badge variant={statusBadgeVariant(d.status)}>{d.status}</Badge></td>
+                      <td>{d.branch}</td>
+                      <td><code>{d.commit_sha ? d.commit_sha.slice(0, 7) : '—'}</code></td>
+                      <td>
+                        {d.url ? (
+                          <a href={d.url} target="_blank" rel="noreferrer">{d.url}</a>
+                        ) : '—'}
+                      </td>
+                      <td>{new Date(d.created_at).toLocaleString()}</td>
+                      <td>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          disabled={deletingId === d.id || d.status === 'pending' || d.status === 'building'}
+                          onClick={() => handleDelete(d.id)}
+                        >
+                          {deletingId === d.id ? '…' : 'Delete'}
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </>
+      )}
+
+      {activeTab === 'logs' && (
+        <div>
+          <h2 className="section-title">Build Logs</h2>
+          <p className="dim">Build logs will appear here.</p>
         </div>
       )}
 
