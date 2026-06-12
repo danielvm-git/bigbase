@@ -1,0 +1,51 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 2,
+      "symbolId": "ui/src/components/Card.tsx::Card::function"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "ui/src/components/Card.tsx::CardHeader::function"
+    }
+  ],
+  "contentHash": "205c04d1970b4e4a94d9447e9eed9a7cfd72cf26eb2eec5d876549cb116dc65b",
+  "edges": [],
+  "file": "ui/src/components/Card.tsx",
+  "intent": [
+    {
+      "date": "2026-06-04T16:06:51-03:00",
+      "hash": "ef3caacacb9f34a66513687ba295a7ceab40bbce",
+      "kind": "commit",
+      "message": "feat(ui): close all 19 prototype-vs-codebase gaps (#12)"
+    },
+    {
+      "date": "2026-05-28T01:02:44-03:00",
+      "hash": "da3f118678f0b80b5874e0d7dc559b5700cd3447",
+      "kind": "commit",
+      "message": "feat(admin-ui): port Appwrite design tokens and create shared component system"
+    }
+  ],
+  "lastModified": 1781284402,
+  "symbols": [
+    {
+      "endLine": 25,
+      "endOffset": 715,
+      "kind": "function",
+      "name": "Card",
+      "startLine": 13,
+      "startOffset": 451,
+      "symbolId": "ui/src/components/Card.tsx::Card::function"
+    },
+    {
+      "endLine": 39,
+      "endOffset": 982,
+      "kind": "function",
+      "name": "CardHeader",
+      "startLine": 32,
+      "startOffset": 787,
+      "symbolId": "ui/src/components/Card.tsx::CardHeader::function"
+    }
+  ]
+}

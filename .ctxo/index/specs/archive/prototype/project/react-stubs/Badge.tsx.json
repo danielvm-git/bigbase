@@ -1,0 +1,76 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 2,
+      "symbolId": "specs/archive/prototype/project/react-stubs/Badge.tsx::Badge::function"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "specs/archive/prototype/project/react-stubs/Badge.tsx::StatusBadge::function"
+    }
+  ],
+  "contentHash": "7448047e406fe31e34d63c52b5d7e1f000269878b3b96aa84b23128ee8640835",
+  "edges": [
+    {
+      "from": "specs/archive/prototype/project/react-stubs/Badge.tsx::Badge::function",
+      "kind": "imports",
+      "to": "specs/archive/prototype/project/react-stubs/tokens.ts::BadgeVariant::type",
+      "typeOnly": true
+    },
+    {
+      "from": "specs/archive/prototype/project/react-stubs/Badge.tsx::Badge::function",
+      "kind": "imports",
+      "to": "specs/archive/prototype/project/react-stubs/tokens.ts::StatusKind::type",
+      "typeOnly": true
+    }
+  ],
+  "file": "specs/archive/prototype/project/react-stubs/Badge.tsx",
+  "intent": [
+    {
+      "date": "2026-06-05T14:27:57-03:00",
+      "hash": "a23e0557dfbac224329c12e39bd2439b37f2a8e8",
+      "kind": "commit",
+      "message": "feat(specs): add BigBase Console design prototype bundle (#14)"
+    }
+  ],
+  "lastModified": 1781284401,
+  "symbols": [
+    {
+      "endLine": 18,
+      "endOffset": 643,
+      "kind": "function",
+      "name": "Badge",
+      "startLine": 11,
+      "startOffset": 358,
+      "symbolId": "specs/archive/prototype/project/react-stubs/Badge.tsx::Badge::function"
+    },
+    {
+      "endLine": 45,
+      "endOffset": 1603,
+      "kind": "function",
+      "name": "StatusBadge",
+      "startLine": 37,
+      "startOffset": 1268,
+      "symbolId": "specs/archive/prototype/project/react-stubs/Badge.tsx::StatusBadge::function"
+    },
+    {
+      "endLine": 8,
+      "endOffset": 272,
+      "kind": "interface",
+      "name": "BadgeProps",
+      "startLine": 3,
+      "startOffset": 86,
+      "symbolId": "specs/archive/prototype/project/react-stubs/Badge.tsx::BadgeProps::interface"
+    },
+    {
+      "endLine": 31,
+      "endOffset": 1131,
+      "kind": "interface",
+      "name": "StatusBadgeProps",
+      "startLine": 27,
+      "startOffset": 980,
+      "symbolId": "specs/archive/prototype/project/react-stubs/Badge.tsx::StatusBadgeProps::interface"
+    }
+  ]
+}

@@ -1,0 +1,69 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 20,
+      "symbolId": "ui/src/pages/GitReposPage.tsx::GitReposPage::function"
+    }
+  ],
+  "contentHash": "dd1b9ed622d7443f04a35f5c4b72f6ed82e6e5187576ecbb5cdc418b618b6c3e",
+  "edges": [
+    {
+      "from": "ui/src/pages/GitReposPage.tsx::GitReposPage::function",
+      "kind": "imports",
+      "to": "ui/src/components.ts::PageHeader::class"
+    },
+    {
+      "from": "ui/src/pages/GitReposPage.tsx::GitReposPage::function",
+      "kind": "imports",
+      "to": "ui/src/components.ts::Button::class"
+    },
+    {
+      "from": "ui/src/pages/GitReposPage.tsx::GitReposPage::function",
+      "kind": "imports",
+      "to": "ui/src/components.ts::Input::class"
+    },
+    {
+      "from": "ui/src/pages/GitReposPage.tsx::GitReposPage::function",
+      "kind": "uses",
+      "to": "ui/src/components.ts::PageHeader::class"
+    },
+    {
+      "from": "ui/src/pages/GitReposPage.tsx::GitReposPage::function",
+      "kind": "uses",
+      "to": "ui/src/components.ts::Button::class"
+    },
+    {
+      "from": "ui/src/pages/GitReposPage.tsx::GitReposPage::function",
+      "kind": "uses",
+      "to": "ui/src/components.ts::Input::class"
+    }
+  ],
+  "file": "ui/src/pages/GitReposPage.tsx",
+  "intent": [
+    {
+      "date": "2026-05-28T01:02:44-03:00",
+      "hash": "da3f118678f0b80b5874e0d7dc559b5700cd3447",
+      "kind": "commit",
+      "message": "feat(admin-ui): port Appwrite design tokens and create shared component system"
+    },
+    {
+      "date": "2026-05-27T22:15:43-03:00",
+      "hash": "d056ce1757c3460861913113fa18f01cedd30ad1",
+      "kind": "commit",
+      "message": "feat(deploy): improve deployment pipeline and add admin UI pages"
+    }
+  ],
+  "lastModified": 1781284402,
+  "symbols": [
+    {
+      "endLine": 115,
+      "endOffset": 4075,
+      "kind": "function",
+      "name": "GitReposPage",
+      "startLine": 13,
+      "startOffset": 257,
+      "symbolId": "ui/src/pages/GitReposPage.tsx::GitReposPage::function"
+    }
+  ]
+}

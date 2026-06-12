@@ -1,0 +1,81 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 7,
+      "symbolId": "ui/src/components/DashboardMetrics.tsx::DashboardMetrics::function"
+    }
+  ],
+  "contentHash": "1ffa2633e15dbccca4a1ae5a3f061401d0d23f12ed567dd2e6dbf2b1ce01907f",
+  "edges": [
+    {
+      "from": "ui/src/components/DashboardMetrics.tsx::DashboardMetrics::function",
+      "kind": "imports",
+      "to": "ui/src/components/index.ts::Card::class"
+    },
+    {
+      "from": "ui/src/components/DashboardMetrics.tsx::DashboardMetrics::function",
+      "kind": "imports",
+      "to": "ui/src/components/index.ts::CardHeader::class"
+    },
+    {
+      "from": "ui/src/components/DashboardMetrics.tsx::DashboardMetrics::function",
+      "kind": "imports",
+      "to": "ui/src/components/MetricCard.ts::MetricCard::class"
+    },
+    {
+      "from": "ui/src/components/DashboardMetrics.tsx::DashboardMetrics::function",
+      "kind": "uses",
+      "to": "ui/src/components/index.ts::Card::class"
+    },
+    {
+      "from": "ui/src/components/DashboardMetrics.tsx::DashboardMetrics::function",
+      "kind": "uses",
+      "to": "ui/src/components/index.ts::CardHeader::class"
+    },
+    {
+      "from": "ui/src/components/DashboardMetrics.tsx::DashboardMetrics::function",
+      "kind": "uses",
+      "to": "ui/src/components/MetricCard.ts::MetricCard::class"
+    }
+  ],
+  "file": "ui/src/components/DashboardMetrics.tsx",
+  "intent": [
+    {
+      "date": "2026-06-04T16:06:51-03:00",
+      "hash": "ef3caacacb9f34a66513687ba295a7ceab40bbce",
+      "kind": "commit",
+      "message": "feat(ui): close all 19 prototype-vs-codebase gaps (#12)"
+    },
+    {
+      "date": "2026-06-04T12:11:50-03:00",
+      "hash": "4f55e004c707db49ad243a84a13dad60defc95ea",
+      "kind": "commit",
+      "message": "fix(ui): align dashboard with prototype and live CPU/memory metrics"
+    },
+    {
+      "date": "2026-06-02T08:49:33-03:00",
+      "hash": "5a069af6077cca5e9f85db27b7b1d819bdaef65b",
+      "kind": "commit",
+      "message": "fix(ui): add tests for DashboardMetrics, fix redeploy error handling, address review warnings"
+    },
+    {
+      "date": "2026-06-02T08:43:17-03:00",
+      "hash": "7b024c2a65983491e3015394cb70e48936cc0efc",
+      "kind": "commit",
+      "message": "refactor(ui): extract DashboardMetrics component to stay under 300 lines"
+    }
+  ],
+  "lastModified": 1781284402,
+  "symbols": [
+    {
+      "endLine": 48,
+      "endOffset": 1674,
+      "kind": "function",
+      "name": "DashboardMetrics",
+      "startLine": 11,
+      "startOffset": 444,
+      "symbolId": "ui/src/components/DashboardMetrics.tsx::DashboardMetrics::function"
+    }
+  ]
+}

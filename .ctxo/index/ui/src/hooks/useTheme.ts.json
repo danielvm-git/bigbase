@@ -1,0 +1,43 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 1,
+      "symbolId": "ui/src/hooks/useTheme.ts::useTheme::function"
+    }
+  ],
+  "contentHash": "e77df11b036bbf7a91bd9b7cdbbe310746c0a1fdc37d460d445b23ff47ab1bb4",
+  "edges": [
+    {
+      "from": "ui/src/hooks/useTheme.ts::useTheme::function",
+      "kind": "imports",
+      "to": "ui/src/context/themeState.ts::ThemeContext::variable"
+    },
+    {
+      "from": "ui/src/hooks/useTheme.ts::useTheme::function",
+      "kind": "uses",
+      "to": "ui/src/context/themeState.ts::ThemeContext::variable"
+    }
+  ],
+  "file": "ui/src/hooks/useTheme.ts",
+  "intent": [
+    {
+      "date": "2026-06-01T22:59:27-03:00",
+      "hash": "e562438a4f60da00e27d7dae7b2010c89bd06e28",
+      "kind": "commit",
+      "message": "refactor(ui): extract context state to separate files for lint compliance"
+    }
+  ],
+  "lastModified": 1781284402,
+  "symbols": [
+    {
+      "endLine": 5,
+      "endOffset": 153,
+      "kind": "function",
+      "name": "useTheme",
+      "startLine": 3,
+      "startOffset": 89,
+      "symbolId": "ui/src/hooks/useTheme.ts::useTheme::function"
+    }
+  ]
+}

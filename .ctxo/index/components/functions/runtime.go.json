@@ -1,0 +1,276 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/functions/runtime.go::RunError.Error::method"
+    },
+    {
+      "cyclomatic": 5,
+      "symbolId": "components/functions/runtime.go::jsRuntime.Execute::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/functions/runtime.go::logCollector.snapshot::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/functions/runtime.go::logCollector.add::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/functions/runtime.go::logCollector.addPrefixed::method"
+    },
+    {
+      "cyclomatic": 5,
+      "symbolId": "components/functions/runtime.go::injectConsole::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/functions/runtime.go::execAsync::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/functions/runtime.go::timeoutDuration::function"
+    }
+  ],
+  "contentHash": "7f4840d27c2c226a45c45b3237dc5b984942bca58f68435b3d290d7ac8e60df9",
+  "edges": [
+    {
+      "from": "components/functions/runtime.go::RunError.Error::method",
+      "kind": "uses",
+      "to": "components/functions/runtime.go::RunError::class"
+    },
+    {
+      "from": "components/functions/runtime.go::jsRuntime.Execute::method",
+      "kind": "uses",
+      "to": "components/functions/runtime.go::jsRuntime::class"
+    },
+    {
+      "from": "components/functions/runtime.go::jsRuntime.Execute::method",
+      "kind": "uses",
+      "to": "components/functions/runtime.go::RunOutput::class"
+    },
+    {
+      "from": "components/functions/runtime.go::jsRuntime.Execute::method",
+      "kind": "calls",
+      "to": "components/functions/runtime.go::injectConsole::function"
+    },
+    {
+      "from": "components/functions/runtime.go::jsRuntime.Execute::method",
+      "kind": "calls",
+      "to": "components/functions/runtime.go::execAsync::function"
+    },
+    {
+      "from": "components/functions/runtime.go::jsRuntime.Execute::method",
+      "kind": "calls",
+      "to": "components/functions/runtime.go::timeoutDuration::function"
+    },
+    {
+      "from": "components/functions/runtime.go::jsRuntime.Execute::method",
+      "kind": "calls",
+      "to": "components/functions/runtime.go::logCollector.snapshot::method"
+    },
+    {
+      "from": "components/functions/runtime.go::jsRuntime.Execute::method",
+      "kind": "uses",
+      "to": "components/functions/runtime.go::RunError::class"
+    },
+    {
+      "from": "components/functions/runtime.go::logCollector.snapshot::method",
+      "kind": "uses",
+      "to": "components/functions/runtime.go::logCollector::class"
+    },
+    {
+      "from": "components/functions/runtime.go::logCollector.add::method",
+      "kind": "uses",
+      "to": "components/functions/runtime.go::logCollector::class"
+    },
+    {
+      "from": "components/functions/runtime.go::logCollector.addPrefixed::method",
+      "kind": "uses",
+      "to": "components/functions/runtime.go::logCollector::class"
+    },
+    {
+      "from": "components/functions/runtime.go::injectConsole::function",
+      "kind": "uses",
+      "to": "components/functions/runtime.go::logCollector::class"
+    },
+    {
+      "from": "components/functions/runtime.go::injectConsole::function",
+      "kind": "calls",
+      "to": "components/functions/runtime.go::logCollector.add::method"
+    },
+    {
+      "from": "components/functions/runtime.go::injectConsole::function",
+      "kind": "calls",
+      "to": "components/functions/runtime.go::logCollector.addPrefixed::method"
+    },
+    {
+      "from": "components/functions/runtime.go::execAsync::function",
+      "kind": "uses",
+      "to": "components/functions/runtime.go::execResult::class"
+    },
+    {
+      "from": "components/functions/runtime.go::jsRuntime::class",
+      "kind": "implements",
+      "to": "components/functions/runtime.go::Runtime::interface"
+    }
+  ],
+  "file": "components/functions/runtime.go",
+  "intent": [
+    {
+      "date": "2026-05-27T15:12:37-03:00",
+      "hash": "a45fa7a90f7100d96473bdb978e3cb7a4f220cdd",
+      "kind": "commit",
+      "message": "fix(functions): address review findings — interrupt timeout, validate update, runtime interface, body limit, injectable runtimes"
+    },
+    {
+      "date": "2026-05-27T13:56:15-03:00",
+      "hash": "54141aa9112b2f161ca720a0deaec54f863a39a1",
+      "kind": "commit",
+      "message": "refactor(functions): split handlers, fix console log race, add missing tests"
+    },
+    {
+      "date": "2026-05-27T13:51:01-03:00",
+      "hash": "44a74f5cba9002559f0aed918a4c895f4abd6e5f",
+      "kind": "commit",
+      "message": "feat(functions): add goja JS runtime with console.log capture and timeout"
+    },
+    {
+      "date": "2026-05-27T13:48:32-03:00",
+      "hash": "00ea81c45485f2d1971227d1fc39c9c67fcd7260",
+      "kind": "commit",
+      "message": "feat(functions): add Functions component with CRUD operations"
+    }
+  ],
+  "lastModified": 1781284401,
+  "symbols": [
+    {
+      "endLine": 14,
+      "endOffset": 170,
+      "kind": "class",
+      "name": "RunOutput",
+      "startLine": 11,
+      "startOffset": 86,
+      "symbolId": "components/functions/runtime.go::RunOutput::class"
+    },
+    {
+      "endLine": 18,
+      "endOffset": 229,
+      "kind": "class",
+      "name": "RunError",
+      "startLine": 16,
+      "startOffset": 177,
+      "symbolId": "components/functions/runtime.go::RunError::class"
+    },
+    {
+      "endLine": 20,
+      "endOffset": 285,
+      "kind": "method",
+      "name": "RunError.Error",
+      "startLine": 20,
+      "startOffset": 231,
+      "symbolId": "components/functions/runtime.go::RunError.Error::method"
+    },
+    {
+      "endLine": 24,
+      "endOffset": 370,
+      "kind": "interface",
+      "name": "Runtime",
+      "startLine": 22,
+      "startOffset": 292,
+      "symbolId": "components/functions/runtime.go::Runtime::interface"
+    },
+    {
+      "endLine": 26,
+      "endOffset": 395,
+      "kind": "class",
+      "name": "jsRuntime",
+      "startLine": 26,
+      "startOffset": 377,
+      "symbolId": "components/functions/runtime.go::jsRuntime::class"
+    },
+    {
+      "endLine": 49,
+      "endOffset": 1056,
+      "kind": "method",
+      "name": "jsRuntime.Execute",
+      "startLine": 28,
+      "startOffset": 397,
+      "symbolId": "components/functions/runtime.go::jsRuntime.Execute::method"
+    },
+    {
+      "endLine": 54,
+      "endOffset": 1118,
+      "kind": "class",
+      "name": "logCollector",
+      "startLine": 51,
+      "startOffset": 1063,
+      "symbolId": "components/functions/runtime.go::logCollector::class"
+    },
+    {
+      "endLine": 62,
+      "endOffset": 1261,
+      "kind": "method",
+      "name": "logCollector.snapshot",
+      "startLine": 56,
+      "startOffset": 1120,
+      "symbolId": "components/functions/runtime.go::logCollector.snapshot::method"
+    },
+    {
+      "endLine": 68,
+      "endOffset": 1363,
+      "kind": "method",
+      "name": "logCollector.add",
+      "startLine": 64,
+      "startOffset": 1263,
+      "symbolId": "components/functions/runtime.go::logCollector.add::method"
+    },
+    {
+      "endLine": 74,
+      "endOffset": 1488,
+      "kind": "method",
+      "name": "logCollector.addPrefixed",
+      "startLine": 70,
+      "startOffset": 1365,
+      "symbolId": "components/functions/runtime.go::logCollector.addPrefixed::method"
+    },
+    {
+      "endLine": 106,
+      "endOffset": 2358,
+      "kind": "function",
+      "name": "injectConsole",
+      "startLine": 76,
+      "startOffset": 1490,
+      "symbolId": "components/functions/runtime.go::injectConsole::function"
+    },
+    {
+      "endLine": 111,
+      "endOffset": 2413,
+      "kind": "class",
+      "name": "execResult",
+      "startLine": 108,
+      "startOffset": 2365,
+      "symbolId": "components/functions/runtime.go::execResult::class"
+    },
+    {
+      "endLine": 125,
+      "endOffset": 2736,
+      "kind": "function",
+      "name": "execAsync",
+      "startLine": 113,
+      "startOffset": 2415,
+      "symbolId": "components/functions/runtime.go::execAsync::function"
+    },
+    {
+      "endLine": 132,
+      "endOffset": 2882,
+      "kind": "function",
+      "name": "timeoutDuration",
+      "startLine": 127,
+      "startOffset": 2738,
+      "symbolId": "components/functions/runtime.go::timeoutDuration::function"
+    }
+  ]
+}

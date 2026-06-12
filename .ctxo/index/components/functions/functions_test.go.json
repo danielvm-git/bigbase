@@ -1,0 +1,160 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/functions/functions_test.go::testLogger.Info::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/functions/functions_test.go::testLogger.Warn::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/functions/functions_test.go::testLogger.Error::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/functions/functions_test.go::testLogger.Debug::method"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/functions/functions_test.go::setupFunctions::function"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/functions/functions_test.go::TestFunctionsImplementsComponent::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/functions/functions_test.go::TestFunctionsName::function"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/functions/functions_test.go::TestFunctionsCreateFunction::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/functions/functions_test.go::createTestFunction::function"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/functions/functions_test.go::TestFunctionsListFunctions::function"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/functions/functions_test.go::TestFunctionsGetFunction::function"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/functions/functions_test.go::TestFunctionsUpdateFunction::function"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/functions/functions_test.go::TestFunctionsDeleteFunction::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/functions/functions_test.go::TestFunctionsDeleteNotFound::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/functions/functions_test.go::TestFunctionsCreateInvalidJSON::function"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/functions/functions_test.go::TestFunctionsRunFunction::function"
+    },
+    {
+      "cyclomatic": 5,
+      "symbolId": "components/functions/functions_test.go::TestFunctionsRunWithLogs::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/functions/functions_test.go::TestFunctionsRunNotFound::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/functions/functions_test.go::TestFunctionsCreateMissingName::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/functions/functions_test.go::TestFunctionsMethodNotAllowed::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/functions/functions_test.go::TestFunctionsEmptyID::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/functions/functions_test.go::TestFunctionsUpdateMethodNotAllowed::function"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/functions/functions_test.go::TestFunctionsRunTimeout::function"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/functions/functions_test.go::TestFunctionsRunJSError::function"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/functions/functions_test.go::TestFunctionsRunUnsupportedRuntime::function"
+    },
+    {
+      "cyclomatic": 14,
+      "symbolId": "components/functions/functions_test.go::TestLogs::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/functions/functions_test.go::TestLogsNonexistentFunction::function"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/functions/functions_test.go::TestLogsEmptyHistory::function"
+    }
+  ],
+  "contentHash": "67b6aa5d20140348f6e2e8755b7f6ed717a2412523d73ab1673b439dadbbd359",
+  "edges": [],
+  "file": "components/functions/functions_test.go",
+  "intent": [
+    {
+      "date": "2026-06-01T22:31:05-03:00",
+      "hash": "914d490e17450f80a3083776c8ce0665e8035706",
+      "kind": "commit",
+      "message": "feat(functions): add execution logs persistence and viewer page"
+    },
+    {
+      "date": "2026-05-27T15:12:37-03:00",
+      "hash": "a45fa7a90f7100d96473bdb978e3cb7a4f220cdd",
+      "kind": "commit",
+      "message": "fix(functions): address review findings — interrupt timeout, validate update, runtime interface, body limit, injectable runtimes"
+    },
+    {
+      "date": "2026-05-27T13:56:15-03:00",
+      "hash": "54141aa9112b2f161ca720a0deaec54f863a39a1",
+      "kind": "commit",
+      "message": "refactor(functions): split handlers, fix console log race, add missing tests"
+    },
+    {
+      "date": "2026-05-27T13:51:01-03:00",
+      "hash": "44a74f5cba9002559f0aed918a4c895f4abd6e5f",
+      "kind": "commit",
+      "message": "feat(functions): add goja JS runtime with console.log capture and timeout"
+    },
+    {
+      "date": "2026-05-27T13:49:09-03:00",
+      "hash": "5e8fd2bc8f6412ef5fd8425924466fb0a151cf02",
+      "kind": "commit",
+      "message": "test(functions): add tests for list, get, update, delete, and validation"
+    },
+    {
+      "date": "2026-05-27T13:48:32-03:00",
+      "hash": "00ea81c45485f2d1971227d1fc39c9c67fcd7260",
+      "kind": "commit",
+      "message": "feat(functions): add Functions component with CRUD operations"
+    }
+  ],
+  "lastModified": 1781284401,
+  "symbols": []
+}

@@ -1,0 +1,58 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 8,
+      "symbolId": "specs/archive/prototype/project/react-stubs/ThemePicker.tsx::ThemePicker::function"
+    }
+  ],
+  "contentHash": "328123e77387e628180a8e7de5c49a639dc547f174ea176dd43fe356fa2d57fb",
+  "edges": [
+    {
+      "from": "specs/archive/prototype/project/react-stubs/ThemePicker.tsx::ThemePicker::function",
+      "kind": "imports",
+      "to": "specs/archive/prototype/project/react-stubs/tokens.ts::THEME_META::variable"
+    },
+    {
+      "from": "specs/archive/prototype/project/react-stubs/ThemePicker.tsx::ThemePicker::function",
+      "kind": "imports",
+      "to": "specs/archive/prototype/project/react-stubs/ThemeContext.ts::useTheme::function"
+    },
+    {
+      "from": "specs/archive/prototype/project/react-stubs/ThemePicker.tsx::ThemePicker::function",
+      "kind": "calls",
+      "to": "specs/archive/prototype/project/react-stubs/ThemeContext.ts::useTheme::function"
+    },
+    {
+      "from": "specs/archive/prototype/project/react-stubs/ThemePicker.tsx::ThemePicker::function",
+      "kind": "uses",
+      "to": "specs/archive/prototype/project/react-stubs/ThemeContext.ts::useTheme::function"
+    },
+    {
+      "from": "specs/archive/prototype/project/react-stubs/ThemePicker.tsx::ThemePicker::function",
+      "kind": "uses",
+      "to": "specs/archive/prototype/project/react-stubs/tokens.ts::THEME_META::variable"
+    }
+  ],
+  "file": "specs/archive/prototype/project/react-stubs/ThemePicker.tsx",
+  "intent": [
+    {
+      "date": "2026-06-05T14:27:57-03:00",
+      "hash": "a23e0557dfbac224329c12e39bd2439b37f2a8e8",
+      "kind": "commit",
+      "message": "feat(specs): add BigBase Console design prototype bundle (#14)"
+    }
+  ],
+  "lastModified": 1781284401,
+  "symbols": [
+    {
+      "endLine": 57,
+      "endOffset": 2170,
+      "kind": "function",
+      "name": "ThemePicker",
+      "startLine": 9,
+      "startOffset": 365,
+      "symbolId": "specs/archive/prototype/project/react-stubs/ThemePicker.tsx::ThemePicker::function"
+    }
+  ]
+}

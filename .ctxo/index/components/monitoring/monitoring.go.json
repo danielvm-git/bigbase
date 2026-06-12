@@ -1,0 +1,1315 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/monitoring/monitoring.go::noopLogger.Info::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/monitoring/monitoring.go::noopLogger.Warn::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/monitoring/monitoring.go::noopLogger.Error::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/monitoring/monitoring.go::noopLogger.Debug::method"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/monitoring/monitoring.go::New::function"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/monitoring/monitoring.go::Monitoring.Name::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/monitoring/monitoring.go::Monitoring.Version::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/monitoring/monitoring.go::Monitoring.Dependencies::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/monitoring/monitoring.go::Monitoring.ConfigSchema::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/monitoring/monitoring.go::Monitoring.Hooks::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/monitoring/monitoring.go::Monitoring.Init::method"
+    },
+    {
+      "cyclomatic": 6,
+      "symbolId": "components/monitoring/monitoring.go::Monitoring.Start::method"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/monitoring/monitoring.go::Monitoring.Stop::method"
+    },
+    {
+      "cyclomatic": 5,
+      "symbolId": "components/monitoring/monitoring.go::Monitoring.runHostCollector::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/monitoring/monitoring.go::Monitoring.storeHostMetrics::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/monitoring/monitoring.go::Monitoring.LatestHostMetrics::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/monitoring/monitoring.go::statusRecorder.WriteHeader::method"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/monitoring/monitoring.go::Monitoring.Middleware::method"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/monitoring/monitoring.go::Monitoring.processCPUTime::method"
+    },
+    {
+      "cyclomatic": 6,
+      "symbolId": "components/monitoring/monitoring.go::Monitoring.sampleCPUPercent::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/monitoring/monitoring.go::Monitoring.SystemMetrics::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/monitoring/monitoring.go::Monitoring.Handler::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/monitoring/monitoring.go::Monitoring.handleHealth::method"
+    },
+    {
+      "cyclomatic": 6,
+      "symbolId": "components/monitoring/monitoring.go::Monitoring.handleMetrics::method"
+    },
+    {
+      "cyclomatic": 6,
+      "symbolId": "components/monitoring/monitoring.go::Monitoring.collectPrometheusSnapshot::method"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/monitoring/monitoring.go::Monitoring.handlePrometheusMetrics::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/monitoring/monitoring.go::writePromLine::function"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/monitoring/monitoring.go::writePromLinef::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/monitoring/monitoring.go::writePromCounter::function"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/monitoring/monitoring.go::writePromGauge::function"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/monitoring/monitoring.go::Monitoring.handleLogs::method"
+    },
+    {
+      "cyclomatic": 5,
+      "symbolId": "components/monitoring/monitoring.go::Monitoring.handleLogCreate::method"
+    },
+    {
+      "cyclomatic": 6,
+      "symbolId": "components/monitoring/monitoring.go::Monitoring.handleLogSearch::method"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/monitoring/monitoring.go::Monitoring.handleLogByID::method"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/monitoring/monitoring.go::Monitoring.handleAlerts::method"
+    },
+    {
+      "cyclomatic": 7,
+      "symbolId": "components/monitoring/monitoring.go::Monitoring.handleAlertCreate::method"
+    },
+    {
+      "cyclomatic": 5,
+      "symbolId": "components/monitoring/monitoring.go::Monitoring.handleAlertList::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/monitoring/monitoring.go::writeJSON::function"
+    }
+  ],
+  "contentHash": "79bec188fcd750e9d431d7583bd950576cb9b688e46f1aa1a4732f3ae9a48e08",
+  "edges": [
+    {
+      "from": "components/monitoring/monitoring.go::noopLogger.Info::method",
+      "kind": "uses",
+      "to": "components/monitoring/monitoring.go::noopLogger::class"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::noopLogger.Warn::method",
+      "kind": "uses",
+      "to": "components/monitoring/monitoring.go::noopLogger::class"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::noopLogger.Error::method",
+      "kind": "uses",
+      "to": "components/monitoring/monitoring.go::noopLogger::class"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::noopLogger.Debug::method",
+      "kind": "uses",
+      "to": "components/monitoring/monitoring.go::noopLogger::class"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::New::function",
+      "kind": "uses",
+      "to": "components/monitoring/monitoring.go::Options::class"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::New::function",
+      "kind": "uses",
+      "to": "components/monitoring/monitoring.go::Monitoring::class"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::New::function",
+      "kind": "uses",
+      "to": "components/monitoring/monitoring.go::noopLogger::class"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::New::function",
+      "kind": "uses",
+      "to": "components/monitoring/monitoring.go::MetricsCollector::class"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::New::function",
+      "kind": "uses",
+      "to": "components/monitoring/monitoring.go::EndpointMetrics::class"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::Monitoring.Name::method",
+      "kind": "uses",
+      "to": "components/monitoring/monitoring.go::Monitoring::class"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::Monitoring.Version::method",
+      "kind": "uses",
+      "to": "components/monitoring/monitoring.go::Monitoring::class"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::Monitoring.Version::method",
+      "kind": "uses",
+      "to": "components/monitoring/monitoring.go::version::variable"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::Monitoring.Dependencies::method",
+      "kind": "uses",
+      "to": "components/monitoring/monitoring.go::Monitoring::class"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::Monitoring.ConfigSchema::method",
+      "kind": "uses",
+      "to": "components/monitoring/monitoring.go::Monitoring::class"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::Monitoring.Hooks::method",
+      "kind": "uses",
+      "to": "components/monitoring/monitoring.go::Monitoring::class"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::Monitoring.Hooks::method",
+      "kind": "uses",
+      "to": "kernel/component.go::HookDef::class"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::Monitoring.Init::method",
+      "kind": "uses",
+      "to": "components/monitoring/monitoring.go::Monitoring::class"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::Monitoring.Init::method",
+      "kind": "uses",
+      "to": "kernel/component.go::Context::class"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::Monitoring.Start::method",
+      "kind": "uses",
+      "to": "components/monitoring/monitoring.go::Monitoring::class"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::Monitoring.Start::method",
+      "kind": "uses",
+      "to": "kernel/component.go::Context::class"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::Monitoring.Start::method",
+      "kind": "calls",
+      "to": "components/monitoring/events.go::newEventStream::function"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::Monitoring.Start::method",
+      "kind": "calls",
+      "to": "components/monitoring/events.go::Monitoring.WithEventBus::method"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::Monitoring.Start::method",
+      "kind": "calls",
+      "to": "kernel/kernel.go::Kernel.EventBus::method"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::Monitoring.Start::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::DBer.Migrate::method"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::Monitoring.Start::method",
+      "kind": "calls",
+      "to": "components/monitoring/org_usage.go::Monitoring.migrateOrgUsageTable::method"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::Monitoring.Start::method",
+      "kind": "calls",
+      "to": "components/monitoring/monitoring.go::Monitoring.runHostCollector::method"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::Monitoring.Start::method",
+      "kind": "calls",
+      "to": "components/monitoring/alert_checker.go::Monitoring.runAlertChecker::method"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::Monitoring.Stop::method",
+      "kind": "uses",
+      "to": "components/monitoring/monitoring.go::Monitoring::class"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::Monitoring.Stop::method",
+      "kind": "uses",
+      "to": "kernel/component.go::Context::class"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::Monitoring.runHostCollector::method",
+      "kind": "uses",
+      "to": "components/monitoring/monitoring.go::Monitoring::class"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::Monitoring.runHostCollector::method",
+      "kind": "calls",
+      "to": "components/monitoring/monitoring.go::Monitoring.storeHostMetrics::method"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::Monitoring.runHostCollector::method",
+      "kind": "calls",
+      "to": "components/monitoring/host_metrics.go::collectHostMetricsNonBlocking::function"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::Monitoring.runHostCollector::method",
+      "kind": "uses",
+      "to": "components/monitoring/monitoring.go::hostCollectInterval::variable"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::Monitoring.runHostCollector::method",
+      "kind": "calls",
+      "to": "components/monitoring/host_metrics.go::collectHostMetrics::function"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::Monitoring.storeHostMetrics::method",
+      "kind": "uses",
+      "to": "components/monitoring/monitoring.go::Monitoring::class"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::Monitoring.storeHostMetrics::method",
+      "kind": "uses",
+      "to": "components/monitoring/host_metrics.go::HostMetrics::class"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::Monitoring.LatestHostMetrics::method",
+      "kind": "uses",
+      "to": "components/monitoring/monitoring.go::Monitoring::class"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::Monitoring.LatestHostMetrics::method",
+      "kind": "uses",
+      "to": "components/monitoring/host_metrics.go::HostMetrics::class"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::statusRecorder.WriteHeader::method",
+      "kind": "uses",
+      "to": "components/monitoring/monitoring.go::statusRecorder::class"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::Monitoring.Middleware::method",
+      "kind": "uses",
+      "to": "components/monitoring/monitoring.go::Monitoring::class"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::Monitoring.Middleware::method",
+      "kind": "uses",
+      "to": "components/monitoring/monitoring.go::statusRecorder::class"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::Monitoring.Middleware::method",
+      "kind": "uses",
+      "to": "components/monitoring/monitoring.go::EndpointMetrics::class"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::Monitoring.processCPUTime::method",
+      "kind": "uses",
+      "to": "components/monitoring/monitoring.go::Monitoring::class"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::Monitoring.processCPUTime::method",
+      "kind": "calls",
+      "to": "components/monitoring/monitoring.go::Logger.Warn::method"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::Monitoring.sampleCPUPercent::method",
+      "kind": "uses",
+      "to": "components/monitoring/monitoring.go::Monitoring::class"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::Monitoring.sampleCPUPercent::method",
+      "kind": "calls",
+      "to": "components/monitoring/monitoring.go::Monitoring.processCPUTime::method"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::Monitoring.SystemMetrics::method",
+      "kind": "uses",
+      "to": "components/monitoring/monitoring.go::Monitoring::class"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::Monitoring.SystemMetrics::method",
+      "kind": "uses",
+      "to": "components/monitoring/monitoring.go::SystemMetrics::class"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::Monitoring.SystemMetrics::method",
+      "kind": "calls",
+      "to": "components/monitoring/monitoring.go::Monitoring.sampleCPUPercent::method"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::Monitoring.Handler::method",
+      "kind": "uses",
+      "to": "components/monitoring/monitoring.go::Monitoring::class"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::Monitoring.handleHealth::method",
+      "kind": "uses",
+      "to": "components/monitoring/monitoring.go::Monitoring::class"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::Monitoring.handleMetrics::method",
+      "kind": "uses",
+      "to": "components/monitoring/monitoring.go::Monitoring::class"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::Monitoring.handleMetrics::method",
+      "kind": "calls",
+      "to": "components/monitoring/monitoring.go::Monitoring.SystemMetrics::method"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::Monitoring.handleMetrics::method",
+      "kind": "calls",
+      "to": "components/monitoring/monitoring.go::writeJSON::function"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::Monitoring.handleMetrics::method",
+      "kind": "calls",
+      "to": "components/monitoring/monitoring.go::Monitoring.LatestHostMetrics::method"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::Monitoring.collectPrometheusSnapshot::method",
+      "kind": "uses",
+      "to": "components/monitoring/monitoring.go::Monitoring::class"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::Monitoring.collectPrometheusSnapshot::method",
+      "kind": "uses",
+      "to": "components/monitoring/monitoring.go::prometheusSnapshot::class"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::Monitoring.collectPrometheusSnapshot::method",
+      "kind": "uses",
+      "to": "components/monitoring/monitoring.go::endpointMetric::class"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::Monitoring.collectPrometheusSnapshot::method",
+      "kind": "calls",
+      "to": "components/monitoring/monitoring.go::Monitoring.SystemMetrics::method"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::Monitoring.handlePrometheusMetrics::method",
+      "kind": "uses",
+      "to": "components/monitoring/monitoring.go::Monitoring::class"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::Monitoring.handlePrometheusMetrics::method",
+      "kind": "calls",
+      "to": "components/monitoring/monitoring.go::Monitoring.collectPrometheusSnapshot::method"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::Monitoring.handlePrometheusMetrics::method",
+      "kind": "calls",
+      "to": "components/monitoring/monitoring.go::writePromCounter::function"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::Monitoring.handlePrometheusMetrics::method",
+      "kind": "calls",
+      "to": "components/monitoring/monitoring.go::writePromGauge::function"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::Monitoring.handlePrometheusMetrics::method",
+      "kind": "calls",
+      "to": "components/monitoring/monitoring.go::writePromLinef::function"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::writePromCounter::function",
+      "kind": "calls",
+      "to": "components/monitoring/monitoring.go::writePromLine::function"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::writePromCounter::function",
+      "kind": "calls",
+      "to": "components/monitoring/monitoring.go::writePromLinef::function"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::writePromGauge::function",
+      "kind": "calls",
+      "to": "components/monitoring/monitoring.go::writePromLine::function"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::writePromGauge::function",
+      "kind": "calls",
+      "to": "components/monitoring/monitoring.go::writePromLinef::function"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::Monitoring.handleLogs::method",
+      "kind": "uses",
+      "to": "components/monitoring/monitoring.go::Monitoring::class"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::Monitoring.handleLogs::method",
+      "kind": "calls",
+      "to": "components/monitoring/monitoring.go::Monitoring.handleLogCreate::method"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::Monitoring.handleLogs::method",
+      "kind": "calls",
+      "to": "components/monitoring/monitoring.go::Monitoring.handleLogSearch::method"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::Monitoring.handleLogs::method",
+      "kind": "calls",
+      "to": "components/monitoring/monitoring.go::writeJSON::function"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::Monitoring.handleLogCreate::method",
+      "kind": "uses",
+      "to": "components/monitoring/monitoring.go::Monitoring::class"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::Monitoring.handleLogCreate::method",
+      "kind": "calls",
+      "to": "components/monitoring/monitoring.go::writeJSON::function"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::Monitoring.handleLogCreate::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::DBer.ExecContext::method"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::Monitoring.handleLogCreate::method",
+      "kind": "calls",
+      "to": "components/monitoring/monitoring.go::Logger.Error::method"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::Monitoring.handleLogSearch::method",
+      "kind": "uses",
+      "to": "components/monitoring/monitoring.go::Monitoring::class"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::Monitoring.handleLogSearch::method",
+      "kind": "calls",
+      "to": "components/monitoring/monitoring.go::writeJSON::function"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::Monitoring.handleLogSearch::method",
+      "kind": "uses",
+      "to": "components/monitoring/monitoring.go::LogEntry::class"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::Monitoring.handleLogSearch::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::DBer.QueryContext::method"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::Monitoring.handleLogSearch::method",
+      "kind": "calls",
+      "to": "components/monitoring/monitoring.go::Logger.Error::method"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::Monitoring.handleLogByID::method",
+      "kind": "uses",
+      "to": "components/monitoring/monitoring.go::Monitoring::class"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::Monitoring.handleLogByID::method",
+      "kind": "calls",
+      "to": "components/monitoring/monitoring.go::writeJSON::function"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::Monitoring.handleLogByID::method",
+      "kind": "uses",
+      "to": "components/monitoring/monitoring.go::LogEntry::class"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::Monitoring.handleLogByID::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::DBer.QueryRowContext::method"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::Monitoring.handleAlerts::method",
+      "kind": "uses",
+      "to": "components/monitoring/monitoring.go::Monitoring::class"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::Monitoring.handleAlerts::method",
+      "kind": "calls",
+      "to": "components/monitoring/monitoring.go::Monitoring.handleAlertList::method"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::Monitoring.handleAlerts::method",
+      "kind": "calls",
+      "to": "components/monitoring/monitoring.go::Monitoring.handleAlertCreate::method"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::Monitoring.handleAlerts::method",
+      "kind": "calls",
+      "to": "components/monitoring/monitoring.go::writeJSON::function"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::Monitoring.handleAlertCreate::method",
+      "kind": "uses",
+      "to": "components/monitoring/monitoring.go::Monitoring::class"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::Monitoring.handleAlertCreate::method",
+      "kind": "calls",
+      "to": "components/monitoring/monitoring.go::writeJSON::function"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::Monitoring.handleAlertCreate::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::DBer.ExecContext::method"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::Monitoring.handleAlertCreate::method",
+      "kind": "calls",
+      "to": "components/monitoring/monitoring.go::Logger.Error::method"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::Monitoring.handleAlertList::method",
+      "kind": "uses",
+      "to": "components/monitoring/monitoring.go::Monitoring::class"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::Monitoring.handleAlertList::method",
+      "kind": "calls",
+      "to": "components/monitoring/monitoring.go::writeJSON::function"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::Monitoring.handleAlertList::method",
+      "kind": "uses",
+      "to": "components/monitoring/monitoring.go::Alert::class"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::Monitoring.handleAlertList::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::DBer.QueryContext::method"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::Monitoring.handleAlertList::method",
+      "kind": "calls",
+      "to": "components/monitoring/monitoring.go::Logger.Error::method"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::Monitoring::class",
+      "kind": "implements",
+      "to": "kernel/component.go::Component::interface"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::noopLogger::class",
+      "kind": "implements",
+      "to": "kernel/component.go::Logger::interface"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::noopLogger::class",
+      "kind": "implements",
+      "to": "components/admin/admin.go::Logger::interface"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::noopLogger::class",
+      "kind": "implements",
+      "to": "components/api/api.go::Logger::interface"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::noopLogger::class",
+      "kind": "implements",
+      "to": "components/auth/auth.go::Logger::interface"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::noopLogger::class",
+      "kind": "implements",
+      "to": "components/cici/cici.go::Logger::interface"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::noopLogger::class",
+      "kind": "implements",
+      "to": "components/db/db.go::Logger::interface"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::noopLogger::class",
+      "kind": "implements",
+      "to": "components/deploy/deploy.go::Logger::interface"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::noopLogger::class",
+      "kind": "implements",
+      "to": "components/forge/forge.go::Logger::interface"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::noopLogger::class",
+      "kind": "implements",
+      "to": "components/functions/functions.go::Logger::interface"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::noopLogger::class",
+      "kind": "implements",
+      "to": "components/git/git.go::Logger::interface"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::noopLogger::class",
+      "kind": "implements",
+      "to": "components/github/github.go::Logger::interface"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::noopLogger::class",
+      "kind": "implements",
+      "to": "components/messaging/messaging.go::Logger::interface"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::noopLogger::class",
+      "kind": "implements",
+      "to": "components/monitoring/monitoring.go::Logger::interface"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::noopLogger::class",
+      "kind": "implements",
+      "to": "components/proxy/proxy.go::Logger::interface"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::noopLogger::class",
+      "kind": "implements",
+      "to": "components/realtime/realtime.go::Logger::interface"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::noopLogger::class",
+      "kind": "implements",
+      "to": "components/sites/sites.go::Logger::interface"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::noopLogger::class",
+      "kind": "implements",
+      "to": "components/storage/storage.go::Logger::interface"
+    },
+    {
+      "from": "components/monitoring/monitoring.go::noopLogger::class",
+      "kind": "implements",
+      "to": "components/webhooks/webhooks.go::Logger::interface"
+    }
+  ],
+  "file": "components/monitoring/monitoring.go",
+  "intent": [
+    {
+      "date": "2026-06-05T19:53:02-03:00",
+      "hash": "20014c0a4af1657cda6928192e1aa99e027a94c7",
+      "kind": "commit",
+      "message": "feat(dx): e22s03 event bus visualizer — SSE endpoint and frontend page"
+    },
+    {
+      "date": "2026-06-05T20:13:56-03:00",
+      "hash": "7bea9645d49a10a8ed723617b32bd0481e3a625e",
+      "kind": "commit",
+      "message": "feat(db): e18s01 extract shared DBer interface"
+    },
+    {
+      "date": "2026-06-05T20:07:42-03:00",
+      "hash": "3680e80da96091fb18b55ec13871c9bcfd94e8d7",
+      "kind": "commit",
+      "message": "feat(monitoring): e25s05 alerting rules with background checker"
+    },
+    {
+      "date": "2026-06-05T20:01:46-03:00",
+      "hash": "ed057d00ca7b330e460706d8f1a6815f50e483b4",
+      "kind": "commit",
+      "message": "feat(monitoring): e25s01 host metrics collection"
+    },
+    {
+      "date": "2026-06-05T19:57:01-03:00",
+      "hash": "e4c4fe0096ce679ba367dc9579aefd7474a02128",
+      "kind": "commit",
+      "message": "feat(monitoring): e23s05 usage tracking per org"
+    },
+    {
+      "date": "2026-06-05T13:39:59-03:00",
+      "hash": "62800c1fe20f6eeea728d59a5f838a31794f22c3",
+      "kind": "commit",
+      "message": "feat(observability): complete wire observability epic"
+    },
+    {
+      "date": "2026-06-04T12:11:50-03:00",
+      "hash": "4f55e004c707db49ad243a84a13dad60defc95ea",
+      "kind": "commit",
+      "message": "fix(ui): align dashboard with prototype and live CPU/memory metrics"
+    },
+    {
+      "date": "2026-05-27T23:24:13-03:00",
+      "hash": "1b356e63f8644510a74b813227a86aacdb09dd99",
+      "kind": "commit",
+      "message": "feat(monitoring): add alert CRUD endpoints"
+    },
+    {
+      "date": "2026-05-27T23:23:19-03:00",
+      "hash": "6d3a6b75331dd46e4603da2c31bcfc04d87a47e2",
+      "kind": "commit",
+      "message": "feat(monitoring): add log storage and search endpoints"
+    },
+    {
+      "date": "2026-05-27T23:21:32-03:00",
+      "hash": "4dfbbc1318a7f5a8cb4ee8ecd12ac48cd49bcb43",
+      "kind": "commit",
+      "message": "feat(monitoring): add request metrics middleware"
+    },
+    {
+      "date": "2026-05-27T23:20:46-03:00",
+      "hash": "dcd04303045bef4131262e517c704882fdde2838",
+      "kind": "commit",
+      "message": "feat(monitoring): add /api/monitoring/metrics endpoint with system and request metrics"
+    },
+    {
+      "date": "2026-05-27T23:20:03-03:00",
+      "hash": "fc6bd9e883f4b8b1a39c62d43ecd53a09bec7f92",
+      "kind": "commit",
+      "message": "feat(monitoring): add system metrics collector"
+    },
+    {
+      "date": "2026-05-27T23:19:08-03:00",
+      "hash": "b292c81635e7fee26049253a5402af3329fb0d16",
+      "kind": "commit",
+      "message": "feat(monitoring): add component shell with health endpoint"
+    }
+  ],
+  "lastModified": 1781284401,
+  "symbols": [
+    {
+      "endLine": 18,
+      "endOffset": 193,
+      "kind": "variable",
+      "name": "version",
+      "startLine": 18,
+      "startOffset": 186,
+      "symbolId": "components/monitoring/monitoring.go::version::variable"
+    },
+    {
+      "endLine": 21,
+      "endOffset": 301,
+      "kind": "type",
+      "name": "DBer",
+      "startLine": 21,
+      "startOffset": 283,
+      "symbolId": "components/monitoring/monitoring.go::DBer::type"
+    },
+    {
+      "endLine": 28,
+      "endOffset": 454,
+      "kind": "interface",
+      "name": "Logger",
+      "startLine": 23,
+      "startOffset": 308,
+      "symbolId": "components/monitoring/monitoring.go::Logger::interface"
+    },
+    {
+      "endLine": 30,
+      "endOffset": 480,
+      "kind": "class",
+      "name": "noopLogger",
+      "startLine": 30,
+      "startOffset": 461,
+      "symbolId": "components/monitoring/monitoring.go::noopLogger::class"
+    },
+    {
+      "endLine": 32,
+      "endOffset": 533,
+      "kind": "method",
+      "name": "noopLogger.Info",
+      "startLine": 32,
+      "startOffset": 482,
+      "symbolId": "components/monitoring/monitoring.go::noopLogger.Info::method"
+    },
+    {
+      "endLine": 33,
+      "endOffset": 585,
+      "kind": "method",
+      "name": "noopLogger.Warn",
+      "startLine": 33,
+      "startOffset": 534,
+      "symbolId": "components/monitoring/monitoring.go::noopLogger.Warn::method"
+    },
+    {
+      "endLine": 34,
+      "endOffset": 637,
+      "kind": "method",
+      "name": "noopLogger.Error",
+      "startLine": 34,
+      "startOffset": 586,
+      "symbolId": "components/monitoring/monitoring.go::noopLogger.Error::method"
+    },
+    {
+      "endLine": 35,
+      "endOffset": 689,
+      "kind": "method",
+      "name": "noopLogger.Debug",
+      "startLine": 35,
+      "startOffset": 638,
+      "symbolId": "components/monitoring/monitoring.go::noopLogger.Debug::method"
+    },
+    {
+      "endLine": 45,
+      "endOffset": 1009,
+      "kind": "class",
+      "name": "Alert",
+      "startLine": 37,
+      "startOffset": 696,
+      "symbolId": "components/monitoring/monitoring.go::Alert::class"
+    },
+    {
+      "endLine": 52,
+      "endOffset": 1171,
+      "kind": "class",
+      "name": "LogEntry",
+      "startLine": 47,
+      "startOffset": 1016,
+      "symbolId": "components/monitoring/monitoring.go::LogEntry::class"
+    },
+    {
+      "endLine": 59,
+      "endOffset": 1378,
+      "kind": "class",
+      "name": "SystemMetrics",
+      "startLine": 54,
+      "startOffset": 1178,
+      "symbolId": "components/monitoring/monitoring.go::SystemMetrics::class"
+    },
+    {
+      "endLine": 67,
+      "endOffset": 1662,
+      "kind": "class",
+      "name": "EndpointMetrics",
+      "startLine": 61,
+      "startOffset": 1385,
+      "symbolId": "components/monitoring/monitoring.go::EndpointMetrics::class"
+    },
+    {
+      "endLine": 74,
+      "endOffset": 1941,
+      "kind": "class",
+      "name": "RequestMetrics",
+      "startLine": 69,
+      "startOffset": 1669,
+      "symbolId": "components/monitoring/monitoring.go::RequestMetrics::class"
+    },
+    {
+      "endLine": 81,
+      "endOffset": 2082,
+      "kind": "class",
+      "name": "MetricsCollector",
+      "startLine": 76,
+      "startOffset": 1948,
+      "symbolId": "components/monitoring/monitoring.go::MetricsCollector::class"
+    },
+    {
+      "endLine": 96,
+      "endOffset": 2394,
+      "kind": "class",
+      "name": "Monitoring",
+      "startLine": 83,
+      "startOffset": 2089,
+      "symbolId": "components/monitoring/monitoring.go::Monitoring::class"
+    },
+    {
+      "endLine": 101,
+      "endOffset": 2447,
+      "kind": "class",
+      "name": "Options",
+      "startLine": 98,
+      "startOffset": 2401,
+      "symbolId": "components/monitoring/monitoring.go::Options::class"
+    },
+    {
+      "endLine": 116,
+      "endOffset": 2728,
+      "kind": "function",
+      "name": "New",
+      "startLine": 103,
+      "startOffset": 2449,
+      "symbolId": "components/monitoring/monitoring.go::New::function"
+    },
+    {
+      "endLine": 118,
+      "endOffset": 2755,
+      "kind": "variable",
+      "name": "hostCollectInterval",
+      "startLine": 118,
+      "startOffset": 2736,
+      "symbolId": "components/monitoring/monitoring.go::hostCollectInterval::variable"
+    },
+    {
+      "endLine": 120,
+      "endOffset": 2851,
+      "kind": "method",
+      "name": "Monitoring.Name",
+      "startLine": 120,
+      "startOffset": 2776,
+      "symbolId": "components/monitoring/monitoring.go::Monitoring.Name::method"
+    },
+    {
+      "endLine": 121,
+      "endOffset": 2922,
+      "kind": "method",
+      "name": "Monitoring.Version",
+      "startLine": 121,
+      "startOffset": 2852,
+      "symbolId": "components/monitoring/monitoring.go::Monitoring.Version::method"
+    },
+    {
+      "endLine": 122,
+      "endOffset": 3001,
+      "kind": "method",
+      "name": "Monitoring.Dependencies",
+      "startLine": 122,
+      "startOffset": 2923,
+      "symbolId": "components/monitoring/monitoring.go::Monitoring.Dependencies::method"
+    },
+    {
+      "endLine": 123,
+      "endOffset": 3068,
+      "kind": "method",
+      "name": "Monitoring.ConfigSchema",
+      "startLine": 123,
+      "startOffset": 3002,
+      "symbolId": "components/monitoring/monitoring.go::Monitoring.ConfigSchema::method"
+    },
+    {
+      "endLine": 124,
+      "endOffset": 3136,
+      "kind": "method",
+      "name": "Monitoring.Hooks",
+      "startLine": 124,
+      "startOffset": 3069,
+      "symbolId": "components/monitoring/monitoring.go::Monitoring.Hooks::method"
+    },
+    {
+      "endLine": 125,
+      "endOffset": 3228,
+      "kind": "method",
+      "name": "Monitoring.Init",
+      "startLine": 125,
+      "startOffset": 3137,
+      "symbolId": "components/monitoring/monitoring.go::Monitoring.Init::method"
+    },
+    {
+      "endLine": 163,
+      "endOffset": 4356,
+      "kind": "method",
+      "name": "Monitoring.Start",
+      "startLine": 126,
+      "startOffset": 3229,
+      "symbolId": "components/monitoring/monitoring.go::Monitoring.Start::method"
+    },
+    {
+      "endLine": 173,
+      "endOffset": 4524,
+      "kind": "method",
+      "name": "Monitoring.Stop",
+      "startLine": 165,
+      "startOffset": 4358,
+      "symbolId": "components/monitoring/monitoring.go::Monitoring.Stop::method"
+    },
+    {
+      "endLine": 187,
+      "endOffset": 4825,
+      "kind": "method",
+      "name": "Monitoring.runHostCollector",
+      "startLine": 175,
+      "startOffset": 4526,
+      "symbolId": "components/monitoring/monitoring.go::Monitoring.runHostCollector::method"
+    },
+    {
+      "endLine": 193,
+      "endOffset": 4947,
+      "kind": "method",
+      "name": "Monitoring.storeHostMetrics",
+      "startLine": 189,
+      "startOffset": 4827,
+      "symbolId": "components/monitoring/monitoring.go::Monitoring.storeHostMetrics::method"
+    },
+    {
+      "endLine": 199,
+      "endOffset": 5080,
+      "kind": "method",
+      "name": "Monitoring.LatestHostMetrics",
+      "startLine": 195,
+      "startOffset": 4949,
+      "symbolId": "components/monitoring/monitoring.go::Monitoring.LatestHostMetrics::method"
+    },
+    {
+      "endLine": 204,
+      "endOffset": 5149,
+      "kind": "class",
+      "name": "statusRecorder",
+      "startLine": 201,
+      "startOffset": 5087,
+      "symbolId": "components/monitoring/monitoring.go::statusRecorder::class"
+    },
+    {
+      "endLine": 209,
+      "endOffset": 5258,
+      "kind": "method",
+      "name": "statusRecorder.WriteHeader",
+      "startLine": 206,
+      "startOffset": 5151,
+      "symbolId": "components/monitoring/monitoring.go::statusRecorder.WriteHeader::method"
+    },
+    {
+      "endLine": 243,
+      "endOffset": 6152,
+      "kind": "method",
+      "name": "Monitoring.Middleware",
+      "startLine": 211,
+      "startOffset": 5260,
+      "symbolId": "components/monitoring/monitoring.go::Monitoring.Middleware::method"
+    },
+    {
+      "endLine": 254,
+      "endOffset": 6589,
+      "kind": "method",
+      "name": "Monitoring.processCPUTime",
+      "startLine": 245,
+      "startOffset": 6154,
+      "symbolId": "components/monitoring/monitoring.go::Monitoring.processCPUTime::method"
+    },
+    {
+      "endLine": 291,
+      "endOffset": 7215,
+      "kind": "method",
+      "name": "Monitoring.sampleCPUPercent",
+      "startLine": 256,
+      "startOffset": 6591,
+      "symbolId": "components/monitoring/monitoring.go::Monitoring.sampleCPUPercent::method"
+    },
+    {
+      "endLine": 307,
+      "endOffset": 7608,
+      "kind": "method",
+      "name": "Monitoring.SystemMetrics",
+      "startLine": 293,
+      "startOffset": 7217,
+      "symbolId": "components/monitoring/monitoring.go::Monitoring.SystemMetrics::method"
+    },
+    {
+      "endLine": 323,
+      "endOffset": 8387,
+      "kind": "method",
+      "name": "Monitoring.Handler",
+      "startLine": 309,
+      "startOffset": 7610,
+      "symbolId": "components/monitoring/monitoring.go::Monitoring.Handler::method"
+    },
+    {
+      "endLine": 329,
+      "endOffset": 8591,
+      "kind": "method",
+      "name": "Monitoring.handleHealth",
+      "startLine": 325,
+      "startOffset": 8389,
+      "symbolId": "components/monitoring/monitoring.go::Monitoring.handleHealth::method"
+    },
+    {
+      "endLine": 381,
+      "endOffset": 9852,
+      "kind": "method",
+      "name": "Monitoring.handleMetrics",
+      "startLine": 331,
+      "startOffset": 8593,
+      "symbolId": "components/monitoring/monitoring.go::Monitoring.handleMetrics::method"
+    },
+    {
+      "endLine": 390,
+      "endOffset": 10116,
+      "kind": "class",
+      "name": "prometheusSnapshot",
+      "startLine": 384,
+      "startOffset": 9942,
+      "symbolId": "components/monitoring/monitoring.go::prometheusSnapshot::class"
+    },
+    {
+      "endLine": 395,
+      "endOffset": 10190,
+      "kind": "class",
+      "name": "endpointMetric",
+      "startLine": 392,
+      "startOffset": 10123,
+      "symbolId": "components/monitoring/monitoring.go::endpointMetric::class"
+    },
+    {
+      "endLine": 438,
+      "endOffset": 11256,
+      "kind": "method",
+      "name": "Monitoring.collectPrometheusSnapshot",
+      "startLine": 398,
+      "startOffset": 10277,
+      "symbolId": "components/monitoring/monitoring.go::Monitoring.collectPrometheusSnapshot::method"
+    },
+    {
+      "endLine": 459,
+      "endOffset": 12286,
+      "kind": "method",
+      "name": "Monitoring.handlePrometheusMetrics",
+      "startLine": 440,
+      "startOffset": 11258,
+      "symbolId": "components/monitoring/monitoring.go::Monitoring.handlePrometheusMetrics::method"
+    },
+    {
+      "endLine": 464,
+      "endOffset": 12454,
+      "kind": "function",
+      "name": "writePromLine",
+      "startLine": 462,
+      "startOffset": 12372,
+      "symbolId": "components/monitoring/monitoring.go::writePromLine::function"
+    },
+    {
+      "endLine": 469,
+      "endOffset": 12651,
+      "kind": "function",
+      "name": "writePromLinef",
+      "startLine": 467,
+      "startOffset": 12537,
+      "symbolId": "components/monitoring/monitoring.go::writePromLinef::function"
+    },
+    {
+      "endLine": 479,
+      "endOffset": 13079,
+      "kind": "function",
+      "name": "writePromCounter",
+      "startLine": 472,
+      "startOffset": 12730,
+      "symbolId": "components/monitoring/monitoring.go::writePromCounter::function"
+    },
+    {
+      "endLine": 487,
+      "endOffset": 13414,
+      "kind": "function",
+      "name": "writePromGauge",
+      "startLine": 482,
+      "startOffset": 13146,
+      "symbolId": "components/monitoring/monitoring.go::writePromGauge::function"
+    },
+    {
+      "endLine": 498,
+      "endOffset": 13696,
+      "kind": "method",
+      "name": "Monitoring.handleLogs",
+      "startLine": 489,
+      "startOffset": 13416,
+      "symbolId": "components/monitoring/monitoring.go::Monitoring.handleLogs::method"
+    },
+    {
+      "endLine": 526,
+      "endOffset": 14654,
+      "kind": "method",
+      "name": "Monitoring.handleLogCreate",
+      "startLine": 500,
+      "startOffset": 13698,
+      "symbolId": "components/monitoring/monitoring.go::Monitoring.handleLogCreate::method"
+    },
+    {
+      "endLine": 561,
+      "endOffset": 15747,
+      "kind": "method",
+      "name": "Monitoring.handleLogSearch",
+      "startLine": 528,
+      "startOffset": 14656,
+      "symbolId": "components/monitoring/monitoring.go::Monitoring.handleLogSearch::method"
+    },
+    {
+      "endLine": 582,
+      "endOffset": 16462,
+      "kind": "method",
+      "name": "Monitoring.handleLogByID",
+      "startLine": 563,
+      "startOffset": 15749,
+      "symbolId": "components/monitoring/monitoring.go::Monitoring.handleLogByID::method"
+    },
+    {
+      "endLine": 593,
+      "endOffset": 16748,
+      "kind": "method",
+      "name": "Monitoring.handleAlerts",
+      "startLine": 584,
+      "startOffset": 16464,
+      "symbolId": "components/monitoring/monitoring.go::Monitoring.handleAlerts::method"
+    },
+    {
+      "endLine": 633,
+      "endOffset": 18247,
+      "kind": "method",
+      "name": "Monitoring.handleAlertCreate",
+      "startLine": 595,
+      "startOffset": 16750,
+      "symbolId": "components/monitoring/monitoring.go::Monitoring.handleAlertCreate::method"
+    },
+    {
+      "endLine": 661,
+      "endOffset": 19170,
+      "kind": "method",
+      "name": "Monitoring.handleAlertList",
+      "startLine": 635,
+      "startOffset": 18249,
+      "symbolId": "components/monitoring/monitoring.go::Monitoring.handleAlertList::method"
+    },
+    {
+      "endLine": 667,
+      "endOffset": 19347,
+      "kind": "function",
+      "name": "writeJSON",
+      "startLine": 663,
+      "startOffset": 19172,
+      "symbolId": "components/monitoring/monitoring.go::writeJSON::function"
+    }
+  ]
+}

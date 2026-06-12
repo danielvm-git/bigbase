@@ -1,0 +1,23 @@
+{
+  "antiPatterns": [],
+  "complexity": [],
+  "contentHash": "32defab7ae515c3c6823bcb009c3b0b28617127fcf127193764cfe8f5a66cdb7",
+  "edges": [
+    {
+      "from": "ui/src/pages/LoginPage.test.tsx::LoginPage.test::variable",
+      "kind": "imports",
+      "to": "ui/src/pages/LoginPage.ts::LoginPage::class"
+    }
+  ],
+  "file": "ui/src/pages/LoginPage.test.tsx",
+  "intent": [
+    {
+      "date": "2026-06-02T21:13:49-03:00",
+      "hash": "f610b14da299314c0471e960126666d168f34a32",
+      "kind": "commit",
+      "message": "feat(ui): complete epic e17 Enhanced Admin UI prototype parity (#10)"
+    }
+  ],
+  "lastModified": 1781284402,
+  "symbols": []
+}

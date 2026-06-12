@@ -1,0 +1,212 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/auth/refreshtoken.go::Auth.migrateRefreshTokens::method"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/auth/refreshtoken.go::generateRefreshToken::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/auth/refreshtoken.go::generateFamilyID::function"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/auth/refreshtoken.go::Auth.issueRefreshToken::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/auth/refreshtoken.go::Auth.invalidateFamily::method"
+    },
+    {
+      "cyclomatic": 11,
+      "symbolId": "components/auth/refreshtoken.go::Auth.handleRefresh::method"
+    }
+  ],
+  "contentHash": "05ee110dfd01b80f81391cc56e6a1b82e656bf40a26e794c67f3cfa3dd5a0494",
+  "edges": [
+    {
+      "from": "components/auth/refreshtoken.go::Auth.migrateRefreshTokens::method",
+      "kind": "uses",
+      "to": "components/auth/auth.go::Auth::class"
+    },
+    {
+      "from": "components/auth/refreshtoken.go::Auth.migrateRefreshTokens::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::DBer.Migrate::method"
+    },
+    {
+      "from": "components/auth/refreshtoken.go::generateRefreshToken::function",
+      "kind": "uses",
+      "to": "components/auth/refreshtoken.go::refreshTokenLen::variable"
+    },
+    {
+      "from": "components/auth/refreshtoken.go::Auth.issueRefreshToken::method",
+      "kind": "uses",
+      "to": "components/auth/auth.go::Auth::class"
+    },
+    {
+      "from": "components/auth/refreshtoken.go::Auth.issueRefreshToken::method",
+      "kind": "calls",
+      "to": "components/auth/refreshtoken.go::generateRefreshToken::function"
+    },
+    {
+      "from": "components/auth/refreshtoken.go::Auth.issueRefreshToken::method",
+      "kind": "uses",
+      "to": "components/auth/refreshtoken.go::refreshTokenExpiry::variable"
+    },
+    {
+      "from": "components/auth/refreshtoken.go::Auth.issueRefreshToken::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::DBer.ExecContext::method"
+    },
+    {
+      "from": "components/auth/refreshtoken.go::Auth.invalidateFamily::method",
+      "kind": "uses",
+      "to": "components/auth/auth.go::Auth::class"
+    },
+    {
+      "from": "components/auth/refreshtoken.go::Auth.invalidateFamily::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::DBer.ExecContext::method"
+    },
+    {
+      "from": "components/auth/refreshtoken.go::Auth.handleRefresh::method",
+      "kind": "uses",
+      "to": "components/auth/auth.go::Auth::class"
+    },
+    {
+      "from": "components/auth/refreshtoken.go::Auth.handleRefresh::method",
+      "kind": "calls",
+      "to": "components/auth/auth.go::writeJSON::function"
+    },
+    {
+      "from": "components/auth/refreshtoken.go::Auth.handleRefresh::method",
+      "kind": "uses",
+      "to": "components/auth/auth.go::maxBodyBytes::variable"
+    },
+    {
+      "from": "components/auth/refreshtoken.go::Auth.handleRefresh::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::DBer.QueryRowContext::method"
+    },
+    {
+      "from": "components/auth/refreshtoken.go::Auth.handleRefresh::method",
+      "kind": "calls",
+      "to": "components/auth/refreshtoken.go::Auth.invalidateFamily::method"
+    },
+    {
+      "from": "components/auth/refreshtoken.go::Auth.handleRefresh::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::DBer.ExecContext::method"
+    },
+    {
+      "from": "components/auth/refreshtoken.go::Auth.handleRefresh::method",
+      "kind": "calls",
+      "to": "components/auth/auth.go::Logger.Error::method"
+    },
+    {
+      "from": "components/auth/refreshtoken.go::Auth.handleRefresh::method",
+      "kind": "calls",
+      "to": "components/auth/jwt.go::createJWT::function"
+    },
+    {
+      "from": "components/auth/refreshtoken.go::Auth.handleRefresh::method",
+      "kind": "calls",
+      "to": "components/auth/refreshtoken.go::Auth.issueRefreshToken::method"
+    }
+  ],
+  "file": "components/auth/refreshtoken.go",
+  "intent": [
+    {
+      "date": "2026-06-12T14:00:44-03:00",
+      "hash": "9a907700b8bcff67f3cb2611f61760111795f007",
+      "kind": "commit",
+      "message": "feat(auth): wire org-ID into JWT claims, middleware context, and API bridge"
+    },
+    {
+      "date": "2026-06-06T11:02:01-03:00",
+      "hash": "0627b371271ce39bdd125034d6ba43f4c9a08ef8",
+      "kind": "commit",
+      "message": "feat(security): e19s04 refresh token store, handler, and tests"
+    }
+  ],
+  "lastModified": 1781284401,
+  "symbols": [
+    {
+      "endLine": 14,
+      "endOffset": 136,
+      "kind": "variable",
+      "name": "refreshTokenLen",
+      "startLine": 14,
+      "startOffset": 121,
+      "symbolId": "components/auth/refreshtoken.go::refreshTokenLen::variable"
+    },
+    {
+      "endLine": 15,
+      "endOffset": 212,
+      "kind": "variable",
+      "name": "refreshTokenExpiry",
+      "startLine": 15,
+      "startOffset": 194,
+      "symbolId": "components/auth/refreshtoken.go::refreshTokenExpiry::variable"
+    },
+    {
+      "endLine": 29,
+      "endOffset": 659,
+      "kind": "method",
+      "name": "Auth.migrateRefreshTokens",
+      "startLine": 19,
+      "startOffset": 310,
+      "symbolId": "components/auth/refreshtoken.go::Auth.migrateRefreshTokens::method"
+    },
+    {
+      "endLine": 38,
+      "endOffset": 962,
+      "kind": "function",
+      "name": "generateRefreshToken",
+      "startLine": 32,
+      "startOffset": 739,
+      "symbolId": "components/auth/refreshtoken.go::generateRefreshToken::function"
+    },
+    {
+      "endLine": 47,
+      "endOffset": 1223,
+      "kind": "function",
+      "name": "generateFamilyID",
+      "startLine": 41,
+      "startOffset": 1023,
+      "symbolId": "components/auth/refreshtoken.go::generateFamilyID::function"
+    },
+    {
+      "endLine": 70,
+      "endOffset": 1963,
+      "kind": "method",
+      "name": "Auth.issueRefreshToken",
+      "startLine": 50,
+      "startOffset": 1305,
+      "symbolId": "components/auth/refreshtoken.go::Auth.issueRefreshToken::method"
+    },
+    {
+      "endLine": 80,
+      "endOffset": 2365,
+      "kind": "method",
+      "name": "Auth.invalidateFamily",
+      "startLine": 74,
+      "startOffset": 2106,
+      "symbolId": "components/auth/refreshtoken.go::Auth.invalidateFamily::method"
+    },
+    {
+      "endLine": 181,
+      "endOffset": 5690,
+      "kind": "method",
+      "name": "Auth.handleRefresh",
+      "startLine": 83,
+      "startOffset": 2416,
+      "symbolId": "components/auth/refreshtoken.go::Auth.handleRefresh::method"
+    }
+  ]
+}

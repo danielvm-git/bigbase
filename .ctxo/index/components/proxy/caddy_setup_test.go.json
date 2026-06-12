@@ -1,0 +1,22 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/proxy/caddy_setup_test.go::TestSetupVPSUsesOnDemandTLS::function"
+    }
+  ],
+  "contentHash": "8f215e26a367f6acf56988abc392eed043bb9f7d6e0e32156a5c531508edd7a1",
+  "edges": [],
+  "file": "components/proxy/caddy_setup_test.go",
+  "intent": [
+    {
+      "date": "2026-06-05T12:21:16-03:00",
+      "hash": "c3794be59a2ccb9431dba427d9cd749aa97d464f",
+      "kind": "commit",
+      "message": "feat(deploy): live build terminal on create-site step 3 (#13)"
+    }
+  ],
+  "lastModified": 1781284401,
+  "symbols": []
+}

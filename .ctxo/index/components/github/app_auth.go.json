@@ -1,0 +1,123 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/github/app_auth.go::GitHub.appJWT::method"
+    },
+    {
+      "cyclomatic": 6,
+      "symbolId": "components/github/app_auth.go::GitHub.installationToken::method"
+    },
+    {
+      "cyclomatic": 6,
+      "symbolId": "components/github/app_auth.go::GitHub.fetchInstallation::method"
+    },
+    {
+      "cyclomatic": 8,
+      "symbolId": "components/github/app_auth.go::GitHub.listInstallationRepos::method"
+    }
+  ],
+  "contentHash": "f72cc03d2a7f2d56c48c7200785133fd86f36c3542332cb73689f2d17cc0a23b",
+  "edges": [
+    {
+      "from": "components/github/app_auth.go::GitHub.appJWT::method",
+      "kind": "uses",
+      "to": "components/github/github.go::GitHub::class"
+    },
+    {
+      "from": "components/github/app_auth.go::GitHub.installationToken::method",
+      "kind": "uses",
+      "to": "components/github/github.go::GitHub::class"
+    },
+    {
+      "from": "components/github/app_auth.go::GitHub.installationToken::method",
+      "kind": "calls",
+      "to": "components/github/app_auth.go::GitHub.appJWT::method"
+    },
+    {
+      "from": "components/github/app_auth.go::GitHub.fetchInstallation::method",
+      "kind": "uses",
+      "to": "components/github/github.go::GitHub::class"
+    },
+    {
+      "from": "components/github/app_auth.go::GitHub.fetchInstallation::method",
+      "kind": "uses",
+      "to": "components/github/github.go::installationDetails::class"
+    },
+    {
+      "from": "components/github/app_auth.go::GitHub.fetchInstallation::method",
+      "kind": "calls",
+      "to": "components/github/app_auth.go::GitHub.appJWT::method"
+    },
+    {
+      "from": "components/github/app_auth.go::GitHub.listInstallationRepos::method",
+      "kind": "uses",
+      "to": "components/github/github.go::GitHub::class"
+    },
+    {
+      "from": "components/github/app_auth.go::GitHub.listInstallationRepos::method",
+      "kind": "uses",
+      "to": "components/github/github.go::Repo::class"
+    },
+    {
+      "from": "components/github/app_auth.go::GitHub.listInstallationRepos::method",
+      "kind": "calls",
+      "to": "components/github/app_auth.go::GitHub.installationToken::method"
+    }
+  ],
+  "file": "components/github/app_auth.go",
+  "intent": [
+    {
+      "date": "2026-06-01T21:42:01-03:00",
+      "hash": "0c7fea6fdf0a635f2a8747d05729b5a65d231e8a",
+      "kind": "commit",
+      "message": "fix(main): register GitHub App CLI flags and wire to github component"
+    },
+    {
+      "date": "2026-06-01T13:45:19-03:00",
+      "hash": "7f3d05bef383ee23eda59ed54665e9fc43e35eed",
+      "kind": "commit",
+      "message": "docs(bugs): update BUG-2026-06-01T055655 Resolution section with fix evidence"
+    }
+  ],
+  "lastModified": 1781284401,
+  "symbols": [
+    {
+      "endLine": 33,
+      "endOffset": 707,
+      "kind": "method",
+      "name": "GitHub.appJWT",
+      "startLine": 15,
+      "startOffset": 128,
+      "symbolId": "components/github/app_auth.go::GitHub.appJWT::method"
+    },
+    {
+      "endLine": 67,
+      "endOffset": 1665,
+      "kind": "method",
+      "name": "GitHub.installationToken",
+      "startLine": 35,
+      "startOffset": 709,
+      "symbolId": "components/github/app_auth.go::GitHub.installationToken::method"
+    },
+    {
+      "endLine": 102,
+      "endOffset": 2605,
+      "kind": "method",
+      "name": "GitHub.fetchInstallation",
+      "startLine": 69,
+      "startOffset": 1667,
+      "symbolId": "components/github/app_auth.go::GitHub.fetchInstallation::method"
+    },
+    {
+      "endLine": 157,
+      "endOffset": 4096,
+      "kind": "method",
+      "name": "GitHub.listInstallationRepos",
+      "startLine": 104,
+      "startOffset": 2607,
+      "symbolId": "components/github/app_auth.go::GitHub.listInstallationRepos::method"
+    }
+  ]
+}

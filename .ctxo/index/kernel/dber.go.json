@@ -1,0 +1,27 @@
+{
+  "antiPatterns": [],
+  "complexity": [],
+  "contentHash": "ea75ef340cd9657074fc4e803ef19975f8144dbd4d01deef7a6465f52ff3a1d4",
+  "edges": [],
+  "file": "kernel/dber.go",
+  "intent": [
+    {
+      "date": "2026-06-05T20:13:56-03:00",
+      "hash": "7bea9645d49a10a8ed723617b32bd0481e3a625e",
+      "kind": "commit",
+      "message": "feat(db): e18s01 extract shared DBer interface"
+    }
+  ],
+  "lastModified": 1781284401,
+  "symbols": [
+    {
+      "endLine": 18,
+      "endOffset": 629,
+      "kind": "interface",
+      "name": "DBer",
+      "startLine": 10,
+      "startOffset": 190,
+      "symbolId": "kernel/dber.go::DBer::interface"
+    }
+  ]
+}

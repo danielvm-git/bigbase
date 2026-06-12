@@ -1,0 +1,155 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/monitoring/org_usage.go::Monitoring.migrateOrgUsageTable::method"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/monitoring/org_usage.go::Monitoring.RecordOrgRequest::method"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/monitoring/org_usage.go::Monitoring.GetOrgUsage::method"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/monitoring/org_usage.go::Monitoring.handleOrgUsage::method"
+    }
+  ],
+  "contentHash": "52e7d39140cc9769c2fae59596c78d130197eade9fdd5a8e12f48875c2d8dae1",
+  "edges": [
+    {
+      "from": "components/monitoring/org_usage.go::Monitoring.migrateOrgUsageTable::method",
+      "kind": "uses",
+      "to": "components/monitoring/monitoring.go::Monitoring::class"
+    },
+    {
+      "from": "components/monitoring/org_usage.go::Monitoring.migrateOrgUsageTable::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::DBer.Migrate::method"
+    },
+    {
+      "from": "components/monitoring/org_usage.go::Monitoring.RecordOrgRequest::method",
+      "kind": "uses",
+      "to": "components/monitoring/monitoring.go::Monitoring::class"
+    },
+    {
+      "from": "components/monitoring/org_usage.go::Monitoring.RecordOrgRequest::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::DBer.ExecContext::method"
+    },
+    {
+      "from": "components/monitoring/org_usage.go::Monitoring.RecordOrgRequest::method",
+      "kind": "calls",
+      "to": "components/monitoring/monitoring.go::Logger.Error::method"
+    },
+    {
+      "from": "components/monitoring/org_usage.go::Monitoring.GetOrgUsage::method",
+      "kind": "uses",
+      "to": "components/monitoring/monitoring.go::Monitoring::class"
+    },
+    {
+      "from": "components/monitoring/org_usage.go::Monitoring.GetOrgUsage::method",
+      "kind": "uses",
+      "to": "components/monitoring/org_usage.go::OrgUsageSummary::class"
+    },
+    {
+      "from": "components/monitoring/org_usage.go::Monitoring.GetOrgUsage::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::DBer.QueryContext::method"
+    },
+    {
+      "from": "components/monitoring/org_usage.go::Monitoring.GetOrgUsage::method",
+      "kind": "uses",
+      "to": "components/monitoring/org_usage.go::OrgUsageDay::class"
+    },
+    {
+      "from": "components/monitoring/org_usage.go::Monitoring.handleOrgUsage::method",
+      "kind": "uses",
+      "to": "components/monitoring/monitoring.go::Monitoring::class"
+    },
+    {
+      "from": "components/monitoring/org_usage.go::Monitoring.handleOrgUsage::method",
+      "kind": "calls",
+      "to": "components/monitoring/monitoring.go::writeJSON::function"
+    },
+    {
+      "from": "components/monitoring/org_usage.go::Monitoring.handleOrgUsage::method",
+      "kind": "calls",
+      "to": "components/monitoring/org_usage.go::Monitoring.GetOrgUsage::method"
+    },
+    {
+      "from": "components/monitoring/org_usage.go::Monitoring.handleOrgUsage::method",
+      "kind": "calls",
+      "to": "components/monitoring/monitoring.go::Logger.Error::method"
+    }
+  ],
+  "file": "components/monitoring/org_usage.go",
+  "intent": [
+    {
+      "date": "2026-06-05T19:57:01-03:00",
+      "hash": "e4c4fe0096ce679ba367dc9579aefd7474a02128",
+      "kind": "commit",
+      "message": "feat(monitoring): e23s05 usage tracking per org"
+    }
+  ],
+  "lastModified": 1781284401,
+  "symbols": [
+    {
+      "endLine": 16,
+      "endOffset": 267,
+      "kind": "class",
+      "name": "OrgUsageDay",
+      "startLine": 12,
+      "startOffset": 147,
+      "symbolId": "components/monitoring/org_usage.go::OrgUsageDay::class"
+    },
+    {
+      "endLine": 24,
+      "endOffset": 549,
+      "kind": "class",
+      "name": "OrgUsageSummary",
+      "startLine": 19,
+      "startOffset": 332,
+      "symbolId": "components/monitoring/org_usage.go::OrgUsageSummary::class"
+    },
+    {
+      "endLine": 36,
+      "endOffset": 930,
+      "kind": "method",
+      "name": "Monitoring.migrateOrgUsageTable",
+      "startLine": 27,
+      "startOffset": 624,
+      "symbolId": "components/monitoring/org_usage.go::Monitoring.migrateOrgUsageTable::method"
+    },
+    {
+      "endLine": 59,
+      "endOffset": 1679,
+      "kind": "method",
+      "name": "Monitoring.RecordOrgRequest",
+      "startLine": 40,
+      "startOffset": 1088,
+      "symbolId": "components/monitoring/org_usage.go::Monitoring.RecordOrgRequest::method"
+    },
+    {
+      "endLine": 91,
+      "endOffset": 2646,
+      "kind": "method",
+      "name": "Monitoring.GetOrgUsage",
+      "startLine": 62,
+      "startOffset": 1742,
+      "symbolId": "components/monitoring/org_usage.go::Monitoring.GetOrgUsage::method"
+    },
+    {
+      "endLine": 111,
+      "endOffset": 3283,
+      "kind": "method",
+      "name": "Monitoring.handleOrgUsage",
+      "startLine": 94,
+      "startOffset": 2699,
+      "symbolId": "components/monitoring/org_usage.go::Monitoring.handleOrgUsage::method"
+    }
+  ]
+}

@@ -1,0 +1,65 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 14,
+      "symbolId": "ui/src/pages/UsersPage.tsx::UsersPage::function"
+    }
+  ],
+  "contentHash": "88431e1778419362ad770be72135bdaece03f7199f8d3d10432f7ad2d07df4fe",
+  "edges": [
+    {
+      "from": "ui/src/pages/UsersPage.tsx::UsersPage::function",
+      "kind": "imports",
+      "to": "ui/src/components.ts::PageHeader::class"
+    },
+    {
+      "from": "ui/src/pages/UsersPage.tsx::UsersPage::function",
+      "kind": "imports",
+      "to": "ui/src/components.ts::Button::class"
+    },
+    {
+      "from": "ui/src/pages/UsersPage.tsx::UsersPage::function",
+      "kind": "uses",
+      "to": "ui/src/components.ts::PageHeader::class"
+    },
+    {
+      "from": "ui/src/pages/UsersPage.tsx::UsersPage::function",
+      "kind": "uses",
+      "to": "ui/src/components.ts::Button::class"
+    }
+  ],
+  "file": "ui/src/pages/UsersPage.tsx",
+  "intent": [
+    {
+      "date": "2026-05-28T01:02:44-03:00",
+      "hash": "da3f118678f0b80b5874e0d7dc559b5700cd3447",
+      "kind": "commit",
+      "message": "feat(admin-ui): port Appwrite design tokens and create shared component system"
+    },
+    {
+      "date": "2026-05-27T01:05:15-03:00",
+      "hash": "2a49228e1fc32f95d22e29aebf03cc3719490e4f",
+      "kind": "commit",
+      "message": "fix: address review findings — security, authz, race conditions"
+    },
+    {
+      "date": "2026-05-26T23:15:56-03:00",
+      "hash": "e19e9775f62605ca4174a457e0d62ba021e47d32",
+      "kind": "commit",
+      "message": "feat(admin): add Admin UI, SQL Editor, and User Management"
+    }
+  ],
+  "lastModified": 1781284402,
+  "symbols": [
+    {
+      "endLine": 89,
+      "endOffset": 2413,
+      "kind": "function",
+      "name": "UsersPage",
+      "startLine": 9,
+      "startOffset": 166,
+      "symbolId": "ui/src/pages/UsersPage.tsx::UsersPage::function"
+    }
+  ]
+}

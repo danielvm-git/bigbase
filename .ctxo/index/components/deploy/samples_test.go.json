@@ -1,0 +1,30 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/deploy/samples_test.go::initSampleRepo::function"
+    },
+    {
+      "cyclomatic": 7,
+      "symbolId": "components/deploy/samples_test.go::TestSampleList::function"
+    },
+    {
+      "cyclomatic": 7,
+      "symbolId": "components/deploy/samples_test.go::TestSampleDeploy::function"
+    }
+  ],
+  "contentHash": "93a668f1eb81c415fd64d0dd37944a86b2084d527c64766a49f1c334c59d761d",
+  "edges": [],
+  "file": "components/deploy/samples_test.go",
+  "intent": [
+    {
+      "date": "2026-06-05T19:55:44-03:00",
+      "hash": "8f23903bab803eec339a27bb41452b11e17e0272",
+      "kind": "commit",
+      "message": "feat(dx): e22s04 sample apps with deploy buttons"
+    }
+  ],
+  "lastModified": 1781284401,
+  "symbols": []
+}

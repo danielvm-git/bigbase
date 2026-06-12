@@ -1,0 +1,144 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 1,
+      "symbolId": "kernel/eventbus.go::NewEventBus::function"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "kernel/eventbus.go::EventBus.Subscribe::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "kernel/eventbus.go::EventBus.SubscriberCount::method"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "kernel/eventbus.go::EventBus.Emit::method"
+    }
+  ],
+  "contentHash": "b1b49aa716570b6abaa2dfced7f422a51921c703f08553a501f69646e1282952",
+  "edges": [
+    {
+      "from": "kernel/eventbus.go::NewEventBus::function",
+      "kind": "uses",
+      "to": "kernel/eventbus.go::EventBus::class"
+    },
+    {
+      "from": "kernel/eventbus.go::NewEventBus::function",
+      "kind": "uses",
+      "to": "kernel/component.go::HookDef::class"
+    },
+    {
+      "from": "kernel/eventbus.go::EventBus.Subscribe::method",
+      "kind": "uses",
+      "to": "kernel/eventbus.go::EventBus::class"
+    },
+    {
+      "from": "kernel/eventbus.go::EventBus.Subscribe::method",
+      "kind": "uses",
+      "to": "kernel/component.go::HookDef::class"
+    },
+    {
+      "from": "kernel/eventbus.go::EventBus.SubscriberCount::method",
+      "kind": "uses",
+      "to": "kernel/eventbus.go::EventBus::class"
+    },
+    {
+      "from": "kernel/eventbus.go::EventBus.Emit::method",
+      "kind": "uses",
+      "to": "kernel/eventbus.go::EventBus::class"
+    },
+    {
+      "from": "kernel/eventbus.go::EventBus.Emit::method",
+      "kind": "uses",
+      "to": "kernel/component.go::Event::class"
+    },
+    {
+      "from": "kernel/eventbus.go::EventBus.Emit::method",
+      "kind": "uses",
+      "to": "kernel/component.go::Context::class"
+    },
+    {
+      "from": "kernel/eventbus.go::EventBus.Emit::method",
+      "kind": "uses",
+      "to": "kernel/component.go::HookDef::class"
+    }
+  ],
+  "file": "kernel/eventbus.go",
+  "intent": [
+    {
+      "date": "2026-06-05T12:58:48-03:00",
+      "hash": "21a8236dd2d6111d9543c744a13133d5a981f305",
+      "kind": "commit",
+      "message": "test(e21s05): add race detection tests and fuzz targets"
+    },
+    {
+      "date": "2026-05-27T19:25:13-03:00",
+      "hash": "f10ed8398be27a6fc5f7a6de5107f891789723db",
+      "kind": "commit",
+      "message": "fix(realtime): fix Hub data race, add event unsubscribe, log emit errors"
+    },
+    {
+      "date": "2026-05-26T13:23:16-03:00",
+      "hash": "fc23a09eb75b67436a08200e876eef687ad8d237",
+      "kind": "commit",
+      "message": "feat(cli proxy kernel): add CLI commands, proxy server, and observability"
+    },
+    {
+      "date": "2026-05-26T12:04:33-03:00",
+      "hash": "3e8d78c36672c39fb4ef117a04b8b98d8ecfb6f2",
+      "kind": "commit",
+      "message": "chore: initial project bootstrap"
+    }
+  ],
+  "lastModified": 1781284401,
+  "symbols": [
+    {
+      "endLine": 12,
+      "endOffset": 133,
+      "kind": "class",
+      "name": "EventBus",
+      "startLine": 8,
+      "startOffset": 49,
+      "symbolId": "kernel/eventbus.go::EventBus::class"
+    },
+    {
+      "endLine": 18,
+      "endOffset": 226,
+      "kind": "function",
+      "name": "NewEventBus",
+      "startLine": 14,
+      "startOffset": 135,
+      "symbolId": "kernel/eventbus.go::NewEventBus::function"
+    },
+    {
+      "endLine": 39,
+      "endOffset": 647,
+      "kind": "method",
+      "name": "EventBus.Subscribe",
+      "startLine": 20,
+      "startOffset": 228,
+      "symbolId": "kernel/eventbus.go::EventBus.Subscribe::method"
+    },
+    {
+      "endLine": 45,
+      "endOffset": 754,
+      "kind": "method",
+      "name": "EventBus.SubscriberCount",
+      "startLine": 41,
+      "startOffset": 649,
+      "symbolId": "kernel/eventbus.go::EventBus.SubscriberCount::method"
+    },
+    {
+      "endLine": 69,
+      "endOffset": 1209,
+      "kind": "method",
+      "name": "EventBus.Emit",
+      "startLine": 47,
+      "startOffset": 756,
+      "symbolId": "kernel/eventbus.go::EventBus.Emit::method"
+    }
+  ]
+}

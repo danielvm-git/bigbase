@@ -1,0 +1,23 @@
+{
+  "antiPatterns": [],
+  "complexity": [],
+  "contentHash": "5baf19f7a316fbe0afe8946b7b8878b0f063f8ba37823664360362811df88f1e",
+  "edges": [
+    {
+      "from": "ui/src/components/StatusBadge.test.tsx::StatusBadge.test::variable",
+      "kind": "imports",
+      "to": "ui/src/components/StatusBadge.ts::StatusBadge::class"
+    }
+  ],
+  "file": "ui/src/components/StatusBadge.test.tsx",
+  "intent": [
+    {
+      "date": "2026-06-04T16:06:51-03:00",
+      "hash": "ef3caacacb9f34a66513687ba295a7ceab40bbce",
+      "kind": "commit",
+      "message": "feat(ui): close all 19 prototype-vs-codebase gaps (#12)"
+    }
+  ],
+  "lastModified": 1781284402,
+  "symbols": []
+}

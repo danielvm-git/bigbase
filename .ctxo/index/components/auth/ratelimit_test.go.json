@@ -1,0 +1,22 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 16,
+      "symbolId": "components/auth/ratelimit_test.go::TestRateLimit::function"
+    }
+  ],
+  "contentHash": "300cc9cb3ef686049fbbc1fbde6d82543c0b27e5fcefc62cc65c240cdfffee70",
+  "edges": [],
+  "file": "components/auth/ratelimit_test.go",
+  "intent": [
+    {
+      "date": "2026-06-05T20:10:12-03:00",
+      "hash": "360653766abe076b4e2fefc0b026eee1482ae9fc",
+      "kind": "commit",
+      "message": "feat(security): e19s01 rate limiting middleware"
+    }
+  ],
+  "lastModified": 1781284401,
+  "symbols": []
+}

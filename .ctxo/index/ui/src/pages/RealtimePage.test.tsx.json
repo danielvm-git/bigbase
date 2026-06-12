@@ -1,0 +1,29 @@
+{
+  "antiPatterns": [],
+  "complexity": [],
+  "contentHash": "dfe6df22a6e15b39fdd4d6acb1db9d635caf821909387d21466d0c891d3d57e8",
+  "edges": [
+    {
+      "from": "ui/src/pages/RealtimePage.test.tsx::RealtimePage.test::variable",
+      "kind": "imports",
+      "to": "ui/src/pages/RealtimePage.ts::RealtimePage::class"
+    }
+  ],
+  "file": "ui/src/pages/RealtimePage.test.tsx",
+  "intent": [
+    {
+      "date": "2026-06-01T22:25:32-03:00",
+      "hash": "567a41a6ad025bbfbbcbe6c70618fc2b034fd090",
+      "kind": "commit",
+      "message": "feat(realtime): add status endpoint and Realtime inspector page"
+    },
+    {
+      "date": "2026-06-01T22:22:55-03:00",
+      "hash": "ee5e6326e990ca4bb20e1fec5f7ed93d041d9a6d",
+      "kind": "commit",
+      "message": "test(realtime): add reproducer for status endpoint and RealtimePage"
+    }
+  ],
+  "lastModified": 1781284402,
+  "symbols": []
+}

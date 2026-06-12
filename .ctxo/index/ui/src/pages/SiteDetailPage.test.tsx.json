@@ -1,0 +1,23 @@
+{
+  "antiPatterns": [],
+  "complexity": [],
+  "contentHash": "4196ea8aa1f0e96dedc7c20f1a2ee5feb8bfe93d1c0a7dc5fee9c6d1fb5945e2",
+  "edges": [
+    {
+      "from": "ui/src/pages/SiteDetailPage.test.tsx::SiteDetailPage.test::variable",
+      "kind": "imports",
+      "to": "ui/src/pages/SiteDetailPage.ts::SiteDetailPage::class"
+    }
+  ],
+  "file": "ui/src/pages/SiteDetailPage.test.tsx",
+  "intent": [
+    {
+      "date": "2026-06-02T18:47:39-03:00",
+      "hash": "fa562dd45709e382956eb4bf46095afc13fad1ab",
+      "kind": "commit",
+      "message": "test(ui): add SiteDetailPage.test.tsx (8 tests) and UsersPage.test.tsx (8 tests)"
+    }
+  ],
+  "lastModified": 1781284402,
+  "symbols": []
+}

@@ -1,0 +1,26 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 3,
+      "symbolId": "config/serve_env_test.go::TestFlagOrEnv::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "config/serve_env_test.go::TestFlagOrEnvGitHubKeys::function"
+    }
+  ],
+  "contentHash": "0a431b3bd37dbc146b005098e4ae405c6521455ca7ced6b57b8eedabb36cc2fc",
+  "edges": [],
+  "file": "config/serve_env_test.go",
+  "intent": [
+    {
+      "date": "2026-06-03T08:55:23-03:00",
+      "hash": "8b76a9a727a186924646d13c74ec9113aa7e2be9",
+      "kind": "commit",
+      "message": "fix(deploy): wire GitHub App secrets to production via env and VPS PEM"
+    }
+  ],
+  "lastModified": 1781284401,
+  "symbols": []
+}

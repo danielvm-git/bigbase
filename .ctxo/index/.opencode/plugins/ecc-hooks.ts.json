@@ -1,0 +1,48 @@
+{
+  "antiPatterns": [],
+  "complexity": [],
+  "contentHash": "a198b640fd1faf1c75e96909eabf4ae24899de127b2447490eed813766013836",
+  "edges": [
+    {
+      "from": ".opencode/plugins/ecc-hooks.ts::ECCHooksPlugin::variable",
+      "kind": "imports",
+      "to": ".opencode/plugins/lib/changed-files-store.ts::initStore::function"
+    },
+    {
+      "from": ".opencode/plugins/ecc-hooks.ts::ECCHooksPlugin::variable",
+      "kind": "imports",
+      "to": ".opencode/plugins/lib/changed-files-store.ts::recordChange::function"
+    },
+    {
+      "from": ".opencode/plugins/ecc-hooks.ts::ECCHooksPlugin::variable",
+      "kind": "imports",
+      "to": ".opencode/plugins/lib/changed-files-store.ts::clearChanges::function"
+    },
+    {
+      "from": ".opencode/plugins/ecc-hooks.ts::ECCHooksPlugin::variable",
+      "kind": "imports",
+      "to": ".opencode/tools/changed-files.ts::changedFilesTool::function"
+    }
+  ],
+  "file": ".opencode/plugins/ecc-hooks.ts",
+  "intent": [
+    {
+      "date": "2026-06-02T13:50:44-03:00",
+      "hash": "7a3a4af3bc35b376cf9ca1b22ec34d20c1356c01",
+      "kind": "commit",
+      "message": "refactor(skills): decouple from ECC — vendor all deps locally"
+    }
+  ],
+  "lastModified": 1781284397,
+  "symbols": [
+    {
+      "endLine": 517,
+      "endOffset": 17216,
+      "kind": "variable",
+      "name": "ECCHooksPlugin",
+      "startLine": 27,
+      "startOffset": 840,
+      "symbolId": ".opencode/plugins/ecc-hooks.ts::ECCHooksPlugin::variable"
+    }
+  ]
+}

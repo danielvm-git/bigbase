@@ -1,0 +1,662 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/git/git.go::noopLogger.Info::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/git/git.go::noopLogger.Warn::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/git/git.go::noopLogger.Error::method"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/git/git.go::New::function"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/git/git.go::Git.Name::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/git/git.go::Git.Version::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/git/git.go::Git.Dependencies::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/git/git.go::Git.ConfigSchema::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/git/git.go::Git.Hooks::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/git/git.go::Git.Init::method"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/git/git.go::Git.Start::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/git/git.go::Git.Stop::method"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/git/git.go::generateID::function"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/git/git.go::Git.Handler::method"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/git/git.go::Git.handleRepos::method"
+    },
+    {
+      "cyclomatic": 9,
+      "symbolId": "components/git/git.go::Git.createRepo::method"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/git/git.go::Git.listRepos::method"
+    },
+    {
+      "cyclomatic": 5,
+      "symbolId": "components/git/git.go::Git.handleRepoByID::method"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/git/git.go::Git.getRepo::method"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/git/git.go::Git.deleteRepo::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/git/git.go::writeJSON::function"
+    }
+  ],
+  "contentHash": "2b0c1cb69bfbb54f961dad5deedf2fd52fcfaf11598e0a3892c3eded1c39870a",
+  "edges": [
+    {
+      "from": "components/git/git.go::noopLogger.Info::method",
+      "kind": "uses",
+      "to": "components/git/git.go::noopLogger::class"
+    },
+    {
+      "from": "components/git/git.go::noopLogger.Warn::method",
+      "kind": "uses",
+      "to": "components/git/git.go::noopLogger::class"
+    },
+    {
+      "from": "components/git/git.go::noopLogger.Error::method",
+      "kind": "uses",
+      "to": "components/git/git.go::noopLogger::class"
+    },
+    {
+      "from": "components/git/git.go::New::function",
+      "kind": "uses",
+      "to": "components/git/git.go::Options::class"
+    },
+    {
+      "from": "components/git/git.go::New::function",
+      "kind": "uses",
+      "to": "components/git/git.go::Git::class"
+    },
+    {
+      "from": "components/git/git.go::New::function",
+      "kind": "uses",
+      "to": "components/git/git.go::noopLogger::class"
+    },
+    {
+      "from": "components/git/git.go::Git.Name::method",
+      "kind": "uses",
+      "to": "components/git/git.go::Git::class"
+    },
+    {
+      "from": "components/git/git.go::Git.Version::method",
+      "kind": "uses",
+      "to": "components/git/git.go::Git::class"
+    },
+    {
+      "from": "components/git/git.go::Git.Version::method",
+      "kind": "uses",
+      "to": "components/git/git.go::version::variable"
+    },
+    {
+      "from": "components/git/git.go::Git.Dependencies::method",
+      "kind": "uses",
+      "to": "components/git/git.go::Git::class"
+    },
+    {
+      "from": "components/git/git.go::Git.ConfigSchema::method",
+      "kind": "uses",
+      "to": "components/git/git.go::Git::class"
+    },
+    {
+      "from": "components/git/git.go::Git.Hooks::method",
+      "kind": "uses",
+      "to": "components/git/git.go::Git::class"
+    },
+    {
+      "from": "components/git/git.go::Git.Hooks::method",
+      "kind": "uses",
+      "to": "kernel/component.go::HookDef::class"
+    },
+    {
+      "from": "components/git/git.go::Git.Init::method",
+      "kind": "uses",
+      "to": "components/git/git.go::Git::class"
+    },
+    {
+      "from": "components/git/git.go::Git.Init::method",
+      "kind": "uses",
+      "to": "kernel/component.go::Context::class"
+    },
+    {
+      "from": "components/git/git.go::Git.Start::method",
+      "kind": "uses",
+      "to": "components/git/git.go::Git::class"
+    },
+    {
+      "from": "components/git/git.go::Git.Start::method",
+      "kind": "uses",
+      "to": "kernel/component.go::Context::class"
+    },
+    {
+      "from": "components/git/git.go::Git.Start::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::DBer.Migrate::method"
+    },
+    {
+      "from": "components/git/git.go::Git.Start::method",
+      "kind": "calls",
+      "to": "components/git/git.go::Logger.Info::method"
+    },
+    {
+      "from": "components/git/git.go::Git.Stop::method",
+      "kind": "uses",
+      "to": "components/git/git.go::Git::class"
+    },
+    {
+      "from": "components/git/git.go::Git.Stop::method",
+      "kind": "uses",
+      "to": "kernel/component.go::Context::class"
+    },
+    {
+      "from": "components/git/git.go::Git.Handler::method",
+      "kind": "uses",
+      "to": "components/git/git.go::Git::class"
+    },
+    {
+      "from": "components/git/git.go::Git.handleRepos::method",
+      "kind": "uses",
+      "to": "components/git/git.go::Git::class"
+    },
+    {
+      "from": "components/git/git.go::Git.handleRepos::method",
+      "kind": "calls",
+      "to": "components/git/git.go::Git.listRepos::method"
+    },
+    {
+      "from": "components/git/git.go::Git.handleRepos::method",
+      "kind": "calls",
+      "to": "components/git/git.go::Git.createRepo::method"
+    },
+    {
+      "from": "components/git/git.go::Git.handleRepos::method",
+      "kind": "calls",
+      "to": "components/git/git.go::writeJSON::function"
+    },
+    {
+      "from": "components/git/git.go::Git.createRepo::method",
+      "kind": "uses",
+      "to": "components/git/git.go::Git::class"
+    },
+    {
+      "from": "components/git/git.go::Git.createRepo::method",
+      "kind": "calls",
+      "to": "components/git/git.go::writeJSON::function"
+    },
+    {
+      "from": "components/git/git.go::Git.createRepo::method",
+      "kind": "calls",
+      "to": "components/git/git.go::generateID::function"
+    },
+    {
+      "from": "components/git/git.go::Git.createRepo::method",
+      "kind": "calls",
+      "to": "components/git/git.go::Logger.Error::method"
+    },
+    {
+      "from": "components/git/git.go::Git.createRepo::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::DBer.ExecContext::method"
+    },
+    {
+      "from": "components/git/git.go::Git.createRepo::method",
+      "kind": "uses",
+      "to": "components/git/git.go::Repo::class"
+    },
+    {
+      "from": "components/git/git.go::Git.listRepos::method",
+      "kind": "uses",
+      "to": "components/git/git.go::Git::class"
+    },
+    {
+      "from": "components/git/git.go::Git.listRepos::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::DBer.QueryContext::method"
+    },
+    {
+      "from": "components/git/git.go::Git.listRepos::method",
+      "kind": "calls",
+      "to": "components/git/git.go::Logger.Error::method"
+    },
+    {
+      "from": "components/git/git.go::Git.listRepos::method",
+      "kind": "calls",
+      "to": "components/git/git.go::writeJSON::function"
+    },
+    {
+      "from": "components/git/git.go::Git.listRepos::method",
+      "kind": "uses",
+      "to": "components/git/git.go::Repo::class"
+    },
+    {
+      "from": "components/git/git.go::Git.handleRepoByID::method",
+      "kind": "uses",
+      "to": "components/git/git.go::Git::class"
+    },
+    {
+      "from": "components/git/git.go::Git.handleRepoByID::method",
+      "kind": "calls",
+      "to": "components/git/git.go::writeJSON::function"
+    },
+    {
+      "from": "components/git/git.go::Git.handleRepoByID::method",
+      "kind": "calls",
+      "to": "components/git/git.go::Git.getRepo::method"
+    },
+    {
+      "from": "components/git/git.go::Git.handleRepoByID::method",
+      "kind": "calls",
+      "to": "components/git/git.go::Git.deleteRepo::method"
+    },
+    {
+      "from": "components/git/git.go::Git.getRepo::method",
+      "kind": "uses",
+      "to": "components/git/git.go::Git::class"
+    },
+    {
+      "from": "components/git/git.go::Git.getRepo::method",
+      "kind": "uses",
+      "to": "components/git/git.go::Repo::class"
+    },
+    {
+      "from": "components/git/git.go::Git.getRepo::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::DBer.QueryRowContext::method"
+    },
+    {
+      "from": "components/git/git.go::Git.getRepo::method",
+      "kind": "calls",
+      "to": "components/git/git.go::writeJSON::function"
+    },
+    {
+      "from": "components/git/git.go::Git.deleteRepo::method",
+      "kind": "uses",
+      "to": "components/git/git.go::Git::class"
+    },
+    {
+      "from": "components/git/git.go::Git.deleteRepo::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::DBer.ExecContext::method"
+    },
+    {
+      "from": "components/git/git.go::Git.deleteRepo::method",
+      "kind": "calls",
+      "to": "components/git/git.go::Logger.Error::method"
+    },
+    {
+      "from": "components/git/git.go::Git.deleteRepo::method",
+      "kind": "calls",
+      "to": "components/git/git.go::writeJSON::function"
+    },
+    {
+      "from": "components/git/git.go::Git::class",
+      "kind": "implements",
+      "to": "kernel/component.go::Component::interface"
+    },
+    {
+      "from": "components/git/git.go::noopLogger::class",
+      "kind": "implements",
+      "to": "components/admin/admin.go::Logger::interface"
+    },
+    {
+      "from": "components/git/git.go::noopLogger::class",
+      "kind": "implements",
+      "to": "components/api/api.go::Logger::interface"
+    },
+    {
+      "from": "components/git/git.go::noopLogger::class",
+      "kind": "implements",
+      "to": "components/auth/auth.go::Logger::interface"
+    },
+    {
+      "from": "components/git/git.go::noopLogger::class",
+      "kind": "implements",
+      "to": "components/cici/cici.go::Logger::interface"
+    },
+    {
+      "from": "components/git/git.go::noopLogger::class",
+      "kind": "implements",
+      "to": "components/forge/forge.go::Logger::interface"
+    },
+    {
+      "from": "components/git/git.go::noopLogger::class",
+      "kind": "implements",
+      "to": "components/functions/functions.go::Logger::interface"
+    },
+    {
+      "from": "components/git/git.go::noopLogger::class",
+      "kind": "implements",
+      "to": "components/git/git.go::Logger::interface"
+    },
+    {
+      "from": "components/git/git.go::noopLogger::class",
+      "kind": "implements",
+      "to": "components/proxy/proxy.go::Logger::interface"
+    },
+    {
+      "from": "components/git/git.go::noopLogger::class",
+      "kind": "implements",
+      "to": "components/realtime/realtime.go::Logger::interface"
+    },
+    {
+      "from": "components/git/git.go::noopLogger::class",
+      "kind": "implements",
+      "to": "components/storage/storage.go::Logger::interface"
+    }
+  ],
+  "file": "components/git/git.go",
+  "intent": [
+    {
+      "date": "2026-06-05T20:13:56-03:00",
+      "hash": "7bea9645d49a10a8ed723617b32bd0481e3a625e",
+      "kind": "commit",
+      "message": "feat(db): e18s01 extract shared DBer interface"
+    },
+    {
+      "date": "2026-05-27T08:25:59-03:00",
+      "hash": "0481cfc785e6fbfd0ec0ad58c7ff416a781bde9d",
+      "kind": "commit",
+      "message": "feat(git): add repository management with bare repo creation"
+    }
+  ],
+  "lastModified": 1781284401,
+  "symbols": [
+    {
+      "endLine": 19,
+      "endOffset": 234,
+      "kind": "variable",
+      "name": "version",
+      "startLine": 19,
+      "startOffset": 227,
+      "symbolId": "components/git/git.go::version::variable"
+    },
+    {
+      "endLine": 25,
+      "endOffset": 365,
+      "kind": "interface",
+      "name": "Logger",
+      "startLine": 21,
+      "startOffset": 251,
+      "symbolId": "components/git/git.go::Logger::interface"
+    },
+    {
+      "endLine": 27,
+      "endOffset": 391,
+      "kind": "class",
+      "name": "noopLogger",
+      "startLine": 27,
+      "startOffset": 372,
+      "symbolId": "components/git/git.go::noopLogger::class"
+    },
+    {
+      "endLine": 29,
+      "endOffset": 444,
+      "kind": "method",
+      "name": "noopLogger.Info",
+      "startLine": 29,
+      "startOffset": 393,
+      "symbolId": "components/git/git.go::noopLogger.Info::method"
+    },
+    {
+      "endLine": 30,
+      "endOffset": 496,
+      "kind": "method",
+      "name": "noopLogger.Warn",
+      "startLine": 30,
+      "startOffset": 445,
+      "symbolId": "components/git/git.go::noopLogger.Warn::method"
+    },
+    {
+      "endLine": 31,
+      "endOffset": 548,
+      "kind": "method",
+      "name": "noopLogger.Error",
+      "startLine": 31,
+      "startOffset": 497,
+      "symbolId": "components/git/git.go::noopLogger.Error::method"
+    },
+    {
+      "endLine": 34,
+      "endOffset": 646,
+      "kind": "type",
+      "name": "DBer",
+      "startLine": 34,
+      "startOffset": 628,
+      "symbolId": "components/git/git.go::DBer::type"
+    },
+    {
+      "endLine": 44,
+      "endOffset": 948,
+      "kind": "class",
+      "name": "Repo",
+      "startLine": 36,
+      "startOffset": 653,
+      "symbolId": "components/git/git.go::Repo::class"
+    },
+    {
+      "endLine": 50,
+      "endOffset": 1015,
+      "kind": "class",
+      "name": "Git",
+      "startLine": 46,
+      "startOffset": 955,
+      "symbolId": "components/git/git.go::Git::class"
+    },
+    {
+      "endLine": 56,
+      "endOffset": 1083,
+      "kind": "class",
+      "name": "Options",
+      "startLine": 52,
+      "startOffset": 1022,
+      "symbolId": "components/git/git.go::Options::class"
+    },
+    {
+      "endLine": 68,
+      "endOffset": 1293,
+      "kind": "function",
+      "name": "New",
+      "startLine": 58,
+      "startOffset": 1085,
+      "symbolId": "components/git/git.go::New::function"
+    },
+    {
+      "endLine": 70,
+      "endOffset": 1358,
+      "kind": "method",
+      "name": "Git.Name",
+      "startLine": 70,
+      "startOffset": 1295,
+      "symbolId": "components/git/git.go::Git.Name::method"
+    },
+    {
+      "endLine": 71,
+      "endOffset": 1424,
+      "kind": "method",
+      "name": "Git.Version",
+      "startLine": 71,
+      "startOffset": 1359,
+      "symbolId": "components/git/git.go::Git.Version::method"
+    },
+    {
+      "endLine": 72,
+      "endOffset": 1497,
+      "kind": "method",
+      "name": "Git.Dependencies",
+      "startLine": 72,
+      "startOffset": 1425,
+      "symbolId": "components/git/git.go::Git.Dependencies::method"
+    },
+    {
+      "endLine": 73,
+      "endOffset": 1559,
+      "kind": "method",
+      "name": "Git.ConfigSchema",
+      "startLine": 73,
+      "startOffset": 1498,
+      "symbolId": "components/git/git.go::Git.ConfigSchema::method"
+    },
+    {
+      "endLine": 74,
+      "endOffset": 1621,
+      "kind": "method",
+      "name": "Git.Hooks",
+      "startLine": 74,
+      "startOffset": 1560,
+      "symbolId": "components/git/git.go::Git.Hooks::method"
+    },
+    {
+      "endLine": 78,
+      "endOffset": 1708,
+      "kind": "method",
+      "name": "Git.Init",
+      "startLine": 76,
+      "startOffset": 1623,
+      "symbolId": "components/git/git.go::Git.Init::method"
+    },
+    {
+      "endLine": 107,
+      "endOffset": 2664,
+      "kind": "method",
+      "name": "Git.Start",
+      "startLine": 80,
+      "startOffset": 1710,
+      "symbolId": "components/git/git.go::Git.Start::method"
+    },
+    {
+      "endLine": 111,
+      "endOffset": 2727,
+      "kind": "method",
+      "name": "Git.Stop",
+      "startLine": 109,
+      "startOffset": 2666,
+      "symbolId": "components/git/git.go::Git.Stop::method"
+    },
+    {
+      "endLine": 119,
+      "endOffset": 2916,
+      "kind": "function",
+      "name": "generateID",
+      "startLine": 113,
+      "startOffset": 2729,
+      "symbolId": "components/git/git.go::generateID::function"
+    },
+    {
+      "endLine": 126,
+      "endOffset": 3099,
+      "kind": "method",
+      "name": "Git.Handler",
+      "startLine": 121,
+      "startOffset": 2918,
+      "symbolId": "components/git/git.go::Git.Handler::method"
+    },
+    {
+      "endLine": 137,
+      "endOffset": 3364,
+      "kind": "method",
+      "name": "Git.handleRepos",
+      "startLine": 128,
+      "startOffset": 3101,
+      "symbolId": "components/git/git.go::Git.handleRepos::method"
+    },
+    {
+      "endLine": 202,
+      "endOffset": 5440,
+      "kind": "method",
+      "name": "Git.createRepo",
+      "startLine": 139,
+      "startOffset": 3366,
+      "symbolId": "components/git/git.go::Git.createRepo::method"
+    },
+    {
+      "endLine": 228,
+      "endOffset": 6325,
+      "kind": "method",
+      "name": "Git.listRepos",
+      "startLine": 204,
+      "startOffset": 5442,
+      "symbolId": "components/git/git.go::Git.listRepos::method"
+    },
+    {
+      "endLine": 245,
+      "endOffset": 6767,
+      "kind": "method",
+      "name": "Git.handleRepoByID",
+      "startLine": 230,
+      "startOffset": 6327,
+      "symbolId": "components/git/git.go::Git.handleRepoByID::method"
+    },
+    {
+      "endLine": 262,
+      "endOffset": 7401,
+      "kind": "method",
+      "name": "Git.getRepo",
+      "startLine": 247,
+      "startOffset": 6769,
+      "symbolId": "components/git/git.go::Git.getRepo::method"
+    },
+    {
+      "endLine": 282,
+      "endOffset": 8088,
+      "kind": "method",
+      "name": "Git.deleteRepo",
+      "startLine": 264,
+      "startOffset": 7403,
+      "symbolId": "components/git/git.go::Git.deleteRepo::method"
+    },
+    {
+      "endLine": 288,
+      "endOffset": 8265,
+      "kind": "function",
+      "name": "writeJSON",
+      "startLine": 284,
+      "startOffset": 8090,
+      "symbolId": "components/git/git.go::writeJSON::function"
+    }
+  ]
+}

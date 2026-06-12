@@ -1,0 +1,66 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/admin/admin_test.go::testLogger.Info::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/admin/admin_test.go::testLogger.Error::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/admin/admin_test.go::TestAdminImplementsComponent::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/admin/admin_test.go::TestAdminName::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/admin/admin_test.go::TestAdminVersion::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/admin/admin_test.go::TestAdminDependencies::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/admin/admin_test.go::TestAdminHooks::function"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/admin/admin_test.go::TestAdminServesIndexHTML::function"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/admin/admin_test.go::TestAdminServesAssets::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/admin/admin_test.go::TestAdminReturns404::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/admin/admin_test.go::TestAdminHandler::function"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/admin/admin_test.go::contains::function"
+    }
+  ],
+  "contentHash": "c7dff6a3edf6afa8dce3d1d87f95f134c8d26a6ac367b0303aa7321ced12abd3",
+  "edges": [],
+  "file": "components/admin/admin_test.go",
+  "intent": [
+    {
+      "date": "2026-05-26T23:15:56-03:00",
+      "hash": "e19e9775f62605ca4174a457e0d62ba021e47d32",
+      "kind": "commit",
+      "message": "feat(admin): add Admin UI, SQL Editor, and User Management"
+    }
+  ],
+  "lastModified": 1781284401,
+  "symbols": []
+}

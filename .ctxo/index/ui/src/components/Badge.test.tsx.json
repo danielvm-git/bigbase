@@ -1,0 +1,40 @@
+{
+  "antiPatterns": [],
+  "complexity": [],
+  "contentHash": "c063def4ec8e37ee40f0a175130e4d7658ab7b34e358bf70ffbc148cb2fa3f33",
+  "edges": [
+    {
+      "from": "ui/src/components/Badge.test.tsx::Badge.test::variable",
+      "kind": "imports",
+      "to": "ui/src/components/Badge.ts::Badge::class"
+    },
+    {
+      "from": "ui/src/components/Badge.test.tsx::Badge.test::variable",
+      "kind": "imports",
+      "to": "ui/src/components/Badge.ts::statusBadgeVariant::function"
+    }
+  ],
+  "file": "ui/src/components/Badge.test.tsx",
+  "intent": [
+    {
+      "date": "2026-06-04T16:06:51-03:00",
+      "hash": "ef3caacacb9f34a66513687ba295a7ceab40bbce",
+      "kind": "commit",
+      "message": "feat(ui): close all 19 prototype-vs-codebase gaps (#12)"
+    },
+    {
+      "date": "2026-06-01T23:03:20-03:00",
+      "hash": "aaf4f264a359cdf6ff34def740727d5e449c5869",
+      "kind": "commit",
+      "message": "test(ui): add missing badge variant test cases for full coverage"
+    },
+    {
+      "date": "2026-06-01T22:19:05-03:00",
+      "hash": "bf8b66251084846f39dc5c2b646a46ebdc58ea17",
+      "kind": "commit",
+      "message": "feat(ui): extract design tokens to styles/, add Vitest test infrastructure"
+    }
+  ],
+  "lastModified": 1781284402,
+  "symbols": []
+}

@@ -1,0 +1,78 @@
+{
+  "antiPatterns": [],
+  "complexity": [],
+  "contentHash": "70fde71f76804f0292e72ad10bd7be85298604653de204ce325e6a523935b409",
+  "edges": [],
+  "file": "kernel/component.go",
+  "intent": [
+    {
+      "date": "2026-05-27T19:25:13-03:00",
+      "hash": "f10ed8398be27a6fc5f7a6de5107f891789723db",
+      "kind": "commit",
+      "message": "fix(realtime): fix Hub data race, add event unsubscribe, log emit errors"
+    },
+    {
+      "date": "2026-05-26T12:04:33-03:00",
+      "hash": "3e8d78c36672c39fb4ef117a04b8b98d8ecfb6f2",
+      "kind": "commit",
+      "message": "chore: initial project bootstrap"
+    }
+  ],
+  "lastModified": 1781284401,
+  "symbols": [
+    {
+      "endLine": 14,
+      "endOffset": 280,
+      "kind": "interface",
+      "name": "Component",
+      "startLine": 5,
+      "startOffset": 45,
+      "symbolId": "kernel/component.go::Component::interface"
+    },
+    {
+      "endLine": 21,
+      "endOffset": 372,
+      "kind": "class",
+      "name": "HookDef",
+      "startLine": 16,
+      "startOffset": 287,
+      "symbolId": "kernel/component.go::HookDef::class"
+    },
+    {
+      "endLine": 23,
+      "endOffset": 425,
+      "kind": "type",
+      "name": "HookFunc",
+      "startLine": 23,
+      "startOffset": 379,
+      "symbolId": "kernel/component.go::HookFunc::type"
+    },
+    {
+      "endLine": 28,
+      "endOffset": 482,
+      "kind": "class",
+      "name": "Event",
+      "startLine": 25,
+      "startOffset": 432,
+      "symbolId": "kernel/component.go::Event::class"
+    },
+    {
+      "endLine": 35,
+      "endOffset": 618,
+      "kind": "class",
+      "name": "Context",
+      "startLine": 30,
+      "startOffset": 489,
+      "symbolId": "kernel/component.go::Context::class"
+    },
+    {
+      "endLine": 42,
+      "endOffset": 771,
+      "kind": "interface",
+      "name": "Logger",
+      "startLine": 37,
+      "startOffset": 625,
+      "symbolId": "kernel/component.go::Logger::interface"
+    }
+  ]
+}

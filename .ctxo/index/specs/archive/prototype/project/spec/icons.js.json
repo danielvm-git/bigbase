@@ -1,0 +1,17 @@
+{
+  "antiPatterns": [],
+  "complexity": [],
+  "contentHash": "6df491ca5f1e8b403debabad309d91797e557983d7e77b95b34c65702bac1e96",
+  "edges": [],
+  "file": "specs/archive/prototype/project/spec/icons.js",
+  "intent": [
+    {
+      "date": "2026-06-05T14:27:57-03:00",
+      "hash": "a23e0557dfbac224329c12e39bd2439b37f2a8e8",
+      "kind": "commit",
+      "message": "feat(specs): add BigBase Console design prototype bundle (#14)"
+    }
+  ],
+  "lastModified": 1781284401,
+  "symbols": []
+}

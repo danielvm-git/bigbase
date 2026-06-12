@@ -1,0 +1,875 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/storage/storage.go::noopLogger.Info::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/storage/storage.go::noopLogger.Warn::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/storage/storage.go::noopLogger.Error::method"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/storage/storage.go::New::function"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/storage/storage.go::Storage.Name::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/storage/storage.go::Storage.Version::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/storage/storage.go::Storage.Dependencies::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/storage/storage.go::Storage.ConfigSchema::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/storage/storage.go::Storage.Hooks::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/storage/storage.go::Storage.Init::method"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/storage/storage.go::Storage.Start::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/storage/storage.go::Storage.Stop::method"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/storage/storage.go::generateID::function"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/storage/storage.go::Storage.Dir::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/storage/storage.go::Storage.Handler::method"
+    },
+    {
+      "cyclomatic": 7,
+      "symbolId": "components/storage/storage.go::Storage.handleUpload::method"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/storage/storage.go::Storage.readUpload::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/storage/storage.go::detectMIME::function"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/storage/storage.go::isMIMEAllowed::function"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/storage/storage.go::Storage.writeFile::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/storage/storage.go::Storage.insertFileMeta::method"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/storage/storage.go::Storage.handleFileList::method"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/storage/storage.go::Storage.fetchFiles::method"
+    },
+    {
+      "cyclomatic": 5,
+      "symbolId": "components/storage/storage.go::Storage.handleFiles::method"
+    },
+    {
+      "cyclomatic": 5,
+      "symbolId": "components/storage/storage.go::Storage.handleThumbnail::method"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/storage/storage.go::Storage.handleFileDownload::method"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/storage/storage.go::Storage.handleFileDelete::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/storage/storage.go::sanitizeFilename::function"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/storage/storage.go::writeJSON::function"
+    }
+  ],
+  "contentHash": "584bbf09285d66bcecb4549ca2fdeff1d65bd023a767a204e7ba30521346bfb3",
+  "edges": [
+    {
+      "from": "components/storage/storage.go::noopLogger.Info::method",
+      "kind": "uses",
+      "to": "components/storage/storage.go::noopLogger::class"
+    },
+    {
+      "from": "components/storage/storage.go::noopLogger.Warn::method",
+      "kind": "uses",
+      "to": "components/storage/storage.go::noopLogger::class"
+    },
+    {
+      "from": "components/storage/storage.go::noopLogger.Error::method",
+      "kind": "uses",
+      "to": "components/storage/storage.go::noopLogger::class"
+    },
+    {
+      "from": "components/storage/storage.go::New::function",
+      "kind": "uses",
+      "to": "components/storage/storage.go::Options::class"
+    },
+    {
+      "from": "components/storage/storage.go::New::function",
+      "kind": "uses",
+      "to": "components/storage/storage.go::Storage::class"
+    },
+    {
+      "from": "components/storage/storage.go::New::function",
+      "kind": "uses",
+      "to": "components/storage/storage.go::noopLogger::class"
+    },
+    {
+      "from": "components/storage/storage.go::Storage.Name::method",
+      "kind": "uses",
+      "to": "components/storage/storage.go::Storage::class"
+    },
+    {
+      "from": "components/storage/storage.go::Storage.Version::method",
+      "kind": "uses",
+      "to": "components/storage/storage.go::Storage::class"
+    },
+    {
+      "from": "components/storage/storage.go::Storage.Version::method",
+      "kind": "uses",
+      "to": "components/storage/storage.go::version::variable"
+    },
+    {
+      "from": "components/storage/storage.go::Storage.Dependencies::method",
+      "kind": "uses",
+      "to": "components/storage/storage.go::Storage::class"
+    },
+    {
+      "from": "components/storage/storage.go::Storage.ConfigSchema::method",
+      "kind": "uses",
+      "to": "components/storage/storage.go::Storage::class"
+    },
+    {
+      "from": "components/storage/storage.go::Storage.Hooks::method",
+      "kind": "uses",
+      "to": "components/storage/storage.go::Storage::class"
+    },
+    {
+      "from": "components/storage/storage.go::Storage.Hooks::method",
+      "kind": "uses",
+      "to": "kernel/component.go::HookDef::class"
+    },
+    {
+      "from": "components/storage/storage.go::Storage.Init::method",
+      "kind": "uses",
+      "to": "components/storage/storage.go::Storage::class"
+    },
+    {
+      "from": "components/storage/storage.go::Storage.Init::method",
+      "kind": "uses",
+      "to": "kernel/component.go::Context::class"
+    },
+    {
+      "from": "components/storage/storage.go::Storage.Start::method",
+      "kind": "uses",
+      "to": "components/storage/storage.go::Storage::class"
+    },
+    {
+      "from": "components/storage/storage.go::Storage.Start::method",
+      "kind": "uses",
+      "to": "kernel/component.go::Context::class"
+    },
+    {
+      "from": "components/storage/storage.go::Storage.Start::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::DBer.Migrate::method"
+    },
+    {
+      "from": "components/storage/storage.go::Storage.Start::method",
+      "kind": "calls",
+      "to": "components/storage/storage.go::Logger.Info::method"
+    },
+    {
+      "from": "components/storage/storage.go::Storage.Stop::method",
+      "kind": "uses",
+      "to": "components/storage/storage.go::Storage::class"
+    },
+    {
+      "from": "components/storage/storage.go::Storage.Stop::method",
+      "kind": "uses",
+      "to": "kernel/component.go::Context::class"
+    },
+    {
+      "from": "components/storage/storage.go::Storage.Dir::method",
+      "kind": "uses",
+      "to": "components/storage/storage.go::Storage::class"
+    },
+    {
+      "from": "components/storage/storage.go::Storage.Handler::method",
+      "kind": "uses",
+      "to": "components/storage/storage.go::Storage::class"
+    },
+    {
+      "from": "components/storage/storage.go::Storage.handleUpload::method",
+      "kind": "uses",
+      "to": "components/storage/storage.go::Storage::class"
+    },
+    {
+      "from": "components/storage/storage.go::Storage.handleUpload::method",
+      "kind": "calls",
+      "to": "components/storage/storage.go::writeJSON::function"
+    },
+    {
+      "from": "components/storage/storage.go::Storage.handleUpload::method",
+      "kind": "calls",
+      "to": "components/storage/storage.go::Storage.readUpload::method"
+    },
+    {
+      "from": "components/storage/storage.go::Storage.handleUpload::method",
+      "kind": "calls",
+      "to": "components/storage/storage.go::detectMIME::function"
+    },
+    {
+      "from": "components/storage/storage.go::Storage.handleUpload::method",
+      "kind": "calls",
+      "to": "components/storage/storage.go::isMIMEAllowed::function"
+    },
+    {
+      "from": "components/storage/storage.go::Storage.handleUpload::method",
+      "kind": "calls",
+      "to": "components/storage/storage.go::generateID::function"
+    },
+    {
+      "from": "components/storage/storage.go::Storage.handleUpload::method",
+      "kind": "calls",
+      "to": "components/storage/storage.go::Logger.Error::method"
+    },
+    {
+      "from": "components/storage/storage.go::Storage.handleUpload::method",
+      "kind": "calls",
+      "to": "components/storage/storage.go::Storage.writeFile::method"
+    },
+    {
+      "from": "components/storage/storage.go::Storage.handleUpload::method",
+      "kind": "calls",
+      "to": "components/storage/storage.go::Storage.insertFileMeta::method"
+    },
+    {
+      "from": "components/storage/storage.go::Storage.handleUpload::method",
+      "kind": "uses",
+      "to": "components/storage/storage.go::FileInfo::class"
+    },
+    {
+      "from": "components/storage/storage.go::Storage.readUpload::method",
+      "kind": "uses",
+      "to": "components/storage/storage.go::Storage::class"
+    },
+    {
+      "from": "components/storage/storage.go::isMIMEAllowed::function",
+      "kind": "uses",
+      "to": "components/storage/storage.go::allowedMimePrefixes::variable"
+    },
+    {
+      "from": "components/storage/storage.go::Storage.writeFile::method",
+      "kind": "uses",
+      "to": "components/storage/storage.go::Storage::class"
+    },
+    {
+      "from": "components/storage/storage.go::Storage.insertFileMeta::method",
+      "kind": "uses",
+      "to": "components/storage/storage.go::Storage::class"
+    },
+    {
+      "from": "components/storage/storage.go::Storage.insertFileMeta::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::DBer.ExecContext::method"
+    },
+    {
+      "from": "components/storage/storage.go::Storage.handleFileList::method",
+      "kind": "uses",
+      "to": "components/storage/storage.go::Storage::class"
+    },
+    {
+      "from": "components/storage/storage.go::Storage.handleFileList::method",
+      "kind": "calls",
+      "to": "components/storage/storage.go::writeJSON::function"
+    },
+    {
+      "from": "components/storage/storage.go::Storage.handleFileList::method",
+      "kind": "calls",
+      "to": "components/storage/storage.go::Storage.fetchFiles::method"
+    },
+    {
+      "from": "components/storage/storage.go::Storage.handleFileList::method",
+      "kind": "calls",
+      "to": "components/storage/storage.go::Logger.Error::method"
+    },
+    {
+      "from": "components/storage/storage.go::Storage.fetchFiles::method",
+      "kind": "uses",
+      "to": "components/storage/storage.go::Storage::class"
+    },
+    {
+      "from": "components/storage/storage.go::Storage.fetchFiles::method",
+      "kind": "uses",
+      "to": "components/storage/storage.go::FileInfo::class"
+    },
+    {
+      "from": "components/storage/storage.go::Storage.fetchFiles::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::DBer.QueryContext::method"
+    },
+    {
+      "from": "components/storage/storage.go::Storage.handleFiles::method",
+      "kind": "uses",
+      "to": "components/storage/storage.go::Storage::class"
+    },
+    {
+      "from": "components/storage/storage.go::Storage.handleFiles::method",
+      "kind": "calls",
+      "to": "components/storage/storage.go::writeJSON::function"
+    },
+    {
+      "from": "components/storage/storage.go::Storage.handleFiles::method",
+      "kind": "calls",
+      "to": "components/storage/storage.go::Storage.handleThumbnail::method"
+    },
+    {
+      "from": "components/storage/storage.go::Storage.handleFiles::method",
+      "kind": "calls",
+      "to": "components/storage/storage.go::Storage.handleFileDelete::method"
+    },
+    {
+      "from": "components/storage/storage.go::Storage.handleFiles::method",
+      "kind": "calls",
+      "to": "components/storage/storage.go::Storage.handleFileDownload::method"
+    },
+    {
+      "from": "components/storage/storage.go::Storage.handleThumbnail::method",
+      "kind": "uses",
+      "to": "components/storage/storage.go::Storage::class"
+    },
+    {
+      "from": "components/storage/storage.go::Storage.handleThumbnail::method",
+      "kind": "calls",
+      "to": "components/storage/storage.go::writeJSON::function"
+    },
+    {
+      "from": "components/storage/storage.go::Storage.handleThumbnail::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::DBer.QueryRowContext::method"
+    },
+    {
+      "from": "components/storage/storage.go::Storage.handleFileDownload::method",
+      "kind": "uses",
+      "to": "components/storage/storage.go::Storage::class"
+    },
+    {
+      "from": "components/storage/storage.go::Storage.handleFileDownload::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::DBer.QueryRowContext::method"
+    },
+    {
+      "from": "components/storage/storage.go::Storage.handleFileDownload::method",
+      "kind": "calls",
+      "to": "components/storage/storage.go::writeJSON::function"
+    },
+    {
+      "from": "components/storage/storage.go::Storage.handleFileDownload::method",
+      "kind": "calls",
+      "to": "components/storage/storage.go::Logger.Error::method"
+    },
+    {
+      "from": "components/storage/storage.go::Storage.handleFileDownload::method",
+      "kind": "calls",
+      "to": "components/storage/storage.go::sanitizeFilename::function"
+    },
+    {
+      "from": "components/storage/storage.go::Storage.handleFileDelete::method",
+      "kind": "uses",
+      "to": "components/storage/storage.go::Storage::class"
+    },
+    {
+      "from": "components/storage/storage.go::Storage.handleFileDelete::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::DBer.QueryRowContext::method"
+    },
+    {
+      "from": "components/storage/storage.go::Storage.handleFileDelete::method",
+      "kind": "calls",
+      "to": "components/storage/storage.go::writeJSON::function"
+    },
+    {
+      "from": "components/storage/storage.go::Storage.handleFileDelete::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::DBer.ExecContext::method"
+    },
+    {
+      "from": "components/storage/storage.go::Storage.handleFileDelete::method",
+      "kind": "calls",
+      "to": "components/storage/storage.go::Logger.Error::method"
+    },
+    {
+      "from": "components/storage/storage.go::Storage::class",
+      "kind": "implements",
+      "to": "kernel/component.go::Component::interface"
+    },
+    {
+      "from": "components/storage/storage.go::noopLogger::class",
+      "kind": "implements",
+      "to": "components/admin/admin.go::Logger::interface"
+    },
+    {
+      "from": "components/storage/storage.go::noopLogger::class",
+      "kind": "implements",
+      "to": "components/api/api.go::Logger::interface"
+    },
+    {
+      "from": "components/storage/storage.go::noopLogger::class",
+      "kind": "implements",
+      "to": "components/auth/auth.go::Logger::interface"
+    },
+    {
+      "from": "components/storage/storage.go::noopLogger::class",
+      "kind": "implements",
+      "to": "components/cici/cici.go::Logger::interface"
+    },
+    {
+      "from": "components/storage/storage.go::noopLogger::class",
+      "kind": "implements",
+      "to": "components/forge/forge.go::Logger::interface"
+    },
+    {
+      "from": "components/storage/storage.go::noopLogger::class",
+      "kind": "implements",
+      "to": "components/functions/functions.go::Logger::interface"
+    },
+    {
+      "from": "components/storage/storage.go::noopLogger::class",
+      "kind": "implements",
+      "to": "components/git/git.go::Logger::interface"
+    },
+    {
+      "from": "components/storage/storage.go::noopLogger::class",
+      "kind": "implements",
+      "to": "components/proxy/proxy.go::Logger::interface"
+    },
+    {
+      "from": "components/storage/storage.go::noopLogger::class",
+      "kind": "implements",
+      "to": "components/realtime/realtime.go::Logger::interface"
+    },
+    {
+      "from": "components/storage/storage.go::noopLogger::class",
+      "kind": "implements",
+      "to": "components/storage/storage.go::Logger::interface"
+    }
+  ],
+  "file": "components/storage/storage.go",
+  "intent": [
+    {
+      "date": "2026-06-05T20:13:56-03:00",
+      "hash": "7bea9645d49a10a8ed723617b32bd0481e3a625e",
+      "kind": "commit",
+      "message": "feat(db): e18s01 extract shared DBer interface"
+    },
+    {
+      "date": "2026-06-05T12:58:48-03:00",
+      "hash": "21a8236dd2d6111d9543c744a13133d5a981f305",
+      "kind": "commit",
+      "message": "test(e21s05): add race detection tests and fuzz targets"
+    },
+    {
+      "date": "2026-06-01T23:15:28-03:00",
+      "hash": "f7669f2b3a7899232bd84aecb5a3c62d0efd0361",
+      "kind": "commit",
+      "message": "fix: address code review findings for Epic 017"
+    },
+    {
+      "date": "2026-06-01T22:35:30-03:00",
+      "hash": "cd2ed093b9ef85d82b41e87d0fcdd8b6aac0b6ad",
+      "kind": "commit",
+      "message": "feat(storage): add thumbnail endpoint for image previews"
+    },
+    {
+      "date": "2026-05-27T13:30:22-03:00",
+      "hash": "ef4ea80440bd62ca63199138d6d0fbba2f686408",
+      "kind": "commit",
+      "message": "fix: harden kernel, api, auth, forge, git, and storage components"
+    },
+    {
+      "date": "2026-05-27T01:05:15-03:00",
+      "hash": "2a49228e1fc32f95d22e29aebf03cc3719490e4f",
+      "kind": "commit",
+      "message": "fix: address review findings — security, authz, race conditions"
+    },
+    {
+      "date": "2026-05-27T00:53:01-03:00",
+      "hash": "78ebe9205aa9eb4feb290ab8ca6810e6e46ffff8",
+      "kind": "commit",
+      "message": "feat(storage): add file upload, download, list, and delete"
+    }
+  ],
+  "lastModified": 1781284401,
+  "symbols": [
+    {
+      "endLine": 19,
+      "endOffset": 217,
+      "kind": "variable",
+      "name": "allowedMimePrefixes",
+      "startLine": 19,
+      "startOffset": 198,
+      "symbolId": "components/storage/storage.go::allowedMimePrefixes::variable"
+    },
+    {
+      "endLine": 30,
+      "endOffset": 398,
+      "kind": "variable",
+      "name": "version",
+      "startLine": 30,
+      "startOffset": 391,
+      "symbolId": "components/storage/storage.go::version::variable"
+    },
+    {
+      "endLine": 36,
+      "endOffset": 529,
+      "kind": "interface",
+      "name": "Logger",
+      "startLine": 32,
+      "startOffset": 415,
+      "symbolId": "components/storage/storage.go::Logger::interface"
+    },
+    {
+      "endLine": 38,
+      "endOffset": 555,
+      "kind": "class",
+      "name": "noopLogger",
+      "startLine": 38,
+      "startOffset": 536,
+      "symbolId": "components/storage/storage.go::noopLogger::class"
+    },
+    {
+      "endLine": 40,
+      "endOffset": 608,
+      "kind": "method",
+      "name": "noopLogger.Info",
+      "startLine": 40,
+      "startOffset": 557,
+      "symbolId": "components/storage/storage.go::noopLogger.Info::method"
+    },
+    {
+      "endLine": 41,
+      "endOffset": 660,
+      "kind": "method",
+      "name": "noopLogger.Warn",
+      "startLine": 41,
+      "startOffset": 609,
+      "symbolId": "components/storage/storage.go::noopLogger.Warn::method"
+    },
+    {
+      "endLine": 42,
+      "endOffset": 712,
+      "kind": "method",
+      "name": "noopLogger.Error",
+      "startLine": 42,
+      "startOffset": 661,
+      "symbolId": "components/storage/storage.go::noopLogger.Error::method"
+    },
+    {
+      "endLine": 45,
+      "endOffset": 810,
+      "kind": "type",
+      "name": "DBer",
+      "startLine": 45,
+      "startOffset": 792,
+      "symbolId": "components/storage/storage.go::DBer::type"
+    },
+    {
+      "endLine": 52,
+      "endOffset": 896,
+      "kind": "class",
+      "name": "Storage",
+      "startLine": 47,
+      "startOffset": 817,
+      "symbolId": "components/storage/storage.go::Storage::class"
+    },
+    {
+      "endLine": 59,
+      "endOffset": 982,
+      "kind": "class",
+      "name": "Options",
+      "startLine": 54,
+      "startOffset": 903,
+      "symbolId": "components/storage/storage.go::Options::class"
+    },
+    {
+      "endLine": 75,
+      "endOffset": 1290,
+      "kind": "function",
+      "name": "New",
+      "startLine": 61,
+      "startOffset": 984,
+      "symbolId": "components/storage/storage.go::New::function"
+    },
+    {
+      "endLine": 77,
+      "endOffset": 1363,
+      "kind": "method",
+      "name": "Storage.Name",
+      "startLine": 77,
+      "startOffset": 1292,
+      "symbolId": "components/storage/storage.go::Storage.Name::method"
+    },
+    {
+      "endLine": 78,
+      "endOffset": 1433,
+      "kind": "method",
+      "name": "Storage.Version",
+      "startLine": 78,
+      "startOffset": 1364,
+      "symbolId": "components/storage/storage.go::Storage.Version::method"
+    },
+    {
+      "endLine": 79,
+      "endOffset": 1510,
+      "kind": "method",
+      "name": "Storage.Dependencies",
+      "startLine": 79,
+      "startOffset": 1434,
+      "symbolId": "components/storage/storage.go::Storage.Dependencies::method"
+    },
+    {
+      "endLine": 80,
+      "endOffset": 1576,
+      "kind": "method",
+      "name": "Storage.ConfigSchema",
+      "startLine": 80,
+      "startOffset": 1511,
+      "symbolId": "components/storage/storage.go::Storage.ConfigSchema::method"
+    },
+    {
+      "endLine": 81,
+      "endOffset": 1642,
+      "kind": "method",
+      "name": "Storage.Hooks",
+      "startLine": 81,
+      "startOffset": 1577,
+      "symbolId": "components/storage/storage.go::Storage.Hooks::method"
+    },
+    {
+      "endLine": 85,
+      "endOffset": 1733,
+      "kind": "method",
+      "name": "Storage.Init",
+      "startLine": 83,
+      "startOffset": 1644,
+      "symbolId": "components/storage/storage.go::Storage.Init::method"
+    },
+    {
+      "endLine": 103,
+      "endOffset": 2283,
+      "kind": "method",
+      "name": "Storage.Start",
+      "startLine": 87,
+      "startOffset": 1735,
+      "symbolId": "components/storage/storage.go::Storage.Start::method"
+    },
+    {
+      "endLine": 107,
+      "endOffset": 2350,
+      "kind": "method",
+      "name": "Storage.Stop",
+      "startLine": 105,
+      "startOffset": 2285,
+      "symbolId": "components/storage/storage.go::Storage.Stop::method"
+    },
+    {
+      "endLine": 115,
+      "endOffset": 2539,
+      "kind": "function",
+      "name": "generateID",
+      "startLine": 109,
+      "startOffset": 2352,
+      "symbolId": "components/storage/storage.go::generateID::function"
+    },
+    {
+      "endLine": 117,
+      "endOffset": 2588,
+      "kind": "method",
+      "name": "Storage.Dir",
+      "startLine": 117,
+      "startOffset": 2541,
+      "symbolId": "components/storage/storage.go::Storage.Dir::method"
+    },
+    {
+      "endLine": 125,
+      "endOffset": 2838,
+      "kind": "method",
+      "name": "Storage.Handler",
+      "startLine": 119,
+      "startOffset": 2590,
+      "symbolId": "components/storage/storage.go::Storage.Handler::method"
+    },
+    {
+      "endLine": 133,
+      "endOffset": 3033,
+      "kind": "class",
+      "name": "FileInfo",
+      "startLine": 127,
+      "startOffset": 2845,
+      "symbolId": "components/storage/storage.go::FileInfo::class"
+    },
+    {
+      "endLine": 183,
+      "endOffset": 4553,
+      "kind": "method",
+      "name": "Storage.handleUpload",
+      "startLine": 135,
+      "startOffset": 3035,
+      "symbolId": "components/storage/storage.go::Storage.handleUpload::method"
+    },
+    {
+      "endLine": 200,
+      "endOffset": 5159,
+      "kind": "method",
+      "name": "Storage.readUpload",
+      "startLine": 185,
+      "startOffset": 4555,
+      "symbolId": "components/storage/storage.go::Storage.readUpload::method"
+    },
+    {
+      "endLine": 204,
+      "endOffset": 5268,
+      "kind": "function",
+      "name": "detectMIME",
+      "startLine": 202,
+      "startOffset": 5161,
+      "symbolId": "components/storage/storage.go::detectMIME::function"
+    },
+    {
+      "endLine": 213,
+      "endOffset": 5429,
+      "kind": "function",
+      "name": "isMIMEAllowed",
+      "startLine": 206,
+      "startOffset": 5270,
+      "symbolId": "components/storage/storage.go::isMIMEAllowed::function"
+    },
+    {
+      "endLine": 225,
+      "endOffset": 5800,
+      "kind": "method",
+      "name": "Storage.writeFile",
+      "startLine": 215,
+      "startOffset": 5431,
+      "symbolId": "components/storage/storage.go::Storage.writeFile::method"
+    },
+    {
+      "endLine": 232,
+      "endOffset": 6121,
+      "kind": "method",
+      "name": "Storage.insertFileMeta",
+      "startLine": 227,
+      "startOffset": 5802,
+      "symbolId": "components/storage/storage.go::Storage.insertFileMeta::method"
+    },
+    {
+      "endLine": 248,
+      "endOffset": 6599,
+      "kind": "method",
+      "name": "Storage.handleFileList",
+      "startLine": 234,
+      "startOffset": 6123,
+      "symbolId": "components/storage/storage.go::Storage.handleFileList::method"
+    },
+    {
+      "endLine": 269,
+      "endOffset": 7185,
+      "kind": "method",
+      "name": "Storage.fetchFiles",
+      "startLine": 250,
+      "startOffset": 6601,
+      "symbolId": "components/storage/storage.go::Storage.fetchFiles::method"
+    },
+    {
+      "endLine": 295,
+      "endOffset": 7872,
+      "kind": "method",
+      "name": "Storage.handleFiles",
+      "startLine": 271,
+      "startOffset": 7187,
+      "symbolId": "components/storage/storage.go::Storage.handleFiles::method"
+    },
+    {
+      "endLine": 329,
+      "endOffset": 8988,
+      "kind": "method",
+      "name": "Storage.handleThumbnail",
+      "startLine": 297,
+      "startOffset": 7874,
+      "symbolId": "components/storage/storage.go::Storage.handleThumbnail::method"
+    },
+    {
+      "endLine": 353,
+      "endOffset": 9875,
+      "kind": "method",
+      "name": "Storage.handleFileDownload",
+      "startLine": 331,
+      "startOffset": 8990,
+      "symbolId": "components/storage/storage.go::Storage.handleFileDownload::method"
+    },
+    {
+      "endLine": 374,
+      "endOffset": 10661,
+      "kind": "method",
+      "name": "Storage.handleFileDelete",
+      "startLine": 355,
+      "startOffset": 9877,
+      "symbolId": "components/storage/storage.go::Storage.handleFileDelete::method"
+    },
+    {
+      "endLine": 382,
+      "endOffset": 10857,
+      "kind": "function",
+      "name": "sanitizeFilename",
+      "startLine": 376,
+      "startOffset": 10663,
+      "symbolId": "components/storage/storage.go::sanitizeFilename::function"
+    },
+    {
+      "endLine": 388,
+      "endOffset": 11034,
+      "kind": "function",
+      "name": "writeJSON",
+      "startLine": 384,
+      "startOffset": 10859,
+      "symbolId": "components/storage/storage.go::writeJSON::function"
+    }
+  ]
+}

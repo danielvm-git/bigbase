@@ -1,0 +1,22 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 14,
+      "symbolId": "components/monitoring/processes_test.go::TestProcessesEndpoint::function"
+    }
+  ],
+  "contentHash": "0ea20314e0f279cd59f0210bd57fbe1ef5bd1b01de761d9090aca67c1c9582a9",
+  "edges": [],
+  "file": "components/monitoring/processes_test.go",
+  "intent": [
+    {
+      "date": "2026-06-05T20:04:57-03:00",
+      "hash": "5bb7701a0ec0c9814d00f976f42f2e50d1238aec",
+      "kind": "commit",
+      "message": "feat(monitoring): e25s04 process-level monitoring"
+    }
+  ],
+  "lastModified": 1781284401,
+  "symbols": []
+}

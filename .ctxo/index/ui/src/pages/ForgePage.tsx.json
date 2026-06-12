@@ -1,0 +1,79 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 36,
+      "symbolId": "ui/src/pages/ForgePage.tsx::ForgePage::function"
+    }
+  ],
+  "contentHash": "6cb6ea2ebcd24e212805a1581b8eda090473128e54c81f626cd5f5936521a87f",
+  "edges": [
+    {
+      "from": "ui/src/pages/ForgePage.tsx::ForgePage::function",
+      "kind": "imports",
+      "to": "ui/src/components.ts::PageHeader::class"
+    },
+    {
+      "from": "ui/src/pages/ForgePage.tsx::ForgePage::function",
+      "kind": "imports",
+      "to": "ui/src/components.ts::Button::class"
+    },
+    {
+      "from": "ui/src/pages/ForgePage.tsx::ForgePage::function",
+      "kind": "imports",
+      "to": "ui/src/components.ts::Input::class"
+    },
+    {
+      "from": "ui/src/pages/ForgePage.tsx::ForgePage::function",
+      "kind": "imports",
+      "to": "ui/src/components.ts::Tabs::class"
+    },
+    {
+      "from": "ui/src/pages/ForgePage.tsx::ForgePage::function",
+      "kind": "uses",
+      "to": "ui/src/components.ts::PageHeader::class"
+    },
+    {
+      "from": "ui/src/pages/ForgePage.tsx::ForgePage::function",
+      "kind": "uses",
+      "to": "ui/src/components.ts::Button::class"
+    },
+    {
+      "from": "ui/src/pages/ForgePage.tsx::ForgePage::function",
+      "kind": "uses",
+      "to": "ui/src/components.ts::Tabs::class"
+    },
+    {
+      "from": "ui/src/pages/ForgePage.tsx::ForgePage::function",
+      "kind": "uses",
+      "to": "ui/src/components.ts::Input::class"
+    }
+  ],
+  "file": "ui/src/pages/ForgePage.tsx",
+  "intent": [
+    {
+      "date": "2026-05-28T01:02:44-03:00",
+      "hash": "da3f118678f0b80b5874e0d7dc559b5700cd3447",
+      "kind": "commit",
+      "message": "feat(admin-ui): port Appwrite design tokens and create shared component system"
+    },
+    {
+      "date": "2026-05-27T22:15:43-03:00",
+      "hash": "d056ce1757c3460861913113fa18f01cedd30ad1",
+      "kind": "commit",
+      "message": "feat(deploy): improve deployment pipeline and add admin UI pages"
+    }
+  ],
+  "lastModified": 1781284402,
+  "symbols": [
+    {
+      "endLine": 232,
+      "endOffset": 10163,
+      "kind": "function",
+      "name": "ForgePage",
+      "startLine": 9,
+      "startOffset": 565,
+      "symbolId": "ui/src/pages/ForgePage.tsx::ForgePage::function"
+    }
+  ]
+}

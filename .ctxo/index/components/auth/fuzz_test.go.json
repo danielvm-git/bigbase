@@ -1,0 +1,22 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/auth/fuzz_test.go::FuzzHashPassword::function"
+    }
+  ],
+  "contentHash": "869845734dc609983dc8b42c0bf51b421fc64700c213cd7d33dff1bf769b4f43",
+  "edges": [],
+  "file": "components/auth/fuzz_test.go",
+  "intent": [
+    {
+      "date": "2026-06-05T12:58:48-03:00",
+      "hash": "21a8236dd2d6111d9543c744a13133d5a981f305",
+      "kind": "commit",
+      "message": "test(e21s05): add race detection tests and fuzz targets"
+    }
+  ],
+  "lastModified": 1781284401,
+  "symbols": []
+}

@@ -1,0 +1,33 @@
+{
+  "antiPatterns": [],
+  "complexity": [],
+  "contentHash": "4bff675e84aabd0e2626037d985dfc45a648d031fcc59e4895415475e5d0c33d",
+  "edges": [
+    {
+      "from": "ui/src/context/ThemeContext.test.tsx::ThemeContext.test::variable",
+      "kind": "imports",
+      "to": "ui/src/context/ThemeContext.ts::ThemeProvider::class"
+    },
+    {
+      "from": "ui/src/context/ThemeContext.test.tsx::ThemeContext.test::variable",
+      "kind": "imports",
+      "to": "ui/src/context/ThemeContext.ts::applyAccentToDocument::function"
+    },
+    {
+      "from": "ui/src/context/ThemeContext.test.tsx::ThemeContext.test::variable",
+      "kind": "imports",
+      "to": "ui/src/hooks/useTheme.ts::useTheme::function"
+    }
+  ],
+  "file": "ui/src/context/ThemeContext.test.tsx",
+  "intent": [
+    {
+      "date": "2026-06-02T21:13:49-03:00",
+      "hash": "f610b14da299314c0471e960126666d168f34a32",
+      "kind": "commit",
+      "message": "feat(ui): complete epic e17 Enhanced Admin UI prototype parity (#10)"
+    }
+  ],
+  "lastModified": 1781284402,
+  "symbols": []
+}

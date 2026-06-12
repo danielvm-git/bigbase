@@ -1,0 +1,29 @@
+{
+  "antiPatterns": [],
+  "complexity": [],
+  "contentHash": "ea42b1338fd5994c15d1bebcde476b50fce259021afc45dbfbe2f735e8e732de",
+  "edges": [
+    {
+      "from": "ui/src/components/Icon.test.tsx::Icon.test::variable",
+      "kind": "imports",
+      "to": "ui/src/components/Icon.ts::Icon::class"
+    },
+    {
+      "from": "ui/src/components/Icon.test.tsx::Icon.test::variable",
+      "kind": "imports",
+      "to": "ui/src/components/Icon.ts::IconName::class",
+      "typeOnly": true
+    }
+  ],
+  "file": "ui/src/components/Icon.test.tsx",
+  "intent": [
+    {
+      "date": "2026-06-04T16:06:51-03:00",
+      "hash": "ef3caacacb9f34a66513687ba295a7ceab40bbce",
+      "kind": "commit",
+      "message": "feat(ui): close all 19 prototype-vs-codebase gaps (#12)"
+    }
+  ],
+  "lastModified": 1781284402,
+  "symbols": []
+}

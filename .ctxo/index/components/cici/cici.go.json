@@ -1,0 +1,506 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/cici/cici.go::noopLogger.Info::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/cici/cici.go::noopLogger.Warn::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/cici/cici.go::noopLogger.Error::method"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/cici/cici.go::New::function"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/cici/cici.go::CICI.Name::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/cici/cici.go::CICI.Version::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/cici/cici.go::CICI.Dependencies::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/cici/cici.go::CICI.ConfigSchema::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/cici/cici.go::CICI.Hooks::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/cici/cici.go::CICI.Init::method"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/cici/cici.go::CICI.Start::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/cici/cici.go::CICI.Stop::method"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/cici/cici.go::generateID::function"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/cici/cici.go::CICI.Handler::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/cici/cici.go::writeJSON::function"
+    }
+  ],
+  "contentHash": "5c35ab8cf55ce65edc4f5a540a3a04b10f5fb95666576e26dbe8abfe1c2ac5cb",
+  "edges": [
+    {
+      "from": "components/cici/cici.go::noopLogger.Info::method",
+      "kind": "uses",
+      "to": "components/cici/cici.go::noopLogger::class"
+    },
+    {
+      "from": "components/cici/cici.go::noopLogger.Warn::method",
+      "kind": "uses",
+      "to": "components/cici/cici.go::noopLogger::class"
+    },
+    {
+      "from": "components/cici/cici.go::noopLogger.Error::method",
+      "kind": "uses",
+      "to": "components/cici/cici.go::noopLogger::class"
+    },
+    {
+      "from": "components/cici/cici.go::New::function",
+      "kind": "uses",
+      "to": "components/cici/cici.go::Options::class"
+    },
+    {
+      "from": "components/cici/cici.go::New::function",
+      "kind": "uses",
+      "to": "components/cici/cici.go::CICI::class"
+    },
+    {
+      "from": "components/cici/cici.go::New::function",
+      "kind": "uses",
+      "to": "components/cici/cici.go::noopLogger::class"
+    },
+    {
+      "from": "components/cici/cici.go::CICI.Name::method",
+      "kind": "uses",
+      "to": "components/cici/cici.go::CICI::class"
+    },
+    {
+      "from": "components/cici/cici.go::CICI.Version::method",
+      "kind": "uses",
+      "to": "components/cici/cici.go::CICI::class"
+    },
+    {
+      "from": "components/cici/cici.go::CICI.Version::method",
+      "kind": "uses",
+      "to": "components/cici/cici.go::version::variable"
+    },
+    {
+      "from": "components/cici/cici.go::CICI.Dependencies::method",
+      "kind": "uses",
+      "to": "components/cici/cici.go::CICI::class"
+    },
+    {
+      "from": "components/cici/cici.go::CICI.ConfigSchema::method",
+      "kind": "uses",
+      "to": "components/cici/cici.go::CICI::class"
+    },
+    {
+      "from": "components/cici/cici.go::CICI.Hooks::method",
+      "kind": "uses",
+      "to": "components/cici/cici.go::CICI::class"
+    },
+    {
+      "from": "components/cici/cici.go::CICI.Hooks::method",
+      "kind": "uses",
+      "to": "kernel/component.go::HookDef::class"
+    },
+    {
+      "from": "components/cici/cici.go::CICI.Init::method",
+      "kind": "uses",
+      "to": "components/cici/cici.go::CICI::class"
+    },
+    {
+      "from": "components/cici/cici.go::CICI.Init::method",
+      "kind": "uses",
+      "to": "kernel/component.go::Context::class"
+    },
+    {
+      "from": "components/cici/cici.go::CICI.Start::method",
+      "kind": "uses",
+      "to": "components/cici/cici.go::CICI::class"
+    },
+    {
+      "from": "components/cici/cici.go::CICI.Start::method",
+      "kind": "uses",
+      "to": "kernel/component.go::Context::class"
+    },
+    {
+      "from": "components/cici/cici.go::CICI.Start::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::DBer.Migrate::method"
+    },
+    {
+      "from": "components/cici/cici.go::CICI.Start::method",
+      "kind": "calls",
+      "to": "components/cici/cici.go::Logger.Info::method"
+    },
+    {
+      "from": "components/cici/cici.go::CICI.Stop::method",
+      "kind": "uses",
+      "to": "components/cici/cici.go::CICI::class"
+    },
+    {
+      "from": "components/cici/cici.go::CICI.Stop::method",
+      "kind": "uses",
+      "to": "kernel/component.go::Context::class"
+    },
+    {
+      "from": "components/cici/cici.go::CICI.Handler::method",
+      "kind": "uses",
+      "to": "components/cici/cici.go::CICI::class"
+    },
+    {
+      "from": "components/cici/cici.go::CICI::class",
+      "kind": "implements",
+      "to": "kernel/component.go::Component::interface"
+    },
+    {
+      "from": "components/cici/cici.go::noopLogger::class",
+      "kind": "implements",
+      "to": "components/admin/admin.go::Logger::interface"
+    },
+    {
+      "from": "components/cici/cici.go::noopLogger::class",
+      "kind": "implements",
+      "to": "components/api/api.go::Logger::interface"
+    },
+    {
+      "from": "components/cici/cici.go::noopLogger::class",
+      "kind": "implements",
+      "to": "components/auth/auth.go::Logger::interface"
+    },
+    {
+      "from": "components/cici/cici.go::noopLogger::class",
+      "kind": "implements",
+      "to": "components/cici/cici.go::Logger::interface"
+    },
+    {
+      "from": "components/cici/cici.go::noopLogger::class",
+      "kind": "implements",
+      "to": "components/forge/forge.go::Logger::interface"
+    },
+    {
+      "from": "components/cici/cici.go::noopLogger::class",
+      "kind": "implements",
+      "to": "components/functions/functions.go::Logger::interface"
+    },
+    {
+      "from": "components/cici/cici.go::noopLogger::class",
+      "kind": "implements",
+      "to": "components/git/git.go::Logger::interface"
+    },
+    {
+      "from": "components/cici/cici.go::noopLogger::class",
+      "kind": "implements",
+      "to": "components/proxy/proxy.go::Logger::interface"
+    },
+    {
+      "from": "components/cici/cici.go::noopLogger::class",
+      "kind": "implements",
+      "to": "components/realtime/realtime.go::Logger::interface"
+    },
+    {
+      "from": "components/cici/cici.go::noopLogger::class",
+      "kind": "implements",
+      "to": "components/storage/storage.go::Logger::interface"
+    }
+  ],
+  "file": "components/cici/cici.go",
+  "intent": [
+    {
+      "date": "2026-06-05T20:13:56-03:00",
+      "hash": "7bea9645d49a10a8ed723617b32bd0481e3a625e",
+      "kind": "commit",
+      "message": "feat(db): e18s01 extract shared DBer interface"
+    },
+    {
+      "date": "2026-05-27T13:42:13-03:00",
+      "hash": "45e79c39440ae6327525ca662b53e02f4d57d6ee",
+      "kind": "commit",
+      "message": "fix: address review findings — rows.Err, routing, YAML leak, repo filter"
+    },
+    {
+      "date": "2026-05-27T13:37:14-03:00",
+      "hash": "44c3f8635fc6a4a9d585fd4e85ff490571f87f5a",
+      "kind": "commit",
+      "message": "refactor(cici): split into files, add boundary tests, shorten functions"
+    },
+    {
+      "date": "2026-05-27T13:34:31-03:00",
+      "hash": "5d2ba355b884661e9938e051d00adcf05303b5ac",
+      "kind": "commit",
+      "message": "feat(cici): add CI/CD pipeline component (Slice 9)"
+    }
+  ],
+  "lastModified": 1781284401,
+  "symbols": [
+    {
+      "endLine": 14,
+      "endOffset": 165,
+      "kind": "variable",
+      "name": "version",
+      "startLine": 14,
+      "startOffset": 158,
+      "symbolId": "components/cici/cici.go::version::variable"
+    },
+    {
+      "endLine": 20,
+      "endOffset": 296,
+      "kind": "interface",
+      "name": "Logger",
+      "startLine": 16,
+      "startOffset": 182,
+      "symbolId": "components/cici/cici.go::Logger::interface"
+    },
+    {
+      "endLine": 22,
+      "endOffset": 322,
+      "kind": "class",
+      "name": "noopLogger",
+      "startLine": 22,
+      "startOffset": 303,
+      "symbolId": "components/cici/cici.go::noopLogger::class"
+    },
+    {
+      "endLine": 24,
+      "endOffset": 375,
+      "kind": "method",
+      "name": "noopLogger.Info",
+      "startLine": 24,
+      "startOffset": 324,
+      "symbolId": "components/cici/cici.go::noopLogger.Info::method"
+    },
+    {
+      "endLine": 25,
+      "endOffset": 427,
+      "kind": "method",
+      "name": "noopLogger.Warn",
+      "startLine": 25,
+      "startOffset": 376,
+      "symbolId": "components/cici/cici.go::noopLogger.Warn::method"
+    },
+    {
+      "endLine": 26,
+      "endOffset": 479,
+      "kind": "method",
+      "name": "noopLogger.Error",
+      "startLine": 26,
+      "startOffset": 428,
+      "symbolId": "components/cici/cici.go::noopLogger.Error::method"
+    },
+    {
+      "endLine": 29,
+      "endOffset": 577,
+      "kind": "type",
+      "name": "DBer",
+      "startLine": 29,
+      "startOffset": 559,
+      "symbolId": "components/cici/cici.go::DBer::type"
+    },
+    {
+      "endLine": 36,
+      "endOffset": 723,
+      "kind": "class",
+      "name": "WorkflowDef",
+      "startLine": 31,
+      "startOffset": 584,
+      "symbolId": "components/cici/cici.go::WorkflowDef::class"
+    },
+    {
+      "endLine": 45,
+      "endOffset": 977,
+      "kind": "class",
+      "name": "PipelineRun",
+      "startLine": 38,
+      "startOffset": 730,
+      "symbolId": "components/cici/cici.go::PipelineRun::class"
+    },
+    {
+      "endLine": 52,
+      "endOffset": 1121,
+      "kind": "class",
+      "name": "LogEntry",
+      "startLine": 47,
+      "startOffset": 984,
+      "symbolId": "components/cici/cici.go::LogEntry::class"
+    },
+    {
+      "endLine": 58,
+      "endOffset": 1254,
+      "kind": "class",
+      "name": "workflowYAML",
+      "startLine": 54,
+      "startOffset": 1128,
+      "symbolId": "components/cici/cici.go::workflowYAML::class"
+    },
+    {
+      "endLine": 63,
+      "endOffset": 1337,
+      "kind": "class",
+      "name": "job",
+      "startLine": 60,
+      "startOffset": 1261,
+      "symbolId": "components/cici/cici.go::job::class"
+    },
+    {
+      "endLine": 69,
+      "endOffset": 1472,
+      "kind": "class",
+      "name": "step",
+      "startLine": 65,
+      "startOffset": 1344,
+      "symbolId": "components/cici/cici.go::step::class"
+    },
+    {
+      "endLine": 74,
+      "endOffset": 1525,
+      "kind": "class",
+      "name": "Options",
+      "startLine": 71,
+      "startOffset": 1479,
+      "symbolId": "components/cici/cici.go::Options::class"
+    },
+    {
+      "endLine": 79,
+      "endOffset": 1575,
+      "kind": "class",
+      "name": "CICI",
+      "startLine": 76,
+      "startOffset": 1532,
+      "symbolId": "components/cici/cici.go::CICI::class"
+    },
+    {
+      "endLine": 87,
+      "endOffset": 1722,
+      "kind": "function",
+      "name": "New",
+      "startLine": 81,
+      "startOffset": 1577,
+      "symbolId": "components/cici/cici.go::New::function"
+    },
+    {
+      "endLine": 89,
+      "endOffset": 1787,
+      "kind": "method",
+      "name": "CICI.Name",
+      "startLine": 89,
+      "startOffset": 1724,
+      "symbolId": "components/cici/cici.go::CICI.Name::method"
+    },
+    {
+      "endLine": 90,
+      "endOffset": 1852,
+      "kind": "method",
+      "name": "CICI.Version",
+      "startLine": 90,
+      "startOffset": 1788,
+      "symbolId": "components/cici/cici.go::CICI.Version::method"
+    },
+    {
+      "endLine": 91,
+      "endOffset": 1924,
+      "kind": "method",
+      "name": "CICI.Dependencies",
+      "startLine": 91,
+      "startOffset": 1853,
+      "symbolId": "components/cici/cici.go::CICI.Dependencies::method"
+    },
+    {
+      "endLine": 92,
+      "endOffset": 1985,
+      "kind": "method",
+      "name": "CICI.ConfigSchema",
+      "startLine": 92,
+      "startOffset": 1925,
+      "symbolId": "components/cici/cici.go::CICI.ConfigSchema::method"
+    },
+    {
+      "endLine": 93,
+      "endOffset": 2046,
+      "kind": "method",
+      "name": "CICI.Hooks",
+      "startLine": 93,
+      "startOffset": 1986,
+      "symbolId": "components/cici/cici.go::CICI.Hooks::method"
+    },
+    {
+      "endLine": 97,
+      "endOffset": 2134,
+      "kind": "method",
+      "name": "CICI.Init",
+      "startLine": 95,
+      "startOffset": 2048,
+      "symbolId": "components/cici/cici.go::CICI.Init::method"
+    },
+    {
+      "endLine": 119,
+      "endOffset": 2940,
+      "kind": "method",
+      "name": "CICI.Start",
+      "startLine": 99,
+      "startOffset": 2136,
+      "symbolId": "components/cici/cici.go::CICI.Start::method"
+    },
+    {
+      "endLine": 123,
+      "endOffset": 3004,
+      "kind": "method",
+      "name": "CICI.Stop",
+      "startLine": 121,
+      "startOffset": 2942,
+      "symbolId": "components/cici/cici.go::CICI.Stop::method"
+    },
+    {
+      "endLine": 131,
+      "endOffset": 3193,
+      "kind": "function",
+      "name": "generateID",
+      "startLine": 125,
+      "startOffset": 3006,
+      "symbolId": "components/cici/cici.go::generateID::function"
+    },
+    {
+      "endLine": 141,
+      "endOffset": 3596,
+      "kind": "method",
+      "name": "CICI.Handler",
+      "startLine": 133,
+      "startOffset": 3195,
+      "symbolId": "components/cici/cici.go::CICI.Handler::method"
+    },
+    {
+      "endLine": 147,
+      "endOffset": 3773,
+      "kind": "function",
+      "name": "writeJSON",
+      "startLine": 143,
+      "startOffset": 3598,
+      "symbolId": "components/cici/cici.go::writeJSON::function"
+    }
+  ]
+}

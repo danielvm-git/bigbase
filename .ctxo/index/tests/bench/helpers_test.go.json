@@ -1,0 +1,42 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 1,
+      "symbolId": "tests/bench/helpers_test.go::noopLogger.Info::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "tests/bench/helpers_test.go::noopLogger.Warn::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "tests/bench/helpers_test.go::noopLogger.Error::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "tests/bench/helpers_test.go::noopLogger.Debug::method"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "tests/bench/helpers_test.go::decodeJSON::function"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "tests/bench/helpers_test.go::itoa::function"
+    }
+  ],
+  "contentHash": "abe1da7da52377b9a1c40a16298955f99d5dd466203e52fd8a13256416e09836",
+  "edges": [],
+  "file": "tests/bench/helpers_test.go",
+  "intent": [
+    {
+      "date": "2026-06-05T12:58:48-03:00",
+      "hash": "21a8236dd2d6111d9543c744a13133d5a981f305",
+      "kind": "commit",
+      "message": "test(e21s05): add race detection tests and fuzz targets"
+    }
+  ],
+  "lastModified": 1781284401,
+  "symbols": []
+}

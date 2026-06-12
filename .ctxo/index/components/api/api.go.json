@@ -1,0 +1,1044 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/api/api.go::WithOrgID::function"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/api/api.go::OrgIDFromContext::function"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/api/api.go::WithUserRole::function"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/api/api.go::UserRoleFromContext::function"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/api/api.go::New::function"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/api/api.go::API.Name::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/api/api.go::API.Version::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/api/api.go::API.Dependencies::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/api/api.go::API.ConfigSchema::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/api/api.go::API.Hooks::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/api/api.go::API.Init::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/api/api.go::API.Start::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/api/api.go::API.Stop::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/api/api.go::API.Handler::method"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/api/api.go::API.ensureTable::method"
+    },
+    {
+      "cyclomatic": 12,
+      "symbolId": "components/api/api.go::API.handleCollection::method"
+    },
+    {
+      "cyclomatic": 14,
+      "symbolId": "components/api/api.go::API.listRecords::method"
+    },
+    {
+      "cyclomatic": 6,
+      "symbolId": "components/api/api.go::API.getRecord::method"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/api/api.go::API.emitMutation::method"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/api/api.go::API.createRecord::method"
+    },
+    {
+      "cyclomatic": 7,
+      "symbolId": "components/api/api.go::API.updateRecord::method"
+    },
+    {
+      "cyclomatic": 7,
+      "symbolId": "components/api/api.go::API.deleteRecord::method"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/api/api.go::API.listCollections::method"
+    },
+    {
+      "cyclomatic": 7,
+      "symbolId": "components/api/api.go::API.fetchCollectionNames::method"
+    },
+    {
+      "cyclomatic": 16,
+      "symbolId": "components/api/api.go::API.handleSQL::method"
+    },
+    {
+      "cyclomatic": 6,
+      "symbolId": "components/api/api.go::ExtractTableRef::function"
+    },
+    {
+      "cyclomatic": 5,
+      "symbolId": "components/api/api.go::scopeQueryForOrg::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/api/api.go::isInternalOrSysTable::function"
+    },
+    {
+      "cyclomatic": 6,
+      "symbolId": "components/api/api.go::rowsToMaps::function"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/api/api.go::sanitize::function"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/api/api.go::writeJSON::function"
+    }
+  ],
+  "contentHash": "b3d248e673bfc7047576c841304491086972d770953dda3d671efd8131895e82",
+  "edges": [
+    {
+      "from": "components/api/api.go::WithOrgID::function",
+      "kind": "uses",
+      "to": "components/api/api.go::ctxOrgID::variable"
+    },
+    {
+      "from": "components/api/api.go::OrgIDFromContext::function",
+      "kind": "uses",
+      "to": "components/api/api.go::ctxOrgID::variable"
+    },
+    {
+      "from": "components/api/api.go::WithUserRole::function",
+      "kind": "uses",
+      "to": "components/api/api.go::ctxUserRole::variable"
+    },
+    {
+      "from": "components/api/api.go::UserRoleFromContext::function",
+      "kind": "uses",
+      "to": "components/api/api.go::ctxUserRole::variable"
+    },
+    {
+      "from": "components/api/api.go::New::function",
+      "kind": "uses",
+      "to": "components/api/api.go::Options::class"
+    },
+    {
+      "from": "components/api/api.go::New::function",
+      "kind": "uses",
+      "to": "components/api/api.go::API::class"
+    },
+    {
+      "from": "components/api/api.go::API.Name::method",
+      "kind": "uses",
+      "to": "components/api/api.go::API::class"
+    },
+    {
+      "from": "components/api/api.go::API.Version::method",
+      "kind": "uses",
+      "to": "components/api/api.go::API::class"
+    },
+    {
+      "from": "components/api/api.go::API.Version::method",
+      "kind": "uses",
+      "to": "components/api/api.go::version::variable"
+    },
+    {
+      "from": "components/api/api.go::API.Dependencies::method",
+      "kind": "uses",
+      "to": "components/api/api.go::API::class"
+    },
+    {
+      "from": "components/api/api.go::API.ConfigSchema::method",
+      "kind": "uses",
+      "to": "components/api/api.go::API::class"
+    },
+    {
+      "from": "components/api/api.go::API.Hooks::method",
+      "kind": "uses",
+      "to": "components/api/api.go::API::class"
+    },
+    {
+      "from": "components/api/api.go::API.Hooks::method",
+      "kind": "uses",
+      "to": "kernel/component.go::HookDef::class"
+    },
+    {
+      "from": "components/api/api.go::API.Init::method",
+      "kind": "uses",
+      "to": "components/api/api.go::API::class"
+    },
+    {
+      "from": "components/api/api.go::API.Init::method",
+      "kind": "uses",
+      "to": "kernel/component.go::Context::class"
+    },
+    {
+      "from": "components/api/api.go::API.Start::method",
+      "kind": "uses",
+      "to": "components/api/api.go::API::class"
+    },
+    {
+      "from": "components/api/api.go::API.Start::method",
+      "kind": "uses",
+      "to": "kernel/component.go::Context::class"
+    },
+    {
+      "from": "components/api/api.go::API.Start::method",
+      "kind": "calls",
+      "to": "kernel/kernel.go::Kernel.EventBus::method"
+    },
+    {
+      "from": "components/api/api.go::API.Start::method",
+      "kind": "calls",
+      "to": "components/api/api.go::Logger.Info::method"
+    },
+    {
+      "from": "components/api/api.go::API.Stop::method",
+      "kind": "uses",
+      "to": "components/api/api.go::API::class"
+    },
+    {
+      "from": "components/api/api.go::API.Stop::method",
+      "kind": "uses",
+      "to": "kernel/component.go::Context::class"
+    },
+    {
+      "from": "components/api/api.go::API.Handler::method",
+      "kind": "uses",
+      "to": "components/api/api.go::API::class"
+    },
+    {
+      "from": "components/api/api.go::API.ensureTable::method",
+      "kind": "uses",
+      "to": "components/api/api.go::API::class"
+    },
+    {
+      "from": "components/api/api.go::API.ensureTable::method",
+      "kind": "calls",
+      "to": "components/api/api.go::sanitize::function"
+    },
+    {
+      "from": "components/api/api.go::API.ensureTable::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::DBer.Migrate::method"
+    },
+    {
+      "from": "components/api/api.go::API.handleCollection::method",
+      "kind": "uses",
+      "to": "components/api/api.go::API::class"
+    },
+    {
+      "from": "components/api/api.go::API.handleCollection::method",
+      "kind": "calls",
+      "to": "components/api/api.go::API.listCollections::method"
+    },
+    {
+      "from": "components/api/api.go::API.handleCollection::method",
+      "kind": "calls",
+      "to": "components/api/api.go::sanitize::function"
+    },
+    {
+      "from": "components/api/api.go::API.handleCollection::method",
+      "kind": "calls",
+      "to": "components/api/api.go::writeJSON::function"
+    },
+    {
+      "from": "components/api/api.go::API.handleCollection::method",
+      "kind": "uses",
+      "to": "components/api/api.go::internalTables::variable"
+    },
+    {
+      "from": "components/api/api.go::API.handleCollection::method",
+      "kind": "calls",
+      "to": "components/api/api.go::API.getRecord::method"
+    },
+    {
+      "from": "components/api/api.go::API.handleCollection::method",
+      "kind": "calls",
+      "to": "components/api/api.go::API.listRecords::method"
+    },
+    {
+      "from": "components/api/api.go::API.handleCollection::method",
+      "kind": "calls",
+      "to": "components/api/api.go::API.createRecord::method"
+    },
+    {
+      "from": "components/api/api.go::API.handleCollection::method",
+      "kind": "calls",
+      "to": "components/api/api.go::API.updateRecord::method"
+    },
+    {
+      "from": "components/api/api.go::API.handleCollection::method",
+      "kind": "calls",
+      "to": "components/api/api.go::API.deleteRecord::method"
+    },
+    {
+      "from": "components/api/api.go::API.listRecords::method",
+      "kind": "uses",
+      "to": "components/api/api.go::API::class"
+    },
+    {
+      "from": "components/api/api.go::API.listRecords::method",
+      "kind": "calls",
+      "to": "components/api/api.go::API.ensureTable::method"
+    },
+    {
+      "from": "components/api/api.go::API.listRecords::method",
+      "kind": "calls",
+      "to": "components/api/api.go::Logger.Error::method"
+    },
+    {
+      "from": "components/api/api.go::API.listRecords::method",
+      "kind": "calls",
+      "to": "components/api/api.go::writeJSON::function"
+    },
+    {
+      "from": "components/api/api.go::API.listRecords::method",
+      "kind": "calls",
+      "to": "components/api/api.go::OrgIDFromContext::function"
+    },
+    {
+      "from": "components/api/api.go::API.listRecords::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::DBer.QueryContext::method"
+    },
+    {
+      "from": "components/api/api.go::API.getRecord::method",
+      "kind": "uses",
+      "to": "components/api/api.go::API::class"
+    },
+    {
+      "from": "components/api/api.go::API.getRecord::method",
+      "kind": "calls",
+      "to": "components/api/api.go::API.ensureTable::method"
+    },
+    {
+      "from": "components/api/api.go::API.getRecord::method",
+      "kind": "calls",
+      "to": "components/api/api.go::Logger.Error::method"
+    },
+    {
+      "from": "components/api/api.go::API.getRecord::method",
+      "kind": "calls",
+      "to": "components/api/api.go::writeJSON::function"
+    },
+    {
+      "from": "components/api/api.go::API.getRecord::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::DBer.QueryRowContext::method"
+    },
+    {
+      "from": "components/api/api.go::API.getRecord::method",
+      "kind": "calls",
+      "to": "components/api/api.go::OrgIDFromContext::function"
+    },
+    {
+      "from": "components/api/api.go::API.emitMutation::method",
+      "kind": "uses",
+      "to": "components/api/api.go::API::class"
+    },
+    {
+      "from": "components/api/api.go::API.emitMutation::method",
+      "kind": "calls",
+      "to": "kernel/eventbus.go::EventBus.Emit::method"
+    },
+    {
+      "from": "components/api/api.go::API.emitMutation::method",
+      "kind": "uses",
+      "to": "kernel/component.go::Event::class"
+    },
+    {
+      "from": "components/api/api.go::API.emitMutation::method",
+      "kind": "calls",
+      "to": "components/api/api.go::Logger.Error::method"
+    },
+    {
+      "from": "components/api/api.go::API.createRecord::method",
+      "kind": "uses",
+      "to": "components/api/api.go::API::class"
+    },
+    {
+      "from": "components/api/api.go::API.createRecord::method",
+      "kind": "calls",
+      "to": "components/api/api.go::API.ensureTable::method"
+    },
+    {
+      "from": "components/api/api.go::API.createRecord::method",
+      "kind": "calls",
+      "to": "components/api/api.go::Logger.Error::method"
+    },
+    {
+      "from": "components/api/api.go::API.createRecord::method",
+      "kind": "calls",
+      "to": "components/api/api.go::writeJSON::function"
+    },
+    {
+      "from": "components/api/api.go::API.createRecord::method",
+      "kind": "calls",
+      "to": "components/api/api.go::OrgIDFromContext::function"
+    },
+    {
+      "from": "components/api/api.go::API.createRecord::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::DBer.ExecContext::method"
+    },
+    {
+      "from": "components/api/api.go::API.createRecord::method",
+      "kind": "calls",
+      "to": "components/api/api.go::API.emitMutation::method"
+    },
+    {
+      "from": "components/api/api.go::API.updateRecord::method",
+      "kind": "uses",
+      "to": "components/api/api.go::API::class"
+    },
+    {
+      "from": "components/api/api.go::API.updateRecord::method",
+      "kind": "calls",
+      "to": "components/api/api.go::API.ensureTable::method"
+    },
+    {
+      "from": "components/api/api.go::API.updateRecord::method",
+      "kind": "calls",
+      "to": "components/api/api.go::Logger.Error::method"
+    },
+    {
+      "from": "components/api/api.go::API.updateRecord::method",
+      "kind": "calls",
+      "to": "components/api/api.go::writeJSON::function"
+    },
+    {
+      "from": "components/api/api.go::API.updateRecord::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::DBer.QueryRowContext::method"
+    },
+    {
+      "from": "components/api/api.go::API.updateRecord::method",
+      "kind": "calls",
+      "to": "components/api/api.go::OrgIDFromContext::function"
+    },
+    {
+      "from": "components/api/api.go::API.updateRecord::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::DBer.ExecContext::method"
+    },
+    {
+      "from": "components/api/api.go::API.updateRecord::method",
+      "kind": "calls",
+      "to": "components/api/api.go::API.emitMutation::method"
+    },
+    {
+      "from": "components/api/api.go::API.deleteRecord::method",
+      "kind": "uses",
+      "to": "components/api/api.go::API::class"
+    },
+    {
+      "from": "components/api/api.go::API.deleteRecord::method",
+      "kind": "calls",
+      "to": "components/api/api.go::API.ensureTable::method"
+    },
+    {
+      "from": "components/api/api.go::API.deleteRecord::method",
+      "kind": "calls",
+      "to": "components/api/api.go::Logger.Error::method"
+    },
+    {
+      "from": "components/api/api.go::API.deleteRecord::method",
+      "kind": "calls",
+      "to": "components/api/api.go::writeJSON::function"
+    },
+    {
+      "from": "components/api/api.go::API.deleteRecord::method",
+      "kind": "calls",
+      "to": "components/api/api.go::OrgIDFromContext::function"
+    },
+    {
+      "from": "components/api/api.go::API.deleteRecord::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::DBer.QueryRowContext::method"
+    },
+    {
+      "from": "components/api/api.go::API.deleteRecord::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::DBer.ExecContext::method"
+    },
+    {
+      "from": "components/api/api.go::API.deleteRecord::method",
+      "kind": "calls",
+      "to": "components/api/api.go::API.emitMutation::method"
+    },
+    {
+      "from": "components/api/api.go::API.listCollections::method",
+      "kind": "uses",
+      "to": "components/api/api.go::API::class"
+    },
+    {
+      "from": "components/api/api.go::API.listCollections::method",
+      "kind": "calls",
+      "to": "components/api/api.go::writeJSON::function"
+    },
+    {
+      "from": "components/api/api.go::API.listCollections::method",
+      "kind": "calls",
+      "to": "components/api/api.go::API.fetchCollectionNames::method"
+    },
+    {
+      "from": "components/api/api.go::API.listCollections::method",
+      "kind": "calls",
+      "to": "components/api/api.go::Logger.Error::method"
+    },
+    {
+      "from": "components/api/api.go::API.fetchCollectionNames::method",
+      "kind": "uses",
+      "to": "components/api/api.go::API::class"
+    },
+    {
+      "from": "components/api/api.go::API.fetchCollectionNames::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::DBer.QueryContext::method"
+    },
+    {
+      "from": "components/api/api.go::API.fetchCollectionNames::method",
+      "kind": "calls",
+      "to": "components/api/api.go::Logger.Error::method"
+    },
+    {
+      "from": "components/api/api.go::API.fetchCollectionNames::method",
+      "kind": "uses",
+      "to": "components/api/api.go::internalTables::variable"
+    },
+    {
+      "from": "components/api/api.go::API.handleSQL::method",
+      "kind": "uses",
+      "to": "components/api/api.go::API::class"
+    },
+    {
+      "from": "components/api/api.go::API.handleSQL::method",
+      "kind": "calls",
+      "to": "components/api/api.go::writeJSON::function"
+    },
+    {
+      "from": "components/api/api.go::API.handleSQL::method",
+      "kind": "calls",
+      "to": "components/api/api.go::UserRoleFromContext::function"
+    },
+    {
+      "from": "components/api/api.go::API.handleSQL::method",
+      "kind": "uses",
+      "to": "components/api/api.go::internalTables::variable"
+    },
+    {
+      "from": "components/api/api.go::API.handleSQL::method",
+      "kind": "calls",
+      "to": "components/api/api.go::OrgIDFromContext::function"
+    },
+    {
+      "from": "components/api/api.go::API.handleSQL::method",
+      "kind": "calls",
+      "to": "components/api/api.go::ExtractTableRef::function"
+    },
+    {
+      "from": "components/api/api.go::API.handleSQL::method",
+      "kind": "calls",
+      "to": "components/api/api.go::isInternalOrSysTable::function"
+    },
+    {
+      "from": "components/api/api.go::API.handleSQL::method",
+      "kind": "calls",
+      "to": "components/api/api.go::scopeQueryForOrg::function"
+    },
+    {
+      "from": "components/api/api.go::API.handleSQL::method",
+      "kind": "calls",
+      "to": "components/api/api.go::Logger.Info::method"
+    },
+    {
+      "from": "components/api/api.go::API.handleSQL::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::DBer.QueryContext::method"
+    },
+    {
+      "from": "components/api/api.go::API.handleSQL::method",
+      "kind": "calls",
+      "to": "components/api/api.go::Logger.Error::method"
+    },
+    {
+      "from": "components/api/api.go::API.handleSQL::method",
+      "kind": "calls",
+      "to": "components/api/api.go::rowsToMaps::function"
+    },
+    {
+      "from": "components/api/api.go::isInternalOrSysTable::function",
+      "kind": "uses",
+      "to": "components/api/api.go::internalTables::variable"
+    },
+    {
+      "from": "components/api/api.go::API::class",
+      "kind": "implements",
+      "to": "kernel/component.go::Component::interface"
+    }
+  ],
+  "file": "components/api/api.go",
+  "intent": [
+    {
+      "date": "2026-06-05T19:51:11-03:00",
+      "hash": "5dc3011a8bf1a23d5532faff56612e14cee9710b",
+      "kind": "commit",
+      "message": "feat(dx): e22s01+e22s02 onboarding checklist UI and 1-click scaffold API"
+    },
+    {
+      "date": "2026-06-05T20:13:56-03:00",
+      "hash": "7bea9645d49a10a8ed723617b32bd0481e3a625e",
+      "kind": "commit",
+      "message": "feat(db): e18s01 extract shared DBer interface"
+    },
+    {
+      "date": "2026-06-05T19:53:09-03:00",
+      "hash": "1c166ca28e806b03a2650bec72e78e4dac852cfd",
+      "kind": "commit",
+      "message": "feat(api): e23s03 resource isolation by org_id"
+    },
+    {
+      "date": "2026-05-27T22:15:43-03:00",
+      "hash": "d056ce1757c3460861913113fa18f01cedd30ad1",
+      "kind": "commit",
+      "message": "feat(deploy): improve deployment pipeline and add admin UI pages"
+    },
+    {
+      "date": "2026-05-27T19:25:13-03:00",
+      "hash": "f10ed8398be27a6fc5f7a6de5107f891789723db",
+      "kind": "commit",
+      "message": "fix(realtime): fix Hub data race, add event unsubscribe, log emit errors"
+    },
+    {
+      "date": "2026-05-27T15:20:30-03:00",
+      "hash": "4ab37bf4a3a7ab5a895d9f8897bf5bbb597bf560",
+      "kind": "commit",
+      "message": "feat(realtime): add WebSocket subscriptions, event bus broadcasts, and Hub pattern"
+    },
+    {
+      "date": "2026-05-27T13:30:22-03:00",
+      "hash": "ef4ea80440bd62ca63199138d6d0fbba2f686408",
+      "kind": "commit",
+      "message": "fix: harden kernel, api, auth, forge, git, and storage components"
+    },
+    {
+      "date": "2026-05-27T01:05:15-03:00",
+      "hash": "2a49228e1fc32f95d22e29aebf03cc3719490e4f",
+      "kind": "commit",
+      "message": "fix: address review findings — security, authz, race conditions"
+    },
+    {
+      "date": "2026-05-26T23:15:56-03:00",
+      "hash": "e19e9775f62605ca4174a457e0d62ba021e47d32",
+      "kind": "commit",
+      "message": "feat(admin): add Admin UI, SQL Editor, and User Management"
+    },
+    {
+      "date": "2026-05-26T15:30:51-03:00",
+      "hash": "9c693a433d006a26e1ca48164444a5f94576afa7",
+      "kind": "commit",
+      "message": "fix(api db): address all 18 code review findings"
+    },
+    {
+      "date": "2026-05-26T15:08:33-03:00",
+      "hash": "696befbe2b772042cfe1c23193e6a45ebea17876",
+      "kind": "commit",
+      "message": "feat(db api): add SQLite database and auto REST CRUD API"
+    }
+  ],
+  "lastModified": 1781284401,
+  "symbols": [
+    {
+      "endLine": 16,
+      "endOffset": 170,
+      "kind": "variable",
+      "name": "version",
+      "startLine": 16,
+      "startOffset": 163,
+      "symbolId": "components/api/api.go::version::variable"
+    },
+    {
+      "endLine": 18,
+      "endOffset": 204,
+      "kind": "type",
+      "name": "contextKey",
+      "startLine": 18,
+      "startOffset": 187,
+      "symbolId": "components/api/api.go::contextKey::type"
+    },
+    {
+      "endLine": 21,
+      "endOffset": 223,
+      "kind": "variable",
+      "name": "ctxOrgID",
+      "startLine": 21,
+      "startOffset": 215,
+      "symbolId": "components/api/api.go::ctxOrgID::variable"
+    },
+    {
+      "endLine": 22,
+      "endOffset": 261,
+      "kind": "variable",
+      "name": "ctxUserRole",
+      "startLine": 22,
+      "startOffset": 250,
+      "symbolId": "components/api/api.go::ctxUserRole::variable"
+    },
+    {
+      "endLine": 28,
+      "endOffset": 461,
+      "kind": "function",
+      "name": "WithOrgID",
+      "startLine": 26,
+      "startOffset": 345,
+      "symbolId": "components/api/api.go::WithOrgID::function"
+    },
+    {
+      "endLine": 35,
+      "endOffset": 689,
+      "kind": "function",
+      "name": "OrgIDFromContext",
+      "startLine": 32,
+      "startOffset": 575,
+      "symbolId": "components/api/api.go::OrgIDFromContext::function"
+    },
+    {
+      "endLine": 40,
+      "endOffset": 873,
+      "kind": "function",
+      "name": "WithUserRole",
+      "startLine": 38,
+      "startOffset": 752,
+      "symbolId": "components/api/api.go::WithUserRole::function"
+    },
+    {
+      "endLine": 47,
+      "endOffset": 1118,
+      "kind": "function",
+      "name": "UserRoleFromContext",
+      "startLine": 44,
+      "startOffset": 992,
+      "symbolId": "components/api/api.go::UserRoleFromContext::function"
+    },
+    {
+      "endLine": 49,
+      "endOffset": 1138,
+      "kind": "variable",
+      "name": "internalTables",
+      "startLine": 49,
+      "startOffset": 1124,
+      "symbolId": "components/api/api.go::internalTables::variable"
+    },
+    {
+      "endLine": 62,
+      "endOffset": 1573,
+      "kind": "interface",
+      "name": "Logger",
+      "startLine": 58,
+      "startOffset": 1459,
+      "symbolId": "components/api/api.go::Logger::interface"
+    },
+    {
+      "endLine": 65,
+      "endOffset": 1671,
+      "kind": "type",
+      "name": "DBer",
+      "startLine": 65,
+      "startOffset": 1653,
+      "symbolId": "components/api/api.go::DBer::type"
+    },
+    {
+      "endLine": 70,
+      "endOffset": 1724,
+      "kind": "class",
+      "name": "Options",
+      "startLine": 67,
+      "startOffset": 1678,
+      "symbolId": "components/api/api.go::Options::class"
+    },
+    {
+      "endLine": 77,
+      "endOffset": 1822,
+      "kind": "class",
+      "name": "API",
+      "startLine": 72,
+      "startOffset": 1731,
+      "symbolId": "components/api/api.go::API::class"
+    },
+    {
+      "endLine": 85,
+      "endOffset": 1947,
+      "kind": "function",
+      "name": "New",
+      "startLine": 79,
+      "startOffset": 1824,
+      "symbolId": "components/api/api.go::New::function"
+    },
+    {
+      "endLine": 87,
+      "endOffset": 2009,
+      "kind": "method",
+      "name": "API.Name",
+      "startLine": 87,
+      "startOffset": 1949,
+      "symbolId": "components/api/api.go::API.Name::method"
+    },
+    {
+      "endLine": 88,
+      "endOffset": 2072,
+      "kind": "method",
+      "name": "API.Version",
+      "startLine": 88,
+      "startOffset": 2010,
+      "symbolId": "components/api/api.go::API.Version::method"
+    },
+    {
+      "endLine": 89,
+      "endOffset": 2142,
+      "kind": "method",
+      "name": "API.Dependencies",
+      "startLine": 89,
+      "startOffset": 2073,
+      "symbolId": "components/api/api.go::API.Dependencies::method"
+    },
+    {
+      "endLine": 90,
+      "endOffset": 2202,
+      "kind": "method",
+      "name": "API.ConfigSchema",
+      "startLine": 90,
+      "startOffset": 2143,
+      "symbolId": "components/api/api.go::API.ConfigSchema::method"
+    },
+    {
+      "endLine": 91,
+      "endOffset": 2261,
+      "kind": "method",
+      "name": "API.Hooks",
+      "startLine": 91,
+      "startOffset": 2203,
+      "symbolId": "components/api/api.go::API.Hooks::method"
+    },
+    {
+      "endLine": 95,
+      "endOffset": 2348,
+      "kind": "method",
+      "name": "API.Init",
+      "startLine": 93,
+      "startOffset": 2263,
+      "symbolId": "components/api/api.go::API.Init::method"
+    },
+    {
+      "endLine": 101,
+      "endOffset": 2481,
+      "kind": "method",
+      "name": "API.Start",
+      "startLine": 97,
+      "startOffset": 2350,
+      "symbolId": "components/api/api.go::API.Start::method"
+    },
+    {
+      "endLine": 105,
+      "endOffset": 2544,
+      "kind": "method",
+      "name": "API.Stop",
+      "startLine": 103,
+      "startOffset": 2483,
+      "symbolId": "components/api/api.go::API.Stop::method"
+    },
+    {
+      "endLine": 116,
+      "endOffset": 2962,
+      "kind": "method",
+      "name": "API.Handler",
+      "startLine": 107,
+      "startOffset": 2546,
+      "symbolId": "components/api/api.go::API.Handler::method"
+    },
+    {
+      "endLine": 137,
+      "endOffset": 3581,
+      "kind": "method",
+      "name": "API.ensureTable",
+      "startLine": 118,
+      "startOffset": 2964,
+      "symbolId": "components/api/api.go::API.ensureTable::method"
+    },
+    {
+      "endLine": 182,
+      "endOffset": 4809,
+      "kind": "method",
+      "name": "API.handleCollection",
+      "startLine": 139,
+      "startOffset": 3583,
+      "symbolId": "components/api/api.go::API.handleCollection::method"
+    },
+    {
+      "endLine": 253,
+      "endOffset": 7089,
+      "kind": "method",
+      "name": "API.listRecords",
+      "startLine": 184,
+      "startOffset": 4811,
+      "symbolId": "components/api/api.go::API.listRecords::method"
+    },
+    {
+      "endLine": 285,
+      "endOffset": 8253,
+      "kind": "method",
+      "name": "API.getRecord",
+      "startLine": 255,
+      "startOffset": 7091,
+      "symbolId": "components/api/api.go::API.getRecord::method"
+    },
+    {
+      "endLine": 297,
+      "endOffset": 8632,
+      "kind": "method",
+      "name": "API.emitMutation",
+      "startLine": 287,
+      "startOffset": 8255,
+      "symbolId": "components/api/api.go::API.emitMutation::method"
+    },
+    {
+      "endLine": 332,
+      "endOffset": 9830,
+      "kind": "method",
+      "name": "API.createRecord",
+      "startLine": 299,
+      "startOffset": 8634,
+      "symbolId": "components/api/api.go::API.createRecord::method"
+    },
+    {
+      "endLine": 380,
+      "endOffset": 11571,
+      "kind": "method",
+      "name": "API.updateRecord",
+      "startLine": 334,
+      "startOffset": 9832,
+      "symbolId": "components/api/api.go::API.updateRecord::method"
+    },
+    {
+      "endLine": 421,
+      "endOffset": 13030,
+      "kind": "method",
+      "name": "API.deleteRecord",
+      "startLine": 382,
+      "startOffset": 11573,
+      "symbolId": "components/api/api.go::API.deleteRecord::method"
+    },
+    {
+      "endLine": 439,
+      "endOffset": 13599,
+      "kind": "method",
+      "name": "API.listCollections",
+      "startLine": 423,
+      "startOffset": 13032,
+      "symbolId": "components/api/api.go::API.listCollections::method"
+    },
+    {
+      "endLine": 468,
+      "endOffset": 14310,
+      "kind": "method",
+      "name": "API.fetchCollectionNames",
+      "startLine": 441,
+      "startOffset": 13601,
+      "symbolId": "components/api/api.go::API.fetchCollectionNames::method"
+    },
+    {
+      "endLine": 560,
+      "endOffset": 17330,
+      "kind": "method",
+      "name": "API.handleSQL",
+      "startLine": 470,
+      "startOffset": 14312,
+      "symbolId": "components/api/api.go::API.handleSQL::method"
+    },
+    {
+      "endLine": 600,
+      "endOffset": 18585,
+      "kind": "function",
+      "name": "ExtractTableRef",
+      "startLine": 564,
+      "startOffset": 17501,
+      "symbolId": "components/api/api.go::ExtractTableRef::function"
+    },
+    {
+      "endLine": 632,
+      "endOffset": 19765,
+      "kind": "function",
+      "name": "scopeQueryForOrg",
+      "startLine": 606,
+      "startOffset": 18871,
+      "symbolId": "components/api/api.go::scopeQueryForOrg::function"
+    },
+    {
+      "endLine": 642,
+      "endOffset": 20078,
+      "kind": "function",
+      "name": "isInternalOrSysTable",
+      "startLine": 636,
+      "startOffset": 19877,
+      "symbolId": "components/api/api.go::isInternalOrSysTable::function"
+    },
+    {
+      "endLine": 669,
+      "endOffset": 20720,
+      "kind": "function",
+      "name": "rowsToMaps",
+      "startLine": 646,
+      "startOffset": 20082,
+      "symbolId": "components/api/api.go::rowsToMaps::function"
+    },
+    {
+      "endLine": 681,
+      "endOffset": 21050,
+      "kind": "function",
+      "name": "sanitize",
+      "startLine": 671,
+      "startOffset": 20722,
+      "symbolId": "components/api/api.go::sanitize::function"
+    },
+    {
+      "endLine": 687,
+      "endOffset": 21227,
+      "kind": "function",
+      "name": "writeJSON",
+      "startLine": 683,
+      "startOffset": 21052,
+      "symbolId": "components/api/api.go::writeJSON::function"
+    }
+  ]
+}

@@ -1,0 +1,146 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/api/onboarding.go::API.handleOnboarding::method"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/api/onboarding.go::API.collectionExists::method"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/api/onboarding.go::API.tableHasRows::method"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/api/onboarding.go::API.tableHasMoreThanOneRow::method"
+    }
+  ],
+  "contentHash": "b4493a2e3ea8a72f5a99e7b601c6d140c5ac3023d4180d3a509a4a04497f5041",
+  "edges": [
+    {
+      "from": "components/api/onboarding.go::API.handleOnboarding::method",
+      "kind": "uses",
+      "to": "components/api/api.go::API::class"
+    },
+    {
+      "from": "components/api/onboarding.go::API.handleOnboarding::method",
+      "kind": "calls",
+      "to": "components/api/api.go::writeJSON::function"
+    },
+    {
+      "from": "components/api/onboarding.go::API.handleOnboarding::method",
+      "kind": "uses",
+      "to": "components/api/onboarding.go::OnboardingStep::class"
+    },
+    {
+      "from": "components/api/onboarding.go::API.handleOnboarding::method",
+      "kind": "calls",
+      "to": "components/api/onboarding.go::API.collectionExists::method"
+    },
+    {
+      "from": "components/api/onboarding.go::API.handleOnboarding::method",
+      "kind": "calls",
+      "to": "components/api/onboarding.go::API.tableHasRows::method"
+    },
+    {
+      "from": "components/api/onboarding.go::API.handleOnboarding::method",
+      "kind": "calls",
+      "to": "components/api/onboarding.go::API.tableHasMoreThanOneRow::method"
+    },
+    {
+      "from": "components/api/onboarding.go::API.collectionExists::method",
+      "kind": "uses",
+      "to": "components/api/api.go::API::class"
+    },
+    {
+      "from": "components/api/onboarding.go::API.collectionExists::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::DBer.QueryRowContext::method"
+    },
+    {
+      "from": "components/api/onboarding.go::API.collectionExists::method",
+      "kind": "uses",
+      "to": "components/api/api.go::internalTables::variable"
+    },
+    {
+      "from": "components/api/onboarding.go::API.tableHasRows::method",
+      "kind": "uses",
+      "to": "components/api/api.go::API::class"
+    },
+    {
+      "from": "components/api/onboarding.go::API.tableHasRows::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::DBer.QueryRowContext::method"
+    },
+    {
+      "from": "components/api/onboarding.go::API.tableHasMoreThanOneRow::method",
+      "kind": "uses",
+      "to": "components/api/api.go::API::class"
+    },
+    {
+      "from": "components/api/onboarding.go::API.tableHasMoreThanOneRow::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::DBer.QueryRowContext::method"
+    }
+  ],
+  "file": "components/api/onboarding.go",
+  "intent": [
+    {
+      "date": "2026-06-05T19:51:11-03:00",
+      "hash": "5dc3011a8bf1a23d5532faff56612e14cee9710b",
+      "kind": "commit",
+      "message": "feat(dx): e22s01+e22s02 onboarding checklist UI and 1-click scaffold API"
+    }
+  ],
+  "lastModified": 1781284401,
+  "symbols": [
+    {
+      "endLine": 14,
+      "endOffset": 234,
+      "kind": "class",
+      "name": "OnboardingStep",
+      "startLine": 10,
+      "startOffset": 126,
+      "symbolId": "components/api/onboarding.go::OnboardingStep::class"
+    },
+    {
+      "endLine": 44,
+      "endOffset": 1388,
+      "kind": "method",
+      "name": "API.handleOnboarding",
+      "startLine": 18,
+      "startOffset": 366,
+      "symbolId": "components/api/onboarding.go::API.handleOnboarding::method"
+    },
+    {
+      "endLine": 60,
+      "endOffset": 1877,
+      "kind": "method",
+      "name": "API.collectionExists",
+      "startLine": 47,
+      "startOffset": 1477,
+      "symbolId": "components/api/onboarding.go::API.collectionExists::method"
+    },
+    {
+      "endLine": 75,
+      "endOffset": 2388,
+      "kind": "method",
+      "name": "API.tableHasRows",
+      "startLine": 63,
+      "startOffset": 1960,
+      "symbolId": "components/api/onboarding.go::API.tableHasRows::method"
+    },
+    {
+      "endLine": 90,
+      "endOffset": 2903,
+      "kind": "method",
+      "name": "API.tableHasMoreThanOneRow",
+      "startLine": 78,
+      "startOffset": 2465,
+      "symbolId": "components/api/onboarding.go::API.tableHasMoreThanOneRow::method"
+    }
+  ]
+}

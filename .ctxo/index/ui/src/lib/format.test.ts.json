@@ -1,0 +1,60 @@
+{
+  "antiPatterns": [],
+  "complexity": [],
+  "contentHash": "331f7561b8610d1786d9e5b16bfdd1f765fbd7e23e29ea7c58cfa293ac04dd39",
+  "edges": [
+    {
+      "from": "ui/src/lib/format.test.ts::format.test::variable",
+      "kind": "imports",
+      "to": "ui/src/lib/format.ts::timeAgo::function"
+    },
+    {
+      "from": "ui/src/lib/format.test.ts::format.test::variable",
+      "kind": "imports",
+      "to": "ui/src/lib/format.ts::siteDisplayUrl::function"
+    },
+    {
+      "from": "ui/src/lib/format.test.ts::format.test::variable",
+      "kind": "imports",
+      "to": "ui/src/lib/format.ts::mapDeployStatus::function"
+    },
+    {
+      "from": "ui/src/lib/format.test.ts::format.test::variable",
+      "kind": "imports",
+      "to": "ui/src/lib/format.ts::fmtUptime::function"
+    },
+    {
+      "from": "ui/src/lib/format.test.ts::format.test::variable",
+      "kind": "imports",
+      "to": "ui/src/lib/format.ts::fmtMemoryMB::function"
+    },
+    {
+      "from": "ui/src/lib/format.test.ts::format.test::variable",
+      "kind": "imports",
+      "to": "ui/src/lib/format.ts::memoryBarPercent::function"
+    }
+  ],
+  "file": "ui/src/lib/format.test.ts",
+  "intent": [
+    {
+      "date": "2026-06-04T12:11:50-03:00",
+      "hash": "4f55e004c707db49ad243a84a13dad60defc95ea",
+      "kind": "commit",
+      "message": "fix(ui): align dashboard with prototype and live CPU/memory metrics"
+    },
+    {
+      "date": "2026-06-04T11:49:33-03:00",
+      "hash": "582d143bfc592df61011280941d06e6354326c1e",
+      "kind": "commit",
+      "message": "fix(deploy): use https://slug.bigbase.click for production site URLs (#11)"
+    },
+    {
+      "date": "2026-06-04T11:34:24-03:00",
+      "hash": "26aba30a291f16ae2a8c97dd336ccb99ee1b1a01",
+      "kind": "commit",
+      "message": "fix(ui): port Sites prototype CSS and block unstyled deploy regressions"
+    }
+  ],
+  "lastModified": 1781284402,
+  "symbols": []
+}

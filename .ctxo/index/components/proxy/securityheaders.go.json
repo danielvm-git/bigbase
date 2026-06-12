@@ -1,0 +1,38 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/proxy/securityheaders.go::Proxy.securityHeadersMiddleware::method"
+    }
+  ],
+  "contentHash": "470a185d47098929cedc139d355bc0b348ea80ababc75d1ac665387c33ab95ab",
+  "edges": [
+    {
+      "from": "components/proxy/securityheaders.go::Proxy.securityHeadersMiddleware::method",
+      "kind": "uses",
+      "to": "components/proxy/proxy.go::Proxy::class"
+    }
+  ],
+  "file": "components/proxy/securityheaders.go",
+  "intent": [
+    {
+      "date": "2026-06-06T11:01:01-03:00",
+      "hash": "e430cb44f3953d270cbc49f2284a07d4266e574e",
+      "kind": "commit",
+      "message": "feat(security): e19s05 security headers middleware"
+    }
+  ],
+  "lastModified": 1781284401,
+  "symbols": [
+    {
+      "endLine": 15,
+      "endOffset": 609,
+      "kind": "method",
+      "name": "Proxy.securityHeadersMiddleware",
+      "startLine": 6,
+      "startOffset": 113,
+      "symbolId": "components/proxy/securityheaders.go::Proxy.securityHeadersMiddleware::method"
+    }
+  ]
+}

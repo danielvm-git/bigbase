@@ -1,0 +1,728 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/proxy/proxy.go::RequestIDFromContext::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/proxy/proxy.go::generateRequestID::function"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/proxy/proxy.go::Proxy.GitHubStars::method"
+    },
+    {
+      "cyclomatic": 5,
+      "symbolId": "components/proxy/proxy.go::Proxy.fetchStars::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/proxy/proxy.go::New::function"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/proxy/proxy.go::Proxy.Name::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/proxy/proxy.go::Proxy.Version::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/proxy/proxy.go::Proxy.Dependencies::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/proxy/proxy.go::Proxy.ConfigSchema::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/proxy/proxy.go::Proxy.Hooks::method"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/proxy/proxy.go::Proxy.Init::method"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/proxy/proxy.go::Proxy.Start::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/proxy/proxy.go::responseWriter.WriteHeader::method"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/proxy/proxy.go::Proxy.requestIDMiddleware::method"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/proxy/proxy.go::Proxy.loggingMiddleware::method"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/proxy/proxy.go::Proxy.Handle::method"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/proxy/proxy.go::Proxy.Stop::method"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/proxy/proxy.go::Proxy.handleDocs::method"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/proxy/proxy.go::Proxy.handleHome::method"
+    },
+    {
+      "cyclomatic": 6,
+      "symbolId": "components/proxy/proxy.go::Proxy.handleHealth::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/proxy/proxy.go::Proxy.handleVersion::method"
+    }
+  ],
+  "contentHash": "819059dc1f70108b6197fbbf846e792d1fba297b50042ed07f28f357da72103e",
+  "edges": [
+    {
+      "from": "components/proxy/proxy.go::RequestIDFromContext::function",
+      "kind": "uses",
+      "to": "components/proxy/proxy.go::requestIDKey::class"
+    },
+    {
+      "from": "components/proxy/proxy.go::Proxy.GitHubStars::method",
+      "kind": "uses",
+      "to": "components/proxy/proxy.go::Proxy::class"
+    },
+    {
+      "from": "components/proxy/proxy.go::Proxy.GitHubStars::method",
+      "kind": "calls",
+      "to": "components/proxy/proxy.go::Proxy.fetchStars::method"
+    },
+    {
+      "from": "components/proxy/proxy.go::Proxy.fetchStars::method",
+      "kind": "uses",
+      "to": "components/proxy/proxy.go::Proxy::class"
+    },
+    {
+      "from": "components/proxy/proxy.go::New::function",
+      "kind": "uses",
+      "to": "components/proxy/proxy.go::Options::class"
+    },
+    {
+      "from": "components/proxy/proxy.go::New::function",
+      "kind": "uses",
+      "to": "components/proxy/proxy.go::Proxy::class"
+    },
+    {
+      "from": "components/proxy/proxy.go::Proxy.Name::method",
+      "kind": "uses",
+      "to": "components/proxy/proxy.go::Proxy::class"
+    },
+    {
+      "from": "components/proxy/proxy.go::Proxy.Version::method",
+      "kind": "uses",
+      "to": "components/proxy/proxy.go::Proxy::class"
+    },
+    {
+      "from": "components/proxy/proxy.go::Proxy.Version::method",
+      "kind": "uses",
+      "to": "components/proxy/proxy.go::version::variable"
+    },
+    {
+      "from": "components/proxy/proxy.go::Proxy.Dependencies::method",
+      "kind": "uses",
+      "to": "components/proxy/proxy.go::Proxy::class"
+    },
+    {
+      "from": "components/proxy/proxy.go::Proxy.ConfigSchema::method",
+      "kind": "uses",
+      "to": "components/proxy/proxy.go::Proxy::class"
+    },
+    {
+      "from": "components/proxy/proxy.go::Proxy.Hooks::method",
+      "kind": "uses",
+      "to": "components/proxy/proxy.go::Proxy::class"
+    },
+    {
+      "from": "components/proxy/proxy.go::Proxy.Hooks::method",
+      "kind": "uses",
+      "to": "kernel/component.go::HookDef::class"
+    },
+    {
+      "from": "components/proxy/proxy.go::Proxy.Init::method",
+      "kind": "uses",
+      "to": "components/proxy/proxy.go::Proxy::class"
+    },
+    {
+      "from": "components/proxy/proxy.go::Proxy.Init::method",
+      "kind": "uses",
+      "to": "kernel/component.go::Context::class"
+    },
+    {
+      "from": "components/proxy/proxy.go::Proxy.Start::method",
+      "kind": "uses",
+      "to": "components/proxy/proxy.go::Proxy::class"
+    },
+    {
+      "from": "components/proxy/proxy.go::Proxy.Start::method",
+      "kind": "uses",
+      "to": "kernel/component.go::Context::class"
+    },
+    {
+      "from": "components/proxy/proxy.go::Proxy.Start::method",
+      "kind": "calls",
+      "to": "components/proxy/securityheaders.go::Proxy.securityHeadersMiddleware::method"
+    },
+    {
+      "from": "components/proxy/proxy.go::Proxy.Start::method",
+      "kind": "calls",
+      "to": "components/proxy/proxy.go::Proxy.loggingMiddleware::method"
+    },
+    {
+      "from": "components/proxy/proxy.go::Proxy.Start::method",
+      "kind": "calls",
+      "to": "components/proxy/proxy.go::Proxy.requestIDMiddleware::method"
+    },
+    {
+      "from": "components/proxy/proxy.go::Proxy.Start::method",
+      "kind": "calls",
+      "to": "components/proxy/hosts.go::Proxy.deploymentHostMiddleware::method"
+    },
+    {
+      "from": "components/proxy/proxy.go::Proxy.Start::method",
+      "kind": "calls",
+      "to": "components/proxy/proxy.go::Logger.Info::method"
+    },
+    {
+      "from": "components/proxy/proxy.go::Proxy.Start::method",
+      "kind": "calls",
+      "to": "components/proxy/proxy.go::Logger.Error::method"
+    },
+    {
+      "from": "components/proxy/proxy.go::responseWriter.WriteHeader::method",
+      "kind": "uses",
+      "to": "components/proxy/proxy.go::responseWriter::class"
+    },
+    {
+      "from": "components/proxy/proxy.go::Proxy.requestIDMiddleware::method",
+      "kind": "uses",
+      "to": "components/proxy/proxy.go::Proxy::class"
+    },
+    {
+      "from": "components/proxy/proxy.go::Proxy.requestIDMiddleware::method",
+      "kind": "calls",
+      "to": "components/proxy/proxy.go::generateRequestID::function"
+    },
+    {
+      "from": "components/proxy/proxy.go::Proxy.requestIDMiddleware::method",
+      "kind": "uses",
+      "to": "components/proxy/proxy.go::requestIDKey::class"
+    },
+    {
+      "from": "components/proxy/proxy.go::Proxy.loggingMiddleware::method",
+      "kind": "uses",
+      "to": "components/proxy/proxy.go::Proxy::class"
+    },
+    {
+      "from": "components/proxy/proxy.go::Proxy.loggingMiddleware::method",
+      "kind": "calls",
+      "to": "components/proxy/proxy.go::RequestIDFromContext::function"
+    },
+    {
+      "from": "components/proxy/proxy.go::Proxy.loggingMiddleware::method",
+      "kind": "uses",
+      "to": "components/proxy/proxy.go::responseWriter::class"
+    },
+    {
+      "from": "components/proxy/proxy.go::Proxy.loggingMiddleware::method",
+      "kind": "calls",
+      "to": "components/proxy/proxy.go::Logger.Info::method"
+    },
+    {
+      "from": "components/proxy/proxy.go::Proxy.Handle::method",
+      "kind": "uses",
+      "to": "components/proxy/proxy.go::Proxy::class"
+    },
+    {
+      "from": "components/proxy/proxy.go::Proxy.Stop::method",
+      "kind": "uses",
+      "to": "components/proxy/proxy.go::Proxy::class"
+    },
+    {
+      "from": "components/proxy/proxy.go::Proxy.Stop::method",
+      "kind": "uses",
+      "to": "kernel/component.go::Context::class"
+    },
+    {
+      "from": "components/proxy/proxy.go::Proxy.handleDocs::method",
+      "kind": "uses",
+      "to": "components/proxy/proxy.go::Proxy::class"
+    },
+    {
+      "from": "components/proxy/proxy.go::Proxy.handleDocs::method",
+      "kind": "uses",
+      "to": "components/proxy/proxy.go::templateFuncs::variable"
+    },
+    {
+      "from": "components/proxy/proxy.go::Proxy.handleDocs::method",
+      "kind": "uses",
+      "to": "components/proxy/proxy.go::docsTemplate::variable"
+    },
+    {
+      "from": "components/proxy/proxy.go::Proxy.handleDocs::method",
+      "kind": "calls",
+      "to": "components/proxy/proxy.go::Proxy.GitHubStars::method"
+    },
+    {
+      "from": "components/proxy/proxy.go::Proxy.handleDocs::method",
+      "kind": "uses",
+      "to": "kernel/kernel.go::Version::variable"
+    },
+    {
+      "from": "components/proxy/proxy.go::Proxy.handleDocs::method",
+      "kind": "calls",
+      "to": "components/proxy/proxy.go::Logger.Error::method"
+    },
+    {
+      "from": "components/proxy/proxy.go::Proxy.handleHome::method",
+      "kind": "uses",
+      "to": "components/proxy/proxy.go::Proxy::class"
+    },
+    {
+      "from": "components/proxy/proxy.go::Proxy.handleHome::method",
+      "kind": "calls",
+      "to": "kernel/kernel.go::Kernel.ListComponents::method"
+    },
+    {
+      "from": "components/proxy/proxy.go::Proxy.handleHome::method",
+      "kind": "uses",
+      "to": "components/proxy/proxy.go::templateFuncs::variable"
+    },
+    {
+      "from": "components/proxy/proxy.go::Proxy.handleHome::method",
+      "kind": "uses",
+      "to": "components/proxy/proxy.go::homeTemplate::variable"
+    },
+    {
+      "from": "components/proxy/proxy.go::Proxy.handleHome::method",
+      "kind": "calls",
+      "to": "components/proxy/proxy.go::Proxy.GitHubStars::method"
+    },
+    {
+      "from": "components/proxy/proxy.go::Proxy.handleHome::method",
+      "kind": "uses",
+      "to": "kernel/kernel.go::ComponentStatus::class"
+    },
+    {
+      "from": "components/proxy/proxy.go::Proxy.handleHome::method",
+      "kind": "uses",
+      "to": "kernel/kernel.go::Version::variable"
+    },
+    {
+      "from": "components/proxy/proxy.go::Proxy.handleHome::method",
+      "kind": "calls",
+      "to": "components/proxy/proxy.go::Logger.Error::method"
+    },
+    {
+      "from": "components/proxy/proxy.go::Proxy.handleHealth::method",
+      "kind": "uses",
+      "to": "components/proxy/proxy.go::Proxy::class"
+    },
+    {
+      "from": "components/proxy/proxy.go::Proxy.handleHealth::method",
+      "kind": "calls",
+      "to": "kernel/kernel.go::Kernel.ListComponents::method"
+    },
+    {
+      "from": "components/proxy/proxy.go::Proxy.handleVersion::method",
+      "kind": "uses",
+      "to": "components/proxy/proxy.go::Proxy::class"
+    },
+    {
+      "from": "components/proxy/proxy.go::Proxy.handleVersion::method",
+      "kind": "uses",
+      "to": "kernel/kernel.go::Version::variable"
+    },
+    {
+      "from": "components/proxy/proxy.go::Proxy::class",
+      "kind": "implements",
+      "to": "kernel/component.go::Component::interface"
+    },
+    {
+      "from": "components/proxy/proxy.go::Proxy::class",
+      "kind": "implements",
+      "to": "components/deploy/deploy.go::DeploymentHostRegistry::interface"
+    }
+  ],
+  "file": "components/proxy/proxy.go",
+  "intent": [
+    {
+      "date": "2026-06-06T11:01:01-03:00",
+      "hash": "e430cb44f3953d270cbc49f2284a07d4266e574e",
+      "kind": "commit",
+      "message": "feat(security): e19s05 security headers middleware"
+    },
+    {
+      "date": "2026-06-05T13:39:59-03:00",
+      "hash": "62800c1fe20f6eeea728d59a5f838a31794f22c3",
+      "kind": "commit",
+      "message": "feat(observability): complete wire observability epic"
+    },
+    {
+      "date": "2026-06-05T13:36:32-03:00",
+      "hash": "16aa0c25d8818bc321925e53cc7a36273f113441",
+      "kind": "commit",
+      "message": "feat(observability): add X-Request-ID middleware with context propagation"
+    },
+    {
+      "date": "2026-06-05T12:21:16-03:00",
+      "hash": "c3794be59a2ccb9431dba427d9cd749aa97d464f",
+      "kind": "commit",
+      "message": "feat(deploy): live build terminal on create-site step 3 (#13)"
+    },
+    {
+      "date": "2026-06-04T12:11:50-03:00",
+      "hash": "4f55e004c707db49ad243a84a13dad60defc95ea",
+      "kind": "commit",
+      "message": "fix(ui): align dashboard with prototype and live CPU/memory metrics"
+    },
+    {
+      "date": "2026-06-04T11:49:33-03:00",
+      "hash": "582d143bfc592df61011280941d06e6354326c1e",
+      "kind": "commit",
+      "message": "fix(deploy): use https://slug.bigbase.click for production site URLs (#11)"
+    },
+    {
+      "date": "2026-06-02T09:18:05-03:00",
+      "hash": "36f90836c41520a663cc55c79a392f64b22852b2",
+      "kind": "commit",
+      "message": "style(proxy): update footer to 'Built with BigPowers by danielvm-git'"
+    },
+    {
+      "date": "2026-06-01T18:48:26-03:00",
+      "hash": "7226b9832799238b75dd3d4dbc2c1beab84d290d",
+      "kind": "commit",
+      "message": "feat(config): configure bigbase.click domain with HTTPS"
+    },
+    {
+      "date": "2026-06-01T15:50:51-03:00",
+      "hash": "3e6b86cdf5df726fc506ab568a05ed9819f71d56",
+      "kind": "commit",
+      "message": "feat: integrate semantic-release and display version in admin footer"
+    },
+    {
+      "date": "2026-06-01T15:49:04-03:00",
+      "hash": "f042fe2361ed476a9ac03f784f87c44374ac545a",
+      "kind": "commit",
+      "message": "feat: integrate semantic-release and display version in admin footer"
+    },
+    {
+      "date": "2026-05-28T01:25:55-03:00",
+      "hash": "dcaff68f7fac2a19583c14b619b6c3b614974cc8",
+      "kind": "commit",
+      "message": "feat(proxy): add documentation page with sidebar navigation"
+    },
+    {
+      "date": "2026-05-28T01:06:59-03:00",
+      "hash": "fea37618f2e70ddccb5d983b487c53c0a013c4cd",
+      "kind": "commit",
+      "message": "feat(proxy): add commercial landing page with GitHub stars cache"
+    },
+    {
+      "date": "2026-05-27T01:05:15-03:00",
+      "hash": "2a49228e1fc32f95d22e29aebf03cc3719490e4f",
+      "kind": "commit",
+      "message": "fix: address review findings — security, authz, race conditions"
+    },
+    {
+      "date": "2026-05-26T15:08:33-03:00",
+      "hash": "696befbe2b772042cfe1c23193e6a45ebea17876",
+      "kind": "commit",
+      "message": "feat(db api): add SQLite database and auto REST CRUD API"
+    },
+    {
+      "date": "2026-05-26T13:23:16-03:00",
+      "hash": "fc23a09eb75b67436a08200e876eef687ad8d237",
+      "kind": "commit",
+      "message": "feat(cli proxy kernel): add CLI commands, proxy server, and observability"
+    }
+  ],
+  "lastModified": 1781284401,
+  "symbols": [
+    {
+      "endLine": 21,
+      "endOffset": 298,
+      "kind": "class",
+      "name": "requestIDKey",
+      "startLine": 21,
+      "startOffset": 277,
+      "symbolId": "components/proxy/proxy.go::requestIDKey::class"
+    },
+    {
+      "endLine": 29,
+      "endOffset": 536,
+      "kind": "function",
+      "name": "RequestIDFromContext",
+      "startLine": 24,
+      "startOffset": 398,
+      "symbolId": "components/proxy/proxy.go::RequestIDFromContext::function"
+    },
+    {
+      "endLine": 38,
+      "endOffset": 772,
+      "kind": "function",
+      "name": "generateRequestID",
+      "startLine": 32,
+      "startOffset": 628,
+      "symbolId": "components/proxy/proxy.go::generateRequestID::function"
+    },
+    {
+      "endLine": 40,
+      "endOffset": 791,
+      "kind": "variable",
+      "name": "templateFuncs",
+      "startLine": 40,
+      "startOffset": 778,
+      "symbolId": "components/proxy/proxy.go::templateFuncs::variable"
+    },
+    {
+      "endLine": 44,
+      "endOffset": 851,
+      "kind": "variable",
+      "name": "version",
+      "startLine": 44,
+      "startOffset": 844,
+      "symbolId": "components/proxy/proxy.go::version::variable"
+    },
+    {
+      "endLine": 49,
+      "endOffset": 951,
+      "kind": "interface",
+      "name": "Logger",
+      "startLine": 46,
+      "startOffset": 868,
+      "symbolId": "components/proxy/proxy.go::Logger::interface"
+    },
+    {
+      "endLine": 55,
+      "endOffset": 1029,
+      "kind": "class",
+      "name": "Options",
+      "startLine": 51,
+      "startOffset": 958,
+      "symbolId": "components/proxy/proxy.go::Options::class"
+    },
+    {
+      "endLine": 69,
+      "endOffset": 1281,
+      "kind": "class",
+      "name": "Proxy",
+      "startLine": 57,
+      "startOffset": 1036,
+      "symbolId": "components/proxy/proxy.go::Proxy::class"
+    },
+    {
+      "endLine": 87,
+      "endOffset": 1632,
+      "kind": "method",
+      "name": "Proxy.GitHubStars",
+      "startLine": 71,
+      "startOffset": 1283,
+      "symbolId": "components/proxy/proxy.go::Proxy.GitHubStars::method"
+    },
+    {
+      "endLine": 110,
+      "endOffset": 2229,
+      "kind": "method",
+      "name": "Proxy.fetchStars",
+      "startLine": 89,
+      "startOffset": 1634,
+      "symbolId": "components/proxy/proxy.go::Proxy.fetchStars::method"
+    },
+    {
+      "endLine": 119,
+      "endOffset": 2380,
+      "kind": "function",
+      "name": "New",
+      "startLine": 112,
+      "startOffset": 2231,
+      "symbolId": "components/proxy/proxy.go::New::function"
+    },
+    {
+      "endLine": 121,
+      "endOffset": 2450,
+      "kind": "method",
+      "name": "Proxy.Name",
+      "startLine": 121,
+      "startOffset": 2382,
+      "symbolId": "components/proxy/proxy.go::Proxy.Name::method"
+    },
+    {
+      "endLine": 122,
+      "endOffset": 2519,
+      "kind": "method",
+      "name": "Proxy.Version",
+      "startLine": 122,
+      "startOffset": 2451,
+      "symbolId": "components/proxy/proxy.go::Proxy.Version::method"
+    },
+    {
+      "endLine": 123,
+      "endOffset": 2585,
+      "kind": "method",
+      "name": "Proxy.Dependencies",
+      "startLine": 123,
+      "startOffset": 2520,
+      "symbolId": "components/proxy/proxy.go::Proxy.Dependencies::method"
+    },
+    {
+      "endLine": 124,
+      "endOffset": 2651,
+      "kind": "method",
+      "name": "Proxy.ConfigSchema",
+      "startLine": 124,
+      "startOffset": 2586,
+      "symbolId": "components/proxy/proxy.go::Proxy.ConfigSchema::method"
+    },
+    {
+      "endLine": 125,
+      "endOffset": 2717,
+      "kind": "method",
+      "name": "Proxy.Hooks",
+      "startLine": 125,
+      "startOffset": 2652,
+      "symbolId": "components/proxy/proxy.go::Proxy.Hooks::method"
+    },
+    {
+      "endLine": 136,
+      "endOffset": 3002,
+      "kind": "method",
+      "name": "Proxy.Init",
+      "startLine": 127,
+      "startOffset": 2719,
+      "symbolId": "components/proxy/proxy.go::Proxy.Init::method"
+    },
+    {
+      "endLine": 158,
+      "endOffset": 3695,
+      "kind": "method",
+      "name": "Proxy.Start",
+      "startLine": 138,
+      "startOffset": 3004,
+      "symbolId": "components/proxy/proxy.go::Proxy.Start::method"
+    },
+    {
+      "endLine": 163,
+      "endOffset": 3760,
+      "kind": "class",
+      "name": "responseWriter",
+      "startLine": 160,
+      "startOffset": 3702,
+      "symbolId": "components/proxy/proxy.go::responseWriter::class"
+    },
+    {
+      "endLine": 168,
+      "endOffset": 3868,
+      "kind": "method",
+      "name": "responseWriter.WriteHeader",
+      "startLine": 165,
+      "startOffset": 3762,
+      "symbolId": "components/proxy/proxy.go::responseWriter.WriteHeader::method"
+    },
+    {
+      "endLine": 180,
+      "endOffset": 4244,
+      "kind": "method",
+      "name": "Proxy.requestIDMiddleware",
+      "startLine": 170,
+      "startOffset": 3870,
+      "symbolId": "components/proxy/proxy.go::Proxy.requestIDMiddleware::method"
+    },
+    {
+      "endLine": 199,
+      "endOffset": 4784,
+      "kind": "method",
+      "name": "Proxy.loggingMiddleware",
+      "startLine": 182,
+      "startOffset": 4246,
+      "symbolId": "components/proxy/proxy.go::Proxy.loggingMiddleware::method"
+    },
+    {
+      "endLine": 205,
+      "endOffset": 4913,
+      "kind": "method",
+      "name": "Proxy.Handle",
+      "startLine": 201,
+      "startOffset": 4786,
+      "symbolId": "components/proxy/proxy.go::Proxy.Handle::method"
+    },
+    {
+      "endLine": 212,
+      "endOffset": 5052,
+      "kind": "method",
+      "name": "Proxy.Stop",
+      "startLine": 207,
+      "startOffset": 4915,
+      "symbolId": "components/proxy/proxy.go::Proxy.Stop::method"
+    },
+    {
+      "endLine": 237,
+      "endOffset": 5648,
+      "kind": "method",
+      "name": "Proxy.handleDocs",
+      "startLine": 214,
+      "startOffset": 5054,
+      "symbolId": "components/proxy/proxy.go::Proxy.handleDocs::method"
+    },
+    {
+      "endLine": 266,
+      "endOffset": 6352,
+      "kind": "method",
+      "name": "Proxy.handleHome",
+      "startLine": 239,
+      "startOffset": 5650,
+      "symbolId": "components/proxy/proxy.go::Proxy.handleHome::method"
+    },
+    {
+      "endLine": 305,
+      "endOffset": 7266,
+      "kind": "method",
+      "name": "Proxy.handleHealth",
+      "startLine": 268,
+      "startOffset": 6354,
+      "symbolId": "components/proxy/proxy.go::Proxy.handleHealth::method"
+    },
+    {
+      "endLine": 310,
+      "endOffset": 7452,
+      "kind": "method",
+      "name": "Proxy.handleVersion",
+      "startLine": 307,
+      "startOffset": 7268,
+      "symbolId": "components/proxy/proxy.go::Proxy.handleVersion::method"
+    },
+    {
+      "endLine": 312,
+      "endOffset": 7470,
+      "kind": "variable",
+      "name": "homeTemplate",
+      "startLine": 312,
+      "startOffset": 7458,
+      "symbolId": "components/proxy/proxy.go::homeTemplate::variable"
+    },
+    {
+      "endLine": 680,
+      "endOffset": 28070,
+      "kind": "variable",
+      "name": "docsTemplate",
+      "startLine": 680,
+      "startOffset": 28058,
+      "symbolId": "components/proxy/proxy.go::docsTemplate::variable"
+    }
+  ]
+}

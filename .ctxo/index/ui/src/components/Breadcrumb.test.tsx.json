@@ -1,0 +1,23 @@
+{
+  "antiPatterns": [],
+  "complexity": [],
+  "contentHash": "6543bbf55abedf353fd63dc76933c8a0f344bb6bf4327bd3f9d682dcbf20e0f7",
+  "edges": [
+    {
+      "from": "ui/src/components/Breadcrumb.test.tsx::Breadcrumb.test::variable",
+      "kind": "imports",
+      "to": "ui/src/components/Breadcrumb.ts::Breadcrumb::class"
+    }
+  ],
+  "file": "ui/src/components/Breadcrumb.test.tsx",
+  "intent": [
+    {
+      "date": "2026-06-02T21:13:49-03:00",
+      "hash": "f610b14da299314c0471e960126666d168f34a32",
+      "kind": "commit",
+      "message": "feat(ui): complete epic e17 Enhanced Admin UI prototype parity (#10)"
+    }
+  ],
+  "lastModified": 1781284402,
+  "symbols": []
+}

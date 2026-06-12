@@ -1,0 +1,292 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/deploy/deploy_test.go::testLogger.Info::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/deploy/deploy_test.go::testLogger.Warn::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/deploy/deploy_test.go::testLogger.Error::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/deploy/deploy_test.go::testLogger.Debug::method"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/deploy/deploy_test.go::setupDeploy::function"
+    },
+    {
+      "cyclomatic": 6,
+      "symbolId": "components/deploy/deploy_test.go::waitForDeploymentTerminal::function"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/deploy/deploy_test.go::newGitStub::function"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/deploy/deploy_test.go::gitStub.Name::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/deploy/deploy_test.go::gitStub.Version::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/deploy/deploy_test.go::gitStub.Dependencies::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/deploy/deploy_test.go::gitStub.ConfigSchema::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/deploy/deploy_test.go::gitStub.Hooks::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/deploy/deploy_test.go::gitStub.Init::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/deploy/deploy_test.go::gitStub.Start::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/deploy/deploy_test.go::gitStub.Stop::method"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/deploy/deploy_test.go::createTestNodeRepo::function"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/deploy/deploy_test.go::createTestRepo::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/deploy/deploy_test.go::mustRun::function"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/deploy/deploy_test.go::TestDeployImplementsComponent::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/deploy/deploy_test.go::TestDeployName::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/deploy/deploy_test.go::TestDeployVersion::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/deploy/deploy_test.go::TestDeployDependencies::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/deploy/deploy_test.go::TestDeployHooks::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/deploy/deploy_test.go::TestDeployCreateMissingRepoID::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/deploy/deploy_test.go::TestDeployCreateRepoNotFound::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/deploy/deploy_test.go::TestDeployCreateInvalidJSON::function"
+    },
+    {
+      "cyclomatic": 6,
+      "symbolId": "components/deploy/deploy_test.go::TestDeployCreateSuccess::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/deploy/deploy_test.go::TestDeployCreateWrongMethod::function"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/deploy/deploy_test.go::TestDeployListEmpty::function"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/deploy/deploy_test.go::TestDeployListAfterCreate::function"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/deploy/deploy_test.go::TestDeployGetByID::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/deploy/deploy_test.go::TestDeployGetByIDNotFound::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/deploy/deploy_test.go::TestDeployGetByIDWrongMethod::function"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/deploy/deploy_test.go::TestDetectAppTypeNode::function"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/deploy/deploy_test.go::TestDetectAppTypeGo::function"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/deploy/deploy_test.go::TestDetectAppTypePython::function"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/deploy/deploy_test.go::TestDetectAppTypeStatic::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/deploy/deploy_test.go::TestDetectAppTypeUnknownFallbackToStatic::function"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/deploy/deploy_test.go::TestGetStartCommandWithStartScript::function"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/deploy/deploy_test.go::TestGetStartCommandNoStartScript::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/deploy/deploy_test.go::TestGetStartCommandNoPackageJSON::function"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/deploy/deploy_test.go::TestGetStartCommandMalformedJSON::function"
+    },
+    {
+      "cyclomatic": 5,
+      "symbolId": "components/deploy/deploy_test.go::TestUpdateURLUpdatesPort::function"
+    },
+    {
+      "cyclomatic": 6,
+      "symbolId": "components/deploy/deploy_test.go::TestRunDeploymentRepoNotFoundOnDisk::function"
+    },
+    {
+      "cyclomatic": 6,
+      "symbolId": "components/deploy/deploy_test.go::TestRunDeploymentStaticSite::function"
+    },
+    {
+      "cyclomatic": 7,
+      "symbolId": "components/deploy/deploy_test.go::TestDeployStopShutsDownStaticServer::function"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/deploy/deploy_test.go::TestDeployLogs::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/deploy/deploy_test.go::TestDeployLogsMethodNotAllowed::function"
+    },
+    {
+      "cyclomatic": 9,
+      "symbolId": "components/deploy/deploy_test.go::TestDeployLogStream::function"
+    },
+    {
+      "cyclomatic": 8,
+      "symbolId": "components/deploy/deploy_test.go::TestDeployLogsReturnsBuildLines::function"
+    },
+    {
+      "cyclomatic": 7,
+      "symbolId": "components/deploy/deploy_test.go::TestDeployLogsFailedIncludesStderr::function"
+    },
+    {
+      "cyclomatic": 7,
+      "symbolId": "components/deploy/deploy_test.go::TestDeployPublicURL::function"
+    },
+    {
+      "cyclomatic": 13,
+      "symbolId": "components/deploy/deploy_test.go::TestDeployBuildError::function"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/deploy/deploy_test.go::insertDeployment::function"
+    },
+    {
+      "cyclomatic": 8,
+      "symbolId": "components/deploy/deploy_test.go::TestDeleteDeployment::function"
+    }
+  ],
+  "contentHash": "a00b87dc709cb9fdf3d145721292c94dda7772314791916dc7945556a3c3e79d",
+  "edges": [],
+  "file": "components/deploy/deploy_test.go",
+  "intent": [
+    {
+      "date": "2026-06-12T13:02:37-03:00",
+      "hash": "766dcebe1c069cd9f5982a2f44cc52e4cbf25e4d",
+      "kind": "commit",
+      "message": "feat(e28): Delete Deployment — DELETE /api/deployments/:id, process teardown, UI delete button"
+    },
+    {
+      "date": "2026-06-05T12:21:16-03:00",
+      "hash": "c3794be59a2ccb9431dba427d9cd749aa97d464f",
+      "kind": "commit",
+      "message": "feat(deploy): live build terminal on create-site step 3 (#13)"
+    },
+    {
+      "date": "2026-06-04T12:14:49-03:00",
+      "hash": "2c7d660114245e9ab0c7375e7f37cd1411fdf9cf",
+      "kind": "commit",
+      "message": "fix(deploy): Node 20 VPS setup, npm HOME env, and deploy error UX"
+    },
+    {
+      "date": "2026-06-04T11:49:33-03:00",
+      "hash": "582d143bfc592df61011280941d06e6354326c1e",
+      "kind": "commit",
+      "message": "fix(deploy): use https://slug.bigbase.click for production site URLs (#11)"
+    },
+    {
+      "date": "2026-06-02T18:35:19-03:00",
+      "hash": "b53f95f017e4225fb8aa8045a638c9b1f3269716",
+      "kind": "commit",
+      "message": "test(deploy): add TestDeployLogStream Go test for deployment log streaming"
+    },
+    {
+      "date": "2026-06-01T23:15:28-03:00",
+      "hash": "f7669f2b3a7899232bd84aecb5a3c62d0efd0361",
+      "kind": "commit",
+      "message": "fix: address code review findings for Epic 017"
+    },
+    {
+      "date": "2026-06-01T13:45:19-03:00",
+      "hash": "7f3d05bef383ee23eda59ed54665e9fc43e35eed",
+      "kind": "commit",
+      "message": "docs(bugs): update BUG-2026-06-01T055655 Resolution section with fix evidence"
+    },
+    {
+      "date": "2026-06-01T02:49:05-03:00",
+      "hash": "d0af4650fdb84b21ad26d571b581132371e9c0c3",
+      "kind": "commit",
+      "message": "fix(deploy): CI git safe.directory and Caddy http:// catch-all"
+    },
+    {
+      "date": "2026-05-27T22:15:43-03:00",
+      "hash": "d056ce1757c3460861913113fa18f01cedd30ad1",
+      "kind": "commit",
+      "message": "feat(deploy): improve deployment pipeline and add admin UI pages"
+    },
+    {
+      "date": "2026-05-27T19:36:27-03:00",
+      "hash": "c8d001aa34aac7d4d0665db256de235310376761",
+      "kind": "commit",
+      "message": "feat(deploy): add deploy component with build detection, process execution, and port allocation"
+    }
+  ],
+  "lastModified": 1781284401,
+  "symbols": []
+}

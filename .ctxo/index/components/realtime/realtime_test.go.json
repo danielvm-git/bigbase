@@ -1,0 +1,74 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/realtime/realtime_test.go::setupRealtime::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/realtime/realtime_test.go::dialWS::function"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/realtime/realtime_test.go::readWS::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/realtime/realtime_test.go::TestRealtimeConnectInvalidToken::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/realtime/realtime_test.go::TestRealtimeConnectNoToken::function"
+    },
+    {
+      "cyclomatic": 5,
+      "symbolId": "components/realtime/realtime_test.go::TestRealtimeSubscribeAndBroadcast::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/realtime/realtime_test.go::TestRealtimeUnsubscribe::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/realtime/realtime_test.go::TestRealtimeStop::function"
+    },
+    {
+      "cyclomatic": 12,
+      "symbolId": "components/realtime/realtime_test.go::TestRealtimeStatusEndpoint::function"
+    },
+    {
+      "cyclomatic": 6,
+      "symbolId": "components/realtime/realtime_test.go::TestRealtimeStatusEmpty::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/realtime/realtime_test.go::TestRealtimeBroadcastOnlySubscribedChannel::function"
+    }
+  ],
+  "contentHash": "f78c815366d8012726a0be6149a8d05932983a4e242c78b382a5dc75de0a66fb",
+  "edges": [],
+  "file": "components/realtime/realtime_test.go",
+  "intent": [
+    {
+      "date": "2026-06-01T22:22:55-03:00",
+      "hash": "ee5e6326e990ca4bb20e1fec5f7ed93d041d9a6d",
+      "kind": "commit",
+      "message": "test(realtime): add reproducer for status endpoint and RealtimePage"
+    },
+    {
+      "date": "2026-05-27T19:25:13-03:00",
+      "hash": "f10ed8398be27a6fc5f7a6de5107f891789723db",
+      "kind": "commit",
+      "message": "fix(realtime): fix Hub data race, add event unsubscribe, log emit errors"
+    },
+    {
+      "date": "2026-05-27T15:20:30-03:00",
+      "hash": "4ab37bf4a3a7ab5a895d9f8897bf5bbb597bf560",
+      "kind": "commit",
+      "message": "feat(realtime): add WebSocket subscriptions, event bus broadcasts, and Hub pattern"
+    }
+  ],
+  "lastModified": 1781284401,
+  "symbols": []
+}

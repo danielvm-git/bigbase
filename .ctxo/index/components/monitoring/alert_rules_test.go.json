@@ -1,0 +1,22 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 26,
+      "symbolId": "components/monitoring/alert_rules_test.go::TestAlertRules::function"
+    }
+  ],
+  "contentHash": "ba42cbb539506f42c7871ab840042e2683189874a79a047ae07aefcb29661e00",
+  "edges": [],
+  "file": "components/monitoring/alert_rules_test.go",
+  "intent": [
+    {
+      "date": "2026-06-05T20:07:42-03:00",
+      "hash": "3680e80da96091fb18b55ec13871c9bcfd94e8d7",
+      "kind": "commit",
+      "message": "feat(monitoring): e25s05 alerting rules with background checker"
+    }
+  ],
+  "lastModified": 1781284401,
+  "symbols": []
+}

@@ -1,0 +1,38 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 13,
+      "symbolId": "ui/src/components/Input.tsx::Input::function"
+    }
+  ],
+  "contentHash": "f454069842385f2d2ae7f3f0be291b1110712f0a22e4dc024bc80ebf63d283a5",
+  "edges": [],
+  "file": "ui/src/components/Input.tsx",
+  "intent": [
+    {
+      "date": "2026-06-04T16:06:51-03:00",
+      "hash": "ef3caacacb9f34a66513687ba295a7ceab40bbce",
+      "kind": "commit",
+      "message": "feat(ui): close all 19 prototype-vs-codebase gaps (#12)"
+    },
+    {
+      "date": "2026-05-28T01:02:44-03:00",
+      "hash": "da3f118678f0b80b5874e0d7dc559b5700cd3447",
+      "kind": "commit",
+      "message": "feat(admin-ui): port Appwrite design tokens and create shared component system"
+    }
+  ],
+  "lastModified": 1781284402,
+  "symbols": [
+    {
+      "endLine": 87,
+      "endOffset": 3083,
+      "kind": "function",
+      "name": "Input",
+      "startLine": 30,
+      "startOffset": 797,
+      "symbolId": "ui/src/components/Input.tsx::Input::function"
+    }
+  ]
+}

@@ -1,0 +1,59 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 7,
+      "symbolId": "ui/src/components/EnvVarEditor.tsx::EnvVarEditor::function"
+    }
+  ],
+  "contentHash": "d4a19f0cab778f4ca88744a2a62353f2e2e2132030d1488c8ad9080d3a30d0f6",
+  "edges": [
+    {
+      "from": "ui/src/components/EnvVarEditor.tsx::EnvVarEditor::function",
+      "kind": "imports",
+      "to": "ui/src/components/index.ts::Button::class"
+    },
+    {
+      "from": "ui/src/components/EnvVarEditor.tsx::EnvVarEditor::function",
+      "kind": "imports",
+      "to": "ui/src/components/index.ts::Input::class"
+    },
+    {
+      "from": "ui/src/components/EnvVarEditor.tsx::EnvVarEditor::function",
+      "kind": "uses",
+      "to": "ui/src/components/index.ts::Button::class"
+    },
+    {
+      "from": "ui/src/components/EnvVarEditor.tsx::EnvVarEditor::function",
+      "kind": "uses",
+      "to": "ui/src/components/index.ts::Input::class"
+    }
+  ],
+  "file": "ui/src/components/EnvVarEditor.tsx",
+  "intent": [
+    {
+      "date": "2026-06-02T19:15:24-03:00",
+      "hash": "f38a037ecf76d4a827bd86a363a658da36a6c5e8",
+      "kind": "commit",
+      "message": "fix(ui): address code review findings"
+    },
+    {
+      "date": "2026-06-02T18:35:19-03:00",
+      "hash": "b53f95f017e4225fb8aa8045a638c9b1f3269716",
+      "kind": "commit",
+      "message": "test(deploy): add TestDeployLogStream Go test for deployment log streaming"
+    }
+  ],
+  "lastModified": 1781284402,
+  "symbols": [
+    {
+      "endLine": 72,
+      "endOffset": 2064,
+      "kind": "function",
+      "name": "EnvVarEditor",
+      "startLine": 8,
+      "startOffset": 195,
+      "symbolId": "ui/src/components/EnvVarEditor.tsx::EnvVarEditor::function"
+    }
+  ]
+}

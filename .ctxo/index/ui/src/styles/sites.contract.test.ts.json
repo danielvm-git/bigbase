@@ -1,0 +1,17 @@
+{
+  "antiPatterns": [],
+  "complexity": [],
+  "contentHash": "fc0d0f871447901971ca13dffce8c8aa12ed6c28f1915451a7dd3b2c0effe7d1",
+  "edges": [],
+  "file": "ui/src/styles/sites.contract.test.ts",
+  "intent": [
+    {
+      "date": "2026-06-04T11:34:24-03:00",
+      "hash": "26aba30a291f16ae2a8c97dd336ccb99ee1b1a01",
+      "kind": "commit",
+      "message": "fix(ui): port Sites prototype CSS and block unstyled deploy regressions"
+    }
+  ],
+  "lastModified": 1781284402,
+  "symbols": []
+}

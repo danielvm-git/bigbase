@@ -1,0 +1,23 @@
+{
+  "antiPatterns": [],
+  "complexity": [],
+  "contentHash": "3b827519eac4fb25ceda8947bb6e0b60366be2c9b911e74bcabc4edeb33b2256",
+  "edges": [
+    {
+      "from": "ui/src/components/StreamLog.test.tsx::StreamLog.test::variable",
+      "kind": "imports",
+      "to": "ui/src/components/StreamLog.ts::StreamLog::class"
+    }
+  ],
+  "file": "ui/src/components/StreamLog.test.tsx",
+  "intent": [
+    {
+      "date": "2026-06-02T18:35:19-03:00",
+      "hash": "b53f95f017e4225fb8aa8045a638c9b1f3269716",
+      "kind": "commit",
+      "message": "test(deploy): add TestDeployLogStream Go test for deployment log streaming"
+    }
+  ],
+  "lastModified": 1781284402,
+  "symbols": []
+}

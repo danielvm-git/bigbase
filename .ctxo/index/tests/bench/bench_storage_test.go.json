@@ -1,0 +1,22 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 3,
+      "symbolId": "tests/bench/bench_storage_test.go::BenchmarkStorageUpload::function"
+    }
+  ],
+  "contentHash": "e8fd8e0eb1efa3cad375b5c0dcd41d42aa7cebf021b880c70ee50e0500c3b588",
+  "edges": [],
+  "file": "tests/bench/bench_storage_test.go",
+  "intent": [
+    {
+      "date": "2026-06-05T12:58:48-03:00",
+      "hash": "21a8236dd2d6111d9543c744a13133d5a981f305",
+      "kind": "commit",
+      "message": "test(e21s05): add race detection tests and fuzz targets"
+    }
+  ],
+  "lastModified": 1781284401,
+  "symbols": []
+}

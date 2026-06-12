@@ -1,0 +1,26 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 12,
+      "symbolId": "components/monitoring/host_metrics_test.go::TestHostMetrics::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/monitoring/host_metrics_test.go::keys::function"
+    }
+  ],
+  "contentHash": "96ee537119ba04a5c81ad97ad050e59860338ef3d1f169d5b33e2c0810bbb472",
+  "edges": [],
+  "file": "components/monitoring/host_metrics_test.go",
+  "intent": [
+    {
+      "date": "2026-06-05T20:01:46-03:00",
+      "hash": "ed057d00ca7b330e460706d8f1a6815f50e483b4",
+      "kind": "commit",
+      "message": "feat(monitoring): e25s01 host metrics collection"
+    }
+  ],
+  "lastModified": 1781284401,
+  "symbols": []
+}

@@ -1,0 +1,287 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/auth/ratelimit.go::DefaultRateLimiterConfig::function"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/auth/ratelimit.go::bucket.allow::method"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/auth/ratelimit.go::bucket.retryAfter::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/auth/ratelimit.go::NewRateLimiter::function"
+    },
+    {
+      "cyclomatic": 6,
+      "symbolId": "components/auth/ratelimit.go::RateLimiter.cleanup::method"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/auth/ratelimit.go::RateLimiter.ipBucket::method"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/auth/ratelimit.go::RateLimiter.userBucket::method"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/auth/ratelimit.go::RateLimiter.Middleware::method"
+    },
+    {
+      "cyclomatic": 6,
+      "symbolId": "components/auth/ratelimit.go::extractIP::function"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/auth/ratelimit.go::WithUserID::function"
+    }
+  ],
+  "contentHash": "b198afe3e59fc2c84077e6a2ee3022397c72ca06580ef3fd508910ecdb18f49e",
+  "edges": [
+    {
+      "from": "components/auth/ratelimit.go::DefaultRateLimiterConfig::function",
+      "kind": "uses",
+      "to": "components/auth/ratelimit.go::RateLimiterConfig::class"
+    },
+    {
+      "from": "components/auth/ratelimit.go::bucket.allow::method",
+      "kind": "uses",
+      "to": "components/auth/ratelimit.go::bucket::class"
+    },
+    {
+      "from": "components/auth/ratelimit.go::bucket.retryAfter::method",
+      "kind": "uses",
+      "to": "components/auth/ratelimit.go::bucket::class"
+    },
+    {
+      "from": "components/auth/ratelimit.go::NewRateLimiter::function",
+      "kind": "uses",
+      "to": "components/auth/ratelimit.go::RateLimiterConfig::class"
+    },
+    {
+      "from": "components/auth/ratelimit.go::NewRateLimiter::function",
+      "kind": "uses",
+      "to": "components/auth/ratelimit.go::RateLimiter::class"
+    },
+    {
+      "from": "components/auth/ratelimit.go::NewRateLimiter::function",
+      "kind": "uses",
+      "to": "components/auth/ratelimit.go::bucket::class"
+    },
+    {
+      "from": "components/auth/ratelimit.go::NewRateLimiter::function",
+      "kind": "calls",
+      "to": "components/auth/ratelimit.go::RateLimiter.cleanup::method"
+    },
+    {
+      "from": "components/auth/ratelimit.go::RateLimiter.cleanup::method",
+      "kind": "uses",
+      "to": "components/auth/ratelimit.go::RateLimiter::class"
+    },
+    {
+      "from": "components/auth/ratelimit.go::RateLimiter.ipBucket::method",
+      "kind": "uses",
+      "to": "components/auth/ratelimit.go::RateLimiter::class"
+    },
+    {
+      "from": "components/auth/ratelimit.go::RateLimiter.ipBucket::method",
+      "kind": "uses",
+      "to": "components/auth/ratelimit.go::bucket::class"
+    },
+    {
+      "from": "components/auth/ratelimit.go::RateLimiter.userBucket::method",
+      "kind": "uses",
+      "to": "components/auth/ratelimit.go::RateLimiter::class"
+    },
+    {
+      "from": "components/auth/ratelimit.go::RateLimiter.userBucket::method",
+      "kind": "uses",
+      "to": "components/auth/ratelimit.go::bucket::class"
+    },
+    {
+      "from": "components/auth/ratelimit.go::RateLimiter.Middleware::method",
+      "kind": "uses",
+      "to": "components/auth/ratelimit.go::RateLimiter::class"
+    },
+    {
+      "from": "components/auth/ratelimit.go::RateLimiter.Middleware::method",
+      "kind": "uses",
+      "to": "components/auth/ratelimit.go::bucket::class"
+    },
+    {
+      "from": "components/auth/ratelimit.go::RateLimiter.Middleware::method",
+      "kind": "calls",
+      "to": "components/auth/auth.go::UserIDFromContext::function"
+    },
+    {
+      "from": "components/auth/ratelimit.go::RateLimiter.Middleware::method",
+      "kind": "calls",
+      "to": "components/auth/ratelimit.go::RateLimiter.userBucket::method"
+    },
+    {
+      "from": "components/auth/ratelimit.go::RateLimiter.Middleware::method",
+      "kind": "calls",
+      "to": "components/auth/ratelimit.go::extractIP::function"
+    },
+    {
+      "from": "components/auth/ratelimit.go::RateLimiter.Middleware::method",
+      "kind": "calls",
+      "to": "components/auth/ratelimit.go::RateLimiter.ipBucket::method"
+    },
+    {
+      "from": "components/auth/ratelimit.go::RateLimiter.Middleware::method",
+      "kind": "calls",
+      "to": "components/auth/ratelimit.go::bucket.allow::method"
+    },
+    {
+      "from": "components/auth/ratelimit.go::RateLimiter.Middleware::method",
+      "kind": "calls",
+      "to": "components/auth/ratelimit.go::bucket.retryAfter::method"
+    },
+    {
+      "from": "components/auth/ratelimit.go::RateLimiter.Middleware::method",
+      "kind": "calls",
+      "to": "components/auth/auth.go::writeJSON::function"
+    },
+    {
+      "from": "components/auth/ratelimit.go::WithUserID::function",
+      "kind": "uses",
+      "to": "components/auth/auth.go::ctxUserID::variable"
+    }
+  ],
+  "file": "components/auth/ratelimit.go",
+  "intent": [
+    {
+      "date": "2026-06-05T20:10:12-03:00",
+      "hash": "360653766abe076b4e2fefc0b026eee1482ae9fc",
+      "kind": "commit",
+      "message": "feat(security): e19s01 rate limiting middleware"
+    }
+  ],
+  "lastModified": 1781284401,
+  "symbols": [
+    {
+      "endLine": 24,
+      "endOffset": 643,
+      "kind": "class",
+      "name": "RateLimiterConfig",
+      "startLine": 13,
+      "startOffset": 151,
+      "symbolId": "components/auth/ratelimit.go::RateLimiterConfig::class"
+    },
+    {
+      "endLine": 36,
+      "endOffset": 990,
+      "kind": "function",
+      "name": "DefaultRateLimiterConfig",
+      "startLine": 28,
+      "startOffset": 775,
+      "symbolId": "components/auth/ratelimit.go::DefaultRateLimiterConfig::function"
+    },
+    {
+      "endLine": 46,
+      "endOffset": 1192,
+      "kind": "class",
+      "name": "bucket",
+      "startLine": 39,
+      "startOffset": 1056,
+      "symbolId": "components/auth/ratelimit.go::bucket::class"
+    },
+    {
+      "endLine": 67,
+      "endOffset": 1572,
+      "kind": "method",
+      "name": "bucket.allow",
+      "startLine": 49,
+      "startOffset": 1272,
+      "symbolId": "components/auth/ratelimit.go::bucket.allow::method"
+    },
+    {
+      "endLine": 78,
+      "endOffset": 1788,
+      "kind": "method",
+      "name": "bucket.retryAfter",
+      "startLine": 70,
+      "startOffset": 1629,
+      "symbolId": "components/auth/ratelimit.go::bucket.retryAfter::method"
+    },
+    {
+      "endLine": 88,
+      "endOffset": 2064,
+      "kind": "class",
+      "name": "RateLimiter",
+      "startLine": 82,
+      "startOffset": 1920,
+      "symbolId": "components/auth/ratelimit.go::RateLimiter::class"
+    },
+    {
+      "endLine": 100,
+      "endOffset": 2380,
+      "kind": "function",
+      "name": "NewRateLimiter",
+      "startLine": 92,
+      "startOffset": 2180,
+      "symbolId": "components/auth/ratelimit.go::NewRateLimiter::function"
+    },
+    {
+      "endLine": 130,
+      "endOffset": 2943,
+      "kind": "method",
+      "name": "RateLimiter.cleanup",
+      "startLine": 102,
+      "startOffset": 2382,
+      "symbolId": "components/auth/ratelimit.go::RateLimiter.cleanup::method"
+    },
+    {
+      "endLine": 147,
+      "endOffset": 3282,
+      "kind": "method",
+      "name": "RateLimiter.ipBucket",
+      "startLine": 132,
+      "startOffset": 2945,
+      "symbolId": "components/auth/ratelimit.go::RateLimiter.ipBucket::method"
+    },
+    {
+      "endLine": 164,
+      "endOffset": 3650,
+      "kind": "method",
+      "name": "RateLimiter.userBucket",
+      "startLine": 149,
+      "startOffset": 3284,
+      "symbolId": "components/auth/ratelimit.go::RateLimiter.userBucket::method"
+    },
+    {
+      "endLine": 187,
+      "endOffset": 4357,
+      "kind": "method",
+      "name": "RateLimiter.Middleware",
+      "startLine": 169,
+      "startOffset": 3842,
+      "symbolId": "components/auth/ratelimit.go::RateLimiter.Middleware::method"
+    },
+    {
+      "endLine": 209,
+      "endOffset": 4892,
+      "kind": "function",
+      "name": "extractIP",
+      "startLine": 190,
+      "startOffset": 4430,
+      "symbolId": "components/auth/ratelimit.go::extractIP::function"
+    },
+    {
+      "endLine": 215,
+      "endOffset": 5151,
+      "kind": "function",
+      "name": "WithUserID",
+      "startLine": 213,
+      "startOffset": 5031,
+      "symbolId": "components/auth/ratelimit.go::WithUserID::function"
+    }
+  ]
+}

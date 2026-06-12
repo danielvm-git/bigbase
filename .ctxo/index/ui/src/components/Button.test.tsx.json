@@ -1,0 +1,23 @@
+{
+  "antiPatterns": [],
+  "complexity": [],
+  "contentHash": "02473ed7fdca03671e28fb0f818c40cf2cd01d11f6f5666db1db2ff8d48890ea",
+  "edges": [
+    {
+      "from": "ui/src/components/Button.test.tsx::Button.test::variable",
+      "kind": "imports",
+      "to": "ui/src/components/Button.ts::Button::class"
+    }
+  ],
+  "file": "ui/src/components/Button.test.tsx",
+  "intent": [
+    {
+      "date": "2026-06-04T16:06:51-03:00",
+      "hash": "ef3caacacb9f34a66513687ba295a7ceab40bbce",
+      "kind": "commit",
+      "message": "feat(ui): close all 19 prototype-vs-codebase gaps (#12)"
+    }
+  ],
+  "lastModified": 1781284402,
+  "symbols": []
+}

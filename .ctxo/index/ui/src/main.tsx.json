@@ -1,0 +1,39 @@
+{
+  "antiPatterns": [],
+  "complexity": [],
+  "contentHash": "c4e202198dfae155848b7987445801da76c63c0d93807571ada84b4cc9ba2753",
+  "edges": [
+    {
+      "from": "ui/src/main.tsx::main::variable",
+      "kind": "imports",
+      "to": "ui/src/context/ThemeContext.ts::ThemeProvider::class"
+    },
+    {
+      "from": "ui/src/main.tsx::main::variable",
+      "kind": "imports",
+      "to": "ui/src/context/ToastContext.ts::ToastProvider::class"
+    },
+    {
+      "from": "ui/src/main.tsx::main::variable",
+      "kind": "imports",
+      "to": "ui/src/App.ts::App::class"
+    }
+  ],
+  "file": "ui/src/main.tsx",
+  "intent": [
+    {
+      "date": "2026-06-01T22:42:32-03:00",
+      "hash": "0d1138cd35b3057d54c5320b71e237cd516f6c6d",
+      "kind": "commit",
+      "message": "feat(ui): add dark mode toggle, toast notifications, and dashboard enhancements"
+    },
+    {
+      "date": "2026-05-26T23:15:56-03:00",
+      "hash": "e19e9775f62605ca4174a457e0d62ba021e47d32",
+      "kind": "commit",
+      "message": "feat(admin): add Admin UI, SQL Editor, and User Management"
+    }
+  ],
+  "lastModified": 1781284402,
+  "symbols": []
+}

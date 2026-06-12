@@ -1,0 +1,90 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/auth/jwt.go::createJWT::function"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/auth/jwt.go::verifyJWT::function"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/auth/jwt.go::extractBearerToken::function"
+    }
+  ],
+  "contentHash": "0e3e1421ea106860ad3cd19ad6e60347338f66439a0f6e1450db69ac55dc17d0",
+  "edges": [
+    {
+      "from": "components/auth/jwt.go::createJWT::function",
+      "kind": "uses",
+      "to": "components/auth/jwt.go::Claims::class"
+    },
+    {
+      "from": "components/auth/jwt.go::verifyJWT::function",
+      "kind": "uses",
+      "to": "components/auth/jwt.go::Claims::class"
+    }
+  ],
+  "file": "components/auth/jwt.go",
+  "intent": [
+    {
+      "date": "2026-06-12T14:00:44-03:00",
+      "hash": "9a907700b8bcff67f3cb2611f61760111795f007",
+      "kind": "commit",
+      "message": "feat(auth): wire org-ID into JWT claims, middleware context, and API bridge"
+    },
+    {
+      "date": "2026-05-27T01:05:15-03:00",
+      "hash": "2a49228e1fc32f95d22e29aebf03cc3719490e4f",
+      "kind": "commit",
+      "message": "fix: address review findings — security, authz, race conditions"
+    },
+    {
+      "date": "2026-05-26T19:14:45-03:00",
+      "hash": "35c60969656a3a51a0ecff3a720f97f0a174f177",
+      "kind": "commit",
+      "message": "feat(auth): add email/password auth with JWT tokens (#1)"
+    }
+  ],
+  "lastModified": 1781284401,
+  "symbols": [
+    {
+      "endLine": 17,
+      "endOffset": 252,
+      "kind": "class",
+      "name": "Claims",
+      "startLine": 11,
+      "startOffset": 91,
+      "symbolId": "components/auth/jwt.go::Claims::class"
+    },
+    {
+      "endLine": 32,
+      "endOffset": 694,
+      "kind": "function",
+      "name": "createJWT",
+      "startLine": 19,
+      "startOffset": 254,
+      "symbolId": "components/auth/jwt.go::createJWT::function"
+    },
+    {
+      "endLine": 49,
+      "endOffset": 1180,
+      "kind": "function",
+      "name": "verifyJWT",
+      "startLine": 34,
+      "startOffset": 696,
+      "symbolId": "components/auth/jwt.go::verifyJWT::function"
+    },
+    {
+      "endLine": 60,
+      "endOffset": 1381,
+      "kind": "function",
+      "name": "extractBearerToken",
+      "startLine": 51,
+      "startOffset": 1182,
+      "symbolId": "components/auth/jwt.go::extractBearerToken::function"
+    }
+  ]
+}

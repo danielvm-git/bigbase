@@ -1,0 +1,159 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 6,
+      "symbolId": "components/cici/workflows.go::CICI.saveWorkflow::method"
+    },
+    {
+      "cyclomatic": 5,
+      "symbolId": "components/cici/workflows.go::CICI.listWorkflows::method"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/cici/workflows.go::CICI.fetchWorkflow::method"
+    }
+  ],
+  "contentHash": "1000160898de1a2fc61d74bba2bd1eec7af46813a9317f0f615877f147e047d0",
+  "edges": [
+    {
+      "from": "components/cici/workflows.go::CICI.saveWorkflow::method",
+      "kind": "uses",
+      "to": "components/cici/cici.go::CICI::class"
+    },
+    {
+      "from": "components/cici/workflows.go::CICI.saveWorkflow::method",
+      "kind": "uses",
+      "to": "components/cici/workflows.go::saveWorkflowReq::class"
+    },
+    {
+      "from": "components/cici/workflows.go::CICI.saveWorkflow::method",
+      "kind": "calls",
+      "to": "components/cici/cici.go::writeJSON::function"
+    },
+    {
+      "from": "components/cici/workflows.go::CICI.saveWorkflow::method",
+      "kind": "uses",
+      "to": "components/cici/cici.go::workflowYAML::class"
+    },
+    {
+      "from": "components/cici/workflows.go::CICI.saveWorkflow::method",
+      "kind": "calls",
+      "to": "components/cici/cici.go::Logger.Warn::method"
+    },
+    {
+      "from": "components/cici/workflows.go::CICI.saveWorkflow::method",
+      "kind": "calls",
+      "to": "components/cici/cici.go::generateID::function"
+    },
+    {
+      "from": "components/cici/workflows.go::CICI.saveWorkflow::method",
+      "kind": "calls",
+      "to": "components/cici/cici.go::Logger.Error::method"
+    },
+    {
+      "from": "components/cici/workflows.go::CICI.saveWorkflow::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::DBer.ExecContext::method"
+    },
+    {
+      "from": "components/cici/workflows.go::CICI.saveWorkflow::method",
+      "kind": "uses",
+      "to": "components/cici/cici.go::WorkflowDef::class"
+    },
+    {
+      "from": "components/cici/workflows.go::CICI.listWorkflows::method",
+      "kind": "uses",
+      "to": "components/cici/cici.go::CICI::class"
+    },
+    {
+      "from": "components/cici/workflows.go::CICI.listWorkflows::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::DBer.QueryContext::method"
+    },
+    {
+      "from": "components/cici/workflows.go::CICI.listWorkflows::method",
+      "kind": "calls",
+      "to": "components/cici/cici.go::Logger.Error::method"
+    },
+    {
+      "from": "components/cici/workflows.go::CICI.listWorkflows::method",
+      "kind": "calls",
+      "to": "components/cici/cici.go::writeJSON::function"
+    },
+    {
+      "from": "components/cici/workflows.go::CICI.listWorkflows::method",
+      "kind": "uses",
+      "to": "components/cici/cici.go::WorkflowDef::class"
+    },
+    {
+      "from": "components/cici/workflows.go::CICI.fetchWorkflow::method",
+      "kind": "uses",
+      "to": "components/cici/cici.go::CICI::class"
+    },
+    {
+      "from": "components/cici/workflows.go::CICI.fetchWorkflow::method",
+      "kind": "uses",
+      "to": "components/cici/cici.go::WorkflowDef::class"
+    },
+    {
+      "from": "components/cici/workflows.go::CICI.fetchWorkflow::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::DBer.QueryRowContext::method"
+    }
+  ],
+  "file": "components/cici/workflows.go",
+  "intent": [
+    {
+      "date": "2026-05-27T13:42:13-03:00",
+      "hash": "45e79c39440ae6327525ca662b53e02f4d57d6ee",
+      "kind": "commit",
+      "message": "fix: address review findings — rows.Err, routing, YAML leak, repo filter"
+    },
+    {
+      "date": "2026-05-27T13:37:14-03:00",
+      "hash": "44c3f8635fc6a4a9d585fd4e85ff490571f87f5a",
+      "kind": "commit",
+      "message": "refactor(cici): split into files, add boundary tests, shorten functions"
+    }
+  ],
+  "lastModified": 1781284401,
+  "symbols": [
+    {
+      "endLine": 16,
+      "endOffset": 187,
+      "kind": "class",
+      "name": "saveWorkflowReq",
+      "startLine": 13,
+      "startOffset": 107,
+      "symbolId": "components/cici/workflows.go::saveWorkflowReq::class"
+    },
+    {
+      "endLine": 57,
+      "endOffset": 1582,
+      "kind": "method",
+      "name": "CICI.saveWorkflow",
+      "startLine": 18,
+      "startOffset": 189,
+      "symbolId": "components/cici/workflows.go::CICI.saveWorkflow::method"
+    },
+    {
+      "endLine": 89,
+      "endOffset": 2619,
+      "kind": "method",
+      "name": "CICI.listWorkflows",
+      "startLine": 59,
+      "startOffset": 1584,
+      "symbolId": "components/cici/workflows.go::CICI.listWorkflows::method"
+    },
+    {
+      "endLine": 100,
+      "endOffset": 2965,
+      "kind": "method",
+      "name": "CICI.fetchWorkflow",
+      "startLine": 91,
+      "startOffset": 2621,
+      "symbolId": "components/cici/workflows.go::CICI.fetchWorkflow::method"
+    }
+  ]
+}

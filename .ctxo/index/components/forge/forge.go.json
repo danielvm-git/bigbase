@@ -1,0 +1,1022 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/forge/forge.go::noopLogger.Info::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/forge/forge.go::noopLogger.Warn::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/forge/forge.go::noopLogger.Error::method"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/forge/forge.go::New::function"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/forge/forge.go::Forge.Name::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/forge/forge.go::Forge.Version::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/forge/forge.go::Forge.Dependencies::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/forge/forge.go::Forge.ConfigSchema::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/forge/forge.go::Forge.Hooks::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/forge/forge.go::Forge.Init::method"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/forge/forge.go::Forge.Start::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/forge/forge.go::Forge.Stop::method"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/forge/forge.go::generateID::function"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/forge/forge.go::Forge.Handler::method"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/forge/forge.go::Forge.handleIssues::method"
+    },
+    {
+      "cyclomatic": 6,
+      "symbolId": "components/forge/forge.go::Forge.createIssue::method"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/forge/forge.go::Forge.listIssues::method"
+    },
+    {
+      "cyclomatic": 5,
+      "symbolId": "components/forge/forge.go::Forge.fetchIssues::method"
+    },
+    {
+      "cyclomatic": 6,
+      "symbolId": "components/forge/forge.go::Forge.handleIssueByID::method"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/forge/forge.go::Forge.getIssue::method"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/forge/forge.go::Forge.updateIssue::method"
+    },
+    {
+      "cyclomatic": 6,
+      "symbolId": "components/forge/forge.go::Forge.handleComments::method"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/forge/forge.go::Forge.handleLabels::method"
+    },
+    {
+      "cyclomatic": 7,
+      "symbolId": "components/forge/forge.go::Forge.createLabel::method"
+    },
+    {
+      "cyclomatic": 5,
+      "symbolId": "components/forge/forge.go::Forge.listLabels::method"
+    },
+    {
+      "cyclomatic": 5,
+      "symbolId": "components/forge/forge.go::Forge.handleBoard::method"
+    },
+    {
+      "cyclomatic": 5,
+      "symbolId": "components/forge/forge.go::Forge.handleWiki::method"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/forge/forge.go::Forge.getWiki::method"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/forge/forge.go::Forge.saveWiki::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/forge/forge.go::writeJSON::function"
+    }
+  ],
+  "contentHash": "b563b55331772077f63aedb9a1f80f1bce33438aac053df03a2cb9d5cc3de781",
+  "edges": [
+    {
+      "from": "components/forge/forge.go::noopLogger.Info::method",
+      "kind": "uses",
+      "to": "components/forge/forge.go::noopLogger::class"
+    },
+    {
+      "from": "components/forge/forge.go::noopLogger.Warn::method",
+      "kind": "uses",
+      "to": "components/forge/forge.go::noopLogger::class"
+    },
+    {
+      "from": "components/forge/forge.go::noopLogger.Error::method",
+      "kind": "uses",
+      "to": "components/forge/forge.go::noopLogger::class"
+    },
+    {
+      "from": "components/forge/forge.go::New::function",
+      "kind": "uses",
+      "to": "components/forge/forge.go::Options::class"
+    },
+    {
+      "from": "components/forge/forge.go::New::function",
+      "kind": "uses",
+      "to": "components/forge/forge.go::Forge::class"
+    },
+    {
+      "from": "components/forge/forge.go::New::function",
+      "kind": "uses",
+      "to": "components/forge/forge.go::noopLogger::class"
+    },
+    {
+      "from": "components/forge/forge.go::Forge.Name::method",
+      "kind": "uses",
+      "to": "components/forge/forge.go::Forge::class"
+    },
+    {
+      "from": "components/forge/forge.go::Forge.Version::method",
+      "kind": "uses",
+      "to": "components/forge/forge.go::Forge::class"
+    },
+    {
+      "from": "components/forge/forge.go::Forge.Version::method",
+      "kind": "uses",
+      "to": "components/forge/forge.go::version::variable"
+    },
+    {
+      "from": "components/forge/forge.go::Forge.Dependencies::method",
+      "kind": "uses",
+      "to": "components/forge/forge.go::Forge::class"
+    },
+    {
+      "from": "components/forge/forge.go::Forge.ConfigSchema::method",
+      "kind": "uses",
+      "to": "components/forge/forge.go::Forge::class"
+    },
+    {
+      "from": "components/forge/forge.go::Forge.Hooks::method",
+      "kind": "uses",
+      "to": "components/forge/forge.go::Forge::class"
+    },
+    {
+      "from": "components/forge/forge.go::Forge.Hooks::method",
+      "kind": "uses",
+      "to": "kernel/component.go::HookDef::class"
+    },
+    {
+      "from": "components/forge/forge.go::Forge.Init::method",
+      "kind": "uses",
+      "to": "components/forge/forge.go::Forge::class"
+    },
+    {
+      "from": "components/forge/forge.go::Forge.Init::method",
+      "kind": "uses",
+      "to": "kernel/component.go::Context::class"
+    },
+    {
+      "from": "components/forge/forge.go::Forge.Start::method",
+      "kind": "uses",
+      "to": "components/forge/forge.go::Forge::class"
+    },
+    {
+      "from": "components/forge/forge.go::Forge.Start::method",
+      "kind": "uses",
+      "to": "kernel/component.go::Context::class"
+    },
+    {
+      "from": "components/forge/forge.go::Forge.Start::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::DBer.Migrate::method"
+    },
+    {
+      "from": "components/forge/forge.go::Forge.Start::method",
+      "kind": "calls",
+      "to": "components/forge/forge.go::Logger.Info::method"
+    },
+    {
+      "from": "components/forge/forge.go::Forge.Stop::method",
+      "kind": "uses",
+      "to": "components/forge/forge.go::Forge::class"
+    },
+    {
+      "from": "components/forge/forge.go::Forge.Stop::method",
+      "kind": "uses",
+      "to": "kernel/component.go::Context::class"
+    },
+    {
+      "from": "components/forge/forge.go::Forge.Handler::method",
+      "kind": "uses",
+      "to": "components/forge/forge.go::Forge::class"
+    },
+    {
+      "from": "components/forge/forge.go::Forge.handleIssues::method",
+      "kind": "uses",
+      "to": "components/forge/forge.go::Forge::class"
+    },
+    {
+      "from": "components/forge/forge.go::Forge.handleIssues::method",
+      "kind": "calls",
+      "to": "components/forge/forge.go::Forge.listIssues::method"
+    },
+    {
+      "from": "components/forge/forge.go::Forge.handleIssues::method",
+      "kind": "calls",
+      "to": "components/forge/forge.go::Forge.createIssue::method"
+    },
+    {
+      "from": "components/forge/forge.go::Forge.handleIssues::method",
+      "kind": "calls",
+      "to": "components/forge/forge.go::writeJSON::function"
+    },
+    {
+      "from": "components/forge/forge.go::Forge.createIssue::method",
+      "kind": "uses",
+      "to": "components/forge/forge.go::Forge::class"
+    },
+    {
+      "from": "components/forge/forge.go::Forge.createIssue::method",
+      "kind": "calls",
+      "to": "components/forge/forge.go::writeJSON::function"
+    },
+    {
+      "from": "components/forge/forge.go::Forge.createIssue::method",
+      "kind": "calls",
+      "to": "components/forge/forge.go::generateID::function"
+    },
+    {
+      "from": "components/forge/forge.go::Forge.createIssue::method",
+      "kind": "calls",
+      "to": "components/forge/forge.go::Logger.Error::method"
+    },
+    {
+      "from": "components/forge/forge.go::Forge.createIssue::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::DBer.ExecContext::method"
+    },
+    {
+      "from": "components/forge/forge.go::Forge.createIssue::method",
+      "kind": "uses",
+      "to": "components/forge/forge.go::Issue::class"
+    },
+    {
+      "from": "components/forge/forge.go::Forge.listIssues::method",
+      "kind": "uses",
+      "to": "components/forge/forge.go::Forge::class"
+    },
+    {
+      "from": "components/forge/forge.go::Forge.listIssues::method",
+      "kind": "calls",
+      "to": "components/forge/forge.go::writeJSON::function"
+    },
+    {
+      "from": "components/forge/forge.go::Forge.listIssues::method",
+      "kind": "calls",
+      "to": "components/forge/forge.go::Forge.fetchIssues::method"
+    },
+    {
+      "from": "components/forge/forge.go::Forge.listIssues::method",
+      "kind": "calls",
+      "to": "components/forge/forge.go::Logger.Error::method"
+    },
+    {
+      "from": "components/forge/forge.go::Forge.fetchIssues::method",
+      "kind": "uses",
+      "to": "components/forge/forge.go::Forge::class"
+    },
+    {
+      "from": "components/forge/forge.go::Forge.fetchIssues::method",
+      "kind": "uses",
+      "to": "components/forge/forge.go::Issue::class"
+    },
+    {
+      "from": "components/forge/forge.go::Forge.fetchIssues::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::DBer.QueryContext::method"
+    },
+    {
+      "from": "components/forge/forge.go::Forge.handleIssueByID::method",
+      "kind": "uses",
+      "to": "components/forge/forge.go::Forge::class"
+    },
+    {
+      "from": "components/forge/forge.go::Forge.handleIssueByID::method",
+      "kind": "calls",
+      "to": "components/forge/forge.go::writeJSON::function"
+    },
+    {
+      "from": "components/forge/forge.go::Forge.handleIssueByID::method",
+      "kind": "calls",
+      "to": "components/forge/forge.go::Forge.handleComments::method"
+    },
+    {
+      "from": "components/forge/forge.go::Forge.handleIssueByID::method",
+      "kind": "calls",
+      "to": "components/forge/forge.go::Forge.getIssue::method"
+    },
+    {
+      "from": "components/forge/forge.go::Forge.handleIssueByID::method",
+      "kind": "calls",
+      "to": "components/forge/forge.go::Forge.updateIssue::method"
+    },
+    {
+      "from": "components/forge/forge.go::Forge.getIssue::method",
+      "kind": "uses",
+      "to": "components/forge/forge.go::Forge::class"
+    },
+    {
+      "from": "components/forge/forge.go::Forge.getIssue::method",
+      "kind": "uses",
+      "to": "components/forge/forge.go::Issue::class"
+    },
+    {
+      "from": "components/forge/forge.go::Forge.getIssue::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::DBer.QueryRowContext::method"
+    },
+    {
+      "from": "components/forge/forge.go::Forge.getIssue::method",
+      "kind": "calls",
+      "to": "components/forge/forge.go::writeJSON::function"
+    },
+    {
+      "from": "components/forge/forge.go::Forge.updateIssue::method",
+      "kind": "uses",
+      "to": "components/forge/forge.go::Forge::class"
+    },
+    {
+      "from": "components/forge/forge.go::Forge.updateIssue::method",
+      "kind": "calls",
+      "to": "components/forge/forge.go::writeJSON::function"
+    },
+    {
+      "from": "components/forge/forge.go::Forge.updateIssue::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::DBer.ExecContext::method"
+    },
+    {
+      "from": "components/forge/forge.go::Forge.updateIssue::method",
+      "kind": "calls",
+      "to": "components/forge/forge.go::Logger.Error::method"
+    },
+    {
+      "from": "components/forge/forge.go::Forge.handleComments::method",
+      "kind": "uses",
+      "to": "components/forge/forge.go::Forge::class"
+    },
+    {
+      "from": "components/forge/forge.go::Forge.handleComments::method",
+      "kind": "calls",
+      "to": "components/forge/forge.go::writeJSON::function"
+    },
+    {
+      "from": "components/forge/forge.go::Forge.handleComments::method",
+      "kind": "calls",
+      "to": "components/forge/forge.go::generateID::function"
+    },
+    {
+      "from": "components/forge/forge.go::Forge.handleComments::method",
+      "kind": "calls",
+      "to": "components/forge/forge.go::Logger.Error::method"
+    },
+    {
+      "from": "components/forge/forge.go::Forge.handleComments::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::DBer.ExecContext::method"
+    },
+    {
+      "from": "components/forge/forge.go::Forge.handleComments::method",
+      "kind": "uses",
+      "to": "components/forge/forge.go::Comment::class"
+    },
+    {
+      "from": "components/forge/forge.go::Forge.handleLabels::method",
+      "kind": "uses",
+      "to": "components/forge/forge.go::Forge::class"
+    },
+    {
+      "from": "components/forge/forge.go::Forge.handleLabels::method",
+      "kind": "calls",
+      "to": "components/forge/forge.go::Forge.listLabels::method"
+    },
+    {
+      "from": "components/forge/forge.go::Forge.handleLabels::method",
+      "kind": "calls",
+      "to": "components/forge/forge.go::Forge.createLabel::method"
+    },
+    {
+      "from": "components/forge/forge.go::Forge.handleLabels::method",
+      "kind": "calls",
+      "to": "components/forge/forge.go::writeJSON::function"
+    },
+    {
+      "from": "components/forge/forge.go::Forge.createLabel::method",
+      "kind": "uses",
+      "to": "components/forge/forge.go::Forge::class"
+    },
+    {
+      "from": "components/forge/forge.go::Forge.createLabel::method",
+      "kind": "calls",
+      "to": "components/forge/forge.go::writeJSON::function"
+    },
+    {
+      "from": "components/forge/forge.go::Forge.createLabel::method",
+      "kind": "calls",
+      "to": "components/forge/forge.go::generateID::function"
+    },
+    {
+      "from": "components/forge/forge.go::Forge.createLabel::method",
+      "kind": "calls",
+      "to": "components/forge/forge.go::Logger.Error::method"
+    },
+    {
+      "from": "components/forge/forge.go::Forge.createLabel::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::DBer.ExecContext::method"
+    },
+    {
+      "from": "components/forge/forge.go::Forge.createLabel::method",
+      "kind": "uses",
+      "to": "components/forge/forge.go::Label::class"
+    },
+    {
+      "from": "components/forge/forge.go::Forge.listLabels::method",
+      "kind": "uses",
+      "to": "components/forge/forge.go::Forge::class"
+    },
+    {
+      "from": "components/forge/forge.go::Forge.listLabels::method",
+      "kind": "calls",
+      "to": "components/forge/forge.go::writeJSON::function"
+    },
+    {
+      "from": "components/forge/forge.go::Forge.listLabels::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::DBer.QueryContext::method"
+    },
+    {
+      "from": "components/forge/forge.go::Forge.listLabels::method",
+      "kind": "calls",
+      "to": "components/forge/forge.go::Logger.Error::method"
+    },
+    {
+      "from": "components/forge/forge.go::Forge.listLabels::method",
+      "kind": "uses",
+      "to": "components/forge/forge.go::Label::class"
+    },
+    {
+      "from": "components/forge/forge.go::Forge.handleBoard::method",
+      "kind": "uses",
+      "to": "components/forge/forge.go::Forge::class"
+    },
+    {
+      "from": "components/forge/forge.go::Forge.handleBoard::method",
+      "kind": "calls",
+      "to": "components/forge/forge.go::writeJSON::function"
+    },
+    {
+      "from": "components/forge/forge.go::Forge.handleBoard::method",
+      "kind": "uses",
+      "to": "components/forge/forge.go::Issue::class"
+    },
+    {
+      "from": "components/forge/forge.go::Forge.handleBoard::method",
+      "kind": "calls",
+      "to": "components/forge/forge.go::Forge.fetchIssues::method"
+    },
+    {
+      "from": "components/forge/forge.go::Forge.handleBoard::method",
+      "kind": "calls",
+      "to": "components/forge/forge.go::Logger.Error::method"
+    },
+    {
+      "from": "components/forge/forge.go::Forge.handleWiki::method",
+      "kind": "uses",
+      "to": "components/forge/forge.go::Forge::class"
+    },
+    {
+      "from": "components/forge/forge.go::Forge.handleWiki::method",
+      "kind": "calls",
+      "to": "components/forge/forge.go::writeJSON::function"
+    },
+    {
+      "from": "components/forge/forge.go::Forge.handleWiki::method",
+      "kind": "calls",
+      "to": "components/forge/forge.go::Forge.getWiki::method"
+    },
+    {
+      "from": "components/forge/forge.go::Forge.handleWiki::method",
+      "kind": "calls",
+      "to": "components/forge/forge.go::Forge.saveWiki::method"
+    },
+    {
+      "from": "components/forge/forge.go::Forge.getWiki::method",
+      "kind": "uses",
+      "to": "components/forge/forge.go::Forge::class"
+    },
+    {
+      "from": "components/forge/forge.go::Forge.getWiki::method",
+      "kind": "calls",
+      "to": "components/forge/forge.go::writeJSON::function"
+    },
+    {
+      "from": "components/forge/forge.go::Forge.getWiki::method",
+      "kind": "uses",
+      "to": "components/forge/forge.go::WikiPage::class"
+    },
+    {
+      "from": "components/forge/forge.go::Forge.getWiki::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::DBer.QueryRowContext::method"
+    },
+    {
+      "from": "components/forge/forge.go::Forge.saveWiki::method",
+      "kind": "uses",
+      "to": "components/forge/forge.go::Forge::class"
+    },
+    {
+      "from": "components/forge/forge.go::Forge.saveWiki::method",
+      "kind": "calls",
+      "to": "components/forge/forge.go::writeJSON::function"
+    },
+    {
+      "from": "components/forge/forge.go::Forge.saveWiki::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::DBer.ExecContext::method"
+    },
+    {
+      "from": "components/forge/forge.go::Forge.saveWiki::method",
+      "kind": "calls",
+      "to": "components/forge/forge.go::Logger.Error::method"
+    },
+    {
+      "from": "components/forge/forge.go::Forge.saveWiki::method",
+      "kind": "uses",
+      "to": "components/forge/forge.go::WikiPage::class"
+    },
+    {
+      "from": "components/forge/forge.go::Forge::class",
+      "kind": "implements",
+      "to": "kernel/component.go::Component::interface"
+    },
+    {
+      "from": "components/forge/forge.go::noopLogger::class",
+      "kind": "implements",
+      "to": "components/admin/admin.go::Logger::interface"
+    },
+    {
+      "from": "components/forge/forge.go::noopLogger::class",
+      "kind": "implements",
+      "to": "components/api/api.go::Logger::interface"
+    },
+    {
+      "from": "components/forge/forge.go::noopLogger::class",
+      "kind": "implements",
+      "to": "components/auth/auth.go::Logger::interface"
+    },
+    {
+      "from": "components/forge/forge.go::noopLogger::class",
+      "kind": "implements",
+      "to": "components/cici/cici.go::Logger::interface"
+    },
+    {
+      "from": "components/forge/forge.go::noopLogger::class",
+      "kind": "implements",
+      "to": "components/forge/forge.go::Logger::interface"
+    },
+    {
+      "from": "components/forge/forge.go::noopLogger::class",
+      "kind": "implements",
+      "to": "components/functions/functions.go::Logger::interface"
+    },
+    {
+      "from": "components/forge/forge.go::noopLogger::class",
+      "kind": "implements",
+      "to": "components/git/git.go::Logger::interface"
+    },
+    {
+      "from": "components/forge/forge.go::noopLogger::class",
+      "kind": "implements",
+      "to": "components/proxy/proxy.go::Logger::interface"
+    },
+    {
+      "from": "components/forge/forge.go::noopLogger::class",
+      "kind": "implements",
+      "to": "components/realtime/realtime.go::Logger::interface"
+    },
+    {
+      "from": "components/forge/forge.go::noopLogger::class",
+      "kind": "implements",
+      "to": "components/storage/storage.go::Logger::interface"
+    }
+  ],
+  "file": "components/forge/forge.go",
+  "intent": [
+    {
+      "date": "2026-06-05T20:13:56-03:00",
+      "hash": "7bea9645d49a10a8ed723617b32bd0481e3a625e",
+      "kind": "commit",
+      "message": "feat(db): e18s01 extract shared DBer interface"
+    },
+    {
+      "date": "2026-05-27T13:30:22-03:00",
+      "hash": "ef4ea80440bd62ca63199138d6d0fbba2f686408",
+      "kind": "commit",
+      "message": "fix: harden kernel, api, auth, forge, git, and storage components"
+    },
+    {
+      "date": "2026-05-27T08:39:23-03:00",
+      "hash": "e893817528dd57a27fd918387a417b68e0346a76",
+      "kind": "commit",
+      "message": "feat(forge): add issues, labels, comments, kanban board, and wiki"
+    }
+  ],
+  "lastModified": 1781284401,
+  "symbols": [
+    {
+      "endLine": 17,
+      "endOffset": 192,
+      "kind": "variable",
+      "name": "version",
+      "startLine": 17,
+      "startOffset": 185,
+      "symbolId": "components/forge/forge.go::version::variable"
+    },
+    {
+      "endLine": 23,
+      "endOffset": 323,
+      "kind": "interface",
+      "name": "Logger",
+      "startLine": 19,
+      "startOffset": 209,
+      "symbolId": "components/forge/forge.go::Logger::interface"
+    },
+    {
+      "endLine": 25,
+      "endOffset": 349,
+      "kind": "class",
+      "name": "noopLogger",
+      "startLine": 25,
+      "startOffset": 330,
+      "symbolId": "components/forge/forge.go::noopLogger::class"
+    },
+    {
+      "endLine": 27,
+      "endOffset": 402,
+      "kind": "method",
+      "name": "noopLogger.Info",
+      "startLine": 27,
+      "startOffset": 351,
+      "symbolId": "components/forge/forge.go::noopLogger.Info::method"
+    },
+    {
+      "endLine": 28,
+      "endOffset": 454,
+      "kind": "method",
+      "name": "noopLogger.Warn",
+      "startLine": 28,
+      "startOffset": 403,
+      "symbolId": "components/forge/forge.go::noopLogger.Warn::method"
+    },
+    {
+      "endLine": 29,
+      "endOffset": 506,
+      "kind": "method",
+      "name": "noopLogger.Error",
+      "startLine": 29,
+      "startOffset": 455,
+      "symbolId": "components/forge/forge.go::noopLogger.Error::method"
+    },
+    {
+      "endLine": 32,
+      "endOffset": 604,
+      "kind": "type",
+      "name": "DBer",
+      "startLine": 32,
+      "startOffset": 586,
+      "symbolId": "components/forge/forge.go::DBer::type"
+    },
+    {
+      "endLine": 43,
+      "endOffset": 960,
+      "kind": "class",
+      "name": "Issue",
+      "startLine": 34,
+      "startOffset": 611,
+      "symbolId": "components/forge/forge.go::Issue::class"
+    },
+    {
+      "endLine": 50,
+      "endOffset": 1101,
+      "kind": "class",
+      "name": "Label",
+      "startLine": 45,
+      "startOffset": 967,
+      "symbolId": "components/forge/forge.go::Label::class"
+    },
+    {
+      "endLine": 57,
+      "endOffset": 1265,
+      "kind": "class",
+      "name": "Comment",
+      "startLine": 52,
+      "startOffset": 1108,
+      "symbolId": "components/forge/forge.go::Comment::class"
+    },
+    {
+      "endLine": 64,
+      "endOffset": 1432,
+      "kind": "class",
+      "name": "WikiPage",
+      "startLine": 59,
+      "startOffset": 1272,
+      "symbolId": "components/forge/forge.go::WikiPage::class"
+    },
+    {
+      "endLine": 69,
+      "endOffset": 1483,
+      "kind": "class",
+      "name": "Forge",
+      "startLine": 66,
+      "startOffset": 1439,
+      "symbolId": "components/forge/forge.go::Forge::class"
+    },
+    {
+      "endLine": 74,
+      "endOffset": 1536,
+      "kind": "class",
+      "name": "Options",
+      "startLine": 71,
+      "startOffset": 1490,
+      "symbolId": "components/forge/forge.go::Options::class"
+    },
+    {
+      "endLine": 82,
+      "endOffset": 1685,
+      "kind": "function",
+      "name": "New",
+      "startLine": 76,
+      "startOffset": 1538,
+      "symbolId": "components/forge/forge.go::New::function"
+    },
+    {
+      "endLine": 84,
+      "endOffset": 1754,
+      "kind": "method",
+      "name": "Forge.Name",
+      "startLine": 84,
+      "startOffset": 1687,
+      "symbolId": "components/forge/forge.go::Forge.Name::method"
+    },
+    {
+      "endLine": 85,
+      "endOffset": 1822,
+      "kind": "method",
+      "name": "Forge.Version",
+      "startLine": 85,
+      "startOffset": 1755,
+      "symbolId": "components/forge/forge.go::Forge.Version::method"
+    },
+    {
+      "endLine": 86,
+      "endOffset": 1897,
+      "kind": "method",
+      "name": "Forge.Dependencies",
+      "startLine": 86,
+      "startOffset": 1823,
+      "symbolId": "components/forge/forge.go::Forge.Dependencies::method"
+    },
+    {
+      "endLine": 87,
+      "endOffset": 1961,
+      "kind": "method",
+      "name": "Forge.ConfigSchema",
+      "startLine": 87,
+      "startOffset": 1898,
+      "symbolId": "components/forge/forge.go::Forge.ConfigSchema::method"
+    },
+    {
+      "endLine": 88,
+      "endOffset": 2025,
+      "kind": "method",
+      "name": "Forge.Hooks",
+      "startLine": 88,
+      "startOffset": 1962,
+      "symbolId": "components/forge/forge.go::Forge.Hooks::method"
+    },
+    {
+      "endLine": 92,
+      "endOffset": 2114,
+      "kind": "method",
+      "name": "Forge.Init",
+      "startLine": 90,
+      "startOffset": 2027,
+      "symbolId": "components/forge/forge.go::Forge.Init::method"
+    },
+    {
+      "endLine": 124,
+      "endOffset": 3434,
+      "kind": "method",
+      "name": "Forge.Start",
+      "startLine": 94,
+      "startOffset": 2116,
+      "symbolId": "components/forge/forge.go::Forge.Start::method"
+    },
+    {
+      "endLine": 128,
+      "endOffset": 3499,
+      "kind": "method",
+      "name": "Forge.Stop",
+      "startLine": 126,
+      "startOffset": 3436,
+      "symbolId": "components/forge/forge.go::Forge.Stop::method"
+    },
+    {
+      "endLine": 136,
+      "endOffset": 3688,
+      "kind": "function",
+      "name": "generateID",
+      "startLine": 130,
+      "startOffset": 3501,
+      "symbolId": "components/forge/forge.go::generateID::function"
+    },
+    {
+      "endLine": 146,
+      "endOffset": 4035,
+      "kind": "method",
+      "name": "Forge.Handler",
+      "startLine": 138,
+      "startOffset": 3690,
+      "symbolId": "components/forge/forge.go::Forge.Handler::method"
+    },
+    {
+      "endLine": 157,
+      "endOffset": 4305,
+      "kind": "method",
+      "name": "Forge.handleIssues",
+      "startLine": 148,
+      "startOffset": 4037,
+      "symbolId": "components/forge/forge.go::Forge.handleIssues::method"
+    },
+    {
+      "endLine": 201,
+      "endOffset": 5875,
+      "kind": "method",
+      "name": "Forge.createIssue",
+      "startLine": 159,
+      "startOffset": 4307,
+      "symbolId": "components/forge/forge.go::Forge.createIssue::method"
+    },
+    {
+      "endLine": 217,
+      "endOffset": 6405,
+      "kind": "method",
+      "name": "Forge.listIssues",
+      "startLine": 203,
+      "startOffset": 5877,
+      "symbolId": "components/forge/forge.go::Forge.listIssues::method"
+    },
+    {
+      "endLine": 250,
+      "endOffset": 7474,
+      "kind": "method",
+      "name": "Forge.fetchIssues",
+      "startLine": 219,
+      "startOffset": 6407,
+      "symbolId": "components/forge/forge.go::Forge.fetchIssues::method"
+    },
+    {
+      "endLine": 274,
+      "endOffset": 8070,
+      "kind": "method",
+      "name": "Forge.handleIssueByID",
+      "startLine": 252,
+      "startOffset": 7476,
+      "symbolId": "components/forge/forge.go::Forge.handleIssueByID::method"
+    },
+    {
+      "endLine": 291,
+      "endOffset": 8717,
+      "kind": "method",
+      "name": "Forge.getIssue",
+      "startLine": 276,
+      "startOffset": 8072,
+      "symbolId": "components/forge/forge.go::Forge.getIssue::method"
+    },
+    {
+      "endLine": 322,
+      "endOffset": 10052,
+      "kind": "method",
+      "name": "Forge.updateIssue",
+      "startLine": 293,
+      "startOffset": 8719,
+      "symbolId": "components/forge/forge.go::Forge.updateIssue::method"
+    },
+    {
+      "endLine": 361,
+      "endOffset": 11300,
+      "kind": "method",
+      "name": "Forge.handleComments",
+      "startLine": 324,
+      "startOffset": 10054,
+      "symbolId": "components/forge/forge.go::Forge.handleComments::method"
+    },
+    {
+      "endLine": 372,
+      "endOffset": 11570,
+      "kind": "method",
+      "name": "Forge.handleLabels",
+      "startLine": 363,
+      "startOffset": 11302,
+      "symbolId": "components/forge/forge.go::Forge.handleLabels::method"
+    },
+    {
+      "endLine": 411,
+      "endOffset": 12889,
+      "kind": "method",
+      "name": "Forge.createLabel",
+      "startLine": 374,
+      "startOffset": 11572,
+      "symbolId": "components/forge/forge.go::Forge.createLabel::method"
+    },
+    {
+      "endLine": 442,
+      "endOffset": 13827,
+      "kind": "method",
+      "name": "Forge.listLabels",
+      "startLine": 413,
+      "startOffset": 12891,
+      "symbolId": "components/forge/forge.go::Forge.listLabels::method"
+    },
+    {
+      "endLine": 468,
+      "endOffset": 14667,
+      "kind": "method",
+      "name": "Forge.handleBoard",
+      "startLine": 444,
+      "startOffset": 13829,
+      "symbolId": "components/forge/forge.go::Forge.handleBoard::method"
+    },
+    {
+      "endLine": 485,
+      "endOffset": 15123,
+      "kind": "method",
+      "name": "Forge.handleWiki",
+      "startLine": 470,
+      "startOffset": 14669,
+      "symbolId": "components/forge/forge.go::Forge.handleWiki::method"
+    },
+    {
+      "endLine": 506,
+      "endOffset": 15822,
+      "kind": "method",
+      "name": "Forge.getWiki",
+      "startLine": 487,
+      "startOffset": 15125,
+      "symbolId": "components/forge/forge.go::Forge.getWiki::method"
+    },
+    {
+      "endLine": 533,
+      "endOffset": 16892,
+      "kind": "method",
+      "name": "Forge.saveWiki",
+      "startLine": 508,
+      "startOffset": 15824,
+      "symbolId": "components/forge/forge.go::Forge.saveWiki::method"
+    },
+    {
+      "endLine": 539,
+      "endOffset": 17069,
+      "kind": "function",
+      "name": "writeJSON",
+      "startLine": 535,
+      "startOffset": 16894,
+      "symbolId": "components/forge/forge.go::writeJSON::function"
+    }
+  ]
+}

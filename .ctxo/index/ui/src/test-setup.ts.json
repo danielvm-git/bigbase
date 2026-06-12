@@ -1,0 +1,23 @@
+{
+  "antiPatterns": [],
+  "complexity": [],
+  "contentHash": "2a1382565141af7d4d236f90c0eac4e484694bc7080e86ff79b160d38a4c95f4",
+  "edges": [],
+  "file": "ui/src/test-setup.ts",
+  "intent": [
+    {
+      "date": "2026-06-04T11:34:24-03:00",
+      "hash": "26aba30a291f16ae2a8c97dd336ccb99ee1b1a01",
+      "kind": "commit",
+      "message": "fix(ui): port Sites prototype CSS and block unstyled deploy regressions"
+    },
+    {
+      "date": "2026-06-01T22:19:05-03:00",
+      "hash": "bf8b66251084846f39dc5c2b646a46ebdc58ea17",
+      "kind": "commit",
+      "message": "feat(ui): extract design tokens to styles/, add Vitest test infrastructure"
+    }
+  ],
+  "lastModified": 1781284402,
+  "symbols": []
+}

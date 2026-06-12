@@ -1,0 +1,364 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 1,
+      "symbolId": "kernel/kernel.go::New::function"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "kernel/kernel.go::Kernel.Register::method"
+    },
+    {
+      "cyclomatic": 5,
+      "symbolId": "kernel/kernel.go::Kernel.Start::method"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "kernel/kernel.go::Kernel.Stop::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "kernel/kernel.go::Kernel.EventBus::method"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "kernel/kernel.go::Kernel.Components::method"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "kernel/kernel.go::Kernel.ListComponents::method"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "kernel/kernel.go::hookNames::function"
+    },
+    {
+      "cyclomatic": 9,
+      "symbolId": "kernel/kernel.go::Kernel.resolveOrder::method"
+    }
+  ],
+  "contentHash": "b139646211e9f5ca78c3328dc3b7e83a505ee6022505b99fe37d76e70e749ecb",
+  "edges": [
+    {
+      "from": "kernel/kernel.go::New::function",
+      "kind": "uses",
+      "to": "kernel/component.go::Logger::interface"
+    },
+    {
+      "from": "kernel/kernel.go::New::function",
+      "kind": "uses",
+      "to": "kernel/kernel.go::Kernel::class"
+    },
+    {
+      "from": "kernel/kernel.go::New::function",
+      "kind": "uses",
+      "to": "kernel/component.go::Component::interface"
+    },
+    {
+      "from": "kernel/kernel.go::New::function",
+      "kind": "calls",
+      "to": "kernel/eventbus.go::NewEventBus::function"
+    },
+    {
+      "from": "kernel/kernel.go::Kernel.Register::method",
+      "kind": "uses",
+      "to": "kernel/kernel.go::Kernel::class"
+    },
+    {
+      "from": "kernel/kernel.go::Kernel.Register::method",
+      "kind": "uses",
+      "to": "kernel/component.go::Component::interface"
+    },
+    {
+      "from": "kernel/kernel.go::Kernel.Register::method",
+      "kind": "calls",
+      "to": "kernel/component.go::Component.Name::method"
+    },
+    {
+      "from": "kernel/kernel.go::Kernel.Register::method",
+      "kind": "calls",
+      "to": "kernel/component.go::Logger.Info::method"
+    },
+    {
+      "from": "kernel/kernel.go::Kernel.Register::method",
+      "kind": "calls",
+      "to": "kernel/component.go::Component.Version::method"
+    },
+    {
+      "from": "kernel/kernel.go::Kernel.Start::method",
+      "kind": "uses",
+      "to": "kernel/kernel.go::Kernel::class"
+    },
+    {
+      "from": "kernel/kernel.go::Kernel.Start::method",
+      "kind": "calls",
+      "to": "kernel/kernel.go::Kernel.resolveOrder::method"
+    },
+    {
+      "from": "kernel/kernel.go::Kernel.Start::method",
+      "kind": "uses",
+      "to": "kernel/component.go::Context::class"
+    },
+    {
+      "from": "kernel/kernel.go::Kernel.Start::method",
+      "kind": "calls",
+      "to": "kernel/kernel.go::Kernel.Components::method"
+    },
+    {
+      "from": "kernel/kernel.go::Kernel.Start::method",
+      "kind": "calls",
+      "to": "kernel/component.go::Component.Init::method"
+    },
+    {
+      "from": "kernel/kernel.go::Kernel.Start::method",
+      "kind": "calls",
+      "to": "kernel/component.go::Component.Start::method"
+    },
+    {
+      "from": "kernel/kernel.go::Kernel.Start::method",
+      "kind": "calls",
+      "to": "kernel/component.go::Logger.Info::method"
+    },
+    {
+      "from": "kernel/kernel.go::Kernel.Stop::method",
+      "kind": "uses",
+      "to": "kernel/kernel.go::Kernel::class"
+    },
+    {
+      "from": "kernel/kernel.go::Kernel.Stop::method",
+      "kind": "calls",
+      "to": "kernel/kernel.go::Kernel.resolveOrder::method"
+    },
+    {
+      "from": "kernel/kernel.go::Kernel.Stop::method",
+      "kind": "calls",
+      "to": "kernel/component.go::Component.Stop::method"
+    },
+    {
+      "from": "kernel/kernel.go::Kernel.Stop::method",
+      "kind": "uses",
+      "to": "kernel/component.go::Context::class"
+    },
+    {
+      "from": "kernel/kernel.go::Kernel.EventBus::method",
+      "kind": "uses",
+      "to": "kernel/kernel.go::Kernel::class"
+    },
+    {
+      "from": "kernel/kernel.go::Kernel.EventBus::method",
+      "kind": "uses",
+      "to": "kernel/eventbus.go::EventBus::class"
+    },
+    {
+      "from": "kernel/kernel.go::Kernel.Components::method",
+      "kind": "uses",
+      "to": "kernel/kernel.go::Kernel::class"
+    },
+    {
+      "from": "kernel/kernel.go::Kernel.Components::method",
+      "kind": "uses",
+      "to": "kernel/component.go::Component::interface"
+    },
+    {
+      "from": "kernel/kernel.go::Kernel.ListComponents::method",
+      "kind": "uses",
+      "to": "kernel/kernel.go::Kernel::class"
+    },
+    {
+      "from": "kernel/kernel.go::Kernel.ListComponents::method",
+      "kind": "uses",
+      "to": "kernel/kernel.go::ComponentStatus::class"
+    },
+    {
+      "from": "kernel/kernel.go::Kernel.ListComponents::method",
+      "kind": "calls",
+      "to": "kernel/kernel.go::Kernel.resolveOrder::method"
+    },
+    {
+      "from": "kernel/kernel.go::Kernel.ListComponents::method",
+      "kind": "calls",
+      "to": "kernel/component.go::Component.Version::method"
+    },
+    {
+      "from": "kernel/kernel.go::Kernel.ListComponents::method",
+      "kind": "calls",
+      "to": "kernel/component.go::Component.Dependencies::method"
+    },
+    {
+      "from": "kernel/kernel.go::Kernel.ListComponents::method",
+      "kind": "calls",
+      "to": "kernel/kernel.go::hookNames::function"
+    },
+    {
+      "from": "kernel/kernel.go::Kernel.ListComponents::method",
+      "kind": "calls",
+      "to": "kernel/component.go::Component.Hooks::method"
+    },
+    {
+      "from": "kernel/kernel.go::hookNames::function",
+      "kind": "uses",
+      "to": "kernel/component.go::HookDef::class"
+    },
+    {
+      "from": "kernel/kernel.go::Kernel.resolveOrder::method",
+      "kind": "uses",
+      "to": "kernel/kernel.go::Kernel::class"
+    },
+    {
+      "from": "kernel/kernel.go::Kernel.resolveOrder::method",
+      "kind": "calls",
+      "to": "kernel/component.go::Component.Dependencies::method"
+    }
+  ],
+  "file": "kernel/kernel.go",
+  "intent": [
+    {
+      "date": "2026-06-01T15:50:51-03:00",
+      "hash": "3e6b86cdf5df726fc506ab568a05ed9819f71d56",
+      "kind": "commit",
+      "message": "feat: integrate semantic-release and display version in admin footer"
+    },
+    {
+      "date": "2026-06-01T15:49:04-03:00",
+      "hash": "f042fe2361ed476a9ac03f784f87c44374ac545a",
+      "kind": "commit",
+      "message": "feat: integrate semantic-release and display version in admin footer"
+    },
+    {
+      "date": "2026-05-27T13:30:22-03:00",
+      "hash": "ef4ea80440bd62ca63199138d6d0fbba2f686408",
+      "kind": "commit",
+      "message": "fix: harden kernel, api, auth, forge, git, and storage components"
+    },
+    {
+      "date": "2026-05-27T01:05:15-03:00",
+      "hash": "2a49228e1fc32f95d22e29aebf03cc3719490e4f",
+      "kind": "commit",
+      "message": "fix: address review findings — security, authz, race conditions"
+    },
+    {
+      "date": "2026-05-26T13:23:16-03:00",
+      "hash": "fc23a09eb75b67436a08200e876eef687ad8d237",
+      "kind": "commit",
+      "message": "feat(cli proxy kernel): add CLI commands, proxy server, and observability"
+    },
+    {
+      "date": "2026-05-26T12:04:33-03:00",
+      "hash": "3e8d78c36672c39fb4ef117a04b8b98d8ecfb6f2",
+      "kind": "commit",
+      "message": "chore: initial project bootstrap"
+    }
+  ],
+  "lastModified": 1781284401,
+  "symbols": [
+    {
+      "endLine": 10,
+      "endOffset": 247,
+      "kind": "variable",
+      "name": "Version",
+      "startLine": 10,
+      "startOffset": 240,
+      "symbolId": "kernel/kernel.go::Version::variable"
+    },
+    {
+      "endLine": 18,
+      "endOffset": 401,
+      "kind": "class",
+      "name": "ComponentStatus",
+      "startLine": 12,
+      "startOffset": 268,
+      "symbolId": "kernel/kernel.go::ComponentStatus::class"
+    },
+    {
+      "endLine": 26,
+      "endOffset": 557,
+      "kind": "class",
+      "name": "Kernel",
+      "startLine": 20,
+      "startOffset": 408,
+      "symbolId": "kernel/kernel.go::Kernel::class"
+    },
+    {
+      "endLine": 35,
+      "endOffset": 743,
+      "kind": "function",
+      "name": "New",
+      "startLine": 28,
+      "startOffset": 559,
+      "symbolId": "kernel/kernel.go::New::function"
+    },
+    {
+      "endLine": 41,
+      "endOffset": 938,
+      "kind": "method",
+      "name": "Kernel.Register",
+      "startLine": 37,
+      "startOffset": 745,
+      "symbolId": "kernel/kernel.go::Kernel.Register::method"
+    },
+    {
+      "endLine": 67,
+      "endOffset": 1604,
+      "kind": "method",
+      "name": "Kernel.Start",
+      "startLine": 43,
+      "startOffset": 940,
+      "symbolId": "kernel/kernel.go::Kernel.Start::method"
+    },
+    {
+      "endLine": 83,
+      "endOffset": 1965,
+      "kind": "method",
+      "name": "Kernel.Stop",
+      "startLine": 69,
+      "startOffset": 1606,
+      "symbolId": "kernel/kernel.go::Kernel.Stop::method"
+    },
+    {
+      "endLine": 87,
+      "endOffset": 2027,
+      "kind": "method",
+      "name": "Kernel.EventBus",
+      "startLine": 85,
+      "startOffset": 1967,
+      "symbolId": "kernel/kernel.go::Kernel.EventBus::method"
+    },
+    {
+      "endLine": 95,
+      "endOffset": 2220,
+      "kind": "method",
+      "name": "Kernel.Components",
+      "startLine": 89,
+      "startOffset": 2029,
+      "symbolId": "kernel/kernel.go::Kernel.Components::method"
+    },
+    {
+      "endLine": 116,
+      "endOffset": 2772,
+      "kind": "method",
+      "name": "Kernel.ListComponents",
+      "startLine": 97,
+      "startOffset": 2222,
+      "symbolId": "kernel/kernel.go::Kernel.ListComponents::method"
+    },
+    {
+      "endLine": 124,
+      "endOffset": 2919,
+      "kind": "function",
+      "name": "hookNames",
+      "startLine": 118,
+      "startOffset": 2774,
+      "symbolId": "kernel/kernel.go::hookNames::function"
+    },
+    {
+      "endLine": 165,
+      "endOffset": 3770,
+      "kind": "method",
+      "name": "Kernel.resolveOrder",
+      "startLine": 126,
+      "startOffset": 2921,
+      "symbolId": "kernel/kernel.go::Kernel.resolveOrder::method"
+    }
+  ]
+}

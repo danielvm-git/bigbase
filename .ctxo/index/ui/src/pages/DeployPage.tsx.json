@@ -1,0 +1,182 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 14,
+      "symbolId": "ui/src/pages/DeployPage.tsx::DeployPage::function"
+    }
+  ],
+  "contentHash": "6432041ed3307318c4b3e6a48645ca00453d7807615c235a0466ed156208c0f5",
+  "edges": [
+    {
+      "from": "ui/src/pages/DeployPage.tsx::DeployPage::function",
+      "kind": "imports",
+      "to": "ui/src/components.ts::PageHeader::class"
+    },
+    {
+      "from": "ui/src/pages/DeployPage.tsx::DeployPage::function",
+      "kind": "imports",
+      "to": "ui/src/components.ts::Button::class"
+    },
+    {
+      "from": "ui/src/pages/DeployPage.tsx::DeployPage::function",
+      "kind": "imports",
+      "to": "ui/src/components.ts::Input::class"
+    },
+    {
+      "from": "ui/src/pages/DeployPage.tsx::DeployPage::function",
+      "kind": "imports",
+      "to": "ui/src/components.ts::PreviewBanner::class"
+    },
+    {
+      "from": "ui/src/pages/DeployPage.tsx::DeployPage::function",
+      "kind": "imports",
+      "to": "ui/src/components.ts::SitesListSkeleton::class"
+    },
+    {
+      "from": "ui/src/pages/DeployPage.tsx::DeployPage::function",
+      "kind": "imports",
+      "to": "ui/src/components/SiteCard.ts::SiteCard::class"
+    },
+    {
+      "from": "ui/src/pages/DeployPage.tsx::DeployPage::function",
+      "kind": "imports",
+      "to": "ui/src/components/Icon.ts::Icon::class"
+    },
+    {
+      "from": "ui/src/pages/DeployPage.tsx::DeployPage::function",
+      "kind": "imports",
+      "to": "ui/src/lib/sitesData.ts::getSites::function"
+    },
+    {
+      "from": "ui/src/pages/DeployPage.tsx::DeployPage::function",
+      "kind": "imports",
+      "to": "ui/src/lib/previewMode.ts::isPreviewForced::function"
+    },
+    {
+      "from": "ui/src/pages/DeployPage.tsx::DeployPage::function",
+      "kind": "imports",
+      "to": "ui/src/lib/previewMode.ts::previewQuerySuffix::function"
+    },
+    {
+      "from": "ui/src/pages/DeployPage.tsx::DeployPage::function",
+      "kind": "imports",
+      "to": "ui/src/types/sites.ts::Site::interface",
+      "typeOnly": true
+    },
+    {
+      "from": "ui/src/pages/DeployPage.tsx::DeployPage::function",
+      "kind": "calls",
+      "to": "ui/src/lib/sitesData.ts::getSites::function"
+    },
+    {
+      "from": "ui/src/pages/DeployPage.tsx::DeployPage::function",
+      "kind": "calls",
+      "to": "ui/src/lib/previewMode.ts::isPreviewForced::function"
+    },
+    {
+      "from": "ui/src/pages/DeployPage.tsx::DeployPage::function",
+      "kind": "calls",
+      "to": "ui/src/lib/previewMode.ts::previewQuerySuffix::function"
+    },
+    {
+      "from": "ui/src/pages/DeployPage.tsx::DeployPage::function",
+      "kind": "calls",
+      "to": "ui/src/lib/previewMode.ts::isPreviewForced::function"
+    },
+    {
+      "from": "ui/src/pages/DeployPage.tsx::DeployPage::function",
+      "kind": "uses",
+      "to": "ui/src/types/sites.ts::Site::interface"
+    },
+    {
+      "from": "ui/src/pages/DeployPage.tsx::DeployPage::function",
+      "kind": "uses",
+      "to": "ui/src/lib/sitesData.ts::getSites::function"
+    },
+    {
+      "from": "ui/src/pages/DeployPage.tsx::DeployPage::function",
+      "kind": "uses",
+      "to": "ui/src/lib/previewMode.ts::isPreviewForced::function"
+    },
+    {
+      "from": "ui/src/pages/DeployPage.tsx::DeployPage::function",
+      "kind": "uses",
+      "to": "ui/src/lib/previewMode.ts::previewQuerySuffix::function"
+    },
+    {
+      "from": "ui/src/pages/DeployPage.tsx::DeployPage::function",
+      "kind": "uses",
+      "to": "ui/src/components.ts::PageHeader::class"
+    },
+    {
+      "from": "ui/src/pages/DeployPage.tsx::DeployPage::function",
+      "kind": "uses",
+      "to": "ui/src/components.ts::SitesListSkeleton::class"
+    },
+    {
+      "from": "ui/src/pages/DeployPage.tsx::DeployPage::function",
+      "kind": "uses",
+      "to": "ui/src/components.ts::PreviewBanner::class"
+    },
+    {
+      "from": "ui/src/pages/DeployPage.tsx::DeployPage::function",
+      "kind": "uses",
+      "to": "ui/src/components.ts::Button::class"
+    },
+    {
+      "from": "ui/src/pages/DeployPage.tsx::DeployPage::function",
+      "kind": "uses",
+      "to": "ui/src/components/Icon.ts::Icon::class"
+    },
+    {
+      "from": "ui/src/pages/DeployPage.tsx::DeployPage::function",
+      "kind": "uses",
+      "to": "ui/src/components.ts::Input::class"
+    },
+    {
+      "from": "ui/src/pages/DeployPage.tsx::DeployPage::function",
+      "kind": "uses",
+      "to": "ui/src/components/SiteCard.ts::SiteCard::class"
+    }
+  ],
+  "file": "ui/src/pages/DeployPage.tsx",
+  "intent": [
+    {
+      "date": "2026-06-04T11:34:24-03:00",
+      "hash": "26aba30a291f16ae2a8c97dd336ccb99ee1b1a01",
+      "kind": "commit",
+      "message": "fix(ui): port Sites prototype CSS and block unstyled deploy regressions"
+    },
+    {
+      "date": "2026-06-01T22:39:09-03:00",
+      "hash": "a4abae1120a620a856070f9eb15495bf6748f16c",
+      "kind": "commit",
+      "message": "feat(deploy): add SSE log stream and enhanced detail pages"
+    },
+    {
+      "date": "2026-05-28T01:02:44-03:00",
+      "hash": "da3f118678f0b80b5874e0d7dc559b5700cd3447",
+      "kind": "commit",
+      "message": "feat(admin-ui): port Appwrite design tokens and create shared component system"
+    },
+    {
+      "date": "2026-05-27T22:15:43-03:00",
+      "hash": "d056ce1757c3460861913113fa18f01cedd30ad1",
+      "kind": "commit",
+      "message": "feat(deploy): improve deployment pipeline and add admin UI pages"
+    }
+  ],
+  "lastModified": 1781284402,
+  "symbols": [
+    {
+      "endLine": 124,
+      "endOffset": 4165,
+      "kind": "function",
+      "name": "DeployPage",
+      "startLine": 11,
+      "startOffset": 500,
+      "symbolId": "ui/src/pages/DeployPage.tsx::DeployPage::function"
+    }
+  ]
+}

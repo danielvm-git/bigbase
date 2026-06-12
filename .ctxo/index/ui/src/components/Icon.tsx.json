@@ -1,0 +1,53 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 1,
+      "symbolId": "ui/src/components/Icon.tsx::Icon::function"
+    }
+  ],
+  "contentHash": "592dee64c92d23be50c96d375dd162e81e4f531be328e076677d1dbf07c89c4d",
+  "edges": [],
+  "file": "ui/src/components/Icon.tsx",
+  "intent": [
+    {
+      "date": "2026-06-04T16:06:51-03:00",
+      "hash": "ef3caacacb9f34a66513687ba295a7ceab40bbce",
+      "kind": "commit",
+      "message": "feat(ui): close all 19 prototype-vs-codebase gaps (#12)"
+    },
+    {
+      "date": "2026-06-04T11:34:24-03:00",
+      "hash": "26aba30a291f16ae2a8c97dd336ccb99ee1b1a01",
+      "kind": "commit",
+      "message": "fix(ui): port Sites prototype CSS and block unstyled deploy regressions"
+    },
+    {
+      "date": "2026-06-02T21:13:49-03:00",
+      "hash": "f610b14da299314c0471e960126666d168f34a32",
+      "kind": "commit",
+      "message": "feat(ui): complete epic e17 Enhanced Admin UI prototype parity (#10)"
+    }
+  ],
+  "lastModified": 1781284402,
+  "symbols": [
+    {
+      "endLine": 277,
+      "endOffset": 8105,
+      "kind": "function",
+      "name": "Icon",
+      "startLine": 258,
+      "startOffset": 7637,
+      "symbolId": "ui/src/components/Icon.tsx::Icon::function"
+    },
+    {
+      "endLine": 39,
+      "endOffset": 609,
+      "kind": "type",
+      "name": "IconName",
+      "startLine": 2,
+      "startOffset": 50,
+      "symbolId": "ui/src/components/Icon.tsx::IconName::type"
+    }
+  ]
+}

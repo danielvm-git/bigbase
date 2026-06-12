@@ -1,0 +1,32 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 4,
+      "symbolId": "ui/src/components/Sparkline.tsx::Sparkline::function"
+    }
+  ],
+  "contentHash": "6321ecaf799a75ba39038dda23cca52c589ba96122a4564bae70a22c55329d04",
+  "edges": [],
+  "file": "ui/src/components/Sparkline.tsx",
+  "intent": [
+    {
+      "date": "2026-06-05T20:04:30-03:00",
+      "hash": "77169802bdab2e3b45615e98938d49a53c0698ab",
+      "kind": "commit",
+      "message": "feat(monitoring): e25s03 monitoring page charts"
+    }
+  ],
+  "lastModified": 1781284402,
+  "symbols": [
+    {
+      "endLine": 46,
+      "endOffset": 1270,
+      "kind": "function",
+      "name": "Sparkline",
+      "startLine": 14,
+      "startOffset": 290,
+      "symbolId": "ui/src/components/Sparkline.tsx::Sparkline::function"
+    }
+  ]
+}

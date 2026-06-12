@@ -1,0 +1,53 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 13,
+      "symbolId": "ui/src/components/OnboardingChecklist.tsx::OnboardingChecklist::function"
+    }
+  ],
+  "contentHash": "6040914cd90461969c1fec7777894b9946d60bf2099a43080f33b1a1b083ce3c",
+  "edges": [
+    {
+      "from": "ui/src/components/OnboardingChecklist.tsx::OnboardingChecklist::function",
+      "kind": "imports",
+      "to": "ui/src/components/Card.ts::Card::class"
+    },
+    {
+      "from": "ui/src/components/OnboardingChecklist.tsx::OnboardingChecklist::function",
+      "kind": "imports",
+      "to": "ui/src/components/Card.ts::CardHeader::class"
+    },
+    {
+      "from": "ui/src/components/OnboardingChecklist.tsx::OnboardingChecklist::function",
+      "kind": "uses",
+      "to": "ui/src/components/Card.ts::Card::class"
+    },
+    {
+      "from": "ui/src/components/OnboardingChecklist.tsx::OnboardingChecklist::function",
+      "kind": "uses",
+      "to": "ui/src/components/Card.ts::CardHeader::class"
+    }
+  ],
+  "file": "ui/src/components/OnboardingChecklist.tsx",
+  "intent": [
+    {
+      "date": "2026-06-05T19:51:11-03:00",
+      "hash": "5dc3011a8bf1a23d5532faff56612e14cee9710b",
+      "kind": "commit",
+      "message": "feat(dx): e22s01+e22s02 onboarding checklist UI and 1-click scaffold API"
+    }
+  ],
+  "lastModified": 1781284402,
+  "symbols": [
+    {
+      "endLine": 60,
+      "endOffset": 1731,
+      "kind": "function",
+      "name": "OnboardingChecklist",
+      "startLine": 9,
+      "startOffset": 162,
+      "symbolId": "ui/src/components/OnboardingChecklist.tsx::OnboardingChecklist::function"
+    }
+  ]
+}

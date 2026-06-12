@@ -1,0 +1,76 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 16,
+      "symbolId": "ui/src/pages/SqlEditorPage.tsx::SqlEditorPage::function"
+    }
+  ],
+  "contentHash": "791a18e20ffad5d77ae995bafedde846141c82055d01332c34281cc93d8779e8",
+  "edges": [
+    {
+      "from": "ui/src/pages/SqlEditorPage.tsx::SqlEditorPage::function",
+      "kind": "imports",
+      "to": "ui/src/components.ts::PageHeader::class"
+    },
+    {
+      "from": "ui/src/pages/SqlEditorPage.tsx::SqlEditorPage::function",
+      "kind": "imports",
+      "to": "ui/src/components.ts::Button::class"
+    },
+    {
+      "from": "ui/src/pages/SqlEditorPage.tsx::SqlEditorPage::function",
+      "kind": "calls",
+      "to": "ui/src/pages/SqlEditorPage.tsx::formatCell::function"
+    },
+    {
+      "from": "ui/src/pages/SqlEditorPage.tsx::SqlEditorPage::function",
+      "kind": "uses",
+      "to": "ui/src/components.ts::PageHeader::class"
+    },
+    {
+      "from": "ui/src/pages/SqlEditorPage.tsx::SqlEditorPage::function",
+      "kind": "uses",
+      "to": "ui/src/components.ts::Button::class"
+    }
+  ],
+  "file": "ui/src/pages/SqlEditorPage.tsx",
+  "intent": [
+    {
+      "date": "2026-06-02T21:13:49-03:00",
+      "hash": "f610b14da299314c0471e960126666d168f34a32",
+      "kind": "commit",
+      "message": "feat(ui): complete epic e17 Enhanced Admin UI prototype parity (#10)"
+    },
+    {
+      "date": "2026-05-28T01:02:44-03:00",
+      "hash": "da3f118678f0b80b5874e0d7dc559b5700cd3447",
+      "kind": "commit",
+      "message": "feat(admin-ui): port Appwrite design tokens and create shared component system"
+    },
+    {
+      "date": "2026-05-27T01:05:15-03:00",
+      "hash": "2a49228e1fc32f95d22e29aebf03cc3719490e4f",
+      "kind": "commit",
+      "message": "fix: address review findings — security, authz, race conditions"
+    },
+    {
+      "date": "2026-05-26T23:15:56-03:00",
+      "hash": "e19e9775f62605ca4174a457e0d62ba021e47d32",
+      "kind": "commit",
+      "message": "feat(admin): add Admin UI, SQL Editor, and User Management"
+    }
+  ],
+  "lastModified": 1781284402,
+  "symbols": [
+    {
+      "endLine": 108,
+      "endOffset": 3161,
+      "kind": "function",
+      "name": "SqlEditorPage",
+      "startLine": 14,
+      "startOffset": 281,
+      "symbolId": "ui/src/pages/SqlEditorPage.tsx::SqlEditorPage::function"
+    }
+  ]
+}

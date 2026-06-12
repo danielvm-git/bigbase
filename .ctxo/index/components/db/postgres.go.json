@@ -1,0 +1,281 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/db/postgres.go::NewPostgres::function"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/db/postgres.go::PostgresDB.Init::method"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/db/postgres.go::PostgresDB.Start::method"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/db/postgres.go::PostgresDB.Stop::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/db/postgres.go::PostgresDB.ExecContext::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/db/postgres.go::PostgresDB.QueryContext::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/db/postgres.go::PostgresDB.QueryRowContext::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/db/postgres.go::PostgresDB.Exec::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/db/postgres.go::PostgresDB.Query::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/db/postgres.go::PostgresDB.QueryRow::method"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/db/postgres.go::PostgresDB.Migrate::method"
+    }
+  ],
+  "contentHash": "ba11e7ba1e3aa408285fb8009b28abc52ca2543fc954844c58b7e9c8651250bc",
+  "edges": [
+    {
+      "from": "components/db/postgres.go::NewPostgres::function",
+      "kind": "uses",
+      "to": "components/db/postgres.go::PostgresOptions::class"
+    },
+    {
+      "from": "components/db/postgres.go::NewPostgres::function",
+      "kind": "uses",
+      "to": "components/db/postgres.go::PostgresDB::class"
+    },
+    {
+      "from": "components/db/postgres.go::NewPostgres::function",
+      "kind": "uses",
+      "to": "components/db/db.go::noopLogger::class"
+    },
+    {
+      "from": "components/db/postgres.go::PostgresDB.Init::method",
+      "kind": "uses",
+      "to": "components/db/postgres.go::PostgresDB::class"
+    },
+    {
+      "from": "components/db/postgres.go::PostgresDB.Init::method",
+      "kind": "uses",
+      "to": "kernel/component.go::Context::class"
+    },
+    {
+      "from": "components/db/postgres.go::PostgresDB.Start::method",
+      "kind": "uses",
+      "to": "components/db/postgres.go::PostgresDB::class"
+    },
+    {
+      "from": "components/db/postgres.go::PostgresDB.Start::method",
+      "kind": "uses",
+      "to": "kernel/component.go::Context::class"
+    },
+    {
+      "from": "components/db/postgres.go::PostgresDB.Start::method",
+      "kind": "calls",
+      "to": "components/db/db.go::Logger.Info::method"
+    },
+    {
+      "from": "components/db/postgres.go::PostgresDB.Stop::method",
+      "kind": "uses",
+      "to": "components/db/postgres.go::PostgresDB::class"
+    },
+    {
+      "from": "components/db/postgres.go::PostgresDB.Stop::method",
+      "kind": "uses",
+      "to": "kernel/component.go::Context::class"
+    },
+    {
+      "from": "components/db/postgres.go::PostgresDB.ExecContext::method",
+      "kind": "uses",
+      "to": "components/db/postgres.go::PostgresDB::class"
+    },
+    {
+      "from": "components/db/postgres.go::PostgresDB.QueryContext::method",
+      "kind": "uses",
+      "to": "components/db/postgres.go::PostgresDB::class"
+    },
+    {
+      "from": "components/db/postgres.go::PostgresDB.QueryRowContext::method",
+      "kind": "uses",
+      "to": "components/db/postgres.go::PostgresDB::class"
+    },
+    {
+      "from": "components/db/postgres.go::PostgresDB.Exec::method",
+      "kind": "uses",
+      "to": "components/db/postgres.go::PostgresDB::class"
+    },
+    {
+      "from": "components/db/postgres.go::PostgresDB.Query::method",
+      "kind": "uses",
+      "to": "components/db/postgres.go::PostgresDB::class"
+    },
+    {
+      "from": "components/db/postgres.go::PostgresDB.QueryRow::method",
+      "kind": "uses",
+      "to": "components/db/postgres.go::PostgresDB::class"
+    },
+    {
+      "from": "components/db/postgres.go::PostgresDB.Migrate::method",
+      "kind": "uses",
+      "to": "components/db/postgres.go::PostgresDB::class"
+    },
+    {
+      "from": "components/db/postgres.go::PostgresDB::class",
+      "kind": "implements",
+      "to": "kernel/dber.go::DBer::interface"
+    },
+    {
+      "from": "components/db/postgres.go::PostgresDB::class",
+      "kind": "implements",
+      "to": "components/backup/backup.go::DBer::interface"
+    },
+    {
+      "from": "components/db/postgres.go::PostgresDB::class",
+      "kind": "implements",
+      "to": "components/webhooks/webhooks.go::DBer::interface"
+    }
+  ],
+  "file": "components/db/postgres.go",
+  "intent": [
+    {
+      "date": "2026-06-05T20:15:15-03:00",
+      "hash": "52c368a07cb122d7891677254ca52a5bc450aa6e",
+      "kind": "commit",
+      "message": "feat(db): e18s02 PostgreSQL driver via pgxpool + stdlib adapter"
+    }
+  ],
+  "lastModified": 1781284401,
+  "symbols": [
+    {
+      "endLine": 18,
+      "endOffset": 281,
+      "kind": "class",
+      "name": "PostgresOptions",
+      "startLine": 15,
+      "startOffset": 225,
+      "symbolId": "components/db/postgres.go::PostgresOptions::class"
+    },
+    {
+      "endLine": 29,
+      "endOffset": 641,
+      "kind": "class",
+      "name": "PostgresDB",
+      "startLine": 24,
+      "startOffset": 552,
+      "symbolId": "components/db/postgres.go::PostgresDB::class"
+    },
+    {
+      "endLine": 41,
+      "endOffset": 901,
+      "kind": "function",
+      "name": "NewPostgres",
+      "startLine": 32,
+      "startOffset": 715,
+      "symbolId": "components/db/postgres.go::NewPostgres::function"
+    },
+    {
+      "endLine": 46,
+      "endOffset": 1036,
+      "kind": "method",
+      "name": "PostgresDB.Init",
+      "startLine": 44,
+      "startOffset": 960,
+      "symbolId": "components/db/postgres.go::PostgresDB.Init::method"
+    },
+    {
+      "endLine": 69,
+      "endOffset": 1758,
+      "kind": "method",
+      "name": "PostgresDB.Start",
+      "startLine": 49,
+      "startOffset": 1097,
+      "symbolId": "components/db/postgres.go::PostgresDB.Start::method"
+    },
+    {
+      "endLine": 84,
+      "endOffset": 2071,
+      "kind": "method",
+      "name": "PostgresDB.Stop",
+      "startLine": 72,
+      "startOffset": 1808,
+      "symbolId": "components/db/postgres.go::PostgresDB.Stop::method"
+    },
+    {
+      "endLine": 89,
+      "endOffset": 2294,
+      "kind": "method",
+      "name": "PostgresDB.ExecContext",
+      "startLine": 87,
+      "startOffset": 2141,
+      "symbolId": "components/db/postgres.go::PostgresDB.ExecContext::method"
+    },
+    {
+      "endLine": 94,
+      "endOffset": 2518,
+      "kind": "method",
+      "name": "PostgresDB.QueryContext",
+      "startLine": 92,
+      "startOffset": 2364,
+      "symbolId": "components/db/postgres.go::PostgresDB.QueryContext::method"
+    },
+    {
+      "endLine": 99,
+      "endOffset": 2740,
+      "kind": "method",
+      "name": "PostgresDB.QueryRowContext",
+      "startLine": 97,
+      "startOffset": 2590,
+      "symbolId": "components/db/postgres.go::PostgresDB.QueryRowContext::method"
+    },
+    {
+      "endLine": 104,
+      "endOffset": 2906,
+      "kind": "method",
+      "name": "PostgresDB.Exec",
+      "startLine": 102,
+      "startOffset": 2793,
+      "symbolId": "components/db/postgres.go::PostgresDB.Exec::method"
+    },
+    {
+      "endLine": 109,
+      "endOffset": 3095,
+      "kind": "method",
+      "name": "PostgresDB.Query",
+      "startLine": 107,
+      "startOffset": 2981,
+      "symbolId": "components/db/postgres.go::PostgresDB.Query::method"
+    },
+    {
+      "endLine": 114,
+      "endOffset": 3282,
+      "kind": "method",
+      "name": "PostgresDB.QueryRow",
+      "startLine": 112,
+      "startOffset": 3172,
+      "symbolId": "components/db/postgres.go::PostgresDB.QueryRow::method"
+    },
+    {
+      "endLine": 122,
+      "endOffset": 3531,
+      "kind": "method",
+      "name": "PostgresDB.Migrate",
+      "startLine": 117,
+      "startOffset": 3358,
+      "symbolId": "components/db/postgres.go::PostgresDB.Migrate::method"
+    }
+  ]
+}

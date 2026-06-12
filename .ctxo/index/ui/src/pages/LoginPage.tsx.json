@@ -1,0 +1,103 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 22,
+      "symbolId": "ui/src/pages/LoginPage.tsx::LoginPage::function"
+    }
+  ],
+  "contentHash": "a9130003a9adb0a6918cda8e8154b993a03ac109f370fd12fc29e700fcf4c030",
+  "edges": [
+    {
+      "from": "ui/src/pages/LoginPage.tsx::LoginPage::function",
+      "kind": "imports",
+      "to": "ui/src/components.ts::Button::class"
+    },
+    {
+      "from": "ui/src/pages/LoginPage.tsx::LoginPage::function",
+      "kind": "imports",
+      "to": "ui/src/components.ts::Input::class"
+    },
+    {
+      "from": "ui/src/pages/LoginPage.tsx::LoginPage::function",
+      "kind": "imports",
+      "to": "ui/src/components.ts::Card::class"
+    },
+    {
+      "from": "ui/src/pages/LoginPage.tsx::LoginPage::function",
+      "kind": "calls",
+      "to": "ui/src/pages/LoginPage.tsx::isValidEmail::function"
+    },
+    {
+      "from": "ui/src/pages/LoginPage.tsx::LoginPage::function",
+      "kind": "calls",
+      "to": "ui/src/pages/LoginPage.tsx::isValidEmail::function"
+    },
+    {
+      "from": "ui/src/pages/LoginPage.tsx::LoginPage::function",
+      "kind": "uses",
+      "to": "ui/src/components.ts::Card::class"
+    },
+    {
+      "from": "ui/src/pages/LoginPage.tsx::LoginPage::function",
+      "kind": "uses",
+      "to": "ui/src/components.ts::Input::class"
+    },
+    {
+      "from": "ui/src/pages/LoginPage.tsx::LoginPage::function",
+      "kind": "uses",
+      "to": "ui/src/components.ts::Button::class"
+    }
+  ],
+  "file": "ui/src/pages/LoginPage.tsx",
+  "intent": [
+    {
+      "date": "2026-06-02T21:13:49-03:00",
+      "hash": "f610b14da299314c0471e960126666d168f34a32",
+      "kind": "commit",
+      "message": "feat(ui): complete epic e17 Enhanced Admin UI prototype parity (#10)"
+    },
+    {
+      "date": "2026-05-28T01:02:44-03:00",
+      "hash": "da3f118678f0b80b5874e0d7dc559b5700cd3447",
+      "kind": "commit",
+      "message": "feat(admin-ui): port Appwrite design tokens and create shared component system"
+    },
+    {
+      "date": "2026-05-28T00:24:26-03:00",
+      "hash": "a453256a715c56eb2df2c8584045d3b48fa901ee",
+      "kind": "commit",
+      "message": "feat(ui): enhance dashboard with charts and fix Google login visibility"
+    },
+    {
+      "date": "2026-05-28T00:13:40-03:00",
+      "hash": "d4970ec7b7d89e32652c9811f67b93ee668f7a29",
+      "kind": "commit",
+      "message": "feat(auth): add Google OAuth social login via embedded relay"
+    },
+    {
+      "date": "2026-05-27T01:05:15-03:00",
+      "hash": "2a49228e1fc32f95d22e29aebf03cc3719490e4f",
+      "kind": "commit",
+      "message": "fix: address review findings — security, authz, race conditions"
+    },
+    {
+      "date": "2026-05-26T23:15:56-03:00",
+      "hash": "e19e9775f62605ca4174a457e0d62ba021e47d32",
+      "kind": "commit",
+      "message": "feat(admin): add Admin UI, SQL Editor, and User Management"
+    }
+  ],
+  "lastModified": 1781284402,
+  "symbols": [
+    {
+      "endLine": 181,
+      "endOffset": 6334,
+      "kind": "function",
+      "name": "LoginPage",
+      "startLine": 13,
+      "startOffset": 306,
+      "symbolId": "ui/src/pages/LoginPage.tsx::LoginPage::function"
+    }
+  ]
+}

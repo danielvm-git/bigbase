@@ -1,0 +1,305 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 1,
+      "symbolId": "ui/src/App.tsx::App::function"
+    }
+  ],
+  "contentHash": "7e76ccc22aee2a61b19a3f8629c21560b9c74a92e0e17746e824879940460036",
+  "edges": [
+    {
+      "from": "ui/src/App.tsx::App::function",
+      "kind": "imports",
+      "to": "ui/src/pages/LoginPage.ts::LoginPage::class"
+    },
+    {
+      "from": "ui/src/App.tsx::App::function",
+      "kind": "imports",
+      "to": "ui/src/pages/DashboardPage.ts::DashboardPage::class"
+    },
+    {
+      "from": "ui/src/App.tsx::App::function",
+      "kind": "imports",
+      "to": "ui/src/pages/DataStudioPage.ts::DataStudioPage::class"
+    },
+    {
+      "from": "ui/src/App.tsx::App::function",
+      "kind": "imports",
+      "to": "ui/src/pages/SqlEditorPage.ts::SqlEditorPage::class"
+    },
+    {
+      "from": "ui/src/App.tsx::App::function",
+      "kind": "imports",
+      "to": "ui/src/pages/UsersPage.ts::UsersPage::class"
+    },
+    {
+      "from": "ui/src/App.tsx::App::function",
+      "kind": "imports",
+      "to": "ui/src/pages/GitReposPage.ts::GitReposPage::class"
+    },
+    {
+      "from": "ui/src/App.tsx::App::function",
+      "kind": "imports",
+      "to": "ui/src/pages/DeployPage.ts::DeployPage::class"
+    },
+    {
+      "from": "ui/src/App.tsx::App::function",
+      "kind": "imports",
+      "to": "ui/src/pages/MessagingPage.ts::MessagingPage::class"
+    },
+    {
+      "from": "ui/src/App.tsx::App::function",
+      "kind": "imports",
+      "to": "ui/src/pages/MessagingDetailPage.ts::MessagingDetailPage::class"
+    },
+    {
+      "from": "ui/src/App.tsx::App::function",
+      "kind": "imports",
+      "to": "ui/src/pages/StoragePage.ts::StoragePage::class"
+    },
+    {
+      "from": "ui/src/App.tsx::App::function",
+      "kind": "imports",
+      "to": "ui/src/pages/FunctionsPage.ts::FunctionsPage::class"
+    },
+    {
+      "from": "ui/src/App.tsx::App::function",
+      "kind": "imports",
+      "to": "ui/src/pages/FunctionDetailPage.ts::FunctionLogsRedirect::class"
+    },
+    {
+      "from": "ui/src/App.tsx::App::function",
+      "kind": "imports",
+      "to": "ui/src/pages/FunctionDetailPage.ts::FunctionDetailPage::class"
+    },
+    {
+      "from": "ui/src/App.tsx::App::function",
+      "kind": "imports",
+      "to": "ui/src/pages/ForgePage.ts::ForgePage::class"
+    },
+    {
+      "from": "ui/src/App.tsx::App::function",
+      "kind": "imports",
+      "to": "ui/src/pages/CiciPage.ts::CiciPage::class"
+    },
+    {
+      "from": "ui/src/App.tsx::App::function",
+      "kind": "imports",
+      "to": "ui/src/pages/CreateSitePage.ts::CreateSitePage::class"
+    },
+    {
+      "from": "ui/src/App.tsx::App::function",
+      "kind": "imports",
+      "to": "ui/src/pages/MonitoringPage.ts::MonitoringPage::class"
+    },
+    {
+      "from": "ui/src/App.tsx::App::function",
+      "kind": "imports",
+      "to": "ui/src/pages/EventsPage.ts::EventsPage::class"
+    },
+    {
+      "from": "ui/src/App.tsx::App::function",
+      "kind": "imports",
+      "to": "ui/src/pages/SiteDetailPage.ts::SiteDetailPage::class"
+    },
+    {
+      "from": "ui/src/App.tsx::App::function",
+      "kind": "imports",
+      "to": "ui/src/pages/RealtimePage.ts::RealtimePage::class"
+    },
+    {
+      "from": "ui/src/App.tsx::App::function",
+      "kind": "imports",
+      "to": "ui/src/pages/SettingsPage.ts::SettingsPage::class"
+    },
+    {
+      "from": "ui/src/App.tsx::App::function",
+      "kind": "imports",
+      "to": "ui/src/pages/NotFoundPage.ts::NotFoundPage::class"
+    },
+    {
+      "from": "ui/src/App.tsx::App::function",
+      "kind": "imports",
+      "to": "ui/src/Layout.ts::Layout::class"
+    },
+    {
+      "from": "ui/src/App.tsx::App::function",
+      "kind": "uses",
+      "to": "ui/src/Layout.ts::Layout::class"
+    },
+    {
+      "from": "ui/src/App.tsx::App::function",
+      "kind": "uses",
+      "to": "ui/src/pages/DashboardPage.ts::DashboardPage::class"
+    },
+    {
+      "from": "ui/src/App.tsx::App::function",
+      "kind": "uses",
+      "to": "ui/src/pages/DataStudioPage.ts::DataStudioPage::class"
+    },
+    {
+      "from": "ui/src/App.tsx::App::function",
+      "kind": "uses",
+      "to": "ui/src/pages/SqlEditorPage.ts::SqlEditorPage::class"
+    },
+    {
+      "from": "ui/src/App.tsx::App::function",
+      "kind": "uses",
+      "to": "ui/src/pages/UsersPage.ts::UsersPage::class"
+    },
+    {
+      "from": "ui/src/App.tsx::App::function",
+      "kind": "uses",
+      "to": "ui/src/pages/GitReposPage.ts::GitReposPage::class"
+    },
+    {
+      "from": "ui/src/App.tsx::App::function",
+      "kind": "uses",
+      "to": "ui/src/pages/DeployPage.ts::DeployPage::class"
+    },
+    {
+      "from": "ui/src/App.tsx::App::function",
+      "kind": "uses",
+      "to": "ui/src/pages/CreateSitePage.ts::CreateSitePage::class"
+    },
+    {
+      "from": "ui/src/App.tsx::App::function",
+      "kind": "uses",
+      "to": "ui/src/pages/SiteDetailPage.ts::SiteDetailPage::class"
+    },
+    {
+      "from": "ui/src/App.tsx::App::function",
+      "kind": "uses",
+      "to": "ui/src/pages/MessagingPage.ts::MessagingPage::class"
+    },
+    {
+      "from": "ui/src/App.tsx::App::function",
+      "kind": "uses",
+      "to": "ui/src/pages/MessagingDetailPage.ts::MessagingDetailPage::class"
+    },
+    {
+      "from": "ui/src/App.tsx::App::function",
+      "kind": "uses",
+      "to": "ui/src/pages/StoragePage.ts::StoragePage::class"
+    },
+    {
+      "from": "ui/src/App.tsx::App::function",
+      "kind": "uses",
+      "to": "ui/src/pages/FunctionsPage.ts::FunctionsPage::class"
+    },
+    {
+      "from": "ui/src/App.tsx::App::function",
+      "kind": "uses",
+      "to": "ui/src/pages/FunctionDetailPage.ts::FunctionDetailPage::class"
+    },
+    {
+      "from": "ui/src/App.tsx::App::function",
+      "kind": "uses",
+      "to": "ui/src/pages/FunctionDetailPage.ts::FunctionLogsRedirect::class"
+    },
+    {
+      "from": "ui/src/App.tsx::App::function",
+      "kind": "uses",
+      "to": "ui/src/pages/ForgePage.ts::ForgePage::class"
+    },
+    {
+      "from": "ui/src/App.tsx::App::function",
+      "kind": "uses",
+      "to": "ui/src/pages/CiciPage.ts::CiciPage::class"
+    },
+    {
+      "from": "ui/src/App.tsx::App::function",
+      "kind": "uses",
+      "to": "ui/src/pages/MonitoringPage.ts::MonitoringPage::class"
+    },
+    {
+      "from": "ui/src/App.tsx::App::function",
+      "kind": "uses",
+      "to": "ui/src/pages/EventsPage.ts::EventsPage::class"
+    },
+    {
+      "from": "ui/src/App.tsx::App::function",
+      "kind": "uses",
+      "to": "ui/src/pages/RealtimePage.ts::RealtimePage::class"
+    },
+    {
+      "from": "ui/src/App.tsx::App::function",
+      "kind": "uses",
+      "to": "ui/src/pages/SettingsPage.ts::SettingsPage::class"
+    },
+    {
+      "from": "ui/src/App.tsx::App::function",
+      "kind": "uses",
+      "to": "ui/src/pages/NotFoundPage.ts::NotFoundPage::class"
+    },
+    {
+      "from": "ui/src/App.tsx::App::function",
+      "kind": "uses",
+      "to": "ui/src/pages/LoginPage.ts::LoginPage::class"
+    }
+  ],
+  "file": "ui/src/App.tsx",
+  "intent": [
+    {
+      "date": "2026-06-05T19:53:02-03:00",
+      "hash": "20014c0a4af1657cda6928192e1aa99e027a94c7",
+      "kind": "commit",
+      "message": "feat(dx): e22s03 event bus visualizer — SSE endpoint and frontend page"
+    },
+    {
+      "date": "2026-06-02T21:13:49-03:00",
+      "hash": "f610b14da299314c0471e960126666d168f34a32",
+      "kind": "commit",
+      "message": "feat(ui): complete epic e17 Enhanced Admin UI prototype parity (#10)"
+    },
+    {
+      "date": "2026-06-01T22:31:05-03:00",
+      "hash": "914d490e17450f80a3083776c8ce0665e8035706",
+      "kind": "commit",
+      "message": "feat(functions): add execution logs persistence and viewer page"
+    },
+    {
+      "date": "2026-06-01T22:25:32-03:00",
+      "hash": "567a41a6ad025bbfbbcbe6c70618fc2b034fd090",
+      "kind": "commit",
+      "message": "feat(realtime): add status endpoint and Realtime inspector page"
+    },
+    {
+      "date": "2026-06-01T18:18:23-03:00",
+      "hash": "540a2dab0437235ccd4f7a390a8a1e3fb40965dd",
+      "kind": "commit",
+      "message": "fix(main): wire github and sites components into backend, proxy, and UI (#9)"
+    },
+    {
+      "date": "2026-05-27T23:25:48-03:00",
+      "hash": "0a683cd2663b412eb0554ccb875265aa4a2fc43f",
+      "kind": "commit",
+      "message": "feat(monitoring): wire into main.go and add admin UI page"
+    },
+    {
+      "date": "2026-05-27T22:15:43-03:00",
+      "hash": "d056ce1757c3460861913113fa18f01cedd30ad1",
+      "kind": "commit",
+      "message": "feat(deploy): improve deployment pipeline and add admin UI pages"
+    },
+    {
+      "date": "2026-05-26T23:15:56-03:00",
+      "hash": "e19e9775f62605ca4174a457e0d62ba021e47d32",
+      "kind": "commit",
+      "message": "feat(admin): add Admin UI, SQL Editor, and User Management"
+    }
+  ],
+  "lastModified": 1781284402,
+  "symbols": [
+    {
+      "endLine": 53,
+      "endOffset": 2581,
+      "kind": "function",
+      "name": "App",
+      "startLine": 24,
+      "startOffset": 1128,
+      "symbolId": "ui/src/App.tsx::App::function"
+    }
+  ]
+}

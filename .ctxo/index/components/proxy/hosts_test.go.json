@@ -1,0 +1,42 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 9,
+      "symbolId": "components/proxy/hosts_test.go::TestProxyDeploymentHost::function"
+    },
+    {
+      "cyclomatic": 5,
+      "symbolId": "components/proxy/hosts_test.go::TestProxyUnregisterDeploymentHost::function"
+    },
+    {
+      "cyclomatic": 7,
+      "symbolId": "components/proxy/hosts_test.go::TestCaddyAllow::function"
+    }
+  ],
+  "contentHash": "0c7d381fb7513be52ce3510fd19c1d76877783feb4f0d64544fd23ccb974f9f1",
+  "edges": [],
+  "file": "components/proxy/hosts_test.go",
+  "intent": [
+    {
+      "date": "2026-06-05T12:58:48-03:00",
+      "hash": "21a8236dd2d6111d9543c744a13133d5a981f305",
+      "kind": "commit",
+      "message": "test(e21s05): add race detection tests and fuzz targets"
+    },
+    {
+      "date": "2026-06-05T12:21:16-03:00",
+      "hash": "c3794be59a2ccb9431dba427d9cd749aa97d464f",
+      "kind": "commit",
+      "message": "feat(deploy): live build terminal on create-site step 3 (#13)"
+    },
+    {
+      "date": "2026-06-04T11:49:33-03:00",
+      "hash": "582d143bfc592df61011280941d06e6354326c1e",
+      "kind": "commit",
+      "message": "fix(deploy): use https://slug.bigbase.click for production site URLs (#11)"
+    }
+  ],
+  "lastModified": 1781284401,
+  "symbols": []
+}

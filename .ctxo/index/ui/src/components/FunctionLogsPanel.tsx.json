@@ -1,0 +1,48 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 9,
+      "symbolId": "ui/src/components/FunctionLogsPanel.tsx::FunctionLogsPanel::function"
+    }
+  ],
+  "contentHash": "9ecf133bb3051f8434b482349a6481e3a23dabd8b28ecc40c9ab6f1da7029102",
+  "edges": [
+    {
+      "from": "ui/src/components/FunctionLogsPanel.tsx::FunctionLogsPanel::function",
+      "kind": "imports",
+      "to": "ui/src/components/Badge.ts::statusBadgeVariant::function"
+    },
+    {
+      "from": "ui/src/components/FunctionLogsPanel.tsx::FunctionLogsPanel::function",
+      "kind": "calls",
+      "to": "ui/src/components/Badge.ts::statusBadgeVariant::function"
+    },
+    {
+      "from": "ui/src/components/FunctionLogsPanel.tsx::FunctionLogsPanel::function",
+      "kind": "uses",
+      "to": "ui/src/components/Badge.ts::statusBadgeVariant::function"
+    }
+  ],
+  "file": "ui/src/components/FunctionLogsPanel.tsx",
+  "intent": [
+    {
+      "date": "2026-06-02T21:13:49-03:00",
+      "hash": "f610b14da299314c0471e960126666d168f34a32",
+      "kind": "commit",
+      "message": "feat(ui): complete epic e17 Enhanced Admin UI prototype parity (#10)"
+    }
+  ],
+  "lastModified": 1781284402,
+  "symbols": [
+    {
+      "endLine": 74,
+      "endOffset": 2376,
+      "kind": "function",
+      "name": "FunctionLogsPanel",
+      "startLine": 17,
+      "startOffset": 346,
+      "symbolId": "ui/src/components/FunctionLogsPanel.tsx::FunctionLogsPanel::function"
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/api/org_isolation_test.go::setupAPIWithOrg::function"
+    },
+    {
+      "cyclomatic": 20,
+      "symbolId": "components/api/org_isolation_test.go::TestOrgIsolation::function"
+    }
+  ],
+  "contentHash": "739c0e0806963467a9019fb59de464a69e7371c0518571469ac182011775eacc",
+  "edges": [],
+  "file": "components/api/org_isolation_test.go",
+  "intent": [
+    {
+      "date": "2026-06-05T19:53:09-03:00",
+      "hash": "1c166ca28e806b03a2650bec72e78e4dac852cfd",
+      "kind": "commit",
+      "message": "feat(api): e23s03 resource isolation by org_id"
+    }
+  ],
+  "lastModified": 1781284401,
+  "symbols": []
+}

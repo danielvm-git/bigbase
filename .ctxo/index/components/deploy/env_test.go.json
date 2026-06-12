@@ -1,0 +1,26 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 6,
+      "symbolId": "components/deploy/env_test.go::TestBuildEnvSetsHomeAndNpmCache::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/deploy/env_test.go::TestBuildEnvEmptyHomePreservesEnviron::function"
+    }
+  ],
+  "contentHash": "c7fb4a2a33d80e228d0e57622356d5c4d78876a7d7bd40db744572facac7b45d",
+  "edges": [],
+  "file": "components/deploy/env_test.go",
+  "intent": [
+    {
+      "date": "2026-06-04T12:14:49-03:00",
+      "hash": "2c7d660114245e9ab0c7375e7f37cd1411fdf9cf",
+      "kind": "commit",
+      "message": "fix(deploy): Node 20 VPS setup, npm HOME env, and deploy error UX"
+    }
+  ],
+  "lastModified": 1781284401,
+  "symbols": []
+}

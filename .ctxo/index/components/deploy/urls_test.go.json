@@ -1,0 +1,40 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/deploy/urls_test.go::TestSiteSlug::function"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/deploy/urls_test.go::TestDeploymentURL::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/deploy/urls_test.go::TestDeploymentHost::function"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/deploy/urls_test.go::TestHostFromDeploymentURL::function"
+    }
+  ],
+  "contentHash": "f711899db17eb9c5d4127adb56c33b58b0778aabefd9e99aab33e84e66711578",
+  "edges": [],
+  "file": "components/deploy/urls_test.go",
+  "intent": [
+    {
+      "date": "2026-06-05T12:21:16-03:00",
+      "hash": "c3794be59a2ccb9431dba427d9cd749aa97d464f",
+      "kind": "commit",
+      "message": "feat(deploy): live build terminal on create-site step 3 (#13)"
+    },
+    {
+      "date": "2026-06-04T11:49:33-03:00",
+      "hash": "582d143bfc592df61011280941d06e6354326c1e",
+      "kind": "commit",
+      "message": "fix(deploy): use https://slug.bigbase.click for production site URLs (#11)"
+    }
+  ],
+  "lastModified": 1781284401,
+  "symbols": []
+}

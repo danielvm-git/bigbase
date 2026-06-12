@@ -1,0 +1,29 @@
+{
+  "antiPatterns": [],
+  "complexity": [],
+  "contentHash": "76c82a3387cd9cbdafc8c2cf9cf0e6fb43170b0ad2c02e9f1c4ecb09c08e95b0",
+  "edges": [
+    {
+      "from": "ui/src/components/RequestChart.test.tsx::RequestChart.test::variable",
+      "kind": "imports",
+      "to": "ui/src/components/RequestChart.ts::RequestChart::class"
+    }
+  ],
+  "file": "ui/src/components/RequestChart.test.tsx",
+  "intent": [
+    {
+      "date": "2026-06-02T19:15:24-03:00",
+      "hash": "f38a037ecf76d4a827bd86a363a658da36a6c5e8",
+      "kind": "commit",
+      "message": "fix(ui): address code review findings"
+    },
+    {
+      "date": "2026-06-02T18:36:42-03:00",
+      "hash": "5afb8b6107898634fa39b10ac5ecf096afb6d3fc",
+      "kind": "commit",
+      "message": "feat(ui): add MetricCard, RequestChart, ComponentHealthGrid, QuickActions dashboard primitives with full test coverage (20 tests)"
+    }
+  ],
+  "lastModified": 1781284402,
+  "symbols": []
+}

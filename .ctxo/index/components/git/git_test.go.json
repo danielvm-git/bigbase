@@ -1,0 +1,72 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/git/git_test.go::testLogger.Info::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/git/git_test.go::testLogger.Warn::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/git/git_test.go::testLogger.Error::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/git/git_test.go::testLogger.Debug::method"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/git/git_test.go::setupGit::function"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/git/git_test.go::TestGitImplementsComponent::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/git/git_test.go::TestGitName::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/git/git_test.go::TestGitVersion::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/git/git_test.go::TestGitDependencies::function"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/git/git_test.go::TestGitCreateRepo::function"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/git/git_test.go::TestGitCreateDuplicateRepo::function"
+    },
+    {
+      "cyclomatic": 5,
+      "symbolId": "components/git/git_test.go::TestGitListRepos::function"
+    }
+  ],
+  "contentHash": "961e43f7208417b91fbe9fccedc8e63f1a878591d34ef21a8c9966b5ba6ad402",
+  "edges": [],
+  "file": "components/git/git_test.go",
+  "intent": [
+    {
+      "date": "2026-05-27T13:30:22-03:00",
+      "hash": "ef4ea80440bd62ca63199138d6d0fbba2f686408",
+      "kind": "commit",
+      "message": "fix: harden kernel, api, auth, forge, git, and storage components"
+    },
+    {
+      "date": "2026-05-27T08:25:59-03:00",
+      "hash": "0481cfc785e6fbfd0ec0ad58c7ff416a781bde9d",
+      "kind": "commit",
+      "message": "feat(git): add repository management with bare repo creation"
+    }
+  ],
+  "lastModified": 1781284401,
+  "symbols": []
+}

@@ -1,0 +1,218 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/auth/emailverify.go::generateVerifyToken::function"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/auth/emailverify.go::Auth.migrateEmailVerify::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/auth/emailverify.go::Auth.storeVerifyToken::method"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/auth/emailverify.go::Auth.sendVerificationEmail::method"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/auth/emailverify.go::Auth.ExtractVerifyToken::method"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/auth/emailverify.go::Auth.isEmailVerified::method"
+    },
+    {
+      "cyclomatic": 6,
+      "symbolId": "components/auth/emailverify.go::Auth.handleVerifyEmail::method"
+    }
+  ],
+  "contentHash": "a6c470d4d6d49b49618bcb78084dac73dd09af8a3a6379a78d961749fbc869dd",
+  "edges": [
+    {
+      "from": "components/auth/emailverify.go::generateVerifyToken::function",
+      "kind": "uses",
+      "to": "components/auth/emailverify.go::verifyTokenLen::variable"
+    },
+    {
+      "from": "components/auth/emailverify.go::Auth.migrateEmailVerify::method",
+      "kind": "uses",
+      "to": "components/auth/auth.go::Auth::class"
+    },
+    {
+      "from": "components/auth/emailverify.go::Auth.migrateEmailVerify::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::DBer.Migrate::method"
+    },
+    {
+      "from": "components/auth/emailverify.go::Auth.storeVerifyToken::method",
+      "kind": "uses",
+      "to": "components/auth/auth.go::Auth::class"
+    },
+    {
+      "from": "components/auth/emailverify.go::Auth.storeVerifyToken::method",
+      "kind": "uses",
+      "to": "components/auth/emailverify.go::verifyTokenExpirySecs::variable"
+    },
+    {
+      "from": "components/auth/emailverify.go::Auth.storeVerifyToken::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::DBer.ExecContext::method"
+    },
+    {
+      "from": "components/auth/emailverify.go::Auth.sendVerificationEmail::method",
+      "kind": "uses",
+      "to": "components/auth/auth.go::Auth::class"
+    },
+    {
+      "from": "components/auth/emailverify.go::Auth.sendVerificationEmail::method",
+      "kind": "calls",
+      "to": "components/auth/emailverify.go::EmailSender.SendEmail::method"
+    },
+    {
+      "from": "components/auth/emailverify.go::Auth.ExtractVerifyToken::method",
+      "kind": "uses",
+      "to": "components/auth/auth.go::Auth::class"
+    },
+    {
+      "from": "components/auth/emailverify.go::Auth.isEmailVerified::method",
+      "kind": "uses",
+      "to": "components/auth/auth.go::Auth::class"
+    },
+    {
+      "from": "components/auth/emailverify.go::Auth.isEmailVerified::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::DBer.QueryRowContext::method"
+    },
+    {
+      "from": "components/auth/emailverify.go::Auth.handleVerifyEmail::method",
+      "kind": "uses",
+      "to": "components/auth/auth.go::Auth::class"
+    },
+    {
+      "from": "components/auth/emailverify.go::Auth.handleVerifyEmail::method",
+      "kind": "calls",
+      "to": "components/auth/auth.go::writeJSON::function"
+    },
+    {
+      "from": "components/auth/emailverify.go::Auth.handleVerifyEmail::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::DBer.QueryRowContext::method"
+    },
+    {
+      "from": "components/auth/emailverify.go::Auth.handleVerifyEmail::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::DBer.ExecContext::method"
+    },
+    {
+      "from": "components/auth/emailverify.go::Auth.handleVerifyEmail::method",
+      "kind": "calls",
+      "to": "components/auth/auth.go::Logger.Error::method"
+    }
+  ],
+  "file": "components/auth/emailverify.go",
+  "intent": [
+    {
+      "date": "2026-06-05T20:12:20-03:00",
+      "hash": "9bf220b31f4dd964d48e6e2628cf2625d8ac11e2",
+      "kind": "commit",
+      "message": "feat(security): e19s02 email verification flow"
+    }
+  ],
+  "lastModified": 1781284401,
+  "symbols": [
+    {
+      "endLine": 14,
+      "endOffset": 129,
+      "kind": "variable",
+      "name": "verifyTokenLen",
+      "startLine": 14,
+      "startOffset": 115,
+      "symbolId": "components/auth/emailverify.go::verifyTokenLen::variable"
+    },
+    {
+      "endLine": 15,
+      "endOffset": 199,
+      "kind": "variable",
+      "name": "verifyTokenExpirySecs",
+      "startLine": 15,
+      "startOffset": 178,
+      "symbolId": "components/auth/emailverify.go::verifyTokenExpirySecs::variable"
+    },
+    {
+      "endLine": 23,
+      "endOffset": 502,
+      "kind": "interface",
+      "name": "EmailSender",
+      "startLine": 21,
+      "startOffset": 440,
+      "symbolId": "components/auth/emailverify.go::EmailSender::interface"
+    },
+    {
+      "endLine": 32,
+      "endOffset": 788,
+      "kind": "function",
+      "name": "generateVerifyToken",
+      "startLine": 26,
+      "startOffset": 568,
+      "symbolId": "components/auth/emailverify.go::generateVerifyToken::function"
+    },
+    {
+      "endLine": 40,
+      "endOffset": 1211,
+      "kind": "method",
+      "name": "Auth.migrateEmailVerify",
+      "startLine": 35,
+      "startOffset": 868,
+      "symbolId": "components/auth/emailverify.go::Auth.migrateEmailVerify::method"
+    },
+    {
+      "endLine": 52,
+      "endOffset": 1716,
+      "kind": "method",
+      "name": "Auth.storeVerifyToken",
+      "startLine": 43,
+      "startOffset": 1300,
+      "symbolId": "components/auth/emailverify.go::Auth.storeVerifyToken::method"
+    },
+    {
+      "endLine": 62,
+      "endOffset": 2102,
+      "kind": "method",
+      "name": "Auth.sendVerificationEmail",
+      "startLine": 55,
+      "startOffset": 1800,
+      "symbolId": "components/auth/emailverify.go::Auth.sendVerificationEmail::method"
+    },
+    {
+      "endLine": 76,
+      "endOffset": 2535,
+      "kind": "method",
+      "name": "Auth.ExtractVerifyToken",
+      "startLine": 66,
+      "startOffset": 2249,
+      "symbolId": "components/auth/emailverify.go::Auth.ExtractVerifyToken::method"
+    },
+    {
+      "endLine": 95,
+      "endOffset": 3111,
+      "kind": "method",
+      "name": "Auth.isEmailVerified",
+      "startLine": 80,
+      "startOffset": 2711,
+      "symbolId": "components/auth/emailverify.go::Auth.isEmailVerified::method"
+    },
+    {
+      "endLine": 141,
+      "endOffset": 4666,
+      "kind": "method",
+      "name": "Auth.handleVerifyEmail",
+      "startLine": 98,
+      "startOffset": 3179,
+      "symbolId": "components/auth/emailverify.go::Auth.handleVerifyEmail::method"
+    }
+  ]
+}

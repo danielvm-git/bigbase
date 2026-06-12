@@ -1,0 +1,120 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 2,
+      "symbolId": "ui/src/context/ThemeContext.tsx::applyAccentToDocument::function"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "ui/src/context/ThemeContext.tsx::ThemeProvider::function"
+    }
+  ],
+  "contentHash": "30d05145d5f2f4ef576beb91a7918d0936f84306dba73c89a2607e5f7ac5b4c9",
+  "edges": [
+    {
+      "from": "ui/src/context/ThemeContext.tsx::applyAccentToDocument::function",
+      "kind": "imports",
+      "to": "ui/src/context/themeState.ts::ThemeContext::variable"
+    },
+    {
+      "from": "ui/src/context/ThemeContext.tsx::applyAccentToDocument::function",
+      "kind": "imports",
+      "to": "ui/src/context/themeState.ts::Theme::type",
+      "typeOnly": true
+    },
+    {
+      "from": "ui/src/context/ThemeContext.tsx::applyAccentToDocument::function",
+      "kind": "imports",
+      "to": "ui/src/context/accentThemes.ts::AccentId::type",
+      "typeOnly": true
+    },
+    {
+      "from": "ui/src/context/ThemeContext.tsx::applyAccentToDocument::function",
+      "kind": "imports",
+      "to": "ui/src/context/accentThemes.ts::getAccentTheme::function"
+    },
+    {
+      "from": "ui/src/context/ThemeContext.tsx::applyAccentToDocument::function",
+      "kind": "imports",
+      "to": "ui/src/context/accentThemes.ts::isAccentId::function"
+    },
+    {
+      "from": "ui/src/context/ThemeContext.tsx::applyAccentToDocument::function",
+      "kind": "calls",
+      "to": "ui/src/context/accentThemes.ts::getAccentTheme::function"
+    },
+    {
+      "from": "ui/src/context/ThemeContext.tsx::ThemeProvider::function",
+      "kind": "calls",
+      "to": "ui/src/context/ThemeContext.tsx::applyAccentToDocument::function"
+    },
+    {
+      "from": "ui/src/context/ThemeContext.tsx::applyAccentToDocument::function",
+      "kind": "uses",
+      "to": "ui/src/context/accentThemes.ts::AccentId::type"
+    },
+    {
+      "from": "ui/src/context/ThemeContext.tsx::applyAccentToDocument::function",
+      "kind": "uses",
+      "to": "ui/src/context/accentThemes.ts::getAccentTheme::function"
+    },
+    {
+      "from": "ui/src/context/ThemeContext.tsx::ThemeProvider::function",
+      "kind": "uses",
+      "to": "ui/src/context/themeState.ts::Theme::type"
+    },
+    {
+      "from": "ui/src/context/ThemeContext.tsx::ThemeProvider::function",
+      "kind": "uses",
+      "to": "ui/src/context/accentThemes.ts::AccentId::type"
+    },
+    {
+      "from": "ui/src/context/ThemeContext.tsx::ThemeProvider::function",
+      "kind": "uses",
+      "to": "ui/src/context/themeState.ts::ThemeContext::variable"
+    }
+  ],
+  "file": "ui/src/context/ThemeContext.tsx",
+  "intent": [
+    {
+      "date": "2026-06-02T21:13:49-03:00",
+      "hash": "f610b14da299314c0471e960126666d168f34a32",
+      "kind": "commit",
+      "message": "feat(ui): complete epic e17 Enhanced Admin UI prototype parity (#10)"
+    },
+    {
+      "date": "2026-06-01T22:59:27-03:00",
+      "hash": "e562438a4f60da00e27d7dae7b2010c89bd06e28",
+      "kind": "commit",
+      "message": "refactor(ui): extract context state to separate files for lint compliance"
+    },
+    {
+      "date": "2026-06-01T22:42:32-03:00",
+      "hash": "0d1138cd35b3057d54c5320b71e237cd516f6c6d",
+      "kind": "commit",
+      "message": "feat(ui): add dark mode toggle, toast notifications, and dashboard enhancements"
+    }
+  ],
+  "lastModified": 1781284402,
+  "symbols": [
+    {
+      "endLine": 48,
+      "endOffset": 1722,
+      "kind": "function",
+      "name": "applyAccentToDocument",
+      "startLine": 28,
+      "startOffset": 740,
+      "symbolId": "ui/src/context/ThemeContext.tsx::applyAccentToDocument::function"
+    },
+    {
+      "endLine": 72,
+      "endOffset": 2517,
+      "kind": "function",
+      "name": "ThemeProvider",
+      "startLine": 50,
+      "startOffset": 1724,
+      "symbolId": "ui/src/context/ThemeContext.tsx::ThemeProvider::function"
+    }
+  ]
+}

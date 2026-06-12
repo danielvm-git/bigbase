@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "computedAt": "2026-06-12T17:13:23.712Z",
+  "commitSha": "9a90770",
+  "confidence": "low",
+  "snapshotsAvailable": 1,
+  "hint": "Install post-commit hook or run `ctxo index` more often to build a richer drift history.",
+  "events": []
+}

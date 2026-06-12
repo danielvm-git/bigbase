@@ -1,0 +1,42 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/webhooks/webhooks_test.go::testLogger.Info::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/webhooks/webhooks_test.go::testLogger.Warn::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/webhooks/webhooks_test.go::testLogger.Error::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/webhooks/webhooks_test.go::testLogger.Debug::method"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/webhooks/webhooks_test.go::setupWebhooks::function"
+    },
+    {
+      "cyclomatic": 16,
+      "symbolId": "components/webhooks/webhooks_test.go::TestWebhookDelivery::function"
+    }
+  ],
+  "contentHash": "452b0245487d64f8612731f888e0043dffa122372601b02ad6b473b9055b12b3",
+  "edges": [],
+  "file": "components/webhooks/webhooks_test.go",
+  "intent": [
+    {
+      "date": "2026-06-05T20:07:54-03:00",
+      "hash": "3f11e0c5a143d9b1a40aa3014426457a7071189f",
+      "kind": "commit",
+      "message": "feat(e20): Platform Ops — backup/restore, migrations, env vars, custom domains, webhooks"
+    }
+  ],
+  "lastModified": 1781284401,
+  "symbols": []
+}

@@ -1,0 +1,32 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 2,
+      "symbolId": "ui/src/components/Tabs.tsx::Tabs::function"
+    }
+  ],
+  "contentHash": "b00d767925ca1cbf77bc757ef56b1a6444a2d5ee51076af4527017b79beef03b",
+  "edges": [],
+  "file": "ui/src/components/Tabs.tsx",
+  "intent": [
+    {
+      "date": "2026-05-28T01:02:44-03:00",
+      "hash": "da3f118678f0b80b5874e0d7dc559b5700cd3447",
+      "kind": "commit",
+      "message": "feat(admin-ui): port Appwrite design tokens and create shared component system"
+    }
+  ],
+  "lastModified": 1781284402,
+  "symbols": [
+    {
+      "endLine": 25,
+      "endOffset": 487,
+      "kind": "function",
+      "name": "Tabs",
+      "startLine": 11,
+      "startOffset": 137,
+      "symbolId": "ui/src/components/Tabs.tsx::Tabs::function"
+    }
+  ]
+}

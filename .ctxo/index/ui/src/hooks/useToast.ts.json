@@ -1,0 +1,43 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 1,
+      "symbolId": "ui/src/hooks/useToast.ts::useToast::function"
+    }
+  ],
+  "contentHash": "2339a3231e76d2ee4e3e7fe38c5d7914b6338c5d6250cffa2f401b1db6e4979a",
+  "edges": [
+    {
+      "from": "ui/src/hooks/useToast.ts::useToast::function",
+      "kind": "imports",
+      "to": "ui/src/context/toastState.ts::ToastContext::variable"
+    },
+    {
+      "from": "ui/src/hooks/useToast.ts::useToast::function",
+      "kind": "uses",
+      "to": "ui/src/context/toastState.ts::ToastContext::variable"
+    }
+  ],
+  "file": "ui/src/hooks/useToast.ts",
+  "intent": [
+    {
+      "date": "2026-06-01T22:59:27-03:00",
+      "hash": "e562438a4f60da00e27d7dae7b2010c89bd06e28",
+      "kind": "commit",
+      "message": "refactor(ui): extract context state to separate files for lint compliance"
+    }
+  ],
+  "lastModified": 1781284402,
+  "symbols": [
+    {
+      "endLine": 5,
+      "endOffset": 153,
+      "kind": "function",
+      "name": "useToast",
+      "startLine": 3,
+      "startOffset": 89,
+      "symbolId": "ui/src/hooks/useToast.ts::useToast::function"
+    }
+  ]
+}

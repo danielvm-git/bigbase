@@ -1,0 +1,35 @@
+{
+  "antiPatterns": [],
+  "complexity": [],
+  "contentHash": "8a985b34f68fbe5f35b07fa285c61667260224783af0f66331f7137c912839b4",
+  "edges": [
+    {
+      "from": "ui/src/pages/DeployPage.test.tsx::DeployPage.test::variable",
+      "kind": "imports",
+      "to": "ui/src/pages/DeployPage.ts::DeployPage::class"
+    }
+  ],
+  "file": "ui/src/pages/DeployPage.test.tsx",
+  "intent": [
+    {
+      "date": "2026-06-04T11:34:24-03:00",
+      "hash": "26aba30a291f16ae2a8c97dd336ccb99ee1b1a01",
+      "kind": "commit",
+      "message": "fix(ui): port Sites prototype CSS and block unstyled deploy regressions"
+    },
+    {
+      "date": "2026-06-02T19:15:24-03:00",
+      "hash": "f38a037ecf76d4a827bd86a363a658da36a6c5e8",
+      "kind": "commit",
+      "message": "fix(ui): address code review findings"
+    },
+    {
+      "date": "2026-06-02T18:35:19-03:00",
+      "hash": "b53f95f017e4225fb8aa8045a638c9b1f3269716",
+      "kind": "commit",
+      "message": "test(deploy): add TestDeployLogStream Go test for deployment log streaming"
+    }
+  ],
+  "lastModified": 1781284402,
+  "symbols": []
+}

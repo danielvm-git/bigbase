@@ -1,0 +1,991 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/github/github.go::noopLogger.Info::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/github/github.go::noopLogger.Warn::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/github/github.go::noopLogger.Error::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/github/github.go::noopLogger.Debug::method"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/github/github.go::New::function"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/github/github.go::GitHub.Name::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/github/github.go::GitHub.Version::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/github/github.go::GitHub.Dependencies::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/github/github.go::GitHub.ConfigSchema::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/github/github.go::GitHub.Hooks::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/github/github.go::GitHub.Init::method"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/github/github.go::GitHub.Start::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/github/github.go::GitHub.Stop::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/github/github.go::GitHub.configured::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/github/github.go::GitHub.PublicHandler::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/github/github.go::GitHub.ProtectedHandler::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/github/github.go::GitHub.Handler::method"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/github/github.go::GitHub.handleStatus::method"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/github/github.go::GitHub.handleInstall::method"
+    },
+    {
+      "cyclomatic": 6,
+      "symbolId": "components/github/github.go::GitHub.handleCallback::method"
+    },
+    {
+      "cyclomatic": 5,
+      "symbolId": "components/github/github.go::GitHub.handleRepos::method"
+    },
+    {
+      "cyclomatic": 6,
+      "symbolId": "components/github/github.go::GitHub.handleConnect::method"
+    },
+    {
+      "cyclomatic": 13,
+      "symbolId": "components/github/github.go::GitHub.mirrorRepository::method"
+    },
+    {
+      "cyclomatic": 5,
+      "symbolId": "components/github/github.go::GitHub.fetchMirror::method"
+    },
+    {
+      "cyclomatic": 10,
+      "symbolId": "components/github/github.go::GitHub.handleWebhook::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/github/github.go::VerifyWebhookSignatureForTest::function"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/github/github.go::verifyWebhookSignature::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/github/github.go::generateID::function"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/github/github.go::GitHub.latestInstallationID::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/github/github.go::writeJSON::function"
+    }
+  ],
+  "contentHash": "3becfed1958e15f7e8c16a8e28b5a7fa2a8b11ae8fc216f782694e5100c8681c",
+  "edges": [
+    {
+      "from": "components/github/github.go::noopLogger.Info::method",
+      "kind": "uses",
+      "to": "components/github/github.go::noopLogger::class"
+    },
+    {
+      "from": "components/github/github.go::noopLogger.Warn::method",
+      "kind": "uses",
+      "to": "components/github/github.go::noopLogger::class"
+    },
+    {
+      "from": "components/github/github.go::noopLogger.Error::method",
+      "kind": "uses",
+      "to": "components/github/github.go::noopLogger::class"
+    },
+    {
+      "from": "components/github/github.go::noopLogger.Debug::method",
+      "kind": "uses",
+      "to": "components/github/github.go::noopLogger::class"
+    },
+    {
+      "from": "components/github/github.go::New::function",
+      "kind": "uses",
+      "to": "components/github/github.go::Options::class"
+    },
+    {
+      "from": "components/github/github.go::New::function",
+      "kind": "uses",
+      "to": "components/github/github.go::GitHub::class"
+    },
+    {
+      "from": "components/github/github.go::New::function",
+      "kind": "uses",
+      "to": "components/github/github.go::noopLogger::class"
+    },
+    {
+      "from": "components/github/github.go::GitHub.Name::method",
+      "kind": "uses",
+      "to": "components/github/github.go::GitHub::class"
+    },
+    {
+      "from": "components/github/github.go::GitHub.Version::method",
+      "kind": "uses",
+      "to": "components/github/github.go::GitHub::class"
+    },
+    {
+      "from": "components/github/github.go::GitHub.Version::method",
+      "kind": "uses",
+      "to": "components/github/github.go::version::variable"
+    },
+    {
+      "from": "components/github/github.go::GitHub.Dependencies::method",
+      "kind": "uses",
+      "to": "components/github/github.go::GitHub::class"
+    },
+    {
+      "from": "components/github/github.go::GitHub.ConfigSchema::method",
+      "kind": "uses",
+      "to": "components/github/github.go::GitHub::class"
+    },
+    {
+      "from": "components/github/github.go::GitHub.Hooks::method",
+      "kind": "uses",
+      "to": "components/github/github.go::GitHub::class"
+    },
+    {
+      "from": "components/github/github.go::GitHub.Hooks::method",
+      "kind": "uses",
+      "to": "kernel/component.go::HookDef::class"
+    },
+    {
+      "from": "components/github/github.go::GitHub.Init::method",
+      "kind": "uses",
+      "to": "components/github/github.go::GitHub::class"
+    },
+    {
+      "from": "components/github/github.go::GitHub.Init::method",
+      "kind": "uses",
+      "to": "kernel/component.go::Context::class"
+    },
+    {
+      "from": "components/github/github.go::GitHub.Start::method",
+      "kind": "uses",
+      "to": "components/github/github.go::GitHub::class"
+    },
+    {
+      "from": "components/github/github.go::GitHub.Start::method",
+      "kind": "uses",
+      "to": "kernel/component.go::Context::class"
+    },
+    {
+      "from": "components/github/github.go::GitHub.Start::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::DBer.Migrate::method"
+    },
+    {
+      "from": "components/github/github.go::GitHub.Start::method",
+      "kind": "calls",
+      "to": "kernel/kernel.go::Kernel.EventBus::method"
+    },
+    {
+      "from": "components/github/github.go::GitHub.Start::method",
+      "kind": "calls",
+      "to": "components/github/github.go::Logger.Info::method"
+    },
+    {
+      "from": "components/github/github.go::GitHub.Start::method",
+      "kind": "calls",
+      "to": "components/github/github.go::GitHub.configured::method"
+    },
+    {
+      "from": "components/github/github.go::GitHub.Stop::method",
+      "kind": "uses",
+      "to": "components/github/github.go::GitHub::class"
+    },
+    {
+      "from": "components/github/github.go::GitHub.Stop::method",
+      "kind": "uses",
+      "to": "kernel/component.go::Context::class"
+    },
+    {
+      "from": "components/github/github.go::GitHub.configured::method",
+      "kind": "uses",
+      "to": "components/github/github.go::GitHub::class"
+    },
+    {
+      "from": "components/github/github.go::GitHub.PublicHandler::method",
+      "kind": "uses",
+      "to": "components/github/github.go::GitHub::class"
+    },
+    {
+      "from": "components/github/github.go::GitHub.ProtectedHandler::method",
+      "kind": "uses",
+      "to": "components/github/github.go::GitHub::class"
+    },
+    {
+      "from": "components/github/github.go::GitHub.Handler::method",
+      "kind": "uses",
+      "to": "components/github/github.go::GitHub::class"
+    },
+    {
+      "from": "components/github/github.go::GitHub.handleStatus::method",
+      "kind": "uses",
+      "to": "components/github/github.go::GitHub::class"
+    },
+    {
+      "from": "components/github/github.go::GitHub.handleStatus::method",
+      "kind": "calls",
+      "to": "components/github/github.go::writeJSON::function"
+    },
+    {
+      "from": "components/github/github.go::GitHub.handleStatus::method",
+      "kind": "calls",
+      "to": "components/github/github.go::GitHub.configured::method"
+    },
+    {
+      "from": "components/github/github.go::GitHub.handleStatus::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::DBer.QueryRowContext::method"
+    },
+    {
+      "from": "components/github/github.go::GitHub.handleInstall::method",
+      "kind": "uses",
+      "to": "components/github/github.go::GitHub::class"
+    },
+    {
+      "from": "components/github/github.go::GitHub.handleInstall::method",
+      "kind": "calls",
+      "to": "components/github/github.go::writeJSON::function"
+    },
+    {
+      "from": "components/github/github.go::GitHub.handleInstall::method",
+      "kind": "calls",
+      "to": "components/github/github.go::GitHub.configured::method"
+    },
+    {
+      "from": "components/github/github.go::GitHub.handleInstall::method",
+      "kind": "calls",
+      "to": "components/github/github.go::generateID::function"
+    },
+    {
+      "from": "components/github/github.go::GitHub.handleCallback::method",
+      "kind": "uses",
+      "to": "components/github/github.go::GitHub::class"
+    },
+    {
+      "from": "components/github/github.go::GitHub.handleCallback::method",
+      "kind": "calls",
+      "to": "components/github/github.go::writeJSON::function"
+    },
+    {
+      "from": "components/github/github.go::GitHub.handleCallback::method",
+      "kind": "calls",
+      "to": "components/github/github.go::GitHub.configured::method"
+    },
+    {
+      "from": "components/github/github.go::GitHub.handleCallback::method",
+      "kind": "calls",
+      "to": "components/github/app_auth.go::GitHub.fetchInstallation::method"
+    },
+    {
+      "from": "components/github/github.go::GitHub.handleCallback::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::DBer.ExecContext::method"
+    },
+    {
+      "from": "components/github/github.go::GitHub.handleRepos::method",
+      "kind": "uses",
+      "to": "components/github/github.go::GitHub::class"
+    },
+    {
+      "from": "components/github/github.go::GitHub.handleRepos::method",
+      "kind": "calls",
+      "to": "components/github/github.go::writeJSON::function"
+    },
+    {
+      "from": "components/github/github.go::GitHub.handleRepos::method",
+      "kind": "calls",
+      "to": "components/github/github.go::GitHub.configured::method"
+    },
+    {
+      "from": "components/github/github.go::GitHub.handleRepos::method",
+      "kind": "uses",
+      "to": "components/github/github.go::Repo::class"
+    },
+    {
+      "from": "components/github/github.go::GitHub.handleRepos::method",
+      "kind": "calls",
+      "to": "components/github/github.go::GitHub.latestInstallationID::method"
+    },
+    {
+      "from": "components/github/github.go::GitHub.handleRepos::method",
+      "kind": "calls",
+      "to": "components/github/app_auth.go::GitHub.listInstallationRepos::method"
+    },
+    {
+      "from": "components/github/github.go::GitHub.handleRepos::method",
+      "kind": "calls",
+      "to": "components/github/github.go::Logger.Error::method"
+    },
+    {
+      "from": "components/github/github.go::GitHub.handleConnect::method",
+      "kind": "uses",
+      "to": "components/github/github.go::GitHub::class"
+    },
+    {
+      "from": "components/github/github.go::GitHub.handleConnect::method",
+      "kind": "calls",
+      "to": "components/github/github.go::writeJSON::function"
+    },
+    {
+      "from": "components/github/github.go::GitHub.handleConnect::method",
+      "kind": "calls",
+      "to": "components/github/github.go::GitHub.mirrorRepository::method"
+    },
+    {
+      "from": "components/github/github.go::GitHub.handleConnect::method",
+      "kind": "calls",
+      "to": "components/github/github.go::Logger.Error::method"
+    },
+    {
+      "from": "components/github/github.go::GitHub.handleConnect::method",
+      "kind": "calls",
+      "to": "components/github/github.go::GitHub.latestInstallationID::method"
+    },
+    {
+      "from": "components/github/github.go::GitHub.handleConnect::method",
+      "kind": "calls",
+      "to": "components/github/github.go::generateID::function"
+    },
+    {
+      "from": "components/github/github.go::GitHub.handleConnect::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::DBer.ExecContext::method"
+    },
+    {
+      "from": "components/github/github.go::GitHub.mirrorRepository::method",
+      "kind": "uses",
+      "to": "components/github/github.go::GitHub::class"
+    },
+    {
+      "from": "components/github/github.go::GitHub.mirrorRepository::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::DBer.QueryRowContext::method"
+    },
+    {
+      "from": "components/github/github.go::GitHub.mirrorRepository::method",
+      "kind": "calls",
+      "to": "components/github/github.go::GitHub.fetchMirror::method"
+    },
+    {
+      "from": "components/github/github.go::GitHub.mirrorRepository::method",
+      "kind": "calls",
+      "to": "components/github/github.go::generateID::function"
+    },
+    {
+      "from": "components/github/github.go::GitHub.mirrorRepository::method",
+      "kind": "calls",
+      "to": "components/github/github.go::GitHub.configured::method"
+    },
+    {
+      "from": "components/github/github.go::GitHub.mirrorRepository::method",
+      "kind": "calls",
+      "to": "components/github/github.go::GitHub.latestInstallationID::method"
+    },
+    {
+      "from": "components/github/github.go::GitHub.mirrorRepository::method",
+      "kind": "calls",
+      "to": "components/github/app_auth.go::GitHub.installationToken::method"
+    },
+    {
+      "from": "components/github/github.go::GitHub.mirrorRepository::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::DBer.ExecContext::method"
+    },
+    {
+      "from": "components/github/github.go::GitHub.fetchMirror::method",
+      "kind": "uses",
+      "to": "components/github/github.go::GitHub::class"
+    },
+    {
+      "from": "components/github/github.go::GitHub.fetchMirror::method",
+      "kind": "calls",
+      "to": "components/github/github.go::GitHub.configured::method"
+    },
+    {
+      "from": "components/github/github.go::GitHub.fetchMirror::method",
+      "kind": "calls",
+      "to": "components/github/github.go::GitHub.latestInstallationID::method"
+    },
+    {
+      "from": "components/github/github.go::GitHub.fetchMirror::method",
+      "kind": "calls",
+      "to": "components/github/app_auth.go::GitHub.installationToken::method"
+    },
+    {
+      "from": "components/github/github.go::GitHub.handleWebhook::method",
+      "kind": "uses",
+      "to": "components/github/github.go::GitHub::class"
+    },
+    {
+      "from": "components/github/github.go::GitHub.handleWebhook::method",
+      "kind": "calls",
+      "to": "components/github/github.go::writeJSON::function"
+    },
+    {
+      "from": "components/github/github.go::GitHub.handleWebhook::method",
+      "kind": "calls",
+      "to": "components/github/github.go::verifyWebhookSignature::function"
+    },
+    {
+      "from": "components/github/github.go::GitHub.handleWebhook::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::DBer.QueryRowContext::method"
+    },
+    {
+      "from": "components/github/github.go::GitHub.handleWebhook::method",
+      "kind": "calls",
+      "to": "components/github/github.go::GitHub.fetchMirror::method"
+    },
+    {
+      "from": "components/github/github.go::GitHub.handleWebhook::method",
+      "kind": "calls",
+      "to": "kernel/eventbus.go::EventBus.Emit::method"
+    },
+    {
+      "from": "components/github/github.go::GitHub.handleWebhook::method",
+      "kind": "uses",
+      "to": "kernel/component.go::Event::class"
+    },
+    {
+      "from": "components/github/github.go::GitHub.handleWebhook::method",
+      "kind": "uses",
+      "to": "kernel/component.go::Context::class"
+    },
+    {
+      "from": "components/github/github.go::VerifyWebhookSignatureForTest::function",
+      "kind": "calls",
+      "to": "components/github/github.go::verifyWebhookSignature::function"
+    },
+    {
+      "from": "components/github/github.go::GitHub.latestInstallationID::method",
+      "kind": "uses",
+      "to": "components/github/github.go::GitHub::class"
+    },
+    {
+      "from": "components/github/github.go::GitHub.latestInstallationID::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::DBer.QueryRowContext::method"
+    },
+    {
+      "from": "components/github/github.go::GitHub::class",
+      "kind": "implements",
+      "to": "kernel/component.go::Component::interface"
+    },
+    {
+      "from": "components/github/github.go::noopLogger::class",
+      "kind": "implements",
+      "to": "kernel/component.go::Logger::interface"
+    },
+    {
+      "from": "components/github/github.go::noopLogger::class",
+      "kind": "implements",
+      "to": "components/admin/admin.go::Logger::interface"
+    },
+    {
+      "from": "components/github/github.go::noopLogger::class",
+      "kind": "implements",
+      "to": "components/api/api.go::Logger::interface"
+    },
+    {
+      "from": "components/github/github.go::noopLogger::class",
+      "kind": "implements",
+      "to": "components/auth/auth.go::Logger::interface"
+    },
+    {
+      "from": "components/github/github.go::noopLogger::class",
+      "kind": "implements",
+      "to": "components/cici/cici.go::Logger::interface"
+    },
+    {
+      "from": "components/github/github.go::noopLogger::class",
+      "kind": "implements",
+      "to": "components/db/db.go::Logger::interface"
+    },
+    {
+      "from": "components/github/github.go::noopLogger::class",
+      "kind": "implements",
+      "to": "components/deploy/deploy.go::Logger::interface"
+    },
+    {
+      "from": "components/github/github.go::noopLogger::class",
+      "kind": "implements",
+      "to": "components/forge/forge.go::Logger::interface"
+    },
+    {
+      "from": "components/github/github.go::noopLogger::class",
+      "kind": "implements",
+      "to": "components/functions/functions.go::Logger::interface"
+    },
+    {
+      "from": "components/github/github.go::noopLogger::class",
+      "kind": "implements",
+      "to": "components/git/git.go::Logger::interface"
+    },
+    {
+      "from": "components/github/github.go::noopLogger::class",
+      "kind": "implements",
+      "to": "components/github/github.go::Logger::interface"
+    },
+    {
+      "from": "components/github/github.go::noopLogger::class",
+      "kind": "implements",
+      "to": "components/messaging/messaging.go::Logger::interface"
+    },
+    {
+      "from": "components/github/github.go::noopLogger::class",
+      "kind": "implements",
+      "to": "components/monitoring/monitoring.go::Logger::interface"
+    },
+    {
+      "from": "components/github/github.go::noopLogger::class",
+      "kind": "implements",
+      "to": "components/proxy/proxy.go::Logger::interface"
+    },
+    {
+      "from": "components/github/github.go::noopLogger::class",
+      "kind": "implements",
+      "to": "components/realtime/realtime.go::Logger::interface"
+    },
+    {
+      "from": "components/github/github.go::noopLogger::class",
+      "kind": "implements",
+      "to": "components/sites/sites.go::Logger::interface"
+    },
+    {
+      "from": "components/github/github.go::noopLogger::class",
+      "kind": "implements",
+      "to": "components/storage/storage.go::Logger::interface"
+    },
+    {
+      "from": "components/github/github.go::noopLogger::class",
+      "kind": "implements",
+      "to": "components/webhooks/webhooks.go::Logger::interface"
+    }
+  ],
+  "file": "components/github/github.go",
+  "intent": [
+    {
+      "date": "2026-06-05T20:13:56-03:00",
+      "hash": "7bea9645d49a10a8ed723617b32bd0481e3a625e",
+      "kind": "commit",
+      "message": "feat(db): e18s01 extract shared DBer interface"
+    },
+    {
+      "date": "2026-06-03T12:57:31-03:00",
+      "hash": "4767cf7da869c8f79685797139184e344cb22057",
+      "kind": "commit",
+      "message": "fix(github): close audit gaps for create-site reconnect UX"
+    },
+    {
+      "date": "2026-06-03T12:26:45-03:00",
+      "hash": "d47becfe6fde594ee1a085942ee4aadc50d4b2a7",
+      "kind": "commit",
+      "message": "fix(github): surface repos API errors in create-site UI"
+    },
+    {
+      "date": "2026-06-03T12:05:09-03:00",
+      "hash": "485181f51bdedb65be6e5f686470bff51fce3d90",
+      "kind": "commit",
+      "message": "fix(github): allow install callback and webhook without JWT auth"
+    },
+    {
+      "date": "2026-06-01T13:45:19-03:00",
+      "hash": "7f3d05bef383ee23eda59ed54665e9fc43e35eed",
+      "kind": "commit",
+      "message": "docs(bugs): update BUG-2026-06-01T055655 Resolution section with fix evidence"
+    }
+  ],
+  "lastModified": 1781284401,
+  "symbols": [
+    {
+      "endLine": 23,
+      "endOffset": 260,
+      "kind": "variable",
+      "name": "version",
+      "startLine": 23,
+      "startOffset": 253,
+      "symbolId": "components/github/github.go::version::variable"
+    },
+    {
+      "endLine": 30,
+      "endOffset": 423,
+      "kind": "interface",
+      "name": "Logger",
+      "startLine": 25,
+      "startOffset": 277,
+      "symbolId": "components/github/github.go::Logger::interface"
+    },
+    {
+      "endLine": 32,
+      "endOffset": 449,
+      "kind": "class",
+      "name": "noopLogger",
+      "startLine": 32,
+      "startOffset": 430,
+      "symbolId": "components/github/github.go::noopLogger::class"
+    },
+    {
+      "endLine": 34,
+      "endOffset": 503,
+      "kind": "method",
+      "name": "noopLogger.Info",
+      "startLine": 34,
+      "startOffset": 451,
+      "symbolId": "components/github/github.go::noopLogger.Info::method"
+    },
+    {
+      "endLine": 35,
+      "endOffset": 556,
+      "kind": "method",
+      "name": "noopLogger.Warn",
+      "startLine": 35,
+      "startOffset": 504,
+      "symbolId": "components/github/github.go::noopLogger.Warn::method"
+    },
+    {
+      "endLine": 36,
+      "endOffset": 609,
+      "kind": "method",
+      "name": "noopLogger.Error",
+      "startLine": 36,
+      "startOffset": 557,
+      "symbolId": "components/github/github.go::noopLogger.Error::method"
+    },
+    {
+      "endLine": 37,
+      "endOffset": 662,
+      "kind": "method",
+      "name": "noopLogger.Debug",
+      "startLine": 37,
+      "startOffset": 610,
+      "symbolId": "components/github/github.go::noopLogger.Debug::method"
+    },
+    {
+      "endLine": 40,
+      "endOffset": 760,
+      "kind": "type",
+      "name": "DBer",
+      "startLine": 40,
+      "startOffset": 742,
+      "symbolId": "components/github/github.go::DBer::type"
+    },
+    {
+      "endLine": 52,
+      "endOffset": 1005,
+      "kind": "class",
+      "name": "GitHub",
+      "startLine": 42,
+      "startOffset": 767,
+      "symbolId": "components/github/github.go::GitHub::class"
+    },
+    {
+      "endLine": 62,
+      "endOffset": 1189,
+      "kind": "class",
+      "name": "Options",
+      "startLine": 54,
+      "startOffset": 1012,
+      "symbolId": "components/github/github.go::Options::class"
+    },
+    {
+      "endLine": 83,
+      "endOffset": 1647,
+      "kind": "function",
+      "name": "New",
+      "startLine": 64,
+      "startOffset": 1191,
+      "symbolId": "components/github/github.go::New::function"
+    },
+    {
+      "endLine": 85,
+      "endOffset": 1717,
+      "kind": "method",
+      "name": "GitHub.Name",
+      "startLine": 85,
+      "startOffset": 1649,
+      "symbolId": "components/github/github.go::GitHub.Name::method"
+    },
+    {
+      "endLine": 86,
+      "endOffset": 1785,
+      "kind": "method",
+      "name": "GitHub.Version",
+      "startLine": 86,
+      "startOffset": 1718,
+      "symbolId": "components/github/github.go::GitHub.Version::method"
+    },
+    {
+      "endLine": 87,
+      "endOffset": 1860,
+      "kind": "method",
+      "name": "GitHub.Dependencies",
+      "startLine": 87,
+      "startOffset": 1786,
+      "symbolId": "components/github/github.go::GitHub.Dependencies::method"
+    },
+    {
+      "endLine": 88,
+      "endOffset": 1924,
+      "kind": "method",
+      "name": "GitHub.ConfigSchema",
+      "startLine": 88,
+      "startOffset": 1861,
+      "symbolId": "components/github/github.go::GitHub.ConfigSchema::method"
+    },
+    {
+      "endLine": 89,
+      "endOffset": 1988,
+      "kind": "method",
+      "name": "GitHub.Hooks",
+      "startLine": 89,
+      "startOffset": 1925,
+      "symbolId": "components/github/github.go::GitHub.Hooks::method"
+    },
+    {
+      "endLine": 93,
+      "endOffset": 2078,
+      "kind": "method",
+      "name": "GitHub.Init",
+      "startLine": 91,
+      "startOffset": 1990,
+      "symbolId": "components/github/github.go::GitHub.Init::method"
+    },
+    {
+      "endLine": 121,
+      "endOffset": 3088,
+      "kind": "method",
+      "name": "GitHub.Start",
+      "startLine": 95,
+      "startOffset": 2080,
+      "symbolId": "components/github/github.go::GitHub.Start::method"
+    },
+    {
+      "endLine": 125,
+      "endOffset": 3154,
+      "kind": "method",
+      "name": "GitHub.Stop",
+      "startLine": 123,
+      "startOffset": 3090,
+      "symbolId": "components/github/github.go::GitHub.Stop::method"
+    },
+    {
+      "endLine": 129,
+      "endOffset": 3261,
+      "kind": "method",
+      "name": "GitHub.configured",
+      "startLine": 127,
+      "startOffset": 3156,
+      "symbolId": "components/github/github.go::GitHub.configured::method"
+    },
+    {
+      "endLine": 138,
+      "endOffset": 3624,
+      "kind": "method",
+      "name": "GitHub.PublicHandler",
+      "startLine": 133,
+      "startOffset": 3422,
+      "symbolId": "components/github/github.go::GitHub.PublicHandler::method"
+    },
+    {
+      "endLine": 148,
+      "endOffset": 4028,
+      "kind": "method",
+      "name": "GitHub.ProtectedHandler",
+      "startLine": 141,
+      "startOffset": 3713,
+      "symbolId": "components/github/github.go::GitHub.ProtectedHandler::method"
+    },
+    {
+      "endLine": 159,
+      "endOffset": 4450,
+      "kind": "method",
+      "name": "GitHub.Handler",
+      "startLine": 150,
+      "startOffset": 4030,
+      "symbolId": "components/github/github.go::GitHub.Handler::method"
+    },
+    {
+      "endLine": 181,
+      "endOffset": 5086,
+      "kind": "method",
+      "name": "GitHub.handleStatus",
+      "startLine": 161,
+      "startOffset": 4452,
+      "symbolId": "components/github/github.go::GitHub.handleStatus::method"
+    },
+    {
+      "endLine": 197,
+      "endOffset": 5682,
+      "kind": "method",
+      "name": "GitHub.handleInstall",
+      "startLine": 183,
+      "startOffset": 5088,
+      "symbolId": "components/github/github.go::GitHub.handleInstall::method"
+    },
+    {
+      "endLine": 230,
+      "endOffset": 6775,
+      "kind": "method",
+      "name": "GitHub.handleCallback",
+      "startLine": 199,
+      "startOffset": 5684,
+      "symbolId": "components/github/github.go::GitHub.handleCallback::method"
+    },
+    {
+      "endLine": 234,
+      "endOffset": 6833,
+      "kind": "class",
+      "name": "installationDetails",
+      "startLine": 232,
+      "startOffset": 6782,
+      "symbolId": "components/github/github.go::installationDetails::class"
+    },
+    {
+      "endLine": 265,
+      "endOffset": 7748,
+      "kind": "method",
+      "name": "GitHub.handleRepos",
+      "startLine": 236,
+      "startOffset": 6835,
+      "symbolId": "components/github/github.go::GitHub.handleRepos::method"
+    },
+    {
+      "endLine": 273,
+      "endOffset": 7983,
+      "kind": "class",
+      "name": "Repo",
+      "startLine": 267,
+      "startOffset": 7755,
+      "symbolId": "components/github/github.go::Repo::class"
+    },
+    {
+      "endLine": 317,
+      "endOffset": 9589,
+      "kind": "method",
+      "name": "GitHub.handleConnect",
+      "startLine": 275,
+      "startOffset": 7985,
+      "symbolId": "components/github/github.go::GitHub.handleConnect::method"
+    },
+    {
+      "endLine": 381,
+      "endOffset": 11579,
+      "kind": "method",
+      "name": "GitHub.mirrorRepository",
+      "startLine": 319,
+      "startOffset": 9591,
+      "symbolId": "components/github/github.go::GitHub.mirrorRepository::method"
+    },
+    {
+      "endLine": 399,
+      "endOffset": 12231,
+      "kind": "method",
+      "name": "GitHub.fetchMirror",
+      "startLine": 383,
+      "startOffset": 11581,
+      "symbolId": "components/github/github.go::GitHub.fetchMirror::method"
+    },
+    {
+      "endLine": 466,
+      "endOffset": 14040,
+      "kind": "method",
+      "name": "GitHub.handleWebhook",
+      "startLine": 401,
+      "startOffset": 12233,
+      "symbolId": "components/github/github.go::GitHub.handleWebhook::method"
+    },
+    {
+      "endLine": 471,
+      "endOffset": 14262,
+      "kind": "function",
+      "name": "VerifyWebhookSignatureForTest",
+      "startLine": 469,
+      "startOffset": 14117,
+      "symbolId": "components/github/github.go::VerifyWebhookSignatureForTest::function"
+    },
+    {
+      "endLine": 486,
+      "endOffset": 14665,
+      "kind": "function",
+      "name": "verifyWebhookSignature",
+      "startLine": 473,
+      "startOffset": 14264,
+      "symbolId": "components/github/github.go::verifyWebhookSignature::function"
+    },
+    {
+      "endLine": 494,
+      "endOffset": 14823,
+      "kind": "function",
+      "name": "generateID",
+      "startLine": 488,
+      "startOffset": 14667,
+      "symbolId": "components/github/github.go::generateID::function"
+    },
+    {
+      "endLine": 501,
+      "endOffset": 15063,
+      "kind": "method",
+      "name": "GitHub.latestInstallationID",
+      "startLine": 496,
+      "startOffset": 14825,
+      "symbolId": "components/github/github.go::GitHub.latestInstallationID::method"
+    },
+    {
+      "endLine": 507,
+      "endOffset": 15240,
+      "kind": "function",
+      "name": "writeJSON",
+      "startLine": 503,
+      "startOffset": 15065,
+      "symbolId": "components/github/github.go::writeJSON::function"
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 7,
+      "symbolId": "ui/src/pages/RealtimePage.tsx::RealtimePage::function"
+    }
+  ],
+  "contentHash": "ebd0c493b9b3e9dffc86112165f49442f8b30442f741a33a1294784a4d124cc3",
+  "edges": [],
+  "file": "ui/src/pages/RealtimePage.tsx",
+  "intent": [
+    {
+      "date": "2026-06-02T08:17:05-03:00",
+      "hash": "ab90f5d76436496c78fae4ec8e5a575adf675e52",
+      "kind": "commit",
+      "message": "fix(ui): resolve TS errors — export ToastVariant, remove unused catch params"
+    },
+    {
+      "date": "2026-06-01T23:15:28-03:00",
+      "hash": "f7669f2b3a7899232bd84aecb5a3c62d0efd0361",
+      "kind": "commit",
+      "message": "fix: address code review findings for Epic 017"
+    },
+    {
+      "date": "2026-06-01T22:25:32-03:00",
+      "hash": "567a41a6ad025bbfbbcbe6c70618fc2b034fd090",
+      "kind": "commit",
+      "message": "feat(realtime): add status endpoint and Realtime inspector page"
+    }
+  ],
+  "lastModified": 1781284402,
+  "symbols": [
+    {
+      "endLine": 143,
+      "endOffset": 5317,
+      "kind": "function",
+      "name": "RealtimePage",
+      "startLine": 13,
+      "startOffset": 218,
+      "symbolId": "ui/src/pages/RealtimePage.tsx::RealtimePage::function"
+    }
+  ]
+}

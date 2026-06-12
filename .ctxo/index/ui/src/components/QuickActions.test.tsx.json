@@ -1,0 +1,23 @@
+{
+  "antiPatterns": [],
+  "complexity": [],
+  "contentHash": "8a306ecd317dd6c1809316887afd01df994783c10ca5af2e9f1d805fb66c23a2",
+  "edges": [
+    {
+      "from": "ui/src/components/QuickActions.test.tsx::QuickActions.test::variable",
+      "kind": "imports",
+      "to": "ui/src/components/QuickActions.ts::QuickActions::class"
+    }
+  ],
+  "file": "ui/src/components/QuickActions.test.tsx",
+  "intent": [
+    {
+      "date": "2026-06-02T18:36:42-03:00",
+      "hash": "5afb8b6107898634fa39b10ac5ecf096afb6d3fc",
+      "kind": "commit",
+      "message": "feat(ui): add MetricCard, RequestChart, ComponentHealthGrid, QuickActions dashboard primitives with full test coverage (20 tests)"
+    }
+  ],
+  "lastModified": 1781284402,
+  "symbols": []
+}

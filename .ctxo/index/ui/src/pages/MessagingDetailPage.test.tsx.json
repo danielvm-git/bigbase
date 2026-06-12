@@ -1,0 +1,23 @@
+{
+  "antiPatterns": [],
+  "complexity": [],
+  "contentHash": "b578bb050c343a45224121f8fbb23f6fe6d74d20ef11f03e6f5bf2fc724a0fcd",
+  "edges": [
+    {
+      "from": "ui/src/pages/MessagingDetailPage.test.tsx::MessagingDetailPage.test::variable",
+      "kind": "imports",
+      "to": "ui/src/pages/MessagingDetailPage.ts::MessagingDetailPage::class"
+    }
+  ],
+  "file": "ui/src/pages/MessagingDetailPage.test.tsx",
+  "intent": [
+    {
+      "date": "2026-06-02T21:13:49-03:00",
+      "hash": "f610b14da299314c0471e960126666d168f34a32",
+      "kind": "commit",
+      "message": "feat(ui): complete epic e17 Enhanced Admin UI prototype parity (#10)"
+    }
+  ],
+  "lastModified": 1781284402,
+  "symbols": []
+}

@@ -1,0 +1,74 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 1,
+      "symbolId": "tests/contract/contract_test.go::testLogger.Info::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "tests/contract/contract_test.go::testLogger.Warn::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "tests/contract/contract_test.go::testLogger.Error::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "tests/contract/contract_test.go::testLogger.Debug::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "tests/contract/contract_test.go::inMemoryDB::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "tests/contract/contract_test.go::jsonBody::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "tests/contract/contract_test.go::doRequest::function"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "tests/contract/contract_test.go::decodeJSON::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "tests/contract/contract_test.go::assertStatus::function"
+    },
+    {
+      "cyclomatic": 11,
+      "symbolId": "tests/contract/contract_test.go::assertField::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "tests/contract/contract_test.go::TestAuthContract::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "tests/contract/contract_test.go::TestMonitoringContract::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "tests/contract/contract_test.go::TestSitesContract::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "tests/contract/contract_test.go::TestDeployContract::function"
+    }
+  ],
+  "contentHash": "105749af0501ca214ec8f412367db3727f5eaf7eb0f2466b36fe3a8c24ba34de",
+  "edges": [],
+  "file": "tests/contract/contract_test.go",
+  "intent": [
+    {
+      "date": "2026-06-05T12:58:48-03:00",
+      "hash": "21a8236dd2d6111d9543c744a13133d5a981f305",
+      "kind": "commit",
+      "message": "test(e21s05): add race detection tests and fuzz targets"
+    }
+  ],
+  "lastModified": 1781284401,
+  "symbols": []
+}

@@ -1,0 +1,29 @@
+{
+  "antiPatterns": [],
+  "complexity": [],
+  "contentHash": "e87a7a7a853146e1773dac9b410d21caf01ad9920de9653729de56cf5de90537",
+  "edges": [
+    {
+      "from": "ui/src/components/EnvVarEditor.test.tsx::EnvVarEditor.test::variable",
+      "kind": "imports",
+      "to": "ui/src/components/EnvVarEditor.ts::EnvVarEditor::class"
+    }
+  ],
+  "file": "ui/src/components/EnvVarEditor.test.tsx",
+  "intent": [
+    {
+      "date": "2026-06-02T19:15:24-03:00",
+      "hash": "f38a037ecf76d4a827bd86a363a658da36a6c5e8",
+      "kind": "commit",
+      "message": "fix(ui): address code review findings"
+    },
+    {
+      "date": "2026-06-02T18:35:19-03:00",
+      "hash": "b53f95f017e4225fb8aa8045a638c9b1f3269716",
+      "kind": "commit",
+      "message": "test(deploy): add TestDeployLogStream Go test for deployment log streaming"
+    }
+  ],
+  "lastModified": 1781284402,
+  "symbols": []
+}

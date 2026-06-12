@@ -1,0 +1,117 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/backup/handler.go::Handler::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/backup/handler.go::handleBackup::function"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/backup/handler.go::handleRestore::function"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/backup/handler.go::writeJSON::function"
+    }
+  ],
+  "contentHash": "76cd1975eb27b3a2b89ef21a199e77c9035ecb8b26159a2fadc33afe57e8f5e6",
+  "edges": [
+    {
+      "from": "components/backup/handler.go::Handler::function",
+      "kind": "uses",
+      "to": "components/backup/backup.go::SQLiteDB::type"
+    },
+    {
+      "from": "components/backup/handler.go::Handler::function",
+      "kind": "calls",
+      "to": "components/backup/handler.go::handleBackup::function"
+    },
+    {
+      "from": "components/backup/handler.go::Handler::function",
+      "kind": "calls",
+      "to": "components/backup/handler.go::handleRestore::function"
+    },
+    {
+      "from": "components/backup/handler.go::handleBackup::function",
+      "kind": "uses",
+      "to": "components/backup/backup.go::SQLiteDB::type"
+    },
+    {
+      "from": "components/backup/handler.go::handleBackup::function",
+      "kind": "calls",
+      "to": "components/backup/backup.go::Dump::function"
+    },
+    {
+      "from": "components/backup/handler.go::handleBackup::function",
+      "kind": "calls",
+      "to": "components/backup/handler.go::writeJSON::function"
+    },
+    {
+      "from": "components/backup/handler.go::handleRestore::function",
+      "kind": "uses",
+      "to": "components/backup/backup.go::SQLiteDB::type"
+    },
+    {
+      "from": "components/backup/handler.go::handleRestore::function",
+      "kind": "calls",
+      "to": "components/backup/handler.go::writeJSON::function"
+    },
+    {
+      "from": "components/backup/handler.go::handleRestore::function",
+      "kind": "calls",
+      "to": "components/backup/backup.go::Restore::function"
+    }
+  ],
+  "file": "components/backup/handler.go",
+  "intent": [
+    {
+      "date": "2026-06-05T20:07:54-03:00",
+      "hash": "3f11e0c5a143d9b1a40aa3014426457a7071189f",
+      "kind": "commit",
+      "message": "feat(e20): Platform Ops — backup/restore, migrations, env vars, custom domains, webhooks"
+    }
+  ],
+  "lastModified": 1781284401,
+  "symbols": [
+    {
+      "endLine": 16,
+      "endOffset": 367,
+      "kind": "function",
+      "name": "Handler",
+      "startLine": 11,
+      "startOffset": 176,
+      "symbolId": "components/backup/handler.go::Handler::function"
+    },
+    {
+      "endLine": 30,
+      "endOffset": 852,
+      "kind": "function",
+      "name": "handleBackup",
+      "startLine": 18,
+      "startOffset": 369,
+      "symbolId": "components/backup/handler.go::handleBackup::function"
+    },
+    {
+      "endLine": 46,
+      "endOffset": 1452,
+      "kind": "function",
+      "name": "handleRestore",
+      "startLine": 32,
+      "startOffset": 854,
+      "symbolId": "components/backup/handler.go::handleRestore::function"
+    },
+    {
+      "endLine": 52,
+      "endOffset": 1629,
+      "kind": "function",
+      "name": "writeJSON",
+      "startLine": 48,
+      "startOffset": 1454,
+      "symbolId": "components/backup/handler.go::writeJSON::function"
+    }
+  ]
+}

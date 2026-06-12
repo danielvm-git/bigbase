@@ -1,0 +1,42 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/db/migrator_test.go::openTestDB::function"
+    },
+    {
+      "cyclomatic": 5,
+      "symbolId": "components/db/migrator_test.go::TestMigrationUp::function"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/db/migrator_test.go::TestMigrationUpIdempotent::function"
+    },
+    {
+      "cyclomatic": 5,
+      "symbolId": "components/db/migrator_test.go::TestMigrationDown::function"
+    },
+    {
+      "cyclomatic": 6,
+      "symbolId": "components/db/migrator_test.go::TestMigrationStatus::function"
+    },
+    {
+      "cyclomatic": 5,
+      "symbolId": "components/db/migrator_test.go::TestMigrationDownAll::function"
+    }
+  ],
+  "contentHash": "a90ebca727e0c4ee2b7be106712324918a41f4de30aef48ecfb0a61f18f52955",
+  "edges": [],
+  "file": "components/db/migrator_test.go",
+  "intent": [
+    {
+      "date": "2026-06-06T11:03:12-03:00",
+      "hash": "1675335a199331880aefdadf8b61b1b9c630265f",
+      "kind": "commit",
+      "message": "feat(db): e18s05 versioned migration system (stdlib, no CGO deps)"
+    }
+  ],
+  "lastModified": 1781284401,
+  "symbols": []
+}

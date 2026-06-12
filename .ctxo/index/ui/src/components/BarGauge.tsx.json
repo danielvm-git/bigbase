@@ -1,0 +1,32 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 4,
+      "symbolId": "ui/src/components/BarGauge.tsx::BarGauge::function"
+    }
+  ],
+  "contentHash": "9f5f4699bd7f286fa2db9e11951193f1833de5649b8280109ce126fe00881b8e",
+  "edges": [],
+  "file": "ui/src/components/BarGauge.tsx",
+  "intent": [
+    {
+      "date": "2026-06-05T20:04:30-03:00",
+      "hash": "77169802bdab2e3b45615e98938d49a53c0698ab",
+      "kind": "commit",
+      "message": "feat(monitoring): e25s03 monitoring page charts"
+    }
+  ],
+  "lastModified": 1781284402,
+  "symbols": [
+    {
+      "endLine": 45,
+      "endOffset": 1289,
+      "kind": "function",
+      "name": "BarGauge",
+      "startLine": 13,
+      "startOffset": 251,
+      "symbolId": "ui/src/components/BarGauge.tsx::BarGauge::function"
+    }
+  ]
+}
