@@ -5,20 +5,20 @@ active_epic_id: null
 active_story_id: null
 active_bug_id: null
 release:
-  target_version: 2.7.0
+  target_version: 2.8.0
   last_tag: v2.7.0
   last_publish: "2026-06-06"
 epic_cycle:
-  current_step: 8
-  next_skill: release-branch
-  completed_steps: [1, 2, 3, 4, 5, 6, 7]
+  current_step: null
+  next_skill: null
+  completed_steps: [1, 2, 3, 4, 5, 6, 7, 8]
   story_bcps: 2
 bug_cycle:
   current_step: null
   completed_steps: []
 git:
-  branch: feat/e28-delete-deployment
-  hash: HEAD
+  branch: main
+  hash: 2b3080e883dca847396b7693f044becdeb19d0c8
 handoff:
   last_step_completed: release-branch
   open_decisions: []
