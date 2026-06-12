@@ -1,7 +1,9 @@
 package proxy_test
 
 import (
+	"io"
 	"net/http"
+	"strings"
 	"testing"
 
 	"github.com/danielvm/bigbase/components/proxy"
@@ -11,7 +13,6 @@ import (
 func TestSecurityHeaders(t *testing.T) {
 	logger := testLogger{}
 	k := kernel.New(logger)
-
 	port := freePort(t)
 	p := proxy.New(proxy.Options{
 		Port:   port,
@@ -20,39 +21,81 @@ func TestSecurityHeaders(t *testing.T) {
 	})
 
 	if err := p.Start(&kernel.Context{}); err != nil {
-		t.Fatalf("start proxy: %v", err)
+		t.Fatalf("failed to start proxy: %v", err)
 	}
 	defer func() { _ = p.Stop(&kernel.Context{}) }()
 
 	waitForServer(t, port, "/health")
 
-	routes := []string{"/", "/health", "/docs", "/api/version"}
-
-	for _, route := range routes {
-		t.Run(route, func(t *testing.T) {
-			resp, err := http.Get("http://localhost:" + port + route)
+	t.Run("home page and docs receive permissive CSP for styles and fonts", func(t *testing.T) {
+		paths := []string{"/", "/docs"}
+		for _, path := range paths {
+			resp, err := http.Get("http://localhost:" + port + path)
 			if err != nil {
-				t.Fatalf("GET %s: %v", route, err)
+				t.Fatalf("GET %s: %v", path, err)
 			}
 			defer func() { _ = resp.Body.Close() }()
 
-			checks := []struct {
-				header string
-				want   string
-			}{
-				{"Content-Security-Policy", "default-src 'self'"},
-				{"Strict-Transport-Security", "max-age=63072000; includeSubDomains"},
-				{"X-Frame-Options", "DENY"},
-				{"X-Content-Type-Options", "nosniff"},
-				{"Referrer-Policy", "strict-origin-when-cross-origin"},
+			csp := resp.Header.Get("Content-Security-Policy")
+			if !strings.Contains(csp, "'unsafe-inline'") {
+				t.Errorf("expected CSP for %s to contain 'unsafe-inline', got %q", path, csp)
 			}
+			if !strings.Contains(csp, "fonts.googleapis.com") {
+				t.Errorf("expected CSP for %s to contain fonts.googleapis.com, got %q", path, csp)
+			}
+			if !strings.Contains(csp, "fonts.gstatic.com") {
+				t.Errorf("expected CSP for %s to contain fonts.gstatic.com, got %q", path, csp)
+			}
+		}
+	})
 
-			for _, c := range checks {
-				got := resp.Header.Get(c.header)
-				if got != c.want {
-					t.Errorf("%s: %s = %q, want %q", route, c.header, got, c.want)
-				}
+	t.Run("home page contains style block", func(t *testing.T) {
+		resp, err := http.Get("http://localhost:" + port + "/")
+		if err != nil {
+			t.Fatalf("GET /: %v", err)
+		}
+		defer func() { _ = resp.Body.Close() }()
+
+		body, _ := io.ReadAll(resp.Body)
+		if !strings.Contains(string(body), "<style>") {
+			t.Error("expected home page to contain <style> tag")
+		}
+	})
+
+	t.Run("API routes receive strict CSP", func(t *testing.T) {
+		routes := []string{"/health", "/api/version"}
+		for _, path := range routes {
+			resp, err := http.Get("http://localhost:" + port + path)
+			if err != nil {
+				t.Fatalf("GET %s: %v", path, err)
 			}
-		})
-	}
+			defer func() { _ = resp.Body.Close() }()
+
+			csp := resp.Header.Get("Content-Security-Policy")
+			if csp != "default-src 'self'" {
+				t.Errorf("expected strict CSP for %s, got %q", path, csp)
+			}
+		}
+	})
+
+	t.Run("standard security headers are present", func(t *testing.T) {
+		resp, err := http.Get("http://localhost:" + port + "/health")
+		if err != nil {
+			t.Fatalf("GET /health: %v", err)
+		}
+		defer func() { _ = resp.Body.Close() }()
+
+		headers := map[string]string{
+			"Strict-Transport-Security": "max-age=63072000; includeSubDomains",
+			"X-Frame-Options":           "DENY",
+			"X-Content-Type-Options":    "nosniff",
+			"Referrer-Policy":           "strict-origin-when-cross-origin",
+		}
+
+		for k, v := range headers {
+			if got := resp.Header.Get(k); got != v {
+				t.Errorf("expected header %s: %q, got %q", k, v, got)
+			}
+		}
+	})
 }

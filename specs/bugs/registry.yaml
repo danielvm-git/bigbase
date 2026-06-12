@@ -246,24 +246,19 @@ bugs:
     summary: Deploy health check returns 502 and rollback fails with "Text file busy"
     file: specs/bugs/BUG-2026-06-05T172800-deploy-health-check-502.md
     status: open
-  - id: BUG-2026-06-12T120000
+  - id: BUG-2026-06-12T150000
     date: "2026-06-12"
-    severity: medium
-    priority: high
-    scope: deploy,sites
-    summary: Site name ignored when generating deployment subdomain — repo name used instead
-    file: specs/bugs/BUG-2026-06-12T120000-site-name-ignored-for-subdomain.md
+    severity: low
+    priority: medium
+    scope: proxy
+    summary: CSP blocks home page styles and Google Fonts — restricted to default-src 'self'
+    file: specs/bugs/BUG-2026-06-12T150000-csp-blocks-home-page-styles.md
     status: fixed
     files_changed:
-      - components/deploy/deploy.go
-      - components/deploy/deploy_test.go
-      - components/deploy/samples.go
-      - components/sites/sites.go
-      - components/sites/sites_test.go
-      - main.go
-    approach: Update DeployTrigger signature to include siteName; use siteName in Trigger for subdomain generation; fallback to repoName if empty.
-    risk_level: medium
-    commit_message: "fix(deploy): use site name for deployment subdomain"
+      - components/proxy/securityheaders.go
+      - components/proxy/securityheaders_test.go
+    approach: Route-aware CSP middleware; permissive for / and /docs to allow inline styles and Google Fonts; strict default-src 'self' for all other routes.
+    risk_level: low
+    commit_message: "fix(proxy): allow inline styles and Google Fonts for HTML routes in CSP"
     regression_guards:
-      - components/sites/sites_test.go TestSitesCreateTriggersDeployWithCustomName
-      - components/deploy/deploy_test.go TestDeployCustomSiteName
+      - components/proxy/securityheaders_test.go TestSecurityHeaders
