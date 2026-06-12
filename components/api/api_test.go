@@ -204,8 +204,16 @@ func TestAPIListCollections(t *testing.T) {
 	}
 }
 
+func withAdminRole(base http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := api.WithUserRole(r.Context(), "admin")
+		base.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
+
 func TestAPIExecuteSQLSelect(t *testing.T) {
 	_, handler := setupAPI(t)
+	sqlHandler := withAdminRole(handler)
 
 	// Seed a record
 	post := httptest.NewRequest("POST", "/api/collections/posts", strings.NewReader(`{"title":"hello"}`))
@@ -220,7 +228,7 @@ func TestAPIExecuteSQLSelect(t *testing.T) {
 	req := httptest.NewRequest("POST", "/api/sql", strings.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
-	handler.ServeHTTP(w, req)
+	sqlHandler.ServeHTTP(w, req)
 
 	if w.Code != http.StatusOK {
 		t.Fatalf("expected 200, got %d: %s", w.Code, w.Body.String())
@@ -248,12 +256,13 @@ func TestAPIExecuteSQLSelect(t *testing.T) {
 
 func TestAPIExecuteSQLInvalidQuery(t *testing.T) {
 	_, handler := setupAPI(t)
+	sqlHandler := withAdminRole(handler)
 
 	body := `{"query":"DROP TABLE posts"}`
 	req := httptest.NewRequest("POST", "/api/sql", strings.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
-	handler.ServeHTTP(w, req)
+	sqlHandler.ServeHTTP(w, req)
 
 	if w.Code != http.StatusBadRequest {
 		t.Fatalf("expected 400 for DROP, got %d: %s", w.Code, w.Body.String())
@@ -262,12 +271,13 @@ func TestAPIExecuteSQLInvalidQuery(t *testing.T) {
 
 func TestAPIExecuteSQLMultiStatement(t *testing.T) {
 	_, handler := setupAPI(t)
+	sqlHandler := withAdminRole(handler)
 
 	body := `{"query":"SELECT 1; DROP TABLE posts"}`
 	req := httptest.NewRequest("POST", "/api/sql", strings.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
-	handler.ServeHTTP(w, req)
+	sqlHandler.ServeHTTP(w, req)
 
 	if w.Code != http.StatusBadRequest {
 		t.Fatalf("expected 400 for multi-statement, got %d: %s", w.Code, w.Body.String())
@@ -276,12 +286,13 @@ func TestAPIExecuteSQLMultiStatement(t *testing.T) {
 
 func TestAPIExecuteSQLWith(t *testing.T) {
 	_, handler := setupAPI(t)
+	sqlHandler := withAdminRole(handler)
 
 	body := `{"query":"WITH t AS (SELECT 1 AS n) SELECT * FROM t"}`
 	req := httptest.NewRequest("POST", "/api/sql", strings.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
-	handler.ServeHTTP(w, req)
+	sqlHandler.ServeHTTP(w, req)
 
 	if w.Code != http.StatusOK {
 		t.Fatalf("expected 200 for WITH, got %d: %s", w.Code, w.Body.String())
@@ -290,12 +301,13 @@ func TestAPIExecuteSQLWith(t *testing.T) {
 
 func TestAPIExecuteSQLSyntaxError(t *testing.T) {
 	_, handler := setupAPI(t)
+	sqlHandler := withAdminRole(handler)
 
 	body := `{"query":"SELECTT oops FROM posts"}`
 	req := httptest.NewRequest("POST", "/api/sql", strings.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
-	handler.ServeHTTP(w, req)
+	sqlHandler.ServeHTTP(w, req)
 
 	if w.Code != http.StatusBadRequest {
 		t.Fatalf("expected 400 for bad syntax, got %d: %s", w.Code, w.Body.String())
@@ -304,12 +316,13 @@ func TestAPIExecuteSQLSyntaxError(t *testing.T) {
 
 func TestAPIExecuteSQLEmptyQuery(t *testing.T) {
 	_, handler := setupAPI(t)
+	sqlHandler := withAdminRole(handler)
 
 	body := `{"query":""}`
 	req := httptest.NewRequest("POST", "/api/sql", strings.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
-	handler.ServeHTTP(w, req)
+	sqlHandler.ServeHTTP(w, req)
 
 	if w.Code != http.StatusBadRequest {
 		t.Fatalf("expected 400, got %d: %s", w.Code, w.Body.String())
@@ -318,11 +331,12 @@ func TestAPIExecuteSQLEmptyQuery(t *testing.T) {
 
 func TestAPIExecuteSQLMissingBody(t *testing.T) {
 	_, handler := setupAPI(t)
+	sqlHandler := withAdminRole(handler)
 
 	req := httptest.NewRequest("POST", "/api/sql", nil)
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
-	handler.ServeHTTP(w, req)
+	sqlHandler.ServeHTTP(w, req)
 
 	if w.Code != http.StatusBadRequest {
 		t.Fatalf("expected 400, got %d: %s", w.Code, w.Body.String())
@@ -331,13 +345,173 @@ func TestAPIExecuteSQLMissingBody(t *testing.T) {
 
 func TestAPIExecuteSQLWrongMethod(t *testing.T) {
 	_, handler := setupAPI(t)
+	sqlHandler := withAdminRole(handler)
 
 	req := httptest.NewRequest("GET", "/api/sql", nil)
 	w := httptest.NewRecorder()
-	handler.ServeHTTP(w, req)
+	sqlHandler.ServeHTTP(w, req)
 
 	if w.Code != http.StatusMethodNotAllowed {
 		t.Fatalf("expected 405, got %d: %s", w.Code, w.Body.String())
+	}
+}
+
+func TestSQLRequiresAdmin(t *testing.T) {
+	_, handler := setupAPI(t)
+
+	t.Run("no_role_returns_403", func(t *testing.T) {
+		body := `{"query":"SELECT 1"}`
+		req := httptest.NewRequest("POST", "/api/sql", strings.NewReader(body))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+		handler.ServeHTTP(w, req)
+
+		if w.Code != http.StatusForbidden {
+			t.Fatalf("expected 403, got %d: %s", w.Code, w.Body.String())
+		}
+		var resp map[string]any
+		if err := json.NewDecoder(w.Body).Decode(&resp); err != nil {
+			t.Fatalf("decode: %v", err)
+		}
+		if resp["error"] != "forbidden" {
+			t.Fatalf("expected 'forbidden', got %v", resp["error"])
+		}
+	})
+
+	t.Run("non_admin_role_returns_403", func(t *testing.T) {
+		body := `{"query":"SELECT 1"}`
+		req := httptest.NewRequest("POST", "/api/sql", strings.NewReader(body))
+		req.Header.Set("Content-Type", "application/json")
+		req = req.WithContext(api.WithUserRole(req.Context(), "user"))
+		w := httptest.NewRecorder()
+		handler.ServeHTTP(w, req)
+
+		if w.Code != http.StatusForbidden {
+			t.Fatalf("expected 403 for non-admin role, got %d: %s", w.Code, w.Body.String())
+		}
+	})
+
+	t.Run("admin_role_allows_query", func(t *testing.T) {
+		body := `{"query":"SELECT 1 AS n"}`
+		req := httptest.NewRequest("POST", "/api/sql", strings.NewReader(body))
+		req.Header.Set("Content-Type", "application/json")
+		req = req.WithContext(api.WithUserRole(req.Context(), "admin"))
+		w := httptest.NewRecorder()
+		handler.ServeHTTP(w, req)
+
+		if w.Code != http.StatusOK {
+			t.Fatalf("expected 200 for admin role, got %d: %s", w.Code, w.Body.String())
+		}
+	})
+}
+
+func TestSQLOrgScoped(t *testing.T) {
+	logger := testLogger{}
+	k := kernel.New(logger)
+	d := db.New(db.Options{Path: ":memory:", Logger: logger})
+	a := api.New(api.Options{DB: d, Logger: logger})
+	k.Register(a)
+	k.Register(d)
+	if err := k.Start(); err != nil {
+		t.Fatalf("kernel start: %v", err)
+	}
+	t.Cleanup(func() { _ = k.Stop() })
+
+	base := a.Handler()
+
+	// Helper: inject admin role + optional org_id
+	adminWithOrg := func(orgID int64, r *http.Request) *http.Request {
+		ctx := r.Context()
+		ctx = api.WithUserRole(ctx, "admin")
+		if orgID > 0 {
+			ctx = api.WithOrgID(ctx, orgID)
+		}
+		return r.WithContext(ctx)
+	}
+
+	// Seed: org 1 creates a record
+	post1 := httptest.NewRequest("POST", "/api/collections/items",
+		strings.NewReader(`{"name":"org1-item"}`))
+	post1.Header.Set("Content-Type", "application/json")
+	w1 := httptest.NewRecorder()
+	base.ServeHTTP(w1, adminWithOrg(1, post1))
+	if w1.Code != http.StatusCreated {
+		t.Fatalf("org1 create: expected 201, got %d: %s", w1.Code, w1.Body.String())
+	}
+
+	// Seed: org 2 creates a record
+	post2 := httptest.NewRequest("POST", "/api/collections/items",
+		strings.NewReader(`{"name":"org2-item"}`))
+	post2.Header.Set("Content-Type", "application/json")
+	w2 := httptest.NewRecorder()
+	base.ServeHTTP(w2, adminWithOrg(2, post2))
+	if w2.Code != http.StatusCreated {
+		t.Fatalf("org2 create: expected 201, got %d: %s", w2.Code, w2.Body.String())
+	}
+
+	// Org 1 queries — should only see their record
+	query1 := httptest.NewRequest("POST", "/api/sql",
+		strings.NewReader(`{"query":"SELECT id, data FROM items ORDER BY id"}`))
+	query1.Header.Set("Content-Type", "application/json")
+	wQ1 := httptest.NewRecorder()
+	base.ServeHTTP(wQ1, adminWithOrg(1, query1))
+	if wQ1.Code != http.StatusOK {
+		t.Fatalf("org1 sql: expected 200, got %d: %s", wQ1.Code, wQ1.Body.String())
+	}
+
+	var resp1 map[string]any
+	if err := json.NewDecoder(wQ1.Body).Decode(&resp1); err != nil {
+		t.Fatalf("decode org1 result: %v", err)
+	}
+	rows1, _ := resp1["rows"].([]any)
+	if len(rows1) != 1 {
+		t.Fatalf("org1: expected 1 row, got %d", len(rows1))
+	}
+
+	// Org 2 queries — should only see their record
+	query2 := httptest.NewRequest("POST", "/api/sql",
+		strings.NewReader(`{"query":"SELECT id, data FROM items ORDER BY id"}`))
+	query2.Header.Set("Content-Type", "application/json")
+	wQ2 := httptest.NewRecorder()
+	base.ServeHTTP(wQ2, adminWithOrg(2, query2))
+	if wQ2.Code != http.StatusOK {
+		t.Fatalf("org2 sql: expected 200, got %d: %s", wQ2.Code, wQ2.Body.String())
+	}
+
+	var resp2 map[string]any
+	if err := json.NewDecoder(wQ2.Body).Decode(&resp2); err != nil {
+		t.Fatalf("decode org2 result: %v", err)
+	}
+	rows2, _ := resp2["rows"].([]any)
+	if len(rows2) != 1 {
+		t.Fatalf("org2: expected 1 row, got %d", len(rows2))
+	}
+}
+
+func TestExtractTableRef(t *testing.T) {
+	tests := []struct {
+		query string
+		want  string
+	}{
+		{"SELECT * FROM users", "users"},
+		{"SELECT id, name FROM posts WHERE id = 1", "posts"},
+		{"SELECT * FROM orders JOIN items ON orders.id = items.order_id", "orders"},
+		{"SELECT * FROM users ORDER BY id", "users"},
+		{"SELECT * FROM users LIMIT 10", "users"},
+		{"WITH t AS (SELECT 1 AS n) SELECT * FROM t", "t"},
+		{"EXPLAIN SELECT * FROM users", "users"},
+		{"EXPLAIN QUERY PLAN SELECT * FROM users", "users"},
+		{"PRAGMA table_info('users')", ""},
+		{"SELECT 1", ""},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.query[:min(len(tc.query), 40)], func(t *testing.T) {
+			got := api.ExtractTableRef(tc.query)
+			if got != tc.want {
+				t.Errorf("extractTableRef(%q) = %q, want %q", tc.query, got, tc.want)
+			}
+		})
 	}
 }
 
@@ -548,4 +722,117 @@ func TestAPIDeleteNonExistentRecord(t *testing.T) {
 	if w.Code != http.StatusNotFound {
 		t.Fatalf("expected 404 for non-existent record, got %d: %s", w.Code, w.Body.String())
 	}
+}
+
+func TestAPIExecuteSQLSecurityChecks(t *testing.T) {
+	logger := testLogger{}
+	k := kernel.New(logger)
+	d := db.New(db.Options{Path: ":memory:", Logger: logger})
+	a := api.New(api.Options{DB: d, Logger: logger})
+	k.Register(a)
+	k.Register(d)
+	if err := k.Start(); err != nil {
+		t.Fatalf("kernel start: %v", err)
+	}
+	t.Cleanup(func() { _ = k.Stop() })
+
+	base := a.Handler()
+
+	adminWithOrg := func(orgID int64, r *http.Request) *http.Request {
+		ctx := r.Context()
+		ctx = api.WithUserRole(ctx, "admin")
+		if orgID > 0 {
+			ctx = api.WithOrgID(ctx, orgID)
+		}
+		return r.WithContext(ctx)
+	}
+
+	// Create collection table to test
+	post := httptest.NewRequest("POST", "/api/collections/items", strings.NewReader(`{"name":"test"}`))
+	post.Header.Set("Content-Type", "application/json")
+	w0 := httptest.NewRecorder()
+	base.ServeHTTP(w0, adminWithOrg(1, post))
+	if w0.Code != http.StatusCreated {
+		t.Fatalf("seed collection: expected 201, got %d", w0.Code)
+	}
+
+	t.Run("UNION_query_rejected_on_collections", func(t *testing.T) {
+		body := `{"query":"SELECT id FROM items UNION SELECT id FROM items"}`
+		req := httptest.NewRequest("POST", "/api/sql", strings.NewReader(body))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+		base.ServeHTTP(w, adminWithOrg(1, req))
+
+		if w.Code != http.StatusBadRequest {
+			t.Errorf("expected 400 for UNION query on collection, got %d: %s", w.Code, w.Body.String())
+		}
+	})
+
+	t.Run("JOIN_query_rejected_on_collections", func(t *testing.T) {
+		body := `{"query":"SELECT * FROM items JOIN items AS i2"}`
+		req := httptest.NewRequest("POST", "/api/sql", strings.NewReader(body))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+		base.ServeHTTP(w, adminWithOrg(1, req))
+
+		if w.Code != http.StatusBadRequest {
+			t.Errorf("expected 400 for JOIN query on collection, got %d: %s", w.Code, w.Body.String())
+		}
+	})
+
+	t.Run("Subquery_rejected_on_collections", func(t *testing.T) {
+		body := `{"query":"SELECT * FROM items WHERE id IN (SELECT id FROM items)"}`
+		req := httptest.NewRequest("POST", "/api/sql", strings.NewReader(body))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+		base.ServeHTTP(w, adminWithOrg(1, req))
+
+		if w.Code != http.StatusBadRequest {
+			t.Errorf("expected 400 for subquery on collection, got %d: %s", w.Code, w.Body.String())
+		}
+	})
+
+	t.Run("Whitespace_normalization_FROM_newline", func(t *testing.T) {
+		body := `{"query":"SELECT id\nFROM\nitems"}`
+		req := httptest.NewRequest("POST", "/api/sql", strings.NewReader(body))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+		base.ServeHTTP(w, adminWithOrg(1, req))
+
+		if w.Code != http.StatusOK {
+			t.Fatalf("expected 200, got %d: %s", w.Code, w.Body.String())
+		}
+	})
+
+	t.Run("Internal_table_word_boundary_check", func(t *testing.T) {
+		// Custom collection containing internal table substring (e.g. "my_users") should succeed
+		postUserCol := httptest.NewRequest("POST", "/api/collections/my_users", strings.NewReader(`{"username":"alice"}`))
+		postUserCol.Header.Set("Content-Type", "application/json")
+		wUserCol := httptest.NewRecorder()
+		base.ServeHTTP(wUserCol, adminWithOrg(1, postUserCol))
+		if wUserCol.Code != http.StatusCreated {
+			t.Fatalf("seed custom collection my_users: expected 201, got %d: %s", wUserCol.Code, wUserCol.Body.String())
+		}
+
+		body := `{"query":"SELECT * FROM my_users"}`
+		req := httptest.NewRequest("POST", "/api/sql", strings.NewReader(body))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+		base.ServeHTTP(w, adminWithOrg(1, req))
+
+		if w.Code != http.StatusOK {
+			t.Errorf("expected 200 for custom my_users collection query, got %d: %s", w.Code, w.Body.String())
+		}
+
+		// Exact internal table "users" should be blocked
+		bodyBlocked := `{"query":"SELECT * FROM users"}`
+		reqBlocked := httptest.NewRequest("POST", "/api/sql", strings.NewReader(bodyBlocked))
+		reqBlocked.Header.Set("Content-Type", "application/json")
+		wBlocked := httptest.NewRecorder()
+		base.ServeHTTP(wBlocked, adminWithOrg(1, reqBlocked))
+
+		if wBlocked.Code != http.StatusForbidden {
+			t.Errorf("expected 403 for blocked internal table users, got %d: %s", wBlocked.Code, wBlocked.Body.String())
+		}
+	})
 }

@@ -139,8 +139,9 @@ func (a *Auth) handleRefresh(w http.ResponseWriter, r *http.Request) {
 
 	// Fetch user info to mint new access token.
 	var email, role string
+	var defaultOrgID int64
 	err = a.db.QueryRowContext(ctx,
-		"SELECT email, role FROM users WHERE id = ?", userID).Scan(&email, &role)
+		"SELECT email, role, COALESCE(default_org_id, 0) FROM users WHERE id = ?", userID).Scan(&email, &role, &defaultOrgID)
 	if err != nil {
 		a.logger.Error("fetch user for refresh", "user_id", userID, "error", err)
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
@@ -148,7 +149,7 @@ func (a *Auth) handleRefresh(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Issue new access token.
-	accessToken, err := createJWT(userID, email, role, a.secret)
+	accessToken, err := createJWT(userID, email, role, defaultOrgID, a.secret)
 	if err != nil {
 		a.logger.Error("create access token on refresh", "error", err)
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})

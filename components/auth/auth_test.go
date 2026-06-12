@@ -9,10 +9,12 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/danielvm/bigbase/components/auth"
 	"github.com/danielvm/bigbase/components/db"
 	"github.com/danielvm/bigbase/kernel"
+	jwt "github.com/golang-jwt/jwt/v5"
 )
 
 type testLogger struct{}
@@ -252,6 +254,75 @@ func TestLoginUnknownUser(t *testing.T) {
 	}
 }
 
+func TestJWTCarriesOrgID(t *testing.T) {
+	_, handler, _ := setupAuth(t)
+
+	// Register creates a user + personal org; verify the JWT carries the org_id.
+	req := httptest.NewRequest("POST", "/api/auth/register",
+		strings.NewReader(`{"email":"orguser@test.com","password":"secret123"}`))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+	if w.Code != http.StatusCreated {
+		t.Fatalf("register: expected 201, got %d: %s", w.Code, w.Body.String())
+	}
+
+	resp := parseResponse(t, w.Body.Bytes())
+	tokenStr, ok := resp["token"].(string)
+	if !ok {
+		t.Fatal("expected token in register response")
+	}
+
+	// Decode JWT to inspect claims (don't need signature verify — we trust our own server)
+	token, _, err := new(jwt.Parser).ParseUnverified(tokenStr, jwt.MapClaims{})
+	if err != nil {
+		t.Fatalf("parse jwt: %v", err)
+	}
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
+		t.Fatal("expected MapClaims")
+	}
+	orgID, hasOrgID := claims["org_id"]
+	if !hasOrgID {
+		t.Fatal("JWT claims missing org_id")
+	}
+	if orgID.(float64) == 0 {
+		t.Fatal("expected non-zero org_id in JWT claims")
+	}
+
+	// Also verify login returns a token with org_id
+	loginReq := httptest.NewRequest("POST", "/api/auth/login",
+		strings.NewReader(`{"email":"orguser@test.com","password":"secret123"}`))
+	loginReq.Header.Set("Content-Type", "application/json")
+	w2 := httptest.NewRecorder()
+	handler.ServeHTTP(w2, loginReq)
+	if w2.Code != http.StatusOK {
+		t.Fatalf("login: expected 200, got %d: %s", w2.Code, w2.Body.String())
+	}
+
+	resp2 := parseResponse(t, w2.Body.Bytes())
+	tokenStr2, ok := resp2["token"].(string)
+	if !ok {
+		t.Fatal("expected token in login response")
+	}
+
+	token2, _, err := new(jwt.Parser).ParseUnverified(tokenStr2, jwt.MapClaims{})
+	if err != nil {
+		t.Fatalf("parse login jwt: %v", err)
+	}
+	claims2, ok := token2.Claims.(jwt.MapClaims)
+	if !ok {
+		t.Fatal("expected MapClaims")
+	}
+	orgID2, hasOrgID2 := claims2["org_id"]
+	if !hasOrgID2 {
+		t.Fatal("login JWT claims missing org_id")
+	}
+	if orgID2.(float64) == 0 {
+		t.Fatal("expected non-zero org_id in login JWT claims")
+	}
+}
+
 func TestRegisterCaseInsensitiveEmail(t *testing.T) {
 	_, handler, _ := setupAuth(t)
 
@@ -373,10 +444,94 @@ func TestMiddlewareEmptyBearerPrefix(t *testing.T) {
 	}
 }
 
+func TestMiddlewareSetsOrgID(t *testing.T) {
+	a, h, _ := setupAuth(t)
+
+	// Register user (creates personal org)
+	regReq := httptest.NewRequest("POST", "/api/auth/register",
+		strings.NewReader(`{"email":"orgmid@test.com","password":"secret123"}`))
+	regReq.Header.Set("Content-Type", "application/json")
+	regW := httptest.NewRecorder()
+	h.ServeHTTP(regW, regReq)
+	if regW.Code != http.StatusCreated {
+		t.Fatalf("register: %d %s", regW.Code, regW.Body.String())
+	}
+
+	// Login to get token
+	loginReq := httptest.NewRequest("POST", "/api/auth/login",
+		strings.NewReader(`{"email":"orgmid@test.com","password":"secret123"}`))
+	loginReq.Header.Set("Content-Type", "application/json")
+	loginW := httptest.NewRecorder()
+	h.ServeHTTP(loginW, loginReq)
+	resp := parseResponse(t, loginW.Body.Bytes())
+	token, _ := resp["token"].(string)
+
+	// Middleware should set OrgID in context
+	var gotOrgID int64
+	var gotOK bool
+	protected := a.Middleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		gotOrgID, gotOK = auth.OrgIDFromContext(r.Context())
+		w.WriteHeader(http.StatusOK)
+	}))
+
+	authReq := httptest.NewRequest("GET", "/api/protected", nil)
+	authReq.Header.Set("Authorization", "Bearer "+token)
+	authW := httptest.NewRecorder()
+	protected.ServeHTTP(authW, authReq)
+
+	if authW.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d", authW.Code)
+	}
+	if !gotOK {
+		t.Fatal("expected OrgIDFromContext to return true")
+	}
+	if gotOrgID == 0 {
+		t.Fatal("expected non-zero org_id in context")
+	}
+}
+
+func TestMiddlewareRejectsNoOrg(t *testing.T) {
+	a, _, _ := setupAuth(t)
+
+	// Forge a JWT with org_id=0 using the same secret as setupAuth.
+	claims := auth.Claims{}
+	claims.UserID = 999
+	claims.Email = "noorganization@test.com"
+	claims.Role = "user"
+	claims.OrgID = 0 // explicitly zero
+	claims.ExpiresAt = jwt.NewNumericDate(time.Now().Add(1 * time.Hour))
+	claims.IssuedAt = jwt.NewNumericDate(time.Now())
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	tokenStr, err := token.SignedString([]byte("test-secret-32-chars!!!"))
+	if err != nil {
+		t.Fatalf("sign forged token: %v", err)
+	}
+
+	protected := a.Middleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		t.Fatal("should not reach handler with org_id=0")
+	}))
+
+	req := httptest.NewRequest("GET", "/api/protected", nil)
+	req.Header.Set("Authorization", "Bearer "+tokenStr)
+	w := httptest.NewRecorder()
+	protected.ServeHTTP(w, req)
+
+	if w.Code != http.StatusForbidden {
+		t.Fatalf("expected 403, got %d: %s", w.Code, w.Body.String())
+	}
+	var body map[string]string
+	if err := json.NewDecoder(w.Body).Decode(&body); err != nil {
+		t.Fatalf("decode body: %v", err)
+	}
+	if body["error"] != "no organization" {
+		t.Fatalf("expected 'no organization' error, got %q", body["error"])
+	}
+}
+
 func TestListUsers(t *testing.T) {
 	_, handler, protected := setupAuth(t)
 
-	for i, email := range []string{"u1@test.com", "u2@test.com", "u3@test.com"} {
+	for i, email := range []string{"u1@test.com"} {
 		req := httptest.NewRequest("POST", "/api/auth/register", strings.NewReader(`{"email":"`+email+`","password":"secret123"}`))
 		req.Header.Set("Content-Type", "application/json")
 		w := httptest.NewRecorder()
@@ -408,8 +563,8 @@ func TestListUsers(t *testing.T) {
 		t.Fatalf("decode: %v", err)
 	}
 	users := body["data"]
-	if len(users) != 3 {
-		t.Fatalf("expected 3 users, got %d", len(users))
+	if len(users) != 1 {
+		t.Fatalf("expected 1 user, got %d", len(users))
 	}
 }
 
@@ -422,6 +577,146 @@ func TestListUsersUnauthenticated(t *testing.T) {
 
 	if w.Code != http.StatusUnauthorized {
 		t.Fatalf("expected 401, got %d", w.Code)
+	}
+}
+
+func TestListUsersRequiresAdmin(t *testing.T) {
+	_, handler, protected := setupAuth(t)
+
+	// Register first user (admin)
+	regReq := httptest.NewRequest("POST", "/api/auth/register",
+		strings.NewReader(`{"email":"admin@test.com","password":"secret123"}`))
+	regReq.Header.Set("Content-Type", "application/json")
+	regW := httptest.NewRecorder()
+	handler.ServeHTTP(regW, regReq)
+	if regW.Code != http.StatusCreated {
+		t.Fatalf("register admin: expected 201, got %d: %s", regW.Code, regW.Body.String())
+	}
+
+	// Register second user (non-admin)
+	regReq2 := httptest.NewRequest("POST", "/api/auth/register",
+		strings.NewReader(`{"email":"user@test.com","password":"secret123"}`))
+	regReq2.Header.Set("Content-Type", "application/json")
+	regW2 := httptest.NewRecorder()
+	handler.ServeHTTP(regW2, regReq2)
+	if regW2.Code != http.StatusCreated {
+		t.Fatalf("register user: expected 201, got %d: %s", regW2.Code, regW2.Body.String())
+	}
+
+	// Login as non-admin user
+	loginReq := httptest.NewRequest("POST", "/api/auth/login",
+		strings.NewReader(`{"email":"user@test.com","password":"secret123"}`))
+	loginReq.Header.Set("Content-Type", "application/json")
+	loginW := httptest.NewRecorder()
+	handler.ServeHTTP(loginW, loginReq)
+	if loginW.Code != http.StatusOK {
+		t.Fatalf("login: expected 200, got %d: %s", loginW.Code, loginW.Body.String())
+	}
+	resp := parseResponse(t, loginW.Body.Bytes())
+	token, _ := resp["token"].(string)
+	if token == "" {
+		t.Fatal("expected non-empty token")
+	}
+
+	// Try GET /api/auth/users as non-admin — should be 403
+	req := httptest.NewRequest("GET", "/api/auth/users", nil)
+	req.Header.Set("Authorization", "Bearer "+token)
+	w := httptest.NewRecorder()
+	protected.ServeHTTP(w, req)
+
+	if w.Code != http.StatusForbidden {
+		t.Fatalf("expected 403 for non-admin user, got %d: %s", w.Code, w.Body.String())
+	}
+
+	var body map[string]string
+	if err := json.NewDecoder(w.Body).Decode(&body); err != nil {
+		t.Fatalf("decode response: %v", err)
+	}
+	if body["error"] != "forbidden" {
+		t.Fatalf("expected 'forbidden' error, got %q", body["error"])
+	}
+}
+
+func TestListUsersForbiddenForNonAdmin(t *testing.T) {
+	_, handler, protected := setupAuth(t)
+
+	// Register first user (admin) and second user (non-admin)
+	for _, email := range []string{"alpha@test.com", "beta@test.com"} {
+		regReq := httptest.NewRequest("POST", "/api/auth/register",
+			strings.NewReader(`{"email":"`+email+`","password":"secret123"}`))
+		regReq.Header.Set("Content-Type", "application/json")
+		regW := httptest.NewRecorder()
+		handler.ServeHTTP(regW, regReq)
+		if regW.Code != http.StatusCreated {
+			t.Fatalf("register %s: expected 201, got %d: %s", email, regW.Code, regW.Body.String())
+		}
+	}
+
+	// Login as non-admin (beta) — should get 403 and no user list
+	loginReq := httptest.NewRequest("POST", "/api/auth/login",
+		strings.NewReader(`{"email":"beta@test.com","password":"secret123"}`))
+	loginReq.Header.Set("Content-Type", "application/json")
+	loginW := httptest.NewRecorder()
+	handler.ServeHTTP(loginW, loginReq)
+	if loginW.Code != http.StatusOK {
+		t.Fatalf("login beta: expected 200, got %d: %s", loginW.Code, loginW.Body.String())
+	}
+	resp := parseResponse(t, loginW.Body.Bytes())
+	nonAdminToken, _ := resp["token"].(string)
+	if nonAdminToken == "" {
+		t.Fatal("expected non-empty token for beta")
+	}
+
+	// Non-admin should get 403
+	req := httptest.NewRequest("GET", "/api/auth/users", nil)
+	req.Header.Set("Authorization", "Bearer "+nonAdminToken)
+	w := httptest.NewRecorder()
+	protected.ServeHTTP(w, req)
+
+	if w.Code != http.StatusForbidden {
+		t.Fatalf("non-admin: expected 403, got %d: %s", w.Code, w.Body.String())
+	}
+
+	// Verify response body contains no user data
+	var body map[string]any
+	if err := json.NewDecoder(w.Body).Decode(&body); err != nil {
+		t.Fatalf("decode response: %v", err)
+	}
+	if _, hasData := body["data"]; hasData {
+		t.Fatal("non-admin response should not contain 'data' field with user list")
+	}
+	if body["error"] != "forbidden" {
+		t.Fatalf("expected 'forbidden' error, got %v", body["error"])
+	}
+
+	// Login as admin (alpha) — should get 200 with full user list
+	loginAdmin := httptest.NewRequest("POST", "/api/auth/login",
+		strings.NewReader(`{"email":"alpha@test.com","password":"secret123"}`))
+	loginAdmin.Header.Set("Content-Type", "application/json")
+	loginAdminW := httptest.NewRecorder()
+	handler.ServeHTTP(loginAdminW, loginAdmin)
+	if loginAdminW.Code != http.StatusOK {
+		t.Fatalf("login alpha: expected 200, got %d: %s", loginAdminW.Code, loginAdminW.Body.String())
+	}
+	adminResp := parseResponse(t, loginAdminW.Body.Bytes())
+	adminToken, _ := adminResp["token"].(string)
+
+	req2 := httptest.NewRequest("GET", "/api/auth/users", nil)
+	req2.Header.Set("Authorization", "Bearer "+adminToken)
+	w2 := httptest.NewRecorder()
+	protected.ServeHTTP(w2, req2)
+
+	if w2.Code != http.StatusOK {
+		t.Fatalf("admin: expected 200, got %d: %s", w2.Code, w2.Body.String())
+	}
+
+	var adminBody map[string][]map[string]any
+	if err := json.NewDecoder(w2.Body).Decode(&adminBody); err != nil {
+		t.Fatalf("decode admin response: %v", err)
+	}
+	users := adminBody["data"]
+	if len(users) != 1 {
+		t.Fatalf("expected 1 user in admin response, got %d", len(users))
 	}
 }
 
@@ -547,10 +842,21 @@ func setupAuthWithGoogle(t *testing.T) (*auth.Auth, http.Handler, http.Handler) 
 	return a, a.Handler(), a.ProtectedHandler()
 }
 
+// makeValidOAuthCallback creates a callback request with a valid oauth_state cookie.
+func makeValidOAuthCallback(t *testing.T, code, state string) *http.Request {
+	t.Helper()
+	req := httptest.NewRequest("GET", "/api/auth/oauth/google/callback?code="+code+"&state="+state, nil)
+	req.AddCookie(&http.Cookie{
+		Name:  "oauth_state",
+		Value: auth.SignState(state, []byte("test-secret-32-chars!!!")),
+	})
+	return req
+}
+
 func TestGoogleCallbackCreatesUser(t *testing.T) {
 	a, handler, _ := setupAuthWithGoogle(t)
 
-	req := httptest.NewRequest("GET", "/api/auth/oauth/google/callback?code=testcode", nil)
+	req := makeValidOAuthCallback(t, "testcode", "test-state")
 	w := httptest.NewRecorder()
 	handler.ServeHTTP(w, req)
 
@@ -595,7 +901,7 @@ func TestGoogleCallbackLinksExistingUser(t *testing.T) {
 		t.Fatalf("register: %d", regW.Code)
 	}
 
-	req := httptest.NewRequest("GET", "/api/auth/oauth/google/callback?code=testcode", nil)
+	req := makeValidOAuthCallback(t, "testcode", "test-state")
 	w := httptest.NewRecorder()
 	handler.ServeHTTP(w, req)
 
@@ -622,6 +928,144 @@ func TestGoogleCallbackLinksExistingUser(t *testing.T) {
 	if claims.Email != "oauth@test.com" {
 		t.Fatalf("expected email 'oauth@test.com', got %q", claims.Email)
 	}
+}
+
+func TestOAuthStateCookieSet(t *testing.T) {
+	_, handler, _ := setupAuthWithGoogle(t)
+
+	req := httptest.NewRequest("GET", "/api/auth/oauth/google", nil)
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+
+	if w.Code != http.StatusFound {
+		t.Fatalf("expected 302 redirect, got %d", w.Code)
+	}
+
+	cookies := w.Result().Cookies()
+	var stateCookie *http.Cookie
+	for _, c := range cookies {
+		if c.Name == "oauth_state" {
+			stateCookie = c
+			break
+		}
+	}
+	if stateCookie == nil {
+		t.Fatal("expected oauth_state cookie to be set")
+	}
+	if stateCookie.Value == "" {
+		t.Fatal("expected non-empty oauth_state cookie value")
+	}
+	if !stateCookie.HttpOnly {
+		t.Error("expected oauth_state cookie to be HttpOnly")
+	}
+	if stateCookie.Path != "/" {
+		t.Errorf("expected Path '/', got %q", stateCookie.Path)
+	}
+	if stateCookie.SameSite != http.SameSiteLaxMode {
+		t.Errorf("expected SameSite=Lax, got %v", stateCookie.SameSite)
+	}
+	if stateCookie.MaxAge != 600 {
+		t.Errorf("expected MaxAge=600, got %d", stateCookie.MaxAge)
+	}
+}
+
+func TestOAuthStateMismatchRejected(t *testing.T) {
+	_, handler, _ := setupAuthWithGoogle(t)
+
+	// Callback without oauth_state cookie should return 400
+	req := httptest.NewRequest("GET", "/api/auth/oauth/google/callback?code=testcode&state=abc123", nil)
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+
+	if w.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400 for missing state cookie, got %d: %s", w.Code, w.Body.String())
+	}
+
+	var resp map[string]any
+	if err := json.NewDecoder(w.Body).Decode(&resp); err != nil {
+		t.Fatalf("decode response: %v", err)
+	}
+	if resp["error"] != "invalid state" {
+		t.Fatalf("expected 'invalid state' error, got %v", resp["error"])
+	}
+
+	// Verify no token cookie was set
+	cookies := w.Result().Cookies()
+	for _, c := range cookies {
+		if c.Name == "token" && c.Value != "" {
+			t.Fatal("expected no token cookie when state validation fails")
+		}
+	}
+}
+
+func TestOAuthStateClearedOnSuccess(t *testing.T) {
+	_, handler, _ := setupAuthWithGoogle(t)
+
+	req := makeValidOAuthCallback(t, "testcode", "test-state")
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+
+	if w.Code != http.StatusFound {
+		t.Fatalf("expected 302 redirect on success, got %d: %s", w.Code, w.Body.String())
+	}
+
+	// Verify oauth_state cookie is cleared (MaxAge <= 0 or expired in past)
+	setCookies := w.Result().Header["Set-Cookie"]
+	if len(setCookies) == 0 {
+		t.Fatal("expected Set-Cookie headers")
+	}
+	var stateCookieCleared bool
+	for _, sc := range setCookies {
+		if strings.HasPrefix(sc, "oauth_state=") {
+			// Should be cleared: MaxAge=0, MaxAge=-1, or Expires in the past
+			stateCookieCleared = strings.Contains(sc, "Max-Age=0") ||
+				strings.Contains(sc, "Max-Age=-1") ||
+				strings.Contains(sc, "expires=")
+		}
+	}
+	if !stateCookieCleared {
+		t.Fatal("expected oauth_state cookie to be cleared (MaxAge<=0)")
+	}
+}
+
+func TestOAuthCallbackNoStateCookie(t *testing.T) {
+	_, handler, _ := setupAuthWithGoogle(t)
+
+	t.Run("no_cookie", func(t *testing.T) {
+		req := httptest.NewRequest("GET", "/api/auth/oauth/google/callback?code=valid&state=somestate", nil)
+		w := httptest.NewRecorder()
+		handler.ServeHTTP(w, req)
+
+		if w.Code != http.StatusBadRequest {
+			t.Fatalf("expected 400, got %d: %s", w.Code, w.Body.String())
+		}
+		// Verify no token cookie was set
+		for _, c := range w.Result().Cookies() {
+			if c.Name == "token" && c.Value != "" {
+				t.Fatal("expected no token cookie when state validation fails")
+			}
+		}
+	})
+
+	t.Run("wrong_state_in_cookie", func(t *testing.T) {
+		// Sign a different state than what's in the query
+		req := httptest.NewRequest("GET", "/api/auth/oauth/google/callback?code=valid&state=real-state", nil)
+		req.AddCookie(&http.Cookie{
+			Name:  "oauth_state",
+			Value: auth.SignState("wrong-state", []byte("test-secret-32-chars!!!")),
+		})
+		w := httptest.NewRecorder()
+		handler.ServeHTTP(w, req)
+
+		if w.Code != http.StatusBadRequest {
+			t.Fatalf("expected 400 for mismatched state, got %d: %s", w.Code, w.Body.String())
+		}
+		for _, c := range w.Result().Cookies() {
+			if c.Name == "token" && c.Value != "" {
+				t.Fatal("expected no token cookie when state validation fails")
+			}
+		}
+	})
 }
 
 func TestGoogleOAuthDisabledWhenNoConfig(t *testing.T) {
@@ -855,8 +1299,11 @@ func TestOrganization(t *testing.T) {
 
 		handler := a.Handler()
 
-		// Simulate Google OAuth callback
-		req := httptest.NewRequest("GET", "/api/auth/oauth/google/callback?code=testcode", nil)
+		// Simulate Google OAuth callback with valid state cookie
+		state := "test-state"
+		signed := auth.SignState(state, []byte("test-secret-32-chars!!!"))
+		req := httptest.NewRequest("GET", "/api/auth/oauth/google/callback?code=testcode&state="+state, nil)
+		req.AddCookie(&http.Cookie{Name: "oauth_state", Value: signed})
 		w := httptest.NewRecorder()
 		handler.ServeHTTP(w, req)
 
@@ -1340,6 +1787,51 @@ func TestOrganization(t *testing.T) {
 	})
 }
 
+func TestStateSignRoundTrip(t *testing.T) {
+	secret := []byte("test-secret-32-chars!!!")
+	state := "abc123def456"
+
+	signed := auth.SignState(state, secret)
+	if signed == "" {
+		t.Fatal("expected non-empty signed state")
+	}
+
+	// verifyState should succeed with matching state and secret
+	if !auth.VerifyState(signed, state, secret) {
+		t.Fatal("expected VerifyState to return true for valid signed state")
+	}
+
+	// verifyState should fail with wrong state
+	if auth.VerifyState(signed, "wrong-state", secret) {
+		t.Fatal("expected VerifyState to return false for wrong state")
+	}
+
+	// verifyState should fail with wrong secret
+	wrongSecret := []byte("wrong-secret!!!!!!")
+	if auth.VerifyState(signed, state, wrongSecret) {
+		t.Fatal("expected VerifyState to return false for wrong secret")
+	}
+
+	// verifyState should fail with tampered signature
+	parts := strings.Split(signed, ".")
+	if len(parts) == 2 {
+		tampered := parts[0] + ".tampered"
+		if auth.VerifyState(tampered, state, secret) {
+			t.Fatal("expected VerifyState to return false for tampered signature")
+		}
+	}
+
+	// verifyState should fail with malformed input (no dot)
+	if auth.VerifyState("no-dot-here", state, secret) {
+		t.Fatal("expected VerifyState to return false for malformed input")
+	}
+
+	// verifyState should fail with empty state
+	if auth.VerifyState("", state, secret) {
+		t.Fatal("expected VerifyState to return false for empty input")
+	}
+}
+
 func TestMiddlewareBadToken(t *testing.T) {
 	a, _, _ := setupAuth(t)
 
@@ -1355,4 +1847,114 @@ func TestMiddlewareBadToken(t *testing.T) {
 	if w.Code != http.StatusUnauthorized {
 		t.Fatalf("expected 401, got %d", w.Code)
 	}
+}
+
+func TestListUsersOrgScoping(t *testing.T) {
+	_, handler, protected, d := setupAuthWithDB(t)
+
+	// Register 2 admins to represent two distinct orgs
+	// Admin 1 (gets Org 1, default role is admin because it's first user)
+	req1 := httptest.NewRequest("POST", "/api/auth/register", strings.NewReader(`{"email":"admin1@org1.com","password":"password123"}`))
+	req1.Header.Set("Content-Type", "application/json")
+	w1 := httptest.NewRecorder()
+	handler.ServeHTTP(w1, req1)
+	if w1.Code != http.StatusCreated {
+		t.Fatalf("register admin1: expected 201, got %d: %s", w1.Code, w1.Body.String())
+	}
+
+	// Admin 2 (gets Org 2, default role is user, we will update it to admin)
+	req2 := httptest.NewRequest("POST", "/api/auth/register", strings.NewReader(`{"email":"admin2@org2.com","password":"password123"}`))
+	req2.Header.Set("Content-Type", "application/json")
+	w2 := httptest.NewRecorder()
+	handler.ServeHTTP(w2, req2)
+	if w2.Code != http.StatusCreated {
+		t.Fatalf("register admin2: expected 201, got %d: %s", w2.Code, w2.Body.String())
+	}
+
+	// Update admin2's role to admin in the DB so they are authorized to list users
+	_, err := d.Exec("UPDATE users SET role = 'admin' WHERE email = ?", "admin2@org2.com")
+	if err != nil {
+		t.Fatalf("failed to update admin2 role: %v", err)
+	}
+
+	// Log in as Admin 1
+	login1Body := `{"email":"admin1@org1.com","password":"password123"}`
+	login1Req := httptest.NewRequest("POST", "/api/auth/login", strings.NewReader(login1Body))
+	login1Req.Header.Set("Content-Type", "application/json")
+	login1W := httptest.NewRecorder()
+	handler.ServeHTTP(login1W, login1Req)
+	resp1 := parseResponse(t, login1W.Body.Bytes())
+	token1, _ := resp1["token"].(string)
+
+	// Log in as Admin 2
+	login2Body := `{"email":"admin2@org2.com","password":"password123"}`
+	login2Req := httptest.NewRequest("POST", "/api/auth/login", strings.NewReader(login2Body))
+	login2Req.Header.Set("Content-Type", "application/json")
+	login2W := httptest.NewRecorder()
+	handler.ServeHTTP(login2W, login2Req)
+	resp2 := parseResponse(t, login2W.Body.Bytes())
+	token2, _ := resp2["token"].(string)
+
+	// Admin 1 queries users list. Should only see admin1@org1.com (since admin2 is in Org 2).
+	listReq1 := httptest.NewRequest("GET", "/api/auth/users", nil)
+	listReq1.Header.Set("Authorization", "Bearer "+token1)
+	listW1 := httptest.NewRecorder()
+	protected.ServeHTTP(listW1, listReq1)
+
+	if listW1.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", listW1.Code, listW1.Body.String())
+	}
+
+	var body1 map[string][]map[string]any
+	if err := json.NewDecoder(listW1.Body).Decode(&body1); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	users1 := body1["data"]
+	if len(users1) != 1 {
+		t.Fatalf("admin1: expected 1 user, got %d: %v", len(users1), users1)
+	}
+	if users1[0]["email"] != "admin1@org1.com" {
+		t.Errorf("admin1: expected to see admin1@org1.com, got %v", users1[0]["email"])
+	}
+
+	// Admin 2 queries users list. Should only see admin2@org2.com.
+	listReq2 := httptest.NewRequest("GET", "/api/auth/users", nil)
+	listReq2.Header.Set("Authorization", "Bearer "+token2)
+	listW2 := httptest.NewRecorder()
+	protected.ServeHTTP(listW2, listReq2)
+
+	if listW2.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", listW2.Code, listW2.Body.String())
+	}
+
+	var body2 map[string][]map[string]any
+	if err := json.NewDecoder(listW2.Body).Decode(&body2); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	users2 := body2["data"]
+	if len(users2) != 1 {
+		t.Fatalf("admin2: expected 1 user, got %d: %v", len(users2), users2)
+	}
+	if users2[0]["email"] != "admin2@org2.com" {
+		t.Errorf("admin2: expected to see admin2@org2.com, got %v", users2[0]["email"])
+	}
+}
+
+func setupAuthWithDB(t *testing.T) (*auth.Auth, http.Handler, http.Handler, *db.DB) {
+	t.Helper()
+	logger := testLogger{}
+	k := kernel.New(logger)
+
+	d := db.New(db.Options{Path: ":memory:", Logger: logger})
+	a := auth.New(auth.Options{DB: d, Logger: logger, Secret: "test-secret-32-chars!!!"})
+
+	k.Register(a)
+	k.Register(d)
+
+	if err := k.Start(); err != nil {
+		t.Fatalf("kernel start: %v", err)
+	}
+	t.Cleanup(func() { _ = k.Stop() })
+
+	return a, a.Handler(), a.ProtectedHandler(), d
 }

@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/danielvm/bigbase/components/db"
 )
@@ -117,12 +118,17 @@ func TestSampleDeploy(t *testing.T) {
 		if err := json.NewDecoder(w.Body).Decode(&resp); err != nil {
 			t.Fatalf("decode: %v", err)
 		}
-		if resp["id"] == nil || resp["id"] == "" {
-			t.Error("expected deployment id in response")
+		depID, _ := resp["id"].(string)
+		if depID == "" {
+			t.Fatal("expected deployment id in response")
 		}
 		if resp["status"] != "pending" {
 			t.Errorf("expected status=pending got %v", resp["status"])
 		}
+
+		// Wait for the deployment to finish running/building so that background git operations
+		// and file locks are completely released before TempDir cleanup is triggered.
+		waitForDeploymentTerminal(t, handler, depID, 5*time.Second)
 	})
 
 	t.Run("returns 404 for unknown sample", func(t *testing.T) {
