@@ -605,6 +605,18 @@ func (a *Auth) handleGoogleOAuth(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	state, _ := generateID()
+
+	// Set a signed state cookie so the callback can verify this flow originated here.
+	http.SetCookie(w, &http.Cookie{
+		Name:     "oauth_state",
+		Value:    SignState(state, a.secret),
+		HttpOnly: true,
+		Secure:   r.TLS != nil,
+		SameSite: http.SameSiteLaxMode,
+		Path:     "/",
+		MaxAge:   600,
+	})
+
 	scheme := "http"
 	if r.TLS != nil {
 		scheme = "https"

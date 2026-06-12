@@ -624,6 +624,45 @@ func TestGoogleCallbackLinksExistingUser(t *testing.T) {
 	}
 }
 
+func TestOAuthStateCookieSet(t *testing.T) {
+	_, handler, _ := setupAuthWithGoogle(t)
+
+	req := httptest.NewRequest("GET", "/api/auth/oauth/google", nil)
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+
+	if w.Code != http.StatusFound {
+		t.Fatalf("expected 302 redirect, got %d", w.Code)
+	}
+
+	cookies := w.Result().Cookies()
+	var stateCookie *http.Cookie
+	for _, c := range cookies {
+		if c.Name == "oauth_state" {
+			stateCookie = c
+			break
+		}
+	}
+	if stateCookie == nil {
+		t.Fatal("expected oauth_state cookie to be set")
+	}
+	if stateCookie.Value == "" {
+		t.Fatal("expected non-empty oauth_state cookie value")
+	}
+	if !stateCookie.HttpOnly {
+		t.Error("expected oauth_state cookie to be HttpOnly")
+	}
+	if stateCookie.Path != "/" {
+		t.Errorf("expected Path '/', got %q", stateCookie.Path)
+	}
+	if stateCookie.SameSite != http.SameSiteLaxMode {
+		t.Errorf("expected SameSite=Lax, got %v", stateCookie.SameSite)
+	}
+	if stateCookie.MaxAge != 600 {
+		t.Errorf("expected MaxAge=600, got %d", stateCookie.MaxAge)
+	}
+}
+
 func TestGoogleOAuthDisabledWhenNoConfig(t *testing.T) {
 	_, handler, _ := setupAuth(t)
 
