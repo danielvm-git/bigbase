@@ -637,6 +637,89 @@ func TestListUsersRequiresAdmin(t *testing.T) {
 	}
 }
 
+func TestListUsersForbiddenForNonAdmin(t *testing.T) {
+	_, handler, protected := setupAuth(t)
+
+	// Register first user (admin) and second user (non-admin)
+	for _, email := range []string{"alpha@test.com", "beta@test.com"} {
+		regReq := httptest.NewRequest("POST", "/api/auth/register",
+			strings.NewReader(`{"email":"`+email+`","password":"secret123"}`))
+		regReq.Header.Set("Content-Type", "application/json")
+		regW := httptest.NewRecorder()
+		handler.ServeHTTP(regW, regReq)
+		if regW.Code != http.StatusCreated {
+			t.Fatalf("register %s: expected 201, got %d: %s", email, regW.Code, regW.Body.String())
+		}
+	}
+
+	// Login as non-admin (beta) — should get 403 and no user list
+	loginReq := httptest.NewRequest("POST", "/api/auth/login",
+		strings.NewReader(`{"email":"beta@test.com","password":"secret123"}`))
+	loginReq.Header.Set("Content-Type", "application/json")
+	loginW := httptest.NewRecorder()
+	handler.ServeHTTP(loginW, loginReq)
+	if loginW.Code != http.StatusOK {
+		t.Fatalf("login beta: expected 200, got %d: %s", loginW.Code, loginW.Body.String())
+	}
+	resp := parseResponse(t, loginW.Body.Bytes())
+	nonAdminToken, _ := resp["token"].(string)
+	if nonAdminToken == "" {
+		t.Fatal("expected non-empty token for beta")
+	}
+
+	// Non-admin should get 403
+	req := httptest.NewRequest("GET", "/api/auth/users", nil)
+	req.Header.Set("Authorization", "Bearer "+nonAdminToken)
+	w := httptest.NewRecorder()
+	protected.ServeHTTP(w, req)
+
+	if w.Code != http.StatusForbidden {
+		t.Fatalf("non-admin: expected 403, got %d: %s", w.Code, w.Body.String())
+	}
+
+	// Verify response body contains no user data
+	var body map[string]any
+	if err := json.NewDecoder(w.Body).Decode(&body); err != nil {
+		t.Fatalf("decode response: %v", err)
+	}
+	if _, hasData := body["data"]; hasData {
+		t.Fatal("non-admin response should not contain 'data' field with user list")
+	}
+	if body["error"] != "forbidden" {
+		t.Fatalf("expected 'forbidden' error, got %v", body["error"])
+	}
+
+	// Login as admin (alpha) — should get 200 with full user list
+	loginAdmin := httptest.NewRequest("POST", "/api/auth/login",
+		strings.NewReader(`{"email":"alpha@test.com","password":"secret123"}`))
+	loginAdmin.Header.Set("Content-Type", "application/json")
+	loginAdminW := httptest.NewRecorder()
+	handler.ServeHTTP(loginAdminW, loginAdmin)
+	if loginAdminW.Code != http.StatusOK {
+		t.Fatalf("login alpha: expected 200, got %d: %s", loginAdminW.Code, loginAdminW.Body.String())
+	}
+	adminResp := parseResponse(t, loginAdminW.Body.Bytes())
+	adminToken, _ := adminResp["token"].(string)
+
+	req2 := httptest.NewRequest("GET", "/api/auth/users", nil)
+	req2.Header.Set("Authorization", "Bearer "+adminToken)
+	w2 := httptest.NewRecorder()
+	protected.ServeHTTP(w2, req2)
+
+	if w2.Code != http.StatusOK {
+		t.Fatalf("admin: expected 200, got %d: %s", w2.Code, w2.Body.String())
+	}
+
+	var adminBody map[string][]map[string]any
+	if err := json.NewDecoder(w2.Body).Decode(&adminBody); err != nil {
+		t.Fatalf("decode admin response: %v", err)
+	}
+	users := adminBody["data"]
+	if len(users) != 2 {
+		t.Fatalf("expected 2 users in admin response, got %d", len(users))
+	}
+}
+
 func TestDeleteUser(t *testing.T) {
 	_, handler, protected := setupAuth(t)
 
