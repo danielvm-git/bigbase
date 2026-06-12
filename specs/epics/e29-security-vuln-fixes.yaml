@@ -74,7 +74,7 @@ stories:
   # ───────────────────────────────────────────────────────────────────
   - id: e29s02
     title: Wire org-ID into request context (activate dead multi-tenant isolation)
-    status: todo
+    status: done
     type: fix
     severity: HIGH
     refs:

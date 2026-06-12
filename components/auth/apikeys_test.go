@@ -270,3 +270,44 @@ func TestAPIKeys(t *testing.T) {
 		}
 	})
 }
+
+func TestAPIKeyOrgScoped(t *testing.T) {
+	a, _, prot, token, orgID := setupAPIKeys(t)
+
+	// Create API key
+	req := httptest.NewRequest("POST", fmt.Sprintf("/api/orgs/%.0f/api-keys", orgID),
+		strings.NewReader(`{"name":"scoped-key","scopes":["read"]}`))
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+token)
+	w := httptest.NewRecorder()
+	prot.ServeHTTP(w, req)
+	if w.Code != http.StatusCreated {
+		t.Fatalf("create api key: %d %s", w.Code, w.Body.String())
+	}
+	var createResp map[string]any
+	_ = json.NewDecoder(w.Body).Decode(&createResp)
+	rawKey := createResp["data"].(map[string]any)["key"].(string)
+
+	// Use the API key through middleware to verify org_id is set
+	var gotOrgID int64
+	var gotOK bool
+	mw := a.Middleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		gotOrgID, gotOK = auth.OrgIDFromContext(r.Context())
+		w.WriteHeader(http.StatusOK)
+	}))
+
+	authReq := httptest.NewRequest("GET", "/api/protected", nil)
+	authReq.Header.Set("Authorization", "Bearer "+rawKey)
+	authW := httptest.NewRecorder()
+	mw.ServeHTTP(authW, authReq)
+
+	if authW.Code != http.StatusOK {
+		t.Fatalf("middleware: expected 200, got %d: %s", authW.Code, authW.Body.String())
+	}
+	if !gotOK {
+		t.Fatal("expected OrgIDFromContext to return true with API key")
+	}
+	if gotOrgID != int64(orgID) {
+		t.Fatalf("expected org_id=%.0f, got %d", orgID, gotOrgID)
+	}
+}

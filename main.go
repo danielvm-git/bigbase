@@ -242,9 +242,20 @@ func startProxy() {
 	k.Register(depComp)
 	k.Register(mComp)
 
+	// orgBridge reads auth.OrgIDFromContext (set by authComp.Middleware) and
+	// bridges it to api.WithOrgID so API handlers see the caller's org.
+	orgBridge := func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if orgID, ok := auth.OrgIDFromContext(r.Context()); ok {
+				r = r.WithContext(api.WithOrgID(r.Context(), orgID))
+			}
+			next.ServeHTTP(w, r)
+		})
+	}
+
 	// Register routes before kernel.Start to avoid race on proxy mux
 	publicAPI := a.Handler()
-	protectedAPI := mComp.Middleware(authComp.Middleware(publicAPI))
+	protectedAPI := mComp.Middleware(authComp.Middleware(orgBridge(publicAPI)))
 	storageHandler := mComp.Middleware(authComp.Middleware(s.Handler()))
 	gitHandler := mComp.Middleware(authComp.Middleware(g.Handler()))
 	forgeHandler := mComp.Middleware(authComp.Middleware(f.Handler()))

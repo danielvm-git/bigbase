@@ -9,10 +9,12 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/danielvm/bigbase/components/auth"
 	"github.com/danielvm/bigbase/components/db"
 	"github.com/danielvm/bigbase/kernel"
+	jwt "github.com/golang-jwt/jwt/v5"
 )
 
 type testLogger struct{}
@@ -252,6 +254,75 @@ func TestLoginUnknownUser(t *testing.T) {
 	}
 }
 
+func TestJWTCarriesOrgID(t *testing.T) {
+	_, handler, _ := setupAuth(t)
+
+	// Register creates a user + personal org; verify the JWT carries the org_id.
+	req := httptest.NewRequest("POST", "/api/auth/register",
+		strings.NewReader(`{"email":"orguser@test.com","password":"secret123"}`))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+	if w.Code != http.StatusCreated {
+		t.Fatalf("register: expected 201, got %d: %s", w.Code, w.Body.String())
+	}
+
+	resp := parseResponse(t, w.Body.Bytes())
+	tokenStr, ok := resp["token"].(string)
+	if !ok {
+		t.Fatal("expected token in register response")
+	}
+
+	// Decode JWT to inspect claims (don't need signature verify — we trust our own server)
+	token, _, err := new(jwt.Parser).ParseUnverified(tokenStr, jwt.MapClaims{})
+	if err != nil {
+		t.Fatalf("parse jwt: %v", err)
+	}
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
+		t.Fatal("expected MapClaims")
+	}
+	orgID, hasOrgID := claims["org_id"]
+	if !hasOrgID {
+		t.Fatal("JWT claims missing org_id")
+	}
+	if orgID.(float64) == 0 {
+		t.Fatal("expected non-zero org_id in JWT claims")
+	}
+
+	// Also verify login returns a token with org_id
+	loginReq := httptest.NewRequest("POST", "/api/auth/login",
+		strings.NewReader(`{"email":"orguser@test.com","password":"secret123"}`))
+	loginReq.Header.Set("Content-Type", "application/json")
+	w2 := httptest.NewRecorder()
+	handler.ServeHTTP(w2, loginReq)
+	if w2.Code != http.StatusOK {
+		t.Fatalf("login: expected 200, got %d: %s", w2.Code, w2.Body.String())
+	}
+
+	resp2 := parseResponse(t, w2.Body.Bytes())
+	tokenStr2, ok := resp2["token"].(string)
+	if !ok {
+		t.Fatal("expected token in login response")
+	}
+
+	token2, _, err := new(jwt.Parser).ParseUnverified(tokenStr2, jwt.MapClaims{})
+	if err != nil {
+		t.Fatalf("parse login jwt: %v", err)
+	}
+	claims2, ok := token2.Claims.(jwt.MapClaims)
+	if !ok {
+		t.Fatal("expected MapClaims")
+	}
+	orgID2, hasOrgID2 := claims2["org_id"]
+	if !hasOrgID2 {
+		t.Fatal("login JWT claims missing org_id")
+	}
+	if orgID2.(float64) == 0 {
+		t.Fatal("expected non-zero org_id in login JWT claims")
+	}
+}
+
 func TestRegisterCaseInsensitiveEmail(t *testing.T) {
 	_, handler, _ := setupAuth(t)
 
@@ -370,6 +441,90 @@ func TestMiddlewareEmptyBearerPrefix(t *testing.T) {
 
 	if w.Code != http.StatusUnauthorized {
 		t.Fatalf("expected 401, got %d", w.Code)
+	}
+}
+
+func TestMiddlewareSetsOrgID(t *testing.T) {
+	a, h, _ := setupAuth(t)
+
+	// Register user (creates personal org)
+	regReq := httptest.NewRequest("POST", "/api/auth/register",
+		strings.NewReader(`{"email":"orgmid@test.com","password":"secret123"}`))
+	regReq.Header.Set("Content-Type", "application/json")
+	regW := httptest.NewRecorder()
+	h.ServeHTTP(regW, regReq)
+	if regW.Code != http.StatusCreated {
+		t.Fatalf("register: %d %s", regW.Code, regW.Body.String())
+	}
+
+	// Login to get token
+	loginReq := httptest.NewRequest("POST", "/api/auth/login",
+		strings.NewReader(`{"email":"orgmid@test.com","password":"secret123"}`))
+	loginReq.Header.Set("Content-Type", "application/json")
+	loginW := httptest.NewRecorder()
+	h.ServeHTTP(loginW, loginReq)
+	resp := parseResponse(t, loginW.Body.Bytes())
+	token, _ := resp["token"].(string)
+
+	// Middleware should set OrgID in context
+	var gotOrgID int64
+	var gotOK bool
+	protected := a.Middleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		gotOrgID, gotOK = auth.OrgIDFromContext(r.Context())
+		w.WriteHeader(http.StatusOK)
+	}))
+
+	authReq := httptest.NewRequest("GET", "/api/protected", nil)
+	authReq.Header.Set("Authorization", "Bearer "+token)
+	authW := httptest.NewRecorder()
+	protected.ServeHTTP(authW, authReq)
+
+	if authW.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d", authW.Code)
+	}
+	if !gotOK {
+		t.Fatal("expected OrgIDFromContext to return true")
+	}
+	if gotOrgID == 0 {
+		t.Fatal("expected non-zero org_id in context")
+	}
+}
+
+func TestMiddlewareRejectsNoOrg(t *testing.T) {
+	a, _, _ := setupAuth(t)
+
+	// Forge a JWT with org_id=0 using the same secret as setupAuth.
+	claims := auth.Claims{}
+	claims.UserID = 999
+	claims.Email = "noorganization@test.com"
+	claims.Role = "user"
+	claims.OrgID = 0 // explicitly zero
+	claims.ExpiresAt = jwt.NewNumericDate(time.Now().Add(1 * time.Hour))
+	claims.IssuedAt = jwt.NewNumericDate(time.Now())
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	tokenStr, err := token.SignedString([]byte("test-secret-32-chars!!!"))
+	if err != nil {
+		t.Fatalf("sign forged token: %v", err)
+	}
+
+	protected := a.Middleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		t.Fatal("should not reach handler with org_id=0")
+	}))
+
+	req := httptest.NewRequest("GET", "/api/protected", nil)
+	req.Header.Set("Authorization", "Bearer "+tokenStr)
+	w := httptest.NewRecorder()
+	protected.ServeHTTP(w, req)
+
+	if w.Code != http.StatusForbidden {
+		t.Fatalf("expected 403, got %d: %s", w.Code, w.Body.String())
+	}
+	var body map[string]string
+	if err := json.NewDecoder(w.Body).Decode(&body); err != nil {
+		t.Fatalf("decode body: %v", err)
+	}
+	if body["error"] != "no organization" {
+		t.Fatalf("expected 'no organization' error, got %q", body["error"])
 	}
 }
 

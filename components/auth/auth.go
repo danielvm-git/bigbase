@@ -31,6 +31,7 @@ const (
 	ctxUserID    contextKey = "user_id"
 	ctxUserEmail contextKey = "user_email"
 	ctxUserRole  contextKey = "user_role"
+	ctxOrgID     contextKey = "org_id"
 )
 
 type authRequest struct {
@@ -281,6 +282,20 @@ func (a *Auth) Middleware(next http.Handler) http.Handler {
 			writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "authorization required"})
 			return
 		}
+
+		// API key authentication — resolve org_id and skip JWT checks.
+		if strings.HasPrefix(token, "bb_") {
+			orgID, err := a.ResolveAPIKey(token)
+			if err != nil {
+				a.logger.Error("api key resolution failed", "error", err)
+				writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "invalid api key"})
+				return
+			}
+			ctx := context.WithValue(r.Context(), ctxOrgID, orgID)
+			next.ServeHTTP(w, r.WithContext(ctx))
+			return
+		}
+
 		claims, err := verifyJWT(token, a.secret)
 		if err != nil {
 			a.logger.Error("jwt verification failed", "error", err)
@@ -290,6 +305,7 @@ func (a *Auth) Middleware(next http.Handler) http.Handler {
 		ctx := context.WithValue(r.Context(), ctxUserID, claims.UserID)
 		ctx = context.WithValue(ctx, ctxUserEmail, claims.Email)
 		ctx = context.WithValue(ctx, ctxUserRole, claims.Role)
+		ctx = context.WithValue(ctx, ctxOrgID, claims.OrgID)
 
 		// Block unverified users when email verification is enabled.
 		verified, vErr := a.isEmailVerified(ctx, claims.UserID)
@@ -300,6 +316,12 @@ func (a *Auth) Middleware(next http.Handler) http.Handler {
 		}
 		if !verified {
 			writeJSON(w, http.StatusForbidden, map[string]string{"error": "email not verified"})
+			return
+		}
+
+		// Fail closed: tokens missing org_id are rejected.
+		if claims.OrgID == 0 {
+			writeJSON(w, http.StatusForbidden, map[string]string{"error": "no organization"})
 			return
 		}
 
@@ -320,6 +342,11 @@ func UserEmailFromContext(ctx context.Context) (string, bool) {
 func UserRoleFromContext(ctx context.Context) (string, bool) {
 	role, ok := ctx.Value(ctxUserRole).(string)
 	return role, ok
+}
+
+func OrgIDFromContext(ctx context.Context) (int64, bool) {
+	orgID, ok := ctx.Value(ctxOrgID).(int64)
+	return orgID, ok
 }
 
 func (a *Auth) decodeBody(w http.ResponseWriter, r *http.Request) (*authRequest, bool) {
@@ -383,7 +410,7 @@ func hashPassword(password string) (string, error) {
 	return string(hash), nil
 }
 
-func (a *Auth) insertUser(ctx context.Context, email, passwordHash string) (int64, string, error) {
+func (a *Auth) insertUser(ctx context.Context, email, passwordHash string) (int64, string, int64, error) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
@@ -401,7 +428,7 @@ func (a *Auth) insertUser(ctx context.Context, email, passwordHash string) (int6
 		"INSERT INTO users (email, password_hash, role, created_at) VALUES (?, ?, ?, ?)",
 		email, passwordHash, role, now)
 	if err != nil {
-		return 0, "", err
+		return 0, "", 0, err
 	}
 	id, _ := res.LastInsertId()
 
@@ -409,11 +436,11 @@ func (a *Auth) insertUser(ctx context.Context, email, passwordHash string) (int6
 	org, err := a.CreateOrg(ctx, email, email, id)
 	if err != nil {
 		a.logger.Error("create personal org", "error", err)
-		return id, role, nil // don't fail registration if org creation fails
+		return id, role, 0, nil // don't fail registration if org creation fails
 	}
 	_, _ = a.db.ExecContext(ctx, "UPDATE users SET default_org_id = ? WHERE id = ?", org.ID, id)
 
-	return id, role, nil
+	return id, role, org.ID, nil
 }
 
 func (a *Auth) handleRegister(w http.ResponseWriter, r *http.Request) {
@@ -441,7 +468,7 @@ func (a *Auth) handleRegister(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userID, role, err := a.insertUser(r.Context(), email, hash)
+	userID, role, orgID, err := a.insertUser(r.Context(), email, hash)
 	if err != nil {
 		if strings.Contains(err.Error(), "UNIQUE constraint") {
 			writeJSON(w, http.StatusConflict, map[string]string{"error": "email already registered"})
@@ -466,7 +493,7 @@ func (a *Auth) handleRegister(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	token, err := createJWT(userID, email, role, a.secret)
+	token, err := createJWT(userID, email, role, orgID, a.secret)
 	if err != nil {
 		a.logger.Error("create jwt", "error", err)
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
@@ -492,10 +519,10 @@ func (a *Auth) handleLogin(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 	defer cancel()
 
-	var userID int64
+	var userID, defaultOrgID int64
 	var passwordHash, role string
 	err := a.db.QueryRowContext(ctx,
-		"SELECT id, password_hash, role FROM users WHERE email = ?", email).Scan(&userID, &passwordHash, &role)
+		"SELECT id, password_hash, role, COALESCE(default_org_id, 0) FROM users WHERE email = ?", email).Scan(&userID, &passwordHash, &role, &defaultOrgID)
 	if err != nil {
 		writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "invalid email or password"})
 		return
@@ -506,7 +533,7 @@ func (a *Auth) handleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, err := createJWT(userID, email, role, a.secret)
+	token, err := createJWT(userID, email, role, defaultOrgID, a.secret)
 	if err != nil {
 		a.logger.Error("create jwt", "error", err)
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
@@ -667,14 +694,14 @@ func (a *Auth) handleGoogleCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userID, err := a.findOrCreateGoogleUser(r.Context(), googleUser)
+	userID, orgID, err := a.findOrCreateGoogleUser(r.Context(), googleUser)
 	if err != nil {
 		a.logger.Error("find or create google user", "error", err)
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 
-	token, err := createJWT(userID, googleUser.Email, "user", a.secret)
+	token, err := createJWT(userID, googleUser.Email, "user", orgID, a.secret)
 	if err != nil {
 		a.logger.Error("create jwt", "error", err)
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
@@ -700,24 +727,24 @@ func (a *Auth) handleGoogleCallback(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/admin/", http.StatusFound)
 }
 
-func (a *Auth) findOrCreateGoogleUser(ctx context.Context, gu *GoogleUser) (int64, error) {
+func (a *Auth) findOrCreateGoogleUser(ctx context.Context, gu *GoogleUser) (int64, int64, error) {
 	if gu.GoogleID != "" {
-		var existingID int64
-		err := a.db.QueryRowContext(ctx, "SELECT id FROM users WHERE google_id = ?", gu.GoogleID).Scan(&existingID)
+		var existingID, defaultOrgID int64
+		err := a.db.QueryRowContext(ctx, "SELECT id, COALESCE(default_org_id, 0) FROM users WHERE google_id = ?", gu.GoogleID).Scan(&existingID, &defaultOrgID)
 		if err == nil {
-			return existingID, nil
+			return existingID, defaultOrgID, nil
 		}
 	}
 
 	if gu.Email != "" {
-		var existingID int64
+		var existingID, defaultOrgID int64
 		var existingGoogleID string
-		err := a.db.QueryRowContext(ctx, "SELECT id, COALESCE(google_id,'') FROM users WHERE email = ?", gu.Email).Scan(&existingID, &existingGoogleID)
+		err := a.db.QueryRowContext(ctx, "SELECT id, COALESCE(google_id,''), COALESCE(default_org_id, 0) FROM users WHERE email = ?", gu.Email).Scan(&existingID, &existingGoogleID, &defaultOrgID)
 		if err == nil {
 			if existingGoogleID == "" || existingGoogleID != gu.GoogleID {
 				_, _ = a.db.ExecContext(ctx, "UPDATE users SET google_id = ?, avatar_url = ? WHERE id = ?", gu.GoogleID, gu.Avatar, existingID)
 			}
-			return existingID, nil
+			return existingID, defaultOrgID, nil
 		}
 	}
 
@@ -727,23 +754,23 @@ func (a *Auth) findOrCreateGoogleUser(ctx context.Context, gu *GoogleUser) (int6
 		"INSERT INTO users (email, password_hash, google_id, avatar_url, role, created_at) VALUES (?, ?, ?, ?, 'user', ?)",
 		gu.Email, passwordHash, gu.GoogleID, gu.Avatar, now)
 	if err != nil {
-		return 0, fmt.Errorf("insert google user: %w", err)
+		return 0, 0, fmt.Errorf("insert google user: %w", err)
 	}
 
 	userID, err := res.LastInsertId()
 	if err != nil {
-		return 0, fmt.Errorf("google user last insert id: %w", err)
+		return 0, 0, fmt.Errorf("google user last insert id: %w", err)
 	}
 
 	// Auto-create personal org for Google OAuth users
 	org, err := a.CreateOrg(ctx, gu.Email, gu.Email, userID)
 	if err != nil {
 		a.logger.Error("create personal org for google user", "error", err)
-		return userID, nil
+		return userID, 0, nil
 	}
 	_, _ = a.db.ExecContext(ctx, "UPDATE users SET default_org_id = ? WHERE id = ?", org.ID, userID)
 
-	return userID, nil
+	return userID, org.ID, nil
 }
 
 type realGoogleVerifier struct {
