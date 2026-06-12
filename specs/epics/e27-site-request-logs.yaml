@@ -3,12 +3,12 @@ context: domain
 id: e27
 title: Site Request Logs
 wsjf: 5.5
-status: pending
+status: done
 covers: []
 stories:
   - id: e27s01
     title: Request log schema and storage
-    status: pending
+    status: done
     tasks:
       - desc: "Create site_request_logs table in SQLite; write one row per proxied HTTP request with site_id, method, path, status, duration_ms, timestamp; auto-prune rows older than 7 days"
         notes: |
@@ -37,7 +37,7 @@ stories:
 
   - id: e27s02
     title: Request logs API endpoint
-    status: pending
+    status: done
     tasks:
       - desc: "GET /api/sites/:id/logs — return paginated request logs for a site with optional filters: status (2xx/4xx/5xx), path prefix, date range, limit (default 100, max 500)"
         notes: |
@@ -52,7 +52,7 @@ stories:
 
   - id: e27s03
     title: Request logs tab on SiteDetailPage
-    status: pending
+    status: done
     tasks:
       - desc: "Add 'Request Logs' tab to SiteDetailPage with a filterable table showing method, path, status badge, duration, and timestamp; support filter by status class and path search"
         notes: |
@@ -68,7 +68,7 @@ stories:
 
   - id: e27s04
     title: Capture stdout/stderr from running sites
-    status: pending
+    status: done
     tasks:
       - desc: "In startApp(), capture cmd.Stdout and cmd.Stderr into ring buffers per site; expose last 200 lines via GET /api/sites/:id/runtime-logs; show in SiteDetailPage under a 'Runtime' sub-tab"
         notes: |

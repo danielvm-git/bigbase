@@ -38,7 +38,7 @@ func TestProxyDeploymentHost(t *testing.T) {
 
 	waitForServer(t, port, "/health")
 
-	if err := p.RegisterDeploymentHost("myapp.bigbase.click", backendPort); err != nil {
+	if err := p.RegisterDeploymentHost("myapp.bigbase.click", backendPort, "s1"); err != nil {
 		t.Fatalf("register host: %v", err)
 	}
 
@@ -61,6 +61,20 @@ func TestProxyDeploymentHost(t *testing.T) {
 	}
 }
 
+func TestProxySiteIDMapping(t *testing.T) {
+	logger := testLogger{}
+	p := proxy.New(proxy.Options{Logger: logger})
+	
+	host := "site-1.bigbase.click"
+	siteID := "s123"
+	port := 12345
+	
+	// This will fail to compile first
+	if err := p.RegisterDeploymentHost(host, port, siteID); err != nil {
+		t.Fatalf("register failed: %v", err)
+	}
+}
+
 func TestProxyUnregisterDeploymentHost(t *testing.T) {
 	logger := testLogger{}
 	k := kernel.New(logger)
@@ -73,7 +87,7 @@ func TestProxyUnregisterDeploymentHost(t *testing.T) {
 
 	waitForServer(t, port, "/health")
 
-	if err := p.RegisterDeploymentHost("test-unreg.bigbase.click", 19999); err != nil {
+	if err := p.RegisterDeploymentHost("test-unreg.bigbase.click", 19999, "s-unreg"); err != nil {
 		t.Fatalf("register host: %v", err)
 	}
 
@@ -113,7 +127,7 @@ func TestCaddyAllow(t *testing.T) {
 		t.Fatalf("unregistered domain status = %d, want 403", resp.StatusCode)
 	}
 
-	if err := p.RegisterDeploymentHost("myapp.bigbase.click", 9999); err != nil {
+	if err := p.RegisterDeploymentHost("myapp.bigbase.click", 9999, "s-myapp"); err != nil {
 		t.Fatalf("register host: %v", err)
 	}
 

@@ -475,8 +475,8 @@ func TestGetStartCommandWithStartScript(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(dir, "package.json"), []byte(`{"scripts":{"start":"node server.js"}}`), 0644); err != nil {
 		t.Fatal(err)
 	}
-	if got := deploy.GetStartCommand(dir); got != "node" {
-		t.Fatalf("expected 'node', got '%s'", got)
+	if got := deploy.GetStartCommand(dir); got != "node server.js" {
+		t.Fatalf("expected 'node server.js', got '%s'", got)
 	}
 }
 
@@ -989,6 +989,317 @@ func TestDeployCustomSiteName(t *testing.T) {
 	url, _ := created["url"].(string)
 	if !strings.HasPrefix(url, "https://my-custom-slug.bigbase.click") {
 		t.Fatalf("url = %q, want prefix https://my-custom-slug.bigbase.click", url)
+	}
+}
+
+func TestDeployLogColumnExists(t *testing.T) {
+	logger := testLogger{}
+	database := db.New(db.Options{Path: ":memory:", Logger: logger})
+	if err := database.Start(&kernel.Context{}); err != nil {
+		t.Fatalf("db start failed: %v", err)
+	}
+	defer func() { _ = database.Stop(&kernel.Context{}) }()
+
+	dep := deploy.New(deploy.Options{DB: database, Logger: logger})
+	
+	if err := dep.Start(&kernel.Context{}); err != nil {
+		t.Fatalf("start failed: %v", err)
+	}
+	defer func() { _ = dep.Stop(&kernel.Context{}) }()
+
+	// Verify column exists by querying it
+	_, err := database.ExecContext(context.Background(), "SELECT build_log FROM deployments LIMIT 1")
+	if err != nil {
+		t.Fatalf("build_log column missing or query failed: %v", err)
+	}
+}
+
+func TestDeployLogsPersisted(t *testing.T) {
+	logger := testLogger{}
+	database := db.New(db.Options{Path: ":memory:", Logger: logger})
+	_ = database.Start(&kernel.Context{})
+	defer func() { _ = database.Stop(&kernel.Context{}) }()
+
+	gitDir := t.TempDir()
+	buildsDir := t.TempDir()
+	gitComp := newGitStub(gitDir)
+	
+	dep := deploy.New(deploy.Options{
+		DB:        database,
+		Logger:    logger,
+		BuildsDir: buildsDir,
+		GitDir:    gitDir,
+	})
+	_ = gitComp.Start(&kernel.Context{})
+	_ = dep.Start(&kernel.Context{})
+	defer func() { _ = dep.Stop(&kernel.Context{}) }()
+
+	repoID := createTestRepo(t, database, "repo-logs", gitDir)
+	deployment, err := dep.Trigger(context.Background(), repoID, "main", "", "s123")
+	if err != nil {
+		t.Fatalf("trigger failed: %v", err)
+	}
+
+	// Wait for deployment to finish (max 5s)
+	start := time.Now()
+	for time.Since(start) < 5*time.Second {
+		var status string
+		_ = database.QueryRowContext(context.Background(),
+			"SELECT status FROM deployments WHERE id = ?", deployment.ID).Scan(&status)
+		if status == "running" || status == "failed" {
+			break
+		}
+		time.Sleep(100 * time.Millisecond)
+	}
+
+	// Verify build_log is NOT empty
+	var buildLog string
+	err = database.QueryRowContext(context.Background(),
+		"SELECT build_log FROM deployments WHERE id = ?", deployment.ID).Scan(&buildLog)
+	if err != nil {
+		t.Fatalf("query build_log failed: %v", err)
+	}
+
+	if buildLog == "" {
+		t.Fatal("expected build_log to be persisted, but it was empty")
+	}
+
+	if !strings.Contains(buildLog, "→ Deployment started") {
+		t.Errorf("build_log content incorrect: %q", buildLog)
+	}
+}
+
+func TestDeployLogsRetrievalFallback(t *testing.T) {
+	logger := testLogger{}
+	database := db.New(db.Options{Path: ":memory:", Logger: logger})
+	_ = database.Start(&kernel.Context{})
+	defer func() { _ = database.Stop(&kernel.Context{}) }()
+
+	gitDir := t.TempDir()
+	buildsDir := t.TempDir()
+	gitComp := newGitStub(gitDir)
+	
+	dep := deploy.New(deploy.Options{
+		DB:        database,
+		Logger:    logger,
+		BuildsDir: buildsDir,
+		GitDir:    gitDir,
+	})
+	_ = gitComp.Start(&kernel.Context{})
+	_ = dep.Start(&kernel.Context{})
+	defer func() { _ = dep.Stop(&kernel.Context{}) }()
+
+	repoID := createTestRepo(t, database, "repo-retrieval", gitDir)
+	deployment, err := dep.Trigger(context.Background(), repoID, "main", "", "s123")
+	if err != nil {
+		t.Fatalf("trigger failed: %v", err)
+	}
+
+	// Wait for deployment to finish
+	start := time.Now()
+	for time.Since(start) < 5*time.Second {
+		var status string
+		_ = database.QueryRowContext(context.Background(),
+			"SELECT status FROM deployments WHERE id = ?", deployment.ID).Scan(&status)
+		if status == "running" || status == "failed" {
+			break
+		}
+		time.Sleep(100 * time.Millisecond)
+	}
+
+	// Manually delete logs from memory (internal "eviction" simulation)
+	// We can't access d.deleteDeployLogs directly since it's unexported in test package,
+	// but we can trigger many other deployments to force eviction, or just test the fallback.
+	// Since we are in the same package (deploy_test), we can't call d.deleteDeployLogs.
+	// Wait, the test is in deploy_test, so it is in a different package.
+	
+	// I'll use a hack to clear the memory if I can, or just trust the logic.
+	// Better: move handleDeployLogs logic to an exported method or just test the HTTP handler.
+	
+	// Actually, I can just use a new Deploy instance sharing the same DB.
+	dep2 := deploy.New(deploy.Options{
+		DB:        database,
+		Logger:    logger,
+		BuildsDir: buildsDir,
+		GitDir:    gitDir,
+	})
+	// dep2 memory is empty.
+	
+	req := httptest.NewRequest("GET", "/api/deploy/"+deployment.ID+"/logs", nil)
+	w := httptest.NewRecorder()
+	dep2.Handler().ServeHTTP(w, req)
+	
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", w.Code, w.Body.String())
+	}
+	
+	var resp map[string]any
+	_ = json.NewDecoder(w.Body).Decode(&resp)
+	lines, _ := resp["lines"].([]any)
+	
+	if len(lines) == 0 {
+		t.Fatal("expected logs from DB fallback, but got empty lines")
+	}
+	
+	found := false
+	for _, line := range lines {
+		if strings.Contains(line.(string), "→ Deployment started") {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Errorf("logs from DB fallback missing expected content: %+v", lines)
+	}
+}
+
+func createTestRuntimeRepo(t *testing.T, database *db.DB, repoID, gitDir string) string {
+	t.Helper()
+
+	_, _ = database.ExecContext(context.Background(),
+		`CREATE TABLE IF NOT EXISTS git_repos (
+			id TEXT PRIMARY KEY, name TEXT NOT NULL UNIQUE, owner_id INTEGER NOT NULL,
+			private INTEGER NOT NULL DEFAULT 1, default_branch TEXT NOT NULL DEFAULT 'main',
+			description TEXT DEFAULT '', created_at TEXT NOT NULL DEFAULT (datetime('now'))
+		)`)
+
+	_, err := database.ExecContext(context.Background(),
+		"INSERT INTO git_repos (id, name, owner_id, private, default_branch, description, created_at) VALUES (?, ?, ?, ?, ?, ?, datetime('now'))",
+		repoID, repoID+"-name", 0, 1, "main", "runtime repo")
+	if err != nil {
+		t.Fatalf("insert repo: %v", err)
+	}
+
+	repoPath := filepath.Join(gitDir, repoID+".git")
+	mustRun(t, "git", "init", "--bare", "-b", "main", repoPath)
+
+	sourceDir := t.TempDir()
+	mustRun(t, "git", "init", "-b", "main", sourceDir)
+	mustRun(t, "git", "-C", sourceDir, "config", "user.email", "test@test.com")
+	mustRun(t, "git", "-C", sourceDir, "config", "user.name", "test")
+	
+	_ = os.WriteFile(filepath.Join(sourceDir, "index.js"), []byte(`
+		console.log("HELLO RUNTIME STDOUT");
+		console.error("HELLO RUNTIME STDERR");
+		const http = require('http');
+		const server = http.createServer((req, res) => {
+			res.end('ok');
+		});
+		server.listen(process.env.PORT || 3000);
+	`), 0644)
+	_ = os.WriteFile(filepath.Join(sourceDir, "package.json"), []byte(`{
+		"name": "runtime-test",
+		"scripts": { 
+			"build": "true",
+			"start": "node index.js" 
+		}
+	}`), 0644)
+
+	mustRun(t, "git", "-C", sourceDir, "add", ".")
+	mustRun(t, "git", "-C", sourceDir, "commit", "-m", "initial commit")
+	mustRun(t, "git", "-C", sourceDir, "remote", "add", "origin", repoPath)
+	mustRun(t, "git", "-C", sourceDir, "push", "-u", "origin", "main")
+
+	return repoID
+}
+
+func TestRuntimeLogs(t *testing.T) {
+	if _, err := exec.LookPath("npm"); err != nil {
+		t.Skip("npm not in PATH")
+	}
+
+	logger := testLogger{}
+	database := db.New(db.Options{Path: ":memory:", Logger: logger})
+	_ = database.Start(&kernel.Context{})
+	defer func() { _ = database.Stop(&kernel.Context{}) }()
+
+	gitDir := t.TempDir()
+	buildsDir := t.TempDir()
+	
+	dep := deploy.New(deploy.Options{
+		DB:        database,
+		Logger:    logger,
+		BuildsDir: buildsDir,
+		GitDir:    gitDir,
+	})
+	_ = dep.Start(&kernel.Context{})
+	defer func() { _ = dep.Stop(&kernel.Context{}) }()
+
+	repoID := createTestRuntimeRepo(t, database, "repo-runtime", gitDir)
+	
+	deployment, err := dep.Trigger(context.Background(), repoID, "main", "", "s-runtime")
+	if err != nil {
+		t.Fatalf("trigger failed: %v", err)
+	}
+
+	// Wait for deployment to reach 'running'
+	start := time.Now()
+	for time.Since(start) < 20*time.Second {
+		var status string
+		_ = database.QueryRowContext(context.Background(),
+			"SELECT status FROM deployments WHERE id = ?", deployment.ID).Scan(&status)
+		if status == "running" {
+			break
+		}
+		if status == "failed" {
+			// Print logs to help debug
+			req := httptest.NewRequest("GET", "/api/deploy/"+deployment.ID+"/logs", nil)
+			w := httptest.NewRecorder()
+			dep.Handler().ServeHTTP(w, req)
+			t.Fatalf("deployment failed during runtime test. logs: %s", w.Body.String())
+		}
+		time.Sleep(500 * time.Millisecond)
+	}
+
+	// Wait for app to print
+	time.Sleep(3 * time.Second)
+
+	// Verify logs contain [runtime] lines
+	req := httptest.NewRequest("GET", "/api/deploy/"+deployment.ID+"/logs", nil)
+	w := httptest.NewRecorder()
+	dep.Handler().ServeHTTP(w, req)
+	
+	var resp map[string]any
+	_ = json.NewDecoder(w.Body).Decode(&resp)
+	lines, _ := resp["lines"].([]any)
+	
+	foundStdout := false
+	foundStderr := false
+	for _, l := range lines {
+		line := l.(string)
+		if strings.Contains(line, "[runtime] HELLO RUNTIME STDOUT") {
+			foundStdout = true
+		}
+		if strings.Contains(line, "[runtime] HELLO RUNTIME STDERR") {
+			foundStderr = true
+		}
+	}
+	
+	if !foundStdout {
+		t.Errorf("runtime stdout log missing. logs: %+v", lines)
+	}
+	if !foundStderr {
+		t.Errorf("runtime stderr log missing. logs: %+v", lines)
+	}
+}
+
+func TestSiteRequestLogsTableExists(t *testing.T) {
+	logger := testLogger{}
+	database := db.New(db.Options{Path: ":memory:", Logger: logger})
+	_ = database.Start(&kernel.Context{})
+	defer func() { _ = database.Stop(&kernel.Context{}) }()
+
+	dep := deploy.New(deploy.Options{DB: database, Logger: logger})
+	
+	if err := dep.Start(&kernel.Context{}); err != nil {
+		t.Fatalf("start failed: %v", err)
+	}
+	defer func() { _ = dep.Stop(&kernel.Context{}) }()
+
+	// Verify table exists by querying it
+	_, err := database.ExecContext(context.Background(), "SELECT id, site_id, method, path, status, duration_ms, created_at FROM site_request_logs LIMIT 1")
+	if err != nil {
+		t.Fatalf("site_request_logs table missing or query failed: %v", err)
 	}
 }
 

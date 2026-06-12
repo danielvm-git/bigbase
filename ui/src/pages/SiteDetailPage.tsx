@@ -9,9 +9,14 @@ import {
   statusBadgeVariant,
   PreviewBanner,
   SitesListSkeleton,
+  BuildLogs,
+  Tabs,
+  RequestLogs,
 } from '../components'
 import { getSite, getSiteDeployments } from '../lib/sitesData'
 import { isPreviewForced, previewQuerySuffix } from '../lib/previewMode'
+import { useBuildLogs } from '../hooks/useBuildLogs'
+import { useRequestLogs } from '../hooks/useRequestLogs'
 import type { Deployment, Site } from '../types/sites'
 
 const STATUS_STEPS = ['pending', 'building', 'deploying', 'running']
@@ -54,9 +59,18 @@ export default function SiteDetailPage() {
   const [activeTab, setActiveTab] = useState('deployments')
   const pq = previewQuerySuffix()
 
+  const latestFromDeployments = deployments[0]
+  const { lines, loading: logsLoading, error: logsError } = useBuildLogs(latestFromDeployments?.id || site?.latest_deployment?.id || '')
+
+  const {
+    logs, loading: reqLogsLoading, error: reqLogsError,
+    pathPrefix, setPathPrefix, statusClass, setStatusClass, refresh: refreshReqLogs
+  } = useRequestLogs(siteId)
+
   const tabs = [
     { id: 'deployments', label: 'Deployments' },
     { id: 'logs', label: 'Build Logs' },
+    { id: 'request-logs', label: 'Request Logs' },
   ]
 
   const load = useCallback(async () => {
@@ -238,7 +252,23 @@ export default function SiteDetailPage() {
       {activeTab === 'logs' && (
         <div>
           <h2 className="section-title">Build Logs</h2>
-          <p className="dim">Build logs will appear here.</p>
+          <BuildLogs lines={lines} loading={logsLoading} error={logsError} />
+        </div>
+      )}
+
+      {activeTab === 'request-logs' && (
+        <div>
+          <h2 className="section-title">Request Logs</h2>
+          <RequestLogs
+            logs={logs}
+            loading={reqLogsLoading}
+            error={reqLogsError}
+            pathPrefix={pathPrefix}
+            onPathPrefixChange={setPathPrefix}
+            statusClass={statusClass}
+            onStatusClassChange={setStatusClass}
+            onRefresh={refreshReqLogs}
+          />
         </div>
       )}
 

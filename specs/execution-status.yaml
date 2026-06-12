@@ -9,12 +9,12 @@ epics:
   e20: done
   e21: done
   e22: done
-  e23: pending
+  e23: done
   e24: done
   e25: done
-  e26: pending
+  e26: done
   e28: done
-  e27: pending
+  e27: done
 stories:
   e29s01: done
   e29s02: done
@@ -78,12 +78,12 @@ stories:
   e25s03: done
   e25s04: done
   e25s05: done
-  e26s01: pending
-  e26s02: pending
-  e26s03: pending
+  e26s01: done
+  e26s02: done
+  e26s03: done
   e28s01: done
   e28s02: done
-  e27s01: pending
-  e27s02: pending
-  e27s03: pending
-  e27s04: pending
+  e27s01: done
+  e27s02: done
+  e27s03: done
+  e27s04: done

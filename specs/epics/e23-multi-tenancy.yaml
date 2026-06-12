@@ -3,7 +3,7 @@ context: domain
 id: e23
 title: Multi-Tenancy and Organizations
 wsjf: 6.0
-status: pending
+status: done
 covers: []
 stories:
   - id: e23s01

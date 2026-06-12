@@ -14,10 +14,10 @@ export function useBuildLogs(deploymentId: string) {
   const [error, setError] = useState<string | null>(null)
   const [status, setStatus] = useState<string | null>(null)
 
-  const fetchLogs = useCallback(async () => {
+  const fetchLogs = useCallback(async (isPolling = false) => {
     if (!deploymentId) return
 
-    setLoading(true)
+    if (!isPolling) setLoading(true)
     setError(null)
 
     try {
@@ -32,15 +32,27 @@ export function useBuildLogs(deploymentId: string) {
       setLines(data.lines || [])
       setStatus(data.status)
     } catch (err) {
-      setError('Failed to fetch logs — network error')
+      if (!isPolling) setError('Failed to fetch logs — network error')
     } finally {
-      setLoading(false)
+      if (!isPolling) setLoading(false)
     }
   }, [deploymentId])
 
   useEffect(() => {
     fetchLogs()
   }, [fetchLogs])
+
+  useEffect(() => {
+    if (!deploymentId || (status !== 'pending' && status !== 'building')) {
+      return
+    }
+
+    const interval = setInterval(() => {
+      fetchLogs(true)
+    }, 2000)
+
+    return () => clearInterval(interval)
+  }, [deploymentId, status, fetchLogs])
 
   return { lines, loading, error, status, refresh: fetchLogs }
 }

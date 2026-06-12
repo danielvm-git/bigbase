@@ -7,10 +7,16 @@ import (
 	"net/http/httputil"
 	"net/url"
 	"strings"
+	"time"
 )
 
+type hostInfo struct {
+	port   int
+	siteID string
+}
+
 // RegisterDeploymentHost maps a public hostname to a local deployment port.
-func (p *Proxy) RegisterDeploymentHost(host string, port int) error {
+func (p *Proxy) RegisterDeploymentHost(host string, port int, siteID string) error {
 	host = normalizeHost(host)
 	if host == "" || port < 1 || port > 65535 {
 		return fmt.Errorf("invalid deployment host or port")
@@ -21,12 +27,12 @@ func (p *Proxy) RegisterDeploymentHost(host string, port int) error {
 	p.deployHostsMu.Lock()
 	defer p.deployHostsMu.Unlock()
 	if p.deployHosts == nil {
-		p.deployHosts = make(map[string]int)
+		p.deployHosts = make(map[string]hostInfo)
 	}
-	if existing, ok := p.deployHosts[host]; ok && existing != port {
+	if existing, ok := p.deployHosts[host]; ok && existing.port != port {
 		return fmt.Errorf("host %q already registered", host)
 	}
-	p.deployHosts[host] = port
+	p.deployHosts[host] = hostInfo{port: port, siteID: siteID}
 	return nil
 }
 
@@ -52,6 +58,14 @@ func (p *Proxy) isDeploymentHostRegistered(host string) bool {
 	_, ok := p.deployHosts[host]
 	p.deployHostsMu.RUnlock()
 	return ok
+}
+
+func (p *Proxy) getDeploymentHostInfo(host string) (hostInfo, bool) {
+	host = normalizeHost(host)
+	p.deployHostsMu.RLock()
+	info, ok := p.deployHosts[host]
+	p.deployHostsMu.RUnlock()
+	return info, ok
 }
 
 // handleCaddyAllow implements Caddy on_demand_tls ask (GET ?domain=host).
@@ -91,15 +105,14 @@ func (p *Proxy) deploymentHostMiddleware(next http.Handler) http.Handler {
 			next.ServeHTTP(w, r)
 			return
 		}
-		p.deployHostsMu.RLock()
-		port, ok := p.deployHosts[host]
-		p.deployHostsMu.RUnlock()
+		
+		info, ok := p.getDeploymentHostInfo(host)
 		if !ok {
 			next.ServeHTTP(w, r)
 			return
 		}
 
-		target, err := url.Parse(fmt.Sprintf("http://127.0.0.1:%d", port))
+		target, err := url.Parse(fmt.Sprintf("http://127.0.0.1:%d", info.port))
 		if err != nil {
 			http.Error(w, "bad gateway", http.StatusBadGateway)
 			return
@@ -108,6 +121,13 @@ func (p *Proxy) deploymentHostMiddleware(next http.Handler) http.Handler {
 		proxy.ErrorHandler = func(rw http.ResponseWriter, _ *http.Request, _ error) {
 			http.Error(rw, "deployment unavailable", http.StatusBadGateway)
 		}
-		proxy.ServeHTTP(w, r)
+
+		start := time.Now()
+		rw := &responseWriter{ResponseWriter: w, status: http.StatusOK}
+		proxy.ServeHTTP(rw, r)
+
+		if p.requestLogger != nil {
+			p.requestLogger.RecordRequestLog(info.siteID, r.Method, r.URL.Path, rw.status, time.Since(start))
+		}
 	})
 }

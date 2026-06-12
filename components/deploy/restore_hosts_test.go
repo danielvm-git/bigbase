@@ -13,7 +13,7 @@ type hostRegistrySpy struct {
 	hosts map[string]int
 }
 
-func (h *hostRegistrySpy) RegisterDeploymentHost(host string, port int) error {
+func (h *hostRegistrySpy) RegisterDeploymentHost(host string, port int, siteID string) error {
 	if h.hosts == nil {
 		h.hosts = make(map[string]int)
 	}
@@ -36,6 +36,7 @@ func TestDeployRestoresHostsOnStart(t *testing.T) {
 	if err := database.Migrate(`CREATE TABLE IF NOT EXISTS deployments (
 		id TEXT PRIMARY KEY,
 		repo_id TEXT NOT NULL,
+		site_id TEXT NOT NULL DEFAULT '',
 		branch TEXT NOT NULL DEFAULT 'main',
 		commit_sha TEXT DEFAULT '',
 		status TEXT NOT NULL DEFAULT 'pending',
@@ -49,8 +50,8 @@ func TestDeployRestoresHostsOnStart(t *testing.T) {
 	}
 
 	_, err := database.ExecContext(context.Background(),
-		`INSERT INTO deployments (id, repo_id, branch, status, url, port, created_at)
-		 VALUES ('dep1', 'repo1', 'main', 'running', 'https://my-app.bigbase.click', 10499, '2026-06-04T00:00:00Z')`)
+		`INSERT INTO deployments (id, repo_id, site_id, branch, status, url, port, created_at)
+		 VALUES ('dep1', 'repo1', 's1', 'main', 'running', 'https://my-app.bigbase.click', 10499, '2026-06-04T00:00:00Z')`)
 	if err != nil {
 		t.Fatalf("insert deployment: %v", err)
 	}

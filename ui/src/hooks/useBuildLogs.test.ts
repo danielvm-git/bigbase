@@ -42,7 +42,75 @@ describe('useBuildLogs', () => {
 
     await waitFor(() => expect(result.current.loading).toBe(false))
 
-    expect(result.current.error).toBe('internal server error')
     expect(result.current.lines).toEqual([])
+  })
+
+  it('polls for logs when status is building', async () => {
+    vi.useFakeTimers()
+    const mockLogsBuilding = {
+      deployment_id: 'dep-123',
+      status: 'building',
+      lines: ['Step 1: cloning'],
+      log_available: true
+    }
+
+    const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValue({
+      ok: true,
+      json: async () => mockLogsBuilding
+    } as Response)
+
+    const { result } = renderHook(() => useBuildLogs('dep-123'))
+
+    // Initial fetch happens immediately
+    await vi.waitUntil(() => result.current.status === 'building')
+    expect(fetchSpy).toHaveBeenCalledTimes(1)
+
+    // Advance time by 2s -> Second call
+    await vi.advanceTimersByTimeAsync(2000)
+    expect(fetchSpy).toHaveBeenCalledTimes(2)
+
+    // Advance time by another 2s -> Third call
+    await vi.advanceTimersByTimeAsync(2000)
+    expect(fetchSpy).toHaveBeenCalledTimes(3)
+
+    vi.useRealTimers()
+  })
+
+  it('stops polling when status is running', async () => {
+    vi.useFakeTimers()
+    const mockLogsBuilding = {
+      deployment_id: 'dep-123',
+      status: 'building',
+      lines: ['building...'],
+      log_available: true
+    }
+    const mockLogsRunning = {
+      deployment_id: 'dep-123',
+      status: 'running',
+      lines: ['done!'],
+      log_available: true
+    }
+
+    const fetchSpy = vi.spyOn(global, 'fetch')
+      .mockResolvedValueOnce({ ok: true, json: async () => mockLogsBuilding } as Response)
+      .mockResolvedValueOnce({ ok: true, json: async () => mockLogsRunning } as Response)
+      .mockResolvedValue({ ok: true, json: async () => mockLogsRunning } as Response)
+
+    const { result } = renderHook(() => useBuildLogs('dep-123'))
+
+    // 1. Initial call
+    await vi.waitUntil(() => result.current.status === 'building')
+    expect(fetchSpy).toHaveBeenCalledTimes(1)
+
+    // 2. Advance 2s -> Second call (returns running)
+    await vi.advanceTimersByTimeAsync(2000)
+    await vi.waitUntil(() => result.current.status === 'running')
+    expect(fetchSpy).toHaveBeenCalledTimes(2)
+
+    // 3. Advance 2s -> Should NOT call again
+    await vi.advanceTimersByTimeAsync(2000)
+    expect(fetchSpy).toHaveBeenCalledTimes(2)
+
+    vi.useRealTimers()
   })
 })

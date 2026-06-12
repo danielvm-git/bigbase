@@ -48,24 +48,30 @@ type Logger interface {
 	Error(msg string, args ...any)
 }
 
+type RequestLogger interface {
+	RecordRequestLog(siteID, method, path string, status int, duration time.Duration)
+}
+
 type Options struct {
-	Port   string
-	Kernel *kernel.Kernel
-	Logger Logger
+	Port          string
+	Kernel        *kernel.Kernel
+	Logger        Logger
+	RequestLogger RequestLogger
 }
 
 type Proxy struct {
-	port   string
-	kernel *kernel.Kernel
-	logger Logger
-	server *http.Server
-	mux    *http.ServeMux
+	port          string
+	kernel        *kernel.Kernel
+	logger        Logger
+	requestLogger RequestLogger
+	server        *http.Server
+	mux           *http.ServeMux
 
 	starsMu       sync.Mutex
 	starsVal      string
 	starsTime     time.Time
 	deployHostsMu sync.RWMutex
-	deployHosts   map[string]int
+	deployHosts   map[string]hostInfo
 }
 
 func (p *Proxy) GitHubStars() string {
@@ -111,11 +117,16 @@ func (p *Proxy) fetchStars() (string, error) {
 
 func New(opts Options) *Proxy {
 	return &Proxy{
-		port:   opts.Port,
-		kernel: opts.Kernel,
-		logger: opts.Logger,
-		mux:    http.NewServeMux(),
+		port:          opts.Port,
+		kernel:        opts.Kernel,
+		logger:        opts.Logger,
+		requestLogger: opts.RequestLogger,
+		mux:           http.NewServeMux(),
 	}
+}
+
+func (p *Proxy) SetRequestLogger(rl RequestLogger) {
+	p.requestLogger = rl
 }
 
 func (p *Proxy) Name() string                     { return "proxy" }
@@ -135,6 +146,10 @@ func (p *Proxy) Init(ctx *kernel.Context, config json.RawMessage) error {
 	return nil
 }
 
+func (p *Proxy) Handler() http.Handler {
+	return p.securityHeadersMiddleware(p.loggingMiddleware(p.requestIDMiddleware(p.deploymentHostMiddleware(p.mux))))
+}
+
 func (p *Proxy) Start(ctx *kernel.Context) error {
 	p.mux.HandleFunc("/", p.handleHome)
 	p.mux.HandleFunc("/docs", p.handleDocs)
@@ -144,7 +159,7 @@ func (p *Proxy) Start(ctx *kernel.Context) error {
 
 	p.server = &http.Server{
 		Addr:    ":" + p.port,
-		Handler: p.securityHeadersMiddleware(p.loggingMiddleware(p.requestIDMiddleware(p.deploymentHostMiddleware(p.mux)))),
+		Handler: p.Handler(),
 	}
 
 	go func() {

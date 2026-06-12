@@ -1,23 +1,23 @@
 type: session-state
 context: infra
 active_flow: build_epic
-active_epic_id: e29
-active_story_id: e29s04
+active_epic_id: null
+active_story_id: null
 active_bug_id: null
 release:
-  target_version: 2.9.0
-  last_tag: v2.8.0
+  target_version: 2.11.0
+  last_tag: v2.10.0
   last_publish: "2026-06-12"
 epic_cycle:
-  current_step: 4
-  next_skill: develop-tdd
-  completed_steps: [1, 2, 3]
-  story_bcps: 2
+  current_step: null
+  next_skill: null
+  completed_steps: [kickoff-branch, develop-tdd]
+  story_bcps: 4
 bug_cycle:
   current_step: null
   completed_steps: [investigate-bug, fix-bug]
 git:
-  branch: feat/e29-security-fixes
+  branch: feat/e27-site-request-logs
   hash: 03cf4b8be4cb7de8450b0019b2e71dd4f3743f80
 handoff:
   last_step_completed: null
