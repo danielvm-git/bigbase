@@ -1,8 +1,8 @@
 type: session-state
 context: infra
-active_flow: build_epic
-active_epic_id: e28
-active_story_id: e28s01
+active_flow: null
+active_epic_id: null
+active_story_id: null
 active_bug_id: null
 release:
   target_version: 2.7.0
