@@ -733,6 +733,46 @@ func TestOAuthStateClearedOnSuccess(t *testing.T) {
 	}
 }
 
+func TestOAuthCallbackNoStateCookie(t *testing.T) {
+	_, handler, _ := setupAuthWithGoogle(t)
+
+	t.Run("no_cookie", func(t *testing.T) {
+		req := httptest.NewRequest("GET", "/api/auth/oauth/google/callback?code=valid&state=somestate", nil)
+		w := httptest.NewRecorder()
+		handler.ServeHTTP(w, req)
+
+		if w.Code != http.StatusBadRequest {
+			t.Fatalf("expected 400, got %d: %s", w.Code, w.Body.String())
+		}
+		// Verify no token cookie was set
+		for _, c := range w.Result().Cookies() {
+			if c.Name == "token" && c.Value != "" {
+				t.Fatal("expected no token cookie when state validation fails")
+			}
+		}
+	})
+
+	t.Run("wrong_state_in_cookie", func(t *testing.T) {
+		// Sign a different state than what's in the query
+		req := httptest.NewRequest("GET", "/api/auth/oauth/google/callback?code=valid&state=real-state", nil)
+		req.AddCookie(&http.Cookie{
+			Name:  "oauth_state",
+			Value: auth.SignState("wrong-state", []byte("test-secret-32-chars!!!")),
+		})
+		w := httptest.NewRecorder()
+		handler.ServeHTTP(w, req)
+
+		if w.Code != http.StatusBadRequest {
+			t.Fatalf("expected 400 for mismatched state, got %d: %s", w.Code, w.Body.String())
+		}
+		for _, c := range w.Result().Cookies() {
+			if c.Name == "token" && c.Value != "" {
+				t.Fatal("expected no token cookie when state validation fails")
+			}
+		}
+	})
+}
+
 func TestGoogleOAuthDisabledWhenNoConfig(t *testing.T) {
 	_, handler, _ := setupAuth(t)
 
