@@ -414,7 +414,7 @@ func TestDeployGetByIDNotFound(t *testing.T) {
 func TestDeployGetByIDWrongMethod(t *testing.T) {
 	_, handler, _, _ := setupDeploy(t)
 
-	req := httptest.NewRequest("DELETE", "/api/deploy/some-id", nil)
+	req := httptest.NewRequest("PUT", "/api/deploy/some-id", nil)
 	w := httptest.NewRecorder()
 	handler.ServeHTTP(w, req)
 
@@ -1010,4 +1010,84 @@ func TestDeployBuildError(t *testing.T) {
 	if !ok || len(lines) == 0 {
 		t.Fatalf("expected lines on failed deploy, got %#v", logs["lines"])
 	}
+}
+
+func insertDeployment(t *testing.T, database *db.DB, id, status, buildsDir string) {
+	t.Helper()
+	_, err := database.ExecContext(context.Background(),
+		`INSERT INTO deployments (id, repo_id, branch, status, url, port, created_at)
+		 VALUES (?, 'repo-x', 'main', ?, '', 0, datetime('now'))`,
+		id, status)
+	if err != nil {
+		t.Fatalf("insert deployment: %v", err)
+	}
+	if err := os.MkdirAll(filepath.Join(buildsDir, id), 0755); err != nil {
+		t.Fatalf("create build dir: %v", err)
+	}
+}
+
+func TestDeleteDeployment(t *testing.T) {
+	_, handler, database, _ := setupDeploy(t)
+	buildsDir := t.TempDir()
+
+	t.Run("404 on missing id", func(t *testing.T) {
+		req := httptest.NewRequest("DELETE", "/api/deploy/nonexistent", nil)
+		w := httptest.NewRecorder()
+		handler.ServeHTTP(w, req)
+		if w.Code != http.StatusNotFound {
+			t.Fatalf("expected 404, got %d: %s", w.Code, w.Body.String())
+		}
+	})
+
+	t.Run("409 on pending deployment", func(t *testing.T) {
+		insertDeployment(t, database, "dep-pending", "pending", buildsDir)
+		req := httptest.NewRequest("DELETE", "/api/deploy/dep-pending", nil)
+		w := httptest.NewRecorder()
+		handler.ServeHTTP(w, req)
+		if w.Code != http.StatusConflict {
+			t.Fatalf("expected 409, got %d: %s", w.Code, w.Body.String())
+		}
+	})
+
+	t.Run("409 on building deployment", func(t *testing.T) {
+		insertDeployment(t, database, "dep-building", "building", buildsDir)
+		req := httptest.NewRequest("DELETE", "/api/deploy/dep-building", nil)
+		w := httptest.NewRecorder()
+		handler.ServeHTTP(w, req)
+		if w.Code != http.StatusConflict {
+			t.Fatalf("expected 409, got %d: %s", w.Code, w.Body.String())
+		}
+	})
+
+	t.Run("204 deletes failed deployment", func(t *testing.T) {
+		insertDeployment(t, database, "dep-failed", "failed", buildsDir)
+		req := httptest.NewRequest("DELETE", "/api/deploy/dep-failed", nil)
+		w := httptest.NewRecorder()
+		handler.ServeHTTP(w, req)
+		if w.Code != http.StatusNoContent {
+			t.Fatalf("expected 204, got %d: %s", w.Code, w.Body.String())
+		}
+		var count int
+		_ = database.QueryRowContext(context.Background(),
+			"SELECT COUNT(*) FROM deployments WHERE id = 'dep-failed'").Scan(&count)
+		if count != 0 {
+			t.Fatal("deployment record still exists after delete")
+		}
+	})
+
+	t.Run("204 deletes running deployment", func(t *testing.T) {
+		insertDeployment(t, database, "dep-running", "running", buildsDir)
+		req := httptest.NewRequest("DELETE", "/api/deploy/dep-running", nil)
+		w := httptest.NewRecorder()
+		handler.ServeHTTP(w, req)
+		if w.Code != http.StatusNoContent {
+			t.Fatalf("expected 204, got %d: %s", w.Code, w.Body.String())
+		}
+		var count int
+		_ = database.QueryRowContext(context.Background(),
+			"SELECT COUNT(*) FROM deployments WHERE id = 'dep-running'").Scan(&count)
+		if count != 0 {
+			t.Fatal("deployment record still exists after delete")
+		}
+	})
 }

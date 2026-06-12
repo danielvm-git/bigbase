@@ -52,3 +52,18 @@ epics:
     wsjf: 4.25
     file: epics/e25-hardware-monitoring.yaml
     mode: flat
+  - id: e26
+    title: Site Build Logs UI
+    wsjf: 4.5
+    file: epics/e26-site-build-logs.yaml
+    mode: flat
+  - id: e28
+    title: Delete Deployment
+    wsjf: 5.0
+    file: epics/e28-delete-deployment.yaml
+    mode: flat
+  - id: e27
+    title: Site Request Logs
+    wsjf: 5.5
+    file: epics/e27-site-request-logs.yaml
+    mode: flat

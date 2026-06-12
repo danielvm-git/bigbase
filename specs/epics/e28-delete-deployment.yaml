@@ -1,0 +1,73 @@
+type: epic-shard
+context: domain
+id: e28
+title: Delete Deployment
+wsjf: 5.0
+status: done
+covers: []
+stories:
+  - id: e28s01
+    title: Backend DELETE /api/deployments/:id
+    status: done
+    tasks:
+      - desc: >
+          Add DELETE handler in handleDeployByID: look up deployment by id (404 if missing);
+          if status is 'pending' or 'building' return 409 (build in progress — caller should
+          redeploy instead of delete); if running, kill process via d.processes map (SIGTERM)
+          or deregister the static host from DeploymentHostRegistry; delete build directory
+          from d.buildsDir/<id>/; evict in-memory deploy logs via d.deleteDeployLogs(id);
+          execute DELETE FROM deployments WHERE id = ?; return 204 No Content.
+          Guard: if the deployment is the only running deploy for its repo_id, still allow
+          deletion (the site will show "no deployment" rather than silently break).
+        notes: |
+          components/deploy/deploy.go handleDeployByID: extend to handle DELETE method.
+          Pattern for the process map: d.processesMu.Lock(); cmd, ok := d.processes[id];
+            if ok { cmd.Process.Signal(syscall.SIGTERM); delete(d.processes, id) }; d.processesMu.Unlock()
+          Pattern for static host: check d.hostRegistry.Remove(HostFromDeploymentURL(dep.URL))
+          Build dir path: filepath.Join(d.buildsDir, id) — use os.RemoveAll (no error on missing).
+          Log eviction: d.deleteDeployLogs(id) — already exists in logs.go line 70.
+          Return 409 JSON: { "error": "deployment is in progress — wait or trigger a new deploy" }
+          Return 204 with empty body on success.
+        verify: "go test ./components/deploy/ -run TestDeleteDeployment -v"
+
+  - id: e28s02
+    title: Delete button with confirmation in SiteDetailPage deployments table
+    status: done
+    tasks:
+      - desc: >
+          Add a Delete column to the deployments table in SiteDetailPage.tsx.
+          Each row gets a small "Delete" Button (variant="ghost", size="sm") that is
+          disabled (and shows a tooltip "Build in progress") when d.status is 'pending'
+          or 'building'. On click, show an inline confirmation row or window.confirm dialog
+          asking "Delete deployment from [date]? This cannot be undone." On confirm,
+          call DELETE /api/deployments/{d.id}, then reload the deployments list.
+          Show a brief error message if the request fails.
+        notes: |
+          ui/src/pages/SiteDetailPage.tsx:
+          1. Add state: const [deletingId, setDeletingId] = useState<string | null>(null)
+          2. Add state: const [deleteError, setDeleteError] = useState<string | null>(null)
+          3. handleDelete = async (id: string) => {
+               if (!window.confirm('Delete this deployment? This cannot be undone.')) return
+               setDeletingId(id)
+               setDeleteError(null)
+               try {
+                 const res = await fetch(`/api/deployments/${id}`, { method: 'DELETE' })
+                 if (!res.ok) {
+                   const j = await res.json()
+                   setDeleteError(j.error ?? `Delete failed (HTTP ${res.status})`)
+                 } else {
+                   load()
+                 }
+               } finally { setDeletingId(null) }
+             }
+          4. Add <th>Actions</th> to the thead.
+          5. Add <td> per row with:
+               <Button variant="ghost" size="sm"
+                 disabled={deletingId === d.id || d.status === 'pending' || d.status === 'building'}
+                 onClick={() => handleDelete(d.id)}>
+                 {deletingId === d.id ? '…' : 'Delete'}
+               </Button>
+          6. Show deleteError below the table in a <p className="input-error-text">.
+          Note: keep previewMode guard — if previewMode is true, skip the fetch and just
+          remove the item from local state for visual fidelity.
+        verify: "cd ui && npm run build"

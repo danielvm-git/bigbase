@@ -1,16 +1,17 @@
-type: execution-status
-context: release
 generated_by: scripts/sync-status-from-epics.sh
 epics:
   e17: done
-  e18: pending
-  e19: pending
-  e20: pending
+  e18: done
+  e19: done
+  e20: done
   e21: done
-  e22: pending
+  e22: done
   e23: pending
   e24: done
-  e25: pending
+  e25: done
+  e26: pending
+  e28: done
+  e27: pending
 stories:
   e17s01: done
   e17s02: done
@@ -30,43 +31,52 @@ stories:
   e17s16: done
   e17s17: done
   e17s18: done
-  e18s01: pending
-  e18s02: pending
-  e18s03: pending
-  e18s04: pending
-  e18s05: pending
-  e19s01: pending
-  e19s02: pending
-  e19s03: pending
-  e19s04: pending
-  e19s05: pending
-  e20s01: pending
-  e20s02: pending
-  e20s03: pending
-  e20s04: pending
-  e20s05: pending
+  e18s01: done
+  e18s02: done
+  e18s03: done
+  e18s04: done
+  e18s05: done
+  e19s01: done
+  e19s02: done
+  e19s03: done
+  e19s04: done
+  e19s05: done
+  e20s01: done
+  e20s02: done
+  e20s03: done
+  e20s04: done
+  e20s05: done
   e21s05: done
   e21s02: done
   e21s01: done
   e21s04: done
   e21s03: done
-  e22s01: pending
-  e22s02: pending
-  e22s03: pending
-  e22s04: pending
-  e22s05: pending
-  e23s01: pending
-  e23s02: pending
-  e23s03: pending
-  e23s04: pending
-  e23s05: pending
+  e22s01: done
+  e22s02: done
+  e22s03: done
+  e22s04: done
+  e22s05: done
+  e23s01: done
+  e23s02: done
+  e23s03: done
+  e23s04: done
+  e23s05: done
   e24s01: done
   e24s02: done
   e24s03: done
   e24s04: done
   e24s05: done
-  e25s01: pending
-  e25s02: pending
-  e25s03: pending
-  e25s04: pending
-  e25s05: pending
+  e25s01: done
+  e25s02: done
+  e25s03: done
+  e25s04: done
+  e25s05: done
+  e26s01: pending
+  e26s02: pending
+  e26s03: pending
+  e28s01: done
+  e28s02: done
+  e27s01: pending
+  e27s02: pending
+  e27s03: pending
+  e27s04: pending

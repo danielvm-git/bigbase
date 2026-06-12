@@ -795,23 +795,64 @@ func (d *Deploy) handleDeployByID(w http.ResponseWriter, r *http.Request) {
 	}
 
 	id := path
-	if r.Method != "GET" {
+	switch r.Method {
+	case http.MethodDelete:
+		d.handleDeleteDeployment(w, r, id)
+	case http.MethodGet:
+		var dep Deployment
+		var appType string
+		err := d.db.QueryRowContext(r.Context(),
+			"SELECT id, repo_id, branch, commit_sha, status, url, port, app_type, COALESCE(error_message,''), created_at FROM deployments WHERE id = ?", id).
+			Scan(&dep.ID, &dep.RepoID, &dep.Branch, &dep.CommitSHA, &dep.Status, &dep.URL, &dep.Port, &appType, &dep.ErrorMessage, &dep.CreatedAt)
+		if err != nil {
+			writeJSON(w, http.StatusNotFound, map[string]string{"error": "deployment not found"})
+			return
+		}
+		dep.AppType = AppType(appType)
+		writeJSON(w, http.StatusOK, dep)
+	default:
 		writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
-		return
 	}
+}
 
-	var dep Deployment
-	var appType string
+func (d *Deploy) handleDeleteDeployment(w http.ResponseWriter, r *http.Request, id string) {
+	var status, url string
 	err := d.db.QueryRowContext(r.Context(),
-		"SELECT id, repo_id, branch, commit_sha, status, url, port, app_type, COALESCE(error_message,''), created_at FROM deployments WHERE id = ?", id).
-		Scan(&dep.ID, &dep.RepoID, &dep.Branch, &dep.CommitSHA, &dep.Status, &dep.URL, &dep.Port, &appType, &dep.ErrorMessage, &dep.CreatedAt)
+		"SELECT status, COALESCE(url,'') FROM deployments WHERE id = ?", id).
+		Scan(&status, &url)
 	if err != nil {
 		writeJSON(w, http.StatusNotFound, map[string]string{"error": "deployment not found"})
 		return
 	}
-	dep.AppType = AppType(appType)
+	if status == "pending" || status == "building" {
+		writeJSON(w, http.StatusConflict, map[string]string{"error": "deployment is in progress — wait or trigger a new deploy"})
+		return
+	}
 
-	writeJSON(w, http.StatusOK, dep)
+	d.mu.Lock()
+	app, hasApp := d.apps[id]
+	if hasApp {
+		delete(d.apps, id)
+	}
+	d.mu.Unlock()
+
+	if hasApp {
+		if app.cmd != nil && app.cmd.Process != nil {
+			_ = app.cmd.Process.Kill()
+		}
+		if app.server != nil {
+			_ = app.server.Close()
+		}
+		if d.hostRouter != nil {
+			d.hostRouter.UnregisterDeploymentHost(app.host)
+		}
+	}
+
+	_ = os.RemoveAll(filepath.Join(d.buildsDir, id))
+	d.deleteDeployLogs(id)
+	_, _ = d.db.ExecContext(r.Context(), "DELETE FROM deployments WHERE id = ?", id)
+
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func (d *Deploy) handleDeployLogs(w http.ResponseWriter, r *http.Request, id string) {

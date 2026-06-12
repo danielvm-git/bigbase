@@ -49,6 +49,8 @@ export default function SiteDetailPage() {
   const [loading, setLoading] = useState(true)
   const [previewMode, setPreviewMode] = useState(false)
   const [redeployError, setRedeployError] = useState<string | null>(null)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
   const pq = previewQuerySuffix()
 
   const load = useCallback(async () => {
@@ -70,6 +72,27 @@ export default function SiteDetailPage() {
     const t = setInterval(load, 3000)
     return () => clearInterval(t)
   }, [deployments, previewMode, load])
+
+  const handleDelete = async (id: string) => {
+    if (!window.confirm('Delete this deployment? This cannot be undone.')) return
+    if (previewMode) {
+      setDeployments(prev => prev.filter(d => d.id !== id))
+      return
+    }
+    setDeletingId(id)
+    setDeleteError(null)
+    try {
+      const res = await fetch(`/api/deployments/${id}`, { method: 'DELETE' })
+      if (!res.ok) {
+        const j = await res.json()
+        setDeleteError(j.error ?? `Delete failed (HTTP ${res.status})`)
+      } else {
+        load()
+      }
+    } finally {
+      setDeletingId(null)
+    }
+  }
 
   const handleRedeploy = async () => {
     if (!site || previewMode) return
@@ -168,6 +191,7 @@ export default function SiteDetailPage() {
                 <th>Commit</th>
                 <th>URL</th>
                 <th>Created</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -182,11 +206,25 @@ export default function SiteDetailPage() {
                     ) : '—'}
                   </td>
                   <td>{new Date(d.created_at).toLocaleString()}</td>
+                  <td>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      disabled={deletingId === d.id || d.status === 'pending' || d.status === 'building'}
+                      onClick={() => handleDelete(d.id)}
+                    >
+                      {deletingId === d.id ? '…' : 'Delete'}
+                    </Button>
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
+      )}
+
+      {deleteError && (
+        <p className="input-error-text" style={{ marginTop: 'var(--space-4)' }}>{deleteError}</p>
       )}
 
       <p style={{ marginTop: 'var(--space-12)' }}>
