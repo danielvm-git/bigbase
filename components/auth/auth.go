@@ -681,6 +681,15 @@ func (a *Auth) handleGoogleCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Clear the OAuth state cookie now that the flow is complete.
+	http.SetCookie(w, &http.Cookie{
+		Name:     "oauth_state",
+		Value:    "",
+		HttpOnly: true,
+		Path:     "/",
+		MaxAge:   -1,
+	})
+
 	http.SetCookie(w, &http.Cookie{
 		Name:     "token",
 		Value:    token,

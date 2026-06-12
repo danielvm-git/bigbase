@@ -703,6 +703,36 @@ func TestOAuthStateMismatchRejected(t *testing.T) {
 	}
 }
 
+func TestOAuthStateClearedOnSuccess(t *testing.T) {
+	_, handler, _ := setupAuthWithGoogle(t)
+
+	req := makeValidOAuthCallback(t, "testcode", "test-state")
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+
+	if w.Code != http.StatusFound {
+		t.Fatalf("expected 302 redirect on success, got %d: %s", w.Code, w.Body.String())
+	}
+
+	// Verify oauth_state cookie is cleared (MaxAge <= 0 or expired in past)
+	setCookies := w.Result().Header["Set-Cookie"]
+	if len(setCookies) == 0 {
+		t.Fatal("expected Set-Cookie headers")
+	}
+	var stateCookieCleared bool
+	for _, sc := range setCookies {
+		if strings.HasPrefix(sc, "oauth_state=") {
+			// Should be cleared: MaxAge=0, MaxAge=-1, or Expires in the past
+			stateCookieCleared = strings.Contains(sc, "Max-Age=0") ||
+				strings.Contains(sc, "Max-Age=-1") ||
+				strings.Contains(sc, "expires=")
+		}
+	}
+	if !stateCookieCleared {
+		t.Fatal("expected oauth_state cookie to be cleared (MaxAge<=0)")
+	}
+}
+
 func TestGoogleOAuthDisabledWhenNoConfig(t *testing.T) {
 	_, handler, _ := setupAuth(t)
 
