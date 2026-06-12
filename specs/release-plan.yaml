@@ -7,6 +7,11 @@ release:
   semantic_release: true
   bump_hint: minor
 epics:
+  - id: e29
+    title: Security Vulnerability Fixes (2026-06 audit)
+    wsjf: 9.3
+    file: epics/e29-security-vuln-fixes.yaml
+    mode: flat
   - id: e17
     title: Enhanced Admin UI
     wsjf: 1.0

@@ -1,0 +1,2 @@
+# Schema: id, bcps, start (ISO 8601), end (ISO 8601), cycle_minutes, bcp_per_hour
+stories: []

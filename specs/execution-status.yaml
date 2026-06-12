@@ -1,5 +1,8 @@
+type: execution-status
+context: execution
 generated_by: scripts/sync-status-from-epics.sh
 epics:
+  e29: todo
   e17: done
   e18: done
   e19: done
@@ -13,6 +16,10 @@ epics:
   e28: done
   e27: pending
 stories:
+  e29s01: todo
+  e29s02: todo
+  e29s03: todo
+  e29s04: todo
   e17s01: done
   e17s02: done
   e17s03: done

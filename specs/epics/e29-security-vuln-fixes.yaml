@@ -1,0 +1,191 @@
+type: epic-shard
+context: domain
+id: e29
+title: Security Vulnerability Fixes (2026-06 audit)
+wsjf: 9.3
+status: todo
+covers:
+  - OAuth login CSRF (no state validation)
+  - Cross-tenant record access (WithOrgID never wired)
+  - Arbitrary cross-tenant SQL reads via /api/sql
+  - PII enumeration via GET /api/auth/users
+
+# ── Zoom-out (modules this epic touches) ──────────────────────────────
+# components/auth/auth.go
+#   purpose: identity — register/login/OAuth, JWT mint+verify, Middleware that
+#            gates every protected route; also owns orgs + api-keys.
+#   callers: main.go wires authComp.Middleware around api/storage/git/forge/etc;
+#            authComp.ProtectedHandler for /api/auth/users, /api/orgs.
+#   contracts: Middleware sets ctxUserID/ctxUserEmail/ctxUserRole then calls
+#              next; verifyJWT/createJWT claim shape (UserID, Email, Role).
+# components/api/api.go
+#   purpose: dynamic collections CRUD + /api/sql read endpoint.
+#   callers: main.go mounts behind authComp.Middleware at /api/collections/, /api/sql.
+#   contracts: OrgIDFromContext(ctx)->(int64,bool); handlers already branch on it.
+#
+# KEY ARCHITECTURAL FACT (drives e29s02):
+#   auth.ctxUser* and api.ctxOrgID are DISTINCT unexported contextKey types in
+#   DIFFERENT packages. auth.Middleware cannot write api's key without importing
+#   api (cycle risk) OR via a bridge. Chosen approach: carry org_id in JWT claims,
+#   expose auth.OrgIDFromContext, and add a thin bridge middleware in main.go that
+#   reads auth.OrgIDFromContext and calls api.WithOrgID. No per-request DB lookup,
+#   no import cycle. Fail-closed if claim is missing.
+
+stories:
+  # ───────────────────────────────────────────────────────────────────
+  - id: e29s01
+    title: Fix OAuth state CSRF — validate state in Google callback
+    status: todo
+    type: fix
+    severity: HIGH
+    refs:
+      file: components/auth/auth.go
+      lines: "599-668"
+    context: >
+      handleGoogleOAuth generates a state (generateID) but never persists it;
+      handleGoogleCallback reads only `code` and mints a session cookie. Add a
+      signed-cookie round-trip so the callback proves the flow originated here.
+    tasks:
+      - desc: >
+          Add helpers signState(state, secret) and verifyState(value, secret) using
+          hmac/SHA256 over the random state, encoding as "state.hex(mac)". Reason for
+          depth: HMAC binds the cookie to the server secret so it can't be forged;
+          two tiny funcs, no new type.
+        verify: "go test ./components/auth/ -run TestStateSignRoundTrip -v"
+      - desc: >
+          In handleGoogleOAuth (~599): after generateID(), set cookie oauth_state =
+          signState(state, a.secret) with HttpOnly, Path=/, SameSite=Lax,
+          Secure=(r.TLS!=nil), MaxAge=600; keep sending the raw state in the Google URL.
+        verify: "go test ./components/auth/ -run TestOAuthStateCookieSet -v"
+      - desc: >
+          In handleGoogleCallback (~616): read query state and the oauth_state cookie;
+          if cookie missing OR verifyState fails OR decoded state != query state,
+          return 400 {\"error\":\"invalid state\"} BEFORE calling verifier.Verify.
+        verify: "go test ./components/auth/ -run TestOAuthStateMismatchRejected -v"
+      - desc: >
+          On the success path, clear the oauth_state cookie (MaxAge=-1) right before
+          setting the token cookie.
+        verify: "go test ./components/auth/ -run TestOAuthStateClearedOnSuccess -v"
+      - desc: >
+          Integration: callback with valid code but no/wrong state cookie returns 400
+          and sets NO token cookie (use existing googleVerifier stub pattern).
+        verify: "go test ./components/auth/ -run TestOAuthCallbackNoStateCookie -v"
+
+  # ───────────────────────────────────────────────────────────────────
+  - id: e29s02
+    title: Wire org-ID into request context (activate dead multi-tenant isolation)
+    status: todo
+    type: fix
+    severity: HIGH
+    refs:
+      file: components/auth/auth.go, components/api/api.go, main.go
+      lines: "auth Middleware ~270; api.WithOrgID ~22; main wiring ~246"
+    context: >
+      api.WithOrgID has zero prod call sites, so every OrgIDFromContext check runs
+      the unfiltered else-branch. Carry org_id in JWT claims, expose it from auth,
+      and bridge it into the api context in main.go. Fail closed.
+    tasks:
+      - desc: >
+          Add OrgID int64 to the JWT claims struct; set it in createJWT signature and
+          all call sites (login, register-then-login, google callback, refresh). Update
+          verifyJWT to read it. Reason for depth: claims are the existing identity
+          channel — no new lookup path.
+        verify: "go test ./components/auth/ -run TestJWTCarriesOrgID -v"
+      - desc: >
+          In auth.Middleware (~290) add ctx = WithValue(ctx, ctxOrgID, claims.OrgID),
+          and export auth.OrgIDFromContext(ctx)(int64,bool). Add ctxOrgID contextKey.
+        verify: "go test ./components/auth/ -run TestMiddlewareSetsOrgID -v"
+      - desc: >
+          Fail closed: in auth.Middleware, if claims.OrgID == 0 return 403
+          {\"error\":\"no organization\"} (after email-verify check). Existing tokens
+          without org are forced to re-auth.
+        verify: "go test ./components/auth/ -run TestMiddlewareRejectsNoOrg -v"
+      - desc: >
+          In main.go add a small bridge middleware orgBridge(next) that reads
+          auth.OrgIDFromContext and, when present, wraps ctx with api.WithOrgID; apply
+          it to protectedAPI only (/api/collections/, /api/sql). Reason for depth: the
+          bridge is the one allowed seam between two packages' private context keys.
+        verify: "go build ./... && grep -q 'api.WithOrgID' main.go"
+      - desc: >
+          Table-driven isolation test in api: seed records for org A and org B; assert
+          a ctx with org A's id cannot list/get/update/delete org B's record (list
+          excludes them, get/update/delete return 403/404).
+        verify: "go test ./components/api/ -run TestOrgIsolation -v"
+      - desc: >
+          API-key path: in ResolveAPIKey flow set the resolved key's org_id into the
+          same JWT-claims/context channel so programmatic access is equally scoped.
+        verify: "go test ./components/auth/ -run TestAPIKeyOrgScoped -v"
+
+  # ───────────────────────────────────────────────────────────────────
+  - id: e29s03
+    title: Restrict /api/sql to admin and scope to caller's org
+    status: todo
+    type: fix
+    severity: HIGH
+    refs:
+      file: components/api/api.go, components/auth/auth.go, main.go
+      lines: "handleSQL ~455"
+    context: >
+      /api/sql runs arbitrary read SQL for any authenticated user with no org filter.
+      Gate on admin role (defense-in-depth at route + handler) and scope execution.
+    tasks:
+      - desc: >
+          Expose api role access: read role via a shared context. Add
+          auth.RequireAdmin(next) middleware that 403s when UserRoleFromContext != admin;
+          apply it to the /api/sql route in main.go. Reason for depth: reusable admin
+          gate, mirrors existing handleUserByID role check.
+        verify: "grep -q 'func.*RequireAdmin' components/auth/auth.go && go build ./..."
+      - desc: >
+          Defense-in-depth in handleSQL (~455): if role from context != admin, return
+          403 before parsing the query. (api reads role via the bridge-injected value
+          or an exported accessor; do NOT trust client.)
+        verify: "go test ./components/api/ -run TestSQLRequiresAdmin -v"
+      - desc: >
+          Scope results to the caller's org: reject queries whose target tables carry
+          an org_id column unless an org filter is enforced; simplest concrete form —
+          wrap the user query as SELECT * FROM (<q>) WHERE org_id = ? when the result
+          set exposes org_id, else allow only sqlite_master/PRAGMA introspection.
+        verify: "go test ./components/api/ -run TestSQLOrgScoped -v"
+
+  # ───────────────────────────────────────────────────────────────────
+  - id: e29s04
+    title: Gate GET /api/auth/users on admin role
+    status: todo
+    type: fix
+    severity: MEDIUM
+    refs:
+      file: components/auth/auth.go
+      lines: "handleUsers ~523"
+    context: >
+      handleUsers returns id/email/created_at for every account with no role check,
+      while handleUserByID already enforces admin/self. Mirror that check.
+    tasks:
+      - desc: >
+          In handleUsers (~523): read role via UserRoleFromContext; if != admin return
+          403 {\"error\":\"forbidden\"} before querying. When org isolation is live,
+          scope the SELECT to the caller's org.
+        verify: "go test ./components/auth/ -run TestListUsersRequiresAdmin -v"
+      - desc: >
+          Regression: valid non-admin token to GET /api/auth/users returns 403 and no
+          user list; admin token still returns the list.
+        verify: "go test ./components/auth/ -run TestListUsersForbiddenForNonAdmin -v"
+
+# ── Verification script (whole epic) ──────────────────────────────────
+# 1. go build ./...                                   (compiles with bridge)
+# 2. go test ./components/auth/ ./components/api/      (all new tests green)
+# 3. Manual: log in as non-admin, POST /api/sql -> 403; GET /api/auth/users -> 403.
+# 4. Manual: two orgs, user A cannot read org B records via /api/collections/*.
+# 5. Manual: hit /oauth/google/callback?code=x with no state cookie -> 400, no login.
+#
+# ── Out of scope ──────────────────────────────────────────────────────
+# - Google id_token signature verification (fetched over TLS; separate item).
+# - git checkout argument-injection hardening in deploy (low confidence).
+# - CI/deploy command-execution review (by-design, track separately).
+#
+# ── Risks ─────────────────────────────────────────────────────────────
+# - Fail-closed org check invalidates existing JWTs lacking OrgID -> users must
+#   re-login. Acceptable; detect via 403 spike on /api/collections after deploy.
+# - Bridge applied to wrong routes would leak/over-restrict; covered by build grep
+#   + TestOrgIsolation.
+# - SQL org-scoping wrapper may break legitimate PRAGMA/introspection; TestSQLOrgScoped
+#   pins allowed shapes.
