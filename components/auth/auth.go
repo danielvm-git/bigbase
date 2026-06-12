@@ -639,6 +639,14 @@ func (a *Auth) handleGoogleCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Validate OAuth state to prevent CSRF.
+	queryState := r.URL.Query().Get("state")
+	stateCookie, stateErr := r.Cookie("oauth_state")
+	if stateErr != nil || !VerifyState(stateCookie.Value, queryState, a.secret) {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid state"})
+		return
+	}
+
 	verifier := a.googleVerifier
 	if verifier == nil {
 		scheme := "http"

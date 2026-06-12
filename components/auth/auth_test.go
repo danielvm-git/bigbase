@@ -547,10 +547,21 @@ func setupAuthWithGoogle(t *testing.T) (*auth.Auth, http.Handler, http.Handler) 
 	return a, a.Handler(), a.ProtectedHandler()
 }
 
+// makeValidOAuthCallback creates a callback request with a valid oauth_state cookie.
+func makeValidOAuthCallback(t *testing.T, code, state string) *http.Request {
+	t.Helper()
+	req := httptest.NewRequest("GET", "/api/auth/oauth/google/callback?code="+code+"&state="+state, nil)
+	req.AddCookie(&http.Cookie{
+		Name:  "oauth_state",
+		Value: auth.SignState(state, []byte("test-secret-32-chars!!!")),
+	})
+	return req
+}
+
 func TestGoogleCallbackCreatesUser(t *testing.T) {
 	a, handler, _ := setupAuthWithGoogle(t)
 
-	req := httptest.NewRequest("GET", "/api/auth/oauth/google/callback?code=testcode", nil)
+	req := makeValidOAuthCallback(t, "testcode", "test-state")
 	w := httptest.NewRecorder()
 	handler.ServeHTTP(w, req)
 
@@ -595,7 +606,7 @@ func TestGoogleCallbackLinksExistingUser(t *testing.T) {
 		t.Fatalf("register: %d", regW.Code)
 	}
 
-	req := httptest.NewRequest("GET", "/api/auth/oauth/google/callback?code=testcode", nil)
+	req := makeValidOAuthCallback(t, "testcode", "test-state")
 	w := httptest.NewRecorder()
 	handler.ServeHTTP(w, req)
 
@@ -660,6 +671,35 @@ func TestOAuthStateCookieSet(t *testing.T) {
 	}
 	if stateCookie.MaxAge != 600 {
 		t.Errorf("expected MaxAge=600, got %d", stateCookie.MaxAge)
+	}
+}
+
+func TestOAuthStateMismatchRejected(t *testing.T) {
+	_, handler, _ := setupAuthWithGoogle(t)
+
+	// Callback without oauth_state cookie should return 400
+	req := httptest.NewRequest("GET", "/api/auth/oauth/google/callback?code=testcode&state=abc123", nil)
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+
+	if w.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400 for missing state cookie, got %d: %s", w.Code, w.Body.String())
+	}
+
+	var resp map[string]any
+	if err := json.NewDecoder(w.Body).Decode(&resp); err != nil {
+		t.Fatalf("decode response: %v", err)
+	}
+	if resp["error"] != "invalid state" {
+		t.Fatalf("expected 'invalid state' error, got %v", resp["error"])
+	}
+
+	// Verify no token cookie was set
+	cookies := w.Result().Cookies()
+	for _, c := range cookies {
+		if c.Name == "token" && c.Value != "" {
+			t.Fatal("expected no token cookie when state validation fails")
+		}
 	}
 }
 
@@ -894,8 +934,11 @@ func TestOrganization(t *testing.T) {
 
 		handler := a.Handler()
 
-		// Simulate Google OAuth callback
-		req := httptest.NewRequest("GET", "/api/auth/oauth/google/callback?code=testcode", nil)
+		// Simulate Google OAuth callback with valid state cookie
+		state := "test-state"
+		signed := auth.SignState(state, []byte("test-secret-32-chars!!!"))
+		req := httptest.NewRequest("GET", "/api/auth/oauth/google/callback?code=testcode&state="+state, nil)
+		req.AddCookie(&http.Cookie{Name: "oauth_state", Value: signed})
 		w := httptest.NewRecorder()
 		handler.ServeHTTP(w, req)
 
