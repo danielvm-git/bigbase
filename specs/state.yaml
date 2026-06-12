@@ -2,7 +2,7 @@ type: session-state
 context: infra
 active_flow: build_epic
 active_epic_id: e29
-active_story_id: e29s01
+active_story_id: e29s02
 active_bug_id: null
 release:
   target_version: 2.9.0

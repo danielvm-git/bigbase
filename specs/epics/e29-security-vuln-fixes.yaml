@@ -35,7 +35,7 @@ stories:
   # ───────────────────────────────────────────────────────────────────
   - id: e29s01
     title: Fix OAuth state CSRF — validate state in Google callback
-    status: todo
+    status: done
     type: fix
     severity: HIGH
     refs:
