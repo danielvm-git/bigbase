@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -55,7 +56,7 @@ type Site struct {
 	LatestDeployment  *Deployment `json:"latest_deployment,omitempty"`
 }
 
-type DeployTrigger func(ctx context.Context, repoID, branch, siteName string) (*Deployment, error)
+type DeployTrigger func(ctx context.Context, repoID, branch, siteName, siteID string) (*Deployment, error)
 
 type Sites struct {
 	db            DBer
@@ -148,6 +149,11 @@ func (s *Sites) handleSiteByID(w http.ResponseWriter, r *http.Request) {
 
 	if len(parts) == 2 && parts[1] == "deploy" && r.Method == http.MethodPost {
 		s.redeploySite(w, r, id)
+		return
+	}
+
+	if len(parts) == 2 && parts[1] == "logs" && r.Method == http.MethodGet {
+		s.listSiteRequestLogs(w, r, id)
 		return
 	}
 
@@ -340,7 +346,7 @@ func (s *Sites) createSite(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if s.triggerDeploy != nil {
-		dep, err := s.triggerDeploy(r.Context(), req.GitRepoID, req.ProductionBranch, req.Name)
+		dep, err := s.triggerDeploy(r.Context(), req.GitRepoID, req.ProductionBranch, req.Name, id)
 		if err != nil {
 			writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
 			return
@@ -349,6 +355,71 @@ func (s *Sites) createSite(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSON(w, http.StatusCreated, site)
+}
+
+func (s *Sites) listSiteRequestLogs(w http.ResponseWriter, r *http.Request, siteID string) {
+	q := r.URL.Query()
+	limit, _ := strconv.Atoi(q.Get("limit"))
+	if limit < 1 || limit > 500 {
+		limit = 100
+	}
+	statusClass := q.Get("status_class") // 2xx, 4xx, 5xx
+	pathPrefix := q.Get("path")
+
+	where := "site_id = ?"
+	args := []any{siteID}
+
+	if statusClass != "" {
+		switch statusClass {
+		case "2xx":
+			where += " AND status >= 200 AND status < 300"
+		case "4xx":
+			where += " AND status >= 400 AND status < 500"
+		case "5xx":
+			where += " AND status >= 500 AND status < 600"
+		}
+	}
+	if pathPrefix != "" {
+		where += " AND path LIKE ?"
+		args = append(args, pathPrefix+"%")
+	}
+
+	var total int
+	_ = s.db.QueryRowContext(r.Context(), "SELECT COUNT(*) FROM site_request_logs WHERE "+where, args...).Scan(&total)
+
+	rows, err := s.db.QueryContext(r.Context(),
+		"SELECT id, method, path, status, duration_ms, created_at FROM site_request_logs WHERE "+where+" ORDER BY created_at DESC LIMIT ?",
+		append(args, limit)...)
+	if err != nil {
+		s.logger.Error("list request logs", "error", err)
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		return
+	}
+	defer func() { _ = rows.Close() }()
+
+	type LogEntry struct {
+		ID         string `json:"id"`
+		Method     string `json:"method"`
+		Path       string `json:"path"`
+		Status     int    `json:"status"`
+		DurationMS int    `json:"duration_ms"`
+		CreatedAt  string `json:"created_at"`
+	}
+
+	data := make([]LogEntry, 0)
+	for rows.Next() {
+		var l LogEntry
+		if err := rows.Scan(&l.ID, &l.Method, &l.Path, &l.Status, &l.DurationMS, &l.CreatedAt); err != nil {
+			continue
+		}
+		data = append(data, l)
+	}
+
+	writeJSON(w, http.StatusOK, map[string]any{
+		"data":    data,
+		"total":   total,
+		"site_id": siteID,
+	})
 }
 
 func (s *Sites) redeploySite(w http.ResponseWriter, r *http.Request, id string) {
@@ -378,7 +449,7 @@ func (s *Sites) redeploySite(w http.ResponseWriter, r *http.Request, id string) 
 		return
 	}
 
-	dep, err := s.triggerDeploy(ctx, gitRepoID, branch, siteName)
+	dep, err := s.triggerDeploy(ctx, gitRepoID, branch, siteName, id)
 	if err != nil {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
 		return

@@ -1,6 +1,7 @@
 package deploy
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"crypto/rand"
@@ -50,6 +51,7 @@ const (
 type Deployment struct {
 	ID           string  `json:"id"`
 	RepoID       string  `json:"repo_id"`
+	SiteID       string  `json:"site_id"`
 	Branch       string  `json:"branch"`
 	CommitSHA    string  `json:"commit_sha"`
 	Status       string  `json:"status"`
@@ -70,7 +72,7 @@ type runningApp struct {
 
 // DeploymentHostRegistry routes public hostnames to local deployment ports.
 type DeploymentHostRegistry interface {
-	RegisterDeploymentHost(host string, port int) error
+	RegisterDeploymentHost(host string, port int, siteID string) error
 	UnregisterDeploymentHost(host string)
 }
 
@@ -165,6 +167,7 @@ func (d *Deploy) Start(ctx *kernel.Context) error {
 	if err := d.db.Migrate(`CREATE TABLE IF NOT EXISTS deployments (
 		id TEXT PRIMARY KEY,
 		repo_id TEXT NOT NULL,
+		site_id TEXT NOT NULL DEFAULT '',
 		branch TEXT NOT NULL DEFAULT 'main',
 		commit_sha TEXT DEFAULT '',
 		status TEXT NOT NULL DEFAULT 'pending',
@@ -172,12 +175,33 @@ func (d *Deploy) Start(ctx *kernel.Context) error {
 		port INTEGER DEFAULT 0,
 		app_type TEXT DEFAULT '',
 		error_message TEXT NOT NULL DEFAULT '',
+		build_log TEXT DEFAULT '',
 		created_at TEXT NOT NULL DEFAULT (datetime('now'))
 	)`); err != nil {
 		return fmt.Errorf("migrate deployments table: %w", err)
 	}
 	if err := d.ensureErrorMessageColumn(); err != nil {
 		return err
+	}
+	if err := d.ensureBuildLogColumn(); err != nil {
+		return err
+	}
+	if err := d.ensureSiteIDColumn(); err != nil {
+		return err
+	}
+	if err := d.db.Migrate(`CREATE TABLE IF NOT EXISTS site_request_logs (
+		id TEXT PRIMARY KEY,
+		site_id TEXT NOT NULL,
+		method TEXT NOT NULL,
+		path TEXT NOT NULL,
+		status INTEGER NOT NULL DEFAULT 0,
+		duration_ms INTEGER NOT NULL DEFAULT 0,
+		created_at TEXT NOT NULL DEFAULT (datetime('now'))
+	)`); err != nil {
+		return fmt.Errorf("migrate site_request_logs table: %w", err)
+	}
+	if err := d.db.Migrate(`CREATE INDEX IF NOT EXISTS idx_srl_site_id ON site_request_logs(site_id, created_at DESC)`); err != nil {
+		return fmt.Errorf("migrate site_request_logs index: %w", err)
 	}
 	d.restoreRunningDeploymentHosts()
 	candidates := d.loadResumeCandidates()
@@ -187,14 +211,14 @@ func (d *Deploy) Start(ctx *kernel.Context) error {
 }
 
 type resumeCandidate struct {
-	id, repoID, repoName, rawURL, appType string
-	port                                    int
+	id, repoID, repoName, rawURL, appType, siteID string
+	port                                            int
 }
 
 func (d *Deploy) loadResumeCandidates() []resumeCandidate {
 	ctx := context.Background()
 	rows, err := d.db.QueryContext(ctx,
-		`SELECT d.id, d.repo_id, g.name, d.url, d.port, d.app_type
+		`SELECT d.id, d.repo_id, g.name, d.url, d.port, d.app_type, d.site_id
 		 FROM deployments d
 		 JOIN git_repos g ON g.id = d.repo_id
 		 WHERE d.status = 'running' AND d.port > 0
@@ -209,7 +233,7 @@ func (d *Deploy) loadResumeCandidates() []resumeCandidate {
 	var out []resumeCandidate
 	for rows.Next() {
 		var c resumeCandidate
-		if err := rows.Scan(&c.id, &c.repoID, &c.repoName, &c.rawURL, &c.port, &c.appType); err != nil {
+		if err := rows.Scan(&c.id, &c.repoID, &c.repoName, &c.rawURL, &c.port, &c.appType, &c.siteID); err != nil {
 			continue
 		}
 		host := HostFromDeploymentURL(c.rawURL)
@@ -255,6 +279,7 @@ func (d *Deploy) resumeCandidates(candidates []resumeCandidate) {
 		deploy := &Deployment{
 			ID:      c.id,
 			RepoID:  c.repoID,
+			SiteID:  c.siteID,
 			Port:    c.port,
 			URL:     c.rawURL,
 			AppType: AppStatic,
@@ -270,23 +295,23 @@ func (d *Deploy) restoreRunningDeploymentHosts() {
 	}
 	ctx := context.Background()
 	rows, err := d.db.QueryContext(ctx,
-		`SELECT url, port FROM deployments WHERE status = 'running' AND port > 0`)
+		`SELECT url, port, site_id FROM deployments WHERE status = 'running' AND port > 0`)
 	if err != nil {
 		d.logger.Warn("restore deployment hosts", "error", err)
 		return
 	}
 	defer func() { _ = rows.Close() }()
 	for rows.Next() {
-		var rawURL string
+		var rawURL, siteID string
 		var port int
-		if err := rows.Scan(&rawURL, &port); err != nil {
+		if err := rows.Scan(&rawURL, &port, &siteID); err != nil {
 			continue
 		}
 		host := HostFromDeploymentURL(rawURL)
 		if host == "" {
 			continue
 		}
-		if err := d.hostRouter.RegisterDeploymentHost(host, port); err != nil {
+		if err := d.hostRouter.RegisterDeploymentHost(host, port, siteID); err != nil {
 			d.logger.Warn("restore deployment host", "host", host, "error", err)
 		}
 	}
@@ -356,6 +381,7 @@ func (d *Deploy) HandleCreate(w http.ResponseWriter, r *http.Request) {
 		RepoID   string `json:"repo_id"`
 		Branch   string `json:"branch"`
 		SiteName string `json:"site_name"`
+		SiteID   string `json:"site_id"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid JSON"})
@@ -369,7 +395,7 @@ func (d *Deploy) HandleCreate(w http.ResponseWriter, r *http.Request) {
 		req.Branch = "main"
 	}
 
-	deploy, err := d.Trigger(r.Context(), req.RepoID, req.Branch, req.SiteName)
+	deploy, err := d.Trigger(r.Context(), req.RepoID, req.Branch, req.SiteName, req.SiteID)
 	if err != nil {
 		switch err.Error() {
 		case "repo not found":
@@ -384,7 +410,7 @@ func (d *Deploy) HandleCreate(w http.ResponseWriter, r *http.Request) {
 }
 
 // Trigger starts a deployment for a git repo without going through HTTP.
-func (d *Deploy) Trigger(ctx context.Context, repoID, branch, siteName string) (*Deployment, error) {
+func (d *Deploy) Trigger(ctx context.Context, repoID, branch, siteName, siteID string) (*Deployment, error) {
 	if repoID == "" {
 		return nil, fmt.Errorf("repo_id is required")
 	}
@@ -413,6 +439,7 @@ func (d *Deploy) Trigger(ctx context.Context, repoID, branch, siteName string) (
 	deploy := &Deployment{
 		ID:        id,
 		RepoID:    repoID,
+		SiteID:    siteID,
 		Branch:    branch,
 		Status:    "pending",
 		Port:      port,
@@ -421,8 +448,8 @@ func (d *Deploy) Trigger(ctx context.Context, repoID, branch, siteName string) (
 	}
 
 	if _, err := d.db.ExecContext(ctx,
-		"INSERT INTO deployments (id, repo_id, branch, status, port, url, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
-		id, repoID, branch, deploy.Status, deploy.Port, deploy.URL, deploy.CreatedAt); err != nil {
+		"INSERT INTO deployments (id, repo_id, site_id, branch, status, port, url, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+		id, repoID, siteID, branch, deploy.Status, deploy.Port, deploy.URL, deploy.CreatedAt); err != nil {
 		return nil, err
 	}
 
@@ -601,7 +628,12 @@ func (d *Deploy) startApp(ctx context.Context, buildDir string, deploy *Deployme
 	switch appType {
 	case AppNode:
 		startCmd := GetStartCommand(buildDir)
-		cmd = exec.CommandContext(ctx, "npm", "exec", "--", startCmd)
+		parts := strings.Fields(startCmd)
+		if len(parts) == 0 {
+			parts = []string{"node", "index.js"}
+		}
+		args := append([]string{"exec", "--"}, parts...)
+		cmd = exec.CommandContext(ctx, "npm", args...)
 		cmd.Dir = buildDir
 	case AppGo:
 		cmd = exec.CommandContext(ctx, filepath.Join(buildDir, "app"))
@@ -618,8 +650,9 @@ func (d *Deploy) startApp(ctx context.Context, buildDir string, deploy *Deployme
 	}
 
 	cmd.Env = append(os.Environ(), fmt.Sprintf("PORT=%d", deploy.Port))
-	cmd.Stdout = nil
-	cmd.Stderr = nil
+	
+	stdout, _ := cmd.StdoutPipe()
+	stderr, _ := cmd.StderrPipe()
 
 	host := deploymentHost(d.publicDomain, repoName)
 	d.mu.Lock()
@@ -631,6 +664,19 @@ func (d *Deploy) startApp(ctx context.Context, buildDir string, deploy *Deployme
 		d.updateStatus(deploy.ID, "failed")
 		return
 	}
+
+	go func() {
+		scanner := bufio.NewScanner(stdout)
+		for scanner.Scan() {
+			d.appendDeployLog(deploy.ID, "[runtime] "+scanner.Text())
+		}
+	}()
+	go func() {
+		scanner := bufio.NewScanner(stderr)
+		for scanner.Scan() {
+			d.appendDeployLog(deploy.ID, "[runtime] "+scanner.Text())
+		}
+	}()
 
 	_ = cmd.Wait()
 }
@@ -659,6 +705,14 @@ func (d *Deploy) updateStatus(id, status string) {
 	defer d.mu.Unlock()
 	_, _ = d.db.ExecContext(context.Background(),
 		"UPDATE deployments SET status = ? WHERE id = ?", status, id)
+
+	if status == "running" || status == "failed" {
+		lines := d.getDeployLogs(id)
+		if len(lines) > 0 {
+			_, _ = d.db.ExecContext(context.Background(),
+				"UPDATE deployments SET build_log = ? WHERE id = ?", strings.Join(lines, "\n"), id)
+		}
+	}
 }
 
 func (d *Deploy) failDeployment(id string, buildErr error) {
@@ -668,10 +722,30 @@ func (d *Deploy) failDeployment(id string, buildErr error) {
 		msg = msg[:maxLen]
 	}
 	d.appendDeployLog(id, "✗ Deploy failed: "+msg)
+	
+	// Use a more direct update here since we have the message
 	d.mu.Lock()
 	defer d.mu.Unlock()
 	_, _ = d.db.ExecContext(context.Background(),
 		"UPDATE deployments SET status = ?, error_message = ? WHERE id = ?", "failed", msg, id)
+
+	lines := d.getDeployLogs(id)
+	if len(lines) > 0 {
+		_, _ = d.db.ExecContext(context.Background(),
+			"UPDATE deployments SET build_log = ? WHERE id = ?", strings.Join(lines, "\n"), id)
+	}
+}
+
+func (d *Deploy) ensureSiteIDColumn() error {
+	_, err := d.db.ExecContext(context.Background(),
+		`ALTER TABLE deployments ADD COLUMN site_id TEXT NOT NULL DEFAULT ''`)
+	if err == nil {
+		return nil
+	}
+	if strings.Contains(strings.ToLower(err.Error()), "duplicate column") {
+		return nil
+	}
+	return fmt.Errorf("add site_id column: %w", err)
 }
 
 func (d *Deploy) ensureErrorMessageColumn() error {
@@ -686,6 +760,18 @@ func (d *Deploy) ensureErrorMessageColumn() error {
 	return fmt.Errorf("add error_message column: %w", err)
 }
 
+func (d *Deploy) ensureBuildLogColumn() error {
+	_, err := d.db.ExecContext(context.Background(),
+		`ALTER TABLE deployments ADD COLUMN build_log TEXT DEFAULT ''`)
+	if err == nil {
+		return nil
+	}
+	if strings.Contains(strings.ToLower(err.Error()), "duplicate column") {
+		return nil
+	}
+	return fmt.Errorf("add build_log column: %w", err)
+}
+
 func (d *Deploy) finalizeDeploymentURL(deploy *Deployment, repoName string) {
 	url := deploymentURL(d.publicDomain, d.useHTTPS, repoName, deploy.Port)
 	host := deploymentHost(d.publicDomain, repoName)
@@ -696,7 +782,7 @@ func (d *Deploy) finalizeDeploymentURL(deploy *Deployment, repoName string) {
 		url, deploy.Port, deploy.ID)
 
 	if d.hostRouter != nil && host != "" {
-		if err := d.hostRouter.RegisterDeploymentHost(host, deploy.Port); err != nil {
+		if err := d.hostRouter.RegisterDeploymentHost(host, deploy.Port, deploy.SiteID); err != nil {
 			d.logger.Warn("register deployment host", "host", host, "error", err)
 		}
 	}
@@ -735,9 +821,8 @@ func GetStartCommand(buildDir string) string {
 		return "node index.js"
 	}
 
-	parts := strings.Fields(pkg.Scripts.Start)
-	if len(parts) > 0 {
-		return parts[0]
+	if pkg.Scripts.Start != "" {
+		return pkg.Scripts.Start
 	}
 	return "node index.js"
 }
@@ -754,7 +839,7 @@ func (d *Deploy) HandleList(w http.ResponseWriter, r *http.Request) {
 	}
 
 	rows, err := d.db.QueryContext(r.Context(),
-		"SELECT id, repo_id, COALESCE(branch,'main'), COALESCE(commit_sha,''), COALESCE(status,'pending'), COALESCE(url,''), COALESCE(port,0), COALESCE(app_type,''), COALESCE(error_message,''), created_at FROM deployments ORDER BY created_at DESC")
+		"SELECT id, repo_id, site_id, COALESCE(branch,'main'), COALESCE(commit_sha,''), COALESCE(status,'pending'), COALESCE(url,''), COALESCE(port,0), COALESCE(app_type,''), COALESCE(error_message,''), created_at FROM deployments ORDER BY created_at DESC")
 	if err != nil {
 		d.logger.Error("list deployments", "error", err)
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
@@ -765,7 +850,7 @@ func (d *Deploy) HandleList(w http.ResponseWriter, r *http.Request) {
 	deployments := make([]Deployment, 0)
 	for rows.Next() {
 		var dep Deployment
-		if err := rows.Scan(&dep.ID, &dep.RepoID, &dep.Branch, &dep.CommitSHA, &dep.Status, &dep.URL, &dep.Port, &dep.AppType, &dep.ErrorMessage, &dep.CreatedAt); err != nil {
+		if err := rows.Scan(&dep.ID, &dep.RepoID, &dep.SiteID, &dep.Branch, &dep.CommitSHA, &dep.Status, &dep.URL, &dep.Port, &dep.AppType, &dep.ErrorMessage, &dep.CreatedAt); err != nil {
 			d.logger.Error("scan deployment", "error", err)
 			continue
 		}
@@ -807,8 +892,8 @@ func (d *Deploy) handleDeployByID(w http.ResponseWriter, r *http.Request) {
 		var dep Deployment
 		var appType string
 		err := d.db.QueryRowContext(r.Context(),
-			"SELECT id, repo_id, branch, commit_sha, status, url, port, app_type, COALESCE(error_message,''), created_at FROM deployments WHERE id = ?", id).
-			Scan(&dep.ID, &dep.RepoID, &dep.Branch, &dep.CommitSHA, &dep.Status, &dep.URL, &dep.Port, &appType, &dep.ErrorMessage, &dep.CreatedAt)
+			"SELECT id, repo_id, site_id, branch, commit_sha, status, url, port, app_type, COALESCE(error_message,''), created_at FROM deployments WHERE id = ?", id).
+			Scan(&dep.ID, &dep.RepoID, &dep.SiteID, &dep.Branch, &dep.CommitSHA, &dep.Status, &dep.URL, &dep.Port, &appType, &dep.ErrorMessage, &dep.CreatedAt)
 		if err != nil {
 			writeJSON(w, http.StatusNotFound, map[string]string{"error": "deployment not found"})
 			return
@@ -866,17 +951,21 @@ func (d *Deploy) handleDeployLogs(w http.ResponseWriter, r *http.Request, id str
 		return
 	}
 
-	// Verify deployment exists and load status + error message
-	var status, errMsg string
+	// Verify deployment exists and load status + error message + build_log
+	var status, errMsg, buildLog string
 	err := d.db.QueryRowContext(r.Context(),
-		"SELECT status, COALESCE(error_message,'') FROM deployments WHERE id = ?", id).
-		Scan(&status, &errMsg)
+		"SELECT status, COALESCE(error_message,''), COALESCE(build_log,'') FROM deployments WHERE id = ?", id).
+		Scan(&status, &errMsg, &buildLog)
 	if err != nil {
 		writeJSON(w, http.StatusNotFound, map[string]string{"error": "deployment not found"})
 		return
 	}
 
 	lines := d.getDeployLogs(id)
+	if len(lines) == 0 && buildLog != "" {
+		lines = strings.Split(buildLog, "\n")
+	}
+
 	payload := map[string]any{
 		"deployment_id": id,
 		"status":        status,

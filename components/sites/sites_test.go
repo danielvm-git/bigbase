@@ -47,7 +47,7 @@ func TestSitesCreateTriggersDeploy(t *testing.T) {
 	s := sites.New(sites.Options{
 		DB:     d,
 		Logger: logger,
-		TriggerDeploy: func(_ context.Context, repoID, branch, siteName string) (*sites.Deployment, error) {
+		TriggerDeploy: func(_ context.Context, repoID, branch, siteName, siteID string) (*sites.Deployment, error) {
 			triggered = true
 			if repoID != "repo-1" || branch != "main" || siteName != "my-site" {
 				t.Fatalf("trigger args repoID=%s branch=%s siteName=%s", repoID, branch, siteName)
@@ -100,7 +100,7 @@ func TestSitesCreateTriggersDeployWithCustomName(t *testing.T) {
 	s := sites.New(sites.Options{
 		DB:     d,
 		Logger: logger,
-		TriggerDeploy: func(_ context.Context, repoID, branch, siteName string) (*sites.Deployment, error) {
+		TriggerDeploy: func(_ context.Context, repoID, branch, siteName, siteID string) (*sites.Deployment, error) {
 			receivedSiteName = siteName
 			return &sites.Deployment{
 				ID: "dep-1", RepoID: repoID, Branch: branch, Status: "pending",
@@ -131,6 +131,53 @@ func TestSitesCreateTriggersDeployWithCustomName(t *testing.T) {
 	}
 	if receivedSiteName != "custom-site-name" {
 		t.Fatalf("expected siteName 'custom-site-name', got '%s'", receivedSiteName)
+	}
+}
+
+func TestSitesListRequestLogs(t *testing.T) {
+	logger := testLogger{}
+	k := kernel.New(logger)
+	d := db.New(db.Options{Path: ":memory:", Logger: logger})
+	s := sites.New(sites.Options{DB: d, Logger: logger})
+	k.Register(d)
+	k.Register(s)
+	if err := k.Start(); err != nil {
+		t.Fatalf("kernel start: %v", err)
+	}
+	t.Cleanup(func() { _ = k.Stop() })
+
+	siteID := "s1"
+	_, _ = d.ExecContext(context.Background(),
+		`INSERT INTO sites (id, name, git_repo_id) VALUES (?, 'mysite', 'r1')`, siteID)
+	
+	// Create table and insert dummy logs (since deploy component owns the table but we test site component)
+	_, _ = d.ExecContext(context.Background(), `CREATE TABLE IF NOT EXISTS site_request_logs (
+		id TEXT PRIMARY KEY,
+		site_id TEXT NOT NULL,
+		method TEXT NOT NULL,
+		path TEXT NOT NULL,
+		status INTEGER NOT NULL DEFAULT 0,
+		duration_ms INTEGER NOT NULL DEFAULT 0,
+		created_at TEXT NOT NULL DEFAULT (datetime('now'))
+	)`)
+	
+	_, _ = d.ExecContext(context.Background(),
+		`INSERT INTO site_request_logs (id, site_id, method, path, status, duration_ms, created_at)
+		 VALUES ('l1', ?, 'GET', '/test', 200, 5, '2026-06-12T15:00:00Z')`, siteID)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/sites/"+siteID+"/logs", nil)
+	w := httptest.NewRecorder()
+	s.Handler().ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", w.Code, w.Body.String())
+	}
+
+	var resp map[string]any
+	_ = json.NewDecoder(w.Body).Decode(&resp)
+	data, _ := resp["data"].([]any)
+	if len(data) != 1 {
+		t.Fatalf("expected 1 log, got %d", len(data))
 	}
 }
 

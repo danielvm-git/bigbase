@@ -9,9 +9,14 @@ import {
   statusBadgeVariant,
   PreviewBanner,
   SitesListSkeleton,
+  BuildLogs,
+  Tabs,
+  RequestLogs,
 } from '../components'
 import { getSite, getSiteDeployments } from '../lib/sitesData'
 import { isPreviewForced, previewQuerySuffix } from '../lib/previewMode'
+import { useBuildLogs } from '../hooks/useBuildLogs'
+import { useRequestLogs } from '../hooks/useRequestLogs'
 import type { Deployment, Site } from '../types/sites'
 
 const STATUS_STEPS = ['pending', 'building', 'deploying', 'running']
@@ -51,7 +56,22 @@ export default function SiteDetailPage() {
   const [redeployError, setRedeployError] = useState<string | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [deleteError, setDeleteError] = useState<string | null>(null)
+  const [activeTab, setActiveTab] = useState('deployments')
   const pq = previewQuerySuffix()
+
+  const latestFromDeployments = deployments[0]
+  const { lines, loading: logsLoading, error: logsError } = useBuildLogs(latestFromDeployments?.id || site?.latest_deployment?.id || '')
+
+  const {
+    logs, loading: reqLogsLoading, error: reqLogsError,
+    pathPrefix, setPathPrefix, statusClass, setStatusClass, refresh: refreshReqLogs
+  } = useRequestLogs(siteId)
+
+  const tabs = [
+    { id: 'deployments', label: 'Deployments' },
+    { id: 'logs', label: 'Build Logs' },
+    { id: 'request-logs', label: 'Request Logs' },
+  ]
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -179,47 +199,76 @@ export default function SiteDetailPage() {
         </Card>
       </div>
 
-      <h2 className="section-title">Deployments</h2>
-      {deployments.length === 0 && <p className="dim">No deployment history.</p>}
-      {deployments.length > 0 && (
-        <div className="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Status</th>
-                <th>Branch</th>
-                <th>Commit</th>
-                <th>URL</th>
-                <th>Created</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {deployments.map(d => (
-                <tr key={d.id}>
-                  <td><Badge variant={statusBadgeVariant(d.status)}>{d.status}</Badge></td>
-                  <td>{d.branch}</td>
-                  <td><code>{d.commit_sha ? d.commit_sha.slice(0, 7) : '—'}</code></td>
-                  <td>
-                    {d.url ? (
-                      <a href={d.url} target="_blank" rel="noreferrer">{d.url}</a>
-                    ) : '—'}
-                  </td>
-                  <td>{new Date(d.created_at).toLocaleString()}</td>
-                  <td>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      disabled={deletingId === d.id || d.status === 'pending' || d.status === 'building'}
-                      onClick={() => handleDelete(d.id)}
-                    >
-                      {deletingId === d.id ? '…' : 'Delete'}
-                    </Button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      <Tabs tabs={tabs} active={activeTab} onChange={setActiveTab} />
+
+      {activeTab === 'deployments' && (
+        <>
+          <h2 className="section-title">Deployment History</h2>
+          {deployments.length === 0 && <p className="dim">No deployment history.</p>}
+          {deployments.length > 0 && (
+            <div className="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Status</th>
+                    <th>Branch</th>
+                    <th>Commit</th>
+                    <th>URL</th>
+                    <th>Created</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {deployments.map(d => (
+                    <tr key={d.id}>
+                      <td><Badge variant={statusBadgeVariant(d.status)}>{d.status}</Badge></td>
+                      <td>{d.branch}</td>
+                      <td><code>{d.commit_sha ? d.commit_sha.slice(0, 7) : '—'}</code></td>
+                      <td>
+                        {d.url ? (
+                          <a href={d.url} target="_blank" rel="noreferrer">{d.url}</a>
+                        ) : '—'}
+                      </td>
+                      <td>{new Date(d.created_at).toLocaleString()}</td>
+                      <td>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          disabled={deletingId === d.id || d.status === 'pending' || d.status === 'building'}
+                          onClick={() => handleDelete(d.id)}
+                        >
+                          {deletingId === d.id ? '…' : 'Delete'}
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </>
+      )}
+
+      {activeTab === 'logs' && (
+        <div>
+          <h2 className="section-title">Build Logs</h2>
+          <BuildLogs lines={lines} loading={logsLoading} error={logsError} />
+        </div>
+      )}
+
+      {activeTab === 'request-logs' && (
+        <div>
+          <h2 className="section-title">Request Logs</h2>
+          <RequestLogs
+            logs={logs}
+            loading={reqLogsLoading}
+            error={reqLogsError}
+            pathPrefix={pathPrefix}
+            onPathPrefixChange={setPathPrefix}
+            statusClass={statusClass}
+            onStatusClassChange={setStatusClass}
+            onRefresh={refreshReqLogs}
+          />
         </div>
       )}
 

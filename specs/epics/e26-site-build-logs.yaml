@@ -3,12 +3,12 @@ context: domain
 id: e26
 title: Site Build Logs UI
 wsjf: 4.5
-status: pending
+status: done
 covers: []
 stories:
   - id: e26s01
     title: Build logs tab on SiteDetailPage
-    status: pending
+    status: done
     tasks:
       - desc: "Add 'Logs' tab to SiteDetailPage that fetches GET /api/deployments/:id/logs for the active deployment and renders lines in a terminal-style <pre> block with auto-scroll"
         notes: |
@@ -24,7 +24,7 @@ stories:
 
   - id: e26s02
     title: Live log streaming during active build
-    status: pending
+    status: done
     tasks:
       - desc: "When deployment status is 'building', poll GET /api/deployments/:id/logs every 2s and append new lines; stop polling when status transitions to running/failed"
         notes: |
@@ -38,7 +38,7 @@ stories:
 
   - id: e26s03
     title: Persist build logs to SQLite on completion
-    status: pending
+    status: done
     tasks:
       - desc: "Add build_log TEXT column to deployments table; on deploy finish (success or fail), write the full log lines as newline-joined string; serve from DB when in-memory log is evicted"
         notes: |

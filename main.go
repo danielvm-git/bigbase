@@ -182,6 +182,7 @@ func startProxy() {
 		PublicDomain: sitesDomainVal,
 		HostRouter:   p,
 	})
+	p.SetRequestLogger(depComp)
 	mComp := monitoring.New(monitoring.Options{
 		DB:     d,
 		Logger: logger,
@@ -197,8 +198,8 @@ func startProxy() {
 	st := sites.New(sites.Options{
 		DB:     d,
 		Logger: logger,
-		TriggerDeploy: func(ctx context.Context, repoID, branch, siteName string) (*sites.Deployment, error) {
-			dep, err := depComp.Trigger(ctx, repoID, branch, siteName)
+		TriggerDeploy: func(ctx context.Context, repoID, branch, siteName, siteID string) (*sites.Deployment, error) {
+			dep, err := depComp.Trigger(ctx, repoID, branch, siteName, siteID)
 			if err != nil {
 				return nil, err
 			}
