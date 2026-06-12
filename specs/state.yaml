@@ -1,26 +1,26 @@
 type: session-state
 context: infra
-active_flow: null
-active_epic_id: null
-active_story_id: null
+active_flow: build_epic
+active_epic_id: e29
+active_story_id: e29s01
 active_bug_id: null
 release:
   target_version: 2.9.0
   last_tag: v2.8.0
   last_publish: "2026-06-12"
 epic_cycle:
-  current_step: null
-  next_skill: null
-  completed_steps: [1, 2, 3, 4, 5, 6, 7, 8]
+  current_step: 1
+  next_skill: develop-tdd
+  completed_steps: []
   story_bcps: 2
 bug_cycle:
   current_step: null
   completed_steps: []
 git:
   branch: main
-  hash: bf4249934b7bda515863e78a0fdb61fcdf2a69f9
+  hash: 7a4e361030d319ebc936af6f96b19ae8cbd6eb28
 handoff:
-  last_step_completed: release-branch
+  last_step_completed: null
   open_decisions: []
   required_reading: []
   next_skill: null
