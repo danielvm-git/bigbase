@@ -580,6 +580,63 @@ func TestListUsersUnauthenticated(t *testing.T) {
 	}
 }
 
+func TestListUsersRequiresAdmin(t *testing.T) {
+	_, handler, protected := setupAuth(t)
+
+	// Register first user (admin)
+	regReq := httptest.NewRequest("POST", "/api/auth/register",
+		strings.NewReader(`{"email":"admin@test.com","password":"secret123"}`))
+	regReq.Header.Set("Content-Type", "application/json")
+	regW := httptest.NewRecorder()
+	handler.ServeHTTP(regW, regReq)
+	if regW.Code != http.StatusCreated {
+		t.Fatalf("register admin: expected 201, got %d: %s", regW.Code, regW.Body.String())
+	}
+
+	// Register second user (non-admin)
+	regReq2 := httptest.NewRequest("POST", "/api/auth/register",
+		strings.NewReader(`{"email":"user@test.com","password":"secret123"}`))
+	regReq2.Header.Set("Content-Type", "application/json")
+	regW2 := httptest.NewRecorder()
+	handler.ServeHTTP(regW2, regReq2)
+	if regW2.Code != http.StatusCreated {
+		t.Fatalf("register user: expected 201, got %d: %s", regW2.Code, regW2.Body.String())
+	}
+
+	// Login as non-admin user
+	loginReq := httptest.NewRequest("POST", "/api/auth/login",
+		strings.NewReader(`{"email":"user@test.com","password":"secret123"}`))
+	loginReq.Header.Set("Content-Type", "application/json")
+	loginW := httptest.NewRecorder()
+	handler.ServeHTTP(loginW, loginReq)
+	if loginW.Code != http.StatusOK {
+		t.Fatalf("login: expected 200, got %d: %s", loginW.Code, loginW.Body.String())
+	}
+	resp := parseResponse(t, loginW.Body.Bytes())
+	token, _ := resp["token"].(string)
+	if token == "" {
+		t.Fatal("expected non-empty token")
+	}
+
+	// Try GET /api/auth/users as non-admin — should be 403
+	req := httptest.NewRequest("GET", "/api/auth/users", nil)
+	req.Header.Set("Authorization", "Bearer "+token)
+	w := httptest.NewRecorder()
+	protected.ServeHTTP(w, req)
+
+	if w.Code != http.StatusForbidden {
+		t.Fatalf("expected 403 for non-admin user, got %d: %s", w.Code, w.Body.String())
+	}
+
+	var body map[string]string
+	if err := json.NewDecoder(w.Body).Decode(&body); err != nil {
+		t.Fatalf("decode response: %v", err)
+	}
+	if body["error"] != "forbidden" {
+		t.Fatalf("expected 'forbidden' error, got %q", body["error"])
+	}
+}
+
 func TestDeleteUser(t *testing.T) {
 	_, handler, protected := setupAuth(t)
 
