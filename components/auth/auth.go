@@ -2,7 +2,9 @@ package auth
 
 import (
 	"context"
+	"crypto/hmac"
 	"crypto/rand"
+	"crypto/sha256"
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
@@ -803,6 +805,32 @@ func generateID() (string, error) {
 		return "", err
 	}
 	return hex.EncodeToString(b), nil
+}
+
+// signState signs a random state string with the server secret using HMAC-SHA256.
+// Returns "state.hex(signature)" — a tamper-evident token bound to this server instance.
+func SignState(state string, secret []byte) string {
+	mac := hmac.New(sha256.New, secret)
+	mac.Write([]byte(state))
+	return state + "." + hex.EncodeToString(mac.Sum(nil))
+}
+
+// verifyState checks that value (a signed state from signState) matches the
+// original state and was signed with the given secret. Uses constant-time comparison.
+func VerifyState(value, state string, secret []byte) bool {
+	lastDot := strings.LastIndex(value, ".")
+	if lastDot < 1 || lastDot == len(value)-1 {
+		return false
+	}
+	gotState := value[:lastDot]
+	if gotState != state {
+		return false
+	}
+	expectedMAC := value[lastDot+1:]
+	mac := hmac.New(sha256.New, secret)
+	mac.Write([]byte(state))
+	expected := hex.EncodeToString(mac.Sum(nil))
+	return hmac.Equal([]byte(expectedMAC), []byte(expected))
 }
 
 func (a *Auth) handleCreateOrg(w http.ResponseWriter, r *http.Request) {

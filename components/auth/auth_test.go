@@ -1340,6 +1340,51 @@ func TestOrganization(t *testing.T) {
 	})
 }
 
+func TestStateSignRoundTrip(t *testing.T) {
+	secret := []byte("test-secret-32-chars!!!")
+	state := "abc123def456"
+
+	signed := auth.SignState(state, secret)
+	if signed == "" {
+		t.Fatal("expected non-empty signed state")
+	}
+
+	// verifyState should succeed with matching state and secret
+	if !auth.VerifyState(signed, state, secret) {
+		t.Fatal("expected VerifyState to return true for valid signed state")
+	}
+
+	// verifyState should fail with wrong state
+	if auth.VerifyState(signed, "wrong-state", secret) {
+		t.Fatal("expected VerifyState to return false for wrong state")
+	}
+
+	// verifyState should fail with wrong secret
+	wrongSecret := []byte("wrong-secret!!!!!!")
+	if auth.VerifyState(signed, state, wrongSecret) {
+		t.Fatal("expected VerifyState to return false for wrong secret")
+	}
+
+	// verifyState should fail with tampered signature
+	parts := strings.Split(signed, ".")
+	if len(parts) == 2 {
+		tampered := parts[0] + ".tampered"
+		if auth.VerifyState(tampered, state, secret) {
+			t.Fatal("expected VerifyState to return false for tampered signature")
+		}
+	}
+
+	// verifyState should fail with malformed input (no dot)
+	if auth.VerifyState("no-dot-here", state, secret) {
+		t.Fatal("expected VerifyState to return false for malformed input")
+	}
+
+	// verifyState should fail with empty state
+	if auth.VerifyState("", state, secret) {
+		t.Fatal("expected VerifyState to return false for empty input")
+	}
+}
+
 func TestMiddlewareBadToken(t *testing.T) {
 	a, _, _ := setupAuth(t)
 
