@@ -1,3 +1,10 @@
+# [2.9.0](https://github.com/danielvm-git/bigbase/compare/v2.8.0...v2.9.0) (2026-06-12)
+
+
+### Features
+
+* **epics:** plan e29 security vuln fixes — OAuth CSRF, cross-tenant isolation, /api/sql gate, users enumeration ([7a4e361](https://github.com/danielvm-git/bigbase/commit/7a4e361030d319ebc936af6f96b19ae8cbd6eb28))
+
 # [2.8.0](https://github.com/danielvm-git/bigbase/compare/v2.7.0...v2.8.0) (2026-06-12)
 
 
