@@ -9,9 +9,9 @@ release:
   last_tag: v2.8.0
   last_publish: "2026-06-12"
 epic_cycle:
-  current_step: 1
-  next_skill: develop-tdd
-  completed_steps: []
+  current_step: 3
+  next_skill: kickoff-branch
+  completed_steps: [1, 2]
   story_bcps: 2
 bug_cycle:
   current_step: null
