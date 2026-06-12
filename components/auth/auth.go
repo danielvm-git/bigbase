@@ -349,6 +349,18 @@ func OrgIDFromContext(ctx context.Context) (int64, bool) {
 	return orgID, ok
 }
 
+// RequireAdmin returns middleware that rejects non-admin requests with 403.
+func RequireAdmin(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		role, ok := UserRoleFromContext(r.Context())
+		if !ok || role != "admin" {
+			writeJSON(w, http.StatusForbidden, map[string]string{"error": "forbidden"})
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
+}
+
 func (a *Auth) decodeBody(w http.ResponseWriter, r *http.Request) (*authRequest, bool) {
 	r.Body = http.MaxBytesReader(w, r.Body, maxBodyBytes)
 	var req authRequest
@@ -550,6 +562,12 @@ type userRow struct {
 }
 
 func (a *Auth) handleUsers(w http.ResponseWriter, r *http.Request) {
+	role, ok := UserRoleFromContext(r.Context())
+	if !ok || role != "admin" {
+		writeJSON(w, http.StatusForbidden, map[string]string{"error": "forbidden"})
+		return
+	}
+
 	users, err := a.fetchUsers(r.Context())
 	if err != nil {
 		a.logger.Error("fetch users", "error", err)
