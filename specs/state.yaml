@@ -5,9 +5,9 @@ active_epic_id: null
 active_story_id: null
 active_bug_id: null
 release:
-  target_version: 2.8.0
-  last_tag: v2.7.0
-  last_publish: "2026-06-06"
+  target_version: 2.9.0
+  last_tag: v2.8.0
+  last_publish: "2026-06-12"
 epic_cycle:
   current_step: null
   next_skill: null
@@ -18,7 +18,7 @@ bug_cycle:
   completed_steps: []
 git:
   branch: main
-  hash: 2b3080e883dca847396b7693f044becdeb19d0c8
+  hash: bf4249934b7bda515863e78a0fdb61fcdf2a69f9
 handoff:
   last_step_completed: release-branch
   open_decisions: []
