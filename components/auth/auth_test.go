@@ -531,7 +531,7 @@ func TestMiddlewareRejectsNoOrg(t *testing.T) {
 func TestListUsers(t *testing.T) {
 	_, handler, protected := setupAuth(t)
 
-	for i, email := range []string{"u1@test.com", "u2@test.com", "u3@test.com"} {
+	for i, email := range []string{"u1@test.com"} {
 		req := httptest.NewRequest("POST", "/api/auth/register", strings.NewReader(`{"email":"`+email+`","password":"secret123"}`))
 		req.Header.Set("Content-Type", "application/json")
 		w := httptest.NewRecorder()
@@ -563,8 +563,8 @@ func TestListUsers(t *testing.T) {
 		t.Fatalf("decode: %v", err)
 	}
 	users := body["data"]
-	if len(users) != 3 {
-		t.Fatalf("expected 3 users, got %d", len(users))
+	if len(users) != 1 {
+		t.Fatalf("expected 1 user, got %d", len(users))
 	}
 }
 
@@ -715,8 +715,8 @@ func TestListUsersForbiddenForNonAdmin(t *testing.T) {
 		t.Fatalf("decode admin response: %v", err)
 	}
 	users := adminBody["data"]
-	if len(users) != 2 {
-		t.Fatalf("expected 2 users in admin response, got %d", len(users))
+	if len(users) != 1 {
+		t.Fatalf("expected 1 user in admin response, got %d", len(users))
 	}
 }
 
@@ -1847,4 +1847,114 @@ func TestMiddlewareBadToken(t *testing.T) {
 	if w.Code != http.StatusUnauthorized {
 		t.Fatalf("expected 401, got %d", w.Code)
 	}
+}
+
+func TestListUsersOrgScoping(t *testing.T) {
+	_, handler, protected, d := setupAuthWithDB(t)
+
+	// Register 2 admins to represent two distinct orgs
+	// Admin 1 (gets Org 1, default role is admin because it's first user)
+	req1 := httptest.NewRequest("POST", "/api/auth/register", strings.NewReader(`{"email":"admin1@org1.com","password":"password123"}`))
+	req1.Header.Set("Content-Type", "application/json")
+	w1 := httptest.NewRecorder()
+	handler.ServeHTTP(w1, req1)
+	if w1.Code != http.StatusCreated {
+		t.Fatalf("register admin1: expected 201, got %d: %s", w1.Code, w1.Body.String())
+	}
+
+	// Admin 2 (gets Org 2, default role is user, we will update it to admin)
+	req2 := httptest.NewRequest("POST", "/api/auth/register", strings.NewReader(`{"email":"admin2@org2.com","password":"password123"}`))
+	req2.Header.Set("Content-Type", "application/json")
+	w2 := httptest.NewRecorder()
+	handler.ServeHTTP(w2, req2)
+	if w2.Code != http.StatusCreated {
+		t.Fatalf("register admin2: expected 201, got %d: %s", w2.Code, w2.Body.String())
+	}
+
+	// Update admin2's role to admin in the DB so they are authorized to list users
+	_, err := d.Exec("UPDATE users SET role = 'admin' WHERE email = ?", "admin2@org2.com")
+	if err != nil {
+		t.Fatalf("failed to update admin2 role: %v", err)
+	}
+
+	// Log in as Admin 1
+	login1Body := `{"email":"admin1@org1.com","password":"password123"}`
+	login1Req := httptest.NewRequest("POST", "/api/auth/login", strings.NewReader(login1Body))
+	login1Req.Header.Set("Content-Type", "application/json")
+	login1W := httptest.NewRecorder()
+	handler.ServeHTTP(login1W, login1Req)
+	resp1 := parseResponse(t, login1W.Body.Bytes())
+	token1, _ := resp1["token"].(string)
+
+	// Log in as Admin 2
+	login2Body := `{"email":"admin2@org2.com","password":"password123"}`
+	login2Req := httptest.NewRequest("POST", "/api/auth/login", strings.NewReader(login2Body))
+	login2Req.Header.Set("Content-Type", "application/json")
+	login2W := httptest.NewRecorder()
+	handler.ServeHTTP(login2W, login2Req)
+	resp2 := parseResponse(t, login2W.Body.Bytes())
+	token2, _ := resp2["token"].(string)
+
+	// Admin 1 queries users list. Should only see admin1@org1.com (since admin2 is in Org 2).
+	listReq1 := httptest.NewRequest("GET", "/api/auth/users", nil)
+	listReq1.Header.Set("Authorization", "Bearer "+token1)
+	listW1 := httptest.NewRecorder()
+	protected.ServeHTTP(listW1, listReq1)
+
+	if listW1.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", listW1.Code, listW1.Body.String())
+	}
+
+	var body1 map[string][]map[string]any
+	if err := json.NewDecoder(listW1.Body).Decode(&body1); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	users1 := body1["data"]
+	if len(users1) != 1 {
+		t.Fatalf("admin1: expected 1 user, got %d: %v", len(users1), users1)
+	}
+	if users1[0]["email"] != "admin1@org1.com" {
+		t.Errorf("admin1: expected to see admin1@org1.com, got %v", users1[0]["email"])
+	}
+
+	// Admin 2 queries users list. Should only see admin2@org2.com.
+	listReq2 := httptest.NewRequest("GET", "/api/auth/users", nil)
+	listReq2.Header.Set("Authorization", "Bearer "+token2)
+	listW2 := httptest.NewRecorder()
+	protected.ServeHTTP(listW2, listReq2)
+
+	if listW2.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", listW2.Code, listW2.Body.String())
+	}
+
+	var body2 map[string][]map[string]any
+	if err := json.NewDecoder(listW2.Body).Decode(&body2); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	users2 := body2["data"]
+	if len(users2) != 1 {
+		t.Fatalf("admin2: expected 1 user, got %d: %v", len(users2), users2)
+	}
+	if users2[0]["email"] != "admin2@org2.com" {
+		t.Errorf("admin2: expected to see admin2@org2.com, got %v", users2[0]["email"])
+	}
+}
+
+func setupAuthWithDB(t *testing.T) (*auth.Auth, http.Handler, http.Handler, *db.DB) {
+	t.Helper()
+	logger := testLogger{}
+	k := kernel.New(logger)
+
+	d := db.New(db.Options{Path: ":memory:", Logger: logger})
+	a := auth.New(auth.Options{DB: d, Logger: logger, Secret: "test-secret-32-chars!!!"})
+
+	k.Register(a)
+	k.Register(d)
+
+	if err := k.Start(); err != nil {
+		t.Fatalf("kernel start: %v", err)
+	}
+	t.Cleanup(func() { _ = k.Stop() })
+
+	return a, a.Handler(), a.ProtectedHandler(), d
 }

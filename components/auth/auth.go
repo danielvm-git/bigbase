@@ -5,6 +5,7 @@ import (
 	"crypto/hmac"
 	"crypto/rand"
 	"crypto/sha256"
+	"database/sql"
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
@@ -582,7 +583,24 @@ func (a *Auth) fetchUsers(ctx context.Context) ([]userRow, error) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
-	rows, err := a.db.QueryContext(ctx, "SELECT id, email, created_at FROM users ORDER BY id")
+	var rows *sql.Rows
+	var err error
+
+	orgID, ok := OrgIDFromContext(ctx)
+	if ok && orgID > 0 {
+		rows, err = a.db.QueryContext(ctx, `
+			SELECT u.id, u.email, u.created_at 
+			FROM users u
+			WHERE u.id IN (
+				SELECT owner_id FROM orgs WHERE id = ?
+				UNION
+				SELECT user_id FROM org_members WHERE org_id = ?
+			)
+			ORDER BY u.id`, orgID, orgID)
+	} else {
+		rows, err = a.db.QueryContext(ctx, "SELECT id, email, created_at FROM users ORDER BY id")
+	}
+
 	if err != nil {
 		return nil, err
 	}
@@ -688,6 +706,7 @@ func (a *Auth) handleGoogleCallback(w http.ResponseWriter, r *http.Request) {
 	queryState := r.URL.Query().Get("state")
 	stateCookie, stateErr := r.Cookie("oauth_state")
 	if stateErr != nil || !VerifyState(stateCookie.Value, queryState, a.secret) {
+		a.clearOAuthStateCookie(w, r)
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid state"})
 		return
 	}
@@ -707,6 +726,7 @@ func (a *Auth) handleGoogleCallback(w http.ResponseWriter, r *http.Request) {
 
 	googleUser, err := verifier.Verify(r.Context(), code)
 	if err != nil {
+		a.clearOAuthStateCookie(w, r)
 		a.logger.Error("google token verification failed", "error", err)
 		writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "google auth failed"})
 		return
@@ -714,6 +734,7 @@ func (a *Auth) handleGoogleCallback(w http.ResponseWriter, r *http.Request) {
 
 	userID, orgID, err := a.findOrCreateGoogleUser(r.Context(), googleUser)
 	if err != nil {
+		a.clearOAuthStateCookie(w, r)
 		a.logger.Error("find or create google user", "error", err)
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
@@ -721,19 +742,14 @@ func (a *Auth) handleGoogleCallback(w http.ResponseWriter, r *http.Request) {
 
 	token, err := createJWT(userID, googleUser.Email, "user", orgID, a.secret)
 	if err != nil {
+		a.clearOAuthStateCookie(w, r)
 		a.logger.Error("create jwt", "error", err)
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 
 	// Clear the OAuth state cookie now that the flow is complete.
-	http.SetCookie(w, &http.Cookie{
-		Name:     "oauth_state",
-		Value:    "",
-		HttpOnly: true,
-		Path:     "/",
-		MaxAge:   -1,
-	})
+	a.clearOAuthStateCookie(w, r)
 
 	http.SetCookie(w, &http.Cookie{
 		Name:     "token",
@@ -743,6 +759,18 @@ func (a *Auth) handleGoogleCallback(w http.ResponseWriter, r *http.Request) {
 		MaxAge:   86400,
 	})
 	http.Redirect(w, r, "/admin/", http.StatusFound)
+}
+
+func (a *Auth) clearOAuthStateCookie(w http.ResponseWriter, r *http.Request) {
+	http.SetCookie(w, &http.Cookie{
+		Name:     "oauth_state",
+		Value:    "",
+		HttpOnly: true,
+		Path:     "/",
+		MaxAge:   -1,
+		Secure:   r.TLS != nil,
+		SameSite: http.SameSiteLaxMode,
+	})
 }
 
 func (a *Auth) findOrCreateGoogleUser(ctx context.Context, gu *GoogleUser) (int64, int64, error) {

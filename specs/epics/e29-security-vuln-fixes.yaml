@@ -3,7 +3,7 @@ context: domain
 id: e29
 title: Security Vulnerability Fixes (2026-06 audit)
 wsjf: 9.3
-status: todo
+status: done
 covers:
   - OAuth login CSRF (no state validation)
   - Cross-tenant record access (WithOrgID never wired)
@@ -119,7 +119,7 @@ stories:
   # ───────────────────────────────────────────────────────────────────
   - id: e29s03
     title: Restrict /api/sql to admin and scope to caller's org
-    status: todo
+    status: done
     type: fix
     severity: HIGH
     refs:
@@ -150,7 +150,7 @@ stories:
   # ───────────────────────────────────────────────────────────────────
   - id: e29s04
     title: Gate GET /api/auth/users on admin role
-    status: todo
+    status: done
     type: fix
     severity: MEDIUM
     refs:

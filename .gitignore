@@ -43,3 +43,4 @@ playwright-report/
 
 # Ctxo local cache (auto-rebuilt, never committed)
 .ctxo/.cache/
+.ctxo/index/

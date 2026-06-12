@@ -2,7 +2,7 @@ type: session-state
 context: infra
 active_flow: build_epic
 active_epic_id: e29
-active_story_id: e29s02
+active_story_id: e29s04
 active_bug_id: null
 release:
   target_version: 2.9.0
@@ -18,7 +18,7 @@ bug_cycle:
   completed_steps: []
 git:
   branch: feat/e29-security-fixes
-  hash: 7a4e361030d319ebc936af6f96b19ae8cbd6eb28
+  hash: 03cf4b8be4cb7de8450b0019b2e71dd4f3743f80
 handoff:
   last_step_completed: null
   open_decisions: []

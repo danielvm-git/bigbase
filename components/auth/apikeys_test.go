@@ -61,7 +61,7 @@ func TestAPIKeys(t *testing.T) {
 	t.Run("create_api_key", func(t *testing.T) {
 		_, _, prot, token, orgID := setupAPIKeys(t)
 
-		body := fmt.Sprintf(`{"name":"test-key","scopes":["read","write"]}`)
+		body := `{"name":"test-key","scopes":["read","write"]}`
 		req := httptest.NewRequest("POST", fmt.Sprintf("/api/orgs/%.0f/api-keys", orgID),
 			strings.NewReader(body))
 		req.Header.Set("Content-Type", "application/json")

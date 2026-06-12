@@ -242,12 +242,16 @@ func startProxy() {
 	k.Register(depComp)
 	k.Register(mComp)
 
-	// orgBridge reads auth.OrgIDFromContext (set by authComp.Middleware) and
-	// bridges it to api.WithOrgID so API handlers see the caller's org.
+	// orgBridge reads auth.OrgIDFromContext and auth.UserRoleFromContext (set by
+	// authComp.Middleware) and bridges them to api.WithOrgID / api.WithUserRole so
+	// API handlers see the caller's org and role.
 	orgBridge := func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if orgID, ok := auth.OrgIDFromContext(r.Context()); ok {
 				r = r.WithContext(api.WithOrgID(r.Context(), orgID))
+			}
+			if role, ok := auth.UserRoleFromContext(r.Context()); ok {
+				r = r.WithContext(api.WithUserRole(r.Context(), role))
 			}
 			next.ServeHTTP(w, r)
 		})
@@ -264,7 +268,9 @@ func startProxy() {
 	sitesHandler := mComp.Middleware(authComp.Middleware(st.Handler()))
 
 	p.Handle("/api/collections/", protectedAPI.ServeHTTP)
-	p.Handle("/api/sql", protectedAPI.ServeHTTP)
+	// /api/sql requires admin role — RequireAdmin runs after auth.Middleware sets the role.
+	sqlHandler := mComp.Middleware(authComp.Middleware(auth.RequireAdmin(orgBridge(publicAPI))))
+	p.Handle("/api/sql", sqlHandler.ServeHTTP)
 	p.Handle("/api/storage/upload", storageHandler.ServeHTTP)
 	p.Handle("/api/storage/files/", storageHandler.ServeHTTP)
 	p.Handle("/api/storage/files", storageHandler.ServeHTTP)

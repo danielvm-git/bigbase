@@ -48,6 +48,8 @@ for ep in epics_index:
     absorb_shard(root / fpath)
 
 out = {
+    "type": "execution-status",
+    "context": "execution",
     "generated_by": "scripts/sync-status-from-epics.sh",
     "epics": epic_status,
     "stories": story_status,

@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -17,7 +18,10 @@ const version = "0.1.0"
 
 type contextKey string
 
-const ctxOrgID contextKey = "org_id"
+const (
+	ctxOrgID    contextKey = "org_id"
+	ctxUserRole contextKey = "user_role"
+)
 
 // WithOrgID stores the org_id in the request context.
 func WithOrgID(ctx context.Context, orgID int64) context.Context {
@@ -29,6 +33,18 @@ func WithOrgID(ctx context.Context, orgID int64) context.Context {
 func OrgIDFromContext(ctx context.Context) (int64, bool) {
 	id, ok := ctx.Value(ctxOrgID).(int64)
 	return id, ok
+}
+
+// WithUserRole stores the user role in the request context.
+func WithUserRole(ctx context.Context, role string) context.Context {
+	return context.WithValue(ctx, ctxUserRole, role)
+}
+
+// UserRoleFromContext retrieves the user role from the request context.
+// Returns ("", false) when no role is set.
+func UserRoleFromContext(ctx context.Context) (string, bool) {
+	role, ok := ctx.Value(ctxUserRole).(string)
+	return role, ok
 }
 
 var internalTables = map[string]bool{
@@ -458,6 +474,13 @@ func (a *API) handleSQL(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Defense-in-depth: require admin role even though the route-level middleware
+	// already gates on admin. This protects against future route misconfigurations.
+	if role, ok := UserRoleFromContext(r.Context()); !ok || role != "admin" {
+		writeJSON(w, http.StatusForbidden, map[string]string{"error": "forbidden"})
+		return
+	}
+
 	r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
 
 	var req struct {
@@ -474,9 +497,12 @@ func (a *API) handleSQL(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Match internal tables using word boundaries to avoid false positives (e.g. my_users)
 	for t := range internalTables {
-		if strings.Contains(strings.ToUpper(q), strings.ToUpper(t)) {
-			writeJSON(w, http.StatusForbidden, map[string]string{"error": "access to internal tables denied"})
+		pattern := `(?i)\b` + regexp.QuoteMeta(t) + `\b`
+		re, err := regexp.Compile(pattern)
+		if err == nil && re.MatchString(q) {
+			writeJSON(w, http.StatusForbidden, map[string]string{"error": "access to internal table " + t + " denied"})
 			return
 		}
 	}
@@ -497,7 +523,27 @@ func (a *API) handleSQL(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
 	defer cancel()
 
-	rows, err := a.db.QueryContext(ctx, q)
+	execQuery := q
+	var execArgs []any
+
+	if orgID, orgOK := OrgIDFromContext(r.Context()); orgOK {
+		// Normalize whitespace to single spaces to prevent bypasses like FROM\nitems
+		normalized := strings.Join(strings.Fields(q), " ")
+		tableRef := ExtractTableRef(normalized)
+
+		if tableRef != "" && !isInternalOrSysTable(tableRef) {
+			// Accesses a user collection table. Enforce strict isolation controls.
+			// Block UNION, JOIN, WITH, and subqueries to prevent scoping bypasses.
+			if !isSimpleQuery(normalized) {
+				writeJSON(w, http.StatusBadRequest, map[string]string{"error": "only simple queries (no JOIN, UNION, WITH, or subqueries) are allowed on collection tables for tenant isolation"})
+				return
+			}
+			execQuery, execArgs = scopeQueryForOrg(normalized, orgID)
+			a.logger.Info("sql org-scoped", "table", tableRef, "org_id", orgID)
+		}
+	}
+
+	rows, err := a.db.QueryContext(ctx, execQuery, execArgs...)
 	if err != nil {
 		a.logger.Error("sql execution failed", "query", q, "error", err)
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "query execution failed"})
@@ -525,6 +571,116 @@ func (a *API) handleSQL(w http.ResponseWriter, r *http.Request) {
 
 	writeJSON(w, http.StatusOK, map[string]any{"columns": columns, "rows": result})
 }
+
+// isSimpleQuery returns true if the query contains no JOIN, UNION, INTERSECT,
+// EXCEPT, or WITH keywords and does not contain subqueries.
+func isSimpleQuery(q string) bool {
+	upper := strings.ToUpper(q)
+	blocked := []string{"JOIN", "UNION", "INTERSECT", "EXCEPT", "WITH"}
+	for _, kw := range blocked {
+		re := regexp.MustCompile(`(?i)\b` + kw + `\b`)
+		if re.MatchString(upper) {
+			return false
+		}
+	}
+	// A simple query contains at most one SELECT keyword.
+	reSelect := regexp.MustCompile(`(?i)\bSELECT\b`)
+	matches := reSelect.FindAllStringIndex(upper, -1)
+	return len(matches) <= 1
+}
+
+func ExtractTableRef(q string) string {
+	// Normalize all whitespace to single spaces
+	normalized := strings.Join(strings.Fields(q), " ")
+	upper := strings.ToUpper(normalized)
+
+	// Handle WITH queries: find the SELECT after WITH
+	if strings.HasPrefix(upper, "WITH") {
+		selIdx := strings.LastIndex(upper, "SELECT")
+		if selIdx < 0 {
+			return ""
+		}
+		upper = upper[selIdx:]
+		normalized = normalized[selIdx:]
+	}
+
+	// Handle EXPLAIN
+	if strings.HasPrefix(upper, "EXPLAIN QUERY PLAN ") {
+		upper = strings.TrimPrefix(upper, "EXPLAIN QUERY PLAN ")
+		normalized = normalized[len("EXPLAIN QUERY PLAN "):]
+	} else if strings.HasPrefix(upper, "EXPLAIN ") {
+		upper = strings.TrimPrefix(upper, "EXPLAIN ")
+		normalized = normalized[len("EXPLAIN "):]
+	}
+
+	// Find FROM keyword
+	fromIdx := strings.Index(upper, " FROM ")
+	if fromIdx < 0 {
+		return ""
+	}
+	afterFrom := strings.TrimSpace(normalized[fromIdx+6:])
+
+	// Extract the table name before any JOIN, WHERE, GROUP, ORDER, LIMIT, etc.
+	endKeywords := []string{" JOIN ", " WHERE ", " GROUP ", " ORDER ", " LIMIT ", " OFFSET ", " HAVING ", " UNION ", " INTERSECT ", " EXCEPT "}
+	endIdx := len(afterFrom)
+	upperAfterFrom := strings.ToUpper(afterFrom)
+	for _, kw := range endKeywords {
+		if idx := strings.Index(upperAfterFrom, kw); idx >= 0 && idx < endIdx {
+			endIdx = idx
+		}
+	}
+
+	table := strings.TrimSpace(afterFrom[:endIdx])
+	// Handle quoted table names
+	table = strings.Trim(table, "\"`'")
+	return strings.ToLower(table)
+}
+
+// scopeQueryForOrg injects an org_id filter into a read-only SQL query.
+// Returns the scoped query string and bind arguments. Works by inserting
+// WHERE org_id = ? (or appending AND org_id = ? if WHERE exists) before
+// GROUP/HAVING/ORDER/LIMIT clauses or at the end of the query.
+func scopeQueryForOrg(q string, orgID int64) (string, []any) {
+	// Normalize all whitespace to single spaces to simplify parsing
+	normalized := strings.Join(strings.Fields(q), " ")
+	upper := strings.ToUpper(normalized)
+
+	// Find insertion point: right before GROUP BY, HAVING, ORDER BY, LIMIT, or end
+	keywords := []string{" GROUP BY ", " HAVING ", " ORDER BY ", " LIMIT "}
+	insertPoint := len(normalized)
+	for _, kw := range keywords {
+		if idx := strings.Index(upper, kw); idx >= 0 && idx < insertPoint {
+			insertPoint = idx
+		}
+	}
+
+	// Trim trailing whitespace before insertion point
+	for insertPoint > 0 && normalized[insertPoint-1] == ' ' {
+		insertPoint--
+	}
+
+	// Check if WHERE already exists
+	whereIdx := strings.Index(upper, " WHERE ")
+	if whereIdx >= 0 && whereIdx < insertPoint {
+		// Append AND org_id = ? before the next clause
+		return normalized[:insertPoint] + " AND org_id = ? " + normalized[insertPoint:], []any{orgID}
+	}
+
+	// No WHERE clause — insert one
+	return normalized[:insertPoint] + " WHERE org_id = ? " + normalized[insertPoint:], []any{orgID}
+}
+
+// isInternalOrSysTable returns true if the table is an internal component table
+// or a sqlite system table.
+func isInternalOrSysTable(name string) bool {
+	if internalTables[name] {
+		return true
+	}
+	lower := strings.ToLower(name)
+	return strings.HasPrefix(lower, "sqlite_") || lower == "" || lower == "dual"
+}
+
+
 
 func rowsToMaps(rows *sql.Rows, columns []string) ([]map[string]any, error) {
 	// Uses any because SQLite column types are dynamic at runtime.
