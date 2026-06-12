@@ -1,0 +1,67 @@
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+
+positions:
+  filename: /tmp/positions.yaml
+
+clients:
+  - url: http://loki:3100/loki/api/v1/push
+
+scrape_configs:
+  # Coleta logs de todos os containers Docker com label bigbase
+  - job_name: bigbase-containers
+    docker_sd_configs:
+      - host: unix:///run/docker.sock
+        refresh_interval: 5s
+    relabel_configs:
+      # Usa o nome do container como stream label
+      - source_labels: [__meta_docker_container_name]
+        target_label: container
+      # Filtra apenas containers com label com.bigbase=true
+      # (adicione essa label no seu container do BigBase)
+      - source_labels: [__meta_docker_container_label_com_bigbase]
+        action: keep
+        regex: "true"
+    pipeline_stages:
+      # BigBase emite JSON estruturado — extrai campos nativamente
+      - json:
+          expressions:
+            level: level
+            msg: msg
+            component: component
+            request_id: request_id
+      - labels:
+          level:
+          component:
+      - output:
+          source: msg
+
+  # Fallback: coleta qualquer container com nome contendo "bigbase"
+  - job_name: bigbase-by-name
+    docker_sd_configs:
+      - host: unix:///run/docker.sock
+        refresh_interval: 5s
+    relabel_configs:
+      - source_labels: [__meta_docker_container_name]
+        action: keep
+        regex: ".*bigbase.*"
+      - source_labels: [__meta_docker_container_name]
+        target_label: container
+    pipeline_stages:
+      - json:
+          expressions:
+            level: level
+            msg: msg
+            component: component
+      - labels:
+          level:
+          component:
+
+  # Logs do sistema (opcional — journald/syslog da VPS)
+  - job_name: varlogs
+    static_configs:
+      - targets: ["localhost"]
+        labels:
+          job: varlogs
+          __path__: /var/log/*.log

@@ -1,0 +1,84 @@
+type: epic-shard
+context: domain
+id: e27
+title: Site Request Logs
+wsjf: 5.5
+status: pending
+covers: []
+stories:
+  - id: e27s01
+    title: Request log schema and storage
+    status: pending
+    tasks:
+      - desc: "Create site_request_logs table in SQLite; write one row per proxied HTTP request with site_id, method, path, status, duration_ms, timestamp; auto-prune rows older than 7 days"
+        notes: |
+          components/deploy/deploy.go (or a new components/sites/request_logs.go):
+          Migrate table:
+            CREATE TABLE IF NOT EXISTS site_request_logs (
+              id TEXT PRIMARY KEY,
+              site_id TEXT NOT NULL,
+              method TEXT NOT NULL,
+              path TEXT NOT NULL,
+              status INTEGER NOT NULL DEFAULT 0,
+              duration_ms INTEGER NOT NULL DEFAULT 0,
+              created_at TEXT NOT NULL DEFAULT (datetime('now'))
+            )
+            CREATE INDEX IF NOT EXISTS idx_srl_site_id ON site_request_logs(site_id, created_at DESC)
+
+          Insert one row per request in the reverse-proxy middleware that routes to sites.
+          The proxy already routes requests by Host header to the correct deployment —
+          wrap that handler with a thin middleware that records start time, calls next,
+          then writes the row asynchronously (goroutine + buffered channel to avoid blocking requests).
+
+          Pruning: run a ticker every 1h that deletes rows WHERE created_at < datetime('now', '-7 days').
+
+          site_id is the sites.id value (not deployment id) so logs survive redeployments.
+        verify: "go test ./components/deploy/ -run TestSiteRequestLogs -v"
+
+  - id: e27s02
+    title: Request logs API endpoint
+    status: pending
+    tasks:
+      - desc: "GET /api/sites/:id/logs — return paginated request logs for a site with optional filters: status (2xx/4xx/5xx), path prefix, date range, limit (default 100, max 500)"
+        notes: |
+          components/sites/sites.go (or deploy component): add handler for GET /api/sites/:siteId/logs.
+          Query params: status_class (2xx|4xx|5xx), path (prefix match via LIKE 'prefix%'),
+            since (ISO datetime), until (ISO datetime), limit (default 100).
+          Response: { data: [{ id, method, path, status, duration_ms, created_at }], total, site_id }
+          Use COUNT(*) with same filters for total.
+          Register route in proxy mux: mux.HandleFunc("/api/sites/", ...) with path parsing.
+          Auth: require valid admin session (same guard used by other /api/* routes).
+        verify: "curl -sf http://localhost:9999/api/sites/test-id/logs | grep -q data"
+
+  - id: e27s03
+    title: Request logs tab on SiteDetailPage
+    status: pending
+    tasks:
+      - desc: "Add 'Request Logs' tab to SiteDetailPage with a filterable table showing method, path, status badge, duration, and timestamp; support filter by status class and path search"
+        notes: |
+          ui/src/pages/SiteDetailPage.tsx: add tab 'request-logs'.
+          On tab activation, fetch GET /api/sites/{siteId}/logs.
+          Render table: Method (badge: GET=blue, POST=green, etc.), Path (code), Status (Badge using
+          existing statusBadgeVariant or color by 2xx=success/4xx=warning/5xx=error), Duration ms, Time.
+          Filter bar above table: text input for path prefix, select for status class (All/2xx/4xx/5xx).
+          Debounce path input 300ms before re-fetching.
+          Show "No request logs yet." dim message if data is empty.
+          Reuse existing table-wrap + Badge components already present in the codebase.
+        verify: "cd ui && npm run build"
+
+  - id: e27s04
+    title: Capture stdout/stderr from running sites
+    status: pending
+    tasks:
+      - desc: "In startApp(), capture cmd.Stdout and cmd.Stderr into ring buffers per site; expose last 200 lines via GET /api/sites/:id/runtime-logs; show in SiteDetailPage under a 'Runtime' sub-tab"
+        notes: |
+          components/deploy/deploy.go startApp(): replace cmd.Stdout = nil / cmd.Stderr = nil with
+          io.Writer pipes that call appendRuntimeLog(siteID, line).
+          Use a separate runtimeLogs map[string][]string (same pattern as deployLogs) with
+          maxRuntimeLogLines = 200 and per-line buffering via bufio.Scanner.
+          Run scanner in a goroutine per pipe.
+          New handler GET /api/sites/:id/runtime-logs: return { lines[], site_id }.
+          UI: add 'Runtime' sub-tab inside the 'Request Logs' tab or as a separate tab.
+          Note: this captures app stdout only — not HTTP request/response bodies.
+          Static sites (no process) show "Static site — no runtime logs." message.
+        verify: "go test ./components/deploy/ -run TestRuntimeLogs -v"

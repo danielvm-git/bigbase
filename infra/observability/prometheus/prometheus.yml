@@ -1,0 +1,20 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    service: bigbase
+
+scrape_configs:
+  # BigBase — usa o endpoint nativo /api/monitoring/metrics/prometheus
+  - job_name: "bigbase"
+    static_configs:
+      - targets: ["host.docker.internal:9999"]
+        labels:
+          instance: "vps-main"
+    metrics_path: /api/monitoring/metrics/prometheus
+    scrape_interval: 15s
+
+  # Prometheus self-monitoring
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["localhost:9090"]

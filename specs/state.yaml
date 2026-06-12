@@ -9,14 +9,15 @@ release:
   last_tag: v2.7.0
   last_publish: "2026-06-06"
 epic_cycle:
-  current_step: null
-  next_skill: null
-  completed_steps: []
+  current_step: 8
+  next_skill: release-branch
+  completed_steps: [1, 2, 3, 4, 5, 6, 7]
+  story_bcps: 2
 bug_cycle:
   current_step: null
   completed_steps: []
 git:
-  branch: main
+  branch: feat/e28-delete-deployment
   hash: HEAD
 handoff:
   last_step_completed: release-branch
