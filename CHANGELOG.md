@@ -1,3 +1,10 @@
+## [2.10.2](https://github.com/danielvm-git/bigbase/compare/v2.10.1...v2.10.2) (2026-06-12)
+
+
+### Bug Fixes
+
+* **proxy:** allow inline styles and fonts in CSP & add root README ([04c4534](https://github.com/danielvm-git/bigbase/commit/04c4534840db49c8d64d64b27c46f7ae11427e04))
+
 ## [2.10.1](https://github.com/danielvm-git/bigbase/compare/v2.10.0...v2.10.1) (2026-06-12)
 
 
