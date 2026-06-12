@@ -1,3 +1,10 @@
+# [2.10.0](https://github.com/danielvm-git/bigbase/compare/v2.9.0...v2.10.0) (2026-06-12)
+
+
+### Features
+
+* **auth:** security vulnerability fixes and regression tests ([#23](https://github.com/danielvm-git/bigbase/issues/23)) ([122dd0a](https://github.com/danielvm-git/bigbase/commit/122dd0a0b7ad3b3088fc21027553773bfe0cd83a))
+
 # [2.9.0](https://github.com/danielvm-git/bigbase/compare/v2.8.0...v2.9.0) (2026-06-12)
 
 
