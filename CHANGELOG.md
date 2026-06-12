@@ -1,3 +1,11 @@
+# [2.8.0](https://github.com/danielvm-git/bigbase/compare/v2.7.0...v2.8.0) (2026-06-12)
+
+
+### Features
+
+* **e28:** Delete Deployment — DELETE /api/deployments/:id, process teardown, UI delete button ([766dceb](https://github.com/danielvm-git/bigbase/commit/766dcebe1c069cd9f5982a2f44cc52e4cbf25e4d))
+* **epics:** plan observability epics and update state ([29a3a6f](https://github.com/danielvm-git/bigbase/commit/29a3a6fd10b606247a4efa28afe88a5b5b19e812))
+
 # [2.6.0](https://github.com/danielvm-git/bigbase/compare/v2.5.1...v2.6.0) (2026-06-06)
 
 
