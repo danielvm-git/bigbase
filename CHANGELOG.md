@@ -1,3 +1,10 @@
+# [2.14.0](https://github.com/danielvm-git/bigbase/compare/v2.13.0...v2.14.0) (2026-06-18)
+
+
+### Features
+
+* **auth,proxy:** add configurable CORS middleware for browser SPA support ([#28](https://github.com/danielvm-git/bigbase/issues/28)) ([f775bfc](https://github.com/danielvm-git/bigbase/commit/f775bfc19c86122056600ed43405a4fec929eeeb))
+
 # [2.13.0](https://github.com/danielvm-git/bigbase/compare/v2.12.0...v2.13.0) (2026-06-18)
 
 
