@@ -213,7 +213,7 @@ func (f *Functions) reloadSchedule() error {
 	if err != nil {
 		return fmt.Errorf("load scheduled functions: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	for rows.Next() {
 		fn, err := f.scanFunction(rows)

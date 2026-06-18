@@ -103,7 +103,7 @@ func injectFetch(vm *goja.Runtime, env map[string]string) {
 		if err != nil {
 			panic(vm.NewGoError(fmt.Errorf("fetch: request failed: %w", err)))
 		}
-		defer resp.Body.Close()
+		defer func() { _ = resp.Body.Close() }()
 
 		bodyBytes, err := io.ReadAll(io.LimitReader(resp.Body, 10<<20)) // 10 MB limit
 		if err != nil {
@@ -200,7 +200,7 @@ func injectDB(vm *goja.Runtime, dber kernel.DBer) {
 			if err != nil {
 				panic(vm.NewGoError(fmt.Errorf("list: query failed: %w", err)))
 			}
-			defer rows.Close()
+			defer func() { _ = rows.Close() }()
 
 			var items []map[string]any
 			for rows.Next() {
