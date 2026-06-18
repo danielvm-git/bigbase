@@ -2,9 +2,15 @@ package functions
 
 import (
 	"fmt"
+	"io"
+	"net"
+	"net/http"
+	"net/url"
+	"strings"
 	"sync"
 	"time"
 
+	"github.com/danielvm/bigbase/kernel"
 	"github.com/dop251/goja"
 )
 
@@ -19,15 +25,24 @@ type RunError struct {
 
 func (e *RunError) Error() string { return e.Message }
 
+// RunContext holds per-execution configuration for function runtime injection.
+type RunContext struct {
+	Env     map[string]string
+	DB      kernel.DBer
+	Request *http.Request
+}
+
 type Runtime interface {
-	Execute(source string, timeout int) (*RunOutput, error)
+	Execute(source string, timeout int, ctx RunContext) (*RunOutput, error)
 }
 
 type jsRuntime struct{}
 
-func (*jsRuntime) Execute(source string, timeout int) (*RunOutput, error) {
+func (*jsRuntime) Execute(source string, timeout int, ctx RunContext) (*RunOutput, error) {
 	vm := goja.New()
 	col := injectConsole(vm)
+	injectEnv(vm, ctx.Env)
+	injectFetch(vm, ctx.Env)
 
 	code := "(function() {" + source + "\n})()"
 	done := execAsync(vm, code)
@@ -46,6 +61,91 @@ func (*jsRuntime) Execute(source string, timeout int) (*RunOutput, error) {
 		<-done
 		return &RunOutput{Logs: col.snapshot()}, &RunError{Message: fmt.Sprintf("execution timed out after %d seconds", timeout)}
 	}
+}
+
+// injectEnv exposes the Function's env map as a read-only global `env` object.
+func injectEnv(vm *goja.Runtime, env map[string]string) {
+	obj := vm.NewObject()
+	for k, v := range env {
+		val := v // capture
+		_ = obj.Set(k, val)
+	}
+	_ = vm.Set("env", obj)
+}
+
+// injectFetch injects a synchronous `fetch(url)` global function.
+// The allowlist is read from env["ALLOWED_HOSTS"] (comma-separated hosts).
+// If no allowlist is set, only localhost is allowed.
+func injectFetch(vm *goja.Runtime, env map[string]string) {
+	allowed := allowedHosts(env)
+
+	_ = vm.Set("fetch", func(call goja.FunctionCall) goja.Value {
+		if len(call.Arguments) < 1 {
+			panic(vm.NewGoError(fmt.Errorf("fetch requires a URL argument")))
+		}
+		rawURL := call.Arguments[0].String()
+
+		parsed, err := url.Parse(rawURL)
+		if err != nil {
+			panic(vm.NewGoError(fmt.Errorf("fetch: invalid URL %q: %w", rawURL, err)))
+		}
+
+		if !isHostAllowed(parsed.Host, allowed) {
+			panic(vm.NewGoError(fmt.Errorf("fetch: host %q not in allowlist", parsed.Host)))
+		}
+
+		client := &http.Client{Timeout: 10 * time.Second}
+		resp, err := client.Get(rawURL)
+		if err != nil {
+			panic(vm.NewGoError(fmt.Errorf("fetch: request failed: %w", err)))
+		}
+		defer resp.Body.Close()
+
+		bodyBytes, err := io.ReadAll(io.LimitReader(resp.Body, 10<<20)) // 10 MB limit
+		if err != nil {
+			panic(vm.NewGoError(fmt.Errorf("fetch: read body failed: %w", err)))
+		}
+
+		result := vm.NewObject()
+		_ = result.Set("status", resp.StatusCode)
+
+		headers := vm.NewObject()
+		for k, vals := range resp.Header {
+			_ = headers.Set(k, strings.Join(vals, ", "))
+		}
+		_ = result.Set("headers", headers)
+		_ = result.Set("body", string(bodyBytes))
+
+		return result
+	})
+}
+
+// allowedHosts parses the ALLOWED_HOSTS env var. Default: localhost only.
+func allowedHosts(env map[string]string) []string {
+	raw, ok := env["ALLOWED_HOSTS"]
+	if !ok || raw == "" {
+		return []string{"localhost", "127.0.0.1"}
+	}
+	hosts := strings.Split(raw, ",")
+	for i, h := range hosts {
+		hosts[i] = strings.TrimSpace(h)
+	}
+	return hosts
+}
+
+// isHostAllowed checks if host matches any entry in the allowlist.
+func isHostAllowed(host string, allowed []string) bool {
+	// Strip port for comparison
+	hostname := host
+	if h, _, err := net.SplitHostPort(host); err == nil {
+		hostname = h
+	}
+	for _, a := range allowed {
+		if a == hostname || a == host {
+			return true
+		}
+	}
+	return false
 }
 
 type logCollector struct {

@@ -211,7 +211,11 @@ func (f *Functions) handleRun(w http.ResponseWriter, r *http.Request, id string)
 		return
 	}
 
-	output, execErr := rt.Execute(fn.Source, fn.Timeout)
+	runCtx := RunContext{
+		Env:     fn.Env,
+		Request: r,
+	}
+	output, execErr := rt.Execute(fn.Source, fn.Timeout, runCtx)
 
 	// Persist execution history
 	execID, saveErr := f.saveExecution(r.Context(), fn.ID, output, execErr)

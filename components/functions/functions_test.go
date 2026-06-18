@@ -2,6 +2,7 @@ package functions_test
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -562,5 +563,66 @@ func TestLogsEmptyHistory(t *testing.T) {
 
 	if len(resp.Data) != 0 {
 		t.Fatalf("expected empty history, got %d entries", len(resp.Data))
+	}
+}
+
+func TestRuntimeFetch(t *testing.T) {
+	// Start a test HTTP server that returns known JSON
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(`{"message":"hello from server"}`))
+	}))
+	defer srv.Close()
+
+	f := setupFunctions(t)
+	h := f.Handler()
+
+	// Extract host:port from test server URL for the allowlist
+	srvHost := strings.TrimPrefix(srv.URL, "http://")
+
+	// Create a function that uses fetch to call the test server
+	createBody := fmt.Sprintf(`{"name":"fetcher","source":"var resp = fetch('http://'+env.TEST_HOST+'/api'); return resp;","trigger":"http","env":{"ALLOWED_HOSTS":"%s","TEST_HOST":"%s"}}`, srvHost, srvHost)
+	req := httptest.NewRequest("POST", "/api/functions", strings.NewReader(createBody))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	h.ServeHTTP(w, req)
+
+	if w.Code != http.StatusCreated {
+		t.Fatalf("create: expected 201, got %d: %s", w.Code, w.Body.String())
+	}
+
+	var created map[string]any
+	_ = json.NewDecoder(w.Body).Decode(&created)
+	fnID := created["id"].(string)
+
+	// Run the function
+	runReq := httptest.NewRequest("POST", "/api/functions/"+fnID+"/run", nil)
+	runW := httptest.NewRecorder()
+	h.ServeHTTP(runW, runReq)
+
+	if runW.Code != http.StatusOK {
+		t.Fatalf("run: expected 200, got %d: %s", runW.Code, runW.Body.String())
+	}
+
+	var runResp map[string]any
+	_ = json.NewDecoder(runW.Body).Decode(&runResp)
+
+	// Should have result (not error)
+	if runResp["error"] != nil {
+		t.Fatalf("expected no error, got: %v", runResp["error"])
+	}
+
+	result, ok := runResp["result"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected result to be map, got: %T %v", runResp["result"], runResp["result"])
+	}
+
+	// Check fetch response fields
+	if status, _ := result["status"].(float64); int(status) != 200 {
+		t.Fatalf("expected status 200, got: %v", result["status"])
+	}
+	if body, _ := result["body"].(string); !strings.Contains(body, "hello from server") {
+		t.Fatalf("expected body to contain 'hello from server', got: %v", result["body"])
 	}
 }
