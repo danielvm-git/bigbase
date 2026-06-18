@@ -89,7 +89,7 @@ jobs:
       - name: Semantic Release
         if: github.event_name == 'push'
         id: semantic
-        run: npx semantic-release
+        run: npx --no-install semantic-release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

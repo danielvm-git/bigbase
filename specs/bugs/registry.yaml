@@ -262,3 +262,11 @@ bugs:
     commit_message: "fix(proxy): allow inline styles and Google Fonts for HTML routes in CSP"
     regression_guards:
       - components/proxy/securityheaders_test.go TestSecurityHeaders
+  - id: BUG-2026-06-18T174500
+    date: "2026-06-18"
+    severity: medium
+    priority: high
+    scope: ci,infra
+    summary: Semantic Release CI fails — npx cannot resolve @semantic-release/changelog plugin
+    file: specs/bugs/BUG-2026-06-18T174500-semantic-release-changelog-missing.md
+    status: open
