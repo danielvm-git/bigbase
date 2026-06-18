@@ -72,3 +72,70 @@ func TestCORSPreflightAllowed(t *testing.T) {
 		t.Errorf("expected empty body for 204, got %q", body)
 	}
 }
+
+func TestCORSDenied(t *testing.T) {
+	allowedOrigins := []string{"https://my-spa.example.com"}
+
+	// Preflight from disallowed origin → 403.
+	t.Run("preflight from disallowed origin", func(t *testing.T) {
+		cors := CORS(allowedOrigins)
+		handler := cors(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusOK)
+		}))
+
+		req := httptest.NewRequest("OPTIONS", "/api/auth/me", nil)
+		req.Header.Set("Origin", "https://evil.com")
+		rec := httptest.NewRecorder()
+		handler.ServeHTTP(rec, req)
+
+		if rec.Code != http.StatusForbidden {
+			t.Errorf("expected 403, got %d", rec.Code)
+		}
+		if rec.Header().Get("Access-Control-Allow-Origin") != "" {
+			t.Error("expected no CORS headers on denied preflight")
+		}
+	})
+
+	// Non-preflight request from disallowed origin → 403.
+	t.Run("non-preflight from disallowed origin", func(t *testing.T) {
+		cors := CORS(allowedOrigins)
+		handler := cors(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusOK)
+		}))
+
+		req := httptest.NewRequest("GET", "/api/auth/me", nil)
+		req.Header.Set("Origin", "https://evil.com")
+		rec := httptest.NewRecorder()
+		handler.ServeHTTP(rec, req)
+
+		if rec.Code != http.StatusForbidden {
+			t.Errorf("expected 403, got %d", rec.Code)
+		}
+		if rec.Header().Get("Access-Control-Allow-Origin") != "" {
+			t.Error("expected no CORS headers on denied request")
+		}
+	})
+
+	// Allowed origin GET passes through with CORS headers.
+	t.Run("non-preflight from allowed origin", func(t *testing.T) {
+		cors := CORS(allowedOrigins)
+		handler := cors(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusOK)
+		}))
+
+		req := httptest.NewRequest("GET", "/api/auth/me", nil)
+		req.Header.Set("Origin", "https://my-spa.example.com")
+		rec := httptest.NewRecorder()
+		handler.ServeHTTP(rec, req)
+
+		if rec.Code != http.StatusOK {
+			t.Errorf("expected 200, got %d", rec.Code)
+		}
+		if rec.Header().Get("Access-Control-Allow-Origin") != "https://my-spa.example.com" {
+			t.Errorf("expected Allow-Origin %q, got %q", "https://my-spa.example.com", rec.Header().Get("Access-Control-Allow-Origin"))
+		}
+		if rec.Header().Get("Access-Control-Allow-Credentials") != "true" {
+			t.Error("expected Access-Control-Allow-Credentials: true")
+		}
+	})
+}
