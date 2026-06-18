@@ -4,7 +4,7 @@ id: e31
 title: SPA-Friendly Auth — CORS, OAuth redirect, logout
 wsjf: 4.8
 wsjf_rationale: "BV=8(blocks all SPA use cases — major pain point for external apps) TC=8(Copa bolão project actively blocked) RR=8(enables new capability class: any browser SPA can auth+call APIs) / JS=5(~1 week: 3 stories)"
-status: planned
+status: done
 covers:
   - components/auth/auth.go
   - components/auth/auth_test.go
