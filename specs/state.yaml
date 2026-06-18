@@ -13,26 +13,32 @@ release:
   last_tag: v2.10.0
   last_publish: "2026-06-12"
 epic_cycle:
-  current_step: 5
-  next_skill: verify-work
-  completed_steps: [survey-context, plan-work, kickoff-branch, develop-tdd]
+  current_step: 8
+  next_skill: release-branch
+  completed_steps: [survey-context, plan-work, kickoff-branch, develop-tdd, verify-work, audit-code, commit-message]
   story_bcps: 5
 bug_cycle:
   current_step: null
   completed_steps: [investigate-bug, fix-bug]
 git:
-  branch: e31s01-cors-middleware
-  hash: 259d8cd
+  branch: main
+  hash: null
+  pr: "https://github.com/danielvm-git/bigbase/pull/28"
 metrics:
   story_start: "2026-06-18T12:45:00Z"
 handoff:
-  last_step_completed: develop-tdd
+  last_step_completed: commit-message
   open_decisions: []
   required_reading:
     - specs/epics/e31-spa-friendly-auth.yaml
-    - components/auth/auth.go
-    - components/auth/cors.go
-    - components/auth/cors_test.go
-    - components/proxy/proxy.go
-    - main.go
-  next_skill: verify-work
+    - specs/verifications/e31s01-verify.yaml
+  next_skill: release-branch
+  commit_draft: |
+    feat(auth,proxy): add configurable CORS middleware for browser SPA support
+    
+    - Add components/auth/cors.go: CORS(allowedOrigins) middleware
+    - Add CORSAllowedOrigins to auth.Options and proxy.Options
+    - Add --cors-allowed-origins CLI flag (empty = disabled)
+    - Default: no origins → CORS disabled (pass-through)
+    - 5 tests: middleware, options, preflight, denied, default-closed
+    - Bump: minor
