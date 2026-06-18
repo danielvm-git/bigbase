@@ -199,7 +199,7 @@ bugs:
     scope: main.go
     summary: GitHub App config flags not registered or parsed in serve command
     file: specs/bugs/BUG-2026-06-01T182800-github-app-flags-missing.md
-    status: open
+    status: fixed
   - id: BUG-2026-06-01T193841
     date: "2026-06-01"
     severity: medium
@@ -207,7 +207,7 @@ bugs:
     scope: "main.go, ui/src/App.tsx"
     summary: GitHub and Sites components not wired into backend registration, proxy routes, or /deploy routes
     file: specs/bugs/BUG-2026-06-01T193841.md
-    status: open
+    status: fixed
   - id: BUG-2026-06-02T000000
     date: "2026-06-02"
     severity: low
@@ -215,7 +215,7 @@ bugs:
     scope: main.go
     summary: GitHub App CLI flags not registered in serve command
     file: specs/bugs/BUG-2026-06-02T000000-github-flags-not-wired.md
-    status: open
+    status: fixed
   - id: BUG-2026-06-04T100000
     date: "2026-06-04"
     severity: high
@@ -245,7 +245,7 @@ bugs:
     scope: deploy,scripts,infra
     summary: Deploy health check returns 502 and rollback fails with "Text file busy"
     file: specs/bugs/BUG-2026-06-05T172800-deploy-health-check-502.md
-    status: open
+    status: fixed
   - id: BUG-2026-06-12T150000
     date: "2026-06-12"
     severity: low
@@ -269,4 +269,4 @@ bugs:
     scope: ci,infra
     summary: Semantic Release CI fails — npx cannot resolve @semantic-release/changelog plugin
     file: specs/bugs/BUG-2026-06-18T174500-semantic-release-changelog-missing.md
-    status: open
+    status: fixed

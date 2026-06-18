@@ -46,3 +46,6 @@ The workflow runs `npx semantic-release` without installing the required plugins
 ## Resolution
 
 <!-- filled in by validate-fix -->
+## Resolution
+
+Fixed by adding semantic-release + plugins to devDependencies and changing CI to use `npx --no-install semantic-release`. Release v2.18.0 published successfully on 2026-06-18T19:57:31Z.
