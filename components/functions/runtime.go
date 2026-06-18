@@ -46,6 +46,7 @@ func (*jsRuntime) Execute(source string, timeout int, ctx RunContext) (*RunOutpu
 	injectEnv(vm, ctx.Env)
 	injectFetch(vm, ctx.Env)
 	injectDB(vm, ctx.DB)
+	injectRequest(vm, ctx.Request)
 
 	code := "(function() {" + source + "\n})()"
 	done := execAsync(vm, code)
@@ -294,6 +295,49 @@ func injectDB(vm *goja.Runtime, dber kernel.DBer) {
 		return col
 	})
 	_ = vm.Set("db", dbObj)
+}
+
+// injectRequest exposes the HTTP request context as a global `request` object.
+// Provides: method, headers, query, body (parsed JSON or raw string).
+func injectRequest(vm *goja.Runtime, r *http.Request) {
+	reqObj := vm.NewObject()
+
+	if r != nil {
+		_ = reqObj.Set("method", r.Method)
+
+		// Headers
+		headers := vm.NewObject()
+		for k, vals := range r.Header {
+			_ = headers.Set(strings.ToLower(k), strings.Join(vals, ", "))
+		}
+		_ = reqObj.Set("headers", headers)
+
+		// Query params
+		query := vm.NewObject()
+		for k, vals := range r.URL.Query() {
+			if len(vals) == 1 {
+				_ = query.Set(k, vals[0])
+			} else {
+				_ = query.Set(k, vals)
+			}
+		}
+		_ = reqObj.Set("query", query)
+
+		// Body: read and parse JSON if possible, otherwise raw string
+		if r.Body != nil {
+			bodyBytes, err := io.ReadAll(io.LimitReader(r.Body, 10<<20))
+			if err == nil && len(bodyBytes) > 0 {
+				var jsonBody any
+				if json.Unmarshal(bodyBytes, &jsonBody) == nil {
+					_ = reqObj.Set("body", vm.ToValue(jsonBody))
+				} else {
+					_ = reqObj.Set("body", string(bodyBytes))
+				}
+			}
+		}
+	}
+
+	_ = vm.Set("request", reqObj)
 }
 
 // validateCollectionName checks the collection name is safe (alphanumeric + underscore).

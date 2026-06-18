@@ -771,3 +771,68 @@ func TestRuntimeDB(t *testing.T) {
 		t.Fatalf("expected first_text='hello', got: %v", first)
 	}
 }
+
+func TestRunHTTPContext(t *testing.T) {
+	f := setupFunctions(t)
+	h := f.Handler()
+
+	// Create a function that reads request context
+	source := `
+		return {
+			method: request.method,
+			header_x: request.headers['x-custom'],
+			body_name: request.body.name,
+			query_page: request.query.page
+		};
+	`
+	createBody := fmt.Sprintf(`{"name":"ctx-reader","source":%q,"trigger":"http"}`, source)
+	req := httptest.NewRequest("POST", "/api/functions", strings.NewReader(createBody))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	h.ServeHTTP(w, req)
+
+	if w.Code != http.StatusCreated {
+		t.Fatalf("create: expected 201, got %d: %s", w.Code, w.Body.String())
+	}
+
+	var created map[string]any
+	_ = json.NewDecoder(w.Body).Decode(&created)
+	fnID := created["id"].(string)
+
+	// Run with custom headers, JSON body, and query params
+	runBody := `{"name":"alice","role":"admin"}`
+	runReq := httptest.NewRequest("POST", "/api/functions/"+fnID+"/run?page=3", strings.NewReader(runBody))
+	runReq.Header.Set("Content-Type", "application/json")
+	runReq.Header.Set("X-Custom", "hello-world")
+	runW := httptest.NewRecorder()
+	h.ServeHTTP(runW, runReq)
+
+	if runW.Code != http.StatusOK {
+		t.Fatalf("run: expected 200, got %d: %s", runW.Code, runW.Body.String())
+	}
+
+	var runResp map[string]any
+	_ = json.NewDecoder(runW.Body).Decode(&runResp)
+
+	if runResp["error"] != nil {
+		t.Fatalf("expected no error, got: %v", runResp["error"])
+	}
+
+	result, ok := runResp["result"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected result map, got: %T %v", runResp["result"], runResp["result"])
+	}
+
+	if method, _ := result["method"].(string); method != "POST" {
+		t.Fatalf("expected method='POST', got: %v", result["method"])
+	}
+	if hdr, _ := result["header_x"].(string); hdr != "hello-world" {
+		t.Fatalf("expected header_x='hello-world', got: %v", result["header_x"])
+	}
+	if bodyName, _ := result["body_name"].(string); bodyName != "alice" {
+		t.Fatalf("expected body_name='alice', got: %v", result["body_name"])
+	}
+	if queryPage, _ := result["query_page"].(string); queryPage != "3" {
+		t.Fatalf("expected query_page='3', got: %v", result["query_page"])
+	}
+}
