@@ -4,7 +4,7 @@ id: e34
 title: Auth UI Components — Multi-Framework
 wsjf: 3.6
 wsjf_rationale: "BV=8(pre-built UI is what makes devs choose BigBase — zero auth UI to build) TC=5(delays adoption but SDK covers the gap) RR=5(reduces permanent onboarding friction) / JS=5(~1 week: 3 UI libs + admin)"
-status: planned
+status: done
 depends_on: [e33]
 covers:
   - packages/auth-ui-svelte/ (new)
@@ -14,7 +14,7 @@ covers:
 stories:
   - id: e34s01
     title: "@bigbase/auth-ui/svelte — Svelte UI components"
-    status: planned
+    status: done
     bcps: 8
     wsjf: 5.33
     wsjf_rationale: "BV=10(Copa bolão needs auth UI — #1 priority) TC=8(blocks Copa launch) RR=5 / JS=2(~1 day)"
@@ -74,7 +74,7 @@ stories:
 
   - id: e34s02
     title: "@bigbase/auth-ui/vue — Vue UI components"
-    status: planned
+    status: done
     bcps: 3
     wsjf: 2.67
     wsjf_rationale: "BV=3(Vue UI is important but secondary to Svelte for Copa) TC=3(flexible) RR=3 / JS=3(~2-3 days)"
@@ -99,7 +99,7 @@ stories:
 
   - id: e34s03
     title: "@bigbase/auth-ui/react — React UI components"
-    status: planned
+    status: done
     bcps: 3
     wsjf: 2.67
     wsjf_rationale: "BV=3(parity with @neondatabase/auth-ui) TC=3(flexible) RR=3 / JS=3(~2-3 days)"
@@ -122,7 +122,7 @@ stories:
 
   - id: e34s04
     title: "Admin UI — auth integration preview page + self-serve docs"
-    status: planned
+    status: done
     bcps: 3
     wsjf: 1.67
     wsjf_rationale: "BV=1(cosmetic — devs can read docs without it) TC=1(no urgency) RR=5(enables self-serve onboarding) / JS=3(~2-3 days)"

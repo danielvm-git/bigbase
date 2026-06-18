@@ -35,7 +35,7 @@ epics:
   e31: done
   e32: done
   e33: done
-  e34: planned
+  e34: done
   e35: planned
 stories:
   e01s01: done
@@ -139,10 +139,10 @@ stories:
   e33s03: done
   e33s04: done
   e33s05: done
-  e34s01: planned
-  e34s02: planned
-  e34s03: planned
-  e34s04: planned
+  e34s01: done
+  e34s02: done
+  e34s03: done
+  e34s04: done
   e35s01: planned
   e35s02: planned
   e35s03: planned
