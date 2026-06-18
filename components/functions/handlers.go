@@ -213,6 +213,7 @@ func (f *Functions) handleRun(w http.ResponseWriter, r *http.Request, id string)
 
 	runCtx := RunContext{
 		Env:     fn.Env,
+		DB:      f.db,
 		Request: r,
 	}
 	output, execErr := rt.Execute(fn.Source, fn.Timeout, runCtx)

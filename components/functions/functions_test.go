@@ -715,3 +715,59 @@ func TestRuntimeEnv(t *testing.T) {
 		t.Fatalf("expected env.REGION='us-east', got: %v", result["region"])
 	}
 }
+
+func TestRuntimeDB(t *testing.T) {
+	f := setupFunctions(t)
+	h := f.Handler()
+
+	// Create a function that uses db.collection() to create and list records
+	source := `
+		var col = db.collection('messages');
+		var r1 = col.create({text: 'hello', from: 'alice'});
+		var r2 = col.create({text: 'world', from: 'bob'});
+		var items = col.list();
+		return { count: items.length, first_text: items[0].text };
+	`
+	createBody := fmt.Sprintf(`{"name":"db-test","source":%q,"trigger":"http"}`, source)
+	req := httptest.NewRequest("POST", "/api/functions", strings.NewReader(createBody))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	h.ServeHTTP(w, req)
+
+	if w.Code != http.StatusCreated {
+		t.Fatalf("create: expected 201, got %d: %s", w.Code, w.Body.String())
+	}
+
+	var created map[string]any
+	_ = json.NewDecoder(w.Body).Decode(&created)
+	fnID := created["id"].(string)
+
+	runReq := httptest.NewRequest("POST", "/api/functions/"+fnID+"/run", nil)
+	runW := httptest.NewRecorder()
+	h.ServeHTTP(runW, runReq)
+
+	if runW.Code != http.StatusOK {
+		t.Fatalf("run: expected 200, got %d: %s", runW.Code, runW.Body.String())
+	}
+
+	var runResp map[string]any
+	_ = json.NewDecoder(runW.Body).Decode(&runResp)
+
+	if runResp["error"] != nil {
+		t.Fatalf("expected no error, got: %v", runResp["error"])
+	}
+
+	result, ok := runResp["result"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected result map, got: %T %v", runResp["result"], runResp["result"])
+	}
+
+	count, _ := result["count"].(float64)
+	if int(count) < 2 {
+		t.Fatalf("expected at least 2 records, got count=%v", count)
+	}
+	first, _ := result["first_text"].(string)
+	if first != "hello" {
+		t.Fatalf("expected first_text='hello', got: %v", first)
+	}
+}
