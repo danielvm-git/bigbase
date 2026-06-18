@@ -73,6 +73,7 @@ type Options struct {
 	GoogleClientID      string
 	GoogleClientSecret  string
 	EmailSender         EmailSender
+	PhoneSender         PhoneSender
 	CORSAllowedOrigins  []string
 	PostLoginRedirect   string   // Default: "/admin/"
 	SPAOriginAllowlist  []string // Allowed origins for SPA redirect with #token=
@@ -86,6 +87,7 @@ type Auth struct {
 	googleClientSecret  string
 	googleVerifier      GoogleVerifier
 	emailSender         EmailSender
+	phoneSender         PhoneSender
 	corsAllowedOrigins  []string
 	postLoginRedirect   string
 	spaOriginAllowlist  []string
@@ -141,6 +143,7 @@ func New(opts Options) *Auth {
 		googleClientID:      opts.GoogleClientID,
 		googleClientSecret:  opts.GoogleClientSecret,
 		emailSender:         opts.EmailSender,
+		phoneSender:         opts.PhoneSender,
 		corsAllowedOrigins:  opts.CORSAllowedOrigins,
 		postLoginRedirect:   postLoginRedirect,
 		spaOriginAllowlist:  opts.SPAOriginAllowlist,
@@ -175,6 +178,7 @@ func (a *Auth) Start(ctx *kernel.Context) error {
 	_ = a.db.Migrate("ALTER TABLE users ADD COLUMN google_id TEXT DEFAULT ''")
 	_ = a.db.Migrate("ALTER TABLE users ADD COLUMN avatar_url TEXT DEFAULT ''")
 	_ = a.db.Migrate("ALTER TABLE users ADD COLUMN name TEXT DEFAULT ''")
+	_ = a.db.Migrate("ALTER TABLE users ADD COLUMN phone TEXT DEFAULT ''")
 	_ = a.db.Migrate("ALTER TABLE users ADD COLUMN default_org_id INTEGER")
 
 	if err := a.db.Migrate(`CREATE TABLE IF NOT EXISTS orgs (
@@ -286,6 +290,10 @@ func (a *Auth) Handler() http.Handler {
 	mux.HandleFunc("/api/auth/otp/verify", a.handleVerifyOTP)
 	mux.HandleFunc("/api/auth/magic-link/send", a.handleSendMagicLink)
 	mux.HandleFunc("/api/auth/magic-link/verify", a.handleVerifyMagicLink)
+	mux.HandleFunc("/api/auth/phone/send", a.handleSendPhoneOTP)
+	mux.HandleFunc("/api/auth/phone/verify", a.handleVerifyPhoneOTP)
+	mux.HandleFunc("/api/auth/anonymous", a.handleAnonymousToken)
+	mux.HandleFunc("/api/auth/oauth/google/popup", a.handlePopupCallback)
 	return mux
 }
 
@@ -860,6 +868,39 @@ func (a *Auth) handleLogout(w http.ResponseWriter, r *http.Request) {
 		MaxAge:   -1,
 	})
 	writeJSON(w, http.StatusOK, map[string]bool{"ok": true})
+}
+
+// findOrCreatePhoneUser finds or creates a user by phone number.
+func (a *Auth) findOrCreatePhoneUser(ctx context.Context, phone string) (int64, int64, error) {
+	email := fmt.Sprintf("phone-%s@bigbase.local", phone)
+	var existingID, defaultOrgID int64
+	err := a.db.QueryRowContext(ctx, "SELECT id, COALESCE(default_org_id, 0) FROM users WHERE phone = ?", phone).Scan(&existingID, &defaultOrgID)
+	if err == nil {
+		return existingID, defaultOrgID, nil
+	}
+
+	passwordHash, _ := hashPassword(generateTempPass())
+	now := time.Now().UTC().Format(time.RFC3339)
+	res, err := a.db.ExecContext(ctx,
+		"INSERT INTO users (email, phone, password_hash, role, created_at) VALUES (?, ?, ?, 'user', ?)",
+		email, phone, passwordHash, now)
+	if err != nil {
+		return 0, 0, fmt.Errorf("insert phone user: %w", err)
+	}
+
+	userID, err := res.LastInsertId()
+	if err != nil {
+		return 0, 0, fmt.Errorf("phone user last insert id: %w", err)
+	}
+
+	org, err := a.CreateOrg(ctx, email, email, userID)
+	if err != nil {
+		a.logger.Error("create personal org for phone user", "error", err)
+		return userID, 0, nil
+	}
+	_, _ = a.db.ExecContext(ctx, "UPDATE users SET default_org_id = ? WHERE id = ?", org.ID, userID)
+
+	return userID, org.ID, nil
 }
 
 func (a *Auth) clearOAuthStateCookie(w http.ResponseWriter, r *http.Request) {
