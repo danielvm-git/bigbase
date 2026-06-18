@@ -58,7 +58,7 @@ stories:
 
   - id: e31s02
     title: Configurable OAuth redirect + SPA token delivery
-    status: planned
+    status: done
     bcps: 8
     wsjf: 4.0
     wsjf_rationale: "BV=5(notable improvement for SPAs, workaround exists — manual token copy from cookie) TC=5(would delay SPA launch) RR=5(reduces SameSite fragility, enables SPA auth flow) / JS=3(~2-3 days)"
@@ -113,7 +113,7 @@ stories:
 
   - id: e31s03
     title: Logout endpoint — POST /api/auth/logout
-    status: planned
+    status: done
     bcps: 2
     wsjf: 5.33
     wsjf_rationale: "BV=5(moderately important for auth completeness, workaround exists — JS drops token) TC=3(flexible, can slip) RR=8(reduces security risk of stale cookies) / JS=3(~2-3 days: endpoint + tests + docs)"

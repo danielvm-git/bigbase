@@ -13,10 +13,10 @@ release:
   last_tag: v2.10.0
   last_publish: "2026-06-12"
 epic_cycle:
-  current_step: 1
-  next_skill: survey-context
+  current_step: null
+  next_skill: null
   completed_steps: []
-  story_bcps: 2
+  story_bcps: 0
 bug_cycle:
   current_step: null
   completed_steps: [investigate-bug, fix-bug]
