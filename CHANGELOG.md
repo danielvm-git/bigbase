@@ -1,3 +1,10 @@
+# [2.15.0](https://github.com/danielvm-git/bigbase/compare/v2.14.0...v2.15.0) (2026-06-18)
+
+
+### Features
+
+* **auth:** add configurable OAuth redirect and SPA token delivery ([#29](https://github.com/danielvm-git/bigbase/issues/29)) ([5d1ab6e](https://github.com/danielvm-git/bigbase/commit/5d1ab6ec5c36f3de6e98a92ae82810ade0273cd6)), closes [#28](https://github.com/danielvm-git/bigbase/issues/28)
+
 # [2.14.0](https://github.com/danielvm-git/bigbase/compare/v2.13.0...v2.14.0) (2026-06-18)
 
 
