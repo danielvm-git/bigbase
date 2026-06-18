@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/danielvm/bigbase/components/db"
 	"github.com/danielvm/bigbase/components/functions"
@@ -26,7 +27,7 @@ func setupFunctions(t *testing.T) *functions.Functions {
 	k := kernel.New(logger)
 
 	d := db.New(db.Options{Path: ":memory:", Logger: logger})
-	f := functions.New(functions.Options{DB: d, Logger: logger})
+	f := functions.New(functions.Options{DB: d, Logger: logger, ScheduleEnabled: true})
 	k.Register(f)
 	k.Register(d)
 	if err := k.Start(); err != nil {
@@ -834,5 +835,61 @@ func TestRunHTTPContext(t *testing.T) {
 	}
 	if queryPage, _ := result["query_page"].(string); queryPage != "3" {
 		t.Fatalf("expected query_page='3', got: %v", result["query_page"])
+	}
+}
+
+func TestSchedule(t *testing.T) {
+	f := setupFunctions(t)
+	h := f.Handler()
+
+	// Create a scheduled function that logs a message
+	source := `console.log('scheduled run at ' + new Date().toISOString()); return {ok: true};`
+	createBody := fmt.Sprintf(`{"name":"cron-job","source":%q,"trigger":"schedule","schedule":"@every 1s"}`, source)
+	req := httptest.NewRequest("POST", "/api/functions", strings.NewReader(createBody))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	h.ServeHTTP(w, req)
+
+	if w.Code != http.StatusCreated {
+		t.Fatalf("create: expected 201, got %d: %s", w.Code, w.Body.String())
+	}
+
+	var created map[string]any
+	_ = json.NewDecoder(w.Body).Decode(&created)
+	fnID := created["id"].(string)
+
+	// Wait for at least one scheduled execution
+	time.Sleep(2500 * time.Millisecond)
+
+	// Check execution logs
+	logsReq := httptest.NewRequest("GET", "/api/functions/"+fnID+"/logs", nil)
+	logsW := httptest.NewRecorder()
+	h.ServeHTTP(logsW, logsReq)
+
+	if logsW.Code != http.StatusOK {
+		t.Fatalf("logs: expected 200, got %d: %s", logsW.Code, logsW.Body.String())
+	}
+
+	var resp struct {
+		Data []struct {
+			Status string `json:"status"`
+		} `json:"data"`
+	}
+	_ = json.NewDecoder(logsW.Body).Decode(&resp)
+
+	if len(resp.Data) == 0 {
+		t.Fatal("expected at least one scheduled execution, got none")
+	}
+
+	// At least one execution should have status 'success'
+	found := false
+	for _, exec := range resp.Data {
+		if exec.Status == "success" {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Fatal("expected at least one successful scheduled execution")
 	}
 }
