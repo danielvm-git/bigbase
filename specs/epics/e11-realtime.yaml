@@ -1,0 +1,17 @@
+type: epic-shard
+context: infra
+id: e11
+title: "Realtime — WebSocket & Event Broadcast"
+wsjf: 1.0
+wsjf_rationale: "Historical — foundation epic. BV=8(live updates) TC=5 RR=5 / JS=5"
+status: done
+migrated_from: specs/archive/slices/011-realtime.md
+stories:
+  - id: e11s01
+    title: "WebSocket subscriptions with mutation event broadcasting"
+    status: done
+    tasks:
+      - desc: "ws:// endpoint subscribes to collection mutations"
+        verify: "go test ./components/realtime/ -run TestWebSocket -v"
+      - desc: "Event bus mutations broadcast to subscribers"
+        verify: "go test ./components/realtime/ -run TestBroadcast -v"

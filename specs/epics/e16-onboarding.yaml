@@ -1,0 +1,17 @@
+type: epic-shard
+context: domain
+id: e16
+title: "Developer Onboarding Journey"
+wsjf: 1.0
+wsjf_rationale: "Historical — foundation epic. BV=5(DX) TC=3 RR=3 / JS=3"
+status: done
+migrated_from: specs/archive/slices/016-developer-onboarding-journey.md
+stories:
+  - id: e16s01
+    title: "Onboarding flow: signup → create project → deploy sample"
+    status: done
+    tasks:
+      - desc: "End-to-end onboarding journey verified"
+        verify: "go test ./tests/contract/ -run TestOnboarding -v"
+      - desc: "CONVENTIONS.md and AGENTS.md present"
+        verify: "test -f CONVENTIONS.md && test -f AGENTS.md"

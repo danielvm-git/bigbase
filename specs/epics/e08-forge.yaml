@@ -1,0 +1,17 @@
+type: epic-shard
+context: domain
+id: e08
+title: "Forge — Issues, Labels, Kanban, Wiki"
+wsjf: 1.0
+wsjf_rationale: "Historical — foundation epic. BV=8(project management) TC=5 RR=5 / JS=8"
+status: done
+migrated_from: specs/archive/slices/008-forge.md
+stories:
+  - id: e08s01
+    title: "Issue tracker with labels, kanban board, wiki"
+    status: done
+    tasks:
+      - desc: "POST /api/forge/issues creates issue"
+        verify: "curl -X POST http://localhost:9999/api/forge/issues -d '{\"title\":\"test\"}'"
+      - desc: "GET /api/forge/issues lists with filters"
+        verify: "curl http://localhost:9999/api/forge/issues"

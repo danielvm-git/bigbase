@@ -1,0 +1,17 @@
+type: epic-shard
+context: domain
+id: e07
+title: "Git + Commercial Landing Page"
+wsjf: 1.0
+wsjf_rationale: "Historical — foundation epic. BV=8(git hosting) TC=5 RR=5 / JS=5"
+status: done
+migrated_from: specs/archive/slices/007-git.md
+stories:
+  - id: e07s01
+    title: "Bare git repo management with SSH"
+    status: done
+    tasks:
+      - desc: "POST /api/git/repos creates bare repo"
+        verify: "curl -X POST http://localhost:9999/api/git/repos -d '{\"name\":\"test\"}'"
+      - desc: "git clone via SSH works"
+        verify: "git clone ssh://localhost:2222/test"

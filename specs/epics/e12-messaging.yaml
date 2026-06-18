@@ -1,0 +1,17 @@
+type: epic-shard
+context: domain
+id: e12
+title: "Messaging — Email, SMS, Push"
+wsjf: 1.0
+wsjf_rationale: "Historical — foundation epic. BV=8(notifications) TC=5 RR=5 / JS=5"
+status: done
+migrated_from: specs/archive/slices/012-messaging.md
+stories:
+  - id: e12s01
+    title: "Email/SMS/Push endpoints with provider interface"
+    status: done
+    tasks:
+      - desc: "POST /api/messaging/email sends email"
+        verify: "curl -X POST http://localhost:9999/api/messaging/email -d '{\"to\":\"a@b.com\",\"body\":\"test\"}'"
+      - desc: "Provider interface supports pluggable backends"
+        verify: "go test ./components/messaging/ -run TestProvider -v"

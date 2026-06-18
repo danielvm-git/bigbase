@@ -1,0 +1,17 @@
+type: epic-shard
+context: ui
+id: e05
+title: "Admin UI — Dashboard"
+wsjf: 1.0
+wsjf_rationale: "Historical — foundation epic. BV=8(visual management) TC=8(needed for non-CLI users) RR=5 / JS=8"
+status: done
+migrated_from: specs/archive/slices/005-admin-ui.md
+stories:
+  - id: e05s01
+    title: "SPA admin dashboard with collection browser"
+    status: done
+    tasks:
+      - desc: "React 19 + Vite SPA served at /admin/"
+        verify: "curl http://localhost:9999/admin/"
+      - desc: "Collection list and record browser"
+        verify: "cd ui && npm run build"

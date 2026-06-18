@@ -1,0 +1,17 @@
+type: epic-shard
+context: infra
+id: e01
+title: "CLI — BigBase Breathes"
+wsjf: 1.0
+wsjf_rationale: "Historical — foundation epic. BV=10(project bootstrap) TC=10(must exist first) RR=10(nothing works without CLI) / JS=3"
+status: done
+migrated_from: specs/archive/slices/001-cli-bigbase-breathes.md
+stories:
+  - id: e01s01
+    title: "CLI binary with version and help commands"
+    status: done
+    tasks:
+      - desc: "go run . version prints version string"
+        verify: "go run . version"
+      - desc: "go run . serve starts the server"
+        verify: "go run . serve --port 9999"

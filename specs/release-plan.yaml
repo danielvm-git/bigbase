@@ -7,6 +7,86 @@ release:
   semantic_release: true
   bump_hint: minor
 epics:
+  - id: e01
+    title: CLI — BigBase Breathes
+    wsjf: 1.0
+    file: epics/e01-cli.yaml
+    mode: flat
+  - id: e02
+    title: Proxy + Landing Page
+    wsjf: 1.0
+    file: epics/e02-proxy.yaml
+    mode: flat
+  - id: e03
+    title: DB + Auto API
+    wsjf: 1.0
+    file: epics/e03-db-auto-api.yaml
+    mode: flat
+  - id: e04
+    title: Auth — Register, Login, JWT
+    wsjf: 1.0
+    file: epics/e04-auth.yaml
+    mode: flat
+  - id: e05
+    title: Admin UI — Dashboard
+    wsjf: 1.0
+    file: epics/e05-admin-ui.yaml
+    mode: flat
+  - id: e06
+    title: Storage + Appwrite Look & Feel
+    wsjf: 1.0
+    file: epics/e06-storage.yaml
+    mode: flat
+  - id: e07
+    title: Git + Commercial Landing Page
+    wsjf: 1.0
+    file: epics/e07-git.yaml
+    mode: flat
+  - id: e08
+    title: Forge — Issues, Labels, Kanban, Wiki
+    wsjf: 1.0
+    file: epics/e08-forge.yaml
+    mode: flat
+  - id: e09
+    title: CI/CD — Pipelines & Workflows
+    wsjf: 1.0
+    file: epics/e09-cici.yaml
+    mode: flat
+  - id: e10
+    title: Functions — Serverless JS Runtime
+    wsjf: 1.0
+    file: epics/e10-functions.yaml
+    mode: flat
+  - id: e11
+    title: Realtime — WebSocket & Event Broadcast
+    wsjf: 1.0
+    file: epics/e11-realtime.yaml
+    mode: flat
+  - id: e12
+    title: Messaging — Email, SMS, Push
+    wsjf: 1.0
+    file: epics/e12-messaging.yaml
+    mode: flat
+  - id: e13
+    title: Deploy — Build & Run Web Apps
+    wsjf: 1.0
+    file: epics/e13-deploy.yaml
+    mode: flat
+  - id: e14
+    title: Monitoring — Metrics, Logs, Alerts, Health
+    wsjf: 1.0
+    file: epics/e14-monitoring.yaml
+    mode: flat
+  - id: e15
+    title: Sites — Deploy from GitHub Journey
+    wsjf: 1.0
+    file: epics/e15-sites.yaml
+    mode: flat
+  - id: e16
+    title: Developer Onboarding Journey
+    wsjf: 1.0
+    file: epics/e16-onboarding.yaml
+    mode: flat
   - id: e29
     title: Security Vulnerability Fixes (2026-06 audit)
     wsjf: 9.3

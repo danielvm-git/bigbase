@@ -5,7 +5,11 @@ active_epic_id: e30
 active_story_id: e30s03
 active_bug_id: null
 release:
-  target_version: 2.11.0
+  target_version: 2.12.0
+  migration:
+    date: "2026-06-18"
+    from: spec-kit/GSD hybrid (specs/archive/)
+    artifacts: 16 slices → epics e01-e16, 3 planning docs → product/tech-architecture
   last_tag: v2.10.0
   last_publish: "2026-06-12"
 epic_cycle:

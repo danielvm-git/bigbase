@@ -1,0 +1,17 @@
+type: epic-shard
+context: domain
+id: e09
+title: "CI/CD — Pipelines & Workflows"
+wsjf: 1.0
+wsjf_rationale: "Historical — foundation epic. BV=8(CI automation) TC=5 RR=5 / JS=8"
+status: done
+migrated_from: specs/archive/slices/009-cici.md
+stories:
+  - id: e09s01
+    title: "Pipeline/workflow engine with git push triggers"
+    status: done
+    tasks:
+      - desc: "Workflows execute on git push"
+        verify: "go test ./components/cici/ -run TestWorkflow -v"
+      - desc: "GET /api/cici/runs lists pipeline history"
+        verify: "curl http://localhost:9999/api/cici/runs"

@@ -1,0 +1,17 @@
+type: epic-shard
+context: infra
+id: e14
+title: "Monitoring — Metrics, Logs, Alerts, Health"
+wsjf: 1.0
+wsjf_rationale: "Historical — foundation epic. BV=8(observability) TC=5 RR=8(production readiness) / JS=5"
+status: done
+migrated_from: specs/archive/slices/014-monitoring.md
+stories:
+  - id: e14s01
+    title: "Health endpoint, structured logs, metrics dashboard"
+    status: done
+    tasks:
+      - desc: "GET /health returns component status"
+        verify: "curl http://localhost:9999/health"
+      - desc: "Structured JSON logging via slog"
+        verify: "go run . serve 2>&1 | head -1 | jq .level"

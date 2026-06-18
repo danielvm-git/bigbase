@@ -1,0 +1,17 @@
+type: epic-shard
+context: domain
+id: e10
+title: "Functions — Serverless JS Runtime"
+wsjf: 1.0
+wsjf_rationale: "Historical — foundation epic. BV=8(serverless compute) TC=5 RR=5 / JS=5"
+status: done
+migrated_from: specs/archive/slices/010-functions.md
+stories:
+  - id: e10s01
+    title: "JavaScript function CRUD and execution via goja"
+    status: done
+    tasks:
+      - desc: "POST /api/functions creates JS function"
+        verify: "curl -X POST http://localhost:9999/api/functions -d '{\"name\":\"test\",\"source\":\"return 42;\"}'"
+      - desc: "POST /api/functions/:id/run executes function"
+        verify: "curl -X POST http://localhost:9999/api/functions/x/run"
