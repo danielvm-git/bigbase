@@ -1,3 +1,10 @@
+## [2.17.1](https://github.com/danielvm-git/bigbase/compare/v2.17.0...v2.17.1) (2026-06-18)
+
+
+### Bug Fixes
+
+* **ui:** resolve TS build errors — unused import and missing node types ([43253e9](https://github.com/danielvm-git/bigbase/commit/43253e96e30c80d9a87aad9a81c7b6f845489b5d))
+
 # [2.17.0](https://github.com/danielvm-git/bigbase/compare/v2.16.0...v2.17.0) (2026-06-18)
 
 
