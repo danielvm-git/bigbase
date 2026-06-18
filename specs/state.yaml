@@ -2,31 +2,28 @@ type: session-state
 context: infra
 active_flow: build_epic
 active_epic_id: e30
-active_story_id: e30s01
+active_story_id: e30s02
 active_bug_id: null
 release:
   target_version: 2.11.0
   last_tag: v2.10.0
   last_publish: "2026-06-12"
 epic_cycle:
-  current_step: 8
-  next_skill: release-branch
-  completed_steps: [survey-context, plan-work, kickoff-branch, develop-tdd, verify-work, audit-code, commit-message]
-  story_bcps: 8
+  current_step: 3
+  next_skill: kickoff-branch
+  completed_steps: [survey-context, plan-work]
+  story_bcps: 2
 bug_cycle:
   current_step: null
   completed_steps: [investigate-bug, fix-bug]
 git:
-  branch: e30s01-functions-runtime
-  hash: e8a194b
+  branch: main
+  hash: null
 handoff:
-  last_step_completed: verify-work
+  last_step_completed: null
   open_decisions: []
   required_reading:
     - specs/epics/e30-backend-for-integrations.yaml
-    - specs/epics/e30s01-functions-runtime.md
-    - specs/epics/e30s01-tasks.yaml
-    - components/functions/runtime.go
-    - components/functions/handlers.go
-    - components/functions/functions.go
-  next_skill: audit-code
+    - components/messaging/messaging.go
+    - main.go
+  next_skill: survey-context
