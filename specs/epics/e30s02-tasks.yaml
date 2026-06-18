@@ -6,15 +6,15 @@ tasks:
   - id: 1
     description: "Implement WebhookProvider — POST JSON payload to configured URL with Bearer token, 10s timeout, respecting Provider interface"
     verify: "go test ./components/messaging/ -run TestWebhookProvider -v"
-    status: todo
+    status: done
     ac: [AC1]
   - id: 2
     description: "Register webhook/telegram provider in main.go with --messaging-webhook-url and --messaging-webhook-token CLI flags"
     verify: "go test ./components/messaging/ -run TestTelegramSend -v"
-    status: todo
+    status: done
     ac: [AC3]
   - id: 3
     description: "Add POST /api/messaging/telegram endpoint accepting {chat_id, text, parse_mode, token} and routing through WebhookProvider"
     verify: "go test ./components/messaging/ -run TestTelegramHandler -v"
-    status: todo
+    status: done
     ac: [AC2]

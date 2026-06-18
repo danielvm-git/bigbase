@@ -40,7 +40,8 @@ stories:
 
   - id: e30s02
     title: Webhook/Telegram Messaging Provider
-    status: planned
+    status: done
+    bcps: 2
     wsjf: 6.5
     wsjf_rationale: "BV=5(needed for chatbots, workaround exists via raw HTTP in functions) TC=5(milestone dependency) RR=3(low risk: just another provider impl) / JS=2(~1 day: Provider interface + main.go registration)"
     tasks:
