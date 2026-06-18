@@ -140,6 +140,8 @@ func startProxy() {
 	sitesDomain := serveFS.String("sites-domain", "", "Parent domain for deployed site subdomains (e.g. bigbase.click)")
 	logLevel := serveFS.String("log-level", "info", "Log level: debug, info, warn, error")
 	corsOrigins := serveFS.String("cors-allowed-origins", "", "Comma-separated list of allowed CORS origins (empty = CORS disabled)")
+	postLoginRedirect := serveFS.String("auth-post-login-redirect", "/admin/", "Post-login redirect URL for OAuth callbacks")
+	spaOriginAllowlist := serveFS.String("auth-spa-origin-allowlist", "", "Comma-separated list of allowed SPA origins for OAuth token delivery (empty = disabled)")
 	_ = serveFS.Parse(os.Args[2:])
 
 	googleID := config.FlagOrEnv(*googleClientID, "GOOGLE_CLIENT_ID")
@@ -187,6 +189,8 @@ func startProxy() {
 		GoogleClientID:     googleID,
 		GoogleClientSecret: googleSecret,
 		CORSAllowedOrigins: corsAllowedOrigins,
+		PostLoginRedirect:  *postLoginRedirect,
+		SPAOriginAllowlist: parseCORSOrigins(*spaOriginAllowlist),
 	})
 
 	ad := admin.New(admin.Options{Logger: logger})

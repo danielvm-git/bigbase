@@ -74,6 +74,8 @@ type Options struct {
 	GoogleClientSecret  string
 	EmailSender         EmailSender
 	CORSAllowedOrigins  []string
+	PostLoginRedirect   string   // Default: "/admin/"
+	SPAOriginAllowlist  []string // Allowed origins for SPA redirect with #token=
 }
 
 type Auth struct {
@@ -85,6 +87,8 @@ type Auth struct {
 	googleVerifier      GoogleVerifier
 	emailSender         EmailSender
 	corsAllowedOrigins  []string
+	postLoginRedirect   string
+	spaOriginAllowlist  []string
 }
 
 func (a *Auth) SetGoogleVerifier(v GoogleVerifier) {
@@ -94,6 +98,19 @@ func (a *Auth) SetGoogleVerifier(v GoogleVerifier) {
 // CORSMiddleware returns a CORS middleware configured with the allowed origins from Options.
 func (a *Auth) CORSMiddleware() func(http.Handler) http.Handler {
 	return CORS(a.corsAllowedOrigins)
+}
+
+// isSPAOriginAllowed checks if the given URL starts with one of the allowed SPA origins.
+func (a *Auth) isSPAOriginAllowed(redirectURL string) bool {
+	if len(a.spaOriginAllowlist) == 0 {
+		return false
+	}
+	for _, origin := range a.spaOriginAllowlist {
+		if strings.HasPrefix(redirectURL, origin) {
+			return true
+		}
+	}
+	return false
 }
 
 func New(opts Options) *Auth {
@@ -113,14 +130,20 @@ func New(opts Options) *Auth {
 		}
 		secret = []byte(hex.EncodeToString(raw))
 	}
+	postLoginRedirect := opts.PostLoginRedirect
+	if postLoginRedirect == "" {
+		postLoginRedirect = "/admin/"
+	}
 	return &Auth{
-		db:                 opts.DB,
-		logger:             logger,
-		secret:             secret,
-		googleClientID:     opts.GoogleClientID,
-		googleClientSecret: opts.GoogleClientSecret,
-		emailSender:        opts.EmailSender,
-		corsAllowedOrigins: opts.CORSAllowedOrigins,
+		db:                  opts.DB,
+		logger:              logger,
+		secret:              secret,
+		googleClientID:      opts.GoogleClientID,
+		googleClientSecret:  opts.GoogleClientSecret,
+		emailSender:         opts.EmailSender,
+		corsAllowedOrigins:  opts.CORSAllowedOrigins,
+		postLoginRedirect:   postLoginRedirect,
+		spaOriginAllowlist:  opts.SPAOriginAllowlist,
 	}
 }
 
@@ -675,12 +698,33 @@ func (a *Auth) handleGoogleOAuth(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusNotFound, map[string]string{"error": "not found"})
 		return
 	}
-	state, _ := generateID()
+	rawState, _ := generateID()
+
+	// Accept optional ?redirect= for SPA token delivery.
+	spaRedirect := r.URL.Query().Get("redirect")
+	var googleState string
+	var cookieValue string
+
+	if spaRedirect != "" && len(a.spaOriginAllowlist) > 0 {
+		if a.isSPAOriginAllowed(spaRedirect) {
+			// Encode the SPA redirect into the signed state.
+			cookieValue = SignSPAState(rawState, spaRedirect, a.secret)
+			googleState = rawState // Google sees only the raw state.
+		} else {
+			// Redirect not allowed — fall back to standard flow.
+			spaRedirect = ""
+			cookieValue = SignState(rawState, a.secret)
+			googleState = rawState
+		}
+	} else {
+		cookieValue = SignState(rawState, a.secret)
+		googleState = rawState
+	}
 
 	// Set a signed state cookie so the callback can verify this flow originated here.
 	http.SetCookie(w, &http.Cookie{
 		Name:     "oauth_state",
-		Value:    SignState(state, a.secret),
+		Value:    cookieValue,
 		HttpOnly: true,
 		Secure:   r.TLS != nil,
 		SameSite: http.SameSiteLaxMode,
@@ -694,7 +738,7 @@ func (a *Auth) handleGoogleOAuth(w http.ResponseWriter, r *http.Request) {
 	}
 	redirectURI := fmt.Sprintf("%s://%s/api/auth/oauth/google/callback", scheme, r.Host)
 	url := fmt.Sprintf("https://accounts.google.com/o/oauth2/v2/auth?client_id=%s&redirect_uri=%s&response_type=code&scope=openid+email+profile&state=%s",
-		a.googleClientID, url.QueryEscape(redirectURI), state)
+		a.googleClientID, url.QueryEscape(redirectURI), googleState)
 	http.Redirect(w, r, url, http.StatusFound)
 }
 
@@ -713,10 +757,22 @@ func (a *Auth) handleGoogleCallback(w http.ResponseWriter, r *http.Request) {
 	// Validate OAuth state to prevent CSRF.
 	queryState := r.URL.Query().Get("state")
 	stateCookie, stateErr := r.Cookie("oauth_state")
-	if stateErr != nil || !VerifyState(stateCookie.Value, queryState, a.secret) {
-		a.clearOAuthStateCookie(w, r)
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid state"})
-		return
+
+	// Try SPA state first (contains redirect URL), then fall back to standard state.
+	var spaRedirect string
+	stateValid := false
+	if stateErr == nil {
+		if s, r, ok := VerifySPAState(stateCookie.Value, a.secret); ok && s == queryState {
+			stateValid = true
+			spaRedirect = r
+		}
+	}
+	if !stateValid {
+		if stateErr != nil || !VerifyState(stateCookie.Value, queryState, a.secret) {
+			a.clearOAuthStateCookie(w, r)
+			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid state"})
+			return
+		}
 	}
 
 	verifier := a.googleVerifier
@@ -756,9 +812,18 @@ func (a *Auth) handleGoogleCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// SPA token delivery: redirect to SPA with #token=... instead of setting cookie.
+	if spaRedirect != "" && a.isSPAOriginAllowed(spaRedirect) {
+		a.clearOAuthStateCookie(w, r)
+		spaURL := spaRedirect + "#token=" + url.QueryEscape(token)
+		http.Redirect(w, r, spaURL, http.StatusFound)
+		return
+	}
+
 	// Clear the OAuth state cookie now that the flow is complete.
 	a.clearOAuthStateCookie(w, r)
 
+	// Standard flow: set HttpOnly cookie and redirect to postLoginRedirect.
 	http.SetCookie(w, &http.Cookie{
 		Name:     "token",
 		Value:    token,
@@ -766,7 +831,7 @@ func (a *Auth) handleGoogleCallback(w http.ResponseWriter, r *http.Request) {
 		Path:     "/",
 		MaxAge:   86400,
 	})
-	http.Redirect(w, r, "/admin/", http.StatusFound)
+	http.Redirect(w, r, a.postLoginRedirect, http.StatusFound)
 }
 
 func (a *Auth) clearOAuthStateCookie(w http.ResponseWriter, r *http.Request) {
@@ -915,6 +980,40 @@ func generateID() (string, error) {
 		return "", err
 	}
 	return hex.EncodeToString(b), nil
+}
+
+// SignSPAState signs a state + spaRedirect pair with the server secret.
+// Format: "rawState|base64(spaRedirect).hex(signature)"
+func SignSPAState(state, spaRedirect string, secret []byte) string {
+	payload := state + "|" + base64.RawURLEncoding.EncodeToString([]byte(spaRedirect))
+	mac := hmac.New(sha256.New, secret)
+	mac.Write([]byte(payload))
+	return payload + "." + hex.EncodeToString(mac.Sum(nil))
+}
+
+// VerifySPAState verifies a signed SPA state and extracts the original state and redirect.
+func VerifySPAState(signed string, secret []byte) (state, redirect string, ok bool) {
+	lastDot := strings.LastIndex(signed, ".")
+	if lastDot < 1 || lastDot == len(signed)-1 {
+		return "", "", false
+	}
+	payload := signed[:lastDot]
+	expectedMAC := signed[lastDot+1:]
+	mac := hmac.New(sha256.New, secret)
+	mac.Write([]byte(payload))
+	expected := hex.EncodeToString(mac.Sum(nil))
+	if !hmac.Equal([]byte(expectedMAC), []byte(expected)) {
+		return "", "", false
+	}
+	parts := strings.SplitN(payload, "|", 2)
+	if len(parts) != 2 {
+		return "", "", false
+	}
+	redirectBytes, err := base64.RawURLEncoding.DecodeString(parts[1])
+	if err != nil {
+		return "", "", false
+	}
+	return parts[0], string(redirectBytes), true
 }
 
 // signState signs a random state string with the server secret using HMAC-SHA256.
