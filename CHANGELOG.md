@@ -1,3 +1,12 @@
+# [2.13.0](https://github.com/danielvm-git/bigbase/compare/v2.12.0...v2.13.0) (2026-06-18)
+
+
+### Features
+
+* **api,ui:** add filter and sort to collections API with Data Studio UI ([#27](https://github.com/danielvm-git/bigbase/issues/27)) ([06868a3](https://github.com/danielvm-git/bigbase/commit/06868a39560801ebc1b582739c4d34e0a2c2d193))
+* **functions:** inject env, fetch, db, request context, and schedule loop into jsRuntime ([#25](https://github.com/danielvm-git/bigbase/issues/25)) ([afce751](https://github.com/danielvm-git/bigbase/commit/afce751379e3b94a667cb7d258e94a4bde7c7d30))
+* **messaging:** add WebhookProvider and telegram messaging endpoint ([#26](https://github.com/danielvm-git/bigbase/issues/26)) ([0728992](https://github.com/danielvm-git/bigbase/commit/0728992bc65e1ebb1bfe4743249713b6ae2a2633))
+
 # [2.12.0](https://github.com/danielvm-git/bigbase/compare/v2.11.0...v2.12.0) (2026-06-18)
 
 
