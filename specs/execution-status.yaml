@@ -32,11 +32,6 @@ epics:
   e28: done
   e27: done
   e30: done
-  e31: done
-  e32: done
-  e33: done
-  e34: done
-  e35: done
 stories:
   e01s01: done
   e02s01: done
@@ -128,21 +123,3 @@ stories:
   e30s01: done
   e30s02: done
   e30s03: done
-  e31s01: done
-  e31s02: done
-  e31s03: done
-  e32s01: done
-  e32s02: done
-  e32s03: done
-  e33s01: done
-  e33s02: done
-  e33s03: done
-  e33s04: done
-  e33s05: done
-  e34s01: done
-  e34s02: done
-  e34s03: done
-  e34s04: done
-  e35s01: done
-  e35s02: done
-  e35s03: done

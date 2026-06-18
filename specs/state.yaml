@@ -1,35 +1,33 @@
 type: session-state
 context: infra
-active_flow: build_epic
-active_epic_id: e35
-active_story_id: e33s01
+active_flow: null
+active_epic_id: null
+active_story_id: null
 active_bug_id: null
 release:
   target_version: 2.12.0
   migration:
     date: "2026-06-18"
     from: spec-kit/GSD hybrid (specs/archive/)
-    artifacts: 16 slices → epics e01-e16, 3 planning docs → product/tech-architecture
   last_tag: v2.10.0
   last_publish: "2026-06-12"
-epic_cycle:
-  current_step: 1
-  next_skill: survey-context
-  completed_steps: []
-  story_bcps: 8
-bug_cycle:
-  current_step: null
-  completed_steps: [investigate-bug, fix-bug]
+metrics:
+  session_start: "2026-06-18T12:45:00Z"
+  session_end: "2026-06-18T18:00:00Z"
+  cycle_minutes: 315
+  epics_completed: 5
+  stories_completed: 17
+  bcps_per_hour: 5.7
+epic_cycle: {}
+bug_cycle: {}
 git:
   branch: main
   hash: null
-  pr: "https://github.com/danielvm-git/bigbase/pull/28"
-metrics:
-  story_start: "2026-06-18T12:45:00Z"
 handoff:
-  last_step_completed: null
+  last_step_completed: release-branch
   open_decisions: []
-  required_reading:
-    - specs/epics/e31-spa-friendly-auth.yaml
-    - components/auth/auth.go
   next_skill: survey-context
+  summary: |
+    Auth roadmap complete: 5 epics (e31-e35), 17 stories, 7 PRs merged.
+    CORS, OAuth SPA, logout, OTP, magic link, user management, SDK (6 packages),
+    UI components (Svelte), phone auth, anonymous token, OAuth popup.
