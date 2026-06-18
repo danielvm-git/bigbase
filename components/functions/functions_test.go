@@ -626,3 +626,92 @@ func TestRuntimeFetch(t *testing.T) {
 		t.Fatalf("expected body to contain 'hello from server', got: %v", result["body"])
 	}
 }
+
+func TestFetchAllowlist(t *testing.T) {
+	f := setupFunctions(t)
+	h := f.Handler()
+
+	// Create a function that tries to fetch a blocked host
+	// No ALLOWED_HOSTS set, so only localhost is allowed — 127.0.0.1:9999 is NOT localhost
+	createBody := `{"name":"blocked-fetcher","source":"var resp = fetch('http://169.254.169.254/latest/meta-data'); return resp;","trigger":"http","env":{}}`
+	req := httptest.NewRequest("POST", "/api/functions", strings.NewReader(createBody))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	h.ServeHTTP(w, req)
+
+	if w.Code != http.StatusCreated {
+		t.Fatalf("create: expected 201, got %d: %s", w.Code, w.Body.String())
+	}
+
+	var created map[string]any
+	_ = json.NewDecoder(w.Body).Decode(&created)
+	fnID := created["id"].(string)
+
+	// Run — should fail with host-not-in-allowlist
+	runReq := httptest.NewRequest("POST", "/api/functions/"+fnID+"/run", nil)
+	runW := httptest.NewRecorder()
+	h.ServeHTTP(runW, runReq)
+
+	if runW.Code != http.StatusOK {
+		t.Fatalf("run: expected 200, got %d: %s", runW.Code, runW.Body.String())
+	}
+
+	var runResp map[string]any
+	_ = json.NewDecoder(runW.Body).Decode(&runResp)
+
+	// Should have an error about allowlist
+	errMsg, _ := runResp["error"].(string)
+	if errMsg == "" {
+		t.Fatal("expected allowlist error, got no error")
+	}
+	if !strings.Contains(errMsg, "allowlist") && !strings.Contains(errMsg, "not in allowlist") {
+		t.Fatalf("expected allowlist error message, got: %s", errMsg)
+	}
+}
+
+func TestRuntimeEnv(t *testing.T) {
+	f := setupFunctions(t)
+	h := f.Handler()
+
+	// Create a function that reads env vars
+	createBody := `{"name":"env-reader","source":"return { key: env.API_KEY, region: env.REGION };","trigger":"http","env":{"API_KEY":"sk-abc123","REGION":"us-east"}}`
+	req := httptest.NewRequest("POST", "/api/functions", strings.NewReader(createBody))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	h.ServeHTTP(w, req)
+
+	if w.Code != http.StatusCreated {
+		t.Fatalf("create: expected 201, got %d: %s", w.Code, w.Body.String())
+	}
+
+	var created map[string]any
+	_ = json.NewDecoder(w.Body).Decode(&created)
+	fnID := created["id"].(string)
+
+	runReq := httptest.NewRequest("POST", "/api/functions/"+fnID+"/run", nil)
+	runW := httptest.NewRecorder()
+	h.ServeHTTP(runW, runReq)
+
+	if runW.Code != http.StatusOK {
+		t.Fatalf("run: expected 200, got %d: %s", runW.Code, runW.Body.String())
+	}
+
+	var runResp map[string]any
+	_ = json.NewDecoder(runW.Body).Decode(&runResp)
+
+	if runResp["error"] != nil {
+		t.Fatalf("expected no error, got: %v", runResp["error"])
+	}
+
+	result, ok := runResp["result"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected result map, got: %T %v", runResp["result"], runResp["result"])
+	}
+
+	if key, _ := result["key"].(string); key != "sk-abc123" {
+		t.Fatalf("expected env.API_KEY='sk-abc123', got: %v", result["key"])
+	}
+	if region, _ := result["region"].(string); region != "us-east" {
+		t.Fatalf("expected env.REGION='us-east', got: %v", result["region"])
+	}
+}
