@@ -1,3 +1,10 @@
+# [2.12.0](https://github.com/danielvm-git/bigbase/compare/v2.11.0...v2.12.0) (2026-06-18)
+
+
+### Features
+
+* **specs:** add e30 Backend for Bots & Integrations epic with e30s01 Functions Runtime plan ([bab659d](https://github.com/danielvm-git/bigbase/commit/bab659dc8e04d803ce129c582022d5c3085f1bac))
+
 # [2.11.0](https://github.com/danielvm-git/bigbase/compare/v2.10.2...v2.11.0) (2026-06-12)
 
 
