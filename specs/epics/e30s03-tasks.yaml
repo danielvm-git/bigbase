@@ -1,0 +1,25 @@
+story_id: e30s03
+title: "Collections API — filter and sort"
+status: planned
+bcps: 3
+tasks:
+  - id: 1
+    description: "Add ?filter=field=value query param to GET /api/collections/:name using json_extract with sanitized field names"
+    verify: "go test ./components/api/ -run TestListRecordsFilter -v"
+    status: todo
+    ac: [AC1, AC7]
+  - id: 2
+    description: "Add ?sort=field (ASC) and ?sort=-field (DESC) query params using json_extract ORDER BY"
+    verify: "go test ./components/api/ -run TestListRecordsSort -v"
+    status: todo
+    ac: [AC2, AC3, AC6]
+  - id: 3
+    description: "Add operator support: eq, gt, gte, lt, lte, ne, like via ?filter=field:op=value syntax"
+    verify: "go test ./components/api/ -run TestListRecordsFilterOps -v"
+    status: todo
+    ac: [AC4, AC5]
+  - id: 4
+    description: "Add filter/sort inputs to Admin UI collection list view"
+    verify: "cd ui && npm run build"
+    status: todo
+    ac: []

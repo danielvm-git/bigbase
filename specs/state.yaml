@@ -2,28 +2,28 @@ type: session-state
 context: infra
 active_flow: build_epic
 active_epic_id: e30
-active_story_id: e30s02
+active_story_id: e30s03
+active_bug_id: null
 active_bug_id: null
 release:
   target_version: 2.11.0
   last_tag: v2.10.0
   last_publish: "2026-06-12"
 epic_cycle:
-  current_step: 4
-  next_skill: develop-tdd
-  completed_steps: [survey-context, plan-work, kickoff-branch]
-  story_bcps: 2
+  current_step: 3
+  next_skill: kickoff-branch
+  completed_steps: [survey-context, plan-work]
+  story_bcps: 3
 bug_cycle:
   current_step: null
   completed_steps: [investigate-bug, fix-bug]
 git:
-  branch: e30s02-webhook-provider
-  hash: d755d5d
+  branch: main
+  hash: null
 handoff:
   last_step_completed: null
   open_decisions: []
   required_reading:
     - specs/epics/e30-backend-for-integrations.yaml
-    - components/messaging/messaging.go
-    - main.go
+    - components/api/api.go
   next_skill: survey-context
