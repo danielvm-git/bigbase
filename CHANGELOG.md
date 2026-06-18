@@ -1,3 +1,10 @@
+# [2.17.0](https://github.com/danielvm-git/bigbase/compare/v2.16.0...v2.17.0) (2026-06-18)
+
+
+### Features
+
+* **auth:** add passwordless auth — OTP, magic link, user management ([#31](https://github.com/danielvm-git/bigbase/issues/31)) ([03ff564](https://github.com/danielvm-git/bigbase/commit/03ff564c81c2d6bb640b8ed9b2b770e68140bfe1))
+
 # [2.16.0](https://github.com/danielvm-git/bigbase/compare/v2.15.0...v2.16.0) (2026-06-18)
 
 
