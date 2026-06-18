@@ -1,3 +1,17 @@
+# [2.18.0](https://github.com/danielvm-git/bigbase/compare/v2.17.1...v2.18.0) (2026-06-18)
+
+
+### Bug Fixes
+
+* **ci:** add semantic-release plugins as devDependencies, use local install ([ce183a9](https://github.com/danielvm-git/bigbase/commit/ce183a9be18fff29c2ede2c0e254aeaa7d602db6))
+
+
+### Features
+
+* **auth:** add phone auth, anonymous token, OAuth popup ([#34](https://github.com/danielvm-git/bigbase/issues/34)) ([2af8713](https://github.com/danielvm-git/bigbase/commit/2af8713fffb089b189341f0ae319a91536e7c12f))
+* **sdk:** add multi-framework auth SDK — @bigbase/auth + 5 adapters ([#32](https://github.com/danielvm-git/bigbase/issues/32)) ([554dbe0](https://github.com/danielvm-git/bigbase/commit/554dbe032348bf0a5af3e8b4d5bed85d5c0de699))
+* **ui:** add Svelte auth UI components — @bigbase/auth-ui-svelte ([#33](https://github.com/danielvm-git/bigbase/issues/33)) ([5a4d48f](https://github.com/danielvm-git/bigbase/commit/5a4d48f474b894de0ff8bb15b0d4ccdfa7cfcc8f))
+
 ## [2.17.1](https://github.com/danielvm-git/bigbase/compare/v2.17.0...v2.17.1) (2026-06-18)
 
 
