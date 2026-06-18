@@ -280,6 +280,7 @@ func (a *Auth) Handler() http.Handler {
 	mux.HandleFunc("/api/auth/forgot-password", a.handleForgotPassword)
 	mux.HandleFunc("/api/auth/reset-password", a.handleResetPassword)
 	mux.HandleFunc("/api/auth/refresh", a.handleRefresh)
+	mux.HandleFunc("/api/auth/logout", a.handleLogout)
 	return mux
 }
 
@@ -832,6 +833,24 @@ func (a *Auth) handleGoogleCallback(w http.ResponseWriter, r *http.Request) {
 		MaxAge:   86400,
 	})
 	http.Redirect(w, r, a.postLoginRedirect, http.StatusFound)
+}
+
+// handleLogout clears the authentication token cookie. This endpoint is for
+// cookie-based clients. Bearer-token / localStorage clients should log out by
+// dropping the token on the client. The server has no token blacklist.
+func (a *Auth) handleLogout(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "POST" {
+		writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
+		return
+	}
+	http.SetCookie(w, &http.Cookie{
+		Name:     "token",
+		Value:    "",
+		HttpOnly: true,
+		Path:     "/",
+		MaxAge:   -1,
+	})
+	writeJSON(w, http.StatusOK, map[string]bool{"ok": true})
 }
 
 func (a *Auth) clearOAuthStateCookie(w http.ResponseWriter, r *http.Request) {
