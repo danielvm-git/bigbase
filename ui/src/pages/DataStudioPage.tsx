@@ -27,6 +27,8 @@ export default function DataStudioPage() {
   const [editCol, setEditCol] = useState<SchemaColumn | null>(null)
   const [colName, setColName] = useState('')
   const [colType, setColType] = useState('text')
+  const [filterValue, setFilterValue] = useState('')
+  const [sortField, setSortField] = useState('')
 
   useEffect(() => {
     fetch('/api/collections/')
@@ -45,11 +47,16 @@ export default function DataStudioPage() {
     }))
   }
 
-  const loadRecords = async (name: string) => {
+  const loadRecords = async (name: string, filter?: string, sort?: string) => {
     setSelected(name)
     setRecordError('')
     try {
-      const res = await fetch(`/api/collections/${name}`)
+      const params = new URLSearchParams()
+      if (filter && filter.trim()) params.set('filter', filter.trim())
+      if (sort && sort.trim()) params.set('sort', sort.trim())
+      const qs = params.toString()
+      const url = `/api/collections/${name}${qs ? '?' + qs : ''}`
+      const res = await fetch(url)
       if (!res.ok) {
         setRecordError(`error: ${res.status}`)
         setRecords([])
@@ -141,7 +148,7 @@ export default function DataStudioPage() {
               <li key={c}>
                 <button
                   className={`collection-btn${selected === c ? ' active' : ''}`}
-                  onClick={() => loadRecords(c)}
+                  onClick={() => loadRecords(c, filterValue, sortField)}
                 >
                   {c}
                 </button>
@@ -187,6 +194,22 @@ export default function DataStudioPage() {
 
           {selected && mode === 'data' && !recordError && records.length === 0 && (
             <p className="dim">No records found.</p>
+          )}
+          {selected && mode === 'data' && !recordError && (
+            <div style={{ display: 'flex', gap: 'var(--space-4)', marginBottom: 'var(--space-4)', flexWrap: 'wrap' }}>
+              <Input
+                placeholder="filter: field=value or field:gt=value"
+                value={filterValue}
+                onChange={e => { setFilterValue(e.target.value); if (selected) loadRecords(selected, e.target.value, sortField) }}
+                style={{ flex: 2, minWidth: 200 }}
+              />
+              <Input
+                placeholder="sort: field or -field"
+                value={sortField}
+                onChange={e => { setSortField(e.target.value); if (selected) loadRecords(selected, filterValue, e.target.value) }}
+                style={{ flex: 1, minWidth: 150 }}
+              />
+            </div>
           )}
           {selected && mode === 'data' && records.length > 0 && (
             <div className="table-wrap">
