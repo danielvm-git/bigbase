@@ -1,4 +1,4 @@
-import { Badge, statusBadgeVariant, Button } from './'
+import { Badge, Button } from './'
 import type { RequestLogEntry } from '../hooks/useRequestLogs'
 
 interface RequestLogsProps {
