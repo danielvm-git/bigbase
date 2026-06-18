@@ -67,26 +67,33 @@ func (noopLogger) Error(msg string, args ...any) {}
 type DBer = kernel.DBer
 
 type Options struct {
-	DB                 DBer
-	Logger             Logger
-	Secret             string
-	GoogleClientID     string
-	GoogleClientSecret string
-	EmailSender        EmailSender
+	DB                  DBer
+	Logger              Logger
+	Secret              string
+	GoogleClientID      string
+	GoogleClientSecret  string
+	EmailSender         EmailSender
+	CORSAllowedOrigins  []string
 }
 
 type Auth struct {
-	db                 DBer
-	logger             Logger
-	secret             []byte
-	googleClientID     string
-	googleClientSecret string
-	googleVerifier     GoogleVerifier
-	emailSender        EmailSender
+	db                  DBer
+	logger              Logger
+	secret              []byte
+	googleClientID      string
+	googleClientSecret  string
+	googleVerifier      GoogleVerifier
+	emailSender         EmailSender
+	corsAllowedOrigins  []string
 }
 
 func (a *Auth) SetGoogleVerifier(v GoogleVerifier) {
 	a.googleVerifier = v
+}
+
+// CORSMiddleware returns a CORS middleware configured with the allowed origins from Options.
+func (a *Auth) CORSMiddleware() func(http.Handler) http.Handler {
+	return CORS(a.corsAllowedOrigins)
 }
 
 func New(opts Options) *Auth {
@@ -113,6 +120,7 @@ func New(opts Options) *Auth {
 		googleClientID:     opts.GoogleClientID,
 		googleClientSecret: opts.GoogleClientSecret,
 		emailSender:        opts.EmailSender,
+		corsAllowedOrigins: opts.CORSAllowedOrigins,
 	}
 }
 

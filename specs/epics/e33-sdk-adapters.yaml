@@ -1,0 +1,237 @@
+type: epic-shard
+context: domain
+id: e33
+title: Client SDK + Multi-Framework Adapters
+wsjf: 5.2
+wsjf_rationale: "BV=10(SDK is core product — without it every project reinvents auth) TC=8(Copa Svelte blocked without SDK) RR=8(eliminates permanent adoption friction) / JS=5(~1 week: core + 4 adapters)"
+status: planned
+depends_on: [e31, e32]
+covers:
+  - packages/auth/ (new npm workspace)
+  - packages/auth-svelte/ (new)
+  - packages/auth-astro/ (new)
+  - packages/auth-vue/ (new)
+  - packages/auth-react/ (new)
+  - ui/src/pages/ (admin docs)
+stories:
+  - id: e33s01
+    title: "@bigbase/auth — framework-agnostic core SDK"
+    status: planned
+    bcps: 8
+    wsjf: 5.33
+    wsjf_rationale: "BV=10(core SDK — all adapters depend on this) TC=8(blocks all framework adapters) RR=8 / JS=3(~2-3 days)"
+    tasks:
+      - desc: "Scaffold packages/auth/ as npm workspace — TypeScript, tree-shakeable, works in Node/Browser/Edge"
+        notes: |
+          New directory: packages/auth/
+          — package.json: name "@bigbase/auth", type "module", main "./dist/index.js", types "./dist/index.d.ts".
+          — tsconfig.json with strict mode, ESM output.
+          — Build with tsup or tsc (minimal config, no framework deps).
+          — Exports: "." → core client, "./types" → type exports.
+          — Add to root package.json workspaces[].
+        verify: "cd packages/auth && npm run build && ls dist/index.js"
+      - desc: "Implement createAuthClient(baseURL, options) — signIn, signUp, signOut, getSession, getJWT"
+        notes: |
+          packages/auth/src/client.ts:
+          — createAuthClient(baseURL: string, options?: {allowAnonymous?: boolean}) → AuthClient.
+          — Methods:
+            • signIn.email({email, password}) → POST /api/auth/login → {user, token}
+            • signIn.social({provider:'google', redirectTo?}) → window.location = /api/auth/oauth/google?redirect=...
+            • signIn.otp({email}) → POST /api/auth/otp/send, then signIn.otp.verify({email, code}) → {user, token}
+            • signIn.magicLink({email, redirectTo?}) → POST /api/auth/magic-link/send
+            • signUp.email({email, password, name?}) → POST /api/auth/register → {user, token}
+            • signOut() → POST /api/auth/logout, clear local state
+            • getSession() → GET /api/auth/me → {user, session}
+            • getJWT() → returns stored JWT token or null
+            • onAuthStateChange(callback) → subscribe/unsubscribe
+          — Token storage: localStorage (Bearer clients) or in-memory (cookie clients).
+          — Auto-set Authorization header: if token in storage, attach to every fetch.
+          — Error normalization: map HTTP errors to AuthError {status, code, message}.
+        verify: "cd packages/auth && npm test"
+      - desc: "Implement session cache (60s TTL), request dedup, cross-tab sync"
+        notes: |
+          packages/auth/src/cache.ts:
+          — SessionCacheManager: in-memory cache with JWT-based TTL.
+          — getCachedSession(): returns cached session if valid, null if expired.
+          — setCachedSession(data): stores session, extracts TTL from JWT exp claim.
+          — invalidateSessionCache(): called on signOut.
+
+          packages/auth/src/dedup.ts:
+          — InFlightRequestManager: Map-based dedup by key.
+          — Multiple concurrent getSession() → single network request.
+          — Body-aware keys: `${method}:${url}:${body}`.
+
+          packages/auth/src/sync.ts:
+          — BroadcastChannel 'bigbase-auth' for cross-tab sync.
+          — On sign-in/sign-out: postMessage → other tabs update state.
+          — On external change: emit onAuthStateChange.
+        verify: "cd packages/auth && npm test"
+      - desc: "Test core SDK — signIn, signUp, signOut, getSession, cache, dedup, cross-tab"
+        notes: |
+          packages/auth/src/client.test.ts:
+          — Mock fetch to simulate BigBase API.
+          — Test email signIn flow (request → response → stored token).
+          — Test getSession caching (second call returns cached, third after TTL re-fetches).
+          — Test request dedup (3 concurrent getSession → 1 network request).
+          — Test signOut clears cache + token.
+          — Test onAuthStateChange fires on signIn/signOut.
+          — Test OTP send + verify flow.
+          — Test magic link send flow.
+        verify: "cd packages/auth && npm test"
+
+  - id: e33s02
+    title: "@bigbase/auth/svelte — SvelteKit adapter"
+    status: planned
+    bcps: 5
+    wsjf: 5.33
+    wsjf_rationale: "BV=10(Copa bolão is SvelteKit — #1 priority) TC=8(blocks Copa project) RR=5 / JS=2(~1 day)"
+    tasks:
+      - desc: "Implement hooks.server.ts middleware — cookie-based session refresh, injects auth into locals"
+        notes: |
+          packages/auth-svelte/src/server/middleware.ts:
+          — bigBaseAuthHandle({baseURL, cookieSecret}): returns SvelteKit handle function.
+          — On each request: reads token cookie, validates with GET /api/auth/me.
+          — If valid: sets event.locals.auth = {user, session, token}.
+          — If invalid/expired: attempts refresh via /api/auth/refresh.
+          — If refresh fails: clears cookie, event.locals.auth = null.
+          — CBOR cookie: encode session data + JWT in signed cookie (reduces /me calls).
+          — Config options: cookieSecret (min 32 chars), sessionDataTtl (default 300s), loginUrl (default '/login').
+        verify: "cd packages/auth-svelte && npm test"
+      - desc: "Implement +page.server.ts helpers — getSession(), requireAuth()"
+        notes: |
+          packages/auth-svelte/src/server/helpers.ts:
+          — getSession(event): returns event.locals.auth (typed).
+          — requireAuth(event): returns auth or throws redirect(307, loginUrl).
+          — Usage in +page.server.ts load function:
+            export const load = async (event) => {
+              const auth = await requireAuth(event);
+              return { user: auth.user };
+            };
+        verify: "cd packages/auth-svelte && npm test"
+      - desc: "Implement Svelte stores — $lib/stores/auth.ts with user, session, isAuthenticated"
+        notes: |
+          packages/auth-svelte/src/client/stores.ts:
+          — createAuthStores(): returns {user, session, isAuthenticated, isLoading} as Svelte writable stores.
+          — Subscribes to client-side onAuthStateChange.
+          — Usage in +layout.svelte:
+            import { createAuthStores } from '@bigbase/auth/svelte';
+            const { user, isAuthenticated, isLoading } = createAuthStores();
+        verify: "cd packages/auth-svelte && npm test"
+      - desc: "Implement OAuth callback route handler for SvelteKit"
+        notes: |
+          packages/auth-svelte/src/server/callback.ts:
+          — Handles GET /auth/callback?code=...&state=... route.
+          — Calls BigBase /api/auth/oauth/google/callback internally.
+          — Sets cookie, redirects to configured PostLoginRedirect or SPA URL.
+          — Usage: create src/routes/auth/callback/+server.ts exporting GET = callbackHandler(...).
+        verify: "cd packages/auth-svelte && npm test"
+
+  - id: e33s03
+    title: "@bigbase/auth/astro — Astro adapter"
+    status: planned
+    bcps: 3
+    wsjf: 3.33
+    wsjf_rationale: "BV=5(Astro is top BaaS landing-page framework) TC=3(flexible) RR=5 / JS=2(~1 day)"
+    tasks:
+      - desc: "Implement Astro middleware — cookie-based session, Astro.locals injection"
+        notes: |
+          packages/auth-astro/src/middleware.ts:
+          — createBigBaseAuth({baseURL, cookieSecret}): returns Astro middleware function.
+          — On each request: validates session cookie, injects Astro.locals.auth = {user, session, token}.
+          — On failure: clears cookie, Astro.locals.auth = null.
+          — Usage in astro.config.mjs:
+            import { createBigBaseAuth } from '@bigbase/auth/astro';
+            export default defineConfig({
+              middleware: createBigBaseAuth({...})
+            });
+        verify: "cd packages/auth-astro && npm test"
+      - desc: "Implement Astro auth helpers — getSession(), requireAuth() for .astro pages"
+        notes: |
+          packages/auth-astro/src/helpers.ts:
+          — getSession(Astro): returns Astro.locals.auth.
+          — requireAuth(Astro): returns auth or Astro.redirect(loginUrl).
+          — Usage in .astro frontmatter:
+            const { user } = Astro.locals.auth || {};
+            if (!user) return Astro.redirect('/login');
+        verify: "cd packages/auth-astro && npm test"
+      - desc: "Implement framework-agnostic UI bridge — pass auth props to Svelte/Vue/React islands"
+        notes: |
+          packages/auth-astro/src/bridge.ts:
+          — createAuthProps(Astro): serializes auth state as JSON props for framework islands.
+          — Usage: <SignInButton client:load {...createAuthProps(Astro)} />
+          — Uses data attributes for vanilla JS fallback.
+        verify: "cd packages/auth-astro && npm test"
+
+  - id: e33s04
+    title: "@bigbase/auth/vue — Vite/Vue adapter"
+    status: planned
+    bcps: 3
+    wsjf: 3.33
+    wsjf_rationale: "BV=5(Vue is massive ecosystem) TC=3(flexible) RR=5 / JS=2(~1 day)"
+    tasks:
+      - desc: "Implement Vue plugin — app.use(createBigBaseAuth({...})), provide/inject pattern"
+        notes: |
+          packages/auth-vue/src/plugin.ts:
+          — createBigBaseAuth(options): returns Vue plugin with install(app).
+          — Provides: auth client, session, user, isAuthenticated via Vue's provide/inject.
+          — Usage in main.ts:
+            import { createBigBaseAuth } from '@bigbase/auth/vue';
+            app.use(createBigBaseAuth({baseURL: '...'}));
+        verify: "cd packages/auth-vue && npm test"
+      - desc: "Implement Vue composable — useAuth(), useSession() for Composition API"
+        notes: |
+          packages/auth-vue/src/composables.ts:
+          — useAuth(): returns reactive {user, session, isAuthenticated, signIn, signUp, signOut}.
+          — useSession(): returns reactive session only (lighter weight).
+          — Usage in <script setup>:
+            const { user, signOut } = useAuth();
+        verify: "cd packages/auth-vue && npm test"
+      - desc: "Implement Vue Router navigation guards"
+        notes: |
+          packages/auth-vue/src/router.ts:
+          — createAuthGuard(loginRoute): returns beforeEach guard that checks auth.
+          — Redirects unauthenticated users to loginRoute.
+          — Usage: router.beforeEach(createAuthGuard('/login')).
+        verify: "cd packages/auth-vue && npm test"
+
+  - id: e33s05
+    title: "@bigbase/auth/react + @bigbase/auth/next — React/Next.js adapter"
+    status: planned
+    bcps: 3
+    wsjf: 3.33
+    wsjf_rationale: "BV=5(React parity with Neon auth) TC=3(flexible) RR=5 / JS=2(~1 day)"
+    tasks:
+      - desc: "Implement React hooks — useSession, useAuth (parity with @neondatabase/auth/react)"
+        notes: |
+          packages/auth-react/src/hooks.ts:
+          — useSession(): returns {data: {user, session}, isPending, error}.
+          — useAuth(): returns full auth object with methods + session.
+          — Usage in components:
+            const { data: session, isPending } = useSession();
+            if (isPending) return <Loading />;
+            if (!session) return <SignIn />;
+        verify: "cd packages/auth-react && npm test"
+      - desc: "Implement Next.js middleware + API route handler"
+        notes: |
+          packages/auth-next/src/middleware.ts:
+          — bigBaseAuthMiddleware({baseURL, cookieSecret}): Next.js middleware.
+          — Protects routes, refreshes session cookie.
+          — Config: loginUrl, skipRoutes (default: ['/api/auth']).
+          — Usage in middleware.ts:
+            export default bigBaseAuthMiddleware({...});
+            export const config = {matcher: ['/((?!_next|favicon).)*']};
+
+          packages/auth-next/src/handler.ts:
+          — authApiHandler({baseURL, cookieSecret}): API route handler.
+          — Proxies auth requests to BigBase.
+          — Usage in app/api/auth/[...all]/route.ts:
+            export const {GET, POST} = authApiHandler({...});
+        verify: "cd packages/auth-next && npm test"
+      - desc: "Test React hooks + Next.js middleware end-to-end"
+        notes: |
+          packages/auth-next/src/__tests__/integration.test.ts:
+          — Test middleware redirects unauthenticated users to loginUrl.
+          — Test middleware refreshes expired session cookie.
+          — Test useSession hook returns session after signIn.
+          — Test signOut clears state and redirects.
+        verify: "cd packages/auth-next && npm test"

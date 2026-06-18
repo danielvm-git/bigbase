@@ -1,0 +1,147 @@
+type: epic-shard
+context: domain
+id: e34
+title: Auth UI Components — Multi-Framework
+wsjf: 3.6
+wsjf_rationale: "BV=8(pre-built UI is what makes devs choose BigBase — zero auth UI to build) TC=5(delays adoption but SDK covers the gap) RR=5(reduces permanent onboarding friction) / JS=5(~1 week: 3 UI libs + admin)"
+status: planned
+depends_on: [e33]
+covers:
+  - packages/auth-ui-svelte/ (new)
+  - packages/auth-ui-vue/ (new)
+  - packages/auth-ui-react/ (new)
+  - ui/src/pages/AdminAuthPage.tsx
+stories:
+  - id: e34s01
+    title: "@bigbase/auth-ui/svelte — Svelte UI components"
+    status: planned
+    bcps: 8
+    wsjf: 5.33
+    wsjf_rationale: "BV=10(Copa bolão needs auth UI — #1 priority) TC=8(blocks Copa launch) RR=5 / JS=2(~1 day)"
+    tasks:
+      - desc: "Implement <SignIn> component — email, OTP, magic link, social modes"
+        notes: |
+          packages/auth-ui-svelte/src/lib/SignIn.svelte:
+          — Props: {authClient, redirectTo?, mode?: 'email'|'otp'|'magic-link', showSocial?: boolean}.
+          — Modes tabbed: Email (default), OTP, Magic Link.
+          — Social login button: "Sign in with Google" → authClient.signIn.social({provider:'google'}).
+          — Email form: email + password inputs, submit → authClient.signIn.email().
+          — OTP form: email input → send OTP → code input → verify.
+          — Magic Link form: email input → send magic link → "Check your email" state.
+          — Error display: inline error message with retry.
+          — Loading states on all buttons.
+          — Tailwind CSS classes (no hardcoded styles — themeable via CSS variables).
+        verify: "cd packages/auth-ui-svelte && npm run build && npm test"
+      - desc: "Implement <SignUp> component — email registration with name"
+        notes: |
+          packages/auth-ui-svelte/src/lib/SignUp.svelte:
+          — Props: {authClient, redirectTo?}.
+          — Fields: name (optional), email (required), password (required, min 6 chars).
+          — Client-side validation: email format, password length, name max 100.
+          — Submit → authClient.signUp.email().
+          — Success: redirect to redirectTo or emit 'signup' event.
+          — Error: inline error message.
+        verify: "cd packages/auth-ui-svelte && npm run build && npm test"
+      - desc: "Implement <UserButton> component — avatar, dropdown with profile/signOut"
+        notes: |
+          packages/auth-ui-svelte/src/lib/UserButton.svelte:
+          — Props: {authClient}.
+          — Subscribes to auth state via onAuthStateChange.
+          — When authenticated: shows avatar (or initials fallback), dropdown with:
+            • User name + email
+            • "Profile" link (configurable href)
+            • "Sign Out" button → authClient.signOut()
+          — When unauthenticated: shows "Sign In" button → redirect to loginUrl.
+          — Keyboard accessible (Enter/Space to toggle, Escape to close, Tab navigation).
+        verify: "cd packages/auth-ui-svelte && npm run build && npm test"
+      - desc: "Implement <AuthView> component — full auth page router"
+        notes: |
+          packages/auth-ui-svelte/src/lib/AuthView.svelte:
+          — Props: {authClient, path?: 'sign-in'|'sign-up'|'forgot-password'|'otp'|'magic-link'}.
+          — Renders the appropriate form based on path prop.
+          — Handles mode transitions: "Forgot password?" link → switches to forgot-password view.
+          — "Already have an account?" → switches to sign-in view.
+          — Usage: <AuthView path="sign-in" /> — single component for entire auth page.
+        verify: "cd packages/auth-ui-svelte && npm run build && npm test"
+      - desc: "Export all components, CSS, and theme tokens"
+        notes: |
+          packages/auth-ui-svelte/src/lib/index.ts:
+          — Export SignIn, SignUp, UserButton, AuthView.
+          — Export CSS: @bigbase/auth-ui-svelte/css (standalone CSS file with CSS variables).
+          — Theme tokens: --bb-auth-primary, --bb-auth-bg, --bb-auth-text, --bb-auth-border, --bb-auth-radius.
+          — Dark mode support via prefers-color-scheme or data-theme attribute.
+        verify: "cd packages/auth-ui-svelte && npm run build && npm test"
+
+  - id: e34s02
+    title: "@bigbase/auth-ui/vue — Vue UI components"
+    status: planned
+    bcps: 3
+    wsjf: 2.67
+    wsjf_rationale: "BV=3(Vue UI is important but secondary to Svelte for Copa) TC=3(flexible) RR=3 / JS=3(~2-3 days)"
+    tasks:
+      - desc: "Implement <SignIn>, <SignUp>, <UserButton>, <AuthView> as Vue SFCs"
+        notes: |
+          packages/auth-ui-vue/src/components/:
+          — Same component catalog as Svelte: SignIn.vue, SignUp.vue, UserButton.vue, AuthView.vue.
+          — Same props interface, same modes (email, OTP, magic link, social).
+          — Vue Composition API with <script setup>.
+          — Uses useAuth() composable from @bigbase/auth/vue.
+          — Same Tailwind CSS + theme tokens.
+          — Same CSS variable system for theming.
+        verify: "cd packages/auth-ui-vue && npm run build && npm test"
+      - desc: "Export components, CSS, theme tokens"
+        notes: |
+          packages/auth-ui-vue/src/index.ts:
+          — Export SignIn, SignUp, UserButton, AuthView.
+          — Export CSS: @bigbase/auth-ui-vue/css.
+          — Same theme tokens as Svelte.
+        verify: "cd packages/auth-ui-vue && npm run build && npm test"
+
+  - id: e34s03
+    title: "@bigbase/auth-ui/react — React UI components"
+    status: planned
+    bcps: 3
+    wsjf: 2.67
+    wsjf_rationale: "BV=3(parity with @neondatabase/auth-ui) TC=3(flexible) RR=3 / JS=3(~2-3 days)"
+    tasks:
+      - desc: "Implement <SignIn>, <SignUp>, <UserButton>, <AuthView> as React components"
+        notes: |
+          packages/auth-ui-react/src/components/:
+          — Same component catalog: SignIn.tsx, SignUp.tsx, UserButton.tsx, AuthView.tsx.
+          — Uses useSession(), useAuth() from @bigbase/auth/react.
+          — Same Tailwind CSS + theme tokens.
+          — Paridade de API com @neondatabase/auth-ui (para facilitar migração).
+        verify: "cd packages/auth-ui-react && npm run build && npm test"
+      - desc: "Export components, CSS, theme tokens"
+        notes: |
+          packages/auth-ui-react/src/index.ts:
+          — Export SignIn, SignUp, UserButton, AuthView.
+          — Export CSS: @bigbase/auth-ui-react/css.
+          — Same theme tokens.
+        verify: "cd packages/auth-ui-react && npm run build && npm test"
+
+  - id: e34s04
+    title: "Admin UI — auth integration preview page + self-serve docs"
+    status: planned
+    bcps: 3
+    wsjf: 1.67
+    wsjf_rationale: "BV=1(cosmetic — devs can read docs without it) TC=1(no urgency) RR=5(enables self-serve onboarding) / JS=3(~2-3 days)"
+    tasks:
+      - desc: "Build /admin/auth page — live preview of all UI components per framework"
+        notes: |
+          ui/src/pages/AdminAuthPage.tsx:
+          — Tabbed interface: Svelte | Vue | React.
+          — Each tab shows live-rendered component previews: SignIn, SignUp, UserButton, AuthView.
+          — Interactive: can toggle between email/OTP/magic-link modes.
+          — Shows current BigBase auth config: OAuth providers enabled, OTP enabled, CORS origins.
+          — Generates copy-paste snippets for each framework.
+        verify: "cd ui && npm run build"
+      - desc: "Add integration docs per framework — step-by-step with code snippets"
+        notes: |
+          Admin UI /admin/auth page includes:
+          — SvelteKit: `npm install @bigbase/auth @bigbase/auth-svelte @bigbase/auth-ui-svelte`, hooks.server.ts setup, +layout.svelte with UserButton, +page.svelte with SignIn.
+          — Astro: `npm install @bigbase/auth @bigbase/auth-astro`, astro.config.mjs middleware, .astro page with UserButton island.
+          — Vue/Vite: `npm install @bigbase/auth @bigbase/auth-vue @bigbase/auth-ui-vue`, main.ts plugin setup, App.vue with router guard.
+          — React/Next.js: `npm install @bigbase/auth @bigbase/auth-react @bigbase/auth-next @bigbase/auth-ui-react`, middleware.ts, app/layout.tsx.
+          — Each framework docs includes: installation, setup (3 steps), component usage, theming.
+        verify: "cd ui && npm run build"

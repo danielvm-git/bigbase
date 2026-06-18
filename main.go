@@ -39,6 +39,23 @@ var (
 
 // parseLogLevel converts a case-insensitive log level string to slog.Level.
 // Returns an error for unknown or empty values.
+// parseCORSOrigins splits a comma-separated string of origins into a slice.
+// Empty input returns nil (CORS disabled).
+func parseCORSOrigins(raw string) []string {
+	if raw == "" {
+		return nil
+	}
+	parts := strings.Split(raw, ",")
+	origins := make([]string, 0, len(parts))
+	for _, p := range parts {
+		p = strings.TrimSpace(p)
+		if p != "" {
+			origins = append(origins, p)
+		}
+	}
+	return origins
+}
+
 func parseLogLevel(level string) (slog.Level, error) {
 	switch level {
 	case "debug", "DEBUG":
@@ -122,6 +139,7 @@ func startProxy() {
 	githubWebhookSecret := serveFS.String("github-webhook-secret", "", "GitHub App webhook secret")
 	sitesDomain := serveFS.String("sites-domain", "", "Parent domain for deployed site subdomains (e.g. bigbase.click)")
 	logLevel := serveFS.String("log-level", "info", "Log level: debug, info, warn, error")
+	corsOrigins := serveFS.String("cors-allowed-origins", "", "Comma-separated list of allowed CORS origins (empty = CORS disabled)")
 	_ = serveFS.Parse(os.Args[2:])
 
 	googleID := config.FlagOrEnv(*googleClientID, "GOOGLE_CLIENT_ID")
@@ -140,13 +158,18 @@ func startProxy() {
 		logger.Error("invalid log level, defaulting", "provided", *logLevel, "error", err)
 		level = slog.LevelInfo
 	}
+
+	// Parse CORS allowed origins (empty = CORS disabled, default safe).
+	corsAllowedOrigins := parseCORSOrigins(*corsOrigins)
+
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: level}))
 	k := kernel.New(logger)
 
 	p := proxy.New(proxy.Options{
-		Port:   *port,
-		Kernel: k,
-		Logger: logger,
+		Port:               *port,
+		Kernel:             k,
+		Logger:             logger,
+		CORSAllowedOrigins: corsAllowedOrigins,
 	})
 	d := db.New(db.Options{
 		Driver: dbDriverVal,
@@ -163,6 +186,7 @@ func startProxy() {
 		Logger:             logger,
 		GoogleClientID:     googleID,
 		GoogleClientSecret: googleSecret,
+		CORSAllowedOrigins: corsAllowedOrigins,
 	})
 
 	ad := admin.New(admin.Options{Logger: logger})

@@ -1,8 +1,8 @@
 type: session-state
 context: infra
 active_flow: build_epic
-active_epic_id: e30
-active_story_id: e30s03
+active_epic_id: e31
+active_story_id: e31s01
 active_bug_id: null
 release:
   target_version: 2.12.0
@@ -13,20 +13,24 @@ release:
   last_tag: v2.10.0
   last_publish: "2026-06-12"
 epic_cycle:
-  current_step: 3
-  next_skill: kickoff-branch
-  completed_steps: [survey-context, plan-work]
-  story_bcps: 3
+  current_step: 1
+  next_skill: plan-work
+  completed_steps: [survey-context]
+  story_bcps: 5
 bug_cycle:
   current_step: null
   completed_steps: [investigate-bug, fix-bug]
 git:
   branch: main
   hash: null
+metrics:
+  story_start: "2026-06-18T12:45:00Z"
 handoff:
-  last_step_completed: null
+  last_step_completed: survey-context
   open_decisions: []
   required_reading:
-    - specs/epics/e30-backend-for-integrations.yaml
-    - components/api/api.go
-  next_skill: survey-context
+    - specs/epics/e31-spa-friendly-auth.yaml
+    - components/auth/auth.go
+    - components/auth/auth_test.go
+    - main.go
+  next_skill: plan-work
