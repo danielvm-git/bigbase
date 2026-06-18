@@ -2,7 +2,7 @@ type: session-state
 context: infra
 active_flow: build_epic
 active_epic_id: e31
-active_story_id: e31s02
+active_story_id: e31s03
 active_bug_id: null
 release:
   target_version: 2.12.0
@@ -16,7 +16,7 @@ epic_cycle:
   current_step: 1
   next_skill: survey-context
   completed_steps: []
-  story_bcps: 8
+  story_bcps: 2
 bug_cycle:
   current_step: null
   completed_steps: [investigate-bug, fix-bug]
@@ -31,5 +31,5 @@ handoff:
   open_decisions: []
   required_reading:
     - specs/epics/e31-spa-friendly-auth.yaml
-    - components/auth/auth.go (handleGoogleOAuth, handleGoogleCallback)
+    - components/auth/auth.go
   next_skill: survey-context
