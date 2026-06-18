@@ -205,17 +205,30 @@ func (a *API) listRecords(w http.ResponseWriter, r *http.Request, collection str
 	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 	defer cancel()
 
-	var rows *sql.Rows
-	var err error
+	// Parse filter and sort params
+	filters, filterArgs := parseFilters(r, collection)
+	sortClause := parseSort(r, collection)
+
+	// Build WHERE clause
+	whereClause := ""
+	args := []any{}
 	if orgID, ok := OrgIDFromContext(r.Context()); ok {
-		rows, err = a.db.QueryContext(ctx,
-			fmt.Sprintf("SELECT id, data FROM %s WHERE org_id = ? ORDER BY id LIMIT ? OFFSET ?", collection),
-			orgID, limit, offset)
-	} else {
-		rows, err = a.db.QueryContext(ctx,
-			fmt.Sprintf("SELECT id, data FROM %s ORDER BY id LIMIT ? OFFSET ?", collection),
-			limit, offset)
+		whereClause = " WHERE org_id = ?"
+		args = append(args, orgID)
 	}
+	if len(filters) > 0 {
+		if whereClause == "" {
+			whereClause = " WHERE " + strings.Join(filters, " AND ")
+		} else {
+			whereClause += " AND " + strings.Join(filters, " AND ")
+		}
+		args = append(args, filterArgs...)
+	}
+
+	query := fmt.Sprintf("SELECT id, data FROM %s%s%s LIMIT ? OFFSET ?", collection, whereClause, sortClause)
+	args = append(args, limit, offset)
+
+	rows, err := a.db.QueryContext(ctx, query, args...)
 	if err != nil {
 		a.logger.Error("list records query", "collection", collection, "error", err)
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
@@ -717,6 +730,117 @@ func sanitize(name string) (string, error) {
 		}
 	}
 	return name, nil
+}
+
+// parseFilters extracts filter query params and returns SQL WHERE clauses
+// with json_extract and corresponding bind arguments.
+// Each ?filter=field=value becomes: json_extract(data, '$.field') = ?
+// Each ?filter=field:op=value becomes: json_extract(data, '$.field') OP ?
+func parseFilters(r *http.Request, collection string) ([]string, []any) {
+	var clauses []string
+	var args []any
+
+	for _, raw := range r.URL.Query()["filter"] {
+		field, op, value := parseFilterExpr(raw)
+
+		// Validate field name
+		if _, err := sanitize(field); err != nil {
+			continue // skip invalid field names
+		}
+
+		extract := fmt.Sprintf("json_extract(data, '$.%s')", field)
+
+		switch op {
+		case "eq", "":
+			if value == "" {
+				clauses = append(clauses, extract+" IS NULL OR "+extract+" = ''")
+			} else {
+				clauses = append(clauses, extract+" = ?")
+				args = append(args, value)
+			}
+		case "gt":
+			clauses = append(clauses, "CAST("+extract+" AS REAL) > ?")
+			args = append(args, value)
+		case "gte":
+			clauses = append(clauses, "CAST("+extract+" AS REAL) >= ?")
+			args = append(args, value)
+		case "lt":
+			clauses = append(clauses, "CAST("+extract+" AS REAL) < ?")
+			args = append(args, value)
+		case "lte":
+			clauses = append(clauses, "CAST("+extract+" AS REAL) <= ?")
+			args = append(args, value)
+		case "ne":
+			clauses = append(clauses, extract+" != ?")
+			args = append(args, value)
+		case "like":
+			clauses = append(clauses, extract+" LIKE ?")
+			args = append(args, "%"+value+"%")
+		}
+	}
+
+	return clauses, args
+}
+
+// parseFilterExpr splits a filter expression like "field=value" or "field:op=value"
+// into (field, op, value). Default op is "eq".
+func parseFilterExpr(raw string) (field, op, value string) {
+	// Check for operator syntax: field:op=value
+	firstColon := strings.Index(raw, ":")
+	firstEq := strings.Index(raw, "=")
+
+	if firstColon > 0 && (firstEq < 0 || firstColon < firstEq) {
+		// Has operator: field:op=value
+		field = raw[:firstColon]
+		rest := raw[firstColon+1:]
+		eqIdx := strings.Index(rest, "=")
+		if eqIdx >= 0 {
+			op = rest[:eqIdx]
+			value = rest[eqIdx+1:]
+		} else {
+			op = "eq"
+			value = rest
+		}
+	} else if firstEq > 0 {
+		// Simple equality: field=value
+		field = raw[:firstEq]
+		value = raw[firstEq+1:]
+		op = "eq"
+	} else {
+		field = raw
+		op = "eq"
+	}
+	return field, op, value
+}
+
+// parseSort extracts the sort query param and returns an ORDER BY clause.
+// ?sort=field → ORDER BY json_extract(data, '$.field') ASC
+// ?sort=-field → ORDER BY json_extract(data, '$.field') DESC
+// No sort param → ORDER BY id (default)
+func parseSort(r *http.Request, collection string) string {
+	raw := r.URL.Query().Get("sort")
+	if raw == "" {
+		return " ORDER BY id"
+	}
+
+	desc := false
+	field := raw
+	if strings.HasPrefix(raw, "-") {
+		desc = true
+		field = raw[1:]
+	}
+
+	// Validate field name
+	if _, err := sanitize(field); err != nil {
+		return " ORDER BY id" // fallback for invalid field
+	}
+
+	dir := "ASC"
+	if desc {
+		dir = "DESC"
+	}
+
+	return fmt.Sprintf(" ORDER BY json_extract(data, '$.%s') %s", field, dir)
 }
 
 func writeJSON(w http.ResponseWriter, status int, data any) {
