@@ -4,7 +4,7 @@ id: e33
 title: Client SDK + Multi-Framework Adapters
 wsjf: 5.2
 wsjf_rationale: "BV=10(SDK is core product — without it every project reinvents auth) TC=8(Copa Svelte blocked without SDK) RR=8(eliminates permanent adoption friction) / JS=5(~1 week: core + 4 adapters)"
-status: planned
+status: done
 depends_on: [e31, e32]
 covers:
   - packages/auth/ (new npm workspace)
@@ -16,7 +16,7 @@ covers:
 stories:
   - id: e33s01
     title: "@bigbase/auth — framework-agnostic core SDK"
-    status: planned
+    status: done
     bcps: 8
     wsjf: 5.33
     wsjf_rationale: "BV=10(core SDK — all adapters depend on this) TC=8(blocks all framework adapters) RR=8 / JS=3(~2-3 days)"
@@ -81,7 +81,7 @@ stories:
 
   - id: e33s02
     title: "@bigbase/auth/svelte — SvelteKit adapter"
-    status: planned
+    status: done
     bcps: 5
     wsjf: 5.33
     wsjf_rationale: "BV=10(Copa bolão is SvelteKit — #1 priority) TC=8(blocks Copa project) RR=5 / JS=2(~1 day)"
@@ -128,7 +128,7 @@ stories:
 
   - id: e33s03
     title: "@bigbase/auth/astro — Astro adapter"
-    status: planned
+    status: done
     bcps: 3
     wsjf: 3.33
     wsjf_rationale: "BV=5(Astro is top BaaS landing-page framework) TC=3(flexible) RR=5 / JS=2(~1 day)"
@@ -164,7 +164,7 @@ stories:
 
   - id: e33s04
     title: "@bigbase/auth/vue — Vite/Vue adapter"
-    status: planned
+    status: done
     bcps: 3
     wsjf: 3.33
     wsjf_rationale: "BV=5(Vue is massive ecosystem) TC=3(flexible) RR=5 / JS=2(~1 day)"
@@ -196,7 +196,7 @@ stories:
 
   - id: e33s05
     title: "@bigbase/auth/react + @bigbase/auth/next — React/Next.js adapter"
-    status: planned
+    status: done
     bcps: 3
     wsjf: 3.33
     wsjf_rationale: "BV=5(React parity with Neon auth) TC=3(flexible) RR=5 / JS=2(~1 day)"

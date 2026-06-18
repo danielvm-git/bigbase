@@ -1,0 +1,15 @@
+{
+  "name": "@bigbase/auth-ui-svelte",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "svelte": "./dist/index.js",
+  "exports": {
+    ".": "./dist/index.js",
+    "./css": "./dist/auth-ui.css"
+  },
+  "files": ["dist"],
+  "scripts": { "build": "svelte-package -i src/lib", "test": "echo ok" },
+  "peerDependencies": { "svelte": "^5.0" },
+  "devDependencies": { "svelte": "^5.0", "@sveltejs/package": "^2.0", "typescript": "^5.7" }
+}
