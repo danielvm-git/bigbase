@@ -1,0 +1,14 @@
+:root {
+  --bb-auth-primary: #1a1a2e;
+  --bb-auth-bg: #ffffff;
+  --bb-auth-text: #1a202c;
+  --bb-auth-border: #e2e8f0;
+  --bb-auth-radius: 8px;
+  --bb-auth-error: #e53e3e;
+}
+
+.bb-auth-view { font-family: system-ui, sans-serif; color: var(--bb-auth-text); }
+.bb-auth-social-btn { background: var(--bb-auth-bg); border-color: var(--bb-auth-border); }
+.bb-auth-signin-link { color: var(--bb-auth-primary); }
+button[type="submit"], .bb-auth-avatar span { background: var(--bb-auth-primary); }
+</style>
