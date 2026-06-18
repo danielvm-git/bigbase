@@ -1,0 +1,45 @@
+story_id: e30s01
+verified_at: "2026-06-18T09:30:00-03:00"
+verifier: verify-work
+phases:
+  smoke:
+    passed: true
+    details: "clean build from worktree, server started on :9998"
+  build:
+    passed: true
+    command: "go build ./..."
+  typecheck:
+    passed: true
+    command: "go vet ./..."
+  lint:
+    passed: true
+    command: "golangci-lint run ./components/functions/..."
+    details: "0 issues"
+  tests:
+    passed: true
+    command: "go test ./..."
+    results: "24 packages pass, 6 new tests: TestRuntimeFetch, TestFetchAllowlist, TestRuntimeEnv, TestRuntimeDB, TestRunHTTPContext, TestSchedule"
+  manual:
+    passed: true
+    ac_results:
+      ac1_fetch:
+        passed: true
+        evidence: "fetch to local test server returned 200 with body"
+      ac2_allowlist:
+        passed: true
+        evidence: "blocked host returned 'host not in allowlist' error"
+      ac3_db:
+        passed: true
+        evidence: "db.collection('items').create/list returned 2 records"
+      ac4_env:
+        passed: true
+        evidence: "env.API_KEY='sk-abc', env.REGION='us-east'"
+      ac5_request:
+        passed: true
+        evidence: "request.method=POST, headers, body, query all accessible"
+      ac6_schedule:
+        passed: true
+        evidence: "TestSchedule unit test passes; @every 1s cron triggers execution"
+      ac7_schedule_flag:
+        passed: true
+        evidence: "ScheduleEnabled defaults false; test enables explicitly"

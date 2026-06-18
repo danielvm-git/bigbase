@@ -14,7 +14,7 @@ covers:
 stories:
   - id: e30s01
     title: Functions Runtime — fetch, db, request context, env, schedule
-    status: planned
+    status: done
     bcps: 8
     wsjf: 3.25
     wsjf_rationale: "BV=10(blocker: functions useless without integrations) TC=8(active Copa bot project blocked) RR=8(eliminates core architectural gap, enables webhook/API functions) / JS=8(~2 weeks: 5 injections + cron loop + tests)"

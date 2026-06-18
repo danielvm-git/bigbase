@@ -9,18 +9,18 @@ release:
   last_tag: v2.10.0
   last_publish: "2026-06-12"
 epic_cycle:
-  current_step: 3
-  next_skill: kickoff-branch
-  completed_steps: [survey-context, plan-work]
+  current_step: 8
+  next_skill: release-branch
+  completed_steps: [survey-context, plan-work, kickoff-branch, develop-tdd, verify-work, audit-code, commit-message]
   story_bcps: 8
 bug_cycle:
   current_step: null
   completed_steps: [investigate-bug, fix-bug]
 git:
-  branch: feat/e27-site-request-logs
-  hash: 03cf4b8be4cb7de8450b0019b2e71dd4f3743f80
+  branch: e30s01-functions-runtime
+  hash: e8a194b
 handoff:
-  last_step_completed: plan-work
+  last_step_completed: verify-work
   open_decisions: []
   required_reading:
     - specs/epics/e30-backend-for-integrations.yaml
@@ -29,4 +29,4 @@ handoff:
     - components/functions/runtime.go
     - components/functions/handlers.go
     - components/functions/functions.go
-  next_skill: kickoff-branch
+  next_skill: audit-code
