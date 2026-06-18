@@ -174,6 +174,7 @@ func (a *Auth) Start(ctx *kernel.Context) error {
 	_ = a.db.Migrate("ALTER TABLE users ADD COLUMN role TEXT NOT NULL DEFAULT 'user'")
 	_ = a.db.Migrate("ALTER TABLE users ADD COLUMN google_id TEXT DEFAULT ''")
 	_ = a.db.Migrate("ALTER TABLE users ADD COLUMN avatar_url TEXT DEFAULT ''")
+	_ = a.db.Migrate("ALTER TABLE users ADD COLUMN name TEXT DEFAULT ''")
 	_ = a.db.Migrate("ALTER TABLE users ADD COLUMN default_org_id INTEGER")
 
 	if err := a.db.Migrate(`CREATE TABLE IF NOT EXISTS orgs (
@@ -281,6 +282,10 @@ func (a *Auth) Handler() http.Handler {
 	mux.HandleFunc("/api/auth/reset-password", a.handleResetPassword)
 	mux.HandleFunc("/api/auth/refresh", a.handleRefresh)
 	mux.HandleFunc("/api/auth/logout", a.handleLogout)
+	mux.HandleFunc("/api/auth/otp/send", a.handleSendOTP)
+	mux.HandleFunc("/api/auth/otp/verify", a.handleVerifyOTP)
+	mux.HandleFunc("/api/auth/magic-link/send", a.handleSendMagicLink)
+	mux.HandleFunc("/api/auth/magic-link/verify", a.handleVerifyMagicLink)
 	return mux
 }
 
@@ -289,6 +294,10 @@ func (a *Auth) ProtectedHandler() http.Handler {
 	mux.HandleFunc("GET /api/auth/users", a.handleUsers)
 	mux.HandleFunc("DELETE /api/auth/users/{id}", a.handleUserByID)
 	mux.HandleFunc("GET /api/auth/me", a.handleMe)
+	mux.HandleFunc("PATCH /api/auth/me", a.handleUpdateMe)
+	mux.HandleFunc("GET /api/auth/me/identities", a.handleListIdentities)
+	mux.HandleFunc("POST /api/auth/me/identities", a.handleLinkIdentity)
+	mux.HandleFunc("DELETE /api/auth/me/identities/{provider}", a.handleUnlinkIdentity)
 	mux.HandleFunc("POST /api/orgs", a.handleCreateOrg)
 	mux.HandleFunc("GET /api/orgs", a.handleListOrgs)
 	mux.HandleFunc("GET /api/orgs/{id}", a.handleGetOrg)
@@ -904,6 +913,39 @@ func (a *Auth) findOrCreateGoogleUser(ctx context.Context, gu *GoogleUser) (int6
 	org, err := a.CreateOrg(ctx, gu.Email, gu.Email, userID)
 	if err != nil {
 		a.logger.Error("create personal org for google user", "error", err)
+		return userID, 0, nil
+	}
+	_, _ = a.db.ExecContext(ctx, "UPDATE users SET default_org_id = ? WHERE id = ?", org.ID, userID)
+
+	return userID, org.ID, nil
+}
+
+// findOrCreateEmailUser finds an existing user by email or creates a passwordless user.
+func (a *Auth) findOrCreateEmailUser(ctx context.Context, email string) (int64, int64, error) {
+	var existingID, defaultOrgID int64
+	err := a.db.QueryRowContext(ctx, "SELECT id, COALESCE(default_org_id, 0) FROM users WHERE email = ?", email).Scan(&existingID, &defaultOrgID)
+	if err == nil {
+		return existingID, defaultOrgID, nil
+	}
+
+	// Create new passwordless user.
+	passwordHash, _ := hashPassword(generateTempPass())
+	now := time.Now().UTC().Format(time.RFC3339)
+	res, err := a.db.ExecContext(ctx,
+		"INSERT INTO users (email, password_hash, role, created_at) VALUES (?, ?, 'user', ?)",
+		email, passwordHash, now)
+	if err != nil {
+		return 0, 0, fmt.Errorf("insert email user: %w", err)
+	}
+
+	userID, err := res.LastInsertId()
+	if err != nil {
+		return 0, 0, fmt.Errorf("email user last insert id: %w", err)
+	}
+
+	org, err := a.CreateOrg(ctx, email, email, userID)
+	if err != nil {
+		a.logger.Error("create personal org", "error", err)
 		return userID, 0, nil
 	}
 	_, _ = a.db.ExecContext(ctx, "UPDATE users SET default_org_id = ? WHERE id = ?", org.ID, userID)
