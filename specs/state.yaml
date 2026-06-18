@@ -2,7 +2,7 @@ type: session-state
 context: infra
 active_flow: build_epic
 active_epic_id: e31
-active_story_id: e31s01
+active_story_id: e31s02
 active_bug_id: null
 release:
   target_version: 2.12.0
@@ -13,10 +13,10 @@ release:
   last_tag: v2.10.0
   last_publish: "2026-06-12"
 epic_cycle:
-  current_step: 8
-  next_skill: release-branch
-  completed_steps: [survey-context, plan-work, kickoff-branch, develop-tdd, verify-work, audit-code, commit-message]
-  story_bcps: 5
+  current_step: 1
+  next_skill: survey-context
+  completed_steps: []
+  story_bcps: 8
 bug_cycle:
   current_step: null
   completed_steps: [investigate-bug, fix-bug]
@@ -27,18 +27,9 @@ git:
 metrics:
   story_start: "2026-06-18T12:45:00Z"
 handoff:
-  last_step_completed: commit-message
+  last_step_completed: null
   open_decisions: []
   required_reading:
     - specs/epics/e31-spa-friendly-auth.yaml
-    - specs/verifications/e31s01-verify.yaml
-  next_skill: release-branch
-  commit_draft: |
-    feat(auth,proxy): add configurable CORS middleware for browser SPA support
-    
-    - Add components/auth/cors.go: CORS(allowedOrigins) middleware
-    - Add CORSAllowedOrigins to auth.Options and proxy.Options
-    - Add --cors-allowed-origins CLI flag (empty = disabled)
-    - Default: no origins → CORS disabled (pass-through)
-    - 5 tests: middleware, options, preflight, denied, default-closed
-    - Bump: minor
+    - components/auth/auth.go (handleGoogleOAuth, handleGoogleCallback)
+  next_skill: survey-context
