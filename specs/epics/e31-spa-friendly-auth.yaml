@@ -12,7 +12,7 @@ covers:
 stories:
   - id: e31s01
     title: Configurable CORS middleware
-    status: planned
+    status: done
     bcps: 5
     wsjf: 5.2
     wsjf_rationale: "BV=8(SPAs completely blocked without CORS) TC=8(blocks Copa project) RR=10(eliminates architectural gap; default-closed for safety) / JS=5(~1 week solo)"

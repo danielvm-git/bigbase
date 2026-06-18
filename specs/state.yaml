@@ -13,24 +13,26 @@ release:
   last_tag: v2.10.0
   last_publish: "2026-06-12"
 epic_cycle:
-  current_step: 1
-  next_skill: plan-work
-  completed_steps: [survey-context]
+  current_step: 5
+  next_skill: verify-work
+  completed_steps: [survey-context, plan-work, kickoff-branch, develop-tdd]
   story_bcps: 5
 bug_cycle:
   current_step: null
   completed_steps: [investigate-bug, fix-bug]
 git:
-  branch: main
-  hash: null
+  branch: e31s01-cors-middleware
+  hash: 259d8cd
 metrics:
   story_start: "2026-06-18T12:45:00Z"
 handoff:
-  last_step_completed: survey-context
+  last_step_completed: develop-tdd
   open_decisions: []
   required_reading:
     - specs/epics/e31-spa-friendly-auth.yaml
     - components/auth/auth.go
-    - components/auth/auth_test.go
+    - components/auth/cors.go
+    - components/auth/cors_test.go
+    - components/proxy/proxy.go
     - main.go
-  next_skill: plan-work
+  next_skill: verify-work
