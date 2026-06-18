@@ -15,7 +15,7 @@ epics:
   e26: done
   e28: done
   e27: done
-  e30: planned
+  e30: done
 stories:
   e29s01: done
   e29s02: done
@@ -90,4 +90,4 @@ stories:
   e27s04: done
   e30s01: done
   e30s02: done
-  e30s03: planned
+  e30s03: done

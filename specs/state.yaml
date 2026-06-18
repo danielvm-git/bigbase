@@ -4,7 +4,6 @@ active_flow: build_epic
 active_epic_id: e30
 active_story_id: e30s03
 active_bug_id: null
-active_bug_id: null
 release:
   target_version: 2.11.0
   last_tag: v2.10.0
