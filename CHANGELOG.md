@@ -1,3 +1,10 @@
+# [2.16.0](https://github.com/danielvm-git/bigbase/compare/v2.15.0...v2.16.0) (2026-06-18)
+
+
+### Features
+
+* **auth:** add POST /api/auth/logout endpoint ([#30](https://github.com/danielvm-git/bigbase/issues/30)) ([3f51ebf](https://github.com/danielvm-git/bigbase/commit/3f51ebfb6c31161b581dca4c46ddf0060457b287))
+
 # [2.15.0](https://github.com/danielvm-git/bigbase/compare/v2.14.0...v2.15.0) (2026-06-18)
 
 
