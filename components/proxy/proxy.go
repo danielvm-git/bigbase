@@ -53,19 +53,21 @@ type RequestLogger interface {
 }
 
 type Options struct {
-	Port          string
-	Kernel        *kernel.Kernel
-	Logger        Logger
-	RequestLogger RequestLogger
+	Port               string
+	Kernel             *kernel.Kernel
+	Logger             Logger
+	RequestLogger      RequestLogger
+	CORSAllowedOrigins []string
 }
 
 type Proxy struct {
-	port          string
-	kernel        *kernel.Kernel
-	logger        Logger
-	requestLogger RequestLogger
-	server        *http.Server
-	mux           *http.ServeMux
+	port               string
+	kernel             *kernel.Kernel
+	logger             Logger
+	requestLogger      RequestLogger
+	server             *http.Server
+	mux                *http.ServeMux
+	corsAllowedOrigins []string
 
 	starsMu       sync.Mutex
 	starsVal      string
@@ -117,11 +119,12 @@ func (p *Proxy) fetchStars() (string, error) {
 
 func New(opts Options) *Proxy {
 	return &Proxy{
-		port:          opts.Port,
-		kernel:        opts.Kernel,
-		logger:        opts.Logger,
-		requestLogger: opts.RequestLogger,
-		mux:           http.NewServeMux(),
+		port:               opts.Port,
+		kernel:             opts.Kernel,
+		logger:             opts.Logger,
+		requestLogger:      opts.RequestLogger,
+		mux:                http.NewServeMux(),
+		corsAllowedOrigins: opts.CORSAllowedOrigins,
 	}
 }
 
@@ -147,7 +150,7 @@ func (p *Proxy) Init(ctx *kernel.Context, config json.RawMessage) error {
 }
 
 func (p *Proxy) Handler() http.Handler {
-	return p.securityHeadersMiddleware(p.loggingMiddleware(p.requestIDMiddleware(p.deploymentHostMiddleware(p.mux))))
+	return p.corsMiddleware(p.securityHeadersMiddleware(p.loggingMiddleware(p.requestIDMiddleware(p.deploymentHostMiddleware(p.mux)))))
 }
 
 func (p *Proxy) Start(ctx *kernel.Context) error {
@@ -1085,3 +1088,44 @@ a:hover { opacity: 0.8; }
 
 </body>
 </html>`
+
+func (p *Proxy) corsMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if len(p.corsAllowedOrigins) == 0 {
+			next.ServeHTTP(w, r)
+			return
+		}
+		origin := r.Header.Get("Origin")
+		if origin == "" {
+			next.ServeHTTP(w, r)
+			return
+		}
+		allowed := false
+		for _, o := range p.corsAllowedOrigins {
+			if o == origin {
+				allowed = true
+				break
+			}
+		}
+		if !allowed {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusForbidden)
+			w.Write([]byte(`{"error":"origin not allowed"}`))
+			return
+		}
+		if r.Method == http.MethodOptions {
+			w.Header().Set("Access-Control-Allow-Origin", origin)
+			w.Header().Set("Access-Control-Allow-Credentials", "true")
+			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS")
+			w.Header().Set("Access-Control-Allow-Headers", "Authorization, Content-Type")
+			w.Header().Set("Access-Control-Max-Age", "86400")
+			w.Header().Set("Vary", "Origin")
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+		w.Header().Set("Access-Control-Allow-Origin", origin)
+		w.Header().Set("Access-Control-Allow-Credentials", "true")
+		w.Header().Set("Vary", "Origin")
+		next.ServeHTTP(w, r)
+	})
+}

@@ -1,10 +1,84 @@
 package auth
 
 import (
+	"context"
+	"database/sql"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 )
+
+func TestCORSMiddleware(t *testing.T) {
+	// Integration test: CORS via auth.CORSMiddleware().
+	// Tests that Options.CORSAllowedOrigins flows through to the middleware.
+	a := &Auth{corsAllowedOrigins: []string{"https://example.com"}}
+	cors := a.CORSMiddleware()
+
+	handler := cors(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
+
+	req := httptest.NewRequest("OPTIONS", "/api/auth/me", nil)
+	req.Header.Set("Origin", "https://example.com")
+	req.Header.Set("Access-Control-Request-Method", "GET")
+	rec := httptest.NewRecorder()
+	handler.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusNoContent {
+		t.Errorf("expected 204, got %d", rec.Code)
+	}
+	if rec.Header().Get("Access-Control-Allow-Origin") != "https://example.com" {
+		t.Errorf("expected Allow-Origin, got %q", rec.Header().Get("Access-Control-Allow-Origin"))
+	}
+}
+
+func TestCORSOptions(t *testing.T) {
+	// Verify CORSAllowedOrigins is stored from Options.
+	tdb := &testDB{}
+	opts := Options{
+		DB:                 tdb,
+		Logger:             noopLogger{},
+		Secret:             "test-secret",
+		CORSAllowedOrigins: []string{"https://a.example.com", "https://b.example.com"},
+	}
+	a := New(opts)
+	if len(a.corsAllowedOrigins) != 2 {
+		t.Errorf("expected 2 origins, got %d", len(a.corsAllowedOrigins))
+	}
+	if a.corsAllowedOrigins[0] != "https://a.example.com" || a.corsAllowedOrigins[1] != "https://b.example.com" {
+		t.Errorf("unexpected origins: %v", a.corsAllowedOrigins)
+	}
+	// Default: no origins means nil.
+	def := New(Options{DB: tdb, Logger: noopLogger{}, Secret: "test"})
+	if len(def.corsAllowedOrigins) != 0 {
+		t.Errorf("expected 0 origins for default, got %d", len(def.corsAllowedOrigins))
+	}
+}
+
+// testDB is a minimal DBer for unit tests that don't need database access.
+type testDB struct{}
+
+func (d *testDB) ExecContext(ctx context.Context, query string, args ...any) (sql.Result, error) {
+	return nil, nil
+}
+func (d *testDB) QueryContext(ctx context.Context, query string, args ...any) (*sql.Rows, error) {
+	return nil, nil
+}
+func (d *testDB) QueryRowContext(ctx context.Context, query string, args ...any) *sql.Row {
+	return nil
+}
+func (d *testDB) Exec(query string, args ...any) (sql.Result, error) {
+	return nil, nil
+}
+func (d *testDB) Query(query string, args ...any) (*sql.Rows, error) {
+	return nil, nil
+}
+func (d *testDB) QueryRow(query string, args ...any) *sql.Row {
+	return nil
+}
+func (d *testDB) Migrate(migration string) error {
+	return nil
+}
 
 func TestCORSDefaultClosed(t *testing.T) {
 	// When no origins configured, CORS middleware is a no-op.
