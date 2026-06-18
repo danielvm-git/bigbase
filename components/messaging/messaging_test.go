@@ -4,8 +4,10 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"io"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/danielvm/bigbase/components/db"
@@ -405,5 +407,104 @@ func TestProviderCalled(t *testing.T) {
 	}
 	if rp.Messages()[0].ToAddr != "a@b.com" {
 		t.Fatalf("expected to_addr 'a@b.com', got '%s'", rp.Messages()[0].ToAddr)
+	}
+}
+
+func TestWebhookProvider(t *testing.T) {
+	// Track received requests
+	var receivedBody []byte
+	var receivedAuth string
+	var receivedPath string
+
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		receivedPath = r.URL.Path
+		receivedAuth = r.Header.Get("Authorization")
+		receivedBody, _ = io.ReadAll(r.Body)
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(`{"ok":true}`))
+	}))
+	defer srv.Close()
+
+	wp := messaging.NewWebhookProvider(srv.URL+"/webhook", "test-token-abc")
+
+	msg := messaging.Message{
+		ID:      "msg-1",
+		Channel: "telegram",
+		ToAddr:  "123456",
+		Body:    "Hello from test",
+	}
+
+	err := wp.Send(context.Background(), msg)
+	if err != nil {
+		t.Fatalf("Send failed: %v", err)
+	}
+
+	// Verify the webhook received the correct data
+	if receivedPath != "/webhook" {
+		t.Fatalf("expected path '/webhook', got '%s'", receivedPath)
+	}
+	if receivedAuth != "Bearer test-token-abc" {
+		t.Fatalf("expected Authorization 'Bearer test-token-abc', got '%s'", receivedAuth)
+	}
+
+	var payload map[string]any
+	if err := json.Unmarshal(receivedBody, &payload); err != nil {
+		t.Fatalf("failed to parse webhook body: %v", err)
+	}
+	if payload["body"] != "Hello from test" {
+		t.Fatalf("expected body 'Hello from test', got '%v'", payload["body"])
+	}
+	if payload["channel"] != "telegram" {
+		t.Fatalf("expected channel 'telegram', got '%v'", payload["channel"])
+	}
+}
+
+func TestTelegramHandler(t *testing.T) {
+	var receivedBody []byte
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		receivedBody, _ = io.ReadAll(r.Body)
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(`{"ok":true}`))
+	}))
+	defer srv.Close()
+
+	logger := testLogger{}
+	k := kernel.New(logger)
+	d := db.New(db.Options{Path: ":memory:", Logger: logger})
+	m := messaging.New(messaging.Options{DB: d, Logger: logger})
+	k.Register(d)
+	k.Register(m)
+	if err := k.Start(); err != nil {
+		t.Fatalf("kernel start: %v", err)
+	}
+	defer func() { _ = k.Stop() }()
+
+	wp := messaging.NewWebhookProvider(srv.URL+"/bot", "")
+	m.RegisterProvider("telegram", wp)
+
+	h := m.Handler()
+
+	body := `{"chat_id":"12345","text":"Hello Telegram!"}`
+	req := httptest.NewRequest("POST", "/api/messaging/telegram", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	h.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", w.Code, w.Body.String())
+	}
+
+	var payload map[string]any
+	if err := json.Unmarshal(receivedBody, &payload); err != nil {
+		t.Fatalf("failed to parse webhook body: %v", err)
+	}
+	if payload["to_addr"] != "12345" {
+		t.Fatalf("expected to_addr '12345', got '%v'", payload["to_addr"])
+	}
+	if payload["body"] != "Hello Telegram!" {
+		t.Fatalf("expected body 'Hello Telegram!', got '%v'", payload["body"])
+	}
+	if payload["channel"] != "telegram" {
+		t.Fatalf("expected channel 'telegram', got '%v'", payload["channel"])
 	}
 }

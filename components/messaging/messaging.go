@@ -145,6 +145,7 @@ func (m *Messaging) Handler() http.Handler {
 	mux.HandleFunc("/api/messaging/email", m.handleEmail)
 	mux.HandleFunc("/api/messaging/sms", m.handleSMS)
 	mux.HandleFunc("/api/messaging/push", m.handlePush)
+	mux.HandleFunc("/api/messaging/telegram", m.handleTelegram)
 	mux.HandleFunc("/api/messaging/messages", m.handleList)
 	return mux
 }
@@ -189,6 +190,44 @@ func (m *Messaging) send(ctx context.Context, channel, toAddr, subject, body str
 	}
 
 	return msg, nil
+}
+
+// handleTelegram handles POST /api/messaging/telegram — accepts {chat_id, text, parse_mode, token}
+// and routes through the registered telegram channel provider.
+func (m *Messaging) handleTelegram(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
+		return
+	}
+
+	var req struct {
+		ChatID    string `json:"chat_id"`
+		Text      string `json:"text"`
+		ParseMode string `json:"parse_mode,omitempty"`
+		Token     string `json:"token,omitempty"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json"})
+		return
+	}
+
+	if req.ChatID == "" {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "chat_id is required"})
+		return
+	}
+	if req.Text == "" {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "text is required"})
+		return
+	}
+
+	msg, err := m.send(r.Context(), "telegram", req.ChatID, "", req.Text)
+	if err != nil {
+		m.logger.Error("telegram send", "error", err)
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "send failed"})
+		return
+	}
+
+	writeJSON(w, http.StatusOK, msg)
 }
 
 func (m *Messaging) handleMethod(w http.ResponseWriter, r *http.Request, method string) bool {
