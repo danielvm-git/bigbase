@@ -4,7 +4,7 @@ id: e35
 title: Advanced Auth — Phone, Anonymous, OAuth popup
 wsjf: 2.2
 wsjf_rationale: "BV=3(nice-to-have — phone auth and anonymous are advanced use cases) TC=1(no urgency) RR=5(completes full Neon parity) / JS=5(~1 week: 3 stories)"
-status: planned
+status: done
 depends_on: [e33]
 covers:
   - components/auth/auth.go
@@ -13,7 +13,7 @@ covers:
 stories:
   - id: e35s01
     title: Phone authentication — SMS OTP
-    status: planned
+    status: done
     bcps: 3
     wsjf: 1.33
     wsjf_rationale: "BV=3(nice-to-have for mobile-first apps) TC=1(no urgency) RR=3 / JS=5(~1 week: Twilio/Vonage integration + tests)"
@@ -47,7 +47,7 @@ stories:
 
   - id: e35s02
     title: Anonymous access — JWT for unauthenticated users with RLS
-    status: planned
+    status: done
     bcps: 2
     wsjf: 1.33
     wsjf_rationale: "BV=2(cosmetic — few apps need public data with RLS) TC=1(no urgency) RR=5(safety feature — limits what anonymous can do) / JS=5(~1 week)"
@@ -79,7 +79,7 @@ stories:
 
   - id: e35s03
     title: OAuth popup flow — window.open based OAuth for iframe/SPA scenarios
-    status: planned
+    status: done
     bcps: 1
     wsjf: 0.6
     wsjf_rationale: "BV=1(cosmetic — niche use case) TC=1(no urgency) RR=3 / JS=3(~2-3 days)"
