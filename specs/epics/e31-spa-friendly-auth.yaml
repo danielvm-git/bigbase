@@ -1,0 +1,142 @@
+type: epic-shard
+context: domain
+id: e31
+title: SPA-Friendly Auth — CORS, OAuth redirect, logout
+wsjf: 4.8
+wsjf_rationale: "BV=8(blocks all SPA use cases — major pain point for external apps) TC=8(Copa bolão project actively blocked) RR=8(enables new capability class: any browser SPA can auth+call APIs) / JS=5(~1 week: 3 stories)"
+status: planned
+covers:
+  - components/auth/auth.go
+  - components/auth/auth_test.go
+  - main.go
+stories:
+  - id: e31s01
+    title: Configurable CORS middleware
+    status: planned
+    bcps: 5
+    wsjf: 5.2
+    wsjf_rationale: "BV=8(SPAs completely blocked without CORS) TC=8(blocks Copa project) RR=10(eliminates architectural gap; default-closed for safety) / JS=5(~1 week solo)"
+    tasks:
+      - desc: "Add CORS middleware in components/auth/cors.go — configurable allowlist of origins (env-driven, comma-separated), allow Authorization + Content-Type headers, handle OPTIONS preflight. Default closed (no origins)."
+        notes: |
+          New file: components/auth/cors.go. Implement CORS(http.Handler, allowedOrigins []string) http.Handler.
+          — Reads allowed origins from Auth.Options.CORSAllowedOrigins ([]string).
+          — Hook into main.go: wrap the proxy mux (or the root handler) with CORS middleware.
+          — On every request: set Vary: Origin. If Origin header present, check against allowlist.
+          — If allowed: set Access-Control-Allow-Origin to the request's origin, Allow-Credentials: true (for cookie auth), Allow-Headers: Authorization, Content-Type.
+          — On OPTIONS (preflight): return 204 with Allow-Methods: GET, POST, PUT, PATCH, DELETE, OPTIONS and Allow-Max-Age: 86400. Do NOT forward preflight to backend handlers.
+          — If origin not allowed: return 403 with JSON error (before preflight handling — deny at level of OPTIONS too except allowed origins).
+          — Default: if CORSAllowedOrigins is empty/nil, middleware is a no-op (passes through). This preserves current behavior.
+          — CLI flag: --cors-allowed-origins (comma-separated, default empty).
+        verify: "go test ./components/auth/ -run TestCORSMiddleware -v"
+      - desc: "Add CORSAllowed field to auth.Options struct, wire from main.go CLI flag, default off"
+        notes: |
+          components/auth/auth.go: add CORSAllowedOrigins []string to Options.
+          main.go: parse --cors-allowed-origins flag, pass to auth.New().
+          Default: empty list → CORS middleware is no-op.
+        verify: "go test ./components/auth/ -run TestCORSOptions -v"
+      - desc: "Test CORS preflight OPTIONS returns 204 with correct headers when origin allowed"
+        notes: |
+          components/auth/auth_test.go: TestCORSPreflightAllowed.
+          — Configure CORSAllowedOrigins: ["https://my-spa.example.com"].
+          — Send OPTIONS /api/auth/me with Origin: https://my-spa.example.com.
+          — Assert 204, Access-Control-Allow-Origin: https://my-spa.example.com, Access-Control-Allow-Methods contains GET/POST/PUT/PATCH/DELETE/OPTIONS, Access-Control-Allow-Headers contains Authorization/Content-Type.
+        verify: "go test ./components/auth/ -run TestCORSPreflightAllowed -v"
+      - desc: "Test CORS denies OPTIONS from disallowed origin and non-preflight requests from disallowed origin"
+        notes: |
+          components/auth/auth_test.go: TestCORSDenied.
+          — Configure CORSAllowedOrigins: ["https://my-spa.example.com"].
+          — Send OPTIONS with Origin: https://evil.com → assert 403, no Access-Control-* headers.
+          — Send GET /api/auth/me with Origin: https://evil.com → assert 403.
+        verify: "go test ./components/auth/ -run TestCORSDenied -v"
+      - desc: "Test CORS passes through when no origins configured (default closed, no-op)"
+        notes: |
+          components/auth/auth_test.go: TestCORSDefaultClosed.
+          — CORSAllowedOrigins is empty/nil.
+          — Send GET /api/auth/me with Origin: https://any.com → assert 200 (passes through to handler), no Access-Control-Allow-Origin header set.
+        verify: "go test ./components/auth/ -run TestCORSDefaultClosed -v"
+
+  - id: e31s02
+    title: Configurable OAuth redirect + SPA token delivery
+    status: planned
+    bcps: 8
+    wsjf: 4.0
+    wsjf_rationale: "BV=5(notable improvement for SPAs, workaround exists — manual token copy from cookie) TC=5(would delay SPA launch) RR=5(reduces SameSite fragility, enables SPA auth flow) / JS=3(~2-3 days)"
+    tasks:
+      - desc: "Add Auth.Options.PostLoginRedirect and SPAOriginAllowlist fields; make handleGoogleCallback redirect configurable"
+        notes: |
+          components/auth/auth.go:
+          — Add PostLoginRedirect string to Options (default: "/admin/" — preserve current behavior).
+          — Add SPAOriginAllowlist []string to Options (default empty).
+          — CLI flags: --auth-post-login-redirect (default "/admin/"), --auth-spa-origin-allowlist (comma-separated, default empty).
+          — In handleGoogleCallback: replace hardcoded "/admin/" with a.PostLoginRedirect.
+          — Pass-through: when SPAOriginAllowlist is empty, current behavior unchanged (redirects to PostLoginRedirect, sets HttpOnly cookie).
+        verify: "go test ./components/auth/ -run TestGoogleCallbackRedirectConfigurable -v"
+      - desc: "Support delivering JWT to cross-origin SPA: validate return URL against SPAOriginAllowlist via OAuth state param, redirect with #token=..."
+        notes: |
+          components/auth/auth.go handleGoogleOAuth:
+          — Accept optional ?redirect= query param. If present, validate against SPAOriginAllowlist.
+          — If valid, encode {spaRedirect: URL} into the OAuth state (alongside existing CSRF token).
+          — Sign the state with SignState as before (the signed value protects both CSRF and the redirect URL).
+
+          handleGoogleCallback:
+          — After decoding state, if spaRedirect present AND SPAOriginAllowlist non-empty:
+            1. Validate spaRedirect starts with one of the allowed origins.
+            2. Instead of setting HttpOnly cookie, redirect to: spaRedirect + "#token=" + url.QueryEscape(token)
+            3. Do NOT set the HttpOnly token cookie in this path (the SPA gets the token from the fragment).
+          — If spaRedirect not present or SPAOriginAllowlist empty: fall back to existing behavior (HttpOnly cookie + PostLoginRedirect).
+          — Revoke/expire token not possible via fragment → note in docs/handbook that SPAs must drop token from localStorage for logout, and that the token in the URL fragment is visible to the page JS (this is standard OAuth implicit-flow behavior).
+        verify: "go test ./components/auth/ -run TestGoogleCallbackSPATokenDelivery -v"
+      - desc: "Test callback with SPA token delivery — validates origin allowlist, redirects to SPA with #token=..."
+        notes: |
+          components/auth/auth_test.go: TestGoogleCallbackSPATokenDelivery.
+          — Configure SPAOriginAllowlist: ["https://bolao.example.com"].
+          — Simulate OAuth flow with ?redirect=https://bolao.example.com/dashboard in state.
+          — Assert final redirect URL matches "https://bolao.example.com/dashboard#token=<jwt>".
+          — Assert no HttpOnly cookie set.
+        verify: "go test ./components/auth/ -run TestGoogleCallbackSPATokenDelivery -v"
+      - desc: "Test SPA redirect origin validation — rejects non-allowlisted origins"
+        notes: |
+          components/auth/auth_test.go: TestGoogleCallbackSPARejectedOrigin.
+          — Configure SPAOriginAllowlist: ["https://bolao.example.com"].
+          — Simulate OAuth flow with ?redirect=https://evil.com in state.
+          — Assert redirect falls back to PostLoginRedirect with HttpOnly cookie set (safe default).
+        verify: "go test ./components/auth/ -run TestGoogleCallbackSPARejectedOrigin -v"
+      - desc: "Test default behavior unchanged — no SPAOriginAllowlist configured, redirect still /admin/"
+        notes: |
+          components/auth/auth_test.go: TestGoogleCallbackDefaultBehavior.
+          — SPAOriginAllowlist is empty.
+          — Simulate normal OAuth flow (no redirect param in state).
+          — Assert redirect to /admin/ (or PostLoginRedirect if configured).
+          — Assert HttpOnly token cookie is set.
+        verify: "go test ./components/auth/ -run TestGoogleCallbackDefaultBehavior -v"
+
+  - id: e31s03
+    title: Logout endpoint — POST /api/auth/logout
+    status: planned
+    bcps: 2
+    wsjf: 5.33
+    wsjf_rationale: "BV=5(moderately important for auth completeness, workaround exists — JS drops token) TC=3(flexible, can slip) RR=8(reduces security risk of stale cookies) / JS=3(~2-3 days: endpoint + tests + docs)"
+    tasks:
+      - desc: "Add POST /api/auth/logout — expires the token cookie for cookie-based clients"
+        notes: |
+          components/auth/auth.go:
+          — Add handleLogout handler.
+          — POST /api/auth/logout: set token cookie with MaxAge=-1, empty Value, HttpOnly=true, Path="/".
+          — Return 200 { "ok": true }.
+          — This is NOT behind auth middleware (user may already have cleared token client-side; no auth check needed — just expire the cookie server-side).
+          — Register route in Handler() (not ProtectedHandler — it's unauthenticated).
+        verify: "go test ./components/auth/ -run TestLogout -v"
+      - desc: "Test logout expires cookie and returns 200"
+        notes: |
+          components/auth/auth_test.go: TestLogout.
+          — Send POST /api/auth/logout with existing token cookie.
+          — Assert 200, "Set-Cookie" header contains token=; Max-Age=0.
+          — Assert no auth middleware interference (test without Bearer token).
+        verify: "go test ./components/auth/ -run TestLogout -v"
+      - desc: "Document that Bearer/localStorage clients log out by dropping token client-side; logout endpoint only for cookie clients"
+        notes: |
+          Add a doc comment above handleLogout in auth.go.
+          Note: "This endpoint expires the server-side cookie. Bearer-token / localStorage clients should log out by dropping the token on the client. The server has no token blacklist."
+          No separate doc file required unless AGENTS.md or CONVENTIONS.md mandates changelog updates; if so, add a brief note to CHANGELOG.
+        verify: "grep -q 'Bearer-token.*log out' components/auth/auth.go"

@@ -1,0 +1,108 @@
+type: epic-shard
+context: domain
+id: e35
+title: Advanced Auth — Phone, Anonymous, OAuth popup
+wsjf: 2.2
+wsjf_rationale: "BV=3(nice-to-have — phone auth and anonymous are advanced use cases) TC=1(no urgency) RR=5(completes full Neon parity) / JS=5(~1 week: 3 stories)"
+status: planned
+depends_on: [e33]
+covers:
+  - components/auth/auth.go
+  - components/auth/auth_test.go
+  - packages/auth/ (core SDK extension)
+stories:
+  - id: e35s01
+    title: Phone authentication — SMS OTP
+    status: planned
+    bcps: 3
+    wsjf: 1.33
+    wsjf_rationale: "BV=3(nice-to-have for mobile-first apps) TC=1(no urgency) RR=3 / JS=5(~1 week: Twilio/Vonage integration + tests)"
+    tasks:
+      - desc: "Add POST /api/auth/phone/send — sends 6-digit SMS OTP via configurable provider"
+        notes: |
+          components/auth/auth.go:
+          — handleSendPhoneOTP: accepts {phone}. Generates 6-digit code (reusing OTP code gen).
+          — SMS provider interface: PhoneSender {Send(ctx, phone, message)}.
+          — Default implementation: Twilio (via twilio-go). Configurable via CLI flags:
+            --auth-phone-provider (twilio|vonage|log), --auth-phone-twilio-sid, --auth-phone-twilio-token, --auth-phone-twilio-from.
+          — 'log' provider: prints code to stdout (dev mode).
+          — Default: no phone sender configured → endpoint returns 404.
+          — Rate limit: 3 codes per phone per hour.
+          — Store code hash in same otp_codes table (add phone column).
+        verify: "go test ./components/auth/ -run TestPhoneOTPSend -v"
+      - desc: "Add POST /api/auth/phone/verify — verifies code, creates user if new, returns JWT"
+        notes: |
+          components/auth/auth.go:
+          — handleVerifyPhoneOTP: accepts {phone, code}. Same logic as email OTP verify.
+          — Find or create user by phone (new column in users: phone TEXT UNIQUE).
+          — Return JWT via writeAuthResponse.
+        verify: "go test ./components/auth/ -run TestPhoneOTPVerify -v"
+      - desc: "Add phone field to user profile, SDK support, and tests"
+        notes: |
+          — Schema migration: ALTER TABLE users ADD COLUMN phone TEXT; CREATE UNIQUE INDEX idx_users_phone ON users(phone).
+          — PATCH /api/auth/me: accept phone field.
+          — SDK: signIn.phoneOTP.send({phone}), signIn.phoneOTP.verify({phone, code}).
+          — Test: full phone OTP flow with mock SMS sender.
+        verify: "go test ./components/auth/ -run TestPhoneOTPEndToEnd -v"
+
+  - id: e35s02
+    title: Anonymous access — JWT for unauthenticated users with RLS
+    status: planned
+    bcps: 2
+    wsjf: 1.33
+    wsjf_rationale: "BV=2(cosmetic — few apps need public data with RLS) TC=1(no urgency) RR=5(safety feature — limits what anonymous can do) / JS=5(~1 week)"
+    tasks:
+      - desc: "Add POST /api/auth/anonymous — returns anonymous JWT with role=anonymous, no user_id"
+        notes: |
+          components/auth/auth.go:
+          — handleAnonymousToken: generates JWT with {role:"anonymous", sub:"anon-{uuid}"}.
+          — Short TTL: 1 hour, not refreshable.
+          — Only available when --auth-anonymous-enabled flag is set (default false).
+          — Auth middleware: allow anonymous tokens for GET requests only.
+          — Anonymous token rejected for POST/PUT/PATCH/DELETE (403).
+        verify: "go test ./components/auth/ -run TestAnonymousToken -v"
+      - desc: "Add RLS hook in api component — anonymous users can only SELECT with WHERE org_id = public"
+        notes: |
+          components/api/api.go:
+          — Auth middleware already extracts role from JWT. If role=anonymous:
+          — GET /api/collections/:name: inject WHERE org_id IN (SELECT id FROM orgs WHERE is_public = 1).
+          — All other methods (POST/PUT/DELETE) → 403 Forbidden.
+          — Config via --api-anonymous-read-enabled flag (default false).
+        verify: "go test ./components/api/ -run TestAnonymousRLS -v"
+      - desc: "Add SDK support — authClient.getAnonymousToken(), allowAnonymous option"
+        notes: |
+          packages/auth/src/client.ts:
+          — createAuthClient(url, {allowAnonymous: true}): enables anonymous token fallback.
+          — getJWT(): returns anonymous token if no session exists (when allowAnonymous is true).
+          — getSession(): returns {user: null, isAnonymous: true} for anonymous sessions.
+        verify: "cd packages/auth && npm test"
+
+  - id: e35s03
+    title: OAuth popup flow — window.open based OAuth for iframe/SPA scenarios
+    status: planned
+    bcps: 1
+    wsjf: 0.6
+    wsjf_rationale: "BV=1(cosmetic — niche use case) TC=1(no urgency) RR=3 / JS=3(~2-3 days)"
+    tasks:
+      - desc: "Add popup mode to OAuth flow — window.open + postMessage completion"
+        notes: |
+          components/auth/auth.go:
+          — Add ?mode=popup query param to /api/auth/oauth/google.
+          — If mode=popup: after callback, render minimal HTML page that does:
+            window.opener.postMessage({type:'bigbase-auth:oauth-complete', token}, origin);
+          — Validate origin against SPAOriginAllowlist before sending message.
+          — Close popup window after message sent.
+
+          packages/auth/src/popup.ts:
+          — signInWithPopup(provider, options): opens popup, listens for postMessage.
+          — Returns auth result via promise.
+          — Timeout after 120s.
+        verify: "go test ./components/auth/ -run TestOAuthPopup -v"
+      - desc: "Test popup flow end-to-end — window.open → Google consent → postMessage → SDK resolves promise"
+        notes: |
+          components/auth/auth_test.go: TestOAuthPopup.
+          — Simulate popup flow: GET /api/auth/oauth/google?mode=popup.
+          — Simulate callback with code.
+          — Assert response HTML contains postMessage script.
+          — Assert postMessage target origin is validated against SPAOriginAllowlist.
+        verify: "go test ./components/auth/ -run TestOAuthPopup -v"
