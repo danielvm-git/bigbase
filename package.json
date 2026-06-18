@@ -1,35 +1,5 @@
 {
-  "name": "bigbase",
+  "name": "bigbase-auth-monorepo",
   "private": true,
-  "version": "0.0.0-dev",
-  "description": "Single-binary BaaS platform",
-  "scripts": {
-    "preflight": "npm run preflight:ui && npm run preflight:go && npm run preflight:e2e",
-    "preflight:go": "go vet ./... && go test ./... -count=1 && bash scripts/check-coverage.sh 59 && test -f ui/dist/index.html",
-    "preflight:ui": "npm run build --prefix ui",
-    "preflight:build": "go build -o bigbase .",
-    "preflight:e2e": "npx playwright test --config=tests/e2e/playwright.config.ts",
-    "test:e2e": "npx playwright test --config=tests/e2e/playwright.config.ts",
-    "sync:opencode-skills": "bash specs/agentic-stack-templates/sync-opencode-skills.sh",
-    "validate:specs": "bash scripts/validate-specs-yaml.sh",
-    "test:specs": "node --test scripts/validate-specs-yaml.test.cjs",
-    "test:dashboard": "node --test .opencode/skills/visual-dashboard/scripts/*.test.cjs",
-    "semantic-release": "semantic-release"
-  },
-  "devDependencies": {
-    "@ctxo/cli": "^0.10.0",
-    "@ctxo/lang-go": "^0.8.0",
-    "@ctxo/lang-typescript": "^0.7.1",
-    "@playwright/test": "^1.60.0",
-    "@semantic-release/changelog": "^6.0.3",
-    "@semantic-release/commit-analyzer": "^13.0.1",
-    "@semantic-release/exec": "^7.0.3",
-    "@semantic-release/git": "^10.0.1",
-    "@semantic-release/github": "^11.0.1",
-    "@semantic-release/release-notes-generator": "^14.0.3",
-    "bigpowers": "^1.3.2",
-    "context-mode": "^1.0.161",
-    "opensrc": "^0.7.2",
-    "semantic-release": "^24.2.3"
-  }
+  "workspaces": ["packages/*"]
 }

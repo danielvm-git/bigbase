@@ -1,0 +1,22 @@
+{
+  "name": "@bigbase/auth",
+  "version": "0.1.0",
+  "description": "Framework-agnostic auth client for BigBase",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": "./dist/index.js",
+    "./types": "./dist/types.d.ts"
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "^5.7",
+    "vitest": "^2.0"
+  }
+}
