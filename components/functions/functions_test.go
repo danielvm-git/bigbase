@@ -2,10 +2,12 @@ package functions_test
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/danielvm/bigbase/components/db"
 	"github.com/danielvm/bigbase/components/functions"
@@ -25,7 +27,7 @@ func setupFunctions(t *testing.T) *functions.Functions {
 	k := kernel.New(logger)
 
 	d := db.New(db.Options{Path: ":memory:", Logger: logger})
-	f := functions.New(functions.Options{DB: d, Logger: logger})
+	f := functions.New(functions.Options{DB: d, Logger: logger, ScheduleEnabled: true})
 	k.Register(f)
 	k.Register(d)
 	if err := k.Start(); err != nil {
@@ -562,5 +564,332 @@ func TestLogsEmptyHistory(t *testing.T) {
 
 	if len(resp.Data) != 0 {
 		t.Fatalf("expected empty history, got %d entries", len(resp.Data))
+	}
+}
+
+func TestRuntimeFetch(t *testing.T) {
+	// Start a test HTTP server that returns known JSON
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(`{"message":"hello from server"}`))
+	}))
+	defer srv.Close()
+
+	f := setupFunctions(t)
+	h := f.Handler()
+
+	// Extract host:port from test server URL for the allowlist
+	srvHost := strings.TrimPrefix(srv.URL, "http://")
+
+	// Create a function that uses fetch to call the test server
+	createBody := fmt.Sprintf(`{"name":"fetcher","source":"var resp = fetch('http://'+env.TEST_HOST+'/api'); return resp;","trigger":"http","env":{"ALLOWED_HOSTS":"%s","TEST_HOST":"%s"}}`, srvHost, srvHost)
+	req := httptest.NewRequest("POST", "/api/functions", strings.NewReader(createBody))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	h.ServeHTTP(w, req)
+
+	if w.Code != http.StatusCreated {
+		t.Fatalf("create: expected 201, got %d: %s", w.Code, w.Body.String())
+	}
+
+	var created map[string]any
+	_ = json.NewDecoder(w.Body).Decode(&created)
+	fnID := created["id"].(string)
+
+	// Run the function
+	runReq := httptest.NewRequest("POST", "/api/functions/"+fnID+"/run", nil)
+	runW := httptest.NewRecorder()
+	h.ServeHTTP(runW, runReq)
+
+	if runW.Code != http.StatusOK {
+		t.Fatalf("run: expected 200, got %d: %s", runW.Code, runW.Body.String())
+	}
+
+	var runResp map[string]any
+	_ = json.NewDecoder(runW.Body).Decode(&runResp)
+
+	// Should have result (not error)
+	if runResp["error"] != nil {
+		t.Fatalf("expected no error, got: %v", runResp["error"])
+	}
+
+	result, ok := runResp["result"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected result to be map, got: %T %v", runResp["result"], runResp["result"])
+	}
+
+	// Check fetch response fields
+	if status, _ := result["status"].(float64); int(status) != 200 {
+		t.Fatalf("expected status 200, got: %v", result["status"])
+	}
+	if body, _ := result["body"].(string); !strings.Contains(body, "hello from server") {
+		t.Fatalf("expected body to contain 'hello from server', got: %v", result["body"])
+	}
+}
+
+func TestFetchAllowlist(t *testing.T) {
+	f := setupFunctions(t)
+	h := f.Handler()
+
+	// Create a function that tries to fetch a blocked host
+	// No ALLOWED_HOSTS set, so only localhost is allowed — 127.0.0.1:9999 is NOT localhost
+	createBody := `{"name":"blocked-fetcher","source":"var resp = fetch('http://169.254.169.254/latest/meta-data'); return resp;","trigger":"http","env":{}}`
+	req := httptest.NewRequest("POST", "/api/functions", strings.NewReader(createBody))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	h.ServeHTTP(w, req)
+
+	if w.Code != http.StatusCreated {
+		t.Fatalf("create: expected 201, got %d: %s", w.Code, w.Body.String())
+	}
+
+	var created map[string]any
+	_ = json.NewDecoder(w.Body).Decode(&created)
+	fnID := created["id"].(string)
+
+	// Run — should fail with host-not-in-allowlist
+	runReq := httptest.NewRequest("POST", "/api/functions/"+fnID+"/run", nil)
+	runW := httptest.NewRecorder()
+	h.ServeHTTP(runW, runReq)
+
+	if runW.Code != http.StatusOK {
+		t.Fatalf("run: expected 200, got %d: %s", runW.Code, runW.Body.String())
+	}
+
+	var runResp map[string]any
+	_ = json.NewDecoder(runW.Body).Decode(&runResp)
+
+	// Should have an error about allowlist
+	errMsg, _ := runResp["error"].(string)
+	if errMsg == "" {
+		t.Fatal("expected allowlist error, got no error")
+	}
+	if !strings.Contains(errMsg, "allowlist") && !strings.Contains(errMsg, "not in allowlist") {
+		t.Fatalf("expected allowlist error message, got: %s", errMsg)
+	}
+}
+
+func TestRuntimeEnv(t *testing.T) {
+	f := setupFunctions(t)
+	h := f.Handler()
+
+	// Create a function that reads env vars
+	createBody := `{"name":"env-reader","source":"return { key: env.API_KEY, region: env.REGION };","trigger":"http","env":{"API_KEY":"sk-abc123","REGION":"us-east"}}`
+	req := httptest.NewRequest("POST", "/api/functions", strings.NewReader(createBody))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	h.ServeHTTP(w, req)
+
+	if w.Code != http.StatusCreated {
+		t.Fatalf("create: expected 201, got %d: %s", w.Code, w.Body.String())
+	}
+
+	var created map[string]any
+	_ = json.NewDecoder(w.Body).Decode(&created)
+	fnID := created["id"].(string)
+
+	runReq := httptest.NewRequest("POST", "/api/functions/"+fnID+"/run", nil)
+	runW := httptest.NewRecorder()
+	h.ServeHTTP(runW, runReq)
+
+	if runW.Code != http.StatusOK {
+		t.Fatalf("run: expected 200, got %d: %s", runW.Code, runW.Body.String())
+	}
+
+	var runResp map[string]any
+	_ = json.NewDecoder(runW.Body).Decode(&runResp)
+
+	if runResp["error"] != nil {
+		t.Fatalf("expected no error, got: %v", runResp["error"])
+	}
+
+	result, ok := runResp["result"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected result map, got: %T %v", runResp["result"], runResp["result"])
+	}
+
+	if key, _ := result["key"].(string); key != "sk-abc123" {
+		t.Fatalf("expected env.API_KEY='sk-abc123', got: %v", result["key"])
+	}
+	if region, _ := result["region"].(string); region != "us-east" {
+		t.Fatalf("expected env.REGION='us-east', got: %v", result["region"])
+	}
+}
+
+func TestRuntimeDB(t *testing.T) {
+	f := setupFunctions(t)
+	h := f.Handler()
+
+	// Create a function that uses db.collection() to create and list records
+	source := `
+		var col = db.collection('messages');
+		var r1 = col.create({text: 'hello', from: 'alice'});
+		var r2 = col.create({text: 'world', from: 'bob'});
+		var items = col.list();
+		return { count: items.length, first_text: items[0].text };
+	`
+	createBody := fmt.Sprintf(`{"name":"db-test","source":%q,"trigger":"http"}`, source)
+	req := httptest.NewRequest("POST", "/api/functions", strings.NewReader(createBody))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	h.ServeHTTP(w, req)
+
+	if w.Code != http.StatusCreated {
+		t.Fatalf("create: expected 201, got %d: %s", w.Code, w.Body.String())
+	}
+
+	var created map[string]any
+	_ = json.NewDecoder(w.Body).Decode(&created)
+	fnID := created["id"].(string)
+
+	runReq := httptest.NewRequest("POST", "/api/functions/"+fnID+"/run", nil)
+	runW := httptest.NewRecorder()
+	h.ServeHTTP(runW, runReq)
+
+	if runW.Code != http.StatusOK {
+		t.Fatalf("run: expected 200, got %d: %s", runW.Code, runW.Body.String())
+	}
+
+	var runResp map[string]any
+	_ = json.NewDecoder(runW.Body).Decode(&runResp)
+
+	if runResp["error"] != nil {
+		t.Fatalf("expected no error, got: %v", runResp["error"])
+	}
+
+	result, ok := runResp["result"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected result map, got: %T %v", runResp["result"], runResp["result"])
+	}
+
+	count, _ := result["count"].(float64)
+	if int(count) < 2 {
+		t.Fatalf("expected at least 2 records, got count=%v", count)
+	}
+	first, _ := result["first_text"].(string)
+	if first != "hello" {
+		t.Fatalf("expected first_text='hello', got: %v", first)
+	}
+}
+
+func TestRunHTTPContext(t *testing.T) {
+	f := setupFunctions(t)
+	h := f.Handler()
+
+	// Create a function that reads request context
+	source := `
+		return {
+			method: request.method,
+			header_x: request.headers['x-custom'],
+			body_name: request.body.name,
+			query_page: request.query.page
+		};
+	`
+	createBody := fmt.Sprintf(`{"name":"ctx-reader","source":%q,"trigger":"http"}`, source)
+	req := httptest.NewRequest("POST", "/api/functions", strings.NewReader(createBody))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	h.ServeHTTP(w, req)
+
+	if w.Code != http.StatusCreated {
+		t.Fatalf("create: expected 201, got %d: %s", w.Code, w.Body.String())
+	}
+
+	var created map[string]any
+	_ = json.NewDecoder(w.Body).Decode(&created)
+	fnID := created["id"].(string)
+
+	// Run with custom headers, JSON body, and query params
+	runBody := `{"name":"alice","role":"admin"}`
+	runReq := httptest.NewRequest("POST", "/api/functions/"+fnID+"/run?page=3", strings.NewReader(runBody))
+	runReq.Header.Set("Content-Type", "application/json")
+	runReq.Header.Set("X-Custom", "hello-world")
+	runW := httptest.NewRecorder()
+	h.ServeHTTP(runW, runReq)
+
+	if runW.Code != http.StatusOK {
+		t.Fatalf("run: expected 200, got %d: %s", runW.Code, runW.Body.String())
+	}
+
+	var runResp map[string]any
+	_ = json.NewDecoder(runW.Body).Decode(&runResp)
+
+	if runResp["error"] != nil {
+		t.Fatalf("expected no error, got: %v", runResp["error"])
+	}
+
+	result, ok := runResp["result"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected result map, got: %T %v", runResp["result"], runResp["result"])
+	}
+
+	if method, _ := result["method"].(string); method != "POST" {
+		t.Fatalf("expected method='POST', got: %v", result["method"])
+	}
+	if hdr, _ := result["header_x"].(string); hdr != "hello-world" {
+		t.Fatalf("expected header_x='hello-world', got: %v", result["header_x"])
+	}
+	if bodyName, _ := result["body_name"].(string); bodyName != "alice" {
+		t.Fatalf("expected body_name='alice', got: %v", result["body_name"])
+	}
+	if queryPage, _ := result["query_page"].(string); queryPage != "3" {
+		t.Fatalf("expected query_page='3', got: %v", result["query_page"])
+	}
+}
+
+func TestSchedule(t *testing.T) {
+	f := setupFunctions(t)
+	h := f.Handler()
+
+	// Create a scheduled function that logs a message
+	source := `console.log('scheduled run at ' + new Date().toISOString()); return {ok: true};`
+	createBody := fmt.Sprintf(`{"name":"cron-job","source":%q,"trigger":"schedule","schedule":"@every 1s"}`, source)
+	req := httptest.NewRequest("POST", "/api/functions", strings.NewReader(createBody))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	h.ServeHTTP(w, req)
+
+	if w.Code != http.StatusCreated {
+		t.Fatalf("create: expected 201, got %d: %s", w.Code, w.Body.String())
+	}
+
+	var created map[string]any
+	_ = json.NewDecoder(w.Body).Decode(&created)
+	fnID := created["id"].(string)
+
+	// Wait for at least one scheduled execution
+	time.Sleep(2500 * time.Millisecond)
+
+	// Check execution logs
+	logsReq := httptest.NewRequest("GET", "/api/functions/"+fnID+"/logs", nil)
+	logsW := httptest.NewRecorder()
+	h.ServeHTTP(logsW, logsReq)
+
+	if logsW.Code != http.StatusOK {
+		t.Fatalf("logs: expected 200, got %d: %s", logsW.Code, logsW.Body.String())
+	}
+
+	var resp struct {
+		Data []struct {
+			Status string `json:"status"`
+		} `json:"data"`
+	}
+	_ = json.NewDecoder(logsW.Body).Decode(&resp)
+
+	if len(resp.Data) == 0 {
+		t.Fatal("expected at least one scheduled execution, got none")
+	}
+
+	// At least one execution should have status 'success'
+	found := false
+	for _, exec := range resp.Data {
+		if exec.Status == "success" {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Fatal("expected at least one successful scheduled execution")
 	}
 }

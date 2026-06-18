@@ -8,8 +8,10 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"sync"
 
 	"github.com/danielvm/bigbase/kernel"
+	"github.com/robfig/cron/v3"
 )
 
 var (
@@ -47,16 +49,21 @@ type Function struct {
 }
 
 type Functions struct {
-	db       DBer
-	logger   Logger
-	timeout  int
-	runtimes map[string]Runtime
+	db              DBer
+	logger          Logger
+	timeout         int
+	runtimes        map[string]Runtime
+	cron            *cron.Cron
+	scheduleEnabled bool
+	mu              sync.Mutex
+	scheduleEntryIDs map[string]cron.EntryID // fnID → cron entry
 }
 
 type Options struct {
-	DB      DBer
-	Logger  Logger
-	Timeout int
+	DB              DBer
+	Logger          Logger
+	Timeout         int
+	ScheduleEnabled bool
 }
 
 func New(opts Options) *Functions {
@@ -69,10 +76,12 @@ func New(opts Options) *Functions {
 		timeout = 30
 	}
 	return &Functions{
-		db:       opts.DB,
-		logger:   logger,
-		timeout:  timeout,
-		runtimes: map[string]Runtime{"javascript": &jsRuntime{}},
+		db:               opts.DB,
+		logger:           logger,
+		timeout:          timeout,
+		runtimes:         map[string]Runtime{"javascript": &jsRuntime{}},
+		scheduleEnabled:  opts.ScheduleEnabled,
+		scheduleEntryIDs: make(map[string]cron.EntryID),
 	}
 }
 
@@ -111,11 +120,22 @@ func (f *Functions) Start(ctx *kernel.Context) error {
 	)`); err != nil {
 		return fmt.Errorf("migrate function_executions table: %w", err)
 	}
+	// Start schedule loop if enabled
+	if f.scheduleEnabled {
+		if err := f.startScheduleLoop(); err != nil {
+			return fmt.Errorf("start schedule loop: %w", err)
+		}
+	}
+
 	f.logger.Info("functions component ready")
 	return nil
 }
 
 func (f *Functions) Stop(ctx *kernel.Context) error {
+	if f.cron != nil {
+		<-f.cron.Stop().Done()
+		f.cron = nil
+	}
 	return nil
 }
 
@@ -161,4 +181,82 @@ func writeJSON(w http.ResponseWriter, status int, data any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	_ = json.NewEncoder(w).Encode(data)
+}
+
+// startScheduleLoop initializes the cron scheduler and registers all
+// functions with trigger=schedule.
+func (f *Functions) startScheduleLoop() error {
+	f.cron = cron.New(cron.WithSeconds())
+	if err := f.reloadSchedule(); err != nil {
+		return err
+	}
+	f.cron.Start()
+	f.logger.Info("schedule loop started")
+	return nil
+}
+
+// reloadSchedule reloads all schedule-triggered functions from the database
+// and registers them with the cron scheduler.
+func (f *Functions) reloadSchedule() error {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+
+	// Remove existing entries
+	for fnID, entryID := range f.scheduleEntryIDs {
+		f.cron.Remove(entryID)
+		delete(f.scheduleEntryIDs, fnID)
+	}
+
+	// Load schedule functions
+	rows, err := f.db.QueryContext(context.Background(),
+		"SELECT id, name, runtime, source, trigger, schedule, env, timeout, created_at FROM functions WHERE trigger = 'schedule' AND schedule != ''")
+	if err != nil {
+		return fmt.Errorf("load scheduled functions: %w", err)
+	}
+	defer func() { _ = rows.Close() }()
+
+	for rows.Next() {
+		fn, err := f.scanFunction(rows)
+		if err != nil {
+			f.logger.Error("scan scheduled function", "error", err)
+			continue
+		}
+		fnCopy := fn
+		entryID, err := f.cron.AddFunc(fn.Schedule, func() {
+			f.executeScheduled(fnCopy)
+		})
+		if err != nil {
+			f.logger.Error("register schedule", "fn", fn.Name, "schedule", fn.Schedule, "error", err)
+			continue
+		}
+		f.scheduleEntryIDs[fn.ID] = entryID
+	}
+	return rows.Err()
+}
+
+// executeScheduled runs a schedule-triggered function and logs the execution.
+func (f *Functions) executeScheduled(fn Function) {
+	rt, ok := f.runtimes[fn.Runtime]
+	if !ok {
+		f.logger.Error("unsupported runtime for scheduled function", "fn", fn.Name, "runtime", fn.Runtime)
+		return
+	}
+
+	runCtx := RunContext{
+		Env:     fn.Env,
+		DB:      f.db,
+	}
+	output, execErr := rt.Execute(fn.Source, fn.Timeout, runCtx)
+
+	execID, saveErr := f.saveExecution(context.Background(), fn.ID, output, execErr)
+	if saveErr != nil {
+		f.logger.Error("save scheduled execution", "fn", fn.Name, "error", saveErr)
+		return
+	}
+
+	if execErr != nil {
+		f.logger.Error("scheduled execution failed", "fn", fn.Name, "exec_id", execID, "error", execErr)
+	} else {
+		f.logger.Info("scheduled execution complete", "fn", fn.Name, "exec_id", execID)
+	}
 }

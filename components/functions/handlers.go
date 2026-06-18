@@ -81,6 +81,14 @@ func (f *Functions) handleCreate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	fn.CreatedAt = time.Now().UTC().Format(time.RFC3339)
+
+	// Reload schedule if the function is schedule-triggered
+	if fn.Trigger == "schedule" && fn.Schedule != "" && f.scheduleEnabled {
+		if err := f.reloadSchedule(); err != nil {
+			f.logger.Error("reload schedule after create", "error", err)
+		}
+	}
+
 	writeJSON(w, http.StatusCreated, fn)
 }
 
@@ -178,6 +186,14 @@ func (f *Functions) handleUpdate(w http.ResponseWriter, r *http.Request, id stri
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
+
+	// Reload schedule in case trigger/schedule changed
+	if f.scheduleEnabled {
+		if err := f.reloadSchedule(); err != nil {
+			f.logger.Error("reload schedule after update", "error", err)
+		}
+	}
+
 	writeJSON(w, http.StatusOK, fn)
 }
 
@@ -193,6 +209,13 @@ func (f *Functions) handleDelete(w http.ResponseWriter, r *http.Request, id stri
 	if rows == 0 {
 		writeJSON(w, http.StatusNotFound, map[string]string{"error": "function not found"})
 		return
+	}
+
+	// Reload schedule in case a scheduled function was deleted
+	if f.scheduleEnabled {
+		if err := f.reloadSchedule(); err != nil {
+			f.logger.Error("reload schedule after delete", "error", err)
+		}
 	}
 
 	writeJSON(w, http.StatusOK, map[string]string{"status": "deleted"})
@@ -211,7 +234,12 @@ func (f *Functions) handleRun(w http.ResponseWriter, r *http.Request, id string)
 		return
 	}
 
-	output, execErr := rt.Execute(fn.Source, fn.Timeout)
+	runCtx := RunContext{
+		Env:     fn.Env,
+		DB:      f.db,
+		Request: r,
+	}
+	output, execErr := rt.Execute(fn.Source, fn.Timeout, runCtx)
 
 	// Persist execution history
 	execID, saveErr := f.saveExecution(r.Context(), fn.ID, output, execErr)
