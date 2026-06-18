@@ -836,3 +836,141 @@ func TestAPIExecuteSQLSecurityChecks(t *testing.T) {
 		}
 	})
 }
+
+func TestListRecordsFilter(t *testing.T) {
+	a, h := setupAPI(t)
+
+	// Seed test data
+	seedJSON(t, h, "items", `{"name":"alice","role":"admin"}`)
+	seedJSON(t, h, "items", `{"name":"bob","role":"user"}`)
+	seedJSON(t, h, "items", `{"name":"carol","role":"admin"}`)
+
+	// Filter by role=admin
+	req := httptest.NewRequest("GET", "/api/collections/items?filter=role=admin", nil)
+	w := httptest.NewRecorder()
+	h.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", w.Code, w.Body.String())
+	}
+
+	var resp struct {
+		Data []map[string]any `json:"data"`
+	}
+	_ = json.NewDecoder(w.Body).Decode(&resp)
+
+	if len(resp.Data) != 2 {
+		t.Fatalf("expected 2 admin records, got %d", len(resp.Data))
+	}
+	for _, r := range resp.Data {
+		if r["role"] != "admin" {
+			t.Fatalf("expected role=admin, got %v", r["role"])
+		}
+	}
+	_ = a // silence unused
+}
+
+func TestListRecordsSort(t *testing.T) {
+	a, h := setupAPI(t)
+
+	seedJSON(t, h, "tasks", `{"priority":3,"name":"c"}`)
+	seedJSON(t, h, "tasks", `{"priority":1,"name":"a"}`)
+	seedJSON(t, h, "tasks", `{"priority":2,"name":"b"}`)
+
+	// Sort ascending by priority
+	req := httptest.NewRequest("GET", "/api/collections/tasks?sort=priority", nil)
+	w := httptest.NewRecorder()
+	h.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", w.Code, w.Body.String())
+	}
+
+	var resp struct {
+		Data []map[string]any `json:"data"`
+	}
+	_ = json.NewDecoder(w.Body).Decode(&resp)
+
+	if len(resp.Data) != 3 {
+		t.Fatalf("expected 3 records, got %d", len(resp.Data))
+	}
+	// Check ascending order: 1, 2, 3
+	if p1, _ := resp.Data[0]["priority"].(float64); int(p1) != 1 {
+		t.Fatalf("expected first priority=1, got %v", resp.Data[0]["priority"])
+	}
+	if p2, _ := resp.Data[1]["priority"].(float64); int(p2) != 2 {
+		t.Fatalf("expected second priority=2, got %v", resp.Data[1]["priority"])
+	}
+
+	// Sort descending
+	req2 := httptest.NewRequest("GET", "/api/collections/tasks?sort=-priority", nil)
+	w2 := httptest.NewRecorder()
+	h.ServeHTTP(w2, req2)
+
+	_ = json.NewDecoder(w2.Body).Decode(&resp)
+	if p1d, _ := resp.Data[0]["priority"].(float64); int(p1d) != 3 {
+		t.Fatalf("expected first priority=3 (desc), got %v", resp.Data[0]["priority"])
+	}
+	_ = a
+}
+
+func TestListRecordsFilterOps(t *testing.T) {
+	a, h := setupAPI(t)
+
+	seedJSON(t, h, "scores", `{"value":10}`)
+	seedJSON(t, h, "scores", `{"value":20}`)
+	seedJSON(t, h, "scores", `{"value":30}`)
+
+	// gt operator
+	req := httptest.NewRequest("GET", "/api/collections/scores?filter=value:gt=15", nil)
+	w := httptest.NewRecorder()
+	h.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", w.Code, w.Body.String())
+	}
+
+	var resp struct {
+		Data []map[string]any `json:"data"`
+	}
+	_ = json.NewDecoder(w.Body).Decode(&resp)
+
+	if len(resp.Data) != 2 {
+		t.Fatalf("expected 2 records with value>15, got %d", len(resp.Data))
+	}
+
+	// lte operator
+	req2 := httptest.NewRequest("GET", "/api/collections/scores?filter=value:lte=10", nil)
+	w2 := httptest.NewRecorder()
+	h.ServeHTTP(w2, req2)
+	_ = json.NewDecoder(w2.Body).Decode(&resp)
+	if len(resp.Data) != 1 {
+		t.Fatalf("expected 1 record with value<=10, got %d", len(resp.Data))
+	}
+
+	// Multiple filters (AND)
+	seedJSON(t, h, "users2", `{"status":"active","role":"admin"}`)
+	seedJSON(t, h, "users2", `{"status":"active","role":"user"}`)
+	seedJSON(t, h, "users2", `{"status":"inactive","role":"admin"}`)
+
+	req3 := httptest.NewRequest("GET", "/api/collections/users2?filter=status=active&filter=role=admin", nil)
+	w3 := httptest.NewRecorder()
+	h.ServeHTTP(w3, req3)
+	_ = json.NewDecoder(w3.Body).Decode(&resp)
+	if len(resp.Data) != 1 {
+		t.Fatalf("expected 1 active admin, got %d", len(resp.Data))
+	}
+	_ = a
+}
+
+// seedJSON creates a record in a collection with the given JSON body.
+func seedJSON(t *testing.T, h http.Handler, collection, body string) {
+	t.Helper()
+	req := httptest.NewRequest("POST", "/api/collections/"+collection, strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	h.ServeHTTP(w, req)
+	if w.Code != http.StatusCreated {
+		t.Fatalf("seed %s: expected 201, got %d: %s", collection, w.Code, w.Body.String())
+	}
+}
