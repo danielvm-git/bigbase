@@ -1,0 +1,74 @@
+type: epic-shard
+context: domain
+id: e30
+title: Backend for Bots & Integrations
+wsjf: 3.25
+wsjf_rationale: "BV=8(blocks all integration use cases) TC=8(active project blocked) RR=8(enables new capability class) / JS=8(~2 weeks across 3 stories)"
+status: planned
+covers:
+  - components/functions/runtime.go
+  - components/functions/handlers.go
+  - components/functions/functions.go
+  - components/messaging/messaging.go
+  - components/api/api.go
+stories:
+  - id: e30s01
+    title: Functions Runtime — fetch, db, request context, env, schedule
+    status: planned
+    bcps: 8
+    wsjf: 3.25
+    wsjf_rationale: "BV=10(blocker: functions useless without integrations) TC=8(active Copa bot project blocked) RR=8(eliminates core architectural gap, enables webhook/API functions) / JS=8(~2 weeks: 5 injections + cron loop + tests)"
+    tasks:
+      - desc: "Inject `fetch(url, options)` into jsRuntime — GET/POST/PUT/DELETE with allowlist and per-request timeout"
+        notes: "components/functions/runtime.go: injectFetch(vm, allowlist, defaultTimeout). Use Go's net/http, enforce host allowlist from Function.Env['ALLOWED_HOSTS'], timeout from Function.Timeout. Return {status, headers, body} promise-like object."
+        verify: "go test ./components/functions/ -run TestRuntimeFetch -v"
+      - desc: "Inject `db` binding — `db.collection(name).create(data)`, `.list()`, `.get(id)`, `.update(id, data)`, `.delete(id)` — reusing api component DBer"
+        notes: "components/functions/runtime.go: injectDB(vm, db). Use same DBer as Functions component. Each call scoped to the function's org. Return simple objects (not goja promises for now)."
+        verify: "go test ./components/functions/ -run TestRuntimeDB -v"
+      - desc: "Inject `env` object into jsRuntime — read-only snapshot of Function.Env key-value pairs"
+        notes: "components/functions/runtime.go: injectEnv(vm, env map[string]string). Expose as global `env` object. Already stored in DB column `env`."
+        verify: "go test ./components/functions/ -run TestRuntimeEnv -v"
+      - desc: "Pass request context (body, headers, query, method) into functions with trigger=http when invoked via POST /api/functions/:id/run"
+        notes: "components/functions/handlers.go handleRun(): if fn.Trigger == 'http', pass r to runtime.Execute or wrap in context object. Expose as global `request` object in jsRuntime: {method, headers, query, body}."
+        verify: "go test ./components/functions/ -run TestRunHTTPContext -v"
+      - desc: "Schedule loop: execute functions with trigger=schedule according to their schedule field (cron syntax via robfig/cron)"
+        notes: "components/functions/functions.go Start(): launch a cron scheduler. On tick, execute matching functions. Log executions to function_executions table. Add `--functions-schedule` flag to enable/disable (default: enabled). Respect Timeout."
+        verify: "go test ./components/functions/ -run TestSchedule -v -timeout 15s"
+      - desc: "Add allowlist config for fetch hosts — default deny-all, configurable via Function.Env or global config"
+        notes: "components/functions/runtime.go: injectFetch checks hostname against allowlist. Global default: localhost only. Function-level override via env ALLOWED_HOSTS (comma-separated). Log blocked requests."
+        verify: "go test ./components/functions/ -run TestFetchAllowlist -v"
+
+  - id: e30s02
+    title: Webhook/Telegram Messaging Provider
+    status: planned
+    wsjf: 6.5
+    wsjf_rationale: "BV=5(needed for chatbots, workaround exists via raw HTTP in functions) TC=5(milestone dependency) RR=3(low risk: just another provider impl) / JS=2(~1 day: Provider interface + main.go registration)"
+    tasks:
+      - desc: "Implement WebhookProvider — POST JSON payload to a configured URL, respecting Provider interface"
+        notes: "components/messaging/webhook.go: new file. WebhookProvider struct with url, token fields. Send() does http.Post with JSON body, Authorization: Bearer header. Timeout: 10s. On failure: set message status to 'failed'."
+        verify: "go test ./components/messaging/ -run TestWebhookProvider -v"
+      - desc: "Register webhook and telegram providers in main.go — configurable via CLI flags"
+        notes: "main.go: instantiate WebhookProvider with --messaging-webhook-url and --messaging-webhook-token flags. Register as 'telegram' channel in messaging.RegisterProvider(). Wire POST /api/messaging/telegram route in messaging.Handler()."
+        verify: "go test ./components/messaging/ -run TestTelegramSend -v"
+      - desc: "Add POST /api/messaging/telegram endpoint — accepts {chat_id, text, parse_mode} and routes through WebhookProvider"
+        notes: "components/messaging/messaging.go: add handleTelegram handler. Parses Telegram-specific payload (chat_id, text, parse_mode). Constructs webhook POST to Telegram Bot API via registered webhook provider."
+        verify: "go test ./components/messaging/ -run TestTelegramHandler -v"
+
+  - id: e30s03
+    title: Collections API — filter and sort
+    status: planned
+    wsjf: 3.67
+    wsjf_rationale: "BV=5(notable improvement: no more raw SQL for simple queries) TC=3(flexible, can slip one sprint) RR=3(low risk, workaround exists via /api/sql) / JS=3(~2-3 days: query params + SQL generation + tests)"
+    tasks:
+      - desc: "Add ?filter=field=value query param to GET /api/collections/:name — use json_extract under the hood"
+        notes: "components/api/api.go listRecords(): parse ?filter=key=value. Generate WHERE json_extract(data, '$.key') = ? clause. Support multiple filters with &filter=key1=val1&filter=key2=val2 (AND chaining). SQL injection: validate field name with sanitize()."
+        verify: "go test ./components/api/ -run TestListRecordsFilter -v"
+      - desc: "Add ?sort=field query param to GET /api/collections/:name — ASC/DESC via prefix"
+        notes: "components/api/api.go listRecords(): parse ?sort=field (ASC default) or ?sort=-field (DESC). Generate ORDER BY json_extract(data, '$.field') ASC/DESC. Validate field name. Default sort remains id when no ?sort provided."
+        verify: "go test ./components/api/ -run TestListRecordsSort -v"
+      - desc: "Add ?filter= operator support: eq (default), gt, gte, lt, lte, ne, like"
+        notes: "components/api/api.go listRecords(): parse ?filter=field:op=value. Map op to SQL comparison. For gt/gte/lt/lte: cast json_extract to numeric. For like: use LIKE with % wildcards. Backward compatible: field=value still works as eq."
+        verify: "go test ./components/api/ -run TestListRecordsFilterOps -v"
+      - desc: "Admin UI: add filter/sort inputs to collection list view"
+        notes: "ui/ collection list page: add filter input fields and sort dropdown. Minimal: text input for field=value filter, dropdown for sort field with ASC/DESC toggle."
+        verify: "cd ui && npm run build"

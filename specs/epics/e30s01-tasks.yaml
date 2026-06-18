@@ -1,0 +1,35 @@
+story_id: e30s01
+title: "Functions Runtime — fetch, db, request context, env, schedule"
+status: planned
+bcps: 8
+tasks:
+  - id: 1
+    description: "Inject `fetch(url, options)` into jsRuntime — GET with allowlist enforcement and per-request timeout; expose as sync global `fetch` returning {status, headers, body}"
+    verify: "go test ./components/functions/ -run TestRuntimeFetch -v"
+    status: todo
+    ac: [AC1, AC2]
+  - id: 2
+    description: "Add fetch allowlist config — global default localhost-only, function-level override via env.ALLOWED_HOSTS (comma-separated); log blocked requests"
+    verify: "go test ./components/functions/ -run TestFetchAllowlist -v"
+    status: todo
+    ac: [AC2]
+  - id: 3
+    description: "Inject `env` object into jsRuntime — read-only snapshot of Function.Env key-value pairs exposed as global `env`"
+    verify: "go test ./components/functions/ -run TestRuntimeEnv -v"
+    status: todo
+    ac: [AC4]
+  - id: 4
+    description: "Inject `db` binding — `db.collection(name).create(data)`, `.list()`, `.get(id)`, `.update(id, data)`, `.delete(id)` reusing kernel.DBer; collection name sanitized"
+    verify: "go test ./components/functions/ -run TestRuntimeDB -v"
+    status: todo
+    ac: [AC3]
+  - id: 5
+    description: "Pass request context (method, headers, query, body) into functions with trigger=http via POST /api/functions/:id/run; expose as global `request` object"
+    verify: "go test ./components/functions/ -run TestRunHTTPContext -v"
+    status: todo
+    ac: [AC5]
+  - id: 6
+    description: "Schedule loop: use robfig/cron v3 to execute trigger=schedule functions; wire in Start(), stop in Stop(); add --functions-schedule flag (default enabled)"
+    verify: "go test ./components/functions/ -run TestSchedule -v -timeout 15s"
+    status: todo
+    ac: [AC6, AC7]

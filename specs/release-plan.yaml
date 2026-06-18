@@ -72,3 +72,8 @@ epics:
     wsjf: 5.5
     file: epics/e27-site-request-logs.yaml
     mode: flat
+  - id: e30
+    title: Backend for Bots & Integrations
+    wsjf: 3.25
+    file: epics/e30-backend-for-integrations.yaml
+    mode: flat

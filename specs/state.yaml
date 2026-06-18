@@ -1,18 +1,18 @@
 type: session-state
 context: infra
 active_flow: build_epic
-active_epic_id: null
-active_story_id: null
+active_epic_id: e30
+active_story_id: e30s01
 active_bug_id: null
 release:
   target_version: 2.11.0
   last_tag: v2.10.0
   last_publish: "2026-06-12"
 epic_cycle:
-  current_step: null
-  next_skill: null
-  completed_steps: [kickoff-branch, develop-tdd]
-  story_bcps: 4
+  current_step: 3
+  next_skill: kickoff-branch
+  completed_steps: [survey-context, plan-work]
+  story_bcps: 8
 bug_cycle:
   current_step: null
   completed_steps: [investigate-bug, fix-bug]
@@ -20,7 +20,13 @@ git:
   branch: feat/e27-site-request-logs
   hash: 03cf4b8be4cb7de8450b0019b2e71dd4f3743f80
 handoff:
-  last_step_completed: null
+  last_step_completed: plan-work
   open_decisions: []
-  required_reading: []
-  next_skill: null
+  required_reading:
+    - specs/epics/e30-backend-for-integrations.yaml
+    - specs/epics/e30s01-functions-runtime.md
+    - specs/epics/e30s01-tasks.yaml
+    - components/functions/runtime.go
+    - components/functions/handlers.go
+    - components/functions/functions.go
+  next_skill: kickoff-branch
