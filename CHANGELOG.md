@@ -1,3 +1,11 @@
+## [2.18.1](https://github.com/danielvm-git/bigbase/compare/v2.18.0...v2.18.1) (2026-06-19)
+
+
+### Bug Fixes
+
+* **lint:** Add missing script to ui/package.json for typecheck, adjust lint scope for baseline ([010b908](https://github.com/danielvm-git/bigbase/commit/010b90814b05f46334bb4f807aa05b190ec48c53))
+* **lint:** address pre-existing UI lint issues across multiple components ([38739a2](https://github.com/danielvm-git/bigbase/commit/38739a2eafa554ef0a69aef1da6909b10d32ce01))
+
 # [2.18.0](https://github.com/danielvm-git/bigbase/compare/v2.17.1...v2.18.0) (2026-06-18)
 
 
