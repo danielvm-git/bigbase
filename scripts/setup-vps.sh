@@ -319,8 +319,32 @@ chmod +x "${BIGBASE_HOME}/status.sh"
 chown "${BIGBASE_USER}:${BIGBASE_GROUP}" "${BIGBASE_HOME}/status.sh"
 
 # ============================================================================
-# Summary
+# Step 8: New Relic Infrastructure Agent (optional)
 # ============================================================================
+if [ -n "${NEW_RELIC_API_KEY:-}" ] && [ -n "${NEW_RELIC_ACCOUNT_ID:-}" ]; then
+  info "[8/8] Installing New Relic infrastructure agent..."
+
+  NR_CLI="/usr/local/bin/newrelic"
+  if ! command -v "$NR_CLI" &>/dev/null; then
+    curl -Ls https://download.newrelic.com/install/newrelic-cli/scripts/install.sh | bash
+  fi
+
+  NR_REGION="${NEW_RELIC_REGION:-US}"
+  if [ "$NR_REGION" = "EU" ]; then
+    sudo env NEW_RELIC_API_KEY="$NEW_RELIC_API_KEY" \
+      NEW_RELIC_ACCOUNT_ID="$NEW_RELIC_ACCOUNT_ID" \
+      NEW_RELIC_REGION="$NR_REGION" \
+      "$NR_CLI" install -n infrastructure-agent-installer -y
+  else
+    sudo env NEW_RELIC_API_KEY="$NEW_RELIC_API_KEY" \
+      NEW_RELIC_ACCOUNT_ID="$NEW_RELIC_ACCOUNT_ID" \
+      "$NR_CLI" install -n infrastructure-agent-installer -y
+  fi
+  info "  New Relic agent installed. View at https://one.newrelic.com > Infrastructure > Hosts"
+else
+  info "[8/8] Skipping New Relic (set NEW_RELIC_API_KEY + NEW_RELIC_ACCOUNT_ID to enable)"
+fi
+
 echo ""
 echo "================================================================================"
 info "  BigBase VPS setup complete!"
@@ -350,4 +374,9 @@ echo "       - BIGBASE_GITHUB_APP_PRIVATE_KEY → GitHub App PEM (multiline)"
 echo "       - BIGBASE_GITHUB_WEBHOOK_SECRET → GitHub App webhook secret"
 echo "  2. Push to main — GitHub Actions will build and deploy"
 echo "  3. Domain bigbase.click is pre-configured in the Caddyfile"
+echo ""
+echo "  Optional — New Relic monitoring:"
+echo "    1. Get your API key at https://one.newrelic.com > API Keys"
+echo "    2. Copy your Account ID from the URL"
+echo "    3. Re-run: ssh root@VPS NEW_RELIC_API_KEY=NRAK-... NEW_RELIC_ACCOUNT_ID=12345 "bash -s" < scripts/setup-vps.sh"
 echo "================================================================================"
