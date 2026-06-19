@@ -2,6 +2,9 @@ package mcp_test
 
 import (
 	"context"
+	"io"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 	"time"
 
@@ -54,5 +57,34 @@ func TestPingTool(t *testing.T) {
 	}
 	if text.Text != "pong" {
 		t.Errorf("expected 'pong', got %q", text.Text)
+	}
+}
+
+func TestHTTPTransport(t *testing.T) {
+	c := mcp.New(mcp.Options{Enabled: true})
+	handler := c.Handler()
+
+	// Test health endpoint
+	req := httptest.NewRequest(http.MethodGet, "/health", nil)
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+
+	resp := w.Result()
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("health: expected 200, got %d", resp.StatusCode)
+	}
+	body, _ := io.ReadAll(resp.Body)
+	resp.Body.Close()
+	bodyStr := string(body)
+	if len(bodyStr) == 0 {
+		t.Error("health: expected non-empty body")
+	}
+
+	// Test MCP endpoint requires POST
+	req = httptest.NewRequest(http.MethodGet, "/mcp", nil)
+	w = httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+	if w.Code != http.StatusMethodNotAllowed {
+		t.Errorf("GET /mcp: expected 405, got %d", w.Code)
 	}
 }

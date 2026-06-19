@@ -6,6 +6,9 @@ package mcp
 import (
 	"context"
 	"encoding/json"
+	"fmt"
+	"net/http"
+	"os"
 
 	"github.com/danielvm/bigbase/kernel"
 	mcpsdk "github.com/modelcontextprotocol/go-sdk/mcp"
@@ -71,6 +74,23 @@ func (c *Component) Start(ctx *kernel.Context) error {
 		return nil
 	}
 	c.logger.Info("mcp server starting", "transport", c.transport, "port", c.port)
+
+	switch c.transport {
+	case "stdio":
+		go func() {
+			if err := c.ServeStdio(context.Background()); err != nil {
+				c.logger.Error("mcp stdio server failed", "error", err)
+			}
+		}()
+	case "http":
+		go func() {
+			addr := fmt.Sprintf(":%d", c.port)
+			c.logger.Info("mcp http server listening", "addr", addr)
+			if err := http.ListenAndServe(addr, c.Handler()); err != nil {
+				c.logger.Error("mcp http server failed", "error", err)
+			}
+		}()
+	}
 	return nil
 }
 
@@ -101,6 +121,49 @@ func (c *Component) NewMCPServer() (*mcpsdk.Server, error) {
 	})
 
 	return srv, nil
+}
+
+// ServeStdio runs the MCP server over stdio (stdin/stdout).
+// This blocks until the context is cancelled or stdin closes.
+func (c *Component) ServeStdio(ctx context.Context) error {
+	srv, err := c.NewMCPServer()
+	if err != nil {
+		return fmt.Errorf("create server: %w", err)
+	}
+	return srv.Run(ctx, &mcpsdk.IOTransport{
+		Reader: os.Stdin,
+		Writer: os.Stdout,
+	})
+}
+
+// Handler returns an HTTP handler for the MCP server.
+// Routes: POST /mcp — MCP messages, GET /health — health check.
+func (c *Component) Handler() http.Handler {
+	mux := http.NewServeMux()
+
+	mux.HandleFunc("/mcp", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+		srv, err := c.NewMCPServer()
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		handler := mcpsdk.NewStreamableHTTPHandler(func(_ *http.Request) *mcpsdk.Server {
+			return srv
+		}, nil)
+		handler.ServeHTTP(w, r)
+	})
+
+	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		fmt.Fprintf(w, `{"status":"ok","version":%q}`, version)
+	})
+
+	return mux
 }
 
 // Logger is the subset of slog used by this component.
