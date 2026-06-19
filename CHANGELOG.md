@@ -1,3 +1,10 @@
+# [2.22.0](https://github.com/danielvm-git/bigbase/compare/v2.21.0...v2.22.0) (2026-06-19)
+
+
+### Features
+
+* **deploy:** add build/ detection in resumeCandidates for SvelteKit ([7f5f854](https://github.com/danielvm-git/bigbase/commit/7f5f85462e9c9a584301911e84a2e654b9e5ef59))
+
 # [2.21.0](https://github.com/danielvm-git/bigbase/compare/v2.20.0...v2.21.0) (2026-06-19)
 
 
