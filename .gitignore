@@ -49,3 +49,4 @@ playwright-report/
 .bts.toml
 .envrc
 .rtk/
+.vscode/mcp.json
