@@ -21,7 +21,7 @@ metrics:
 epic_cycle: {}
 bug_cycle:
   step: 5
-  current_step: finalize-ui-lint
+  current_step: verify-work
   next_skill: verify-work
   completed_steps:
   - history-check
@@ -32,7 +32,7 @@ bug_cycle:
   story_bcps: 3
 git:
   branch: feat/e36-delete-site
-  hash: 761a33b
+  hash: f31f769
 handoff:
   last_step_completed: build-epic step 4 develop-tdd for BUG-2026-06-19T131025; Go
     lint fixed, UI lint addressed, cold-start smoke fails.
