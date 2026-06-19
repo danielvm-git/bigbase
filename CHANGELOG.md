@@ -1,3 +1,10 @@
+## [2.26.4](https://github.com/danielvm-git/bigbase/compare/v2.26.3...v2.26.4) (2026-06-19)
+
+
+### Bug Fixes
+
+* **deploy:** fix ghost running status and wrong Python detection ([5935168](https://github.com/danielvm-git/bigbase/commit/59351682e07d7daec75235903857df4dfa4e80af))
+
 ## [2.26.3](https://github.com/danielvm-git/bigbase/compare/v2.26.2...v2.26.3) (2026-06-19)
 
 
