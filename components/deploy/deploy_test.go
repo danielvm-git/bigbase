@@ -1685,3 +1685,18 @@ func TestResumeSvelteKitStaticDeployment(t *testing.T) {
 		t.Fatalf("expected content from build/, got: %s", string(body))
 	}
 }
+
+func TestSvelteKitSSRStartCommand(t *testing.T) {
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, "package.json"), []byte(`{
+		"name": "sveltekit-ssr",
+		"scripts": {
+			"start": "node build/index.js"
+		}
+	}`), 0644); err != nil {
+		t.Fatal(err)
+	}
+	if got := deploy.GetStartCommand(dir); got != "node build/index.js" {
+		t.Fatalf("expected 'node build/index.js' for SvelteKit SSR, got '%s'", got)
+	}
+}
