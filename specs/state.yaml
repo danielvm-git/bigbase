@@ -1,9 +1,9 @@
 type: session-state
 context: infra
-active_flow: fix_bug
-active_epic_id: null
-active_story_id: null
-active_bug_id: BUG-2026-06-19T131025
+active_flow: null
+active_epic_id: e36
+active_story_id: e36s01
+active_bug_id: null
 release:
   target_version: 2.12.0
   migration:
@@ -19,25 +19,14 @@ metrics:
   stories_completed: 17
   bcps_per_hour: 5.7
 epic_cycle: {}
-bug_cycle:
-  step: 5
-  current_step: finalize-ui-lint
-  next_skill: verify-work
-  completed_steps:
-  - history-check
-  - diagnose-root
-  - fix-plan
-  - kickoff-branch
-  - develop-tdd
-  story_bcps: 3
+bug_cycle: {}
 git:
-  branch: feat/e36-delete-site
-  hash: 300408f
+  branch: main
+  hash: 8667e1e
 handoff:
-  last_step_completed: build-epic step 4 develop-tdd for BUG-2026-06-19T131025; Go
-    lint fixed, UI lint addressed locally.
+  last_step_completed: build-epic complete for e36s01; landed on main, branch deleted
   open_decisions: []
-  next_skill: verify-work
+  next_skill: survey-context
   summary: 'Auth roadmap complete: 5 epics (e31-e35), 17 stories, 7 PRs merged.
 
     CORS, OAuth SPA, logout, OTP, magic link, user management, SDK (6 packages),
@@ -45,5 +34,6 @@ handoff:
     UI components (Svelte), phone auth, anonymous token, OAuth popup.
 
     '
-  context: Resume verify-work for BUG-2026-06-19T131025. Address UI lint errors and
-    cold-start smoke test failure (missing bigbase binary).
+  context: e36s01 Backend DELETE /api/sites/:id is done. e36s02 (deploy cleanup),
+    e36s03 (UI delete action), and e36s04 (E2E) remain pending. Lint baseline bug
+    BUG-2026-06-19T131025 is a known issue unrelated to e36.
