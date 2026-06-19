@@ -21,7 +21,7 @@ metrics:
 epic_cycle: {}
 bug_cycle:
   step: 5
-  current_step: resolve-ui-lint-and-cold-start
+  current_step: finalize-ui-lint
   next_skill: verify-work
   completed_steps:
   - history-check
@@ -32,10 +32,10 @@ bug_cycle:
   story_bcps: 3
 git:
   branch: feat/e36-delete-site
-  hash: 69ea838
+  hash: 300408f
 handoff:
   last_step_completed: build-epic step 4 develop-tdd for BUG-2026-06-19T131025; Go
-    lint fixed, UI lint partially addressed locally.
+    lint fixed, UI lint addressed locally.
   open_decisions: []
   next_skill: verify-work
   summary: 'Auth roadmap complete: 5 epics (e31-e35), 17 stories, 7 PRs merged.
@@ -45,5 +45,5 @@ handoff:
     UI components (Svelte), phone auth, anonymous token, OAuth popup.
 
     '
-  context: Resume verify-work for BUG-2026-06-19T131025. Fix UI lint errors and the
+  context: Resume verify-work for BUG-2026-06-19T131025. Address UI lint errors and
     cold-start smoke test failure (missing bigbase binary).
