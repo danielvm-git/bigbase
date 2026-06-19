@@ -8,7 +8,7 @@ status: pending
 stories:
   - id: e37s01
     title: "SvelteKit static and SSR deployment from git repos"
-    status: pending
+    status: done
     bcps: 3
     wsjf: 4.0
     wsjf_rationale: "BV=6(removes framework friction) TC=3(no deadline) RR=3(know gap) / JS=3"
