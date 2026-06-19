@@ -1,8 +1,9 @@
 type: session-state
 context: infra
 active_flow: fix_bug
-active_epic_id: e37
-active_story_id: e37s01
+active_epic_id: null
+active_story_id: null
+active_bug_id: BUG-2026-06-19T131025
 release:
   target_version: 2.12.0
   migration:
@@ -17,35 +18,32 @@ metrics:
   epics_completed: 5
   stories_completed: 17
   bcps_per_hour: 5.7
-  story_start: '2026-06-18T21:28:17Z'
-epic_cycle:
-  step: 3
-  current_step: kickoff-branch
-  next_skill: kickoff-branch
-  completed_steps:
-  - survey-context
-  - plan-work
-  story_bcps: 3
+epic_cycle: {}
 bug_cycle:
-  current_step: verify-work
+  step: 5
+  current_step: finalize-ui-lint
+  next_skill: verify-work
   completed_steps:
   - history-check
   - diagnose-root
   - fix-plan
   - kickoff-branch
   - develop-tdd
-  next_skill: verify-work
-  step: 5
   story_bcps: 3
 git:
-  branch: main
-  hash: 010b908
+  branch: feat/e36-delete-site
+  hash: 300408f
 handoff:
   last_step_completed: build-epic step 4 develop-tdd for BUG-2026-06-19T131025; Go
-    lint fixed, UI lint and cold-start smoke fail.
+    lint fixed, UI lint addressed locally.
   open_decisions: []
   next_skill: verify-work
-  summary: "Building e37 \u2014 SvelteKit Deployment support"
-  context: Resume verify-work for BUG-2026-06-19T131025. Fix UI lint and cold-start
-    smoke test failures identified in previous steps.
-active_bug_id: BUG-2026-06-19T131025
+  summary: 'Auth roadmap complete: 5 epics (e31-e35), 17 stories, 7 PRs merged.
+
+    CORS, OAuth SPA, logout, OTP, magic link, user management, SDK (6 packages),
+
+    UI components (Svelte), phone auth, anonymous token, OAuth popup.
+
+    '
+  context: Resume verify-work for BUG-2026-06-19T131025. Address UI lint errors and
+    cold-start smoke test failure (missing bigbase binary).

@@ -1,0 +1,49 @@
+type: epic-shard
+context: domain
+id: e37
+title: "SvelteKit Deployment — static (adapter-static) & SSR (adapter-node)"
+wsjf: 4.0
+wsjf_rationale: "BV=6 (removes friction for major framework) TC=3 (no deadline) RR=3 (fixes known gap) / JS=3 (2-3 days)"
+status: pending
+stories:
+  - id: e37s01
+    title: "SvelteKit static and SSR deployment from git repos"
+    status: pending
+    bcps: 3
+    wsjf: 4.0
+    wsjf_rationale: "BV=6(removes framework friction) TC=3(no deadline) RR=3(know gap) / JS=3"
+    acceptance:
+      - "Given a SvelteKit project built with adapter-static (output: build/), when deployed, the build/ directory is served as static files"
+      - "Given a SvelteKit project built with adapter-node (SSR), when deployed, node build/index.js is started with PORT env"
+      - "Given a previously running static deployment from build/, when the deploy component resumes, it serves from build/ correctly"
+      - "Given a non-SvelteKit Node project with dist/, existing dist/ detection continues to work"
+    tasks:
+      - desc: "Add build/ check after dist/ in runDeployment post-build block (AppNode → AppStatic switch)"
+        notes: |
+          In components/deploy/deploy.go, inside runDeployment (~line 655-670):
+          After the existing `if _, err := os.Stat(filepath.Join(buildDir, "dist")); err == nil {`
+          block, add an `else if _, err := os.Stat(filepath.Join(buildDir, "build")); err == nil {`
+          block that does the same thing: set serveDir, appType, update DB.
+          This handles SvelteKit adapter-static which outputs to build/ by default.
+        verify: "go test ./components/deploy/ -run TestSvelteKitBuildOutputDetected -v"
+      - desc: "Add build/ check in resumeCandidates for SvelteKit static resume"
+        notes: |
+          In components/deploy/deploy.go, two spots in resumeCandidates (~line 236-264):
+          1. In the `if appType == AppNode` block: add `else if build/ exists` after the dist/ check
+          2. In the `if appType == AppStatic` block: add `else if build/ exists` after the dist/ check
+          Both should set serveDir and switch appType to AppStatic.
+        verify: "go test ./components/deploy/ -run TestResumeSvelteKitStaticDeployment -v"
+      - desc: "Ensure SvelteKit SSR start command works via GetStartCommand"
+        notes: |
+          SvelteKit with adapter-node sets "start": "node build/index.js" in package.json.
+          GetStartCommand already reads this from scripts.start, so it should work.
+          Add a test that creates a package.json with adapter-node-style start script
+          and asserts GetStartCommand returns "node build/index.js".
+          No code change needed unless the test fails.
+        verify: "go test ./components/deploy/ -run TestSvelteKitSSRStartCommand -v"
+      - desc: "Regression guard — existing dist/ detection still works"
+        notes: |
+          Verify that all existing tests in deploy_test.go that rely on dist/ detection
+          still pass. No code change needed — this is a test-only guard.
+          Run the full deploy test suite to confirm.
+        verify: "go test ./components/deploy/ -run TestDetectAppTypeNode -v"

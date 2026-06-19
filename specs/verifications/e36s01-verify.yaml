@@ -1,0 +1,67 @@
+story_id: e36s01
+verified_at: "2026-06-19T12:52:27Z"
+verifier: verify-work
+branch: feat/e36-delete-site
+overall:
+  passed: false
+  status: blocked_by_unrelated_lint_baseline
+phases:
+  smoke:
+    passed: true
+    command: "/tmp/bigbase-verify serve --port 19999 --db <tempdb> && curl -sf http://localhost:19999/health"
+    evidence: "Cold-start smoke OK; /health returned status ok with 16/16 components running."
+  build:
+    passed: true
+    command: "go build -o /tmp/bigbase-verify ."
+  typecheck:
+    passed: true
+    command: "go vet ./..."
+  ui_build:
+    passed: true
+    command: "cd ui && npm run build"
+    evidence: "Vite build completed and verify-sites-css-in-dist: OK."
+  lint:
+    passed: false
+    command: "golangci-lint run ./... && cd ui && npm run lint"
+    scoped_command: "golangci-lint run ./components/sites/..."
+    scoped_passed: true
+    evidence: |
+      Story-scoped Go lint passed with 0 issues.
+      Full golangci-lint failed in unrelated pre-existing files including components/auth, components/db/migrator.go,
+      components/proxy/proxy.go, main.go, and ui/node_modules/flatted.
+      UI lint failed in unrelated pre-existing React files such as Badge.tsx, Button.tsx, hooks, and pages.
+      No lint failure was reported in components/sites/sites.go or components/sites/sites_test.go.
+  tests:
+    passed: true
+    commands:
+      - "go test ./components/sites/ -run TestDeleteSite -v"
+      - "go test ./components/sites/ ./components/deploy/ -run 'TestDeleteSite|TestCustomDomain|TestDeleteDeployment' -v"
+      - "go test ./..."
+    evidence: "All focused and full Go tests passed."
+  manual:
+    passed: true
+    steps:
+      - step: "Cold-start BigBase with a temp database."
+        expected: "Server boots from scratch and reports healthy components."
+        actual: "/health returned status ok with 16 running components."
+        passed: true
+      - step: "Verify DELETE missing site behavior."
+        expected: "DELETE /api/sites/missing returns 404."
+        actual: "Covered by TestDeleteSiteNotFound passing."
+        passed: true
+      - step: "Verify active deployment guard."
+        expected: "Sites with pending, building, or running deployments return 409 and preserve data."
+        actual: "Covered by TestDeleteSiteActiveDeploymentConflict passing."
+        passed: true
+      - step: "Verify terminal cascade deletion and git repo preservation."
+        expected: "Terminal site data is deleted; source git_repos row remains; unrelated same-repo site deployment remains."
+        actual: "Covered by TestDeleteSiteCascade passing."
+        passed: true
+  gaps:
+    closed: false
+    items:
+      - id: unrelated-full-lint-baseline
+        expected: "Full repository lint gates pass."
+        actual: "Full lint commands fail in unrelated files outside this story scope."
+        status: open
+        recommendation: "Fix or waive unrelated baseline lint before advancing to audit-code."

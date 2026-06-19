@@ -256,11 +256,6 @@ func (s *Sites) latestDeployment(ctx context.Context, repoID string) (*Deploymen
 	return &d, nil
 }
 
-type siteDeleteTarget struct {
-	ID        string
-	GitRepoID string
-}
-
 func (s *Sites) getSite(w http.ResponseWriter, r *http.Request, id string) {
 	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 	defer cancel()
@@ -365,6 +360,11 @@ func (s *Sites) createSite(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSON(w, http.StatusCreated, site)
+}
+
+type siteDeleteTarget struct {
+	ID        string
+	GitRepoID string
 }
 
 func (s *Sites) deleteSite(w http.ResponseWriter, r *http.Request, id string) {
