@@ -286,6 +286,14 @@ bugs:
     summary: Site deletion returns 500 when deployments table missing site_id column
     file: specs/bugs/BUG-2026-06-19T163327-site-delete-500-missing-column.md
     status: open
+  - id: BUG-2026-06-19T173242
+    date: "2026-06-19"
+    severity: high
+    priority: high
+    scope: deploy,monitoring,vps
+    summary: Python deploys fail with PEP 668 + alert checker missing duration_seconds column
+    file: specs/bugs/BUG-2026-06-19T173242-pip-pep668-and-alert-column.md
+    status: open
     files_changed:
       - components/sites/sites.go
       - components/sites/sites_test.go

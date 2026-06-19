@@ -59,11 +59,11 @@ type SystemMetrics struct {
 }
 
 type EndpointMetrics struct {
-	Count       int64             `json:"count"`
-	StatusCount map[int]int64     `json:"status_count"`
-	Latencies   []float64         `json:"-"`
-	AvgLatency  float64           `json:"avg_latency_ms"`
-	P99Latency  float64           `json:"p99_latency_ms"`
+	Count       int64         `json:"count"`
+	StatusCount map[int]int64 `json:"status_count"`
+	Latencies   []float64     `json:"-"`
+	AvgLatency  float64       `json:"avg_latency_ms"`
+	P99Latency  float64       `json:"p99_latency_ms"`
 }
 
 type RequestMetrics struct {
@@ -117,11 +117,11 @@ func New(opts Options) *Monitoring {
 
 const hostCollectInterval = 15 * time.Second
 
-func (m *Monitoring) Name() string                  { return "monitoring" }
-func (m *Monitoring) Version() string               { return version }
-func (m *Monitoring) Dependencies() []string         { return []string{"db"} }
-func (m *Monitoring) ConfigSchema() json.RawMessage { return nil }
-func (m *Monitoring) Hooks() []kernel.HookDef        { return nil }
+func (m *Monitoring) Name() string                                           { return "monitoring" }
+func (m *Monitoring) Version() string                                        { return version }
+func (m *Monitoring) Dependencies() []string                                 { return []string{"db"} }
+func (m *Monitoring) ConfigSchema() json.RawMessage                          { return nil }
+func (m *Monitoring) Hooks() []kernel.HookDef                                { return nil }
 func (m *Monitoring) Init(ctx *kernel.Context, config json.RawMessage) error { return nil }
 func (m *Monitoring) Start(ctx *kernel.Context) error {
 	m.stream = newEventStream()
@@ -148,6 +148,13 @@ func (m *Monitoring) Start(ctx *kernel.Context) error {
 			duration_seconds INTEGER NOT NULL DEFAULT 300
 		)`); err != nil {
 			return err
+		}
+		// Ensure duration_seconds column exists for DBs created before this migration.
+		if _, err := m.db.Exec(
+			"ALTER TABLE monitoring_alerts ADD COLUMN duration_seconds INTEGER NOT NULL DEFAULT 300"); err != nil {
+			if !strings.Contains(err.Error(), "duplicate column") {
+				m.logger.Warn("add duration_seconds column", "error", err)
+			}
 		}
 		if err := m.migrateOrgUsageTable(); err != nil {
 			return err
@@ -347,8 +354,8 @@ func (m *Monitoring) handleMetrics(w http.ResponseWriter, r *http.Request) {
 	endpoints := make(map[string]map[string]any)
 	for path, ep := range m.metrics.requests {
 		endpoints[path] = map[string]any{
-			"count":         ep.Count,
-			"status_count":  ep.StatusCount,
+			"count":          ep.Count,
+			"status_count":   ep.StatusCount,
 			"avg_latency_ms": ep.AvgLatency,
 		}
 	}

@@ -603,7 +603,7 @@ func (d *Deploy) buildApp(ctx context.Context, deployID string, buildDir string,
 	case AppGo:
 		return d.runBuildCommand(ctx, deployID, buildDir, "go", "build", "-o", "app", ".")
 	case AppPython:
-		return d.runBuildCommand(ctx, deployID, buildDir, "pip", "install", "-r", "requirements.txt")
+		return d.runBuildCommand(ctx, deployID, buildDir, "pip", "install", "--break-system-packages", "-r", "requirements.txt")
 	}
 	return nil
 }
