@@ -12,24 +12,24 @@ import (
 	"syscall"
 	"text/tabwriter"
 
-	"github.com/danielvm/bigbase/config"
 	"github.com/danielvm/bigbase/components/admin"
 	"github.com/danielvm/bigbase/components/api"
 	"github.com/danielvm/bigbase/components/auth"
 	"github.com/danielvm/bigbase/components/backup"
 	"github.com/danielvm/bigbase/components/cici"
-	"github.com/danielvm/bigbase/components/deploy"
 	"github.com/danielvm/bigbase/components/db"
+	"github.com/danielvm/bigbase/components/deploy"
 	"github.com/danielvm/bigbase/components/forge"
 	"github.com/danielvm/bigbase/components/functions"
 	"github.com/danielvm/bigbase/components/git"
 	"github.com/danielvm/bigbase/components/github"
 	"github.com/danielvm/bigbase/components/messaging"
-	"github.com/danielvm/bigbase/components/sites"
 	"github.com/danielvm/bigbase/components/monitoring"
 	"github.com/danielvm/bigbase/components/proxy"
 	"github.com/danielvm/bigbase/components/realtime"
+	"github.com/danielvm/bigbase/components/sites"
 	"github.com/danielvm/bigbase/components/storage"
+	"github.com/danielvm/bigbase/config"
 	"github.com/danielvm/bigbase/kernel"
 )
 
@@ -242,6 +242,9 @@ func startProxy() {
 				AppType:   string(dep.AppType),
 				CreatedAt: dep.CreatedAt,
 			}, nil
+		},
+		DeleteSiteCleanup: func(ctx context.Context, siteID, repoID string) error {
+			return depComp.DeleteSiteDeployments(ctx, siteID, repoID)
 		},
 	})
 	rt := realtime.New(realtime.Options{

@@ -77,21 +77,21 @@ type DeploymentHostRegistry interface {
 }
 
 type Deploy struct {
-	db            DBer
-	logger        Logger
-	buildsDir     string
-	gitDir        string
-	buildHome     string
-	basePort      int
-	publicDomain  string
-	useHTTPS      bool
-	hostRouter    DeploymentHostRegistry
-	deployLogsMu  sync.RWMutex
-	deployLogs    map[string][]string
-	mu            sync.Mutex
-	nextPort      int
-	apps          map[string]*runningApp
-	unsubscribe   func()
+	db           DBer
+	logger       Logger
+	buildsDir    string
+	gitDir       string
+	buildHome    string
+	basePort     int
+	publicDomain string
+	useHTTPS     bool
+	hostRouter   DeploymentHostRegistry
+	deployLogsMu sync.RWMutex
+	deployLogs   map[string][]string
+	mu           sync.Mutex
+	nextPort     int
+	apps         map[string]*runningApp
+	unsubscribe  func()
 }
 
 type Options struct {
@@ -150,11 +150,11 @@ func New(opts Options) *Deploy {
 	}
 }
 
-func (d *Deploy) Name() string                   { return "deploy" }
-func (d *Deploy) Version() string                { return version }
-func (d *Deploy) Dependencies() []string         { return []string{"db", "git"} }
-func (d *Deploy) ConfigSchema() json.RawMessage  { return nil }
-func (d *Deploy) Hooks() []kernel.HookDef        { return nil }
+func (d *Deploy) Name() string                  { return "deploy" }
+func (d *Deploy) Version() string               { return version }
+func (d *Deploy) Dependencies() []string        { return []string{"db", "git"} }
+func (d *Deploy) ConfigSchema() json.RawMessage { return nil }
+func (d *Deploy) Hooks() []kernel.HookDef       { return nil }
 
 func (d *Deploy) Init(ctx *kernel.Context, config json.RawMessage) error {
 	return nil
@@ -212,7 +212,7 @@ func (d *Deploy) Start(ctx *kernel.Context) error {
 
 type resumeCandidate struct {
 	id, repoID, repoName, rawURL, appType, siteID string
-	port                                            int
+	port                                          int
 }
 
 func (d *Deploy) loadResumeCandidates() []resumeCandidate {
@@ -323,7 +323,7 @@ func (d *Deploy) Stop(ctx *kernel.Context) error {
 	}
 	d.mu.Lock()
 	defer d.mu.Unlock()
-	
+
 	for id, app := range d.apps {
 		if app.host != "" && d.hostRouter != nil {
 			d.hostRouter.UnregisterDeploymentHost(app.host)
@@ -650,7 +650,7 @@ func (d *Deploy) startApp(ctx context.Context, buildDir string, deploy *Deployme
 	}
 
 	cmd.Env = append(os.Environ(), fmt.Sprintf("PORT=%d", deploy.Port))
-	
+
 	stdout, _ := cmd.StdoutPipe()
 	stderr, _ := cmd.StderrPipe()
 
@@ -722,7 +722,7 @@ func (d *Deploy) failDeployment(id string, buildErr error) {
 		msg = msg[:maxLen]
 	}
 	d.appendDeployLog(id, "✗ Deploy failed: "+msg)
-	
+
 	// Use a more direct update here since we have the message
 	d.mu.Lock()
 	defer d.mu.Unlock()
@@ -976,6 +976,61 @@ func (d *Deploy) handleDeployLogs(w http.ResponseWriter, r *http.Request, id str
 		payload["error_message"] = errMsg
 	}
 	writeJSON(w, http.StatusOK, payload)
+}
+
+// DeleteSiteDeployments terminates all running apps and removes all deployment
+// artifacts for a given site. It matches by site_id first, then falls back to
+// empty-site_id + repo_id for legacy deployments. Unlike the HTTP handler, this
+// does not reject active deployments — the caller (sites.deleteSite) has already
+// decided the site is being deleted.
+func (d *Deploy) DeleteSiteDeployments(ctx context.Context, siteID, repoID string) error {
+	rows, err := d.db.QueryContext(ctx,
+		`SELECT id, status, COALESCE(url,'') FROM deployments
+		 WHERE site_id = ? OR (site_id = '' AND repo_id = ?)`,
+		siteID, repoID)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = rows.Close() }()
+
+	type depRow struct{ id, status, url string }
+	var deps []depRow
+	for rows.Next() {
+		var r depRow
+		if err := rows.Scan(&r.id, &r.status, &r.url); err != nil {
+			continue
+		}
+		deps = append(deps, r)
+	}
+
+	for _, dep := range deps {
+		d.mu.Lock()
+		app, hasApp := d.apps[dep.id]
+		if hasApp {
+			delete(d.apps, dep.id)
+		}
+		d.mu.Unlock()
+
+		if hasApp {
+			if app.cmd != nil && app.cmd.Process != nil {
+				_ = app.cmd.Process.Kill()
+			}
+			if app.server != nil {
+				_ = app.server.Close()
+			}
+			if d.hostRouter != nil {
+				d.hostRouter.UnregisterDeploymentHost(app.host)
+			}
+		}
+
+		_ = os.RemoveAll(filepath.Join(d.buildsDir, dep.id))
+		d.deleteDeployLogs(dep.id)
+	}
+
+	_, err = d.db.ExecContext(ctx,
+		`DELETE FROM deployments WHERE site_id = ? OR (site_id = '' AND repo_id = ?)`,
+		siteID, repoID)
+	return err
 }
 
 var _ kernel.Component = (*Deploy)(nil)
