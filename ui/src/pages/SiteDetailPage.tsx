@@ -13,7 +13,7 @@ import {
   Tabs,
   RequestLogs,
 } from '../components'
-import { getSite, getSiteDeployments } from '../lib/sitesData'
+import { getSite, getSiteDeployments, deleteSite } from '../lib/sitesData'
 import { isPreviewForced, previewQuerySuffix } from '../lib/previewMode'
 import { useBuildLogs } from '../hooks/useBuildLogs'
 import { useRequestLogs } from '../hooks/useRequestLogs'
@@ -56,6 +56,8 @@ export default function SiteDetailPage() {
   const [redeployError, setRedeployError] = useState<string | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [deleteError, setDeleteError] = useState<string | null>(null)
+  const [deletingSite, setDeletingSite] = useState(false)
+  const [deleteSiteError, setDeleteSiteError] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState('deployments')
   const pq = previewQuerySuffix()
 
@@ -111,6 +113,24 @@ export default function SiteDetailPage() {
       }
     } finally {
       setDeletingId(null)
+    }
+  }
+
+  const handleDeleteSite = async () => {
+    const name = site?.name || ''
+    if (!window.confirm(`Delete site "${name}"?\n\nThis will remove all deployments, domains, and logs. This cannot be undone.`)) return
+    if (previewMode) {
+      window.location.href = `/admin/#/deploy${pq}`
+      return
+    }
+    setDeletingSite(true)
+    setDeleteSiteError(null)
+    const result = await deleteSite(site!.id)
+    if (result.ok) {
+      window.location.href = `/admin/#/deploy${pq}`
+    } else {
+      setDeleteSiteError(result.error || 'Delete failed')
+      setDeletingSite(false)
     }
   }
 
@@ -275,6 +295,26 @@ export default function SiteDetailPage() {
       {deleteError && (
         <p className="input-error-text" style={{ marginTop: 'var(--space-4)' }}>{deleteError}</p>
       )}
+
+      <Card style={{ marginTop: 'var(--space-12)', borderColor: 'var(--error)' }}>
+        <CardHeader title="Danger Zone" />
+        <p className="dim" style={{ marginBottom: 'var(--space-6)' }}>
+          Permanently delete this site and all associated deployments, domains, and logs.
+          This cannot be undone.
+        </p>
+        {deleteSiteError && (
+          <p className="input-error-text" style={{ marginBottom: 'var(--space-4)' }}>{deleteSiteError}</p>
+        )}
+        <Button
+          variant="primary"
+          size="sm"
+          disabled={deletingSite}
+          onClick={handleDeleteSite}
+          style={{ background: 'var(--error)', borderColor: 'var(--error)' }}
+        >
+          {deletingSite ? 'Deleting…' : `Delete ${site.name}`}
+        </Button>
+      </Card>
 
       <p style={{ marginTop: 'var(--space-12)' }}>
         <Link to={`/deploy${pq}`}>← All sites</Link>

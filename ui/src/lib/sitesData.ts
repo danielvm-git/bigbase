@@ -261,3 +261,19 @@ export async function createSite(input: CreateSiteInput): Promise<CreateSiteResu
 export function githubInstallURL(): string {
   return '/api/github/install'
 }
+
+export async function deleteSite(siteId: string): Promise<{ ok: boolean; error?: string }> {
+  if (isPreviewForced()) {
+    return { ok: true }
+  }
+  try {
+    const res = await fetch(`/api/sites/${siteId}`, { method: 'DELETE' })
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({ error: '' })) as { error?: string }
+      return { ok: false, error: body.error || `Delete failed (HTTP ${res.status})` }
+    }
+    return { ok: true }
+  } catch {
+    return { ok: false, error: 'Delete failed — network error' }
+  }
+}
