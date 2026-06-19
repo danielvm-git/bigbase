@@ -1,3 +1,10 @@
+# [2.26.0](https://github.com/danielvm-git/bigbase/compare/v2.25.0...v2.26.0) (2026-06-19)
+
+
+### Features
+
+* **vps:** add New Relic infrastructure agent to VPS setup script ([bea6b08](https://github.com/danielvm-git/bigbase/commit/bea6b08e69ed1fab8eb45a3100c6524a25847c8b))
+
 # [2.25.0](https://github.com/danielvm-git/bigbase/compare/v2.24.0...v2.25.0) (2026-06-19)
 
 
