@@ -20,9 +20,9 @@ metrics:
   story_start: '2026-06-19T12:34:00Z'
   story_end: null
 epic_cycle:
-  step: 7
-  current_step: commit-message
-  next_skill: commit-message
+  step: 8
+  current_step: release-branch
+  next_skill: release-branch
   completed_steps:
     - survey-context
     - plan-work
@@ -30,6 +30,7 @@ epic_cycle:
     - develop-tdd
     - verify-work
     - audit-code
+    - commit-message
   story_bcps: 3
 bug_cycle: {}
 git:
