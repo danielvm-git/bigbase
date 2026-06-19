@@ -32,7 +32,7 @@ epics:
   e28: done
   e27: done
   e30: done
-  e36: pending
+  e36: done
   e37: pending
   e31: done
   e32: done
@@ -131,9 +131,9 @@ stories:
   e30s02: done
   e30s03: done
   e36s01: done
-  e36s02: pending
-  e36s03: pending
-  e36s04: pending
+  e36s02: done
+  e36s03: done
+  e36s04: done
   e37s01: pending
   e31s01: done
   e31s02: done

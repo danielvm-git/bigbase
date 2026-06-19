@@ -4,7 +4,7 @@ id: e36
 title: Delete Deployed Site
 wsjf: 6.0
 wsjf_rationale: "BV=8(removes stale production sites and accidental deploys from the console) TC=5(active admin pain visible in Sites grid) RR=5(reduces orphan processes, host routes, domains, and logs) / JS=3(~2-3 days: backend cascade + deploy cleanup + UI confirmation/tests)"
-status: pending
+status: done
 depends_on:
   - e15
   - e28
@@ -54,7 +54,7 @@ stories:
 
   - id: e36s02
     title: Deploy component cleanup hook for deleted sites
-    status: pending
+    status: done
     bcps: 3
     wsjf: 5.0
     wsjf_rationale: "BV=8(deleted sites must stop serving) TC=5(active production cleanup) RR=5(prevents orphan processes/routes) / JS=3"
@@ -75,7 +75,7 @@ stories:
 
   - id: e36s03
     title: Sites UI delete action with confirmation and optimistic refresh
-    status: pending
+    status: done
     bcps: 2
     wsjf: 6.5
     wsjf_rationale: "BV=8(admin can remove the stale cards shown in Sites grid) TC=5(active user request) RR=3(UI-only risk reduction) / JS=2"
@@ -97,7 +97,7 @@ stories:
 
   - id: e36s04
     title: End-to-end deletion coverage and release notes
-    status: pending
+    status: done
     bcps: 1
     wsjf: 6.5
     wsjf_rationale: "BV=5(proves the user-facing workflow) TC=5(active bug/feature request) RR=3(regression protection) / JS=2"

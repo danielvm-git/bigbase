@@ -1,0 +1,133 @@
+type: epic-shard
+context: domain
+id: e38
+title: "MCP Server — Agent-Native Platform Education"
+wsjf: 4.2
+wsjf_rationale: "BV=8(significant: MCP is the new standard for agent-platform interaction; makes BigBase visible to all AI coding agents) TC=8(competitive window: agent-native platforms are the current wave; being early matters) RR=5(moderate: reduces onboarding friction + unblocks agent-driven development) / JS=5(~1 week: Go MCP server + knowledge tools + deploy integration)"
+status: planned
+covers:
+  - components/mcp/
+stories:
+  - id: e38s01
+    title: "MCP Server Foundation — stdio + HTTP transport, tools registry"
+    status: planned
+    bcps: 3
+    wsjf: 4.2
+    wsjf_rationale: "BV=8 TC=8 RR=5 / JS=5"
+    tasks:
+      - desc: "Scaffold components/mcp/ — Go module using github.com/modelcontextprotocol/go-sdk (matching github-mcp-server pattern)"
+        notes: |
+          Create components/mcp/mcp.go with kernel.Component interface.
+          Dependencies: none (standalone server).
+          Add --mcp-port flag (default: 3900), --mcp-enabled flag (default: true).
+          Use mcp.NewServer() from go-sdk with name='BigBase', version from build info.
+        verify: "go build ./... && go test ./components/mcp/ -v"
+      - desc: "Implement stdio transport — local agent use via pipe"
+        notes: |
+          Wire mcp.NewStdioServer() with mcp.IOTransport reading os.Stdin / writing os.Stdout.
+          Register a ping tool to verify server is alive.
+          Log to stderr (not stdout — stdout is the MCP transport).
+        verify: "echo '{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\",\"params\":{\"protocolVersion\":\"2025-03-26\",\"clientInfo\":{\"name\":\"test\",\"version\":\"0.1\"}}}' | go run . mcp-serve --stdio 2>/dev/null | head -1 | grep -q initialize"
+      - desc: "Implement HTTP/SSE transport — hosted at mcp.bigbase.click"
+        notes: |
+          Use mcp.NewStreamableHTTPServer() with CORS for agent client origins.
+          Register on the proxy/host router (or standalone HTTP server on --mcp-port).
+          Route: POST /mcp for MCP messages, GET /mcp for SSE events.
+          Add GET /health endpoint returning {"status":"ok","version":...}.
+          Add /.well-known/mcp.json for auto-discovery.
+        verify: "go test ./components/mcp/ -run TestHTTPTransport -v"
+      - desc: "Register in kernel — component discovery + lifecycle hooks"
+        notes: |
+          Register mcp component in kernel.Discover().
+          Start() launches the server (stdio or HTTP based on --mcp-transport flag).
+          Stop() shuts down gracefully with context timeout.
+          Add to main.go serve command's component startup list.
+        verify: "go run . components list | grep -q mcp"
+
+  - id: e38s02
+    title: "Platform Knowledge Tools — service catalog, docs, code examples"
+    status: planned
+    bcps: 4
+    wsjf: 6.0
+    wsjf_rationale: "BV=8 TC=8 RR=5 / JS=3.5(~3 days: knowledge base + tool implementations)"
+    tasks:
+      - desc: "Register list_services tool — return catalog of BigBase services with capabilities and status"
+        notes: |
+          Tool: list_services — returns structured list of all BigBase services.
+          Each entry: name, description, capabilities[], status (stable/beta/planned), docs_path.
+          Services: deploy, auth, db (auto-api), storage, functions, realtime, messaging, forge, cici, monitoring, webhooks.
+          Format output as clear, agent-consumable text.
+        verify: "go test ./components/mcp/ -run TestListServices -v"
+      - desc: "Register get_service_docs tool — detailed documentation for a specific service"
+        notes: |
+          Tool: get_service_docs(service) — returns API surface, configuration, examples for a service.
+          Include: REST endpoints, request/response schemas, auth requirements, CLI flags.
+          Store knowledge base as embedded Go files (embed.FS) in components/mcp/knowledge/.
+          Each service has a .json doc file: auth.json, db.json, storage.json, deploy.json, etc.
+        verify: "go test ./components/mcp/ -run TestGetServiceDocs -v"
+      - desc: "Register get_code_example tool — framework-specific integration snippets"
+        notes: |
+          Tool: get_code_example(service, framework) — returns ready-to-paste code.
+          Frameworks: sveltekit, nextjs, astro, vue, react, go, python.
+          Services: auth (login/register/JWT), db (CRUD), storage (upload/download), realtime (WebSocket).
+          Each snippet includes imports, config, and usage. Store in components/mcp/knowledge/examples/.
+          Generated code must work against BigBase's actual API — test manually once.
+        verify: "go test ./components/mcp/ -run TestGetCodeExample -v"
+      - desc: "Add server instructions — teach the agent how to use the MCP effectively"
+        notes: |
+          When agent connects, send server instructions that explain:
+          - BigBase is a BaaS platform (like Supabase/Firebase but self-hosted)
+          - Available services and when to use each
+          - How to deploy to bigbase.click via the MCP tools
+          - Framework-first workflow: pick framework → get code example → deploy
+          Set via mcp.ServerInstructions() or equivalent in go-sdk.
+        verify: "go test ./components/mcp/ -run TestServerInstructions -v"
+      - desc: "Register list_frameworks tool — frameworks BigBase supports with maturity level"
+        notes: |
+          Tool: list_frameworks — returns supported frameworks with integration maturity.
+          Each entry: name, maturity (full/partial/planned), recommended_for, caveats.
+          Full: SvelteKit (reference), Astro.
+          Partial: Next.js (SSR limited), Vue, React.
+          Planned: Go, Python serverless.
+        verify: "go test ./components/mcp/ -run TestListFrameworks -v"
+
+  - id: e38s03
+    title: "Deploy Workflow Tools — repo listing, deploy trigger, status, logs"
+    status: planned
+    bcps: 3
+    wsjf: 5.33
+    wsjf_rationale: "BV=8 TC=8 RR=8(eliminates deploy knowledge gap for agents; agents can't deploy without this) / JS=4.5(~3-4 days: API integration + tools)"
+    tasks:
+      - desc: "Register list_repos tool — list git repos available for deployment"
+        notes: |
+          Tool: list_repos — calls BigBase's internal git component to list repos.
+          Returns: id, name, description, updated_at, branches[].
+          Use kernel event bus or direct DB query (git_repos table) — MCP component has db dependency.
+          Add db dependency in Dependencies().
+        verify: "go test ./components/mcp/ -run TestListRepos -v"
+      - desc: "Register deploy_site tool — trigger a deployment from a repo+branch"
+        notes: |
+          Tool: deploy_site(repo_id, branch?, site_name?) — calls deploy.Trigger() via component API or internal import path.
+          Returns deployment ID, URL, status.
+          Validate repo exists, branch defaults to 'main', site_name defaults to repo name.
+          If deploy component is not loaded, return clear error message.
+        verify: "go test ./components/mcp/ -run TestDeploySite -v"
+      - desc: "Register get_deploy_status tool — check deployment status and details"
+        notes: |
+          Tool: get_deploy_status(deployment_id) — queries deployments table for status, URL, port, app_type, commit_sha, error_message.
+          Returns clear agent-friendly summary: running/failed/building with URL and next steps.
+          If failed, include error message and suggest fixes.
+        verify: "go test ./components/mcp/ -run TestGetDeployStatus -v"
+      - desc: "Register get_deploy_logs tool — stream or fetch build logs"
+        notes: |
+          Tool: get_deploy_logs(deployment_id) — fetches build_log column from deployments table.
+          Returns timestamped log lines. Format for agent readability.
+          Include summary: total lines, status at end, error lines highlighted.
+        verify: "go test ./components/mcp/ -run TestGetDeployLogs -v"
+      - desc: "Register deploy_guide tool — step-by-step deployment workflow for agents"
+        notes: |
+          Tool: deploy_guide(framework?) — returns a natural-language step-by-step guide.
+          Covers: 1) Push code to repo 2) List repos 3) Deploy 4) Check status 5) View logs.
+          Framework-specific notes: where build output goes, start command detection, env vars.
+          This is the "teaching" tool — it doesn't execute, it explains.
+        verify: "go test ./components/mcp/ -run TestDeployGuide -v"
