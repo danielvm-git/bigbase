@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net"
 	"net/http"
 	"net/http/httptest"
@@ -1504,5 +1505,198 @@ func TestDeleteSiteCleanup(t *testing.T) {
 		"SELECT COUNT(*) FROM deployments WHERE id = 'dep-other-site'").Scan(&count)
 	if count != 1 {
 		t.Fatalf("unrelated deployment should remain, got %d", count)
+	}
+}
+
+func createSvelteKitStaticRepo(t *testing.T, database *db.DB, repoID, gitDir string) string {
+	t.Helper()
+
+	_, _ = database.ExecContext(context.Background(),
+		`CREATE TABLE IF NOT EXISTS git_repos (
+			id TEXT PRIMARY KEY, name TEXT NOT NULL UNIQUE, owner_id INTEGER NOT NULL,
+			private INTEGER NOT NULL DEFAULT 1, default_branch TEXT NOT NULL DEFAULT 'main',
+			description TEXT DEFAULT '', created_at TEXT NOT NULL DEFAULT (datetime('now'))
+		)`)
+
+	_, err := database.ExecContext(context.Background(),
+		"INSERT INTO git_repos (id, name, owner_id, private, default_branch, description, created_at) VALUES (?, ?, ?, ?, ?, ?, datetime('now'))",
+		repoID, repoID+"-name", 0, 1, "main", "sveltekit static repo")
+	if err != nil {
+		t.Fatalf("insert repo: %v", err)
+	}
+
+	repoPath := filepath.Join(gitDir, repoID+".git")
+	mustRun(t, "git", "init", "--bare", "-b", "main", repoPath)
+
+	sourceDir := t.TempDir()
+	mustRun(t, "git", "init", "-b", "main", sourceDir)
+	mustRun(t, "git", "-C", sourceDir, "config", "user.email", "test@test.com")
+	mustRun(t, "git", "-C", sourceDir, "config", "user.name", "test")
+
+	// Simulate SvelteKit with adapter-static: package.json + build script that outputs to build/
+	_ = os.WriteFile(filepath.Join(sourceDir, "package.json"), []byte(`{
+		"name": "sveltekit-static",
+		"private": true,
+		"scripts": {
+			"build": "mkdir -p build && echo '<h1>SvelteKit</h1>' > build/index.html"
+		}
+	}`), 0644)
+
+	mustRun(t, "git", "-C", sourceDir, "add", ".")
+	mustRun(t, "git", "-C", sourceDir, "commit", "-m", "initial commit")
+	mustRun(t, "git", "-C", sourceDir, "remote", "add", "origin", repoPath)
+	mustRun(t, "git", "-C", sourceDir, "push", "-u", "origin", "main")
+
+	return repoID
+}
+
+func TestSvelteKitBuildOutputDetected(t *testing.T) {
+	if _, err := exec.LookPath("npm"); err != nil {
+		t.Skip("npm not in PATH")
+	}
+
+	_, handler, database, gitDir := setupDeploy(t)
+	repoID := createSvelteKitStaticRepo(t, database, "repo-sk-static", gitDir)
+
+	var buf bytes.Buffer
+	_ = json.NewEncoder(&buf).Encode(map[string]string{"repo_id": repoID})
+	req := httptest.NewRequest("POST", "/api/deploy", &buf)
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+	if w.Code != http.StatusCreated {
+		t.Fatalf("expected 201, got %d: %s", w.Code, w.Body.String())
+	}
+
+	var created map[string]any
+	if err := json.NewDecoder(w.Body).Decode(&created); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	depID, _ := created["id"].(string)
+
+	// Wait for terminal state
+	waitForDeploymentTerminal(t, handler, depID, 30*time.Second)
+
+	// Fetch the deployment and verify it's running as static
+	getReq := httptest.NewRequest("GET", "/api/deploy/"+depID, nil)
+	getW := httptest.NewRecorder()
+	handler.ServeHTTP(getW, getReq)
+	if getW.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d", getW.Code)
+	}
+
+	var got map[string]any
+	if err := json.NewDecoder(getW.Body).Decode(&got); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+
+	if got["status"] != "running" {
+		t.Fatalf("expected status 'running', got '%s'", got["status"])
+	}
+	appType, _ := got["app_type"].(string)
+	if appType != "static" {
+		t.Fatalf("expected app_type 'static' for SvelteKit build/ output, got '%s'", appType)
+	}
+}
+
+func TestResumeSvelteKitStaticDeployment(t *testing.T) {
+	logger := testLogger{}
+	database := db.New(db.Options{Path: ":memory:", Logger: logger})
+	_ = database.Start(&kernel.Context{})
+	t.Cleanup(func() { _ = database.Stop(&kernel.Context{}) })
+
+	gitDir := t.TempDir()
+	buildsDir := t.TempDir()
+	gitComp := newGitStub(gitDir)
+	_ = gitComp.Start(&kernel.Context{})
+
+	depID := "sk-resume-test"
+	port := 31999
+
+	// Seed git_repos
+	_, _ = database.ExecContext(context.Background(),
+		`CREATE TABLE IF NOT EXISTS git_repos (
+			id TEXT PRIMARY KEY, name TEXT NOT NULL UNIQUE, owner_id INTEGER NOT NULL,
+			private INTEGER NOT NULL DEFAULT 1, default_branch TEXT NOT NULL DEFAULT 'main',
+			description TEXT DEFAULT '', created_at TEXT NOT NULL DEFAULT (datetime('now'))
+		)`)
+	_, _ = database.ExecContext(context.Background(),
+		"INSERT INTO git_repos (id, name, owner_id, private, default_branch, description) VALUES (?, ?, 0, 1, 'main', '')",
+		"repo-x", "sk-resume-name")
+
+	// Pre-create deployments table so seeding works before dep.Start()
+	_, _ = database.ExecContext(context.Background(),
+		`CREATE TABLE IF NOT EXISTS deployments (
+			id TEXT PRIMARY KEY,
+			repo_id TEXT NOT NULL,
+			site_id TEXT NOT NULL DEFAULT '',
+			branch TEXT NOT NULL DEFAULT 'main',
+			commit_sha TEXT DEFAULT '',
+			status TEXT NOT NULL DEFAULT 'pending',
+			url TEXT DEFAULT '',
+			port INTEGER DEFAULT 0,
+			app_type TEXT DEFAULT '',
+			error_message TEXT NOT NULL DEFAULT '',
+			build_log TEXT DEFAULT '',
+			created_at TEXT NOT NULL DEFAULT (datetime('now'))
+		)`)
+
+	// Seed deployment with status='running', app_type='node', port>0, and public URL
+	_, err := database.ExecContext(context.Background(),
+		`INSERT INTO deployments (id, repo_id, branch, status, url, port, app_type, created_at)
+		 VALUES (?, 'repo-x', 'main', 'running', ?, ?, 'node', datetime('now'))`,
+		depID, fmt.Sprintf("https://sk-resume-name.test.click"), port)
+	if err != nil {
+		t.Fatalf("seed deployment: %v", err)
+	}
+
+	// Create build directory with build/ output (simulating SvelteKit adapter-static)
+	buildDir := filepath.Join(buildsDir, depID)
+	if err := os.MkdirAll(filepath.Join(buildDir, "build"), 0755); err != nil {
+		t.Fatalf("mkdir build: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(buildDir, "build", "index.html"), []byte("<h1>Resumed SvelteKit</h1>"), 0644); err != nil {
+		t.Fatalf("write index.html: %v", err)
+	}
+
+	// Component with PublicDomain enables resume routing
+	dep := deploy.New(deploy.Options{
+		DB:           database,
+		Logger:       logger,
+		BuildsDir:    buildsDir,
+		GitDir:       gitDir,
+		PublicDomain: "test.click",
+	})
+	_ = dep.Start(&kernel.Context{})
+	t.Cleanup(func() { _ = dep.Stop(&kernel.Context{}) })
+
+	// Give resume goroutine time to start serving
+	time.Sleep(1 * time.Second)
+
+	// Verify deployment is serving from build/
+	resp, err := http.Get(fmt.Sprintf("http://localhost:%d", port))
+	if err != nil {
+		t.Fatalf("resumed deployment not serving on port %d: %v", port, err)
+	}
+	defer resp.Body.Close()
+
+	body, _ := io.ReadAll(resp.Body)
+	if !strings.Contains(string(body), "Resumed SvelteKit") {
+		t.Fatalf("expected content from build/, got: %s", string(body))
+	}
+}
+
+func TestSvelteKitSSRStartCommand(t *testing.T) {
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, "package.json"), []byte(`{
+		"name": "sveltekit-ssr",
+		"scripts": {
+			"start": "node build/index.js"
+		}
+	}`), 0644); err != nil {
+		t.Fatal(err)
+	}
+	if got := deploy.GetStartCommand(dir); got != "node build/index.js" {
+		t.Fatalf("expected 'node build/index.js' for SvelteKit SSR, got '%s'", got)
 	}
 }

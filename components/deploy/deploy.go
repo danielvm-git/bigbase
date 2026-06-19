@@ -264,6 +264,10 @@ func (d *Deploy) resumeCandidates(candidates []resumeCandidate) {
 			if _, err := os.Stat(filepath.Join(buildDir, "dist")); err == nil {
 				serveDir = filepath.Join(buildDir, "dist")
 				appType = AppStatic
+			} else if _, err := os.Stat(filepath.Join(buildDir, "build")); err == nil {
+				// SvelteKit adapter-static outputs to build/ by default
+				serveDir = filepath.Join(buildDir, "build")
+				appType = AppStatic
 			} else {
 				continue
 			}
@@ -271,6 +275,8 @@ func (d *Deploy) resumeCandidates(candidates []resumeCandidate) {
 		if appType == AppStatic {
 			if _, err := os.Stat(filepath.Join(buildDir, "dist")); err == nil {
 				serveDir = filepath.Join(buildDir, "dist")
+			} else if _, err := os.Stat(filepath.Join(buildDir, "build")); err == nil {
+				serveDir = filepath.Join(buildDir, "build")
 			}
 		}
 		if appType != AppStatic {
@@ -528,6 +534,13 @@ func (d *Deploy) runDeployment(deploy *Deployment, buildDir, repoName string) {
 	if appType == AppNode {
 		if _, err := os.Stat(filepath.Join(buildDir, "dist")); err == nil {
 			serveDir = filepath.Join(buildDir, "dist")
+			appType = AppStatic
+			deploy.AppType = AppStatic
+			_, _ = d.db.ExecContext(context.Background(),
+				"UPDATE deployments SET app_type = ? WHERE id = ?", string(AppStatic), deploy.ID)
+		} else if _, err := os.Stat(filepath.Join(buildDir, "build")); err == nil {
+			// SvelteKit adapter-static outputs to build/ by default
+			serveDir = filepath.Join(buildDir, "build")
 			appType = AppStatic
 			deploy.AppType = AppStatic
 			_, _ = d.db.ExecContext(context.Background(),
