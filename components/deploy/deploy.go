@@ -264,6 +264,10 @@ func (d *Deploy) resumeCandidates(candidates []resumeCandidate) {
 			if _, err := os.Stat(filepath.Join(buildDir, "dist")); err == nil {
 				serveDir = filepath.Join(buildDir, "dist")
 				appType = AppStatic
+			} else if _, err := os.Stat(filepath.Join(buildDir, "build")); err == nil {
+				// SvelteKit adapter-static outputs to build/ by default
+				serveDir = filepath.Join(buildDir, "build")
+				appType = AppStatic
 			} else {
 				continue
 			}
@@ -271,6 +275,8 @@ func (d *Deploy) resumeCandidates(candidates []resumeCandidate) {
 		if appType == AppStatic {
 			if _, err := os.Stat(filepath.Join(buildDir, "dist")); err == nil {
 				serveDir = filepath.Join(buildDir, "dist")
+			} else if _, err := os.Stat(filepath.Join(buildDir, "build")); err == nil {
+				serveDir = filepath.Join(buildDir, "build")
 			}
 		}
 		if appType != AppStatic {
