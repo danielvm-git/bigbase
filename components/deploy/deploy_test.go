@@ -446,11 +446,26 @@ func TestDetectAppTypeGo(t *testing.T) {
 
 func TestDetectAppTypePython(t *testing.T) {
 	dir := t.TempDir()
+	// requirements.txt alone is not enough — need an entry point (app.py or main.py)
 	if err := os.WriteFile(filepath.Join(dir, "requirements.txt"), []byte("flask"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "app.py"), []byte("# server"), 0644); err != nil {
 		t.Fatal(err)
 	}
 	if got := deploy.DetectAppType(dir); got != "python" {
 		t.Fatalf("expected 'python', got '%s'", got)
+	}
+}
+
+func TestDetectAppTypePythonRequirementsOnlyFallsToStatic(t *testing.T) {
+	dir := t.TempDir()
+	// requirements.txt without app.py/main.py should NOT be detected as python
+	if err := os.WriteFile(filepath.Join(dir, "requirements.txt"), []byte("flask"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	if got := deploy.DetectAppType(dir); got == "python" {
+		t.Fatal("requirements.txt alone should not be detected as python (no entry point)")
 	}
 }
 
@@ -1556,7 +1571,7 @@ func TestSvelteKitBuildOutputDetected(t *testing.T) {
 	}
 
 	_, handler, database, gitDir := setupDeploy(t)
-	repoID := createSvelteKitStaticRepo(t, database, "repo-sk-static", gitDir)
+	repoID := createSvelteKitStaticRepo(t, database, "repo-sveltekit-static", gitDir)
 
 	var buf bytes.Buffer
 	_ = json.NewEncoder(&buf).Encode(map[string]string{"repo_id": repoID})
@@ -1610,7 +1625,7 @@ func TestResumeSvelteKitStaticDeployment(t *testing.T) {
 	gitComp := newGitStub(gitDir)
 	_ = gitComp.Start(&kernel.Context{})
 
-	depID := "sk-resume-test"
+	depID := "sveltekit-resume-test"
 	port := 31999
 
 	// Seed git_repos
@@ -1622,7 +1637,7 @@ func TestResumeSvelteKitStaticDeployment(t *testing.T) {
 		)`)
 	_, _ = database.ExecContext(context.Background(),
 		"INSERT INTO git_repos (id, name, owner_id, private, default_branch, description) VALUES (?, ?, 0, 1, 'main', '')",
-		"repo-x", "sk-resume-name")
+		"repo-x", "sveltekit-resume-name")
 
 	// Pre-create deployments table so seeding works before dep.Start()
 	_, _ = database.ExecContext(context.Background(),
@@ -1645,7 +1660,7 @@ func TestResumeSvelteKitStaticDeployment(t *testing.T) {
 	_, err := database.ExecContext(context.Background(),
 		`INSERT INTO deployments (id, repo_id, branch, status, url, port, app_type, created_at)
 		 VALUES (?, 'repo-x', 'main', 'running', ?, ?, 'node', datetime('now'))`,
-		depID, fmt.Sprintf("https://sk-resume-name.test.click"), port)
+		depID, "https://sveltekit-resume-name.test.click", port)
 	if err != nil {
 		t.Fatalf("seed deployment: %v", err)
 	}
@@ -1678,7 +1693,7 @@ func TestResumeSvelteKitStaticDeployment(t *testing.T) {
 	if err != nil {
 		t.Fatalf("resumed deployment not serving on port %d: %v", port, err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	body, _ := io.ReadAll(resp.Body)
 	if !strings.Contains(string(body), "Resumed SvelteKit") {

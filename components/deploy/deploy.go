@@ -695,7 +695,14 @@ func (d *Deploy) startApp(ctx context.Context, buildDir string, deploy *Deployme
 		}
 	}()
 
-	_ = cmd.Wait()
+	if err := cmd.Wait(); err != nil {
+		d.logger.Error("app exited", "id", deploy.ID, "error", err)
+		d.appendDeployLog(deploy.ID, fmt.Sprintf("✗ App exited: %v", err))
+		d.updateStatus(deploy.ID, "failed")
+		if host != "" && d.hostRouter != nil {
+			d.hostRouter.UnregisterDeploymentHost(host)
+		}
+	}
 }
 
 func (d *Deploy) serveStatic(ctx context.Context, buildDir string, deploy *Deployment, repoName string) {
@@ -812,8 +819,10 @@ func DetectAppType(buildDir string) AppType {
 	if fileExists(filepath.Join(buildDir, "go.mod")) {
 		return AppGo
 	}
-	if fileExists(filepath.Join(buildDir, "requirements.txt")) ||
-		fileExists(filepath.Join(buildDir, "app.py")) ||
+	// Python: only if a runnable entry point exists at root. requirements.txt
+	// alone is insufficient — many Node/static repos ship it alongside a Python
+	// tool without an actual web-server entry point.
+	if fileExists(filepath.Join(buildDir, "app.py")) ||
 		fileExists(filepath.Join(buildDir, "main.py")) {
 		return AppPython
 	}
