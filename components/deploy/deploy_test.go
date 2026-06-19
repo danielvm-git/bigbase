@@ -90,14 +90,14 @@ func newGitStub(dir string) *gitStub {
 	return &gitStub{dir: dir}
 }
 
-func (g *gitStub) Name() string                                  { return "git" }
-func (g *gitStub) Version() string                               { return "0.1.0" }
-func (g *gitStub) Dependencies() []string                        { return []string{"db"} }
-func (g *gitStub) ConfigSchema() json.RawMessage                 { return nil }
-func (g *gitStub) Hooks() []kernel.HookDef                       { return nil }
+func (g *gitStub) Name() string                                           { return "git" }
+func (g *gitStub) Version() string                                        { return "0.1.0" }
+func (g *gitStub) Dependencies() []string                                 { return []string{"db"} }
+func (g *gitStub) ConfigSchema() json.RawMessage                          { return nil }
+func (g *gitStub) Hooks() []kernel.HookDef                                { return nil }
 func (g *gitStub) Init(ctx *kernel.Context, config json.RawMessage) error { return nil }
-func (g *gitStub) Start(ctx *kernel.Context) error               { return os.MkdirAll(g.dir, 0755) }
-func (g *gitStub) Stop(ctx *kernel.Context) error                { return nil }
+func (g *gitStub) Start(ctx *kernel.Context) error                        { return os.MkdirAll(g.dir, 0755) }
+func (g *gitStub) Stop(ctx *kernel.Context) error                         { return nil }
 
 func createTestNodeRepo(t *testing.T, database *db.DB, repoID, gitDir string) string {
 	t.Helper()
@@ -1001,7 +1001,7 @@ func TestDeployLogColumnExists(t *testing.T) {
 	defer func() { _ = database.Stop(&kernel.Context{}) }()
 
 	dep := deploy.New(deploy.Options{DB: database, Logger: logger})
-	
+
 	if err := dep.Start(&kernel.Context{}); err != nil {
 		t.Fatalf("start failed: %v", err)
 	}
@@ -1023,7 +1023,7 @@ func TestDeployLogsPersisted(t *testing.T) {
 	gitDir := t.TempDir()
 	buildsDir := t.TempDir()
 	gitComp := newGitStub(gitDir)
-	
+
 	dep := deploy.New(deploy.Options{
 		DB:        database,
 		Logger:    logger,
@@ -1078,7 +1078,7 @@ func TestDeployLogsRetrievalFallback(t *testing.T) {
 	gitDir := t.TempDir()
 	buildsDir := t.TempDir()
 	gitComp := newGitStub(gitDir)
-	
+
 	dep := deploy.New(deploy.Options{
 		DB:        database,
 		Logger:    logger,
@@ -1112,10 +1112,10 @@ func TestDeployLogsRetrievalFallback(t *testing.T) {
 	// but we can trigger many other deployments to force eviction, or just test the fallback.
 	// Since we are in the same package (deploy_test), we can't call d.deleteDeployLogs.
 	// Wait, the test is in deploy_test, so it is in a different package.
-	
+
 	// I'll use a hack to clear the memory if I can, or just trust the logic.
 	// Better: move handleDeployLogs logic to an exported method or just test the HTTP handler.
-	
+
 	// Actually, I can just use a new Deploy instance sharing the same DB.
 	dep2 := deploy.New(deploy.Options{
 		DB:        database,
@@ -1124,23 +1124,23 @@ func TestDeployLogsRetrievalFallback(t *testing.T) {
 		GitDir:    gitDir,
 	})
 	// dep2 memory is empty.
-	
+
 	req := httptest.NewRequest("GET", "/api/deploy/"+deployment.ID+"/logs", nil)
 	w := httptest.NewRecorder()
 	dep2.Handler().ServeHTTP(w, req)
-	
+
 	if w.Code != http.StatusOK {
 		t.Fatalf("expected 200, got %d: %s", w.Code, w.Body.String())
 	}
-	
+
 	var resp map[string]any
 	_ = json.NewDecoder(w.Body).Decode(&resp)
 	lines, _ := resp["lines"].([]any)
-	
+
 	if len(lines) == 0 {
 		t.Fatal("expected logs from DB fallback, but got empty lines")
 	}
-	
+
 	found := false
 	for _, line := range lines {
 		if strings.Contains(line.(string), "→ Deployment started") {
@@ -1177,7 +1177,7 @@ func createTestRuntimeRepo(t *testing.T, database *db.DB, repoID, gitDir string)
 	mustRun(t, "git", "init", "-b", "main", sourceDir)
 	mustRun(t, "git", "-C", sourceDir, "config", "user.email", "test@test.com")
 	mustRun(t, "git", "-C", sourceDir, "config", "user.name", "test")
-	
+
 	_ = os.WriteFile(filepath.Join(sourceDir, "index.js"), []byte(`
 		console.log("HELLO RUNTIME STDOUT");
 		console.error("HELLO RUNTIME STDERR");
@@ -1215,7 +1215,7 @@ func TestRuntimeLogs(t *testing.T) {
 
 	gitDir := t.TempDir()
 	buildsDir := t.TempDir()
-	
+
 	dep := deploy.New(deploy.Options{
 		DB:        database,
 		Logger:    logger,
@@ -1226,7 +1226,7 @@ func TestRuntimeLogs(t *testing.T) {
 	defer func() { _ = dep.Stop(&kernel.Context{}) }()
 
 	repoID := createTestRuntimeRepo(t, database, "repo-runtime", gitDir)
-	
+
 	deployment, err := dep.Trigger(context.Background(), repoID, "main", "", "s-runtime")
 	if err != nil {
 		t.Fatalf("trigger failed: %v", err)
@@ -1258,11 +1258,11 @@ func TestRuntimeLogs(t *testing.T) {
 	req := httptest.NewRequest("GET", "/api/deploy/"+deployment.ID+"/logs", nil)
 	w := httptest.NewRecorder()
 	dep.Handler().ServeHTTP(w, req)
-	
+
 	var resp map[string]any
 	_ = json.NewDecoder(w.Body).Decode(&resp)
 	lines, _ := resp["lines"].([]any)
-	
+
 	foundStdout := false
 	foundStderr := false
 	for _, l := range lines {
@@ -1274,7 +1274,7 @@ func TestRuntimeLogs(t *testing.T) {
 			foundStderr = true
 		}
 	}
-	
+
 	if !foundStdout {
 		t.Errorf("runtime stdout log missing. logs: %+v", lines)
 	}
@@ -1290,7 +1290,7 @@ func TestSiteRequestLogsTableExists(t *testing.T) {
 	defer func() { _ = database.Stop(&kernel.Context{}) }()
 
 	dep := deploy.New(deploy.Options{DB: database, Logger: logger})
-	
+
 	if err := dep.Start(&kernel.Context{}); err != nil {
 		t.Fatalf("start failed: %v", err)
 	}
@@ -1448,4 +1448,61 @@ func TestDeleteDeployment(t *testing.T) {
 			t.Fatal("deployment record still exists after delete")
 		}
 	})
+}
+
+func TestDeleteSiteCleanup(t *testing.T) {
+	_, _, database, _ := setupDeploy(t)
+	buildsDir := t.TempDir()
+
+	siteID := "site-cleanup"
+	repoID := "repo-cleanup"
+
+	// Insert deployments matching the site
+	insertDeployment(t, database, "dep-site-failed", "failed", buildsDir)
+	_, _ = database.ExecContext(context.Background(),
+		"UPDATE deployments SET site_id = ? WHERE id = ?", siteID, "dep-site-failed")
+
+	insertDeployment(t, database, "dep-site-running", "running", buildsDir)
+	_, _ = database.ExecContext(context.Background(),
+		"UPDATE deployments SET site_id = ? WHERE id = ?", siteID, "dep-site-running")
+
+	// Legacy deployment (empty site_id, matched by repo_id)
+	insertDeployment(t, database, "dep-legacy-failed", "failed", buildsDir)
+	_, _ = database.ExecContext(context.Background(),
+		"UPDATE deployments SET repo_id = ? WHERE id = ?", repoID, "dep-legacy-failed")
+
+	// Unrelated deployment (different site)
+	insertDeployment(t, database, "dep-other-site", "failed", buildsDir)
+	_, _ = database.ExecContext(context.Background(),
+		"UPDATE deployments SET site_id = 'other-site', repo_id = ? WHERE id = ?", repoID, "dep-other-site")
+
+	dep := deploy.New(deploy.Options{
+		DB:        database,
+		Logger:    testLogger{},
+		BuildsDir: buildsDir,
+		BasePort:  10000,
+	})
+
+	err := dep.DeleteSiteDeployments(context.Background(), siteID, repoID)
+	if err != nil {
+		t.Fatalf("DeleteSiteDeployments: %v", err)
+	}
+
+	// Site deployments should be gone
+	for _, id := range []string{"dep-site-failed", "dep-site-running", "dep-legacy-failed"} {
+		var count int
+		_ = database.QueryRowContext(context.Background(),
+			"SELECT COUNT(*) FROM deployments WHERE id = ?", id).Scan(&count)
+		if count != 0 {
+			t.Fatalf("deployment %s should be deleted, got %d", id, count)
+		}
+	}
+
+	// Unrelated deployment should remain
+	var count int
+	_ = database.QueryRowContext(context.Background(),
+		"SELECT COUNT(*) FROM deployments WHERE id = 'dep-other-site'").Scan(&count)
+	if count != 1 {
+		t.Fatalf("unrelated deployment should remain, got %d", count)
+	}
 }

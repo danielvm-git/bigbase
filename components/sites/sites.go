@@ -58,17 +58,20 @@ type Site struct {
 }
 
 type DeployTrigger func(ctx context.Context, repoID, branch, siteName, siteID string) (*Deployment, error)
+type DeleteSiteCleanupFunc func(ctx context.Context, siteID, repoID string) error
 
 type Sites struct {
-	db            DBer
-	logger        Logger
-	triggerDeploy DeployTrigger
+	db                DBer
+	logger            Logger
+	triggerDeploy     DeployTrigger
+	deleteSiteCleanup DeleteSiteCleanupFunc
 }
 
 type Options struct {
-	DB            DBer
-	Logger        Logger
-	TriggerDeploy DeployTrigger
+	DB                DBer
+	Logger            Logger
+	TriggerDeploy     DeployTrigger
+	DeleteSiteCleanup DeleteSiteCleanupFunc
 }
 
 func New(opts Options) *Sites {
@@ -76,7 +79,7 @@ func New(opts Options) *Sites {
 	if logger == nil {
 		logger = noopLogger{}
 	}
-	return &Sites{db: opts.DB, logger: logger, triggerDeploy: opts.TriggerDeploy}
+	return &Sites{db: opts.DB, logger: logger, triggerDeploy: opts.TriggerDeploy, deleteSiteCleanup: opts.DeleteSiteCleanup}
 }
 
 func (s *Sites) Name() string                  { return "sites" }
@@ -388,9 +391,15 @@ func (s *Sites) deleteSite(w http.ResponseWriter, r *http.Request, id string) {
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
-	if active {
+	if active && s.deleteSiteCleanup == nil {
 		writeJSON(w, http.StatusConflict, map[string]string{"error": "site has an active deployment — wait for it to finish or delete deployments first"})
 		return
+	}
+
+	if s.deleteSiteCleanup != nil {
+		if err := s.deleteSiteCleanup(ctx, target.ID, target.GitRepoID); err != nil {
+			s.logger.Error("delete site deploy cleanup", "error", err, "site_id", target.ID, "repo_id", target.GitRepoID)
+		}
 	}
 
 	if err := s.deleteSiteRecords(ctx, target); err != nil {

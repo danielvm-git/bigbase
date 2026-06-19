@@ -355,3 +355,57 @@ func TestDeleteSiteCascade(t *testing.T) {
 		}
 	})
 }
+
+func TestDeleteSiteCallsCleanupCallback(t *testing.T) {
+	logger := testLogger{}
+	k := kernel.New(logger)
+	d := db.New(db.Options{Path: ":memory:", Logger: logger})
+	g := git.New(git.Options{DB: d, Logger: logger, Dir: t.TempDir()})
+
+	var cleanupCalled bool
+	var gotSiteID, gotRepoID string
+
+	s := sites.New(sites.Options{
+		DB:     d,
+		Logger: logger,
+		DeleteSiteCleanup: func(_ context.Context, siteID, repoID string) error {
+			cleanupCalled = true
+			gotSiteID = siteID
+			gotRepoID = repoID
+			return nil
+		},
+	})
+	k.Register(d)
+	k.Register(g)
+	k.Register(s)
+	if err := k.Start(); err != nil {
+		t.Fatalf("kernel start: %v", err)
+	}
+	t.Cleanup(func() { _ = k.Stop() })
+
+	createSiteDeleteSupportTables(t, d)
+	seedSiteForDelete(t, d, "site-cb", "repo-cb")
+	_, _ = d.ExecContext(context.Background(),
+		`INSERT INTO deployments (id, site_id, repo_id, status) VALUES ('dep-running', 'site-cb', 'repo-cb', 'running')`)
+
+	req := httptest.NewRequest(http.MethodDelete, "/api/sites/site-cb", nil)
+	w := httptest.NewRecorder()
+	s.Handler().ServeHTTP(w, req)
+
+	if w.Code != http.StatusNoContent {
+		t.Fatalf("expected 204 with cleanup, got %d: %s", w.Code, w.Body.String())
+	}
+	if !cleanupCalled {
+		t.Fatal("expected DeleteSiteCleanup callback to be called")
+	}
+	if gotSiteID != "site-cb" {
+		t.Fatalf("cleanup got site_id=%q, want site-cb", gotSiteID)
+	}
+	if gotRepoID != "repo-cb" {
+		t.Fatalf("cleanup got repo_id=%q, want repo-cb", gotRepoID)
+	}
+	// Site should still be cascade-deleted after cleanup
+	if got := countRows(t, d, "SELECT COUNT(*) FROM sites WHERE id = ?", "site-cb"); got != 0 {
+		t.Fatalf("site should be deleted after cleanup, got %d", got)
+	}
+}
