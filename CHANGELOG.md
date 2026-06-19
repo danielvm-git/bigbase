@@ -1,3 +1,10 @@
+# [2.24.0](https://github.com/danielvm-git/bigbase/compare/v2.23.0...v2.24.0) (2026-06-19)
+
+
+### Features
+
+* **mcp:** register deploy workflow tools ([68ccbdd](https://github.com/danielvm-git/bigbase/commit/68ccbdda6875f218a03073876da6313727694296))
+
 # [2.23.0](https://github.com/danielvm-git/bigbase/compare/v2.22.0...v2.23.0) (2026-06-19)
 
 
