@@ -3,6 +3,7 @@ package sites
 import (
 	"context"
 	"crypto/rand"
+	"database/sql"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -25,10 +26,10 @@ type Logger interface {
 
 type noopLogger struct{}
 
-func (noopLogger) Info(msg string, args ...any)   {}
-func (noopLogger) Warn(msg string, args ...any)   {}
-func (noopLogger) Error(msg string, args ...any)  {}
-func (noopLogger) Debug(msg string, args ...any)  {}
+func (noopLogger) Info(msg string, args ...any)  {}
+func (noopLogger) Warn(msg string, args ...any)  {}
+func (noopLogger) Error(msg string, args ...any) {}
+func (noopLogger) Debug(msg string, args ...any) {}
 
 // DBer is an alias for kernel.DBer — the shared database abstraction.
 type DBer = kernel.DBer
@@ -46,14 +47,14 @@ type Deployment struct {
 }
 
 type Site struct {
-	ID                string      `json:"id"`
-	Name              string      `json:"name"`
-	FullName          string      `json:"full_name"`
-	GitRepoID         string      `json:"git_repo_id"`
-	ProductionBranch  string      `json:"production_branch"`
-	RootPath          string      `json:"root_path"`
-	GitHubConnected   bool        `json:"github_connected,omitempty"`
-	LatestDeployment  *Deployment `json:"latest_deployment,omitempty"`
+	ID               string      `json:"id"`
+	Name             string      `json:"name"`
+	FullName         string      `json:"full_name"`
+	GitRepoID        string      `json:"git_repo_id"`
+	ProductionBranch string      `json:"production_branch"`
+	RootPath         string      `json:"root_path"`
+	GitHubConnected  bool        `json:"github_connected,omitempty"`
+	LatestDeployment *Deployment `json:"latest_deployment,omitempty"`
 }
 
 type DeployTrigger func(ctx context.Context, repoID, branch, siteName, siteID string) (*Deployment, error)
@@ -78,11 +79,11 @@ func New(opts Options) *Sites {
 	return &Sites{db: opts.DB, logger: logger, triggerDeploy: opts.TriggerDeploy}
 }
 
-func (s *Sites) Name() string                   { return "sites" }
-func (s *Sites) Version() string                { return version }
-func (s *Sites) Dependencies() []string         { return []string{"db"} }
-func (s *Sites) ConfigSchema() json.RawMessage  { return nil }
-func (s *Sites) Hooks() []kernel.HookDef        { return nil }
+func (s *Sites) Name() string                  { return "sites" }
+func (s *Sites) Version() string               { return version }
+func (s *Sites) Dependencies() []string        { return []string{"db"} }
+func (s *Sites) ConfigSchema() json.RawMessage { return nil }
+func (s *Sites) Hooks() []kernel.HookDef       { return nil }
 
 func (s *Sites) Init(ctx *kernel.Context, config json.RawMessage) error {
 	return nil
@@ -117,7 +118,6 @@ func (s *Sites) Handler() http.Handler {
 	mux.HandleFunc("/api/sites/", s.handleSiteByID)
 	return mux
 }
-
 
 func generateID() (string, error) {
 	b := make([]byte, 16)
@@ -160,6 +160,11 @@ func (s *Sites) handleSiteByID(w http.ResponseWriter, r *http.Request) {
 	// Route domain sub-paths: /api/sites/{id}/domains[/{domain}/verify]
 	if len(parts) >= 2 && parts[1] == "domains" {
 		s.handleDomains(w, r)
+		return
+	}
+
+	if len(parts) == 1 && r.Method == http.MethodDelete {
+		s.deleteSite(w, r, id)
 		return
 	}
 
@@ -287,11 +292,11 @@ func (s *Sites) getSite(w http.ResponseWriter, r *http.Request, id string) {
 
 func (s *Sites) createSite(w http.ResponseWriter, r *http.Request) {
 	var req struct {
-		Name              string `json:"name"`
-		GitRepoID         string `json:"git_repo_id"`
-		ProductionBranch  string `json:"production_branch"`
-		RootPath          string `json:"root_path"`
-		GitHubFullName    string `json:"github_full_name"`
+		Name             string `json:"name"`
+		GitRepoID        string `json:"git_repo_id"`
+		ProductionBranch string `json:"production_branch"`
+		RootPath         string `json:"root_path"`
+		GitHubFullName   string `json:"github_full_name"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json"})
@@ -355,6 +360,100 @@ func (s *Sites) createSite(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSON(w, http.StatusCreated, site)
+}
+
+type siteDeleteTarget struct {
+	ID        string
+	GitRepoID string
+}
+
+func (s *Sites) deleteSite(w http.ResponseWriter, r *http.Request, id string) {
+	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
+	defer cancel()
+
+	target, err := s.siteDeleteTarget(ctx, id)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			writeJSON(w, http.StatusNotFound, map[string]string{"error": "site not found"})
+			return
+		}
+		s.logger.Error("resolve site for delete", "error", err)
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		return
+	}
+
+	active, err := s.hasActiveDeployment(ctx, target)
+	if err != nil {
+		s.logger.Error("check active deployments for site delete", "error", err)
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		return
+	}
+	if active {
+		writeJSON(w, http.StatusConflict, map[string]string{"error": "site has an active deployment — wait for it to finish or delete deployments first"})
+		return
+	}
+
+	if err := s.deleteSiteRecords(ctx, target); err != nil {
+		s.logger.Error("delete site records", "error", err)
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
+func (s *Sites) siteDeleteTarget(ctx context.Context, id string) (siteDeleteTarget, error) {
+	var target siteDeleteTarget
+	err := s.db.QueryRowContext(ctx,
+		"SELECT id, git_repo_id FROM sites WHERE id = ? OR git_repo_id = ?", id, id).
+		Scan(&target.ID, &target.GitRepoID)
+	return target, err
+}
+
+func (s *Sites) hasActiveDeployment(ctx context.Context, target siteDeleteTarget) (bool, error) {
+	var count int
+	err := s.db.QueryRowContext(ctx,
+		`SELECT COUNT(*) FROM deployments
+		 WHERE (site_id = ? OR (site_id = '' AND repo_id = ?))
+		 AND status IN ('pending', 'building', 'running')`,
+		target.ID, target.GitRepoID).Scan(&count)
+	if isMissingOptionalTable(err) {
+		return false, nil
+	}
+	if err != nil {
+		return false, err
+	}
+	return count > 0, nil
+}
+
+func (s *Sites) deleteSiteRecords(ctx context.Context, target siteDeleteTarget) error {
+	queries := []struct {
+		query string
+		args  []any
+	}{
+		{query: "DELETE FROM site_domains WHERE site_id = ?", args: []any{target.ID}},
+		{query: "DELETE FROM site_request_logs WHERE site_id = ?", args: []any{target.ID}},
+		{query: "DELETE FROM deployments WHERE site_id = ? OR (site_id = '' AND repo_id = ?)", args: []any{target.ID, target.GitRepoID}},
+		{query: "DELETE FROM sites WHERE id = ?", args: []any{target.ID}},
+	}
+
+	for _, q := range queries {
+		if _, err := s.db.ExecContext(ctx, q.query, q.args...); err != nil && !isMissingOptionalTable(err) {
+			return err
+		}
+	}
+	return nil
+}
+
+func isMissingOptionalTable(err error) bool {
+	if err == nil {
+		return false
+	}
+	msg := err.Error()
+	return strings.Contains(msg, "no such table: deployments") ||
+		strings.Contains(msg, "no such table: site_request_logs") ||
+		strings.Contains(msg, `relation "deployments" does not exist`) ||
+		strings.Contains(msg, `relation "site_request_logs" does not exist`)
 }
 
 func (s *Sites) listSiteRequestLogs(w http.ResponseWriter, r *http.Request, siteID string) {

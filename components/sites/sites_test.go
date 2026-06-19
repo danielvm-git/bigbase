@@ -16,10 +16,10 @@ import (
 
 type testLogger struct{}
 
-func (testLogger) Info(msg string, args ...any)   {}
-func (testLogger) Warn(msg string, args ...any)   {}
-func (testLogger) Error(msg string, args ...any)  {}
-func (testLogger) Debug(msg string, args ...any)  {}
+func (testLogger) Info(msg string, args ...any)  {}
+func (testLogger) Warn(msg string, args ...any)  {}
+func (testLogger) Error(msg string, args ...any) {}
+func (testLogger) Debug(msg string, args ...any) {}
 
 func setupSites(t *testing.T) *sites.Sites {
 	t.Helper()
@@ -149,7 +149,7 @@ func TestSitesListRequestLogs(t *testing.T) {
 	siteID := "s1"
 	_, _ = d.ExecContext(context.Background(),
 		`INSERT INTO sites (id, name, git_repo_id) VALUES (?, 'mysite', 'r1')`, siteID)
-	
+
 	// Create table and insert dummy logs (since deploy component owns the table but we test site component)
 	_, _ = d.ExecContext(context.Background(), `CREATE TABLE IF NOT EXISTS site_request_logs (
 		id TEXT PRIMARY KEY,
@@ -160,7 +160,7 @@ func TestSitesListRequestLogs(t *testing.T) {
 		duration_ms INTEGER NOT NULL DEFAULT 0,
 		created_at TEXT NOT NULL DEFAULT (datetime('now'))
 	)`)
-	
+
 	_, _ = d.ExecContext(context.Background(),
 		`INSERT INTO site_request_logs (id, site_id, method, path, status, duration_ms, created_at)
 		 VALUES ('l1', ?, 'GET', '/test', 200, 5, '2026-06-12T15:00:00Z')`, siteID)
@@ -195,4 +195,163 @@ func TestSitesListEmpty(t *testing.T) {
 	if data == nil {
 		t.Fatal("expected data array")
 	}
+}
+
+// --- e36 delete-site tests ---
+
+func setupSitesDeleteTest(t *testing.T) (*db.DB, http.Handler) {
+	t.Helper()
+	logger := testLogger{}
+	k := kernel.New(logger)
+	d := db.New(db.Options{Path: ":memory:", Logger: logger})
+	g := git.New(git.Options{DB: d, Logger: logger, Dir: t.TempDir()})
+	s := sites.New(sites.Options{DB: d, Logger: logger})
+	k.Register(d)
+	k.Register(g)
+	k.Register(s)
+	if err := k.Start(); err != nil {
+		t.Fatalf("kernel start: %v", err)
+	}
+	t.Cleanup(func() { _ = k.Stop() })
+	return d, s.Handler()
+}
+
+func createSiteDeleteSupportTables(t *testing.T, d *db.DB) {
+	t.Helper()
+	_, _ = d.ExecContext(context.Background(), `CREATE TABLE IF NOT EXISTS deployments (
+		id TEXT PRIMARY KEY,
+		repo_id TEXT NOT NULL DEFAULT '',
+		site_id TEXT NOT NULL DEFAULT '',
+		status TEXT NOT NULL DEFAULT '',
+		created_at TEXT NOT NULL DEFAULT (datetime('now'))
+	)`)
+	_, _ = d.ExecContext(context.Background(), `CREATE TABLE IF NOT EXISTS site_request_logs (
+		id TEXT PRIMARY KEY,
+		site_id TEXT NOT NULL,
+		method TEXT NOT NULL,
+		path TEXT NOT NULL,
+		status INTEGER NOT NULL DEFAULT 0,
+		duration_ms INTEGER NOT NULL DEFAULT 0,
+		created_at TEXT NOT NULL DEFAULT (datetime('now'))
+	)`)
+}
+
+func seedSiteForDelete(t *testing.T, d *db.DB, siteID, repoID string) {
+	t.Helper()
+	_, _ = d.ExecContext(context.Background(),
+		`INSERT INTO git_repos (id, name, owner_id, private, default_branch, description, created_at)
+		 VALUES (?, 'delete-site-repo', 0, 1, 'main', '', datetime('now'))`, repoID)
+	_, _ = d.ExecContext(context.Background(),
+		`INSERT INTO sites (id, name, git_repo_id, production_branch, root_path, github_full_name, created_at)
+		 VALUES (?, 'delete-site', ?, 'main', './', 'owner/delete-site', datetime('now'))`, siteID, repoID)
+	_, _ = d.ExecContext(context.Background(),
+		`INSERT INTO site_domains (id, site_id, domain, verify_token, created_at)
+		 VALUES ('dom-1', ?, 'delete-site.example.com', 'token', datetime('now'))`, siteID)
+	_, _ = d.ExecContext(context.Background(),
+		`INSERT INTO site_request_logs (id, site_id, method, path, status, duration_ms, created_at)
+		 VALUES ('log-1', ?, 'GET', '/', 200, 4, datetime('now'))`, siteID)
+}
+
+func countRows(t *testing.T, d *db.DB, query string, args ...any) int {
+	t.Helper()
+	var count int
+	_ = d.QueryRowContext(context.Background(), query, args...).Scan(&count)
+	return count
+}
+
+func TestDeleteSiteNotFound(t *testing.T) {
+	_, h := setupSitesDeleteTest(t)
+	req := httptest.NewRequest(http.MethodDelete, "/api/sites/missing", nil)
+	w := httptest.NewRecorder()
+	h.ServeHTTP(w, req)
+	if w.Code != http.StatusNotFound {
+		t.Fatalf("expected 404, got %d: %s", w.Code, w.Body.String())
+	}
+}
+
+func TestDeleteSiteActiveDeploymentConflict(t *testing.T) {
+	for _, status := range []string{"pending", "building", "running"} {
+		t.Run(status, func(t *testing.T) {
+			d, h := setupSitesDeleteTest(t)
+			createSiteDeleteSupportTables(t, d)
+			seedSiteForDelete(t, d, "site-"+status, "repo-"+status)
+			_, _ = d.ExecContext(context.Background(),
+				`INSERT INTO deployments (id, site_id, repo_id, status) VALUES (?, ?, ?, ?)`,
+				"dep-"+status, "site-"+status, "repo-"+status, status)
+
+			req := httptest.NewRequest(http.MethodDelete, "/api/sites/site-"+status, nil)
+			w := httptest.NewRecorder()
+			h.ServeHTTP(w, req)
+
+			if w.Code != http.StatusConflict {
+				t.Fatalf("expected 409, got %d: %s", w.Code, w.Body.String())
+			}
+			if got := countRows(t, d, "SELECT COUNT(*) FROM sites WHERE id = ?", "site-"+status); got != 1 {
+				t.Fatalf("site should remain, got %d rows", got)
+			}
+		})
+	}
+}
+
+func TestDeleteSiteCascade(t *testing.T) {
+	t.Run("canonical site id", func(t *testing.T) {
+		d, h := setupSitesDeleteTest(t)
+		createSiteDeleteSupportTables(t, d)
+		seedSiteForDelete(t, d, "site-del", "repo-del")
+		_, _ = d.ExecContext(context.Background(),
+			`INSERT INTO deployments (id, site_id, repo_id, status) VALUES
+			 ('dep-site', 'site-del', 'repo-del', 'failed'),
+			 ('dep-legacy', '', 'repo-del', 'failed'),
+			 ('dep-other', 'other-site', 'repo-del', 'failed')`)
+
+		req := httptest.NewRequest(http.MethodDelete, "/api/sites/site-del", nil)
+		w := httptest.NewRecorder()
+		h.ServeHTTP(w, req)
+
+		if w.Code != http.StatusNoContent {
+			t.Fatalf("expected 204, got %d: %s", w.Code, w.Body.String())
+		}
+		if got := countRows(t, d, "SELECT COUNT(*) FROM sites WHERE id = ?", "site-del"); got != 0 {
+			t.Fatalf("site row should be deleted, got %d", got)
+		}
+		if got := countRows(t, d, "SELECT COUNT(*) FROM site_domains WHERE site_id = ?", "site-del"); got != 0 {
+			t.Fatalf("site domains should be deleted, got %d", got)
+		}
+		if got := countRows(t, d, "SELECT COUNT(*) FROM site_request_logs WHERE site_id = ?", "site-del"); got != 0 {
+			t.Fatalf("site request logs should be deleted, got %d", got)
+		}
+		if got := countRows(t, d, "SELECT COUNT(*) FROM deployments WHERE site_id = ? OR (site_id = '' AND repo_id = ?)", "site-del", "repo-del"); got != 0 {
+			t.Fatalf("site deployments should be deleted, got %d", got)
+		}
+		if got := countRows(t, d, "SELECT COUNT(*) FROM deployments WHERE site_id <> '' AND repo_id = ?", "repo-del"); got != 1 {
+			t.Fatalf("other site deployment for same repo should remain, got %d", got)
+		}
+		if got := countRows(t, d, "SELECT COUNT(*) FROM git_repos WHERE id = ?", "repo-del"); got != 1 {
+			t.Fatalf("source git repo should remain, got %d", got)
+		}
+	})
+
+	t.Run("legacy git repo id alias", func(t *testing.T) {
+		d, h := setupSitesDeleteTest(t)
+		createSiteDeleteSupportTables(t, d)
+		seedSiteForDelete(t, d, "site-alias", "repo-alias")
+		_, _ = d.ExecContext(context.Background(),
+			`INSERT INTO deployments (id, site_id, repo_id, status) VALUES
+			 ('dep-alias-site', 'site-alias', 'repo-alias', 'failed'),
+			 ('dep-alias-legacy', '', 'repo-alias', 'failed')`)
+
+		req := httptest.NewRequest(http.MethodDelete, "/api/sites/repo-alias", nil)
+		w := httptest.NewRecorder()
+		h.ServeHTTP(w, req)
+
+		if w.Code != http.StatusNoContent {
+			t.Fatalf("expected 204, got %d: %s", w.Code, w.Body.String())
+		}
+		if got := countRows(t, d, "SELECT COUNT(*) FROM sites WHERE id = ?", "site-alias"); got != 0 {
+			t.Fatalf("site row should be deleted, got %d", got)
+		}
+		if got := countRows(t, d, "SELECT COUNT(*) FROM git_repos WHERE id = ?", "repo-alias"); got != 1 {
+			t.Fatalf("source git repo should remain, got %d", got)
+		}
+	})
 }
