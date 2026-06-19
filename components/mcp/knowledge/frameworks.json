@@ -1,0 +1,53 @@
+{
+  "frameworks": [
+    {
+      "name": "sveltekit",
+      "display": "SvelteKit",
+      "maturity": "full",
+      "recommended_for": "SPA + SSR web apps",
+      "caveats": "SSR requires node adapter; static sites use adapter-static"
+    },
+    {
+      "name": "astro",
+      "display": "Astro",
+      "maturity": "full",
+      "recommended_for": "Content sites, blogs, marketing pages",
+      "caveats": "SSR support via adapter-node"
+    },
+    {
+      "name": "nextjs",
+      "display": "Next.js",
+      "maturity": "partial",
+      "recommended_for": "React apps with SSR",
+      "caveats": "SSR support limited; static export recommended"
+    },
+    {
+      "name": "vue",
+      "display": "Vue / Nuxt",
+      "maturity": "partial",
+      "recommended_for": "Vue SPA apps",
+      "caveats": "Nuxt SSR under development"
+    },
+    {
+      "name": "react",
+      "display": "React (Vite)",
+      "maturity": "partial",
+      "recommended_for": "React SPA apps with Vite",
+      "caveats": "SSR not yet supported"
+    },
+    {
+      "name": "go",
+      "display": "Go",
+      "maturity": "planned",
+      "recommended_for": "Go web servers and APIs",
+      "caveats": "Coming soon"
+    },
+    {
+      "name": "python",
+      "display": "Python",
+      "maturity": "planned",
+      "recommended_for": "Python web apps (Flask, FastAPI)",
+      "caveats": "Coming soon"
+    }
+  ]
+}

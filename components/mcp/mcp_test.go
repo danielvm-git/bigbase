@@ -88,3 +88,61 @@ func TestHTTPTransport(t *testing.T) {
 		t.Errorf("GET /mcp: expected 405, got %d", w.Code)
 	}
 }
+
+func TestKnowledgeTools(t *testing.T) {
+	c := mcp.New(mcp.Options{Enabled: true})
+	srv, err := c.NewMCPServer()
+	if err != nil {
+		t.Fatalf("NewMCPServer: %v", err)
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	t1, t2 := mcpsdk.NewInMemoryTransports()
+	if _, err := srv.Connect(ctx, t1, nil); err != nil {
+		t.Fatalf("server.Connect: %v", err)
+	}
+
+	client := mcpsdk.NewClient(&mcpsdk.Implementation{Name: "test", Version: "1.0"}, nil)
+	session, err := client.Connect(ctx, t2, nil)
+	if err != nil {
+		t.Fatalf("client.Connect: %v", err)
+	}
+	defer session.Close()
+
+	tools := []struct {
+		name string
+		args map[string]any
+	}{
+		{"list_services", nil},
+		{"list_frameworks", nil},
+		{"get_service_docs", map[string]any{"service": "deploy"}},
+		{"get_service_docs", map[string]any{"service": "auth"}},
+		{"get_code_example", map[string]any{"service": "auth", "framework": "sveltekit"}},
+		{"get_code_example", map[string]any{"service": "db", "framework": "react"}},
+	}
+
+	for _, tool := range tools {
+		t.Run(tool.name, func(t *testing.T) {
+			result, err := session.CallTool(ctx, &mcpsdk.CallToolParams{
+				Name:      tool.name,
+				Arguments: tool.args,
+			})
+			if err != nil {
+				t.Fatalf("CallTool(%s): %v", tool.name, err)
+			}
+			if len(result.Content) == 0 {
+				t.Fatal("expected content")
+			}
+			tc, ok := result.Content[0].(*mcpsdk.TextContent)
+			if !ok {
+				t.Fatalf("expected *TextContent, got %T", result.Content[0])
+			}
+			if tc.Text == "" {
+				t.Error("expected non-empty response")
+			}
+			t.Logf("%s: %d chars", tool.name, len(tc.Text))
+		})
+	}
+}
