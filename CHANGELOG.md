@@ -1,3 +1,10 @@
+# [2.21.0](https://github.com/danielvm-git/bigbase/compare/v2.20.0...v2.21.0) (2026-06-19)
+
+
+### Features
+
+* **ui:** add site delete action to Sites grid and SiteDetail danger zone ([e2ba57a](https://github.com/danielvm-git/bigbase/commit/e2ba57a189f3a1f0225482aff2d06da5d9e0a6a7))
+
 # [2.20.0](https://github.com/danielvm-git/bigbase/compare/v2.19.0...v2.20.0) (2026-06-19)
 
 
