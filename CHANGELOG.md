@@ -1,3 +1,10 @@
+## [2.26.3](https://github.com/danielvm-git/bigbase/compare/v2.26.2...v2.26.3) (2026-06-19)
+
+
+### Bug Fixes
+
+* **ui:** fix build logs URL from /api/deployments to /api/deploy ([8ce4173](https://github.com/danielvm-git/bigbase/commit/8ce417391d038cce5f8756a41220f8be87b3eb84))
+
 ## [2.26.2](https://github.com/danielvm-git/bigbase/compare/v2.26.1...v2.26.2) (2026-06-19)
 
 
