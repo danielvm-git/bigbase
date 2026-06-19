@@ -105,18 +105,99 @@ func (c *Component) NewMCPServer() (*mcpsdk.Server, error) {
 		Name:    "BigBase",
 		Version: version,
 	}, &mcpsdk.ServerOptions{
-		Instructions: "BigBase is an open-source Backend-as-a-Service platform. Use the tools to learn about services, get code examples, and deploy applications.",
+		Instructions: `BigBase is an open-source Backend-as-a-Service platform — like Supabase or Firebase, but self-hosted.
+
+Available services: deploy, auth, db (auto-API), storage, functions, realtime, messaging, webhooks, forge, cici, monitoring.
+
+Workflow: pick a framework → get code examples → deploy to bigbase.click.
+
+Use list_services to see the full catalog, get_service_docs for details on a specific service, get_code_example for framework-specific snippets, and list_frameworks to see supported frameworks.`,
 	})
 
-	// Register ping tool
+	// registerPingTool
 	mcpsdk.AddTool(srv, &mcpsdk.Tool{
 		Name:        "ping",
 		Description: "Simple ping to verify the MCP server is alive.",
 	}, func(ctx context.Context, req *mcpsdk.CallToolRequest, _ any) (*mcpsdk.CallToolResult, any, error) {
 		return &mcpsdk.CallToolResult{
-			Content: []mcpsdk.Content{
-				&mcpsdk.TextContent{Text: "pong"},
-			},
+			Content: []mcpsdk.Content{&mcpsdk.TextContent{Text: "pong"}},
+		}, nil, nil
+	})
+
+	// registerListServices
+	services, err := loadServices()
+	if err != nil {
+		return nil, fmt.Errorf("load services: %w", err)
+	}
+	mcpsdk.AddTool(srv, &mcpsdk.Tool{
+		Name:        "list_services",
+		Description: "List all BigBase services with capabilities and status. Use this to discover what the platform offers before diving into a specific service.",
+	}, func(ctx context.Context, req *mcpsdk.CallToolRequest, _ any) (*mcpsdk.CallToolResult, any, error) {
+		return &mcpsdk.CallToolResult{
+			Content: []mcpsdk.Content{&mcpsdk.TextContent{Text: formatServicesList(services)}},
+		}, nil, nil
+	})
+
+	// registerGetServiceDocs
+	mcpsdk.AddTool(srv, &mcpsdk.Tool{
+		Name:        "get_service_docs",
+		Description: "Get detailed documentation for a specific BigBase service, including API endpoints and capabilities. Use after list_services to dive deeper into a service.",
+	}, func(ctx context.Context, req *mcpsdk.CallToolRequest, _ any) (*mcpsdk.CallToolResult, any, error) {
+		var args map[string]any
+		if req.Params.Arguments != nil {
+			_ = json.Unmarshal(req.Params.Arguments, &args)
+		}
+		name, _ := args["service"].(string)
+		for _, s := range services {
+			if s.Name == name {
+				return &mcpsdk.CallToolResult{
+					Content: []mcpsdk.Content{&mcpsdk.TextContent{Text: formatServiceDoc(s)}},
+				}, nil, nil
+			}
+		}
+		return &mcpsdk.CallToolResult{
+			Content: []mcpsdk.Content{&mcpsdk.TextContent{Text: fmt.Sprintf("Service %q not found. Use list_services to see available services.", name)}},
+		}, nil, nil
+	})
+
+	// registerGetCodeExample
+	examples, err := loadCodeExamples()
+	if err != nil {
+		return nil, fmt.Errorf("load examples: %w", err)
+	}
+	mcpsdk.AddTool(srv, &mcpsdk.Tool{
+		Name:        "get_code_example",
+		Description: "Get ready-to-paste code snippets for a BigBase service in a specific framework (sveltekit, react, nextjs, vue, etc.). Use this to quickly integrate auth, db, storage, or realtime.",
+	}, func(ctx context.Context, req *mcpsdk.CallToolRequest, _ any) (*mcpsdk.CallToolResult, any, error) {
+		var args map[string]any
+		if req.Params.Arguments != nil {
+			_ = json.Unmarshal(req.Params.Arguments, &args)
+		}
+		svc, _ := args["service"].(string)
+		fw, _ := args["framework"].(string)
+		for _, ex := range examples {
+			if ex.Service == svc && ex.Framework == fw {
+				return &mcpsdk.CallToolResult{
+					Content: []mcpsdk.Content{&mcpsdk.TextContent{Text: formatCodeExample(ex)}},
+				}, nil, nil
+			}
+		}
+		return &mcpsdk.CallToolResult{
+			Content: []mcpsdk.Content{&mcpsdk.TextContent{Text: fmt.Sprintf("No example for %s/%s. Try list_frameworks and list_services to see what's available.", svc, fw)}},
+		}, nil, nil
+	})
+
+	// registerListFrameworks
+	frameworks, err := loadFrameworks()
+	if err != nil {
+		return nil, fmt.Errorf("load frameworks: %w", err)
+	}
+	mcpsdk.AddTool(srv, &mcpsdk.Tool{
+		Name:        "list_frameworks",
+		Description: "List frameworks BigBase supports with maturity level (full, partial, planned). Use this to choose the right framework for your project.",
+	}, func(ctx context.Context, req *mcpsdk.CallToolRequest, _ any) (*mcpsdk.CallToolResult, any, error) {
+		return &mcpsdk.CallToolResult{
+			Content: []mcpsdk.Content{&mcpsdk.TextContent{Text: formatFrameworksList(frameworks)}},
 		}, nil, nil
 	})
 

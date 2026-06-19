@@ -1,0 +1,81 @@
+{
+  "services": [
+    {
+      "name": "deploy",
+      "description": "Build and run web apps from git repos — Node, Go, Python, static sites. Auto-detects project type, builds, and serves on custom subdomains.",
+      "capabilities": ["git clone", "build (npm/go/pip)", "static serving", "process management", "custom domains", "build logs"],
+      "status": "stable",
+      "endpoints": ["POST /api/deploy", "GET /api/deploy", "GET /api/deploy/:id", "DELETE /api/deploy/:id", "GET /api/deploy/:id/logs"]
+    },
+    {
+      "name": "auth",
+      "description": "User authentication — register, login, JWT tokens, Google OAuth, passwordless (OTP, magic link), API keys, org membership, role-based access.",
+      "capabilities": ["email/password auth", "JWT tokens", "Google OAuth 2.0", "OTP login", "magic links", "API keys", "orgs & teams", "role-based access"],
+      "status": "stable",
+      "endpoints": ["POST /api/auth/register", "POST /api/auth/login", "GET /api/auth/me", "POST /api/auth/google", "POST /api/auth/otp/send", "POST /api/auth/otp/verify"]
+    },
+    {
+      "name": "db",
+      "description": "Auto-generated REST API for database collections — CRUD operations with filter, sort, and pagination. SQLite or PostgreSQL backend.",
+      "capabilities": ["auto CRUD API", "filter & sort", "pagination", "SQLite", "PostgreSQL", "collection management"],
+      "status": "stable",
+      "endpoints": ["GET /api/collections/:name", "POST /api/collections/:name", "GET /api/collections/:name/:id", "PATCH /api/collections/:name/:id", "DELETE /api/collections/:name/:id"]
+    },
+    {
+      "name": "storage",
+      "description": "File storage with upload, download, and management. Appwrite-compatible API for client SDKs.",
+      "capabilities": ["file upload", "file download", "file listing", "delete", "buckets"],
+      "status": "stable",
+      "endpoints": ["POST /api/storage/buckets/:bucket/files", "GET /api/storage/buckets/:bucket/files/:id", "GET /api/storage/buckets/:bucket/files", "DELETE /api/storage/buckets/:bucket/files/:id"]
+    },
+    {
+      "name": "functions",
+      "description": "Serverless JavaScript runtime — write and deploy JS functions triggered by HTTP or cron schedule. Includes fetch, db, and env bindings.",
+      "capabilities": ["JS runtime (goja)", "HTTP triggers", "cron schedules", "fetch binding", "db binding", "env variables", "execution logs"],
+      "status": "stable",
+      "endpoints": ["POST /api/functions", "GET /api/functions", "POST /api/functions/:id/run", "GET /api/functions/:id/logs"]
+    },
+    {
+      "name": "realtime",
+      "description": "WebSocket-based real-time subscriptions — clients subscribe to collection changes and receive live updates.",
+      "capabilities": ["WebSocket connections", "collection subscriptions", "mutation events", "broadcast"],
+      "status": "stable",
+      "endpoints": ["ws://host/api/realtime"]
+    },
+    {
+      "name": "messaging",
+      "description": "Outbound messaging — email (SMTP), SMS, push notifications, and webhook/Telegram providers.",
+      "capabilities": ["email (SMTP)", "SMS", "push notifications", "webhook provider", "Telegram provider"],
+      "status": "stable",
+      "endpoints": ["POST /api/messaging/send"]
+    },
+    {
+      "name": "webhooks",
+      "description": "Outbound webhook delivery — register webhook endpoints, deliver events with HMAC-SHA256 signatures, retry with backoff.",
+      "capabilities": ["webhook registration", "event delivery", "HMAC signatures", "retry with backoff"],
+      "status": "stable",
+      "endpoints": ["POST /api/webhooks", "GET /api/webhooks", "DELETE /api/webhooks/:id"]
+    },
+    {
+      "name": "forge",
+      "description": "Project management — issues, labels, kanban boards, and wiki for each project.",
+      "capabilities": ["issue tracking", "labels", "kanban boards", "wiki"],
+      "status": "stable",
+      "endpoints": ["POST /api/issues", "GET /api/issues", "GET /api/projects/:id/kanban"]
+    },
+    {
+      "name": "cici",
+      "description": "CI/CD pipelines — build, test, and deploy workflows triggered by git pushes.",
+      "capabilities": ["pipeline configuration", "build steps", "git triggers", "deploy steps"],
+      "status": "beta",
+      "endpoints": ["POST /api/pipelines", "GET /api/pipelines/:id/runs"]
+    },
+    {
+      "name": "monitoring",
+      "description": "Metrics, logs, alerts, and health checks — structured JSON logging, component status, and hardware monitoring.",
+      "capabilities": ["structured logging", "health checks", "component status", "hardware metrics", "alerts"],
+      "status": "stable",
+      "endpoints": ["GET /health", "GET /api/monitoring/logs", "GET /api/monitoring/metrics"]
+    }
+  ]
+}
