@@ -1,3 +1,10 @@
+## [2.26.2](https://github.com/danielvm-git/bigbase/compare/v2.26.1...v2.26.2) (2026-06-19)
+
+
+### Bug Fixes
+
+* **deploy:** use python3 with python fallback for Python app startup ([8c342a2](https://github.com/danielvm-git/bigbase/commit/8c342a21bb4f8b83bec8c4a3d7a6ec92d96c8af5))
+
 ## [2.26.1](https://github.com/danielvm-git/bigbase/compare/v2.26.0...v2.26.1) (2026-06-19)
 
 
