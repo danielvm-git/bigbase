@@ -409,3 +409,49 @@ func TestDeleteSiteCallsCleanupCallback(t *testing.T) {
 		t.Fatalf("site should be deleted after cleanup, got %d", got)
 	}
 }
+
+func TestDeleteSiteHandlesMissingColumn(t *testing.T) {
+	logger := testLogger{}
+	k := kernel.New(logger)
+	d := db.New(db.Options{Path: ":memory:", Logger: logger})
+	g := git.New(git.Options{DB: d, Logger: logger, Dir: t.TempDir()})
+	s := sites.New(sites.Options{DB: d, Logger: logger})
+	k.Register(d)
+	k.Register(g)
+	k.Register(s)
+	if err := k.Start(); err != nil {
+		t.Fatalf("kernel start: %v", err)
+	}
+	t.Cleanup(func() { _ = k.Stop() })
+
+	// Simulate old production DB: deployments table WITHOUT site_id column
+	_, _ = d.ExecContext(context.Background(), `CREATE TABLE IF NOT EXISTS deployments (
+		id TEXT PRIMARY KEY,
+		repo_id TEXT NOT NULL DEFAULT '',
+		status TEXT NOT NULL DEFAULT '',
+		created_at TEXT NOT NULL DEFAULT (datetime('now'))
+	)`)
+	_, _ = d.ExecContext(context.Background(), `CREATE TABLE IF NOT EXISTS site_request_logs (
+		id TEXT PRIMARY KEY,
+		method TEXT NOT NULL,
+		path TEXT NOT NULL,
+		status INTEGER NOT NULL DEFAULT 0,
+		duration_ms INTEGER NOT NULL DEFAULT 0,
+		created_at TEXT NOT NULL DEFAULT (datetime('now'))
+	)`)
+
+	seedSiteForDelete(t, d, "site-olddb", "repo-olddb")
+	_, _ = d.ExecContext(context.Background(),
+		`INSERT INTO deployments (id, repo_id, status) VALUES ('dep-olddb', 'repo-olddb', 'failed')`)
+
+	req := httptest.NewRequest(http.MethodDelete, "/api/sites/site-olddb", nil)
+	w := httptest.NewRecorder()
+	s.Handler().ServeHTTP(w, req)
+
+	if w.Code != http.StatusNoContent {
+		t.Fatalf("expected 204 even with missing columns, got %d: %s", w.Code, w.Body.String())
+	}
+	if got := countRows(t, d, "SELECT COUNT(*) FROM sites WHERE id = ?", "site-olddb"); got != 0 {
+		t.Fatalf("site should be deleted, got %d", got)
+	}
+}

@@ -1,0 +1,263 @@
+// Package mcp implements an MCP (Model Context Protocol) server for BigBase.
+// It exposes tools that teach AI coding agents how to use BigBase services,
+// deploy applications, and integrate with frameworks.
+package mcp
+
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"os"
+
+	"github.com/danielvm/bigbase/kernel"
+	mcpsdk "github.com/modelcontextprotocol/go-sdk/mcp"
+)
+
+const version = "0.1.0"
+
+// Options configure the MCP component.
+type Options struct {
+	// Logger is the structured logger. If nil, a no-op logger is used.
+	Logger Logger
+	// Port is the HTTP port for the MCP server (default: 3900).
+	Port int
+	// Transport is "stdio" or "http" (default: "http").
+	Transport string
+	// Enabled controls whether the MCP server starts (default: true).
+	Enabled bool
+}
+
+// Component is the ECC component for the MCP server.
+type Component struct {
+	logger    Logger
+	port      int
+	transport string
+	enabled   bool
+}
+
+// New creates a new MCP component with the given options.
+func New(opts Options) *Component {
+	logger := opts.Logger
+	if logger == nil {
+		logger = noopLogger{}
+	}
+	port := opts.Port
+	if port == 0 {
+		port = 3900
+	}
+	transport := opts.Transport
+	if transport == "" {
+		transport = "http"
+	}
+	return &Component{
+		logger:    logger,
+		port:      port,
+		transport: transport,
+		enabled:   opts.Enabled,
+	}
+}
+
+func (c *Component) Name() string                   { return "mcp" }
+func (c *Component) Version() string                { return version }
+func (c *Component) Dependencies() []string         { return nil }
+func (c *Component) ConfigSchema() json.RawMessage  { return nil }
+func (c *Component) Hooks() []kernel.HookDef        { return nil }
+
+func (c *Component) Init(ctx *kernel.Context, config json.RawMessage) error {
+	return nil
+}
+
+func (c *Component) Start(ctx *kernel.Context) error {
+	if !c.enabled {
+		c.logger.Info("mcp server disabled")
+		return nil
+	}
+	c.logger.Info("mcp server starting", "transport", c.transport, "port", c.port)
+
+	switch c.transport {
+	case "stdio":
+		go func() {
+			if err := c.ServeStdio(context.Background()); err != nil {
+				c.logger.Error("mcp stdio server failed", "error", err)
+			}
+		}()
+	case "http":
+		go func() {
+			addr := fmt.Sprintf(":%d", c.port)
+			c.logger.Info("mcp http server listening", "addr", addr)
+			if err := http.ListenAndServe(addr, c.Handler()); err != nil {
+				c.logger.Error("mcp http server failed", "error", err)
+			}
+		}()
+	}
+	return nil
+}
+
+func (c *Component) Stop(ctx *kernel.Context) error {
+	c.logger.Info("mcp server stopped")
+	return nil
+}
+
+// NewMCPServer creates and configures an MCP server with registered tools.
+func (c *Component) NewMCPServer() (*mcpsdk.Server, error) {
+	srv := mcpsdk.NewServer(&mcpsdk.Implementation{
+		Name:    "BigBase",
+		Version: version,
+	}, &mcpsdk.ServerOptions{
+		Instructions: `BigBase is an open-source Backend-as-a-Service platform — like Supabase or Firebase, but self-hosted.
+
+Available services: deploy, auth, db (auto-API), storage, functions, realtime, messaging, webhooks, forge, cici, monitoring.
+
+Workflow: pick a framework → get code examples → deploy to bigbase.click.
+
+Use list_services to see the full catalog, get_service_docs for details on a specific service, get_code_example for framework-specific snippets, and list_frameworks to see supported frameworks.`,
+	})
+
+	// registerPingTool
+	mcpsdk.AddTool(srv, &mcpsdk.Tool{
+		Name:        "ping",
+		Description: "Simple ping to verify the MCP server is alive.",
+	}, func(ctx context.Context, req *mcpsdk.CallToolRequest, _ any) (*mcpsdk.CallToolResult, any, error) {
+		return &mcpsdk.CallToolResult{
+			Content: []mcpsdk.Content{&mcpsdk.TextContent{Text: "pong"}},
+		}, nil, nil
+	})
+
+	// registerListServices
+	services, err := loadServices()
+	if err != nil {
+		return nil, fmt.Errorf("load services: %w", err)
+	}
+	mcpsdk.AddTool(srv, &mcpsdk.Tool{
+		Name:        "list_services",
+		Description: "List all BigBase services with capabilities and status. Use this to discover what the platform offers before diving into a specific service.",
+	}, func(ctx context.Context, req *mcpsdk.CallToolRequest, _ any) (*mcpsdk.CallToolResult, any, error) {
+		return &mcpsdk.CallToolResult{
+			Content: []mcpsdk.Content{&mcpsdk.TextContent{Text: formatServicesList(services)}},
+		}, nil, nil
+	})
+
+	// registerGetServiceDocs
+	mcpsdk.AddTool(srv, &mcpsdk.Tool{
+		Name:        "get_service_docs",
+		Description: "Get detailed documentation for a specific BigBase service, including API endpoints and capabilities. Use after list_services to dive deeper into a service.",
+	}, func(ctx context.Context, req *mcpsdk.CallToolRequest, _ any) (*mcpsdk.CallToolResult, any, error) {
+		var args map[string]any
+		if req.Params.Arguments != nil {
+			_ = json.Unmarshal(req.Params.Arguments, &args)
+		}
+		name, _ := args["service"].(string)
+		for _, s := range services {
+			if s.Name == name {
+				return &mcpsdk.CallToolResult{
+					Content: []mcpsdk.Content{&mcpsdk.TextContent{Text: formatServiceDoc(s)}},
+				}, nil, nil
+			}
+		}
+		return &mcpsdk.CallToolResult{
+			Content: []mcpsdk.Content{&mcpsdk.TextContent{Text: fmt.Sprintf("Service %q not found. Use list_services to see available services.", name)}},
+		}, nil, nil
+	})
+
+	// registerGetCodeExample
+	examples, err := loadCodeExamples()
+	if err != nil {
+		return nil, fmt.Errorf("load examples: %w", err)
+	}
+	mcpsdk.AddTool(srv, &mcpsdk.Tool{
+		Name:        "get_code_example",
+		Description: "Get ready-to-paste code snippets for a BigBase service in a specific framework (sveltekit, react, nextjs, vue, etc.). Use this to quickly integrate auth, db, storage, or realtime.",
+	}, func(ctx context.Context, req *mcpsdk.CallToolRequest, _ any) (*mcpsdk.CallToolResult, any, error) {
+		var args map[string]any
+		if req.Params.Arguments != nil {
+			_ = json.Unmarshal(req.Params.Arguments, &args)
+		}
+		svc, _ := args["service"].(string)
+		fw, _ := args["framework"].(string)
+		for _, ex := range examples {
+			if ex.Service == svc && ex.Framework == fw {
+				return &mcpsdk.CallToolResult{
+					Content: []mcpsdk.Content{&mcpsdk.TextContent{Text: formatCodeExample(ex)}},
+				}, nil, nil
+			}
+		}
+		return &mcpsdk.CallToolResult{
+			Content: []mcpsdk.Content{&mcpsdk.TextContent{Text: fmt.Sprintf("No example for %s/%s. Try list_frameworks and list_services to see what's available.", svc, fw)}},
+		}, nil, nil
+	})
+
+	// registerListFrameworks
+	frameworks, err := loadFrameworks()
+	if err != nil {
+		return nil, fmt.Errorf("load frameworks: %w", err)
+	}
+	mcpsdk.AddTool(srv, &mcpsdk.Tool{
+		Name:        "list_frameworks",
+		Description: "List frameworks BigBase supports with maturity level (full, partial, planned). Use this to choose the right framework for your project.",
+	}, func(ctx context.Context, req *mcpsdk.CallToolRequest, _ any) (*mcpsdk.CallToolResult, any, error) {
+		return &mcpsdk.CallToolResult{
+			Content: []mcpsdk.Content{&mcpsdk.TextContent{Text: formatFrameworksList(frameworks)}},
+		}, nil, nil
+	})
+
+	return srv, nil
+}
+
+// ServeStdio runs the MCP server over stdio (stdin/stdout).
+// This blocks until the context is cancelled or stdin closes.
+func (c *Component) ServeStdio(ctx context.Context) error {
+	srv, err := c.NewMCPServer()
+	if err != nil {
+		return fmt.Errorf("create server: %w", err)
+	}
+	return srv.Run(ctx, &mcpsdk.IOTransport{
+		Reader: os.Stdin,
+		Writer: os.Stdout,
+	})
+}
+
+// Handler returns an HTTP handler for the MCP server.
+// Routes: POST /mcp — MCP messages, GET /health — health check.
+func (c *Component) Handler() http.Handler {
+	mux := http.NewServeMux()
+
+	mux.HandleFunc("/mcp", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+		srv, err := c.NewMCPServer()
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		handler := mcpsdk.NewStreamableHTTPHandler(func(_ *http.Request) *mcpsdk.Server {
+			return srv
+		}, nil)
+		handler.ServeHTTP(w, r)
+	})
+
+	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		fmt.Fprintf(w, `{"status":"ok","version":%q}`, version)
+	})
+
+	return mux
+}
+
+// Logger is the subset of slog used by this component.
+type Logger interface {
+	Info(msg string, args ...any)
+	Warn(msg string, args ...any)
+	Error(msg string, args ...any)
+	Debug(msg string, args ...any)
+}
+
+type noopLogger struct{}
+
+func (noopLogger) Info(msg string, args ...any)  {}
+func (noopLogger) Warn(msg string, args ...any)  {}
+func (noopLogger) Error(msg string, args ...any) {}
+func (noopLogger) Debug(msg string, args ...any) {}

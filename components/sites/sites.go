@@ -462,7 +462,9 @@ func isMissingOptionalTable(err error) bool {
 	return strings.Contains(msg, "no such table: deployments") ||
 		strings.Contains(msg, "no such table: site_request_logs") ||
 		strings.Contains(msg, `relation "deployments" does not exist`) ||
-		strings.Contains(msg, `relation "site_request_logs" does not exist`)
+		strings.Contains(msg, `relation "site_request_logs" does not exist`) ||
+		strings.Contains(msg, "no such column") ||
+		strings.Contains(msg, "column") && strings.Contains(msg, "does not exist")
 }
 
 func (s *Sites) listSiteRequestLogs(w http.ResponseWriter, r *http.Request, siteID string) {

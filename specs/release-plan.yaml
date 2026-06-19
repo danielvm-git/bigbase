@@ -199,3 +199,13 @@ epics:
     file: epics/archive/e35-advanced-auth.yaml
     mode: flat
     status: done
+  - id: e38
+    title: MCP Server — Agent-Native Platform Education
+    wsjf: 4.2
+    file: epics/e38-mcp-server.yaml
+    mode: flat
+  - id: e39
+    title: Multi-User Platform — Admin panel, role switching, friend invites
+    wsjf: 3.6
+    file: epics/e39-multi-user-platform.yaml
+    mode: flat

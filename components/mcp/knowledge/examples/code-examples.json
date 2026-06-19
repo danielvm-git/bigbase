@@ -1,0 +1,52 @@
+{
+  "examples": [
+    {
+      "service": "auth",
+      "framework": "sveltekit",
+      "title": "Login with email/password",
+      "code": "// src/routes/login/+page.server.ts\nimport { redirect } from '@sveltejs/kit';\n\nexport const actions = {\n  default: async ({ request, fetch }) => {\n    const data = await request.formData();\n    const email = data.get('email');\n    const password = data.get('password');\n    \n    const res = await fetch('https://your-app.bigbase.click/api/auth/login', {\n      method: 'POST',\n      headers: { 'Content-Type': 'application/json' },\n      body: JSON.stringify({ email, password })\n    });\n    \n    if (!res.ok) throw new Error('Login failed');\n    const { token, user } = await res.json();\n    \n    // Store JWT in httpOnly cookie\n    return { token, user };\n  }\n};"
+    },
+    {
+      "service": "auth",
+      "framework": "react",
+      "title": "Login with email/password",
+      "code": "// src/hooks/useAuth.ts\nimport { useState } from 'react';\n\nconst BASE = 'https://your-app.bigbase.click';\n\nexport function useAuth() {\n  const [user, setUser] = useState(null);\n\n  const login = async (email: string, password: string) => {\n    const res = await fetch(`${BASE}/api/auth/login`, {\n      method: 'POST',\n      headers: { 'Content-Type': 'application/json' },\n      body: JSON.stringify({ email, password })\n    });\n    const { token, user } = await res.json();\n    localStorage.setItem('token', token);\n    setUser(user);\n    return user;\n  };\n\n  return { user, login };\n}"
+    },
+    {
+      "service": "auth",
+      "framework": "nextjs",
+      "title": "Login with email/password (Server Action)",
+      "code": "// app/login/actions.ts\n'use server'\nimport { cookies } from 'next/headers';\n\nconst BASE = 'https://your-app.bigbase.click';\n\nexport async function login(email: string, password: string) {\n  const res = await fetch(`${BASE}/api/auth/login`, {\n    method: 'POST',\n    headers: { 'Content-Type': 'application/json' },\n    body: JSON.stringify({ email, password })\n  });\n  const { token, user } = await res.json();\n  (await cookies()).set('token', token, { httpOnly: true, secure: true });\n  return user;\n}"
+    },
+    {
+      "service": "db",
+      "framework": "sveltekit",
+      "title": "CRUD operations on a collection",
+      "code": "// src/lib/api.ts\nconst BASE = 'https://your-app.bigbase.click';\nconst TOKEN = 'your-jwt-token';\n\nexport const db = {\n  collection(name: string) {\n    const headers = {\n      'Content-Type': 'application/json',\n      'Authorization': `Bearer ${TOKEN}`\n    };\n    return {\n      list: async () => {\n        const res = await fetch(`${BASE}/api/collections/${name}`, { headers });\n        return res.json();\n      },\n      create: async (data: any) => {\n        const res = await fetch(`${BASE}/api/collections/${name}`, {\n          method: 'POST', headers, body: JSON.stringify({ data })\n        });\n        return res.json();\n      },\n      get: async (id: string) => {\n        const res = await fetch(`${BASE}/api/collections/${name}/${id}`, { headers });\n        return res.json();\n      },\n      update: async (id: string, data: any) => {\n        const res = await fetch(`${BASE}/api/collections/${name}/${id}`, {\n          method: 'PATCH', headers, body: JSON.stringify({ data })\n        });\n        return res.json();\n      },\n      delete: async (id: string) => {\n        const res = await fetch(`${BASE}/api/collections/${name}/${id}`, {\n          method: 'DELETE', headers\n        });\n        return res.json();\n      }\n    };\n  }\n};"
+    },
+    {
+      "service": "db",
+      "framework": "react",
+      "title": "CRUD operations on a collection",
+      "code": "// src/lib/api.ts\nconst BASE = 'https://your-app.bigbase.click';\n\nfunction headers() {\n  const token = localStorage.getItem('token');\n  return {\n    'Content-Type': 'application/json',\n    ...(token && { Authorization: `Bearer ${token}` })\n  };\n}\n\nexport const db = {\n  collection(name: string) {\n    return {\n      list: () => fetch(`${BASE}/api/collections/${name}`, { headers: headers() }).then(r => r.json()),\n      create: (data: any) => fetch(`${BASE}/api/collections/${name}`, {\n        method: 'POST', headers: headers(), body: JSON.stringify({ data })\n      }).then(r => r.json()),\n      get: (id: string) => fetch(`${BASE}/api/collections/${name}/${id}`, { headers: headers() }).then(r => r.json()),\n      update: (id: string, data: any) => fetch(`${BASE}/api/collections/${name}/${id}`, {\n        method: 'PATCH', headers: headers(), body: JSON.stringify({ data })\n      }).then(r => r.json()),\n      delete: (id: string) => fetch(`${BASE}/api/collections/${name}/${id}`, {\n        method: 'DELETE', headers: headers()\n      }).then(r => r.json())\n    };\n  }\n};"
+    },
+    {
+      "service": "storage",
+      "framework": "sveltekit",
+      "title": "Upload and download files",
+      "code": "// src/lib/storage.ts\nconst BASE = 'https://your-app.bigbase.click';\nconst TOKEN = 'your-jwt-token';\n\nexport const storage = {\n  upload: async (bucket: string, file: File) => {\n    const form = new FormData();\n    form.append('file', file);\n    const res = await fetch(`${BASE}/api/storage/buckets/${bucket}/files`, {\n      method: 'POST',\n      headers: { Authorization: `Bearer ${TOKEN}` },\n      body: form\n    });\n    return res.json();\n  },\n  download: async (bucket: string, fileId: string) => {\n    const res = await fetch(`${BASE}/api/storage/buckets/${bucket}/files/${fileId}`, {\n      headers: { Authorization: `Bearer ${TOKEN}` }\n    });\n    return res.blob();\n  },\n  list: async (bucket: string) => {\n    const res = await fetch(`${BASE}/api/storage/buckets/${bucket}/files`, {\n      headers: { Authorization: `Bearer ${TOKEN}` }\n    });\n    return res.json();\n  }\n};"
+    },
+    {
+      "service": "realtime",
+      "framework": "sveltekit",
+      "title": "Subscribe to collection changes",
+      "code": "// src/lib/realtime.ts\nexport function subscribe(collection: string, onUpdate: (data: any) => void) {\n  const ws = new WebSocket(`wss://your-app.bigbase.click/api/realtime`);\n  \n  ws.onopen = () => {\n    ws.send(JSON.stringify({ type: 'subscribe', collection }));\n  };\n  \n  ws.onmessage = (event) => {\n    const msg = JSON.parse(event.data);\n    if (msg.collection === collection) {\n      onUpdate(msg.data);\n    }\n  };\n  \n  return () => ws.close();\n}"
+    },
+    {
+      "service": "realtime",
+      "framework": "react",
+      "title": "Subscribe to collection changes",
+      "code": "// src/hooks/useRealtime.ts\nimport { useEffect } from 'react';\n\nexport function useRealtime(collection: string, onUpdate: (data: any) => void) {\n  useEffect(() => {\n    const ws = new WebSocket(`wss://your-app.bigbase.click/api/realtime`);\n    ws.onopen = () => ws.send(JSON.stringify({ type: 'subscribe', collection }));\n    ws.onmessage = (e) => {\n      const msg = JSON.parse(e.data);\n      if (msg.collection === collection) onUpdate(msg.data);\n    };\n    return () => ws.close();\n  }, [collection]);\n}"
+    }
+  ]
+}
