@@ -39,13 +39,13 @@ bug_cycle:
   story_bcps: 3
 git:
   branch: main
-  hash: eac4d53
+  hash: 010b908
 handoff:
   last_step_completed: build-epic step 4 develop-tdd for BUG-2026-06-19T131025; Go
     lint fixed, UI lint and cold-start smoke fail.
   open_decisions: []
   next_skill: verify-work
   summary: "Building e37 \u2014 SvelteKit Deployment support"
-  context: Resume verify-work for BUG-2026-06-19T131025. Fix UI lint errors and cold-start
-    smoke test failure. Existing Go lint fixes are committed.
+  context: Resume verify-work for BUG-2026-06-19T131025. Fix UI lint and cold-start
+    smoke test failures identified in previous steps.
 active_bug_id: BUG-2026-06-19T131025
