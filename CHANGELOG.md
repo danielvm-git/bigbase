@@ -1,3 +1,21 @@
+# [2.19.0](https://github.com/danielvm-git/bigbase/compare/v2.18.1...v2.19.0) (2026-06-19)
+
+
+### Bug Fixes
+
+* **lint:** address pre-existing lint issues in react hooks and fast refresh ([1f93769](https://github.com/danielvm-git/bigbase/commit/1f93769e16f1ee3bf8d3fbb71c297d67eb2bbcce))
+* **ui:** address pre-existing lint issues in react hooks and fast refresh ([e9bfa42](https://github.com/danielvm-git/bigbase/commit/e9bfa42d2ca13d34e6ba379534edf109dc683012))
+* **ui:** address pre-existing lint issues in react hooks and fast refresh ([300408f](https://github.com/danielvm-git/bigbase/commit/300408f234640c22275e5272f57d6abf7b351cc8))
+* **ui:** address pre-existing lint issues in react hooks and fast refresh ([69ea838](https://github.com/danielvm-git/bigbase/commit/69ea8387925828ff49a1e46b34d1cab696235145))
+* **ui:** address pre-existing lint issues in react hooks and fast refresh ([f31f769](https://github.com/danielvm-git/bigbase/commit/f31f769b66cf94a1ea582b00029be25df3e2360d))
+* **ui:** address pre-existing lint issues in react hooks and fast refresh ([761a33b](https://github.com/danielvm-git/bigbase/commit/761a33ba11796adf9111aabcaf4dd25808d4072c))
+
+
+### Features
+
+* **sites:** add DELETE /api/sites/:id with safe cascade cleanup ([8667e1e](https://github.com/danielvm-git/bigbase/commit/8667e1ea6a8b57e8969f05a6cfc10f745ffcaeff))
+* **sites:** add DELETE /api/sites/:id with safe cascade cleanup ([ae23e3f](https://github.com/danielvm-git/bigbase/commit/ae23e3f29c78f9b4b9f1f5199516cc8b9905f4b0))
+
 ## [2.18.1](https://github.com/danielvm-git/bigbase/compare/v2.18.0...v2.18.1) (2026-06-19)
 
 
