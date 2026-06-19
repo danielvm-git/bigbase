@@ -278,6 +278,14 @@ bugs:
     summary: Full lint baseline blocks verify-work despite story-scoped checks passing
     file: specs/bugs/BUG-2026-06-19T131025-lint-baseline-blocks-verify.md
     status: done
+  - id: BUG-2026-06-19T163327
+    date: "2026-06-19"
+    severity: high
+    priority: high
+    scope: sites,deploy
+    summary: Site deletion returns 500 when deployments table missing site_id column
+    file: specs/bugs/BUG-2026-06-19T163327-site-delete-500-missing-column.md
+    status: open
     files_changed:
       - components/sites/sites.go
       - components/sites/sites_test.go
