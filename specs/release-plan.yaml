@@ -157,33 +157,45 @@ epics:
     wsjf: 3.25
     file: epics/e30-backend-for-integrations.yaml
     mode: flat
+  - id: e36
+    title: Delete Deployed Site
+    wsjf: 6.0
+    file: epics/e36-delete-site.yaml
+    mode: flat
+    status: pending
+  - id: e37
+    title: SvelteKit Deployment — static (adapter-static) & SSR (adapter-node)
+    wsjf: 4.0
+    file: epics/e37-sveltekit.yaml
+    mode: flat
+    status: pending
   - id: e31
     title: SPA-Friendly Auth — CORS, OAuth redirect, logout
     wsjf: 4.8
-    file: archive/e31-spa-friendly-auth.yaml
+    file: epics/archive/e31-spa-friendly-auth.yaml
     mode: flat
     status: done
   - id: e32
     title: Passwordless Auth + User Management
     wsjf: 6.0
-    file: archive/e32-passwordless-auth.yaml
+    file: epics/archive/e32-passwordless-auth.yaml
     mode: flat
     status: done
   - id: e33
     title: Client SDK + Multi-Framework Adapters
     wsjf: 5.2
-    file: archive/e33-sdk-adapters.yaml
+    file: epics/archive/e33-sdk-adapters.yaml
     mode: flat
     status: done
   - id: e34
     title: Auth UI Components — Multi-Framework
     wsjf: 3.6
-    file: archive/e34-auth-ui-components.yaml
+    file: epics/archive/e34-auth-ui-components.yaml
     mode: flat
     status: done
   - id: e35
     title: Advanced Auth — Phone, Anonymous, OAuth popup
     wsjf: 2.2
-    file: archive/e35-advanced-auth.yaml
+    file: epics/archive/e35-advanced-auth.yaml
     mode: flat
     status: done

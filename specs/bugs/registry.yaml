@@ -270,3 +270,33 @@ bugs:
     summary: Semantic Release CI fails — npx cannot resolve @semantic-release/changelog plugin
     file: specs/bugs/BUG-2026-06-18T174500-semantic-release-changelog-missing.md
     status: fixed
+  - id: BUG-2026-06-19T131025
+    date: "2026-06-19"
+    severity: high
+    priority: high
+    scope: ci,infra,lint,ui,go
+    summary: Full lint baseline blocks verify-work despite story-scoped checks passing
+    file: specs/bugs/BUG-2026-06-19T131025-lint-baseline-blocks-verify.md
+    status: done
+    files_changed:
+      - components/sites/sites.go
+      - components/sites/sites_test.go
+      - specs/bugs/registry.yaml
+      - specs/execution-status.yaml
+      - specs/release-plan.yaml
+      - specs/state.yaml
+    approach: |
+      1. **Scope analysis**: Determine impact of lint failures on active story `e36s01`.
+      2. **Isolate baseline**: Identify ignored modules/dependencies.
+      3. **Fix baseline**: Update root lint config and clean first-party code.
+      4. **Verify**: Ensure scoped code passes, full repo passes, UI lint passes.
+    risk_level: high
+    commit_message: "fix(lint): resolve baseline violations and exclude dependencies"
+  - id: BUG-2026-06-04T100000
+    date: "2026-06-04"
+    severity: high
+    priority: high
+    scope: ui
+    summary: "Reviewer must-fix findings on prototype-fidelity-parity: mock success leaks /api/auth, ThemePicker loses focus on close, 5 of 15 planned icon names were silently substituted"
+    file: specs/bugs/BUG-2026-06-04T100000-reviewer-must-fix-on-prototype-fidelity.md
+    status: fixed
