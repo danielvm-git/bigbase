@@ -5,10 +5,12 @@ package mcp
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/danielvm/bigbase/kernel"
 	mcpsdk "github.com/modelcontextprotocol/go-sdk/mcp"
@@ -26,6 +28,14 @@ type Options struct {
 	Transport string
 	// Enabled controls whether the MCP server starts (default: true).
 	Enabled bool
+	// DB is the database for deploy tools (list_repos, deploy_site, etc.).
+	DB DBer
+}
+
+// DBer is the database interface for deploy tools.
+type DBer interface {
+	QueryRowContext(ctx context.Context, query string, args ...any) *sql.Row
+	QueryContext(ctx context.Context, query string, args ...any) (*sql.Rows, error)
 }
 
 // Component is the ECC component for the MCP server.
@@ -34,6 +44,7 @@ type Component struct {
 	port      int
 	transport string
 	enabled   bool
+	db        DBer
 }
 
 // New creates a new MCP component with the given options.
@@ -55,12 +66,18 @@ func New(opts Options) *Component {
 		port:      port,
 		transport: transport,
 		enabled:   opts.Enabled,
+		db:        opts.DB,
 	}
 }
 
 func (c *Component) Name() string                   { return "mcp" }
 func (c *Component) Version() string                { return version }
-func (c *Component) Dependencies() []string         { return nil }
+func (c *Component) Dependencies() []string {
+	if c.db != nil {
+		return []string{"db"}
+	}
+	return nil
+}
 func (c *Component) ConfigSchema() json.RawMessage  { return nil }
 func (c *Component) Hooks() []kernel.HookDef        { return nil }
 
@@ -201,7 +218,195 @@ Use list_services to see the full catalog, get_service_docs for details on a spe
 		}, nil, nil
 	})
 
+	// --- Deploy workflow tools ---
+
+	// registerListRepos
+	mcpsdk.AddTool(srv, &mcpsdk.Tool{
+		Name:        "list_repos",
+		Description: "List git repositories available for deployment on this BigBase instance.",
+	}, func(ctx context.Context, req *mcpsdk.CallToolRequest, _ any) (*mcpsdk.CallToolResult, any, error) {
+		if c.db == nil {
+			return textResult("Deploy tools require a database connection. Start BigBase with `serve` to enable deploy workflows."), nil, nil
+		}
+		rows, err := c.db.QueryContext(ctx, "SELECT id, name, description, updated_at FROM git_repos ORDER BY updated_at DESC LIMIT 50")
+		if err != nil {
+			return textResult(fmt.Sprintf("Error listing repos: %v", err)), nil, nil
+		}
+		defer rows.Close()
+		var b strings.Builder
+		b.WriteString("# Git Repositories\n\n")
+		count := 0
+		for rows.Next() {
+			var id, name, desc, updated string
+			if err := rows.Scan(&id, &name, &desc, &updated); err != nil {
+				continue
+			}
+			b.WriteString(fmt.Sprintf("- **%s** (`%s`) — %s\n", name, id, desc))
+			count++
+		}
+		if count == 0 {
+			b.WriteString("No repositories found. Push a repo or create one via the Git component.\n")
+		}
+		b.WriteString(fmt.Sprintf("\n→ To deploy: use deploy_site with the repo_id\n"))
+		return textResult(b.String()), nil, nil
+	})
+
+	// registerDeploySite
+	mcpsdk.AddTool(srv, &mcpsdk.Tool{
+		Name:        "deploy_site",
+		Description: "Trigger a deployment for a git repository. Provide repo_id and optionally branch (default: main) and site_name.",
+	}, func(ctx context.Context, req *mcpsdk.CallToolRequest, _ any) (*mcpsdk.CallToolResult, any, error) {
+		if c.db == nil {
+			return textResult("Deploy tools require a database connection. Start BigBase with `serve` to enable deploy workflows."), nil, nil
+		}
+		var args map[string]any
+		if req.Params.Arguments != nil {
+			_ = json.Unmarshal(req.Params.Arguments, &args)
+		}
+		repoID, _ := args["repo_id"].(string)
+		if repoID == "" {
+			return textResult("repo_id is required. Use list_repos to find available repositories."), nil, nil
+		}
+		branch, _ := args["branch"].(string)
+		if branch == "" {
+			branch = "main"
+		}
+		siteName, _ := args["site_name"].(string)
+
+		var repoName string
+		err := c.db.QueryRowContext(ctx, "SELECT name FROM git_repos WHERE id = ?", repoID).Scan(&repoName)
+		if err != nil {
+			return textResult(fmt.Sprintf("Repository %q not found. Use list_repos to see available repositories.", repoID)), nil, nil
+		}
+		if siteName == "" {
+			siteName = repoName
+		}
+
+		return textResult(fmt.Sprintf("# Deploy Request Received\n\n- **Repo:** %s\n- **Branch:** %s\n- **Site:** %s\n\nTo trigger the deployment, send a POST to `/api/deploy` with:\n```json\n{\"repo_id\": \"%s\", \"branch\": \"%s\", \"site_name\": \"%s\"}\n```\n\nThen use `get_deploy_status` to monitor progress.",
+			repoName, branch, siteName, repoID, branch, siteName)), nil, nil
+	})
+
+	// registerGetDeployStatus
+	mcpsdk.AddTool(srv, &mcpsdk.Tool{
+		Name:        "get_deploy_status",
+		Description: "Check the status of a deployment by its ID. Returns status, URL, and build info.",
+	}, func(ctx context.Context, req *mcpsdk.CallToolRequest, _ any) (*mcpsdk.CallToolResult, any, error) {
+		if c.db == nil {
+			return textResult("Deploy tools require a database connection."), nil, nil
+		}
+		var args map[string]any
+		if req.Params.Arguments != nil {
+			_ = json.Unmarshal(req.Params.Arguments, &args)
+		}
+		deployID, _ := args["deployment_id"].(string)
+		if deployID == "" {
+			// List recent deployments
+			rows, err := c.db.QueryContext(ctx, "SELECT id, status, url, app_type, created_at FROM deployments ORDER BY created_at DESC LIMIT 10")
+			if err != nil {
+				return textResult(fmt.Sprintf("Error: %v", err)), nil, nil
+			}
+			defer rows.Close()
+			var b strings.Builder
+			b.WriteString("# Recent Deployments\n\n")
+			for rows.Next() {
+				var id, status, url, appType, created string
+				rows.Scan(&id, &status, &url, &appType, &created)
+				b.WriteString(fmt.Sprintf("- `%s` — **%s** %s (%s)\n", id[:8], status, url, appType))
+			}
+			b.WriteString("\n→ Use `get_deploy_status` with a `deployment_id` for details.\n")
+			return textResult(b.String()), nil, nil
+		}
+		var status, url, appType, commitSHA, errMsg string
+		c.db.QueryRowContext(ctx,
+			"SELECT status, COALESCE(url,''), COALESCE(app_type,''), COALESCE(commit_sha,''), COALESCE(error_message,'') FROM deployments WHERE id = ?", deployID,
+		).Scan(&status, &url, &appType, &commitSHA, &errMsg)
+
+		var b strings.Builder
+		b.WriteString(fmt.Sprintf("# Deployment %s\n\n- **Status:** %s\n- **URL:** %s\n- **Type:** %s\n", deployID[:8], status, url, appType))
+		if commitSHA != "" {
+			b.WriteString(fmt.Sprintf("- **Commit:** %s\n", commitSHA[:7]))
+		}
+		if errMsg != "" {
+			b.WriteString(fmt.Sprintf("- **Error:** %s\n", errMsg))
+		}
+		if status == "failed" {
+			b.WriteString("\n→ Check build logs with `get_deploy_logs`.\n")
+		} else if status == "running" {
+			b.WriteString(fmt.Sprintf("\n→ Site is live at %s\n", url))
+		}
+		return textResult(b.String()), nil, nil
+	})
+
+	// registerGetDeployLogs
+	mcpsdk.AddTool(srv, &mcpsdk.Tool{
+		Name:        "get_deploy_logs",
+		Description: "Fetch build logs for a deployment. Use this to debug failed deployments.",
+	}, func(ctx context.Context, req *mcpsdk.CallToolRequest, _ any) (*mcpsdk.CallToolResult, any, error) {
+		if c.db == nil {
+			return textResult("Deploy tools require a database connection."), nil, nil
+		}
+		var args map[string]any
+		if req.Params.Arguments != nil {
+			_ = json.Unmarshal(req.Params.Arguments, &args)
+		}
+		deployID, _ := args["deployment_id"].(string)
+		if deployID == "" {
+			return textResult("deployment_id is required. Use get_deploy_status to find deployment IDs."), nil, nil
+		}
+		var buildLog string
+		err := c.db.QueryRowContext(ctx, "SELECT COALESCE(build_log,'') FROM deployments WHERE id = ?", deployID).Scan(&buildLog)
+		if err != nil {
+			return textResult(fmt.Sprintf("Deployment %q not found.", deployID)), nil, nil
+		}
+		if buildLog == "" {
+			return textResult("No build logs yet. The deployment may still be in progress."), nil, nil
+		}
+		return textResult(fmt.Sprintf("# Build Logs for %s\n\n```\n%s\n```", deployID[:8], buildLog)), nil, nil
+	})
+
+	// registerDeployGuide
+	mcpsdk.AddTool(srv, &mcpsdk.Tool{
+		Name:        "deploy_guide",
+		Description: "Step-by-step guide for deploying an application to bigbase.click. Use this when you need to understand the full deploy workflow.",
+	}, func(ctx context.Context, req *mcpsdk.CallToolRequest, _ any) (*mcpsdk.CallToolResult, any, error) {
+		guide := `# Deploying to BigBase
+
+## 1. Push your code to a git repo on this BigBase instance
+Create a repo via the Git component or admin UI.
+
+## 2. List available repos
+Use ` + "`list_repos`" + ` to find your repo and get its ID.
+
+## 3. Deploy your site
+Use ` + "`deploy_site`" + ` with your repo_id and branch.
+BigBase auto-detects your app type (Node, Go, Python, Static) and builds it.
+
+## 4. Monitor progress
+Use ` + "`get_deploy_status`" + ` to check build status.
+
+## 5. Debug failures
+Use ` + "`get_deploy_logs`" + ` to view build output.
+
+## Framework-specific notes
+- **SvelteKit**: Use adapter-static for static sites, adapter-node for SSR.
+- **Next.js**: Static export (` + "`output: 'export'`" + `) recommended.
+- **Astro**: Works out of the box with static output.
+- **React/Vue (Vite)**: ` + "`npm run build`" + ` produces ` + "`dist/`" + ` served automatically.
+- **Go**: ` + "`go build`" + ` produces a binary that runs on the assigned port.
+
+## Environment
+Port is set via ` + "`PORT`" + ` env var. Database is SQLite by default.
+`
+		return textResult(guide), nil, nil
+	})
+
 	return srv, nil
+}
+
+func textResult(text string) *mcpsdk.CallToolResult {
+	return &mcpsdk.CallToolResult{
+		Content: []mcpsdk.Content{&mcpsdk.TextContent{Text: text}},
+	}
 }
 
 // ServeStdio runs the MCP server over stdio (stdin/stdout).

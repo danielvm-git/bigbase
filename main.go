@@ -286,6 +286,7 @@ func startProxy() {
 		Enabled:   !*mcpDisabled,
 		Port:      *mcpPort,
 		Transport: *mcpTransport,
+		DB:        d,
 	})
 	k.Register(mcpComp)
 
