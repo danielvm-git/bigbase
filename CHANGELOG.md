@@ -1,3 +1,17 @@
+# [2.23.0](https://github.com/danielvm-git/bigbase/compare/v2.22.0...v2.23.0) (2026-06-19)
+
+
+### Bug Fixes
+
+* **sites:** handle missing columns gracefully in site deletion ([90c4aac](https://github.com/danielvm-git/bigbase/commit/90c4aac4db7030ef8e6047b315daf11224ad0bef))
+
+
+### Features
+
+* **mcp:** register knowledge tools — list_services, get_service_docs, get_code_example, list_frameworks ([71a23b5](https://github.com/danielvm-git/bigbase/commit/71a23b54e5e944feeb5932b68bb9055a1ec3b6c4))
+* **mcp:** scaffold component with ping tool ([a069eac](https://github.com/danielvm-git/bigbase/commit/a069eacf8bc473956370e406b3c6320b0122b379))
+* **mcp:** stdio + HTTP transport, ping tool, kernel registration ([0a00872](https://github.com/danielvm-git/bigbase/commit/0a008720c57c132037262c1b98460c407cee4ca5))
+
 # [2.22.0](https://github.com/danielvm-git/bigbase/compare/v2.21.0...v2.22.0) (2026-06-19)
 
 
