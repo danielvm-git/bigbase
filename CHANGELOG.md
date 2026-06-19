@@ -1,3 +1,10 @@
+# [2.25.0](https://github.com/danielvm-git/bigbase/compare/v2.24.0...v2.25.0) (2026-06-19)
+
+
+### Features
+
+* **observability:** add New Relic infrastructure agent setup script ([fa7ad96](https://github.com/danielvm-git/bigbase/commit/fa7ad961bec0859acda43230853a56217d31ac3d))
+
 # [2.24.0](https://github.com/danielvm-git/bigbase/compare/v2.23.0...v2.24.0) (2026-06-19)
 
 
