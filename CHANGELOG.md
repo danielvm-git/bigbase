@@ -1,3 +1,10 @@
+## [2.26.1](https://github.com/danielvm-git/bigbase/compare/v2.26.0...v2.26.1) (2026-06-19)
+
+
+### Bug Fixes
+
+* **deploy,monitoring:** fix Python deploys on Ubuntu 24.04 and alert checker column ([09d8015](https://github.com/danielvm-git/bigbase/commit/09d8015896eba91c2487c87bbeca8a8ad554810b))
+
 # [2.26.0](https://github.com/danielvm-git/bigbase/compare/v2.25.0...v2.26.0) (2026-06-19)
 
 
