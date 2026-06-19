@@ -1,3 +1,10 @@
+# [2.20.0](https://github.com/danielvm-git/bigbase/compare/v2.19.0...v2.20.0) (2026-06-19)
+
+
+### Features
+
+* **sites,deploy:** add deploy cleanup hook for site deletion ([a24fbee](https://github.com/danielvm-git/bigbase/commit/a24fbeeac9587733e366b763677377cf8791254d))
+
 # [2.19.0](https://github.com/danielvm-git/bigbase/compare/v2.18.1...v2.19.0) (2026-06-19)
 
 
