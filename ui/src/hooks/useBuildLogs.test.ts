@@ -28,7 +28,7 @@ describe('useBuildLogs', () => {
 
     expect(result.current.lines).toEqual(['Step 1: cloning', 'Step 2: installing'])
     expect(result.current.error).toBeNull()
-    expect(fetchSpy).toHaveBeenCalledWith('/api/deployments/dep-123/logs')
+    expect(fetchSpy).toHaveBeenCalledWith('/api/deploy/dep-123/logs')
   })
 
   it('handles fetch errors', async () => {

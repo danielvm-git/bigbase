@@ -21,7 +21,7 @@ export function useBuildLogs(deploymentId: string) {
     setError(null)
 
     try {
-      const res = await fetch(`/api/deployments/${deploymentId}/logs`)
+      const res = await fetch(`/api/deploy/${deploymentId}/logs`)
       const data = await res.json()
 
       if (!res.ok) {
