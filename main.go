@@ -23,6 +23,7 @@ import (
 	"github.com/danielvm/bigbase/components/functions"
 	"github.com/danielvm/bigbase/components/git"
 	"github.com/danielvm/bigbase/components/github"
+	"github.com/danielvm/bigbase/components/mcp"
 	"github.com/danielvm/bigbase/components/messaging"
 	"github.com/danielvm/bigbase/components/monitoring"
 	"github.com/danielvm/bigbase/components/proxy"
@@ -104,6 +105,9 @@ func main() {
 	logger := slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: slog.LevelWarn}))
 	k := kernel.New(logger)
 
+	// Register all components for discovery (CLI listing)
+	k.Register(mcp.New(mcp.Options{}))
+
 	if err := k.Start(); err != nil {
 		logger.Error("failed to start kernel", "error", err)
 		os.Exit(1)
@@ -142,6 +146,9 @@ func startProxy() {
 	corsOrigins := serveFS.String("cors-allowed-origins", "", "Comma-separated list of allowed CORS origins (empty = CORS disabled)")
 	postLoginRedirect := serveFS.String("auth-post-login-redirect", "/admin/", "Post-login redirect URL for OAuth callbacks")
 	spaOriginAllowlist := serveFS.String("auth-spa-origin-allowlist", "", "Comma-separated list of allowed SPA origins for OAuth token delivery (empty = disabled)")
+	mcpDisabled := serveFS.Bool("mcp-disabled", false, "Disable MCP server")
+	mcpPort := serveFS.Int("mcp-port", 3900, "MCP server HTTP port")
+	mcpTransport := serveFS.String("mcp-transport", "http", "MCP transport (stdio, http)")
 	_ = serveFS.Parse(os.Args[2:])
 
 	googleID := config.FlagOrEnv(*googleClientID, "GOOGLE_CLIENT_ID")
@@ -273,6 +280,14 @@ func startProxy() {
 	k.Register(msgComp)
 	k.Register(depComp)
 	k.Register(mComp)
+
+	mcpComp := mcp.New(mcp.Options{
+		Logger:    logger,
+		Enabled:   !*mcpDisabled,
+		Port:      *mcpPort,
+		Transport: *mcpTransport,
+	})
+	k.Register(mcpComp)
 
 	// orgBridge reads auth.OrgIDFromContext and auth.UserRoleFromContext (set by
 	// authComp.Middleware) and bridges them to api.WithOrgID / api.WithUserRole so

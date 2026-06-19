@@ -1,9 +1,8 @@
 type: session-state
 context: infra
-active_flow: null
-active_epic_id: null
-active_story_id: null
-active_bug_id: null
+active_flow: build_epic
+active_epic_id: e38
+active_story_id: e38s01
 release:
   target_version: 2.12.0
   migration:
@@ -18,24 +17,29 @@ metrics:
   epics_completed: 6
   stories_completed: 17
   bcps_per_hour: 5.7
-  story_start: '2026-06-19T17:30:00Z'
-  story_end: '2026-06-19T16:11:25Z'
-epic_cycle: {}
+  story_start: '2026-06-19T12:34:00Z'
+  story_end: null
+epic_cycle:
+  step: 8
+  current_step: release-branch
+  next_skill: release-branch
+  completed_steps:
+    - survey-context
+    - plan-work
+    - kickoff-branch
+    - develop-tdd
+    - verify-work
+    - audit-code
+    - commit-message
+  story_bcps: 3
 bug_cycle: {}
 git:
-  branch: main
-  hash: f0489f4
+  branch: feat/e38-mcp-server
+  hash: d57affb
+  worktree: ../feat/e38-mcp-server
 handoff:
-  last_step_completed: 'release-branch: epic e36 complete, all 4 stories landed, capsule
-    archived'
+  last_step_completed: "kickoff-branch — clean baseline, worktree ready"
   open_decisions: []
-  next_skill: survey-context
-  summary: 'Auth roadmap complete: 5 epics (e31-e35), 17 stories, 7 PRs merged.
-
-    CORS, OAuth SPA, logout, OTP, magic link, user management, SDK (6 packages),
-
-    UI components (Svelte), phone auth, anonymous token, OAuth popup.
-
-    '
-  context: Epic e36 Delete Deployed Site complete. Backend DELETE + deploy cleanup
-    + UI delete + E2E coverage. Lint baseline bug BUG-2026-06-19T131025 still open.
+  next_skill: develop-tdd
+  summary: 'Building e38 — MCP Server for agent-native platform education'
+  context: Step 3 done. Worktree at ../feat/e38-mcp-server on feat/e38-mcp-server branch. Next: develop-tdd for e38s01 tasks.
