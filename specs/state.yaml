@@ -2,7 +2,7 @@ type: session-state
 context: infra
 active_flow: build_epic
 active_epic_id: e38
-active_story_id: e38s02
+active_story_id: e38s03
 release:
   target_version: 2.12.0
   migration:
@@ -15,31 +15,26 @@ metrics:
   session_end: '2026-06-19T17:00:00Z'
   cycle_minutes: 315
   epics_completed: 6
-  stories_completed: 18
+  stories_completed: 19
   bcps_per_hour: 5.7
-  story_start: '2026-06-19T17:15:00Z'
+  story_start: '2026-06-19T17:45:00Z'
   story_end: null
 epic_cycle:
-  step: 8
-  current_step: release-branch
-  next_skill: release-branch
+  step: 3
+  current_step: kickoff-branch
+  next_skill: kickoff-branch
   completed_steps:
     - survey-context
     - plan-work
-    - kickoff-branch
-    - develop-tdd
-    - verify-work
-    - audit-code
-    - commit-message
-  story_bcps: 4
+  story_bcps: 3
 bug_cycle: {}
 git:
-  branch: feat/e38s02-knowledge
-  hash: d3f4ee1
-  worktree: ../feat/e38s02-knowledge
+  branch: main
+  hash: a1410df
+  worktree: null
 handoff:
-  last_step_completed: "build-epic e38s01 released — MCP Server Foundation merged to main"
+  last_step_completed: "e38s02 released — knowledge tools merged to main"
   open_decisions: []
-  next_skill: survey-context
-  summary: 'Building e38s02 — Platform Knowledge Tools'
-  context: e38s01 done and merged to main. Starting e38s02 (5 tasks, BCP=4).
+  next_skill: kickoff-branch
+  summary: 'Building e38s03 — Deploy Workflow Tools'
+  context: e38s02 done. Starting e38s03 (5 tasks, BCP=3). Needs DB and deploy component integration.

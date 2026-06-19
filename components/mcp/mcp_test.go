@@ -146,3 +146,69 @@ func TestKnowledgeTools(t *testing.T) {
 		})
 	}
 }
+
+func TestDeployTools(t *testing.T) {
+	c := mcp.New(mcp.Options{Enabled: true})
+	srv, err := c.NewMCPServer()
+	if err != nil {
+		t.Fatalf("NewMCPServer: %v", err)
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	t1, t2 := mcpsdk.NewInMemoryTransports()
+	if _, err := srv.Connect(ctx, t1, nil); err != nil {
+		t.Fatalf("server.Connect: %v", err)
+	}
+
+	client := mcpsdk.NewClient(&mcpsdk.Implementation{Name: "test", Version: "1.0"}, nil)
+	session, err := client.Connect(ctx, t2, nil)
+	if err != nil {
+		t.Fatalf("client.Connect: %v", err)
+	}
+	defer session.Close()
+
+	// deploy_guide is pure knowledge — should always work
+	t.Run("deploy_guide", func(t *testing.T) {
+		result, err := session.CallTool(ctx, &mcpsdk.CallToolParams{Name: "deploy_guide"})
+		if err != nil {
+			t.Fatalf("deploy_guide: %v", err)
+		}
+		tc, _ := result.Content[0].(*mcpsdk.TextContent)
+		if tc.Text == "" {
+			t.Error("expected non-empty guide")
+		}
+		t.Logf("deploy_guide: %d chars", len(tc.Text))
+	})
+
+	// list_repos, deploy_site, get_deploy_status, get_deploy_logs
+	// return friendly messages when DB not connected
+	for _, tool := range []string{"list_repos", "get_deploy_status", "get_deploy_logs"} {
+		t.Run(tool+"_no_db", func(t *testing.T) {
+			result, err := session.CallTool(ctx, &mcpsdk.CallToolParams{Name: tool})
+			if err != nil {
+				t.Fatalf("%s: %v", tool, err)
+			}
+			tc, _ := result.Content[0].(*mcpsdk.TextContent)
+			// Should return a helpful message, not crash
+			if tc.Text == "" {
+				t.Errorf("%s: expected message", tool)
+			}
+		})
+	}
+
+	t.Run("deploy_site_no_db", func(t *testing.T) {
+		result, err := session.CallTool(ctx, &mcpsdk.CallToolParams{
+			Name:      "deploy_site",
+			Arguments: map[string]interface{}{"repo_id": "test"},
+		})
+		if err != nil {
+			t.Fatalf("deploy_site: %v", err)
+		}
+		tc, _ := result.Content[0].(*mcpsdk.TextContent)
+		if tc.Text == "" {
+			t.Error("deploy_site: expected message")
+		}
+	})
+}
