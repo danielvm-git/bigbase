@@ -15,7 +15,7 @@ architecture. Stack: Go 1.22+ / ECC Kernel + Plugins / SQLite + PostgreSQL.
 | Build  | `go build -o bigbase .` |
 | Lint   | `golangci-lint run ./...` |
 | Test coverage | `go test -coverprofile=coverage.out ./... && go tool cover -func=coverage.out` |
-| Setup  | `bash scripts/setup.sh` (idempotent) |
+| Setup  | `bash scripts/setup.sh` (idempotent) + `bash scripts/setup-newrelic.sh` (monitoring) |
 
 ## Architecture
 ECC pattern: Kernel (discovery, lifecycle, event bus, config merge) + pluggable
@@ -50,6 +50,8 @@ via embedded relay (no user-owned Google app required).
 | List components | `go run . components list` |
 | Monitoring | `curl http://localhost:9999/api/monitoring/logs` (auth required) |
 | Metrics (Prometheus) | `curl http://localhost:9999/api/monitoring/metrics/prometheus` |
+| New Relic (host metrics) | `bash scripts/setup-newrelic.sh` (requires API key + account ID) |
+| New Relic dashboard | https://one.newrelic.com > Infrastructure > Hosts |
 
 Logging is structured JSON via `slog.JSONHandler` in serve mode.
 CLI output uses plain text. All components log with `key=value` pairs.
