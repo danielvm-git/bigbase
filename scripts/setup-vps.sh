@@ -57,7 +57,14 @@ apt-get install -y -qq \
   ufw \
   caddy \
   rsync \
-  ca-certificates
+  ca-certificates \
+  python3 \
+  python3-pip
+
+# Create python symlink (Ubuntu 24.04+ only ships python3)
+if ! command -v python &>/dev/null; then
+  ln -sf "$(which python3)" /usr/local/bin/python
+fi
 
 # Node.js 24 LTS for Vite/npm site builds (Vite 8: Node >= 20.19; platform standard is 24 LTS)
 NODE_MAJOR=0

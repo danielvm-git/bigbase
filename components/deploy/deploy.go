@@ -652,7 +652,11 @@ func (d *Deploy) startApp(ctx context.Context, buildDir string, deploy *Deployme
 		cmd = exec.CommandContext(ctx, filepath.Join(buildDir, "app"))
 		cmd.Dir = buildDir
 	case AppPython:
-		cmd = exec.CommandContext(ctx, "python", "app.py")
+		pythonBin := "python3"
+		if _, err := exec.LookPath(pythonBin); err != nil {
+			pythonBin = "python"
+		}
+		cmd = exec.CommandContext(ctx, pythonBin, "app.py")
 		cmd.Dir = buildDir
 	}
 
