@@ -45,13 +45,14 @@ via embedded relay (no user-owned Google app required).
 | What | Command |
 |------|---------|
 | View logs | `go run . serve --port 9999` then curl `/health` (JSON to stdout) |
-| Health check | `curl http://localhost:9999/health` |
+| Health check | `bash scripts/health-check.sh` or `curl http://localhost:9999/health` |
 | Component status | `go run . status` |
 | List components | `go run . components list` |
 | Monitoring | `curl http://localhost:9999/api/monitoring/logs` (auth required) |
+| Metrics (Prometheus) | `curl http://localhost:9999/api/monitoring/metrics/prometheus` |
 
 Logging is structured JSON via `slog.JSONHandler` in serve mode.
-CLI output uses plain text.
+CLI output uses plain text. All components log with `key=value` pairs.
 
 ## Specs (bigpowers YAML)
 
