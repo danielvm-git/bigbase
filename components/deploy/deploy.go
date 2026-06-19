@@ -532,6 +532,13 @@ func (d *Deploy) runDeployment(deploy *Deployment, buildDir, repoName string) {
 			deploy.AppType = AppStatic
 			_, _ = d.db.ExecContext(context.Background(),
 				"UPDATE deployments SET app_type = ? WHERE id = ?", string(AppStatic), deploy.ID)
+		} else if _, err := os.Stat(filepath.Join(buildDir, "build")); err == nil {
+			// SvelteKit adapter-static outputs to build/ by default
+			serveDir = filepath.Join(buildDir, "build")
+			appType = AppStatic
+			deploy.AppType = AppStatic
+			_, _ = d.db.ExecContext(context.Background(),
+				"UPDATE deployments SET app_type = ? WHERE id = ?", string(AppStatic), deploy.ID)
 		}
 	}
 

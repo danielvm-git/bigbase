@@ -1506,3 +1506,94 @@ func TestDeleteSiteCleanup(t *testing.T) {
 		t.Fatalf("unrelated deployment should remain, got %d", count)
 	}
 }
+
+func createSvelteKitStaticRepo(t *testing.T, database *db.DB, repoID, gitDir string) string {
+	t.Helper()
+
+	_, _ = database.ExecContext(context.Background(),
+		`CREATE TABLE IF NOT EXISTS git_repos (
+			id TEXT PRIMARY KEY, name TEXT NOT NULL UNIQUE, owner_id INTEGER NOT NULL,
+			private INTEGER NOT NULL DEFAULT 1, default_branch TEXT NOT NULL DEFAULT 'main',
+			description TEXT DEFAULT '', created_at TEXT NOT NULL DEFAULT (datetime('now'))
+		)`)
+
+	_, err := database.ExecContext(context.Background(),
+		"INSERT INTO git_repos (id, name, owner_id, private, default_branch, description, created_at) VALUES (?, ?, ?, ?, ?, ?, datetime('now'))",
+		repoID, repoID+"-name", 0, 1, "main", "sveltekit static repo")
+	if err != nil {
+		t.Fatalf("insert repo: %v", err)
+	}
+
+	repoPath := filepath.Join(gitDir, repoID+".git")
+	mustRun(t, "git", "init", "--bare", "-b", "main", repoPath)
+
+	sourceDir := t.TempDir()
+	mustRun(t, "git", "init", "-b", "main", sourceDir)
+	mustRun(t, "git", "-C", sourceDir, "config", "user.email", "test@test.com")
+	mustRun(t, "git", "-C", sourceDir, "config", "user.name", "test")
+
+	// Simulate SvelteKit with adapter-static: package.json + build script that outputs to build/
+	_ = os.WriteFile(filepath.Join(sourceDir, "package.json"), []byte(`{
+		"name": "sveltekit-static",
+		"private": true,
+		"scripts": {
+			"build": "mkdir -p build && echo '<h1>SvelteKit</h1>' > build/index.html"
+		}
+	}`), 0644)
+
+	mustRun(t, "git", "-C", sourceDir, "add", ".")
+	mustRun(t, "git", "-C", sourceDir, "commit", "-m", "initial commit")
+	mustRun(t, "git", "-C", sourceDir, "remote", "add", "origin", repoPath)
+	mustRun(t, "git", "-C", sourceDir, "push", "-u", "origin", "main")
+
+	return repoID
+}
+
+func TestSvelteKitBuildOutputDetected(t *testing.T) {
+	if _, err := exec.LookPath("npm"); err != nil {
+		t.Skip("npm not in PATH")
+	}
+
+	_, handler, database, gitDir := setupDeploy(t)
+	repoID := createSvelteKitStaticRepo(t, database, "repo-sk-static", gitDir)
+
+	var buf bytes.Buffer
+	_ = json.NewEncoder(&buf).Encode(map[string]string{"repo_id": repoID})
+	req := httptest.NewRequest("POST", "/api/deploy", &buf)
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+	if w.Code != http.StatusCreated {
+		t.Fatalf("expected 201, got %d: %s", w.Code, w.Body.String())
+	}
+
+	var created map[string]any
+	if err := json.NewDecoder(w.Body).Decode(&created); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	depID, _ := created["id"].(string)
+
+	// Wait for terminal state
+	waitForDeploymentTerminal(t, handler, depID, 30*time.Second)
+
+	// Fetch the deployment and verify it's running as static
+	getReq := httptest.NewRequest("GET", "/api/deploy/"+depID, nil)
+	getW := httptest.NewRecorder()
+	handler.ServeHTTP(getW, getReq)
+	if getW.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d", getW.Code)
+	}
+
+	var got map[string]any
+	if err := json.NewDecoder(getW.Body).Decode(&got); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+
+	if got["status"] != "running" {
+		t.Fatalf("expected status 'running', got '%s'", got["status"])
+	}
+	appType, _ := got["app_type"].(string)
+	if appType != "static" {
+		t.Fatalf("expected app_type 'static' for SvelteKit build/ output, got '%s'", appType)
+	}
+}
