@@ -1,0 +1,105 @@
+type: epic-shard
+context: domain
+id: e39
+title: "Multi-User Platform — Admin panel, role switching, friend invites"
+wsjf: 3.6
+wsjf_rationale: "BV=8(significant: unlocks multi-user platform usage; without this BigBase is effectively single-user despite multi-tenancy backend) TC=5(blocks sharing and adoption; defers milestone if skipped) RR=5(moderate: reduces adoption risk, prevents confusion between backend capability and user-facing availability) / JS=5(~1 week: admin UI + invite UX + role switching, wiring existing e23 backend)"
+status: planned
+depends_on:
+  - e23
+  - e04
+  - e17
+covers:
+  - ui/
+  - components/auth/
+stories:
+  - id: e39s01
+    title: "Admin User Management Dashboard"
+    status: planned
+    bcps: 3
+    wsjf: 3.6
+    wsjf_rationale: "BV=8 TC=5 RR=5 / JS=5"
+    tasks:
+      - desc: "Admin UI page — list all users with org, role, last login, deployment count"
+        notes: |
+          ui/src/routes/admin/users/ — new page listing all users from GET /api/admin/users.
+          Columns: name, email, org, role (admin/user), deployments count, last login, status.
+          Search/filter by email or org. Sortable columns.
+          Backend: new GET /api/admin/users endpoint (admin-only, returns 403 for non-admins).
+          Reuse e23 org membership data.
+        verify: "cd ui && npm run build && go test ./components/auth/ -run TestAdminUsers -v"
+      - desc: "Set user role — promote/demote between admin and user from admin panel"
+        notes: |
+          Admin panel: dropdown or toggle on each user row to switch role (admin ↔ user).
+          Backend: PATCH /api/admin/users/:id with {role: "admin"|"user"}.
+          Cannot demote self (the last admin). Audit log entry on role change.
+          JWT role claim updates on next login (or force token refresh).
+        verify: "go test ./components/auth/ -run TestSetUserRole -v"
+      - desc: "Admin overview widget — total users, active this week, pending invites, deployments total"
+        notes: |
+          Admin dashboard home (or top of users page): summary cards.
+          Stats from DB queries: COUNT users, COUNT users WHERE last_login > 7 days ago,
+          COUNT invites WHERE status='pending', COUNT deployments.
+          Refresh on page load. Add to existing admin dashboard if e17 enhanced admin UI exists.
+        verify: "cd ui && npm run build"
+
+  - id: e39s02
+    title: "Friend Invitation Flow — email invite, accept, onboard"
+    status: planned
+    bcps: 3
+    wsjf: 3.6
+    wsjf_rationale: "BV=8 TC=5 RR=3 / JS=4.5"
+    tasks:
+      - desc: "Invite friends UI — email input, role selector, org context; backend sends invite email"
+        notes: |
+          UI: modal or form on admin users page: "Invite friend" button.
+          Fields: email (required), role (user/admin, default: user), personal message (optional).
+          Backend: POST /api/invites {email, role, org_id, message}.
+          If org_id not specified, uses inviter's org. Generates invite token (JWT with 7-day expiry).
+          Sends email via messaging component with accept link: bigbase.click/accept?token=xxx.
+          Uses e23s02 invite-by-email foundation.
+        verify: "go test ./components/auth/ -run TestInviteFlow -v"
+      - desc: "Accept invite page — token validation, register or login, auto-join org"
+        notes: |
+          UI: route /accept?token=xxx — validates JWT token, shows org name and inviter.
+          If not registered: signup form pre-filled with invited email, on register auto-joins org.
+          If already registered: "Join {org}" button, one click, redirects to dashboard.
+          Backend: POST /api/invites/accept {token} — validates, adds user to org, marks invite accepted.
+          Returns JWT with updated org membership.
+        verify: "go test ./components/auth/ -run TestAcceptInvite -v"
+      - desc: "Pending invites list — resend, revoke from admin panel"
+        notes: |
+          Admin users page: tab or section for pending invites.
+          Shows: email, invited by, date, role, status. Actions: Resend (new email), Revoke (cancel).
+          Backend: GET /api/invites (admin-only), POST /api/invites/:id/resend, DELETE /api/invites/:id.
+        verify: "go test ./components/auth/ -run TestInviteManagement -v"
+
+  - id: e39s03
+    title: "Role Switching — enter as admin or user, per-user workspaces"
+    status: planned
+    bcps: 2
+    wsjf: 4.0
+    wsjf_rationale: "BV=5 TC=5 RR=3 / JS=3.25"
+    tasks:
+      - desc: "Admin ↔ User view toggle — switch perspective in UI without re-login"
+        notes: |
+          UI: dropdown in header/navbar: "Viewing as: Admin" with option to switch to "User".
+          Switching changes the UI: admin sees all users/deployments, user sees only their org.
+          Stores preference in session/local storage. Does NOT change JWT role — purely UI filter.
+          Admin can "impersonate" a specific user's view from the users list.
+          If admin has no personal deployments, show "Your deploy workspace is empty" as user view.
+        verify: "cd ui && npm run build"
+      - desc: "User workspace — scoped repos and deployments per user/org"
+        notes: |
+          When viewing as user: repo list shows only repos the user owns or org repos.
+          Deployment list filtered by user's org. Create deployment scoped to user's org.
+          Backend: already done in e23s03 (resource isolation). Add UI filtering: pass org_id query param.
+          User profile page: show username, email, org, deployment count, account age.
+        verify: "go test ./components/auth/ -run TestUserWorkspace -v"
+      - desc: "First-user bootstrap — first user auto-admin, subsequent users default to user role"
+        notes: |
+          On first-ever registration (users table empty), auto-assign admin role.
+          All subsequent registrations default to user role.
+          Migration: existing users get admin role backfill.
+          Config flag --require-invite (default: false) — when true, only invited emails can register.
+        verify: "go test ./components/auth/ -run TestFirstUserAdmin -v"

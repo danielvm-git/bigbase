@@ -1,8 +1,8 @@
 type: session-state
 context: infra
-active_flow: build_epic
-active_epic_id: e36
-active_story_id: e36s02
+active_flow: null
+active_epic_id: null
+active_story_id: null
 active_bug_id: null
 release:
   target_version: 2.12.0
@@ -15,26 +15,21 @@ metrics:
   session_start: '2026-06-18T12:45:00Z'
   session_end: '2026-06-18T18:00:00Z'
   cycle_minutes: 315
-  epics_completed: 5
+  epics_completed: 6
   stories_completed: 17
   bcps_per_hour: 5.7
   story_start: '2026-06-19T17:30:00Z'
-epic_cycle:
-  step: 3
-  current_step: kickoff-branch
-  next_skill: develop-tdd
-  completed_steps:
-  - survey-context
-  - plan-work
-  story_bcps: 3
+  story_end: '2026-06-19T16:11:25Z'
+epic_cycle: {}
 bug_cycle: {}
 git:
   branch: main
-  hash: 8096f05
+  hash: f0489f4
 handoff:
-  last_step_completed: build-epic step 2 plan-work for e36s02
+  last_step_completed: 'release-branch: epic e36 complete, all 4 stories landed, capsule
+    archived'
   open_decisions: []
-  next_skill: develop-tdd
+  next_skill: survey-context
   summary: 'Auth roadmap complete: 5 epics (e31-e35), 17 stories, 7 PRs merged.
 
     CORS, OAuth SPA, logout, OTP, magic link, user management, SDK (6 packages),
@@ -42,6 +37,5 @@ handoff:
     UI components (Svelte), phone auth, anonymous token, OAuth popup.
 
     '
-  context: 'e36s02: Add DeleteSiteDeployments() to Deploy, DeleteSiteCleanup callback
-    to Sites.Options, wire in main.go. Tests cover running/failed/legacy deployment
-    cleanup.'
+  context: Epic e36 Delete Deployed Site complete. Backend DELETE + deploy cleanup
+    + UI delete + E2E coverage. Lint baseline bug BUG-2026-06-19T131025 still open.

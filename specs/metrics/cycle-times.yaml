@@ -1,2 +1,24 @@
-# Schema: id, bcps, start (ISO 8601), end (ISO 8601), cycle_minutes, bcp_per_hour
-stories: []
+- id: e36s01
+  bcps: 3
+  start: '2026-06-18T21:28:17Z'
+  end: '2026-06-19T00:00:00Z'
+  cycle_minutes: 152
+  bcp_per_hour: 1.2
+- id: e36s02
+  bcps: 3
+  start: '2026-06-19T18:10:00Z'
+  end: '2026-06-19T18:10:00Z'
+  cycle_minutes: 45
+  bcp_per_hour: 4.0
+- id: e36s03
+  bcps: 2
+  start: '2026-06-19T18:10:00Z'
+  end: '2026-06-19T18:10:00Z'
+  cycle_minutes: 45
+  bcp_per_hour: 2.7
+- id: e36s04
+  bcps: 1
+  start: '2026-06-19T18:10:00Z'
+  end: '2026-06-19T18:10:00Z'
+  cycle_minutes: 45
+  bcp_per_hour: 1.3

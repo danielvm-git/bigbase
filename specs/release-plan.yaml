@@ -160,9 +160,9 @@ epics:
   - id: e36
     title: Delete Deployed Site
     wsjf: 6.0
-    file: epics/e36-delete-site.yaml
+    file: epics/archive/e36-delete-site.yaml
     mode: flat
-    status: pending
+    status: done
   - id: e37
     title: SvelteKit Deployment — static (adapter-static) & SSR (adapter-node)
     wsjf: 4.0
