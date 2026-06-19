@@ -1,0 +1,116 @@
+type: epic-shard
+context: domain
+id: e36
+title: Delete Deployed Site
+wsjf: 6.0
+wsjf_rationale: "BV=8(removes stale production sites and accidental deploys from the console) TC=5(active admin pain visible in Sites grid) RR=5(reduces orphan processes, host routes, domains, and logs) / JS=3(~2-3 days: backend cascade + deploy cleanup + UI confirmation/tests)"
+status: pending
+depends_on:
+  - e15
+  - e28
+covers:
+  - components/sites/sites.go
+  - components/sites/sites_test.go
+  - components/deploy/deploy.go
+  - components/deploy/deploy_test.go
+  - ui/src/pages/DeployPage.tsx
+  - ui/src/pages/SiteDetailPage.tsx
+  - ui/src/components/SiteCard.tsx
+  - ui/src/lib/sitesData.ts
+stories:
+  - id: e36s01
+    title: Backend DELETE /api/sites/:id with safe cascade cleanup
+    status: done
+    bcps: 3
+    wsjf: 6.0
+    wsjf_rationale: "BV=8(site deletion must be real, not just hidden from UI) TC=5(active console cleanup need) RR=5(removes orphan records/hosts/logs) / JS=3"
+    spec: e36s01-delete-site-backend.md
+    tasks_file: e36s01-tasks.yaml
+    tasks:
+      - desc: "Add RED route/status tests for missing site and active deployment guard"
+        status: done
+        notes: "components/sites/sites_test.go: added TestDeleteSiteNotFound and TestDeleteSiteActiveDeploymentConflict. Treat pending, building, and running as active because deploy cleanup is e36s02."
+        verify: "go test ./components/sites/ -run TestDeleteSite -v"
+      - desc: "Add RED cascade tests for canonical site id, legacy git_repo_id alias, and git_repos preservation"
+        status: done
+        notes: "Seed sites, git_repos, site_domains, site_request_logs, terminal deployment rows, and another same-repo site deployment; assert DELETE returns 204, preserves git_repos, and does not delete another site's deployment."
+        verify: "go test ./components/sites/ -run TestDeleteSite -v"
+      - desc: "Route DELETE /api/sites/:id in handleSiteByID before the generic method guard"
+        status: done
+        notes: "Only root site path DELETE routes to deleteSite; /deploy, /logs, and /domains subroutes keep their existing method-specific routing."
+        verify: "go test ./components/sites/ -run TestDeleteSiteNotFound -v"
+      - desc: "Implement site alias resolution helper and active deployment guard for pending, building, and running statuses"
+        status: done
+        notes: "Resolve canonical site row by sites.id or git_repo_id. Query deployments by site_id OR empty-site_id repo_id fallback. Return 409 before any destructive write if active rows exist."
+        verify: "go test ./components/sites/ -run TestDeleteSiteActiveDeploymentConflict -v"
+      - desc: "Implement idempotent cascade deletes for terminal data: site_domains, site_request_logs, deployments, then sites; return generic client errors"
+        status: done
+        notes: "Use parameterized SQL. Delete by canonical site id and empty-site_id git_repo_id fallback for legacy deployments. Log DB errors internally and return {error: internal error}."
+        verify: "go test ./components/sites/ -run TestDeleteSiteCascade -v"
+      - desc: "Run focused regression tests for Sites and Deploy deletion/domain/log contracts"
+        status: done
+        notes: "Confirms new route does not regress domain subroutes, request log routes, or existing deployment deletion semantics."
+        verify: "go test ./components/sites/ ./components/deploy/ -run 'TestDeleteSite|TestCustomDomain|TestDeleteDeployment' -v"
+
+  - id: e36s02
+    title: Deploy component cleanup hook for deleted sites
+    status: pending
+    bcps: 3
+    wsjf: 5.0
+    wsjf_rationale: "BV=8(deleted sites must stop serving) TC=5(active production cleanup) RR=5(prevents orphan processes/routes) / JS=3"
+    tasks:
+      - desc: >
+          Extract deployment deletion internals into a reusable cleanup path and invoke it for all deployments
+          belonging to a deleted site. The cleanup must terminate running app processes, close static servers,
+          unregister deployment hosts, remove build directories, evict deploy/runtime logs, and delete deployment
+          DB rows without duplicating the HTTP handler logic.
+        notes: |
+          components/deploy/deploy.go:
+          - Refactor handleDeleteDeployment into an internal deleteDeployment(ctx, id) helper.
+          - Add a site-level cleanup entry point that accepts site_id + repo_id fallback and loops matching deployments.
+          - Wire through ECC-friendly composition or event bus from main.go; do not import deploy from sites.
+          - Preserve existing e28 behavior: DELETE /api/deploy/:id still returns 409 for pending/building deployments.
+          - Running deployments are allowed to be deleted and must stop serving immediately.
+        verify: "go test ./components/deploy/ -run 'TestDeleteDeployment|TestDeleteSiteCleanup' -v"
+
+  - id: e36s03
+    title: Sites UI delete action with confirmation and optimistic refresh
+    status: pending
+    bcps: 2
+    wsjf: 6.5
+    wsjf_rationale: "BV=8(admin can remove the stale cards shown in Sites grid) TC=5(active user request) RR=3(UI-only risk reduction) / JS=2"
+    tasks:
+      - desc: >
+          Add a delete action for each site in the Sites grid and a danger-zone delete action on SiteDetailPage.
+          The action must show a confirmation that names the site and warns that deployments, domains, and logs
+          will be removed. On confirm, call DELETE /api/sites/{site.id}, remove the card or redirect back to
+          /deploy, and show a friendly error for 404/409/500. In preview mode, delete only from local state.
+        notes: |
+          ui/src/components/SiteCard.tsx and/or ui/src/pages/DeployPage.tsx:
+          - Avoid making the whole Link card swallow the delete button click; stop propagation or move actions outside the Link.
+          - Disable or explain deletion while latest deployment is pending/building if backend returns 409.
+          - Keep keyboard access and an accessible label such as "Delete site <name>".
+          ui/src/pages/SiteDetailPage.tsx:
+          - Add a Settings/Danger Zone section or a compact danger card below tabs.
+          - After successful deletion, navigate to /deploy.
+        verify: "cd ui && npx vitest run src/pages/DeployPage.test.tsx src/pages/SiteDetailPage.test.tsx && npm run build"
+
+  - id: e36s04
+    title: End-to-end deletion coverage and release notes
+    status: pending
+    bcps: 1
+    wsjf: 6.5
+    wsjf_rationale: "BV=5(proves the user-facing workflow) TC=5(active bug/feature request) RR=3(regression protection) / JS=2"
+    tasks:
+      - desc: >
+          Add an E2E flow that creates or seeds a site, deletes it from the Sites grid, verifies it disappears
+          after refresh, and verifies the site detail URL no longer loads. Document that site deletion removes
+          deployments/domains/logs but leaves the source git repository available for redeploying later.
+        notes: |
+          tests/e2e/sites.spec.ts:
+          - Use isolated test data to avoid deleting real user sites.
+          - Assert confirmation copy includes the site name.
+          - Assert refresh persistence by reloading /deploy after delete.
+          Docs/release notes:
+          - Mention difference between deleting a deployment (history row) and deleting a site (site + all deploy artifacts).
+        verify: "npx playwright test tests/e2e/sites.spec.ts -g 'delete site'"

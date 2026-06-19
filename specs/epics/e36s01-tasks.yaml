@@ -1,0 +1,35 @@
+story_id: e36s01
+title: Backend DELETE /api/sites/:id with safe cascade cleanup
+status: done
+bcps: 3
+tasks:
+  - id: 1
+    description: Add RED route/status tests for missing site and active deployment guard
+    verify: "go test ./components/sites/ -run TestDeleteSite -v"
+    status: done
+    ac: [AC1, AC2]
+  - id: 2
+    description: Add RED cascade tests for canonical site id, legacy git_repo_id alias, and git_repos preservation
+    verify: "go test ./components/sites/ -run TestDeleteSite -v"
+    status: done
+    ac: [AC3, AC4, AC5]
+  - id: 3
+    description: Route DELETE /api/sites/:id in handleSiteByID before the generic method guard
+    verify: "go test ./components/sites/ -run TestDeleteSiteNotFound -v"
+    status: done
+    ac: [AC1]
+  - id: 4
+    description: Implement site alias resolution helper and active deployment guard for pending, building, and running statuses
+    verify: "go test ./components/sites/ -run TestDeleteSiteActiveDeploymentConflict -v"
+    status: done
+    ac: [AC2]
+  - id: 5
+    description: Implement idempotent cascade deletes for terminal data: site_domains, site_request_logs, deployments, then sites; return generic client errors
+    verify: "go test ./components/sites/ -run TestDeleteSiteCascade -v"
+    status: done
+    ac: [AC3, AC4, AC5]
+  - id: 6
+    description: Run focused regression tests for Sites and Deploy deletion/domain/log contracts
+    verify: "go test ./components/sites/ ./components/deploy/ -run 'TestDeleteSite|TestCustomDomain|TestDeleteDeployment' -v"
+    status: done
+    ac: [AC6]
