@@ -320,7 +320,24 @@ bugs:
     date: "2026-06-20"
     severity: high
     priority: high
-    scope: deploy,proxy
+    scope: deploy,proxy,caddy
     summary: Redeployment does not replace static files — old content persists on domain
     file: specs/bugs/BUG-2026-06-20T014500-redeploy-stale-static-files.md
-    status: open
+    status: fixed
+    files_changed:
+      - components/proxy/hosts.go
+      - components/proxy/hosts_test.go
+      - components/deploy/deploy.go
+      - components/deploy/deploy_test.go
+      - /etc/caddy/Caddyfile (VPS)
+    approach: |
+      1. RegisterDeploymentHost replaces existing mapping instead of erroring
+      2. stopDeployment helper + stopPreviousDeployments in Trigger
+      3. deploymentHostMiddleware forwards /api/* to BigBase (SPA support)
+      4. Removed hardcoded Caddy entry for bolao.bigbase.click
+    risk_level: high
+    commit_message: "fix(deploy,proxy): redeployment now replaces previous — no more stale content"
+    regression_guards:
+      - components/deploy/deploy_test.go TestRedeployReplacesPrevious
+      - components/proxy/hosts_test.go TestRegisterDeploymentHostReplacesExisting
+      - components/deploy/deploy_test.go TestDetectAppTypePythonRequirementsOnlyFallsToStatic

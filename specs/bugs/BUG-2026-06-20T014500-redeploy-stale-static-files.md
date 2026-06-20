@@ -94,14 +94,28 @@ Alternatively, add a new method `ReplaceDeploymentHost` that does the same but i
 
 ## Acceptance Criteria
 
-- [ ] Redeploying a site serves new content (verified by asset hash or content check)
-- [ ] Previous deployment's static server is shut down after redeploy
-- [ ] Previous deployment's proxy host mapping is released
-- [ ] Previous deployment's DB status updated to `"replaced"`
-- [ ] Old ports are freed / not leaked
-- [ ] All existing tests pass
-- [ ] Regression: fresh deployments (no prior deployment) still work
+- [x] Redeploying a site serves new content (verified by asset hash or content check)
+- [x] Previous deployment's static server is shut down after redeploy
+- [x] Previous deployment's proxy host mapping is released
+- [x] Previous deployment's DB status updated to `"replaced"`
+- [x] Old ports are freed / not leaked
+- [x] All existing tests pass
+- [x] Regression: fresh deployments (no prior deployment) still work
 
 ## Resolution
 
-<!-- filled in by validate-fix -->
+**Fixed:** 2026-06-20
+**Root cause confirmed:** `RegisterDeploymentHost` rejected re-registration of an existing host with a different port (returned "host already registered" error). The error was silently logged as Warn, so new deployments appeared to succeed in the UI but the proxy continued routing to the old port. Ghost deployments accumulated on unreachable ports.
+**Fix applied:**
+1. `RegisterDeploymentHost` in proxy now replaces existing host→port mapping instead of erroring
+2. New `stopDeployment` helper kills process, shuts down server, unregisters host, marks `replaced`
+3. `stopPreviousDeployments` called from `Trigger` stops old deployments for same site/repo before creating new one
+4. `deploymentHostMiddleware` forwards `/api/*` paths to BigBase (allows SPA same-origin API calls through dynamic proxy)
+5. Hardcoded Caddy entry for `bolao.bigbase.click` removed — uses `*.bigbase.click` wildcard + dynamic proxy
+**Hardening added:**
+- `TestRedeployReplacesPrevious` — integration test deploying twice to same site, verifying proxy mapping replacement and status change
+- `TestRegisterDeploymentHostReplacesExisting` — direct test that re-registration succeeds and updates port
+- `TestDetectAppTypePythonRequirementsOnlyFallsToStatic` — prevents false Python detection
+- `deploymentHostMiddleware` API passthrough — prevents SPA API routing failures
+**Evidence:** all tests pass (`go test ./... -timeout 180s`)
+**Commit:** `fix(deploy,proxy): redeployment now replaces previous — no more stale content (#35)` + `fix(proxy): forward /api/* to BigBase for deployment hosts; export hostInfo`
