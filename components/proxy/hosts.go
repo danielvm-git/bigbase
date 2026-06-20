@@ -29,9 +29,8 @@ func (p *Proxy) RegisterDeploymentHost(host string, port int, siteID string) err
 	if p.deployHosts == nil {
 		p.deployHosts = make(map[string]hostInfo)
 	}
-	if existing, ok := p.deployHosts[host]; ok && existing.port != port {
-		return fmt.Errorf("host %q already registered", host)
-	}
+	// Allow replacing an existing registration — subsequent deployments for the
+	// same host update the port in place, enabling zero-downtime redeployment.
 	p.deployHosts[host] = hostInfo{port: port, siteID: siteID}
 	return nil
 }

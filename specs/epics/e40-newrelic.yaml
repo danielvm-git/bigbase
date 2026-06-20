@@ -1,0 +1,45 @@
+type: epic-shard
+context: domain
+id: e40
+title: "New Relic Integration — Application and Server Monitoring"
+wsjf: 5.33
+wsjf_rationale: "BV=5(notable operator value for production) TC=3(flexible deadline) RR=8(critical visibility/observability for diagnosing production failures) / JS=3(2-3 days: SDK integration, HTTP middleware, DB wrapper, flags)"
+status: planned
+covers:
+  - main.go
+  - components/proxy/
+  - components/db/
+stories:
+  - id: e40s01
+    title: "New Relic Go Agent Initialization"
+    status: planned
+    bcps: 2
+    wsjf: 5.33
+    wsjf_rationale: "BV=5 TC=3 RR=8 / JS=3"
+    tasks:
+      - desc: "Add github.com/newrelic/go-agent/v3/newrelic dependency to go.mod"
+        verify: "go test ./... && grep -q 'github.com/newrelic/go-agent/v3' go.mod"
+      - desc: "Add configuration flags and environment variable mapping for New Relic"
+        verify: "go run . serve --help 2>&1 | grep -q 'new-relic'"
+      - desc: "Initialize New Relic Agent application in main.go serve command"
+        verify: "go test ./... && go run . serve --log-level debug --new-relic-license-key fake-key 2>&1 | grep -q 'new relic'"
+  - id: e40s02
+    title: "Instrument HTTP Proxy Request Tracing"
+    status: planned
+    bcps: 2
+    wsjf: 5.33
+    wsjf_rationale: "BV=5 TC=3 RR=8 / JS=3"
+    tasks:
+      - desc: "Create a custom New Relic middleware in the proxy component"
+        verify: "go test ./components/proxy/ -v"
+      - desc: "Inject New Relic middleware into the Proxy handler chain"
+        verify: "go test ./components/proxy/ -v"
+  - id: e40s03
+    title: "Instrument Database Segment Tracing"
+    status: planned
+    bcps: 2
+    wsjf: 5.33
+    wsjf_rationale: "BV=5 TC=3 RR=8 / JS=3"
+    tasks:
+      - desc: "Trace database queries in ExecContext, QueryContext, and QueryRowContext"
+        verify: "go test ./components/db/ -v"
