@@ -1,0 +1,32 @@
+# PR-Agent configuration for BigBase
+# Sync with CONVENTIONS.md when conventions change
+
+[config]
+model = "deepseek-v4-pro"
+fallback_models = ["deepseek-v4-flash"]
+response_language = "en-US"
+# Skip generated/doc files from diff analysis
+patch_extension_skip_types = [".md", ".txt", ".yaml", ".toml", ".jsonc"]
+
+[pr_reviewer]
+require_tests_review = true           # flag if no tests added
+require_estimate_effort_to_review = true
+enable_review_labels_effort = true    # adds effort label to PR
+extra_instructions = """
+  This is a Go 1.22+ BaaS platform (BigBase) using Entity-Component-Construct (ECC) architecture.
+  Components: proxy, auth, db, api, storage, git, forge, cici, functions, realtime, messaging, deploy, admin, monitoring.
+  Conventions: no `any` type, no direct imports between components (use event bus), errors wrapped with fmt.Errorf,
+  table-driven tests, parameterized SQL only, no secrets in code.
+  Flag: direct component imports, raw SQL concatenation, unhandled errors, missing test coverage for new logic.
+"""
+
+[pr_description]
+generate_ai_title = false             # keep semantic-release commit-driven titles
+add_original_user_description = true
+
+[pr_code_suggestions]
+focus_only_on_problems = true         # avoid cosmetic suggestions
+
+[ignore]
+# Don't review generated/vendor/spec files
+glob = ["specs/**", "ui/dist/**", "vendor/**", "**/*_gen.go"]

@@ -1,0 +1,36 @@
+# PR-Agent automated code review
+# Uses DeepSeek via OpenAI-compatible API endpoint.
+# Pin to v0.36 for stability — @main has hardcoded GPT-5 model names.
+#
+# Sync with CONVENTIONS.md when conventions change
+name: PR Review
+
+on:
+  pull_request:
+    types: [opened, reopened, ready_for_review, synchronize]
+  issue_comment:
+    types: [created]
+
+jobs:
+  pr_agent:
+    if: ${{ github.event.sender.type != 'Bot' }}
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: write
+      contents: read
+    steps:
+      - name: PR Agent
+        uses: docker://pragent/pr-agent:0.36.0-github_action
+        env:
+          # OpenAI-compatible endpoint pointing to DeepSeek
+          OPENAI_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+          OPENAI__API_BASE: https://api.deepseek.com/v1
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          github_action_config.auto_review: "true"
+          github_action_config.auto_describe: "true"
+          github_action_config.auto_improve: "true"
+          # Model name DeepSeek expects
+          github_action_config.model: "deepseek-v4-pro"
+          CONFIG__MODEL: "deepseek-v4-pro"
+          CONFIG__FALLBACK_MODELS: '["deepseek-v4-flash"]'
