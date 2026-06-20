@@ -1,3 +1,10 @@
+## [2.30.1](https://github.com/danielvm-git/bigbase/compare/v2.30.0...v2.30.1) (2026-06-20)
+
+
+### Bug Fixes
+
+* **mcp:** allow GET /mcp for SSE connections (remove 405 method guard) ([28e05ee](https://github.com/danielvm-git/bigbase/commit/28e05ee507cedd2dda24b66c70afb9348205d401))
+
 # [2.30.0](https://github.com/danielvm-git/bigbase/compare/v2.29.0...v2.30.0) (2026-06-20)
 
 
