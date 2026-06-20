@@ -1,3 +1,10 @@
+# [2.30.0](https://github.com/danielvm-git/bigbase/compare/v2.29.0...v2.30.0) (2026-06-20)
+
+
+### Features
+
+* **proxy:** route service hosts to internal backends ([3ed14e8](https://github.com/danielvm-git/bigbase/commit/3ed14e8485f15130b8fd80c5647c942edf77c5d6))
+
 # [2.29.0](https://github.com/danielvm-git/bigbase/compare/v2.28.0...v2.29.0) (2026-06-20)
 
 
