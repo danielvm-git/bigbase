@@ -1,8 +1,8 @@
 type: session-state
 context: infra
-active_flow: done
+active_flow: build_epic
 active_epic_id: e40
-active_story_id: e40s01
+active_story_id: e40s02
 release:
   target_version: 2.12.0
   migration:
@@ -12,25 +12,20 @@ release:
   last_publish: '2026-06-12'
 metrics:
   session_start: '2026-06-20T00:00:00Z'
-  session_end: '2026-06-20T18:45:00-03:00'
+  session_end: null
   cycle_minutes: 105
   epics_completed: 9
   stories_completed: 27
   bcps_per_hour: 5.8
-  story_start: '2026-06-20T00:00:00Z'
-  story_end: '2026-06-20T18:45:00-03:00'
+  story_start: '2026-06-20T18:45:00-03:00'
+  story_end: null
 epic_cycle:
-  step: done
-  current_step: null
+  step: 4
+  current_step: develop-tdd
   completed_steps:
     - survey-context
     - plan-work
     - kickoff-branch
-    - develop-tdd
-    - verify-work
-    - audit-code
-    - commit-message
-    - release-branch
   story_bcps: 2
 bug_cycle: {}
 git:
@@ -38,10 +33,10 @@ git:
   hash: c1b5459
   worktree: null
 handoff:
-  last_step_completed: release-branch
+  last_step_completed: ""
   open_decisions: []
-  next_skill: survey-context
-  summary: "e40s01 complete. New Relic Go Agent (v3.43.3) initialized with CLI flags and env var fallbacks. Merged to main."
-  context: "e40s01 done. Next: e40s02 (HTTP tracing) and e40s03 (DB tracing). Also pending: e39 (Multi-User Platform, 3 stories)."
+  next_skill: develop-tdd
+  summary: "Starting e40s02: Instrument HTTP Proxy Request Tracing. 2 tasks: create NR middleware + inject into handler chain."
+  context: "Yolo mode: skipping survey/plan, going straight to develop-tdd for e40s02 then e40s03."
 
 

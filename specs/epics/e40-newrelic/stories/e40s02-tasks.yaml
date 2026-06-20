@@ -1,0 +1,13 @@
+story_id: e40s02
+title: "Instrument HTTP Proxy Request Tracing"
+status: done
+bcps: 2
+tasks:
+  - id: 1
+    description: "Add NRApp to proxy.Options and create newRelicMiddleware on Proxy"
+    verify: "grep -q 'newRelicMiddleware' components/proxy/proxy.go && go build ./..."
+    status: done
+  - id: 2
+    description: "Inject newRelicMiddleware into proxy Handler() chain and wire nrApp from main.go"
+    verify: "grep -q 'NRApp' components/proxy/proxy.go && go test ./... && echo '✅ All pass'"
+    status: done

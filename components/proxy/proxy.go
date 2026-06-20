@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/danielvm/bigbase/kernel"
+	"github.com/newrelic/go-agent/v3/newrelic"
 )
 
 // requestIDKey is the context key for request-scoped request IDs.
@@ -58,6 +59,7 @@ type Options struct {
 	Logger             Logger
 	RequestLogger      RequestLogger
 	CORSAllowedOrigins []string
+	NRApp              *newrelic.Application
 }
 
 type Proxy struct {
@@ -68,6 +70,7 @@ type Proxy struct {
 	server             *http.Server
 	mux                *http.ServeMux
 	corsAllowedOrigins []string
+	nrApp              *newrelic.Application
 
 	starsMu       sync.Mutex
 	starsVal      string
@@ -126,6 +129,7 @@ func New(opts Options) *Proxy {
 		requestLogger:      opts.RequestLogger,
 		mux:                http.NewServeMux(),
 		corsAllowedOrigins: opts.CORSAllowedOrigins,
+		nrApp:              opts.NRApp,
 	}
 }
 
@@ -151,7 +155,11 @@ func (p *Proxy) Init(ctx *kernel.Context, config json.RawMessage) error {
 }
 
 func (p *Proxy) Handler() http.Handler {
-	return p.corsMiddleware(p.securityHeadersMiddleware(p.loggingMiddleware(p.requestIDMiddleware(p.deploymentHostMiddleware(p.mux)))))
+	h := p.corsMiddleware(p.securityHeadersMiddleware(p.loggingMiddleware(p.requestIDMiddleware(p.deploymentHostMiddleware(p.mux)))))
+	if p.nrApp != nil {
+		h = p.newRelicMiddleware(h)
+	}
+	return h
 }
 
 func (p *Proxy) Start(ctx *kernel.Context) error {
@@ -226,6 +234,16 @@ func (p *Proxy) loggingMiddleware(next http.Handler) http.Handler {
 			args = append(args, "request_id", rid)
 		}
 		p.logger.Info("HTTP request", args...)
+	})
+}
+
+func (p *Proxy) newRelicMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		txn := p.nrApp.StartTransaction(r.Method + " " + r.URL.Path)
+		defer txn.End()
+		txn.SetWebRequestHTTP(r)
+		w = txn.SetWebResponse(w)
+		next.ServeHTTP(w, r.WithContext(newrelic.NewContext(r.Context(), txn)))
 	})
 }
 
