@@ -1,3 +1,10 @@
+## [2.30.2](https://github.com/danielvm-git/bigbase/compare/v2.30.1...v2.30.2) (2026-06-20)
+
+
+### Bug Fixes
+
+* **mcp:** disable DNS rebinding protection for reverse-proxied MCP server ([7afffaf](https://github.com/danielvm-git/bigbase/commit/7afffaf7b0d66afd1c99a908becefc46f4210464))
+
 ## [2.30.1](https://github.com/danielvm-git/bigbase/compare/v2.30.0...v2.30.1) (2026-06-20)
 
 
