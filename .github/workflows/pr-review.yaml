@@ -1,6 +1,6 @@
 # PR-Agent automated code review
-# Uses qodo-ai/pr-agent with DeepSeek API (OpenAI-compatible endpoint)
-# Triggers on PR events + slash commands via issue_comment
+# Uses DeepSeek via OpenAI-compatible API endpoint.
+# Pin to v0.36 for stability — @main has hardcoded GPT-5 model names.
 #
 # Sync with CONVENTIONS.md when conventions change
 name: PR Review
@@ -21,15 +21,16 @@ jobs:
       contents: read
     steps:
       - name: PR Agent
-        # Pin to v0.34 for stability — @main has hardcoded GPT-5 model names
         uses: docker://pragent/pr-agent:0.36.0-github_action
         env:
+          # OpenAI-compatible endpoint pointing to DeepSeek
           OPENAI_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
-          DEEPSEEK_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+          OPENAI__API_BASE: https://api.deepseek.com/v1
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # Model config via CONFIG.* format for PR-Agent v0.34
-          CONFIG__MODEL: "deepseek/deepseek-chat"
-          CONFIG__FALLBACK_MODELS: '["deepseek/deepseek-chat"]'
           github_action_config.auto_review: "true"
           github_action_config.auto_describe: "true"
           github_action_config.auto_improve: "true"
+          # Model name DeepSeek expects
+          github_action_config.model: "deepseek-v4-pro"
+          CONFIG__MODEL: "deepseek-v4-pro"
+          CONFIG__FALLBACK_MODELS: '["deepseek-v4-flash"]'
