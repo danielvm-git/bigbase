@@ -32,9 +32,9 @@ epics:
   e28: done
   e27: done
   e30: done
-  e38: done
+  e38: planned
   e41: done
-  e37: done
+  e37: pending
   e39: planned
   e40: in_progress
 stories:
@@ -128,9 +128,9 @@ stories:
   e30s01: done
   e30s02: done
   e30s03: done
-  e38s01: done
-  e38s02: done
-  e38s03: done
+  e38s01: planned
+  e38s02: planned
+  e38s03: planned
   e41s01: done
   e41s02: done
   e41s03: done
@@ -140,5 +140,5 @@ stories:
   e39s02: planned
   e39s03: planned
   e40s01: done
-  e40s02: planned
-  e40s03: planned
+  e40s02: done
+  e40s03: done
