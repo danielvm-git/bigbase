@@ -11,8 +11,8 @@ import (
 )
 
 type hostInfo struct {
-	port   int
-	siteID string
+	Port   int
+	SiteID string
 }
 
 // RegisterDeploymentHost maps a public hostname to a local deployment port.
@@ -31,7 +31,7 @@ func (p *Proxy) RegisterDeploymentHost(host string, port int, siteID string) err
 	}
 	// Allow replacing an existing registration — subsequent deployments for the
 	// same host update the port in place, enabling zero-downtime redeployment.
-	p.deployHosts[host] = hostInfo{port: port, siteID: siteID}
+	p.deployHosts[host] = hostInfo{Port: port, SiteID: siteID}
 	return nil
 }
 
@@ -59,7 +59,8 @@ func (p *Proxy) isDeploymentHostRegistered(host string) bool {
 	return ok
 }
 
-func (p *Proxy) getDeploymentHostInfo(host string) (hostInfo, bool) {
+// GetDeploymentHostInfo returns the current port and site ID for a deployment host.
+func (p *Proxy) GetDeploymentHostInfo(host string) (hostInfo, bool) {
 	host = normalizeHost(host)
 	p.deployHostsMu.RLock()
 	info, ok := p.deployHosts[host]
@@ -105,13 +106,20 @@ func (p *Proxy) deploymentHostMiddleware(next http.Handler) http.Handler {
 			return
 		}
 		
-		info, ok := p.getDeploymentHostInfo(host)
+		info, ok := p.GetDeploymentHostInfo(host)
 		if !ok {
 			next.ServeHTTP(w, r)
 			return
 		}
 
-		target, err := url.Parse(fmt.Sprintf("http://127.0.0.1:%d", info.port))
+		// API calls to deployment hosts must reach BigBase, not the static
+		// file server. Forward /api/* paths to the main handler.
+		if strings.HasPrefix(r.URL.Path, "/api/") {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		target, err := url.Parse(fmt.Sprintf("http://127.0.0.1:%d", info.Port))
 		if err != nil {
 			http.Error(w, "bad gateway", http.StatusBadGateway)
 			return
@@ -126,7 +134,7 @@ func (p *Proxy) deploymentHostMiddleware(next http.Handler) http.Handler {
 		proxy.ServeHTTP(rw, r)
 
 		if p.requestLogger != nil {
-			p.requestLogger.RecordRequestLog(info.siteID, r.Method, r.URL.Path, rw.status, time.Since(start))
+			p.requestLogger.RecordRequestLog(info.SiteID, r.Method, r.URL.Path, rw.status, time.Since(start))
 		}
 	})
 }

@@ -104,6 +104,35 @@ func TestProxyUnregisterDeploymentHost(t *testing.T) {
 	}
 }
 
+func TestRegisterDeploymentHostReplacesExisting(t *testing.T) {
+	logger := testLogger{}
+	p := proxy.New(proxy.Options{Logger: logger})
+
+	host := "replace-test.bigbase.click"
+
+	// First registration — sets host -> 10001
+	if err := p.RegisterDeploymentHost(host, 10001, "s1"); err != nil {
+		t.Fatalf("first registration: %v", err)
+	}
+
+	// Second registration with different port — must replace, not error
+	if err := p.RegisterDeploymentHost(host, 20002, "s2"); err != nil {
+		t.Fatalf("re-registration with new port should succeed, got: %v", err)
+	}
+
+	// Verify replacement via GetDeploymentHostInfo (port 20002 not 10001)
+	info, ok := p.GetDeploymentHostInfo(host)
+	if !ok {
+		t.Fatal("host should still be registered after re-registration")
+	}
+	if info.Port != 20002 {
+		t.Fatalf("after re-registration: port=%d (want 20002)", info.Port)
+	}
+	if info.SiteID != "s2" {
+		t.Fatalf("after re-registration: site_id=%q (want s2)", info.SiteID)
+	}
+}
+
 func TestCaddyAllow(t *testing.T) {
 	logger := testLogger{}
 	k := kernel.New(logger)
