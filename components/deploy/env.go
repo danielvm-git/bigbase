@@ -18,6 +18,10 @@ func BuildEnv(home string) []string {
 	return append(env,
 		"HOME="+home,
 		"NPM_CONFIG_CACHE="+filepath.Join(home, ".npm"),
+		// Prevent Puppeteer from downloading Chrome during npm install.
+		// Not needed for static site builds; frequently fails on VPS.
+		"PUPPETEER_SKIP_DOWNLOAD=true",
+		"PUPPETEER_SKIP_BROWSER_DOWNLOAD=true",
 	)
 }
 

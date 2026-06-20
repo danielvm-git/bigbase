@@ -26,6 +26,20 @@ func TestBuildEnvSetsHomeAndNpmCache(t *testing.T) {
 	}
 }
 
+func TestBuildEnvSkipsPuppeteerDownload(t *testing.T) {
+	env := deploy.BuildEnv("/opt/bigbase")
+	found := false
+	for _, e := range env {
+		if e == "PUPPETEER_SKIP_DOWNLOAD=true" {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Fatal("PUPPETEER_SKIP_DOWNLOAD=true not set in build env")
+	}
+}
+
 func TestBuildEnvEmptyHomePreservesEnviron(t *testing.T) {
 	if len(deploy.BuildEnv("")) == 0 {
 		t.Fatal("expected non-empty environ")

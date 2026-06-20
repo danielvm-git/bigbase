@@ -355,6 +355,7 @@ func (d *Deploy) Handler() http.Handler {
 	mux.HandleFunc("/api/deploy/", d.handleDeployByID)
 	mux.HandleFunc("/api/samples", d.handleSamples)
 	mux.HandleFunc("/api/samples/", d.handleSamples)
+	mux.HandleFunc("/api/deploy/stats", d.handleDeployStats)
 	return mux
 }
 
@@ -668,6 +669,10 @@ func (d *Deploy) buildApp(ctx context.Context, deployID string, buildDir string,
 		if err := d.runBuildCommand(ctx, deployID, buildDir, "npm", "install"); err != nil {
 			return fmt.Errorf("npm install: %w", err)
 		}
+		if err := ValidateNodeBuildScript(buildDir); err != nil {
+			d.appendDeployLog(deployID, "✗ "+err.Error())
+			return err
+		}
 		if err := d.runBuildCommand(ctx, deployID, buildDir, "npm", "run", "build"); err != nil {
 			return fmt.Errorf("npm run build: %w", err)
 		}
@@ -689,13 +694,17 @@ func (d *Deploy) runBuildCommand(ctx context.Context, deployID, dir, name string
 	label := formatBuildCommand(name, args...)
 	d.appendDeployLog(deployID, "→ Running: "+label)
 
-	var stderr bytes.Buffer
+	var stderr, stdout bytes.Buffer
 	cmd := exec.CommandContext(ctx, name, args...)
 	cmd.Dir = dir
 	cmd.Env = d.buildCmdEnv()
 	cmd.Stderr = &stderr
+	cmd.Stdout = &stdout
 	if err := cmd.Run(); err != nil {
 		detail := strings.TrimSpace(stderr.String())
+		if detail == "" {
+			detail = strings.TrimSpace(stdout.String())
+		}
 		if detail != "" {
 			d.appendDeployLogBlock(deployID, detail)
 			return fmt.Errorf("%w: %s", err, detail)
@@ -925,6 +934,27 @@ func GetStartCommand(buildDir string) string {
 	return "node index.js"
 }
 
+// ValidateNodeBuildScript checks that a package.json file exists at dir and
+// contains a "build" script. Returns a clear error message if not.
+func ValidateNodeBuildScript(dir string) error {
+	data, err := os.ReadFile(filepath.Join(dir, "package.json"))
+	if err != nil {
+		return fmt.Errorf("cannot read package.json: %w", err)
+	}
+	var pkg struct {
+		Scripts struct {
+			Build string `json:"build"`
+		} `json:"scripts"`
+	}
+	if err := json.Unmarshal(data, &pkg); err != nil {
+		return fmt.Errorf("invalid package.json: %w", err)
+	}
+	if pkg.Scripts.Build == "" {
+		return fmt.Errorf("no build script found in package.json: add a \"build\" entry to \"scripts\" or set app_type to static")
+	}
+	return nil
+}
+
 func fileExists(path string) bool {
 	_, err := os.Stat(path)
 	return err == nil
@@ -1057,6 +1087,52 @@ func (d *Deploy) handleDeployLogs(w http.ResponseWriter, r *http.Request, id str
 		payload["error_message"] = errMsg
 	}
 	writeJSON(w, http.StatusOK, payload)
+}
+
+// handleDeployStats returns aggregate deployment statistics: total, running,
+// failed counts, and a rolling failure rate over the last 24 hours.
+func (d *Deploy) handleDeployStats(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
+		return
+	}
+
+	ctx := r.Context()
+	stats := map[string]any{}
+
+	var total int
+	if err := d.db.QueryRowContext(ctx, "SELECT COUNT(*) FROM deployments").Scan(&total); err == nil {
+		stats["total"] = total
+	}
+
+	var running int
+	if err := d.db.QueryRowContext(ctx, "SELECT COUNT(*) FROM deployments WHERE status = 'running'").Scan(&running); err == nil {
+		stats["running"] = running
+	}
+
+	var totalFailed int
+	if err := d.db.QueryRowContext(ctx, "SELECT COUNT(*) FROM deployments WHERE status = 'failed'").Scan(&totalFailed); err == nil {
+		stats["total_failed"] = totalFailed
+	}
+
+	var recentFailed int
+	if err := d.db.QueryRowContext(ctx,
+		"SELECT COUNT(*) FROM deployments WHERE status = 'failed' AND created_at > datetime('now', '-1 day')").
+		Scan(&recentFailed); err == nil {
+		stats["failed_24h"] = recentFailed
+	}
+
+	var recentTotal int
+	if err := d.db.QueryRowContext(ctx,
+		"SELECT COUNT(*) FROM deployments WHERE created_at > datetime('now', '-1 day')").
+		Scan(&recentTotal); err == nil {
+		stats["total_24h"] = recentTotal
+		if recentTotal > 0 {
+			stats["failure_rate_24h"] = fmt.Sprintf("%.1f%%", float64(recentFailed)/float64(recentTotal)*100)
+		}
+	}
+
+	writeJSON(w, http.StatusOK, stats)
 }
 
 // DeleteSiteDeployments terminates all running apps and removes all deployment

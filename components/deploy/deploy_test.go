@@ -1896,3 +1896,37 @@ func TestRedeployReplacesPrevious(t *testing.T) {
 			int(port2), string(bodyBytes))
 	}
 }
+
+func TestValidateNodeBuildScriptHasBuild(t *testing.T) {
+	dir := t.TempDir()
+	pkg := `{"scripts":{"build":"vite build","start":"node index.js"}}`
+	if err := os.WriteFile(filepath.Join(dir, "package.json"), []byte(pkg), 0644); err != nil {
+		t.Fatal(err)
+	}
+	if err := deploy.ValidateNodeBuildScript(dir); err != nil {
+		t.Fatalf("expected no error, got: %v", err)
+	}
+}
+
+func TestValidateNodeBuildScriptMissing(t *testing.T) {
+	dir := t.TempDir()
+	pkg := `{"scripts":{"start":"node index.js"}}`
+	if err := os.WriteFile(filepath.Join(dir, "package.json"), []byte(pkg), 0644); err != nil {
+		t.Fatal(err)
+	}
+	err := deploy.ValidateNodeBuildScript(dir)
+	if err == nil {
+		t.Fatal("expected error for missing build script")
+	}
+	if !strings.Contains(err.Error(), "build script") {
+		t.Fatalf("expected 'No build script' error, got: %v", err)
+	}
+}
+
+func TestValidateNodeBuildScriptNoPackageJSON(t *testing.T) {
+	dir := t.TempDir()
+	err := deploy.ValidateNodeBuildScript(dir)
+	if err == nil {
+		t.Fatal("expected error when package.json missing")
+	}
+}
