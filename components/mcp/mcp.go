@@ -52,9 +52,10 @@ type Component struct {
 	logger    Logger
 	port      int
 	transport string
-	enabled   bool
-	db        DBer
-	deployer  DeployTrigger
+	enabled           bool
+	db                DBer
+	deployer          DeployTrigger
+	streamableHandler http.Handler // created once, reused across requests for session persistence
 }
 
 // New creates a new MCP component with the given options.
@@ -457,22 +458,25 @@ func (c *Component) ServeStdio(ctx context.Context) error {
 
 // Handler returns an HTTP handler for the MCP server.
 // Routes: GET /mcp — SSE stream, POST /mcp — MCP messages, GET /health — health check.
+// The streamable handler is created once and reused so MCP sessions persist
+// across requests (initialization, tool calls, SSE reconnections).
 func (c *Component) Handler() http.Handler {
-	mux := http.NewServeMux()
-
-	mux.HandleFunc("/mcp", func(w http.ResponseWriter, r *http.Request) {
+	if c.streamableHandler == nil {
 		srv, err := c.NewMCPServer()
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
+			return http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+			})
 		}
-		handler := mcpsdk.NewStreamableHTTPHandler(func(_ *http.Request) *mcpsdk.Server {
+		c.streamableHandler = mcpsdk.NewStreamableHTTPHandler(func(_ *http.Request) *mcpsdk.Server {
 			return srv
 		}, &mcpsdk.StreamableHTTPOptions{
 			DisableLocalhostProtection: true,
 		})
-		handler.ServeHTTP(w, r)
-	})
+	}
+
+	mux := http.NewServeMux()
+	mux.Handle("/mcp", c.streamableHandler)
 
 	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
