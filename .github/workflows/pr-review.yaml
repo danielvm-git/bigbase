@@ -31,7 +31,7 @@ jobs:
           github_action_config.auto_describe: "true"
           github_action_config.auto_improve: "true"
           # Model name DeepSeek expects
-          github_action_config.model: "deepseek-v4-pro"
-          CONFIG__MODEL: "deepseek-v4-pro"
-          CONFIG__FALLBACK_MODELS: '["deepseek-v4-flash"]'
+          github_action_config.model: "openai/deepseek-v4-pro"
+          CONFIG__MODEL: "openai/deepseek-v4-pro"
+          CONFIG__FALLBACK_MODELS: '["openai/deepseek-v4-flash"]'
           CONFIG__CUSTOM_MODEL_MAX_TOKENS: "128000"

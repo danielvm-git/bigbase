@@ -2,8 +2,9 @@
 # Sync with CONVENTIONS.md when conventions change
 
 [config]
-model = "deepseek-v4-pro"
-fallback_models = ["deepseek-v4-flash"]
+# LiteLLM needs provider/model-name format for custom endpoints
+model = "openai/deepseek-v4-pro"
+fallback_models = ["openai/deepseek-v4-flash"]
 custom_model_max_tokens = 128000
 response_language = "en-US"
 # Skip generated/doc files from diff analysis
