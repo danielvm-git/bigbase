@@ -2,8 +2,8 @@
 # Sync with CONVENTIONS.md when conventions change
 
 [config]
-model = "deepseek/deepseek-chat"
-fallback_models = ["deepseek/deepseek-chat"]
+model = "deepseek-v4-pro"
+fallback_models = ["deepseek-v4-flash"]
 response_language = "en-US"
 # Skip generated/doc files from diff analysis
 patch_extension_skip_types = [".md", ".txt", ".yaml", ".toml", ".jsonc"]

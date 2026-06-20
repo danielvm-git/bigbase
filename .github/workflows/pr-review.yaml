@@ -29,3 +29,5 @@ jobs:
           github_action_config.auto_review: "true"
           github_action_config.auto_describe: "true"
           github_action_config.auto_improve: "true"
+          github_action_config.model: "deepseek-v4-pro"
+          OPENAI__MODEL: "deepseek-v4-pro"
