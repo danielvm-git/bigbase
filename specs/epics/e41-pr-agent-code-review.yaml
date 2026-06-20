@@ -1,0 +1,59 @@
+type: epic-shard
+context: developer-tooling
+id: e41
+title: "DX — Automated PR Code Review via PR-Agent + DeepSeek"
+wsjf: 7.0
+wsjf_rationale: "BV=5(catches bugs before prod, enforces Go conventions automatically for solo dev) TC=2(no urgency, no customer blocking) RR=7(reduces risk of shipping regressions; auto-review every PR before merge) / JS=2(~2h: 1 workflow file + 1 config file + 1 GitHub secret)"
+status: done
+tier: 2
+evidence: |
+  Integrated PR-Agent v0.36 with DeepSeek V4 Pro via OpenAI-compatible endpoint.
+  Validated with test PR: full review posted with effort estimate, test check, security
+  audit, and focus area recommendations. No code suggestions (correct for trivial PR).
+
+  Config lessons learned during integration:
+  - @main has hardcoded GPT-5 model names — must pin to stable version (v0.36)
+  - LiteLLM needs provider/model-name format: openai/deepseek-v4-pro
+  - custom_model_max_tokens=128000 required for models not in MAX_TOKENS list
+  - synchronous events are skipped by default (synchronize, push)
+  - First PR can't self-review (workflow file not on main)
+  - Branch protection with PR-required + status checks set on main
+
+covers:
+  - .github/workflows/pr-review.yaml
+  - .pr_agent.toml
+  - .github/PULL_REQUEST_TEMPLATE.md
+  - Branch protection rules on main
+
+stories:
+  - id: e41s01
+    title: "Add PR-Agent GitHub Action workflow with DeepSeek"
+    status: done
+    bcps: 3
+    tasks:
+      - desc: "Create .github/workflows/pr-review.yaml with DeepSeek API"
+      - desc: "Add DEEPSEEK_API_KEY secret to GitHub repo"
+      - desc: "Pin to pragent/pr-agent:0.36.0-github_action for stability"
+
+  - id: e41s02
+    title: "Add .pr_agent.toml config tuned for BigBase conventions"
+    status: done
+    bcps: 2
+    tasks:
+      - desc: "Create .pr_agent.toml with BigBase-specific reviewer instructions"
+      - desc: "Add .github/PULL_REQUEST_TEMPLATE.md aligned with conventional commits"
+
+  - id: e41s03
+    title: "Validate end-to-end: open test PR and confirm review appears"
+    status: done
+    bcps: 1
+    tasks:
+      - desc: "Verified test PR #37 receives PR-Agent review with DeepSeek"
+      - desc: "Review includes effort estimate, test flag, security check, focus areas"
+
+  - id: e41s04
+    title: "Enforce PR-only merges via GitHub branch protection on main"
+    status: done
+    bcps: 2
+    tasks:
+      - desc: "Branch protection: PR required, status checks, strict mode, admin exempt"

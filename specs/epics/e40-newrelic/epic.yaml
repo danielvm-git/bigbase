@@ -12,7 +12,7 @@ covers:
 stories:
   - id: e40s01
     file: stories/e40s01-newrelic-agent-init.md
-    status: in_progress
+    status: done
   - id: e40s02
     file: stories/e40s02-http-tracing.md
     status: planned
