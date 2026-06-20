@@ -468,7 +468,9 @@ func (c *Component) Handler() http.Handler {
 		}
 		handler := mcpsdk.NewStreamableHTTPHandler(func(_ *http.Request) *mcpsdk.Server {
 			return srv
-		}, nil)
+		}, &mcpsdk.StreamableHTTPOptions{
+			DisableLocalhostProtection: true,
+		})
 		handler.ServeHTTP(w, r)
 	})
 

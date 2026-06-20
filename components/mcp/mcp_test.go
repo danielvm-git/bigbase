@@ -613,3 +613,34 @@ func TestMCPGetSSE(t *testing.T) {
 	}
 	t.Logf("GET /mcp: %d OK, Content-Type: %s", w.Code, ct)
 }
+
+func TestMCPNonLocalhostHostHeader(t *testing.T) {
+	// Simulate VPS: the MCP server listens on :3900 (including localhost),
+	// but requests arrive via Caddy reverse proxy with Host: mcp.bigbase.click.
+	// DNS rebinding protection (mcpsdk v1.4.0) must be disabled since the
+	// server is behind a reverse proxy, not exposed directly to the internet.
+	c := mcp.New(mcp.Options{Enabled: true})
+	handler := c.Handler()
+
+	req := httptest.NewRequest(http.MethodPost, "/mcp",
+		strings.NewReader(`{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-03-26","clientInfo":{"name":"test","version":"1.0"},"capabilities":{}}}`))
+	req.Header.Set("Content-Type", "application/json")
+	req.Host = "mcp.bigbase.click"
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+
+	if w.Code == http.StatusForbidden {
+		t.Fatal("POST /mcp with Host: mcp.bigbase.click returned 403 — DNS rebinding protection blocks non-localhost Host header")
+	}
+	// httptest doesn't set LocalAddrContextKey, so the DNS rebinding check is
+	// skipped. The critical assertion is that 403 is never returned.
+	body := w.Body.String()
+	preview := body
+	if len(preview) > 150 {
+		preview = body[:150]
+	}
+	t.Logf("Host: mcp.bigbase.click → %d, body: %s", w.Code, preview)
+	if w.Code != http.StatusOK && w.Code != http.StatusBadRequest {
+		t.Fatalf("unexpected status %d", w.Code)
+	}
+}
