@@ -32,7 +32,7 @@ epics:
   e28: done
   e27: done
   e30: done
-  e38: planned
+  e38: done
 stories:
   e01s01: done
   e02s01: done
@@ -124,6 +124,6 @@ stories:
   e30s01: done
   e30s02: done
   e30s03: done
-  e38s01: planned
-  e38s02: planned
-  e38s03: planned
+  e38s01: done
+  e38s02: done
+  e38s03: done

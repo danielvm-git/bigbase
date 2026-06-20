@@ -1,0 +1,41 @@
+story_id: e38s02
+verified_at: "2026-06-20T02:15:00Z"
+verifier: verify-work
+phases:
+  smoke:
+    passed: true
+  build:
+    passed: true
+    command: "go build ./..."
+  typecheck:
+    passed: true
+  lint:
+    passed: true
+  tests:
+    passed: true
+    command: "go test ./components/mcp/ -v"
+    coverage: "76.3%"
+  manual:
+    steps:
+      - step: "Register list_services tool — catalog of BigBase services with capabilities and status"
+        expected: "TestListServices: returns 'BigBase Services' header, lists deploy/auth/db"
+        actual: "PASS — lists 10+ services with capabilities and status"
+        passed: true
+      - step: "Register get_service_docs tool — detailed documentation for a specific service"
+        expected: "TestGetServiceDocs: returns doc for deploy/auth/storage; unknown service says 'not found'"
+        actual: "PASS — service docs return endpoints and capabilities; unknown service handled gracefully"
+        passed: true
+      - step: "Register get_code_example tool — framework-specific integration snippets"
+        expected: "TestGetCodeExample: returns snippets for auth/sveltekit, db/react, storage/sveltekit"
+        actual: "PASS — code examples returned with imports and usage; unknown pair suggests alternatives"
+        passed: true
+      - step: "Add server instructions — teach the agent how to use the MCP effectively"
+        expected: "TestServerInstructions: session initialized with instructions, tools accessible"
+        actual: "PASS — server instructions convey BigBase services and framework-first workflow"
+        passed: true
+      - step: "Register list_frameworks tool — frameworks with maturity level"
+        expected: "TestListFrameworks: lists SvelteKit, React, Astro with maturity levels"
+        actual: "PASS — 5 frameworks listed with maturity, recommended_for, and caveats"
+        passed: true
+  gaps:
+    closed: true

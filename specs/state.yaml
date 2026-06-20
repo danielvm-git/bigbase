@@ -1,8 +1,8 @@
 type: session-state
 context: infra
 active_flow: build_epic
-active_epic_id: e38
-active_story_id: e38s03
+active_epic_id: null
+active_story_id: null
 release:
   target_version: 2.12.0
   migration:
@@ -37,8 +37,8 @@ git:
   hash: a1410df
   worktree: null
 handoff:
-  last_step_completed: "e38s03 released — deploy workflow tools merged to main"
+  last_step_completed: "e38 complete — all 3 stories released"
   open_decisions: []
   next_skill: survey-context
-  summary: 'e38s03 done. 6 files changed, +385/-49. MCP discovery endpoint + deploy tool tests.'
-  context: e38 has 2 remaining planned stories (e38s01, e38s02). Next: survey-context to decide next story.
+  summary: 'Epic e38 (MCP Server) complete: knowledge tools + deploy workflow + agent discovery.'
+  context: All e38 stories done. 30 epics complete. Next: survey-context.

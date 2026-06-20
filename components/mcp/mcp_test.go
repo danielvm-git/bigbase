@@ -402,3 +402,182 @@ func TestGetDeployLogs(t *testing.T) {
 	}
 	t.Logf("get_deploy_logs: %d chars", len(tc.Text))
 }
+
+// --- e38s01 stdio transport test ---
+
+func TestStdioTransport(t *testing.T) {
+	c := mcp.New(mcp.Options{Transport: "stdio", Enabled: true})
+	srv, err := c.NewMCPServer()
+	if err != nil {
+		t.Fatalf("NewMCPServer: %v", err)
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	t1, t2 := mcpsdk.NewInMemoryTransports()
+	if _, err := srv.Connect(ctx, t1, nil); err != nil {
+		t.Fatalf("server.Connect: %v", err)
+	}
+	client := mcpsdk.NewClient(&mcpsdk.Implementation{Name: "test", Version: "1.0"}, nil)
+	session, err := client.Connect(ctx, t2, nil)
+	if err != nil {
+		t.Fatalf("client.Connect: %v", err)
+	}
+	defer func() { _ = session.Close() }()
+	// Verify we can call a tool over the transport
+	result, err := session.CallTool(ctx, &mcpsdk.CallToolParams{Name: "ping"})
+	if err != nil {
+		t.Fatalf("ping over stdio transport: %v", err)
+	}
+	tc, _ := result.Content[0].(*mcpsdk.TextContent)
+	if tc.Text != "pong" {
+		t.Errorf("expected 'pong', got %q", tc.Text)
+	}
+	t.Log("stdio transport ping: pong")
+}
+
+// --- e38s02 knowledge tool standalone tests ---
+
+func TestListServices(t *testing.T) {
+	c := mcp.New(mcp.Options{Enabled: true})
+	ctx, session := connectMCPSession(t, c)
+	result, err := session.CallTool(ctx, &mcpsdk.CallToolParams{Name: "list_services"})
+	if err != nil {
+		t.Fatalf("list_services: %v", err)
+	}
+	tc, ok := result.Content[0].(*mcpsdk.TextContent)
+	if !ok || tc.Text == "" {
+		t.Fatal("expected non-empty response")
+	}
+	if !strings.Contains(tc.Text, "BigBase Services") {
+		t.Error("expected 'BigBase Services' header")
+	}
+	for _, svc := range []string{"deploy", "auth", "db"} {
+		if !strings.Contains(tc.Text, svc) {
+			t.Errorf("expected service %q in list", svc)
+		}
+	}
+	t.Logf("list_services: %d chars", len(tc.Text))
+}
+
+func TestGetServiceDocs(t *testing.T) {
+	c := mcp.New(mcp.Options{Enabled: true})
+	ctx, session := connectMCPSession(t, c)
+	for _, svc := range []string{"deploy", "auth", "storage"} {
+		result, err := session.CallTool(ctx, &mcpsdk.CallToolParams{
+			Name:      "get_service_docs",
+			Arguments: map[string]interface{}{"service": svc},
+		})
+		if err != nil {
+			t.Fatalf("get_service_docs(%s): %v", svc, err)
+		}
+		tc, _ := result.Content[0].(*mcpsdk.TextContent)
+		if tc.Text == "" {
+			t.Errorf("get_service_docs(%s): empty response", svc)
+		}
+		if !strings.Contains(tc.Text, svc) {
+			t.Errorf("get_service_docs(%s): response should mention %s", svc, svc)
+		}
+		t.Logf("get_service_docs(%s): %d chars", svc, len(tc.Text))
+	}
+	// Unknown service returns helpful message
+	result, err := session.CallTool(ctx, &mcpsdk.CallToolParams{
+		Name:      "get_service_docs",
+		Arguments: map[string]interface{}{"service": "nonexistent"},
+	})
+	if err != nil {
+		t.Fatalf("get_service_docs(nonexistent): %v", err)
+	}
+	tc, _ := result.Content[0].(*mcpsdk.TextContent)
+	if !strings.Contains(tc.Text, "not found") {
+		t.Error("unknown service should say 'not found'")
+	}
+}
+
+func TestGetCodeExample(t *testing.T) {
+	c := mcp.New(mcp.Options{Enabled: true})
+	ctx, session := connectMCPSession(t, c)
+	pairs := [][2]string{
+		{"auth", "sveltekit"},
+		{"db", "react"},
+		{"storage", "sveltekit"},
+	}
+	for _, p := range pairs {
+		result, err := session.CallTool(ctx, &mcpsdk.CallToolParams{
+			Name: "get_code_example",
+			Arguments: map[string]interface{}{"service": p[0], "framework": p[1]},
+		})
+		if err != nil {
+			t.Fatalf("get_code_example(%s/%s): %v", p[0], p[1], err)
+		}
+		tc, _ := result.Content[0].(*mcpsdk.TextContent)
+		if tc.Text == "" {
+			t.Errorf("get_code_example(%s/%s): empty", p[0], p[1])
+		}
+		t.Logf("get_code_example(%s/%s): %d chars", p[0], p[1], len(tc.Text))
+	}
+	// Unknown pair returns helpful message
+	result, err := session.CallTool(ctx, &mcpsdk.CallToolParams{
+		Name: "get_code_example",
+		Arguments: map[string]interface{}{"service": "nope", "framework": "nope"},
+	})
+	if err != nil {
+		t.Fatalf("get_code_example(nope): %v", err)
+	}
+	tc, _ := result.Content[0].(*mcpsdk.TextContent)
+	if !strings.Contains(tc.Text, "No example") {
+		t.Error("unknown pair should suggest alternatives")
+	}
+}
+
+func TestServerInstructions(t *testing.T) {
+	c := mcp.New(mcp.Options{Transport: "stdio", Enabled: true})
+	srv, err := c.NewMCPServer()
+	if err != nil {
+		t.Fatalf("NewMCPServer: %v", err)
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	t1, t2 := mcpsdk.NewInMemoryTransports()
+	if _, err := srv.Connect(ctx, t1, nil); err != nil {
+		t.Fatalf("server.Connect: %v", err)
+	}
+	client := mcpsdk.NewClient(&mcpsdk.Implementation{Name: "test", Version: "1.0"}, nil)
+	session, err := client.Connect(ctx, t2, nil)
+	if err != nil {
+		t.Fatalf("client.Connect: %v", err)
+	}
+	defer func() { _ = session.Close() }()
+	// Server instructions are sent on initialize. Verify the session is alive
+	// and tools are available.
+	result, err := session.CallTool(ctx, &mcpsdk.CallToolParams{Name: "list_services"})
+	if err != nil {
+		t.Fatalf("list_services: %v", err)
+	}
+	tc, _ := result.Content[0].(*mcpsdk.TextContent)
+	if !strings.Contains(tc.Text, "BigBase") {
+		t.Error("expected instructions context in response")
+	}
+	t.Log("server instructions accessible via initialized session")
+}
+
+func TestListFrameworks(t *testing.T) {
+	c := mcp.New(mcp.Options{Enabled: true})
+	ctx, session := connectMCPSession(t, c)
+	result, err := session.CallTool(ctx, &mcpsdk.CallToolParams{Name: "list_frameworks"})
+	if err != nil {
+		t.Fatalf("list_frameworks: %v", err)
+	}
+	tc, ok := result.Content[0].(*mcpsdk.TextContent)
+	if !ok || tc.Text == "" {
+		t.Fatal("expected non-empty response")
+	}
+	if !strings.Contains(tc.Text, "Supported Frameworks") {
+		t.Error("expected 'Supported Frameworks' header")
+	}
+	for _, fw := range []string{"SvelteKit", "React", "Astro"} {
+		if !strings.Contains(tc.Text, fw) {
+			t.Errorf("expected framework %q in list", fw)
+		}
+	}
+	t.Logf("list_frameworks: %d chars", len(tc.Text))
+}

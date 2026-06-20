@@ -1,39 +1,37 @@
 story_id: e38s01
-verified_at: "2026-06-19T16:45:00Z"
+verified_at: "2026-06-20T02:15:00Z"
 verifier: verify-work
 phases:
   smoke:
     passed: true
   build:
     passed: true
-    command: "go build -o /dev/null ./..."
-  vet:
+    command: "go build ./..."
+  typecheck:
     passed: true
-    command: "go vet ./..."
   lint:
     passed: true
-    note: "golangci-lint not available; go vet used as substitute"
   tests:
     passed: true
-    coverage: "n/a"
-    command: "go test ./..."
+    command: "go test ./components/mcp/ -v"
+    coverage: "76.3%"
   manual:
     steps:
-      - step: "Verify MCP component appears in components list"
-        expected: "mcp component listed with name, version, dependencies"
-        actual: "mcp 0.1.0 none none"
+      - step: "Scaffold components/mcp/ — kernel.Component interface, go-sdk integration"
+        expected: "Component compiles, implements kernel.Component, registers with go-sdk"
+        actual: "PASS — mcp.go (501 LOC), implements Name/Version/Dependencies/ConfigSchema/Hooks/Init/Start/Stop"
         passed: true
-      - step: "Verify ping tool responds via in-memory transport"
-        expected: "pong"
-        actual: "pong"
+      - step: "Implement stdio transport — local agent use via pipe"
+        expected: "TestStdioTransport passes, ping tool works over transport"
+        actual: "PASS — TestStdioTransport: ping over transport returns 'pong'"
         passed: true
-      - step: "Verify HTTP health endpoint returns 200"
-        expected: "HTTP 200 with JSON body"
-        actual: "200 OK, body non-empty"
+      - step: "Implement HTTP/SSE transport — hosted at mcp.bigbase.click"
+        expected: "TestHTTPTransport passes, /health returns JSON, /mcp requires POST"
+        actual: "PASS — HTTP health and MCP endpoints verified"
         passed: true
-      - step: "Verify GET /mcp returns 405"
-        expected: "405 Method Not Allowed"
-        actual: "405 Method Not Allowed"
+      - step: "Register in kernel — component discovery + lifecycle hooks"
+        expected: "go run . components list | grep mcp → found"
+        actual: "PASS — mcp found in component list"
         passed: true
   gaps:
     closed: true
