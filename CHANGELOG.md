@@ -1,3 +1,10 @@
+# [2.29.0](https://github.com/danielvm-git/bigbase/compare/v2.28.0...v2.29.0) (2026-06-20)
+
+
+### Features
+
+* **mcp:** complete epic e38 — knowledge tools, deploy workflow, agent discovery ([7275c27](https://github.com/danielvm-git/bigbase/commit/7275c27f751ffa8040f620b2686788aa75272a30))
+
 # [2.28.0](https://github.com/danielvm-git/bigbase/compare/v2.27.0...v2.28.0) (2026-06-20)
 
 
