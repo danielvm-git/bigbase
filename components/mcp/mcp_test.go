@@ -41,7 +41,7 @@ func TestPingTool(t *testing.T) {
 	if err != nil {
 		t.Fatalf("client.Connect: %v", err)
 	}
-	defer session.Close()
+	defer func() { _ = session.Close() }()
 
 	result, err := session.CallTool(ctx, &mcpsdk.CallToolParams{Name: "ping"})
 	if err != nil {
@@ -74,7 +74,7 @@ func TestHTTPTransport(t *testing.T) {
 		t.Fatalf("health: expected 200, got %d", resp.StatusCode)
 	}
 	body, _ := io.ReadAll(resp.Body)
-	resp.Body.Close()
+	_ = resp.Body.Close()
 	bodyStr := string(body)
 	if len(bodyStr) == 0 {
 		t.Error("health: expected non-empty body")
@@ -109,7 +109,7 @@ func TestKnowledgeTools(t *testing.T) {
 	if err != nil {
 		t.Fatalf("client.Connect: %v", err)
 	}
-	defer session.Close()
+	defer func() { _ = session.Close() }()
 
 	tools := []struct {
 		name string
@@ -167,7 +167,7 @@ func TestDeployTools(t *testing.T) {
 	if err != nil {
 		t.Fatalf("client.Connect: %v", err)
 	}
-	defer session.Close()
+	defer func() { _ = session.Close() }()
 
 	// deploy_guide is pure knowledge — should always work
 	t.Run("deploy_guide", func(t *testing.T) {

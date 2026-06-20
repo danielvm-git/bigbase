@@ -2,8 +2,10 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"flag"
 	"fmt"
+	"io"
 	"log/slog"
 	"net/http"
 	"os"
@@ -11,6 +13,7 @@ import (
 	"strings"
 	"syscall"
 	"text/tabwriter"
+	"time"
 
 	"github.com/danielvm/bigbase/components/admin"
 	"github.com/danielvm/bigbase/components/api"
@@ -99,6 +102,9 @@ func main() {
 		return
 	case "migrate":
 		runMigrate()
+		return
+	case "deploy":
+		runDeployCmd()
 		return
 	}
 
@@ -287,6 +293,7 @@ func startProxy() {
 		Port:      *mcpPort,
 		Transport: *mcpTransport,
 		DB:        d,
+		Deployer:  depComp,
 	})
 	k.Register(mcpComp)
 
@@ -395,7 +402,169 @@ Usage:
   bigbase backup --db PATH --output FILE        Dump database to SQL file
   bigbase restore --input FILE --db PATH        Replay SQL dump into database
   bigbase migrate up|down|status [--db PATH]    Run database migrations
+  bigbase deploy [--server URL] [--repo ID]     Deploy a git repo
   bigbase help                                  Show this help`)
+}
+
+func runDeployCmd() {
+	fs := flag.NewFlagSet("deploy", flag.ExitOnError)
+	server := fs.String("server", "http://localhost:8080", "BigBase server URL")
+	repoID := fs.String("repo", "", "Repository ID (required)")
+	branch := fs.String("branch", "main", "Branch to deploy")
+	siteName := fs.String("site-name", "", "Site name (defaults to repo name)")
+	siteID := fs.String("site-id", "", "Site ID (optional)")
+	apiKey := fs.String("api-key", "", "API key for authentication")
+	wait := fs.Bool("wait", true, "Wait for deployment to complete")
+	_ = fs.Parse(os.Args[2:])
+
+	serverURL := config.FlagOrEnv(*server, "BIGBASE_SERVER")
+	key := config.FlagOrEnv(*apiKey, "BIGBASE_API_KEY")
+
+	if *repoID == "" {
+		fmt.Fprintln(os.Stderr, "error: --repo is required")
+		fmt.Fprintln(os.Stderr, "Usage: bigbase deploy --repo <repo_id> [--branch main] [--server http://...]")
+		os.Exit(1)
+	}
+
+	if serverURL == "" {
+		serverURL = "http://localhost:8080"
+	}
+
+	serverURL = strings.TrimRight(serverURL, "/")
+
+	body := map[string]string{
+		"repo_id":   *repoID,
+		"branch":    *branch,
+		"site_name": *siteName,
+		"site_id":   *siteID,
+	}
+	jsonBody, err := json.Marshal(body)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "error: marshal body: %v\n", err)
+		os.Exit(1)
+	}
+
+	req, err := http.NewRequest("POST", serverURL+"/api/deploy", strings.NewReader(string(jsonBody)))
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "error: create request: %v\n", err)
+		os.Exit(1)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	if key != "" {
+		req.Header.Set("Authorization", "Bearer "+key)
+	}
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "error: connect to %s: %v\n", serverURL, err)
+		os.Exit(1)
+	}
+	defer func() { _ = resp.Body.Close() }()
+
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "error: read response: %v\n", err)
+		os.Exit(1)
+	}
+
+	if resp.StatusCode != http.StatusCreated {
+		fmt.Fprintf(os.Stderr, "error: server returned %d\n%s\n", resp.StatusCode, string(respBody))
+		os.Exit(1)
+	}
+
+	var raw map[string]interface{}
+	if err := json.Unmarshal(respBody, &raw); err != nil {
+		fmt.Fprintf(os.Stderr, "error: parse response: %v\n", err)
+		os.Exit(1)
+	}
+
+	deployID, _ := raw["id"].(string)
+	deployURL, _ := raw["url"].(string)
+	deployStatus, _ := raw["status"].(string)
+
+	if deployID == "" && deployURL == "" {
+		fmt.Fprintf(os.Stderr, "error: unexpected response: %s\n", string(respBody))
+		os.Exit(1)
+	}
+
+	shortID := deployID
+	if len(shortID) > 8 {
+		shortID = shortID[:8]
+	}
+
+	fmt.Println("Deployment created!")
+	fmt.Println("  ID:", shortID)
+	fmt.Println("  URL:", deployURL)
+	fmt.Println("  Status:", deployStatus)
+
+	if !*wait {
+		return
+	}
+
+	fmt.Println()
+	fmt.Println("Waiting for deployment to complete...")
+	client := &http.Client{Timeout: 5 * time.Second}
+	for {
+		time.Sleep(2 * time.Second)
+
+		statusReq, err := http.NewRequest("GET", serverURL+"/api/deploy/"+deployID, nil)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "warning: poll request: %v\n", err)
+			continue
+		}
+		if key != "" {
+			statusReq.Header.Set("Authorization", "Bearer "+key)
+		}
+
+		statusResp, err := client.Do(statusReq)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "warning: poll failed: %v\n", err)
+			continue
+		}
+
+		statusBody, err := io.ReadAll(statusResp.Body)
+		_ = statusResp.Body.Close()
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "warning: poll read: %v\n", err)
+			continue
+		}
+
+		var rawStatus map[string]interface{}
+		if err := json.Unmarshal(statusBody, &rawStatus); err != nil {
+			fmt.Fprintf(os.Stderr, "warning: poll parse: %v\n", err)
+			continue
+		}
+
+		status, _ := rawStatus["status"].(string)
+		buildLog, _ := rawStatus["build_log"].(string)
+		errMsg, _ := rawStatus["error_message"].(string)
+
+		fmt.Printf("  Status: %s\n", status)
+
+		switch status {
+		case "running":
+			fmt.Println()
+			fmt.Println("Deployment is live!")
+			return
+		case "failed":
+			if errMsg != "" {
+				fmt.Fprintf(os.Stderr, "\nError: %s\n", errMsg)
+			}
+			if buildLog != "" {
+				fmt.Println()
+				fmt.Println("Build log:")
+				fmt.Println(buildLog)
+			}
+			os.Exit(1)
+			return
+		case "pending":
+			// still building, keep polling
+		case "replaced":
+			fmt.Println()
+			fmt.Println("Deployment was replaced by a newer one.")
+			return
+		}
+	}
 }
 
 func printStatus(k *kernel.Kernel) {
@@ -474,7 +643,7 @@ func runBackup() {
 		fmt.Fprintf(os.Stderr, "error: dump: %v\n", err)
 		os.Exit(1)
 	}
-	fmt.Fprintf(os.Stdout, "backup written to %s\n", *output)
+	_, _ = fmt.Fprintf(os.Stdout, "backup written to %s\n", *output)
 }
 
 func runRestore() {
@@ -506,7 +675,7 @@ func runRestore() {
 		fmt.Fprintf(os.Stderr, "error: restore: %v\n", err)
 		os.Exit(1)
 	}
-	fmt.Fprintln(os.Stdout, "restore complete")
+	_, _ = fmt.Fprintln(os.Stdout, "restore complete")
 }
 
 func runMigrate() {
@@ -536,13 +705,13 @@ func runMigrate() {
 			fmt.Fprintf(os.Stderr, "error: migrate up: %v\n", err)
 			os.Exit(1)
 		}
-		fmt.Fprintln(os.Stdout, "migrations applied")
+		_, _ = fmt.Fprintln(os.Stdout, "migrations applied")
 	case "down":
 		if err := m.Down(context.Background()); err != nil {
 			fmt.Fprintf(os.Stderr, "error: migrate down: %v\n", err)
 			os.Exit(1)
 		}
-		fmt.Fprintln(os.Stdout, "migrations rolled back")
+		_, _ = fmt.Fprintln(os.Stdout, "migrations rolled back")
 	case "status":
 		ver, dirty, err := m.Status(context.Background())
 		if err != nil {

@@ -82,8 +82,8 @@ func formatServicesList(services []serviceEntry) string {
 	var b strings.Builder
 	b.WriteString("# BigBase Services\n\n")
 	for _, s := range services {
-		b.WriteString(fmt.Sprintf("## %s (%s)\n", s.Name, s.Status))
-		b.WriteString(fmt.Sprintf("%s\n\n", s.Description))
+		fmt.Fprintf(&b, "## %s (%s)\n", s.Name, s.Status)
+		fmt.Fprintf(&b, "%s\n\n", s.Description)
 		b.WriteString("**Capabilities:** ")
 		b.WriteString(strings.Join(s.Capabilities, ", "))
 		b.WriteString("\n\n")
@@ -93,16 +93,16 @@ func formatServicesList(services []serviceEntry) string {
 
 func formatServiceDoc(svc serviceEntry) string {
 	var b strings.Builder
-	b.WriteString(fmt.Sprintf("# %s\n\n", svc.Name))
-	b.WriteString(fmt.Sprintf("**Status:** %s\n\n", svc.Status))
-	b.WriteString(fmt.Sprintf("%s\n\n", svc.Description))
+	fmt.Fprintf(&b, "# %s\n\n", svc.Name)
+	fmt.Fprintf(&b, "**Status:** %s\n\n", svc.Status)
+	fmt.Fprintf(&b, "%s\n\n", svc.Description)
 	b.WriteString("## Capabilities\n\n")
 	for _, c := range svc.Capabilities {
-		b.WriteString(fmt.Sprintf("- %s\n", c))
+		fmt.Fprintf(&b, "- %s\n", c)
 	}
 	b.WriteString("\n## Endpoints\n\n")
 	for _, e := range svc.Endpoints {
-		b.WriteString(fmt.Sprintf("- `%s`\n", e))
+		fmt.Fprintf(&b, "- `%s`\n", e)
 	}
 	return b.String()
 }
@@ -111,11 +111,11 @@ func formatFrameworksList(frameworks []frameworkEntry) string {
 	var b strings.Builder
 	b.WriteString("# Supported Frameworks\n\n")
 	for _, f := range frameworks {
-		b.WriteString(fmt.Sprintf("## %s\n", f.Display))
-		b.WriteString(fmt.Sprintf("**Maturity:** %s\n", f.Maturity))
-		b.WriteString(fmt.Sprintf("**Best for:** %s\n", f.RecommendedFor))
+		fmt.Fprintf(&b, "## %s\n", f.Display)
+		fmt.Fprintf(&b, "**Maturity:** %s\n", f.Maturity)
+		fmt.Fprintf(&b, "**Best for:** %s\n", f.RecommendedFor)
 		if f.Caveats != "" {
-			b.WriteString(fmt.Sprintf("**Note:** %s\n", f.Caveats))
+			fmt.Fprintf(&b, "**Note:** %s\n", f.Caveats)
 		}
 		b.WriteString("\n")
 	}

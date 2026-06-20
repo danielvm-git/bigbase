@@ -12,11 +12,17 @@ import (
 	"os"
 	"strings"
 
+	"github.com/danielvm/bigbase/components/deploy"
 	"github.com/danielvm/bigbase/kernel"
 	mcpsdk "github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
 const version = "0.1.0"
+
+// DeployTrigger triggers a deployment from a git repo.
+type DeployTrigger interface {
+	Trigger(ctx context.Context, repoID, branch, siteName, siteID string) (*deploy.Deployment, error)
+}
 
 // Options configure the MCP component.
 type Options struct {
@@ -28,8 +34,11 @@ type Options struct {
 	Transport string
 	// Enabled controls whether the MCP server starts (default: true).
 	Enabled bool
-	// DB is the database for deploy tools (list_repos, deploy_site, etc.).
+	// DB is the database for deploy tools (list_repos, get_deploy_status, etc.).
 	DB DBer
+	// Deployer triggers deployments. Set to the deploy component for the
+	// deploy_site tool to work as a real trigger instead of a doc-only tool.
+	Deployer DeployTrigger
 }
 
 // DBer is the database interface for deploy tools.
@@ -45,6 +54,7 @@ type Component struct {
 	transport string
 	enabled   bool
 	db        DBer
+	deployer  DeployTrigger
 }
 
 // New creates a new MCP component with the given options.
@@ -67,19 +77,20 @@ func New(opts Options) *Component {
 		transport: transport,
 		enabled:   opts.Enabled,
 		db:        opts.DB,
+		deployer:  opts.Deployer,
 	}
 }
 
-func (c *Component) Name() string                   { return "mcp" }
-func (c *Component) Version() string                { return version }
+func (c *Component) Name() string    { return "mcp" }
+func (c *Component) Version() string { return version }
 func (c *Component) Dependencies() []string {
 	if c.db != nil {
 		return []string{"db"}
 	}
 	return nil
 }
-func (c *Component) ConfigSchema() json.RawMessage  { return nil }
-func (c *Component) Hooks() []kernel.HookDef        { return nil }
+func (c *Component) ConfigSchema() json.RawMessage { return nil }
+func (c *Component) Hooks() []kernel.HookDef       { return nil }
 
 func (c *Component) Init(ctx *kernel.Context, config json.RawMessage) error {
 	return nil
@@ -232,7 +243,7 @@ Use list_services to see the full catalog, get_service_docs for details on a spe
 		if err != nil {
 			return textResult(fmt.Sprintf("Error listing repos: %v", err)), nil, nil
 		}
-		defer rows.Close()
+		defer func() { _ = rows.Close() }()
 		var b strings.Builder
 		b.WriteString("# Git Repositories\n\n")
 		count := 0
@@ -241,13 +252,13 @@ Use list_services to see the full catalog, get_service_docs for details on a spe
 			if err := rows.Scan(&id, &name, &desc, &updated); err != nil {
 				continue
 			}
-			b.WriteString(fmt.Sprintf("- **%s** (`%s`) — %s\n", name, id, desc))
+			fmt.Fprintf(&b, "- **%s** (`%s`) — %s\n", name, id, desc)
 			count++
 		}
 		if count == 0 {
 			b.WriteString("No repositories found. Push a repo or create one via the Git component.\n")
 		}
-		b.WriteString(fmt.Sprintf("\n→ To deploy: use deploy_site with the repo_id\n"))
+		b.WriteString("\n→ To deploy: use deploy_site with the repo_id\n")
 		return textResult(b.String()), nil, nil
 	})
 
@@ -272,6 +283,7 @@ Use list_services to see the full catalog, get_service_docs for details on a spe
 			branch = "main"
 		}
 		siteName, _ := args["site_name"].(string)
+		siteID, _ := args["site_id"].(string)
 
 		var repoName string
 		err := c.db.QueryRowContext(ctx, "SELECT name FROM git_repos WHERE id = ?", repoID).Scan(&repoName)
@@ -280,6 +292,26 @@ Use list_services to see the full catalog, get_service_docs for details on a spe
 		}
 		if siteName == "" {
 			siteName = repoName
+		}
+
+		// If a Deployer is wired in, trigger the actual deployment.
+		if c.deployer != nil {
+			dep, err := c.deployer.Trigger(ctx, repoID, branch, siteName, siteID)
+			if err != nil {
+				return textResult(fmt.Sprintf("Deploy failed: %v", err)), nil, nil
+			}
+			shortID := dep.ID
+			if len(shortID) > 8 {
+				shortID = shortID[:8]
+			}
+			var b strings.Builder
+			fmt.Fprintf(&b, "# Deploy Started: %s\n\n", shortID)
+			fmt.Fprintf(&b, "- **Repo:** %s\n", repoName)
+			fmt.Fprintf(&b, "- **Branch:** %s\n", branch)
+			fmt.Fprintf(&b, "- **Site:** %s\n", dep.URL)
+			fmt.Fprintf(&b, "- **Status:** %s\n", dep.Status)
+			fmt.Fprintf(&b, "\n→ Use `get_deploy_status` with `deployment_id: %s` to monitor.\n", dep.ID)
+			return textResult(b.String()), nil, nil
 		}
 
 		return textResult(fmt.Sprintf("# Deploy Request Received\n\n- **Repo:** %s\n- **Branch:** %s\n- **Site:** %s\n\nTo trigger the deployment, send a POST to `/api/deploy` with:\n```json\n{\"repo_id\": \"%s\", \"branch\": \"%s\", \"site_name\": \"%s\"}\n```\n\nThen use `get_deploy_status` to monitor progress.",
@@ -305,34 +337,35 @@ Use list_services to see the full catalog, get_service_docs for details on a spe
 			if err != nil {
 				return textResult(fmt.Sprintf("Error: %v", err)), nil, nil
 			}
-			defer rows.Close()
+			defer func() { _ = rows.Close() }()
 			var b strings.Builder
 			b.WriteString("# Recent Deployments\n\n")
 			for rows.Next() {
 				var id, status, url, appType, created string
-				rows.Scan(&id, &status, &url, &appType, &created)
-				b.WriteString(fmt.Sprintf("- `%s` — **%s** %s (%s)\n", id[:8], status, url, appType))
+				_ = rows.Scan(&id, &status, &url, &appType, &created)
+				fmt.Fprintf(&b, "- `%s` — **%s** %s (%s)\n", id[:8], status, url, appType)
 			}
 			b.WriteString("\n→ Use `get_deploy_status` with a `deployment_id` for details.\n")
 			return textResult(b.String()), nil, nil
 		}
 		var status, url, appType, commitSHA, errMsg string
-		c.db.QueryRowContext(ctx,
+		_ = c.db.QueryRowContext(ctx,
 			"SELECT status, COALESCE(url,''), COALESCE(app_type,''), COALESCE(commit_sha,''), COALESCE(error_message,'') FROM deployments WHERE id = ?", deployID,
 		).Scan(&status, &url, &appType, &commitSHA, &errMsg)
 
 		var b strings.Builder
-		b.WriteString(fmt.Sprintf("# Deployment %s\n\n- **Status:** %s\n- **URL:** %s\n- **Type:** %s\n", deployID[:8], status, url, appType))
+		fmt.Fprintf(&b, "# Deployment %s\n\n- **Status:** %s\n- **URL:** %s\n- **Type:** %s\n", deployID[:8], status, url, appType)
 		if commitSHA != "" {
-			b.WriteString(fmt.Sprintf("- **Commit:** %s\n", commitSHA[:7]))
+			fmt.Fprintf(&b, "- **Commit:** %s\n", commitSHA[:7])
 		}
 		if errMsg != "" {
-			b.WriteString(fmt.Sprintf("- **Error:** %s\n", errMsg))
+			fmt.Fprintf(&b, "- **Error:** %s\n", errMsg)
 		}
-		if status == "failed" {
+		switch status {
+		case "failed":
 			b.WriteString("\n→ Check build logs with `get_deploy_logs`.\n")
-		} else if status == "running" {
-			b.WriteString(fmt.Sprintf("\n→ Site is live at %s\n", url))
+		case "running":
+			fmt.Fprintf(&b, "\n→ Site is live at %s\n", url)
 		}
 		return textResult(b.String()), nil, nil
 	})
@@ -446,7 +479,7 @@ func (c *Component) Handler() http.Handler {
 	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		fmt.Fprintf(w, `{"status":"ok","version":%q}`, version)
+		_, _ = fmt.Fprintf(w, `{"status":"ok","version":%q}`, version)
 	})
 
 	return mux
