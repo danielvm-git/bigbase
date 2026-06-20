@@ -242,3 +242,107 @@ func TestMCPDiscoveryEndpoint(t *testing.T) {
 	}
 	t.Logf("MCP discovery: %s", string(body))
 }
+
+func TestMCPServiceHostRouting(t *testing.T) {
+	// Start a simulated MCP backend on a random port.
+	mcpBackend := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("X-Backend", "mcp")
+		_, _ = fmt.Fprintf(w, "mcp:%s", r.URL.Path)
+	}))
+	t.Cleanup(mcpBackend.Close)
+
+	u, err := url.Parse(mcpBackend.URL)
+	if err != nil {
+		t.Fatalf("parse mcp backend URL: %v", err)
+	}
+	mcpPort, err := strconv.Atoi(u.Port())
+	if err != nil {
+		t.Fatalf("mcp backend port: %v", err)
+	}
+
+	logger := testLogger{}
+	k := kernel.New(logger)
+	proxyPort := freePort(t)
+	p := proxy.New(proxy.Options{Port: proxyPort, Kernel: k, Logger: logger})
+
+	// Replace the default MCP port with our test backend.
+	p.RemoveServiceHost("mcp.bigbase.click")
+	p.AddServiceHost("mcp.bigbase.click", mcpPort)
+
+	if err := p.Start(&kernel.Context{}); err != nil {
+		t.Fatalf("start proxy: %v", err)
+	}
+	t.Cleanup(func() { _ = p.Stop(&kernel.Context{}) })
+
+	waitForServer(t, proxyPort, "/health")
+
+	makeRequest := func(host, path string) *http.Response {
+		req, err := http.NewRequest(http.MethodGet,
+			fmt.Sprintf("http://127.0.0.1:%s%s", proxyPort, path), nil)
+		if err != nil {
+			t.Fatalf("new request: %v", err)
+		}
+		req.Host = host
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			t.Fatalf("request %s: %v", path, err)
+		}
+		return resp
+	}
+
+	// .well-known/mcp.json should be served by the proxy itself, NOT proxied.
+	t.Run("discovery not proxied", func(t *testing.T) {
+		resp := makeRequest("mcp.bigbase.click", "/.well-known/mcp.json")
+		defer func() { _ = resp.Body.Close() }()
+		if resp.StatusCode != http.StatusOK {
+			t.Fatalf("discovery status = %d, want 200", resp.StatusCode)
+		}
+		body, _ := io.ReadAll(resp.Body)
+		if !strings.Contains(string(body), "mcpServers") {
+			t.Errorf("expected mcpServers in discovery, got: %s", string(body))
+		}
+		// Must NOT be proxied to the MCP backend.
+		if strings.Contains(string(body), "mcp:") {
+			t.Error("discovery was proxied to backend, should be served by proxy")
+		}
+	})
+
+	// /mcp should be proxied to the MCP backend.
+	t.Run("api proxied to MCP", func(t *testing.T) {
+		resp := makeRequest("mcp.bigbase.click", "/mcp")
+		defer func() { _ = resp.Body.Close() }()
+		if resp.StatusCode != http.StatusOK {
+			t.Fatalf("mcp status = %d, want 200", resp.StatusCode)
+		}
+		body, _ := io.ReadAll(resp.Body)
+		// The backend returns "mcp:/mcp"
+		if !strings.Contains(string(body), "mcp:/mcp") {
+			t.Errorf("expected mcp backend response, got: %s", string(body))
+		}
+		if resp.Header.Get("X-Backend") != "mcp" {
+			t.Error("expected X-Backend: mcp header from backend")
+		}
+	})
+
+	// Verify that the custom service host registration survives Start() and
+	// is not overwritten by the default service host seed.
+	t.Run("custom port survives Start", func(t *testing.T) {
+		info, ok := p.GetDeploymentHostInfo("mcp.bigbase.click")
+		if ok {
+			t.Fatal("mcp.bigbase.click should not be a deployment host")
+		}
+		_ = info
+		// Service host routing is verified by the subtests above.
+		// If the port were overwritten to 3900, the proxy would 502.
+	})
+
+	// /health on mcp.bigbase.click should also be proxied to MCP backend.
+	t.Run("health proxied to MCP", func(t *testing.T) {
+		resp := makeRequest("mcp.bigbase.click", "/health")
+		defer func() { _ = resp.Body.Close() }()
+		body, _ := io.ReadAll(resp.Body)
+		if !strings.Contains(string(body), "mcp:/health") {
+			t.Errorf("expected mcp backend response for /health, got: %s", string(body))
+		}
+	})
+}

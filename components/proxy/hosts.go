@@ -100,6 +100,38 @@ var allowedHosts = map[string]bool{
 	"mcp.bigbase.click": true,
 }
 
+// defaultServiceHosts maps hostnames to backend ports for internal services
+// that run alongside the proxy. These are seeded into the Proxy instance on
+// Start() and can be extended at runtime via AddServiceHost.
+var defaultServiceHosts = map[string]int{
+	"mcp.bigbase.click": 3900,
+}
+
+// serviceExcludePaths are URL paths that the proxy handles directly for
+// service hosts, rather than proxying to the backend.
+var serviceExcludePaths = map[string]bool{
+	"/.well-known/mcp.json": true,
+}
+
+// AddServiceHost registers a hostname → backend port mapping for a permanent
+// internal service (not a deployment). The proxy will route requests with this
+// Host header to the backend, except for paths in serviceExcludePaths.
+func (p *Proxy) AddServiceHost(host string, port int) {
+	host = normalizeHost(host)
+	if p.serviceHosts == nil {
+		p.serviceHosts = make(map[string]int)
+	}
+	p.serviceHosts[host] = port
+}
+
+// RemoveServiceHost unregisters a service host.
+func (p *Proxy) RemoveServiceHost(host string) {
+	host = normalizeHost(host)
+	if p.serviceHosts != nil {
+		delete(p.serviceHosts, host)
+	}
+}
+
 // loopbackHosts are local addresses that should never be routed as deployment hosts.
 var loopbackHosts = map[string]bool{
 	"localhost": true,
@@ -119,6 +151,26 @@ func (p *Proxy) deploymentHostMiddleware(next http.Handler) http.Handler {
 			return
 		}
 		
+		// Service hosts (MCP, admin, etc.) — proxy to backend, but let the
+		// proxy itself serve discovery / well-known endpoints.
+		if backendPort, ok := p.serviceHosts[host]; ok {
+			if serviceExcludePaths[r.URL.Path] {
+				next.ServeHTTP(w, r)
+				return
+			}
+			target, err := url.Parse(fmt.Sprintf("http://127.0.0.1:%d", backendPort))
+			if err != nil {
+				http.Error(w, "bad gateway", http.StatusBadGateway)
+				return
+			}
+			rp := httputil.NewSingleHostReverseProxy(target)
+			rp.ErrorHandler = func(rw http.ResponseWriter, _ *http.Request, _ error) {
+				http.Error(rw, "service unavailable", http.StatusBadGateway)
+			}
+			rp.ServeHTTP(w, r)
+			return
+		}
+
 		info, ok := p.GetDeploymentHostInfo(host)
 		if !ok {
 			next.ServeHTTP(w, r)

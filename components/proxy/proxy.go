@@ -74,6 +74,7 @@ type Proxy struct {
 	starsTime     time.Time
 	deployHostsMu sync.RWMutex
 	deployHosts   map[string]hostInfo
+	serviceHosts  map[string]int
 }
 
 func (p *Proxy) GitHubStars() string {
@@ -160,6 +161,17 @@ func (p *Proxy) Start(ctx *kernel.Context) error {
 	p.mux.HandleFunc("/api/version", p.handleVersion)
 	p.mux.HandleFunc("/api/internal/caddy-allow", p.handleCaddyAllow)
 	p.mux.HandleFunc("/.well-known/mcp.json", p.handleMCPDiscovery)
+
+	// Seed service hosts from package-level defaults (don't overwrite
+	// entries already added via AddServiceHost before Start).
+	if p.serviceHosts == nil {
+		p.serviceHosts = make(map[string]int)
+	}
+	for host, port := range defaultServiceHosts {
+		if _, exists := p.serviceHosts[host]; !exists {
+			p.serviceHosts[host] = port
+		}
+	}
 
 	p.server = &http.Server{
 		Addr:    ":" + p.port,
