@@ -1,3 +1,10 @@
+## [2.26.6](https://github.com/danielvm-git/bigbase/compare/v2.26.5...v2.26.6) (2026-06-20)
+
+
+### Bug Fixes
+
+* **proxy:** forward /api/* to BigBase for deployment hosts; export hostInfo ([84078d3](https://github.com/danielvm-git/bigbase/commit/84078d3308e8d66bb58958c31f3e4bec6608924a))
+
 ## [2.26.5](https://github.com/danielvm-git/bigbase/compare/v2.26.4...v2.26.5) (2026-06-20)
 
 
