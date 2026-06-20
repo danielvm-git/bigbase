@@ -1,3 +1,10 @@
+# [2.32.0](https://github.com/danielvm-git/bigbase/compare/v2.31.0...v2.32.0) (2026-06-20)
+
+
+### Features
+
+* **deploy:** passthrough paths, metadata injection, SPA fallback docs ([54d40cf](https://github.com/danielvm-git/bigbase/commit/54d40cfca33492782ff3af4b1cbdeb1d74167d47))
+
 # [2.31.0](https://github.com/danielvm-git/bigbase/compare/v2.30.3...v2.31.0) (2026-06-20)
 
 
