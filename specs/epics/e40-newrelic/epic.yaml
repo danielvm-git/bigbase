@@ -15,7 +15,7 @@ stories:
     status: done
   - id: e40s02
     file: stories/e40s02-http-tracing.md
-    status: planned
+    status: done
   - id: e40s03
     file: stories/e40s03-db-tracing.md
-    status: planned
+    status: done
