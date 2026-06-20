@@ -187,7 +187,7 @@ exit status 1', '2026-06-19T13:00:00Z')`,
 // mockDeployer is a DeployTrigger that returns a fixed deployment.
 type mockDeployer struct{}
 
-func (m *mockDeployer) Trigger(_ context.Context, repoID, branch, siteName, siteID string) (*deploy.Deployment, error) {
+func (m *mockDeployer) Trigger(_ context.Context, repoID, branch, siteName, siteID string, _ []string) (*deploy.Deployment, error) {
 	return &deploy.Deployment{
 		ID:     fmt.Sprintf("dep-%s-%s", repoID, branch),
 		Status: "building",

@@ -1066,6 +1066,22 @@ a:hover { opacity: 0.8; }
     <h2 id="deploy">Deploy</h2>
     <p>Git-based deployment system. Link a Git repository, specify a branch, and deploy with one click. Auto-polls for status updates.</p>
 
+    <h3>SPA Fallback & Passthrough</h3>
+    <p>By default, BigBase intercepts <code>/api/*</code> requests on deployed hosts to route them to the BigBase API. Static sites use Go's <code>http.FileServer</code>, which serves <code>index.html</code> for any path not matching a file (classic SPA fallback).</p>
+    <p>If your app needs its own API endpoints or custom static assets, use the <code>passthrough_paths</code> field when creating a deployment:</p>
+    <div class="cmd">
+      <span>$</span> curl -X POST http://localhost:9999/api/deploy \<br>
+      &nbsp;&nbsp;-H "Content-Type: application/json" \<br>
+      &nbsp;&nbsp;-d '{"repo_id":"abc123","branch":"main","passthrough_paths":["/api/my-app/*","/version.json"]}'
+    </div>
+    <p>Paths matching a passthrough rule are forwarded directly to your app, bypassing BigBase's <code>/api/*</code> intercept.</p>
+
+    <h3>Environment Metadata</h3>
+    <p>BigBase injects a <code>__BIGBASE_METADATA__</code> script into HTML responses. Your app can read it to get deployment context without a separate API call:</p>
+    <pre><code>// In your app's JavaScript:
+console.log(window.__BIGBASE_METADATA__);
+// { version: "abc1234", deployedAt: "2026-06-20T12:00:00Z" }</code></pre>
+
     <h2 id="realtime">Realtime</h2>
     <p>WebSocket-based realtime events. Subscribe to database changes, system events, and custom channels at <code>/realtime</code>.</p>
 

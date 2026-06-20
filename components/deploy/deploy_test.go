@@ -1052,7 +1052,7 @@ func TestDeployLogsPersisted(t *testing.T) {
 	defer func() { _ = dep.Stop(&kernel.Context{}) }()
 
 	repoID := createTestRepo(t, database, "repo-logs", gitDir)
-	deployment, err := dep.Trigger(context.Background(), repoID, "main", "", "s123")
+	deployment, err := dep.Trigger(context.Background(), repoID, "main", "", "s123", nil)
 	if err != nil {
 		t.Fatalf("trigger failed: %v", err)
 	}
@@ -1107,7 +1107,7 @@ func TestDeployLogsRetrievalFallback(t *testing.T) {
 	defer func() { _ = dep.Stop(&kernel.Context{}) }()
 
 	repoID := createTestRepo(t, database, "repo-retrieval", gitDir)
-	deployment, err := dep.Trigger(context.Background(), repoID, "main", "", "s123")
+	deployment, err := dep.Trigger(context.Background(), repoID, "main", "", "s123", nil)
 	if err != nil {
 		t.Fatalf("trigger failed: %v", err)
 	}
@@ -1244,7 +1244,7 @@ func TestRuntimeLogs(t *testing.T) {
 
 	repoID := createTestRuntimeRepo(t, database, "repo-runtime", gitDir)
 
-	deployment, err := dep.Trigger(context.Background(), repoID, "main", "", "s-runtime")
+	deployment, err := dep.Trigger(context.Background(), repoID, "main", "", "s-runtime", nil)
 	if err != nil {
 		t.Fatalf("trigger failed: %v", err)
 	}
@@ -1723,7 +1723,7 @@ type mockHostRegistry struct {
 	hosts map[string]int // host -> port
 }
 
-func (m *mockHostRegistry) RegisterDeploymentHost(host string, port int, _ string) error {
+func (m *mockHostRegistry) RegisterDeploymentHost(host string, port int, _ string, _ []string, _ map[string]string) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	if m.hosts == nil {

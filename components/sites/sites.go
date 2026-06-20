@@ -57,7 +57,7 @@ type Site struct {
 	LatestDeployment *Deployment `json:"latest_deployment,omitempty"`
 }
 
-type DeployTrigger func(ctx context.Context, repoID, branch, siteName, siteID string) (*Deployment, error)
+type DeployTrigger func(ctx context.Context, repoID, branch, siteName, siteID string, passthroughPaths []string) (*Deployment, error)
 type DeleteSiteCleanupFunc func(ctx context.Context, siteID, repoID string) error
 
 type Sites struct {
@@ -354,7 +354,7 @@ func (s *Sites) createSite(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if s.triggerDeploy != nil {
-		dep, err := s.triggerDeploy(r.Context(), req.GitRepoID, req.ProductionBranch, req.Name, id)
+		dep, err := s.triggerDeploy(r.Context(), req.GitRepoID, req.ProductionBranch, req.Name, id, nil)
 		if err != nil {
 			writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
 			return
@@ -559,7 +559,7 @@ func (s *Sites) redeploySite(w http.ResponseWriter, r *http.Request, id string) 
 		return
 	}
 
-	dep, err := s.triggerDeploy(ctx, gitRepoID, branch, siteName, id)
+	dep, err := s.triggerDeploy(ctx, gitRepoID, branch, siteName, id, nil)
 	if err != nil {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
 		return

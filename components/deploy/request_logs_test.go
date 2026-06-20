@@ -90,7 +90,7 @@ func TestSiteRequestLogsEndToEnd(t *testing.T) {
 	// 2. Register the host
 	host := "logs.test"
 	siteID := "s1"
-	if err := p.RegisterDeploymentHost(host, port, siteID); err != nil {
+	if err := p.RegisterDeploymentHost(host, port, siteID, nil, nil); err != nil {
 		t.Fatalf("register: %v", err)
 	}
 

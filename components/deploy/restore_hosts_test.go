@@ -13,7 +13,7 @@ type hostRegistrySpy struct {
 	hosts map[string]int
 }
 
-func (h *hostRegistrySpy) RegisterDeploymentHost(host string, port int, siteID string) error {
+func (h *hostRegistrySpy) RegisterDeploymentHost(host string, port int, siteID string, _ []string, _ map[string]string) error {
 	if h.hosts == nil {
 		h.hosts = make(map[string]int)
 	}

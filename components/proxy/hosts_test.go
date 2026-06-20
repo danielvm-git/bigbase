@@ -40,7 +40,7 @@ func TestProxyDeploymentHost(t *testing.T) {
 
 	waitForServer(t, port, "/health")
 
-	if err := p.RegisterDeploymentHost("myapp.bigbase.click", backendPort, "s1"); err != nil {
+	if err := p.RegisterDeploymentHost("myapp.bigbase.click", backendPort, "s1", nil, nil); err != nil {
 		t.Fatalf("register host: %v", err)
 	}
 
@@ -71,8 +71,7 @@ func TestProxySiteIDMapping(t *testing.T) {
 	siteID := "s123"
 	port := 12345
 	
-	// This will fail to compile first
-	if err := p.RegisterDeploymentHost(host, port, siteID); err != nil {
+	if err := p.RegisterDeploymentHost(host, port, siteID, nil, nil); err != nil {
 		t.Fatalf("register failed: %v", err)
 	}
 }
@@ -89,7 +88,7 @@ func TestProxyUnregisterDeploymentHost(t *testing.T) {
 
 	waitForServer(t, port, "/health")
 
-	if err := p.RegisterDeploymentHost("test-unreg.bigbase.click", 19999, "s-unreg"); err != nil {
+	if err := p.RegisterDeploymentHost("test-unreg.bigbase.click", 19999, "s-unreg", nil, nil); err != nil {
 		t.Fatalf("register host: %v", err)
 	}
 
@@ -113,12 +112,12 @@ func TestRegisterDeploymentHostReplacesExisting(t *testing.T) {
 	host := "replace-test.bigbase.click"
 
 	// First registration — sets host -> 10001
-	if err := p.RegisterDeploymentHost(host, 10001, "s1"); err != nil {
+	if err := p.RegisterDeploymentHost(host, 10001, "s1", nil, nil); err != nil {
 		t.Fatalf("first registration: %v", err)
 	}
 
 	// Second registration with different port — must replace, not error
-	if err := p.RegisterDeploymentHost(host, 20002, "s2"); err != nil {
+	if err := p.RegisterDeploymentHost(host, 20002, "s2", nil, nil); err != nil {
 		t.Fatalf("re-registration with new port should succeed, got: %v", err)
 	}
 
@@ -158,7 +157,7 @@ func TestCaddyAllow(t *testing.T) {
 		t.Fatalf("unregistered domain status = %d, want 403", resp.StatusCode)
 	}
 
-	if err := p.RegisterDeploymentHost("myapp.bigbase.click", 9999, "s-myapp"); err != nil {
+	if err := p.RegisterDeploymentHost("myapp.bigbase.click", 9999, "s-myapp", nil, nil); err != nil {
 		t.Fatalf("register host: %v", err)
 	}
 
@@ -345,4 +344,229 @@ func TestMCPServiceHostRouting(t *testing.T) {
 			t.Errorf("expected mcp backend response for /health, got: %s", string(body))
 		}
 	})
+}
+
+// TestPassthroughAPIPaths verifies that deployments with passthrough paths
+// forward matching /api/* requests to the deployed app instead of BigBase.
+func TestPassthroughAPIPaths(t *testing.T) {
+	// Backend simulating a deployed app with its own /api endpoint.
+	backend := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("X-App-API", "true")
+		_, _ = fmt.Fprintf(w, "app-api:%s", r.URL.Path)
+	}))
+	t.Cleanup(backend.Close)
+
+	u, err := url.Parse(backend.URL)
+	if err != nil {
+		t.Fatalf("parse backend url: %v", err)
+	}
+	backendPort, err := strconv.Atoi(u.Port())
+	if err != nil {
+		t.Fatalf("backend port: %v", err)
+	}
+
+	logger := testLogger{}
+	k := kernel.New(logger)
+	port := freePort(t)
+	p := proxy.New(proxy.Options{Port: port, Kernel: k, Logger: logger})
+	if err := p.Start(&kernel.Context{}); err != nil {
+		t.Fatalf("start proxy: %v", err)
+	}
+	t.Cleanup(func() { _ = p.Stop(&kernel.Context{}) })
+	waitForServer(t, port, "/health")
+
+	host := "passthrough-test.bigbase.click"
+
+	// Register with passthrough for /api/my-app/*
+	if err := p.RegisterDeploymentHost(host, backendPort, "s1",
+		[]string{"/api/my-app/*", "/version.json"}, nil); err != nil {
+		t.Fatalf("register host: %v", err)
+	}
+
+	makeRequest := func(path string) *http.Response {
+		req, err := http.NewRequest(http.MethodGet,
+			fmt.Sprintf("http://127.0.0.1:%s%s", port, path), nil)
+		if err != nil {
+			t.Fatalf("new request: %v", err)
+		}
+		req.Host = host
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			t.Fatalf("request %s: %v", path, err)
+		}
+		return resp
+	}
+
+	// Passthrough path — should reach the backend app, not BigBase.
+	t.Run("passthrough /api/my-app/* reaches app", func(t *testing.T) {
+		resp := makeRequest("/api/my-app/users")
+		defer func() { _ = resp.Body.Close() }()
+		body, _ := io.ReadAll(resp.Body)
+		if resp.StatusCode != http.StatusOK {
+			t.Fatalf("status = %d, want 200", resp.StatusCode)
+		}
+		if resp.Header.Get("X-App-API") != "true" {
+			t.Error("expected X-App-API header from backend")
+		}
+		if !strings.Contains(string(body), "app-api:/api/my-app/users") {
+			t.Errorf("unexpected body: %s", body)
+		}
+	})
+
+	// Passthrough for specific file path.
+	t.Run("passthrough /version.json reaches app", func(t *testing.T) {
+		resp := makeRequest("/version.json")
+		defer func() { _ = resp.Body.Close() }()
+		body, _ := io.ReadAll(resp.Body)
+		if resp.Header.Get("X-App-API") != "true" {
+			t.Error("expected X-App-API header from backend for version.json")
+		}
+		if !strings.Contains(string(body), "app-api:/version.json") {
+			t.Errorf("unexpected body: %s", body)
+		}
+	})
+
+	// Non-passthrough /api/* should still be intercepted by BigBase.
+	t.Run("non-passthrough /api/version goes to BigBase", func(t *testing.T) {
+		resp := makeRequest("/api/version")
+		defer func() { _ = resp.Body.Close() }()
+		body, _ := io.ReadAll(resp.Body)
+		// BigBase's /api/version returns JSON, not "app-api:"
+		if strings.Contains(string(body), "app-api:") {
+			t.Error("/api/version should go to BigBase, not backend")
+		}
+		if !strings.Contains(string(body), "version") {
+			t.Errorf("expected BigBase version response, got: %s", body)
+		}
+	})
+
+	// Root path should still proxy to backend.
+	t.Run("root path reaches app", func(t *testing.T) {
+		resp := makeRequest("/")
+		defer func() { _ = resp.Body.Close() }()
+		body, _ := io.ReadAll(resp.Body)
+		if resp.Header.Get("X-App-API") != "true" {
+			t.Error("expected X-App-API header from backend for /")
+		}
+		if !strings.Contains(string(body), "app-api:/") {
+			t.Errorf("unexpected body: %s", body)
+		}
+	})
+}
+
+// TestMetadataInjection verifies that __BIGBASE_METADATA__ is injected into
+// HTML responses from deployed apps.
+func TestMetadataInjection(t *testing.T) {
+	// Backend returning HTML.
+	backend := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		_, _ = w.Write([]byte("<html><head></head><body><p>Hello</p></body></html>"))
+	}))
+	t.Cleanup(backend.Close)
+
+	u, err := url.Parse(backend.URL)
+	if err != nil {
+		t.Fatalf("parse backend url: %v", err)
+	}
+	backendPort, err := strconv.Atoi(u.Port())
+	if err != nil {
+		t.Fatalf("backend port: %v", err)
+	}
+
+	logger := testLogger{}
+	k := kernel.New(logger)
+	port := freePort(t)
+	p := proxy.New(proxy.Options{Port: port, Kernel: k, Logger: logger})
+	if err := p.Start(&kernel.Context{}); err != nil {
+		t.Fatalf("start proxy: %v", err)
+	}
+	t.Cleanup(func() { _ = p.Stop(&kernel.Context{}) })
+	waitForServer(t, port, "/health")
+
+	host := "meta-test.bigbase.click"
+	metadata := map[string]string{
+		"version":    "abc1234",
+		"deployedAt": "2026-06-20T12:00:00Z",
+	}
+
+	if err := p.RegisterDeploymentHost(host, backendPort, "s-meta", nil, metadata); err != nil {
+		t.Fatalf("register host: %v", err)
+	}
+
+	req, err := http.NewRequest(http.MethodGet,
+		fmt.Sprintf("http://127.0.0.1:%s/", port), nil)
+	if err != nil {
+		t.Fatalf("new request: %v", err)
+	}
+	req.Host = host
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatalf("request: %v", err)
+	}
+	defer func() { _ = resp.Body.Close() }()
+
+	body, _ := io.ReadAll(resp.Body)
+	bodyStr := string(body)
+
+	if !strings.Contains(bodyStr, "__BIGBASE_METADATA__") {
+		t.Fatal("expected __BIGBASE_METADATA__ script in response")
+	}
+	if !strings.Contains(bodyStr, `"version":"abc1234"`) {
+		t.Error("expected version in metadata")
+	}
+	if !strings.Contains(bodyStr, `"deployedAt":"2026-06-20T12:00:00Z"`) {
+		t.Error("expected deployedAt in metadata")
+	}
+	if !strings.Contains(bodyStr, "<p>Hello</p>") {
+		t.Error("original HTML content should be preserved")
+	}
+	if !strings.Contains(bodyStr, "</head>") {
+		t.Error("</head> tag should still be present")
+	}
+
+	t.Logf("metadata injection body:\n%s", bodyStr)
+}
+
+// TestMetadataNotInjectedOnNonHTML verifies metadata is NOT injected into
+// non-HTML responses (JSON, plain text, etc.).
+func TestMetadataNotInjectedOnNonHTML(t *testing.T) {
+	backend := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"ok":true}`))
+	}))
+	t.Cleanup(backend.Close)
+
+	u, _ := url.Parse(backend.URL)
+	backendPort, _ := strconv.Atoi(u.Port())
+
+	logger := testLogger{}
+	k := kernel.New(logger)
+	port := freePort(t)
+	p := proxy.New(proxy.Options{Port: port, Kernel: k, Logger: logger})
+	if err := p.Start(&kernel.Context{}); err != nil {
+		t.Fatalf("start proxy: %v", err)
+	}
+	t.Cleanup(func() { _ = p.Stop(&kernel.Context{}) })
+	waitForServer(t, port, "/health")
+
+	host := "no-meta.bigbase.click"
+	metadata := map[string]string{"version": "should-not-appear"}
+
+	if err := p.RegisterDeploymentHost(host, backendPort, "s-nometa", nil, metadata); err != nil {
+		t.Fatalf("register host: %v", err)
+	}
+
+	req, _ := http.NewRequest(http.MethodGet,
+		fmt.Sprintf("http://127.0.0.1:%s/", port), nil)
+	req.Host = host
+	resp, _ := http.DefaultClient.Do(req)
+	defer func() { _ = resp.Body.Close() }()
+
+	body, _ := io.ReadAll(resp.Body)
+	if strings.Contains(string(body), "__BIGBASE_METADATA__") {
+		t.Fatal("metadata should NOT be injected into JSON response")
+	}
+	if !strings.Contains(string(body), `"ok":true`) {
+		t.Error("original JSON should be preserved")
+	}
 }

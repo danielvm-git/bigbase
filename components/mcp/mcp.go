@@ -21,7 +21,7 @@ const version = "0.1.0"
 
 // DeployTrigger triggers a deployment from a git repo.
 type DeployTrigger interface {
-	Trigger(ctx context.Context, repoID, branch, siteName, siteID string) (*deploy.Deployment, error)
+	Trigger(ctx context.Context, repoID, branch, siteName, siteID string, passthroughPaths []string) (*deploy.Deployment, error)
 }
 
 // Options configure the MCP component.
@@ -297,7 +297,7 @@ Use list_services to see the full catalog, get_service_docs for details on a spe
 
 		// If a Deployer is wired in, trigger the actual deployment.
 		if c.deployer != nil {
-			dep, err := c.deployer.Trigger(ctx, repoID, branch, siteName, siteID)
+			dep, err := c.deployer.Trigger(ctx, repoID, branch, siteName, siteID, nil)
 			if err != nil {
 				return textResult(fmt.Sprintf("Deploy failed: %v", err)), nil, nil
 			}

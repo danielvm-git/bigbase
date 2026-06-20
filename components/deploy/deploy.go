@@ -49,17 +49,18 @@ const (
 )
 
 type Deployment struct {
-	ID           string  `json:"id"`
-	RepoID       string  `json:"repo_id"`
-	SiteID       string  `json:"site_id"`
-	Branch       string  `json:"branch"`
-	CommitSHA    string  `json:"commit_sha"`
-	Status       string  `json:"status"`
-	URL          string  `json:"url"`
-	Port         int     `json:"port"`
-	AppType      AppType `json:"app_type"`
-	ErrorMessage string  `json:"error_message,omitempty"`
-	CreatedAt    string  `json:"created_at"`
+	ID               string   `json:"id"`
+	RepoID           string   `json:"repo_id"`
+	SiteID           string   `json:"site_id"`
+	Branch           string   `json:"branch"`
+	CommitSHA        string   `json:"commit_sha"`
+	Status           string   `json:"status"`
+	URL              string   `json:"url"`
+	Port             int      `json:"port"`
+	AppType          AppType  `json:"app_type"`
+	ErrorMessage     string   `json:"error_message,omitempty"`
+	PassthroughPaths []string `json:"passthrough_paths,omitempty"`
+	CreatedAt        string   `json:"created_at"`
 }
 
 type runningApp struct {
@@ -72,7 +73,7 @@ type runningApp struct {
 
 // DeploymentHostRegistry routes public hostnames to local deployment ports.
 type DeploymentHostRegistry interface {
-	RegisterDeploymentHost(host string, port int, siteID string) error
+	RegisterDeploymentHost(host string, port int, siteID string, passthroughPaths []string, metadata map[string]string) error
 	UnregisterDeploymentHost(host string)
 }
 
@@ -189,6 +190,9 @@ func (d *Deploy) Start(ctx *kernel.Context) error {
 	if err := d.ensureSiteIDColumn(); err != nil {
 		return err
 	}
+	if err := d.ensurePassthroughPathsColumn(); err != nil {
+		return err
+	}
 	if err := d.db.Migrate(`CREATE TABLE IF NOT EXISTS site_request_logs (
 		id TEXT PRIMARY KEY,
 		site_id TEXT NOT NULL,
@@ -213,12 +217,13 @@ func (d *Deploy) Start(ctx *kernel.Context) error {
 type resumeCandidate struct {
 	id, repoID, repoName, rawURL, appType, siteID string
 	port                                          int
+	passthroughPaths                              []string
 }
 
 func (d *Deploy) loadResumeCandidates() []resumeCandidate {
 	ctx := context.Background()
 	rows, err := d.db.QueryContext(ctx,
-		`SELECT d.id, d.repo_id, g.name, d.url, d.port, d.app_type, d.site_id
+		`SELECT d.id, d.repo_id, g.name, d.url, d.port, d.app_type, d.site_id, d.passthrough_paths
 		 FROM deployments d
 		 JOIN git_repos g ON g.id = d.repo_id
 		 WHERE d.status = 'running' AND d.port > 0
@@ -233,9 +238,11 @@ func (d *Deploy) loadResumeCandidates() []resumeCandidate {
 	var out []resumeCandidate
 	for rows.Next() {
 		var c resumeCandidate
-		if err := rows.Scan(&c.id, &c.repoID, &c.repoName, &c.rawURL, &c.port, &c.appType, &c.siteID); err != nil {
+		var passthroughJSON string
+		if err := rows.Scan(&c.id, &c.repoID, &c.repoName, &c.rawURL, &c.port, &c.appType, &c.siteID, &passthroughJSON); err != nil {
 			continue
 		}
+		c.passthroughPaths = parsePassthroughPaths(passthroughJSON)
 		host := HostFromDeploymentURL(c.rawURL)
 		if host == "" || host == "localhost" || seenHost[host] {
 			continue
@@ -301,23 +308,28 @@ func (d *Deploy) restoreRunningDeploymentHosts() {
 	}
 	ctx := context.Background()
 	rows, err := d.db.QueryContext(ctx,
-		`SELECT url, port, site_id FROM deployments WHERE status = 'running' AND port > 0`)
+		`SELECT url, port, site_id, commit_sha, passthrough_paths FROM deployments WHERE status = 'running' AND port > 0`)
 	if err != nil {
 		d.logger.Warn("restore deployment hosts", "error", err)
 		return
 	}
 	defer func() { _ = rows.Close() }()
 	for rows.Next() {
-		var rawURL, siteID string
+		var rawURL, siteID, commitSHA, passthroughJSON string
 		var port int
-		if err := rows.Scan(&rawURL, &port, &siteID); err != nil {
+		if err := rows.Scan(&rawURL, &port, &siteID, &commitSHA, &passthroughJSON); err != nil {
 			continue
 		}
 		host := HostFromDeploymentURL(rawURL)
 		if host == "" {
 			continue
 		}
-		if err := d.hostRouter.RegisterDeploymentHost(host, port, siteID); err != nil {
+		passthroughPaths := parsePassthroughPaths(passthroughJSON)
+		metadata := map[string]string{}
+		if commitSHA != "" {
+			metadata["version"] = commitSHA
+		}
+		if err := d.hostRouter.RegisterDeploymentHost(host, port, siteID, passthroughPaths, metadata); err != nil {
 			d.logger.Warn("restore deployment host", "host", host, "error", err)
 		}
 	}
@@ -378,6 +390,27 @@ func writeJSON(w http.ResponseWriter, status int, data any) {
 	_ = json.NewEncoder(w).Encode(data)
 }
 
+// marshalPassthroughPaths converts a string slice to a JSON array string for DB storage.
+func marshalPassthroughPaths(paths []string) string {
+	if len(paths) == 0 {
+		return ""
+	}
+	data, _ := json.Marshal(paths)
+	return string(data)
+}
+
+// parsePassthroughPaths parses a JSON array string from the DB into a string slice.
+func parsePassthroughPaths(raw string) []string {
+	if raw == "" {
+		return nil
+	}
+	var paths []string
+	if err := json.Unmarshal([]byte(raw), &paths); err != nil {
+		return nil
+	}
+	return paths
+}
+
 func (d *Deploy) HandleCreate(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
 		writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
@@ -385,10 +418,11 @@ func (d *Deploy) HandleCreate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var req struct {
-		RepoID   string `json:"repo_id"`
-		Branch   string `json:"branch"`
-		SiteName string `json:"site_name"`
-		SiteID   string `json:"site_id"`
+		RepoID           string   `json:"repo_id"`
+		Branch           string   `json:"branch"`
+		SiteName         string   `json:"site_name"`
+		SiteID           string   `json:"site_id"`
+		PassthroughPaths []string `json:"passthrough_paths"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid JSON"})
@@ -402,7 +436,7 @@ func (d *Deploy) HandleCreate(w http.ResponseWriter, r *http.Request) {
 		req.Branch = "main"
 	}
 
-	deploy, err := d.Trigger(r.Context(), req.RepoID, req.Branch, req.SiteName, req.SiteID)
+	deploy, err := d.Trigger(r.Context(), req.RepoID, req.Branch, req.SiteName, req.SiteID, req.PassthroughPaths)
 	if err != nil {
 		switch err.Error() {
 		case "repo not found":
@@ -417,7 +451,7 @@ func (d *Deploy) HandleCreate(w http.ResponseWriter, r *http.Request) {
 }
 
 // Trigger starts a deployment for a git repo without going through HTTP.
-func (d *Deploy) Trigger(ctx context.Context, repoID, branch, siteName, siteID string) (*Deployment, error) {
+func (d *Deploy) Trigger(ctx context.Context, repoID, branch, siteName, siteID string, passthroughPaths []string) (*Deployment, error) {
 	if repoID == "" {
 		return nil, fmt.Errorf("repo_id is required")
 	}
@@ -448,20 +482,22 @@ func (d *Deploy) Trigger(ctx context.Context, repoID, branch, siteName, siteID s
 	buildDir := filepath.Join(d.buildsDir, id)
 	port := pickPort(d.basePort)
 
+	passthroughJSON := marshalPassthroughPaths(passthroughPaths)
 	deploy := &Deployment{
-		ID:        id,
-		RepoID:    repoID,
-		SiteID:    siteID,
-		Branch:    branch,
-		Status:    "pending",
-		Port:      port,
-		URL:       deploymentURL(d.publicDomain, d.useHTTPS, siteName, port),
-		CreatedAt: time.Now().UTC().Format(time.RFC3339),
+		ID:               id,
+		RepoID:           repoID,
+		SiteID:           siteID,
+		Branch:           branch,
+		Status:           "pending",
+		Port:             port,
+		PassthroughPaths: passthroughPaths,
+		URL:              deploymentURL(d.publicDomain, d.useHTTPS, siteName, port),
+		CreatedAt:        time.Now().UTC().Format(time.RFC3339),
 	}
 
 	if _, err := d.db.ExecContext(ctx,
-		"INSERT INTO deployments (id, repo_id, site_id, branch, status, port, url, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-		id, repoID, siteID, branch, deploy.Status, deploy.Port, deploy.URL, deploy.CreatedAt); err != nil {
+		"INSERT INTO deployments (id, repo_id, site_id, branch, status, port, url, passthrough_paths, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+		id, repoID, siteID, branch, deploy.Status, deploy.Port, deploy.URL, passthroughJSON, deploy.CreatedAt); err != nil {
 		return nil, err
 	}
 
@@ -877,6 +913,18 @@ func (d *Deploy) ensureBuildLogColumn() error {
 	return fmt.Errorf("add build_log column: %w", err)
 }
 
+func (d *Deploy) ensurePassthroughPathsColumn() error {
+	_, err := d.db.ExecContext(context.Background(),
+		`ALTER TABLE deployments ADD COLUMN passthrough_paths TEXT DEFAULT ''`)
+	if err == nil {
+		return nil
+	}
+	if strings.Contains(strings.ToLower(err.Error()), "duplicate column") {
+		return nil
+	}
+	return fmt.Errorf("add passthrough_paths column: %w", err)
+}
+
 func (d *Deploy) finalizeDeploymentURL(deploy *Deployment, repoName string) {
 	url := deploymentURL(d.publicDomain, d.useHTTPS, repoName, deploy.Port)
 	host := deploymentHost(d.publicDomain, repoName)
@@ -887,10 +935,22 @@ func (d *Deploy) finalizeDeploymentURL(deploy *Deployment, repoName string) {
 		url, deploy.Port, deploy.ID)
 
 	if d.hostRouter != nil && host != "" {
-		if err := d.hostRouter.RegisterDeploymentHost(host, deploy.Port, deploy.SiteID); err != nil {
+		metadata := d.buildMetadata(deploy)
+		if err := d.hostRouter.RegisterDeploymentHost(host, deploy.Port, deploy.SiteID, deploy.PassthroughPaths, metadata); err != nil {
 			d.logger.Warn("register deployment host", "host", host, "error", err)
 		}
 	}
+}
+
+// buildMetadata constructs the __BIGBASE_METADATA__ map for a deployment.
+func (d *Deploy) buildMetadata(deploy *Deployment) map[string]string {
+	m := map[string]string{
+		"deployedAt": time.Now().UTC().Format(time.RFC3339),
+	}
+	if deploy.CommitSHA != "" {
+		m["version"] = deploy.CommitSHA
+	}
+	return m
 }
 
 func DetectAppType(buildDir string) AppType {
@@ -967,7 +1027,7 @@ func (d *Deploy) HandleList(w http.ResponseWriter, r *http.Request) {
 	}
 
 	rows, err := d.db.QueryContext(r.Context(),
-		"SELECT id, repo_id, site_id, COALESCE(branch,'main'), COALESCE(commit_sha,''), COALESCE(status,'pending'), COALESCE(url,''), COALESCE(port,0), COALESCE(app_type,''), COALESCE(error_message,''), created_at FROM deployments ORDER BY created_at DESC")
+		"SELECT id, repo_id, site_id, COALESCE(branch,'main'), COALESCE(commit_sha,''), COALESCE(status,'pending'), COALESCE(url,''), COALESCE(port,0), COALESCE(app_type,''), COALESCE(error_message,''), COALESCE(passthrough_paths,''), created_at FROM deployments ORDER BY created_at DESC")
 	if err != nil {
 		d.logger.Error("list deployments", "error", err)
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
@@ -978,10 +1038,12 @@ func (d *Deploy) HandleList(w http.ResponseWriter, r *http.Request) {
 	deployments := make([]Deployment, 0)
 	for rows.Next() {
 		var dep Deployment
-		if err := rows.Scan(&dep.ID, &dep.RepoID, &dep.SiteID, &dep.Branch, &dep.CommitSHA, &dep.Status, &dep.URL, &dep.Port, &dep.AppType, &dep.ErrorMessage, &dep.CreatedAt); err != nil {
+		var passthroughJSON string
+		if err := rows.Scan(&dep.ID, &dep.RepoID, &dep.SiteID, &dep.Branch, &dep.CommitSHA, &dep.Status, &dep.URL, &dep.Port, &dep.AppType, &dep.ErrorMessage, &passthroughJSON, &dep.CreatedAt); err != nil {
 			d.logger.Error("scan deployment", "error", err)
 			continue
 		}
+		dep.PassthroughPaths = parsePassthroughPaths(passthroughJSON)
 		deployments = append(deployments, dep)
 	}
 	writeJSON(w, http.StatusOK, map[string]any{"data": deployments})
@@ -1018,15 +1080,16 @@ func (d *Deploy) handleDeployByID(w http.ResponseWriter, r *http.Request) {
 		d.handleDeleteDeployment(w, r, id)
 	case http.MethodGet:
 		var dep Deployment
-		var appType string
+		var appType, passthroughJSON string
 		err := d.db.QueryRowContext(r.Context(),
-			"SELECT id, repo_id, site_id, branch, commit_sha, status, url, port, app_type, COALESCE(error_message,''), created_at FROM deployments WHERE id = ?", id).
-			Scan(&dep.ID, &dep.RepoID, &dep.SiteID, &dep.Branch, &dep.CommitSHA, &dep.Status, &dep.URL, &dep.Port, &appType, &dep.ErrorMessage, &dep.CreatedAt)
+			"SELECT id, repo_id, site_id, branch, commit_sha, status, url, port, app_type, COALESCE(error_message,''), COALESCE(passthrough_paths,''), created_at FROM deployments WHERE id = ?", id).
+			Scan(&dep.ID, &dep.RepoID, &dep.SiteID, &dep.Branch, &dep.CommitSHA, &dep.Status, &dep.URL, &dep.Port, &appType, &dep.ErrorMessage, &passthroughJSON, &dep.CreatedAt)
 		if err != nil {
 			writeJSON(w, http.StatusNotFound, map[string]string{"error": "deployment not found"})
 			return
 		}
 		dep.AppType = AppType(appType)
+		dep.PassthroughPaths = parsePassthroughPaths(passthroughJSON)
 		writeJSON(w, http.StatusOK, dep)
 	default:
 		writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})

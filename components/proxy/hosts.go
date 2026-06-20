@@ -1,7 +1,10 @@
 package proxy
 
 import (
+	"bytes"
+	"compress/gzip"
 	"fmt"
+	"io"
 	"net"
 	"net/http"
 	"net/http/httputil"
@@ -11,12 +14,16 @@ import (
 )
 
 type hostInfo struct {
-	Port   int
-	SiteID string
+	Port             int
+	SiteID           string
+	PassthroughPaths []string
+	Metadata         map[string]string // injected into __BIGBASE_METADATA__
 }
 
 // RegisterDeploymentHost maps a public hostname to a local deployment port.
-func (p *Proxy) RegisterDeploymentHost(host string, port int, siteID string) error {
+// passthroughPaths are URL path prefixes that bypass BigBase's /api/* intercept
+// and are forwarded directly to the deployed app.
+func (p *Proxy) RegisterDeploymentHost(host string, port int, siteID string, passthroughPaths []string, metadata map[string]string) error {
 	host = normalizeHost(host)
 	if host == "" || port < 1 || port > 65535 {
 		return fmt.Errorf("invalid deployment host or port")
@@ -31,7 +38,7 @@ func (p *Proxy) RegisterDeploymentHost(host string, port int, siteID string) err
 	}
 	// Allow replacing an existing registration — subsequent deployments for the
 	// same host update the port in place, enabling zero-downtime redeployment.
-	p.deployHosts[host] = hostInfo{Port: port, SiteID: siteID}
+	p.deployHosts[host] = hostInfo{Port: port, SiteID: siteID, PassthroughPaths: passthroughPaths, Metadata: metadata}
 	return nil
 }
 
@@ -177,9 +184,18 @@ func (p *Proxy) deploymentHostMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		// API calls to deployment hosts must reach BigBase, not the static
-		// file server. Forward /api/* paths to the main handler.
-		if strings.HasPrefix(r.URL.Path, "/api/") {
+		// API calls to deployment hosts that match BigBase's own API are
+		// handled locally. Passthrough paths (configured per-deployment) skip
+		// this intercept and are forwarded to the deployed app.
+		passthrough := false
+		for _, pp := range info.PassthroughPaths {
+			pp = strings.TrimSuffix(pp, "/*")
+			if strings.HasPrefix(r.URL.Path, pp) {
+				passthrough = true
+				break
+			}
+		}
+		if !passthrough && strings.HasPrefix(r.URL.Path, "/api/") {
 			next.ServeHTTP(w, r)
 			return
 		}
@@ -193,6 +209,11 @@ func (p *Proxy) deploymentHostMiddleware(next http.Handler) http.Handler {
 		proxy.ErrorHandler = func(rw http.ResponseWriter, _ *http.Request, _ error) {
 			http.Error(rw, "deployment unavailable", http.StatusBadGateway)
 		}
+		// Inject __BIGBASE_METADATA__ script into HTML responses.
+		proxy.ModifyResponse = func(resp *http.Response) error {
+			p.injectMetadata(resp, info.Metadata)
+			return nil
+		}
 
 		start := time.Now()
 		rw := &responseWriter{ResponseWriter: w, status: http.StatusOK}
@@ -202,4 +223,111 @@ func (p *Proxy) deploymentHostMiddleware(next http.Handler) http.Handler {
 			p.requestLogger.RecordRequestLog(info.SiteID, r.Method, r.URL.Path, rw.status, time.Since(start))
 		}
 	})
+}
+
+// injectMetadata adds a __BIGBASE_METADATA__ <script> tag to HTML responses.
+// Supports gzip-compressed responses. Non-HTML and empty metadata are no-ops.
+func (p *Proxy) injectMetadata(resp *http.Response, metadata map[string]string) {
+	if len(metadata) == 0 {
+		return
+	}
+	ct := resp.Header.Get("Content-Type")
+	if !strings.Contains(ct, "text/html") {
+		return
+	}
+
+	// Build the injection script.
+	var buf bytes.Buffer
+	buf.WriteString("<script>window.__BIGBASE_METADATA__ = {")
+	first := true
+	for k, v := range metadata {
+		if !first {
+			buf.WriteString(",")
+		}
+		first = false
+		fmt.Fprintf(&buf, `"%s":"%s"`, k, escapeJSON(v))
+	}
+	buf.WriteString("};</script>")
+	script := buf.Bytes()
+
+	// Read the body, optionally decompress gzip.
+	var bodyBytes []byte
+	var err error
+	if resp.Header.Get("Content-Encoding") == "gzip" {
+		var gr *gzip.Reader
+		gr, err = gzip.NewReader(resp.Body)
+		if err != nil {
+			return
+		}
+		bodyBytes, err = io.ReadAll(gr)
+		_ = gr.Close()
+	} else {
+		bodyBytes, err = io.ReadAll(resp.Body)
+	}
+	if err != nil || len(bodyBytes) == 0 {
+		resp.Body = io.NopCloser(strings.NewReader(""))
+		// Re-create a nil body to avoid data loss on error.
+		if len(bodyBytes) > 0 {
+			resp.Body = io.NopCloser(bytes.NewReader(bodyBytes))
+		}
+		return
+	}
+	_ = resp.Body.Close()
+
+	// Inject after </head> or before </body>, preferring </head>.
+	var injected []byte
+	if idx := bytes.LastIndex(bodyBytes, []byte("</head>")); idx >= 0 {
+		injected = make([]byte, 0, len(bodyBytes)+len(script))
+		injected = append(injected, bodyBytes[:idx+len("</head>")]...)
+		injected = append(injected, script...)
+		injected = append(injected, bodyBytes[idx+len("</head>"):]...)
+	} else if idx := bytes.LastIndex(bodyBytes, []byte("</body>")); idx >= 0 {
+		injected = make([]byte, 0, len(bodyBytes)+len(script))
+		injected = append(injected, bodyBytes[:idx]...)
+		injected = append(injected, script...)
+		injected = append(injected, bodyBytes[idx:]...)
+	} else {
+		// No recognizable insertion point — prepend.
+		injected = make([]byte, 0, len(bodyBytes)+len(script))
+		injected = append(injected, script...)
+		injected = append(injected, bodyBytes...)
+	}
+
+	// Re-compress if original was gzipped.
+	if resp.Header.Get("Content-Encoding") == "gzip" {
+		var gzBuf bytes.Buffer
+		gw := gzip.NewWriter(&gzBuf)
+		if _, err := gw.Write(injected); err != nil {
+			_ = gw.Close()
+			return
+		}
+		_ = gw.Close()
+		injected = gzBuf.Bytes()
+	}
+
+	resp.Body = io.NopCloser(bytes.NewReader(injected))
+	resp.ContentLength = int64(len(injected))
+	resp.Header.Set("Content-Length", fmt.Sprintf("%d", len(injected)))
+}
+
+// escapeJSON escapes a string for safe inclusion in a JSON value.
+func escapeJSON(s string) string {
+	var buf bytes.Buffer
+	for _, r := range s {
+		switch r {
+		case '"':
+			buf.WriteString(`\"`)
+		case '\\':
+			buf.WriteString(`\\`)
+		case '\n':
+			buf.WriteString(`\n`)
+		case '\r':
+			buf.WriteString(`\r`)
+		case '\t':
+			buf.WriteString(`\t`)
+		default:
+			buf.WriteRune(r)
+		}
+	}
+	return buf.String()
 }
