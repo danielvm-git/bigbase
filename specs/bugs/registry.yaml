@@ -316,3 +316,11 @@ bugs:
     summary: "Reviewer must-fix findings on prototype-fidelity-parity: mock success leaks /api/auth, ThemePicker loses focus on close, 5 of 15 planned icon names were silently substituted"
     file: specs/bugs/BUG-2026-06-04T100000-reviewer-must-fix-on-prototype-fidelity.md
     status: fixed
+  - id: BUG-2026-06-20T014500
+    date: "2026-06-20"
+    severity: high
+    priority: high
+    scope: deploy,proxy
+    summary: Redeployment does not replace static files — old content persists on domain
+    file: specs/bugs/BUG-2026-06-20T014500-redeploy-stale-static-files.md
+    status: open

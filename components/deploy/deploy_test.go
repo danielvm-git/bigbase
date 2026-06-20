@@ -11,6 +11,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"os/exec"
+	"sync"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -1713,5 +1714,185 @@ func TestSvelteKitSSRStartCommand(t *testing.T) {
 	}
 	if got := deploy.GetStartCommand(dir); got != "node build/index.js" {
 		t.Fatalf("expected 'node build/index.js' for SvelteKit SSR, got '%s'", got)
+	}
+}
+
+// mockHostRegistry implements DeploymentHostRegistry for testing.
+type mockHostRegistry struct {
+	mu    sync.Mutex
+	hosts map[string]int // host -> port
+}
+
+func (m *mockHostRegistry) RegisterDeploymentHost(host string, port int, _ string) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if m.hosts == nil {
+		m.hosts = make(map[string]int)
+	}
+	m.hosts[host] = port
+	return nil
+}
+
+func (m *mockHostRegistry) UnregisterDeploymentHost(host string) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	delete(m.hosts, host)
+}
+
+func (m *mockHostRegistry) getPort(host string) (int, bool) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	p, ok := m.hosts[host]
+	return p, ok
+}
+
+func TestRedeployReplacesPrevious(t *testing.T) {
+	logger := testLogger{}
+	database := db.New(db.Options{Path: ":memory:", Logger: logger})
+	gitDir := t.TempDir()
+	buildsDir := t.TempDir()
+	gitComp := newGitStub(gitDir)
+
+	hostReg := &mockHostRegistry{}
+
+	dep := deploy.New(deploy.Options{
+		DB:           database,
+		Logger:       logger,
+		BuildsDir:    buildsDir,
+		GitDir:       gitDir,
+		PublicDomain: "test.click",
+		HostRouter:   hostReg,
+	})
+
+	k := kernel.New(logger)
+	k.Register(database)
+	k.Register(gitComp)
+	k.Register(dep)
+	if err := k.Start(); err != nil {
+		t.Fatalf("kernel start: %v", err)
+	}
+	t.Cleanup(func() { _ = k.Stop() })
+
+	handler := dep.Handler()
+	repoID := createTestRepo(t, database, "redeploy-test", gitDir)
+
+	// ── First deployment ──
+	body := map[string]string{
+		"repo_id":   repoID,
+		"branch":    "main",
+		"site_id":   "site-1",
+		"site_name": "redeploy-test",
+	}
+	var buf bytes.Buffer
+	_ = json.NewEncoder(&buf).Encode(body)
+	req := httptest.NewRequest("POST", "/api/deploy", &buf)
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+	if w.Code != http.StatusCreated {
+		t.Fatalf("first deploy: %d: %s", w.Code, w.Body.String())
+	}
+
+	var created map[string]any
+	_ = json.NewDecoder(w.Body).Decode(&created)
+	depID1, _ := created["id"].(string)
+
+	waitForDeploymentTerminal(t, handler, depID1, 10*time.Second)
+
+	// Verify first deployment is running and port is registered
+	getReq := httptest.NewRequest("GET", "/api/deploy/"+depID1, nil)
+	getW := httptest.NewRecorder()
+	handler.ServeHTTP(getW, getReq)
+	var dep1 map[string]any
+	_ = json.NewDecoder(getW.Body).Decode(&dep1)
+	status1, _ := dep1["status"].(string)
+	port1, _ := dep1["port"].(float64)
+	if status1 != "running" {
+		t.Fatalf("first deploy status = %q, want running", status1)
+	}
+
+	host := "redeploy-test.test.click"
+	gotPort, ok := hostReg.getPort(host)
+	if !ok {
+		t.Fatal("host not registered after first deploy")
+	}
+	if gotPort != int(port1) {
+		t.Fatalf("after first deploy host port = %d, want %d", gotPort, int(port1))
+	}
+
+	// ── Second deployment (same repo, same site) ──
+	buf.Reset()
+	_ = json.NewEncoder(&buf).Encode(body)
+	req2 := httptest.NewRequest("POST", "/api/deploy", &buf)
+	req2.Header.Set("Content-Type", "application/json")
+	w2 := httptest.NewRecorder()
+	handler.ServeHTTP(w2, req2)
+	if w2.Code != http.StatusCreated {
+		t.Fatalf("second deploy: %d: %s", w2.Code, w2.Body.String())
+	}
+
+	var created2 map[string]any
+	_ = json.NewDecoder(w2.Body).Decode(&created2)
+	depID2, _ := created2["id"].(string)
+
+	waitForDeploymentTerminal(t, handler, depID2, 10*time.Second)
+
+	// Verify second deployment is running
+	getReq2 := httptest.NewRequest("GET", "/api/deploy/"+depID2, nil)
+	getW2 := httptest.NewRecorder()
+	handler.ServeHTTP(getW2, getReq2)
+	var dep2 map[string]any
+	_ = json.NewDecoder(getW2.Body).Decode(&dep2)
+	status2, _ := dep2["status"].(string)
+	port2, _ := dep2["port"].(float64)
+	if status2 != "running" {
+		t.Fatalf("second deploy status = %q, want running", status2)
+	}
+
+	// Host should now point to second deployment's port
+	gotPort2, ok := hostReg.getPort(host)
+	if !ok {
+		t.Fatal("host not registered after second deploy")
+	}
+	if gotPort2 != int(port2) {
+		t.Fatalf("after redeploy host port = %d, want %d (second deploy port)", gotPort2, int(port2))
+	}
+
+	// First deployment should be marked as replaced
+	getAgain1 := httptest.NewRequest("GET", "/api/deploy/"+depID1, nil)
+	getWAgain1 := httptest.NewRecorder()
+	handler.ServeHTTP(getWAgain1, getAgain1)
+	var dep1Again map[string]any
+	_ = json.NewDecoder(getWAgain1.Body).Decode(&dep1Again)
+	status1After, _ := dep1Again["status"].(string)
+	if status1After != "replaced" {
+		t.Fatalf("first deploy status after redeploy = %q, want replaced", status1After)
+	}
+
+	// Verify second deployment service is reachable (static server running).
+	// Retry a few times — serveStatic runs in a goroutine and may not be
+	// listening immediately after waitForDeploymentTerminal returns.
+	addr := fmt.Sprintf("http://127.0.0.1:%d", int(port2))
+	var bodyBytes []byte
+	serverOK := false
+	for i := 0; i < 20; i++ {
+		reqCheck, _ := http.NewRequest("GET", addr, nil)
+		ctx, cancel := context.WithTimeout(context.Background(), 500*time.Millisecond)
+		reqCheck = reqCheck.WithContext(ctx)
+		resp, err := http.DefaultClient.Do(reqCheck)
+		cancel()
+		if err == nil {
+			bodyBytes, _ = io.ReadAll(resp.Body)
+			_ = resp.Body.Close()
+			if strings.Contains(string(bodyBytes), "Hello") {
+				serverOK = true
+				break
+			}
+		}
+		time.Sleep(100 * time.Millisecond)
+	}
+	if !serverOK {
+		t.Fatalf("second deployment serving on port %d, body = %q, want 'Hello'",
+			int(port2), string(bodyBytes))
 	}
 }

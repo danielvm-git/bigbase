@@ -434,6 +434,11 @@ func (d *Deploy) Trigger(ctx context.Context, repoID, branch, siteName, siteID s
 		siteName = repoName
 	}
 
+	// Stop any previous running deployment for the same site or repo.
+	// By unregistering the old host before the new deployment starts,
+	// finalizeDeploymentURL will successfully register the new port.
+	d.stopPreviousDeployments(ctx, siteID, repoID)
+
 	id, err := generateID()
 	if err != nil {
 		return nil, err
@@ -462,8 +467,75 @@ func (d *Deploy) Trigger(ctx context.Context, repoID, branch, siteName, siteID s
 	d.initDeployLogs(id)
 	d.appendDeployLog(id, fmt.Sprintf("→ Deployment started (branch: %s)", branch))
 
+	// After finalizeDeploymentURL runs, the proxy will route to the new port.
+	// Any old deployment stopped above is already unregistered and cleaned up.
 	go d.runDeployment(deploy, buildDir, siteName)
 	return deploy, nil
+}
+
+// stopDeployment stops a running deployment: kills the process, shuts down the
+// static server, unregisters the proxy host, and optionally updates DB status.
+func (d *Deploy) stopDeployment(id, newStatus string) {
+	d.mu.Lock()
+	app, hasApp := d.apps[id]
+	if hasApp {
+		delete(d.apps, id)
+	}
+	d.mu.Unlock()
+
+	if hasApp {
+		if app.cmd != nil && app.cmd.Process != nil {
+			_ = app.cmd.Process.Kill()
+		}
+		if app.server != nil {
+			shutdownCtx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+			_ = app.server.Shutdown(shutdownCtx)
+			cancel()
+		}
+		if d.hostRouter != nil && app.host != "" {
+			d.hostRouter.UnregisterDeploymentHost(app.host)
+		}
+	}
+
+	if newStatus != "" {
+		_, _ = d.db.ExecContext(context.Background(),
+			"UPDATE deployments SET status = ? WHERE id = ?", newStatus, id)
+	}
+}
+
+// stopPreviousDeployments finds and stops any running deployments for the same
+// site (by site_id) or same repo (by repo_id), marking them as "replaced".
+// IDs are collected first, then stopped, to avoid nesting DB queries on a
+// single-connection SQLite pool.
+func (d *Deploy) stopPreviousDeployments(ctx context.Context, siteID, repoID string) {
+	var query string
+	var args []any
+	if siteID != "" {
+		query = "SELECT id FROM deployments WHERE site_id = ? AND status = 'running'"
+		args = []any{siteID}
+	} else {
+		query = "SELECT id FROM deployments WHERE repo_id = ? AND status = 'running'"
+		args = []any{repoID}
+	}
+	rows, err := d.db.QueryContext(ctx, query, args...)
+	if err != nil {
+		d.logger.Warn("query previous deployments", "error", err)
+		return
+	}
+	var ids []string
+	for rows.Next() {
+		var id string
+		if err := rows.Scan(&id); err != nil {
+			continue
+		}
+		ids = append(ids, id)
+	}
+	_ = rows.Close()
+
+	for _, id := range ids {
+		d.stopDeployment(id, "replaced")
+		d.logger.Info("stopped previous deployment", "replaced", id)
+	}
 }
 
 func (d *Deploy) runDeployment(deploy *Deployment, buildDir, repoName string) {
@@ -945,24 +1017,7 @@ func (d *Deploy) handleDeleteDeployment(w http.ResponseWriter, r *http.Request, 
 		return
 	}
 
-	d.mu.Lock()
-	app, hasApp := d.apps[id]
-	if hasApp {
-		delete(d.apps, id)
-	}
-	d.mu.Unlock()
-
-	if hasApp {
-		if app.cmd != nil && app.cmd.Process != nil {
-			_ = app.cmd.Process.Kill()
-		}
-		if app.server != nil {
-			_ = app.server.Close()
-		}
-		if d.hostRouter != nil {
-			d.hostRouter.UnregisterDeploymentHost(app.host)
-		}
-	}
+	d.stopDeployment(id, "replaced")
 
 	_ = os.RemoveAll(filepath.Join(d.buildsDir, id))
 	d.deleteDeployLogs(id)
