@@ -22,7 +22,7 @@ jobs:
     steps:
       - name: PR Agent
         # Pin to v0.34 for stability — @main has hardcoded GPT-5 model names
-        uses: docker://pragent/pr-agent:v0.34-github_action
+        uses: docker://pragent/pr-agent:0.36.0-github_action
         env:
           OPENAI_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
           DEEPSEEK_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
