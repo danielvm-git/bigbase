@@ -34,3 +34,4 @@ jobs:
           github_action_config.model: "deepseek-v4-pro"
           CONFIG__MODEL: "deepseek-v4-pro"
           CONFIG__FALLBACK_MODELS: '["deepseek-v4-flash"]'
+          CONFIG__CUSTOM_MODEL_MAX_TOKENS: "128000"

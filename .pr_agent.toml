@@ -4,6 +4,7 @@
 [config]
 model = "deepseek-v4-pro"
 fallback_models = ["deepseek-v4-flash"]
+custom_model_max_tokens = 128000
 response_language = "en-US"
 # Skip generated/doc files from diff analysis
 patch_extension_skip_types = [".md", ".txt", ".yaml", ".toml", ".jsonc"]
@@ -12,6 +13,8 @@ patch_extension_skip_types = [".md", ".txt", ".yaml", ".toml", ".jsonc"]
 require_tests_review = true           # flag if no tests added
 require_estimate_effort_to_review = true
 enable_review_labels_effort = true    # adds effort label to PR
+require_security_review = true        # explicit security audit on every PR
+num_max_findings = 5                  # more thorough: 5 instead of default 3
 extra_instructions = """
   This is a Go 1.22+ BaaS platform (BigBase) using Entity-Component-Construct (ECC) architecture.
   Components: proxy, auth, db, api, storage, git, forge, cici, functions, realtime, messaging, deploy, admin, monitoring.
