@@ -1,3 +1,10 @@
+# [2.31.0](https://github.com/danielvm-git/bigbase/compare/v2.30.3...v2.31.0) (2026-06-20)
+
+
+### Features
+
+* **deploy:** build resilience — Puppeteer skip, build script validation, stdout capture, failure stats ([9e87f6f](https://github.com/danielvm-git/bigbase/commit/9e87f6fe8ecb7542397f77341841109dbf5752a0))
+
 ## [2.30.3](https://github.com/danielvm-git/bigbase/compare/v2.30.2...v2.30.3) (2026-06-20)
 
 
