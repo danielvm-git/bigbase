@@ -21,16 +21,15 @@ jobs:
       contents: read
     steps:
       - name: PR Agent
-        uses: qodo-ai/pr-agent@main
+        # Pin to v0.34 for stability — @main has hardcoded GPT-5 model names
+        uses: docker://pragent/pr-agent:v0.34-github_action
         env:
-          # PR-Agent expects OPENAI_KEY (not OPENAI__KEY) for LiteLLM
           OPENAI_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
-          OPENAI__KEY: ${{ secrets.DEEPSEEK_API_KEY }}
-          OPENAI__API_BASE: https://api.deepseek.com/v1
+          DEEPSEEK_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Model config via CONFIG.* format for PR-Agent v0.34
+          CONFIG__MODEL: "deepseek/deepseek-chat"
+          CONFIG__FALLBACK_MODELS: '["deepseek/deepseek-chat"]'
           github_action_config.auto_review: "true"
           github_action_config.auto_describe: "true"
           github_action_config.auto_improve: "true"
-          github_action_config.model: "deepseek-v4-pro"
-          # Duplicate for tools that read env vars directly vs via config
-          OPENAI__MODEL: "deepseek-v4-pro"
