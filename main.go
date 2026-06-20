@@ -203,8 +203,6 @@ func startProxy() {
 	} else {
 		logger.Debug("new relic agent disabled")
 	}
-	_ = nrApp // consumed by e40s02 (HTTP tracing) and e40s03 (DB tracing)
-
 	k := kernel.New(logger)
 
 	p := proxy.New(proxy.Options{
@@ -212,6 +210,7 @@ func startProxy() {
 		Kernel:             k,
 		Logger:             logger,
 		CORSAllowedOrigins: corsAllowedOrigins,
+		NRApp:              nrApp,
 	})
 	d := db.New(db.Options{
 		Driver: dbDriverVal,
