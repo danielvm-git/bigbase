@@ -35,10 +35,12 @@ import (
 	"github.com/danielvm/bigbase/components/storage"
 	"github.com/danielvm/bigbase/config"
 	"github.com/danielvm/bigbase/kernel"
+	"github.com/newrelic/go-agent/v3/newrelic"
 )
 
 var (
-	version = kernel.Version
+	version  = kernel.Version
+	nrApp    *newrelic.Application
 )
 
 // parseLogLevel converts a case-insensitive log level string to slog.Level.
@@ -155,6 +157,9 @@ func startProxy() {
 	mcpDisabled := serveFS.Bool("mcp-disabled", false, "Disable MCP server")
 	mcpPort := serveFS.Int("mcp-port", 3900, "MCP server HTTP port")
 	mcpTransport := serveFS.String("mcp-transport", "http", "MCP transport (stdio, http)")
+	nrLicenseKey := serveFS.String("newrelic-license-key", "", "New Relic license key (env: NEW_RELIC_LICENSE_KEY)")
+	nrAppName := serveFS.String("newrelic-app-name", "BigBase", "New Relic application name (env: NEW_RELIC_APP_NAME)")
+	nrEnabled := serveFS.Bool("newrelic-enabled", true, "Enable New Relic agent (env: NEW_RELIC_ENABLED)")
 	_ = serveFS.Parse(os.Args[2:])
 
 	googleID := config.FlagOrEnv(*googleClientID, "GOOGLE_CLIENT_ID")
@@ -166,6 +171,9 @@ func startProxy() {
 	sitesDomainVal := config.FlagOrEnv(*sitesDomain, "BIGBASE_SITES_DOMAIN")
 	dbDriverVal := config.FlagOrEnv(*dbDriver, "BIGBASE_DB_DRIVER")
 	dbDSNVal := config.FlagOrEnv(*dbDSN, "BIGBASE_DB_DSN")
+	newRelicLicenseKey := config.FlagOrEnv(*nrLicenseKey, "NEW_RELIC_LICENSE_KEY")
+	newRelicAppName := config.FlagOrEnv(*nrAppName, "NEW_RELIC_APP_NAME")
+	newRelicEnabled := *nrEnabled
 
 	level, err := parseLogLevel(*logLevel)
 	if err != nil {
@@ -178,6 +186,25 @@ func startProxy() {
 	corsAllowedOrigins := parseCORSOrigins(*corsOrigins)
 
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: level}))
+
+	// New Relic Application agent initialization
+	if newRelicEnabled && newRelicLicenseKey != "" {
+		var err error
+		nrApp, err = newrelic.NewApplication(
+			newrelic.ConfigAppName(newRelicAppName),
+			newrelic.ConfigLicense(newRelicLicenseKey),
+			newrelic.ConfigDebugLogger(os.Stdout),
+		)
+		if err != nil {
+			logger.Warn("new relic agent initialization failed", "error", err)
+		} else {
+			logger.Info("new relic agent initialized", "app", newRelicAppName)
+		}
+	} else {
+		logger.Debug("new relic agent disabled")
+	}
+	_ = nrApp // consumed by e40s02 (HTTP tracing) and e40s03 (DB tracing)
+
 	k := kernel.New(logger)
 
 	p := proxy.New(proxy.Options{

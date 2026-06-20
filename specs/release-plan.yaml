@@ -187,8 +187,41 @@ epics:
     file: archive/e35-advanced-auth.yaml
     mode: flat
     status: done
+  - id: e36
+    title: Delete Deployed Site — backend cascade, deploy cleanup, UI delete action, E2E
+    wsjf: 6.0
+    file: archive/e36-delete-site.yaml
+    mode: flat
+    status: done
   - id: e38
     title: MCP Server — Agent-Native Platform Education
     wsjf: 4.2
     file: epics/e38-mcp-server.yaml
     mode: flat
+    status: done
+  - id: e41
+    title: PR-Agent Automated Code Review
+    wsjf: 4.0
+    file: epics/e41-pr-agent-code-review.yaml
+    mode: flat
+    status: done
+
+  # ─── Next release (v2.13.0) ───
+  - id: e37
+    title: SvelteKit Deployment — static (adapter-static) & SSR (adapter-node)
+    wsjf: 4.0
+    file: epics/e37-sveltekit.yaml
+    mode: flat
+    status: done
+  - id: e39
+    title: Multi-User Platform — Admin panel, role switching, friend invites
+    wsjf: 3.6
+    file: epics/e39-multi-user-platform.yaml
+    mode: flat
+    status: planned
+  - id: e40
+    title: New Relic Integration — Application and Server Monitoring
+    wsjf: 5.33
+    file: epics/e40-newrelic/epic.yaml
+    mode: folder
+    status: in_progress
