@@ -1,3 +1,10 @@
+# [2.27.0](https://github.com/danielvm-git/bigbase/compare/v2.26.6...v2.27.0) (2026-06-20)
+
+
+### Features
+
+* **cli): add 'bigbase deploy' subcommand; feat(mcp:** deploy_site triggers real deploys ([01ab424](https://github.com/danielvm-git/bigbase/commit/01ab42437762f02884ca20ad9b0c338d2d35e409))
+
 ## [2.26.6](https://github.com/danielvm-git/bigbase/compare/v2.26.5...v2.26.6) (2026-06-20)
 
 
