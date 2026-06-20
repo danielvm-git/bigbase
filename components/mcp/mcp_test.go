@@ -85,12 +85,14 @@ func TestHTTPTransport(t *testing.T) {
 		t.Error("health: expected non-empty body")
 	}
 
-	// Test MCP endpoint requires POST
+	// Test GET /mcp is allowed (SSE connection). MCP Streamable HTTP spec
+	// requires GET for establishing server→client event streams.
 	req = httptest.NewRequest(http.MethodGet, "/mcp", nil)
+	req.Header.Set("Accept", "text/event-stream")
 	w = httptest.NewRecorder()
 	handler.ServeHTTP(w, req)
-	if w.Code != http.StatusMethodNotAllowed {
-		t.Errorf("GET /mcp: expected 405, got %d", w.Code)
+	if w.Code == http.StatusMethodNotAllowed {
+		t.Error("GET /mcp returned 405 — SSE connections are blocked")
 	}
 }
 
@@ -580,4 +582,34 @@ func TestListFrameworks(t *testing.T) {
 		}
 	}
 	t.Logf("list_frameworks: %d chars", len(tc.Text))
+}
+
+func TestMCPGetSSE(t *testing.T) {
+	c := mcp.New(mcp.Options{Enabled: true})
+	handler := c.Handler()
+
+	// GET /mcp should NOT return 405 — the MCP Streamable HTTP spec requires
+	// GET for SSE session establishment with Accept: text/event-stream.
+	req := httptest.NewRequest(http.MethodGet, "/mcp", nil)
+	req.Header.Set("Accept", "text/event-stream")
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+
+	if w.Code == http.StatusMethodNotAllowed {
+		t.Fatal("GET /mcp returned 405 — SSE connections are blocked by method guard")
+	}
+	// Without a session, the handler may return 400. That's fine — the critical
+	// check is that 405 is gone, proving the method guard is removed.
+	if w.Code == http.StatusBadRequest {
+		t.Log("GET /mcp returned 400 (expected without an active MCP session)")
+		return
+	}
+	if w.Code != http.StatusOK {
+		t.Fatalf("GET /mcp status = %d, want 200 or 400", w.Code)
+	}
+	ct := w.Header().Get("Content-Type")
+	if ct != "" && !strings.Contains(ct, "text/event-stream") {
+		t.Errorf("expected text/event-stream content-type, got %q", ct)
+	}
+	t.Logf("GET /mcp: %d OK, Content-Type: %s", w.Code, ct)
 }
