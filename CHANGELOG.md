@@ -1,3 +1,10 @@
+# [2.28.0](https://github.com/danielvm-git/bigbase/compare/v2.27.0...v2.28.0) (2026-06-20)
+
+
+### Features
+
+* **mcp:** add agent discovery endpoint and deploy workflow tests ([f26120d](https://github.com/danielvm-git/bigbase/commit/f26120dc6e922a0216a5f4782dab5c88ff3c1b4c))
+
 # [2.27.0](https://github.com/danielvm-git/bigbase/compare/v2.26.6...v2.27.0) (2026-06-20)
 
 
