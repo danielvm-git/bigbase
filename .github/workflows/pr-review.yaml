@@ -23,6 +23,8 @@ jobs:
       - name: PR Agent
         uses: qodo-ai/pr-agent@main
         env:
+          # PR-Agent expects OPENAI_KEY (not OPENAI__KEY) for LiteLLM
+          OPENAI_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
           OPENAI__KEY: ${{ secrets.DEEPSEEK_API_KEY }}
           OPENAI__API_BASE: https://api.deepseek.com/v1
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -30,4 +32,5 @@ jobs:
           github_action_config.auto_describe: "true"
           github_action_config.auto_improve: "true"
           github_action_config.model: "deepseek-v4-pro"
+          # Duplicate for tools that read env vars directly vs via config
           OPENAI__MODEL: "deepseek-v4-pro"
