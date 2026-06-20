@@ -1,3 +1,10 @@
+## [2.30.3](https://github.com/danielvm-git/bigbase/compare/v2.30.2...v2.30.3) (2026-06-20)
+
+
+### Bug Fixes
+
+* **mcp:** reuse streamable handler across requests for session persistence ([2152b67](https://github.com/danielvm-git/bigbase/commit/2152b67fb8151a0c6836b6b430351995137fb58c))
+
 ## [2.30.2](https://github.com/danielvm-git/bigbase/compare/v2.30.1...v2.30.2) (2026-06-20)
 
 
