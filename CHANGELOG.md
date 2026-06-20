@@ -1,3 +1,10 @@
+## [2.26.5](https://github.com/danielvm-git/bigbase/compare/v2.26.4...v2.26.5) (2026-06-20)
+
+
+### Bug Fixes
+
+* **deploy,proxy:** redeployment now replaces previous — no more stale content ([#35](https://github.com/danielvm-git/bigbase/issues/35)) ([0dd6cfb](https://github.com/danielvm-git/bigbase/commit/0dd6cfba843d26a4196d56a1adf3eb95a6a32ca2))
+
 ## [2.26.4](https://github.com/danielvm-git/bigbase/compare/v2.26.3...v2.26.4) (2026-06-19)
 
 
