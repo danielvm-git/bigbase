@@ -159,6 +159,7 @@ func (p *Proxy) Start(ctx *kernel.Context) error {
 	p.mux.HandleFunc("/health", p.handleHealth)
 	p.mux.HandleFunc("/api/version", p.handleVersion)
 	p.mux.HandleFunc("/api/internal/caddy-allow", p.handleCaddyAllow)
+	p.mux.HandleFunc("/.well-known/mcp.json", p.handleMCPDiscovery)
 
 	p.server = &http.Server{
 		Addr:    ":" + p.port,
@@ -325,6 +326,11 @@ func (p *Proxy) handleHealth(w http.ResponseWriter, r *http.Request) {
 func (p *Proxy) handleVersion(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	_, _ = fmt.Fprintf(w, `{"version":"%s"}`, kernel.Version)
+}
+
+func (p *Proxy) handleMCPDiscovery(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	_, _ = fmt.Fprintf(w, `{"mcpServers":{"bigbase":{"url":"https://mcp.bigbase.click/mcp"}}}`+"\n")
 }
 
 var homeTemplate = `<!DOCTYPE html>

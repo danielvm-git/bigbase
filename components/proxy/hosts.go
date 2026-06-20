@@ -69,7 +69,8 @@ func (p *Proxy) GetDeploymentHostInfo(host string) (hostInfo, bool) {
 }
 
 // handleCaddyAllow implements Caddy on_demand_tls ask (GET ?domain=host).
-// Returns 200 only when the host is registered for a running deployment.
+// Returns 200 when the host is a loopback host, a registered deployment, or
+// explicitly allowed (e.g. mcp.bigbase.click for public MCP access).
 func (p *Proxy) handleCaddyAllow(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
@@ -80,11 +81,23 @@ func (p *Proxy) handleCaddyAllow(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "missing domain", http.StatusBadRequest)
 		return
 	}
-	if !p.isDeploymentHostRegistered(domain) {
-		http.Error(w, "forbidden", http.StatusForbidden)
+	// Allow loopback hosts (bigbase.click, localhost, etc.) and explicit
+	// allowlist entries (mcp.bigbase.click) without a running deployment.
+	if allowedHosts[domain] {
+		w.WriteHeader(http.StatusOK)
 		return
 	}
-	w.WriteHeader(http.StatusOK)
+	if p.isDeploymentHostRegistered(domain) {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+	http.Error(w, "forbidden", http.StatusForbidden)
+}
+
+// allowedHosts are hosts that can get TLS certs via on_demand_tls even without
+// being a running deployment host. Used for MCP server, admin extensions, etc.
+var allowedHosts = map[string]bool{
+	"mcp.bigbase.click": true,
 }
 
 // loopbackHosts are local addresses that should never be routed as deployment hosts.
