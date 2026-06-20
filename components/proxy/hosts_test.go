@@ -1,11 +1,13 @@
 package proxy_test
 
 import (
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/danielvm/bigbase/components/proxy"
@@ -169,4 +171,74 @@ func TestCaddyAllow(t *testing.T) {
 	if resp.StatusCode != http.StatusOK {
 		t.Fatalf("registered domain status = %d, want 200", resp.StatusCode)
 	}
+}
+
+func TestCaddyAllowMCPHost(t *testing.T) {
+	logger := testLogger{}
+	k := kernel.New(logger)
+	port := freePort(t)
+	p := proxy.New(proxy.Options{Port: port, Kernel: k, Logger: logger})
+	if err := p.Start(&kernel.Context{}); err != nil {
+		t.Fatalf("start proxy: %v", err)
+	}
+	t.Cleanup(func() { _ = p.Stop(&kernel.Context{}) })
+
+	waitForServer(t, port, "/health")
+
+	// mcp.bigbase.click is an allowed host (for MCP TLS certs) even without a
+	// registered deployment.
+	allowURL := fmt.Sprintf("http://127.0.0.1:%s/api/internal/caddy-allow?domain=mcp.bigbase.click", port)
+	resp, err := http.Get(allowURL)
+	if err != nil {
+		t.Fatalf("mcp host request: %v", err)
+	}
+	defer func() { _ = resp.Body.Close() }()
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("mcp.bigbase.click status = %d, want 200", resp.StatusCode)
+	}
+}
+
+func TestMCPDiscoveryEndpoint(t *testing.T) {
+	logger := testLogger{}
+	k := kernel.New(logger)
+	port := freePort(t)
+	p := proxy.New(proxy.Options{Port: port, Kernel: k, Logger: logger})
+	if err := p.Start(&kernel.Context{}); err != nil {
+		t.Fatalf("start proxy: %v", err)
+	}
+	t.Cleanup(func() { _ = p.Stop(&kernel.Context{}) })
+
+	waitForServer(t, port, "/health")
+
+	resp, err := http.Get(fmt.Sprintf("http://127.0.0.1:%s/.well-known/mcp.json", port))
+	if err != nil {
+		t.Fatalf("GET /.well-known/mcp.json: %v", err)
+	}
+	defer func() { _ = resp.Body.Close() }()
+
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("status = %d, want 200", resp.StatusCode)
+	}
+	if ct := resp.Header.Get("Content-Type"); !strings.Contains(ct, "application/json") {
+		t.Errorf("Content-Type = %q, want application/json", ct)
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		t.Fatalf("read body: %v", err)
+	}
+
+	if !strings.Contains(string(body), "mcpServers") {
+		t.Errorf("expected mcpServers in body, got: %s", string(body))
+	}
+	if !strings.Contains(string(body), "bigbase") {
+		t.Errorf("expected bigbase in body, got: %s", string(body))
+	}
+	if !strings.Contains(string(body), "mcp.bigbase.click") {
+		t.Errorf("expected mcp.bigbase.click in body, got: %s", string(body))
+	}
+	if !strings.Contains(string(body), "/mcp") {
+		t.Errorf("expected /mcp path in body, got: %s", string(body))
+	}
+	t.Logf("MCP discovery: %s", string(body))
 }

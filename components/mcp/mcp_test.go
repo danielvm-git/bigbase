@@ -2,15 +2,20 @@ package mcp_test
 
 import (
 	"context"
+	"database/sql"
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
+	"github.com/danielvm/bigbase/components/deploy"
 	"github.com/danielvm/bigbase/components/mcp"
 	"github.com/danielvm/bigbase/kernel"
 	mcpsdk "github.com/modelcontextprotocol/go-sdk/mcp"
+	_ "modernc.org/sqlite"
 )
 
 func TestComponentImplementsKernelComponent(t *testing.T) {
@@ -147,68 +152,253 @@ func TestKnowledgeTools(t *testing.T) {
 	}
 }
 
-func TestDeployTools(t *testing.T) {
-	c := mcp.New(mcp.Options{Enabled: true})
+// deployTestDB creates an in-memory SQLite DB with the tables and
+// sample data that the deploy MCP tools need.
+func deployTestDB(t *testing.T) *sql.DB {
+	t.Helper()
+	db, err := sql.Open("sqlite", ":memory:")
+	if err != nil {
+		t.Fatalf("open in-memory sqlite: %v", err)
+	}
+	for _, stmt := range []string{
+		`CREATE TABLE git_repos (id TEXT PRIMARY KEY, name TEXT, description TEXT, updated_at TEXT)`,
+		`CREATE TABLE deployments (id TEXT PRIMARY KEY, status TEXT, url TEXT, app_type TEXT, commit_sha TEXT, error_message TEXT, build_log TEXT, created_at TEXT)`,
+		`INSERT INTO git_repos VALUES ('repo-1', 'my-sveltekit-app', 'A SvelteKit demo', '2026-06-01T10:00:00Z')`,
+		`INSERT INTO git_repos VALUES ('repo-2', 'go-api', 'A Go API server', '2026-06-02T11:00:00Z')`,
+		`INSERT INTO deployments VALUES ('dep-1234567890abcdef', 'running', 'https://myapp.bigbase.click', 'node', 'abc1234', '', '', '2026-06-19T12:00:00Z')`,
+		`INSERT INTO deployments VALUES ('dep-failed1234567890', 'failed', '', 'go', 'def5678', 'build: exit status 1', 'Step 1/5 : FROM golang:1.22
+ ---> abc123
+Step 2/5 : COPY . .
+ ---> def456
+Step 3/5 : RUN go build
+ ---> Running in abc789
+go: go.mod file not found
+exit status 1', '2026-06-19T13:00:00Z')`,
+	} {
+		if _, err := db.Exec(stmt); err != nil {
+			t.Fatalf("exec %q: %v", stmt[:40], err)
+		}
+	}
+	return db
+}
+
+// mockDeployer is a DeployTrigger that returns a fixed deployment.
+type mockDeployer struct{}
+
+func (m *mockDeployer) Trigger(_ context.Context, repoID, branch, siteName, siteID string) (*deploy.Deployment, error) {
+	return &deploy.Deployment{
+		ID:     fmt.Sprintf("dep-%s-%s", repoID, branch),
+		Status: "building",
+		URL:    fmt.Sprintf("https://%s.bigbase.click", siteName),
+	}, nil
+}
+
+// connectMCPSession creates an in-memory MCP client session for testing.
+func connectMCPSession(t *testing.T, c *mcp.Component) (context.Context, *mcpsdk.ClientSession) {
+	t.Helper()
 	srv, err := c.NewMCPServer()
 	if err != nil {
 		t.Fatalf("NewMCPServer: %v", err)
 	}
-
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
+	t.Cleanup(cancel)
 	t1, t2 := mcpsdk.NewInMemoryTransports()
 	if _, err := srv.Connect(ctx, t1, nil); err != nil {
 		t.Fatalf("server.Connect: %v", err)
 	}
-
 	client := mcpsdk.NewClient(&mcpsdk.Implementation{Name: "test", Version: "1.0"}, nil)
 	session, err := client.Connect(ctx, t2, nil)
 	if err != nil {
 		t.Fatalf("client.Connect: %v", err)
 	}
-	defer func() { _ = session.Close() }()
+	t.Cleanup(func() { _ = session.Close() })
+	return ctx, session
+}
 
-	// deploy_guide is pure knowledge — should always work
-	t.Run("deploy_guide", func(t *testing.T) {
-		result, err := session.CallTool(ctx, &mcpsdk.CallToolParams{Name: "deploy_guide"})
-		if err != nil {
-			t.Fatalf("deploy_guide: %v", err)
+func TestDeployGuide(t *testing.T) {
+	c := mcp.New(mcp.Options{Enabled: true})
+	ctx, session := connectMCPSession(t, c)
+	result, err := session.CallTool(ctx, &mcpsdk.CallToolParams{Name: "deploy_guide"})
+	if err != nil {
+		t.Fatalf("deploy_guide: %v", err)
+	}
+	tc, ok := result.Content[0].(*mcpsdk.TextContent)
+	if !ok {
+		t.Fatalf("expected *TextContent, got %T", result.Content[0])
+	}
+	if tc.Text == "" {
+		t.Fatal("expected non-empty guide")
+	}
+	for _, want := range []string{"deploy_site", "list_repos", "get_deploy_status", "get_deploy_logs"} {
+		if !strings.Contains(tc.Text, want) {
+			t.Errorf("deploy_guide should mention %q", want)
 		}
-		tc, _ := result.Content[0].(*mcpsdk.TextContent)
-		if tc.Text == "" {
-			t.Error("expected non-empty guide")
-		}
-		t.Logf("deploy_guide: %d chars", len(tc.Text))
-	})
+	}
+	t.Logf("deploy_guide: %d chars", len(tc.Text))
+}
 
-	// list_repos, deploy_site, get_deploy_status, get_deploy_logs
-	// return friendly messages when DB not connected
-	for _, tool := range []string{"list_repos", "get_deploy_status", "get_deploy_logs"} {
-		t.Run(tool+"_no_db", func(t *testing.T) {
-			result, err := session.CallTool(ctx, &mcpsdk.CallToolParams{Name: tool})
-			if err != nil {
-				t.Fatalf("%s: %v", tool, err)
-			}
-			tc, _ := result.Content[0].(*mcpsdk.TextContent)
-			// Should return a helpful message, not crash
-			if tc.Text == "" {
-				t.Errorf("%s: expected message", tool)
-			}
-		})
+func TestListRepos(t *testing.T) {
+	db := deployTestDB(t)
+	defer func() { _ = db.Close() }()
+
+	c := mcp.New(mcp.Options{Enabled: true, DB: db})
+	ctx, session := connectMCPSession(t, c)
+
+	result, err := session.CallTool(ctx, &mcpsdk.CallToolParams{Name: "list_repos"})
+	if err != nil {
+		t.Fatalf("list_repos: %v", err)
+	}
+	tc, ok := result.Content[0].(*mcpsdk.TextContent)
+	if !ok {
+		t.Fatalf("expected *TextContent, got %T", result.Content[0])
+	}
+	// Should list our test repos
+	for _, want := range []string{"my-sveltekit-app", "go-api"} {
+		if !strings.Contains(tc.Text, want) {
+			t.Errorf("list_repos should mention %q", want)
+		}
+	}
+	if !strings.Contains(tc.Text, "deploy_site") {
+		t.Error("list_repos should mention deploy_site")
+	}
+	t.Logf("list_repos: %d chars", len(tc.Text))
+}
+
+func TestDeploySite(t *testing.T) {
+	db := deployTestDB(t)
+	defer func() { _ = db.Close() }()
+
+	mockD := &mockDeployer{}
+	c := mcp.New(mcp.Options{Enabled: true, DB: db, Deployer: mockD})
+	ctx, session := connectMCPSession(t, c)
+
+	// repo_id required
+	result, err := session.CallTool(ctx, &mcpsdk.CallToolParams{Name: "deploy_site"})
+	if err != nil {
+		t.Fatalf("deploy_site (no args): %v", err)
+	}
+	tc, _ := result.Content[0].(*mcpsdk.TextContent)
+	if !strings.Contains(tc.Text, "repo_id is required") {
+		t.Errorf("expected 'repo_id is required', got: %s", tc.Text)
 	}
 
-	t.Run("deploy_site_no_db", func(t *testing.T) {
-		result, err := session.CallTool(ctx, &mcpsdk.CallToolParams{
-			Name:      "deploy_site",
-			Arguments: map[string]interface{}{"repo_id": "test"},
-		})
-		if err != nil {
-			t.Fatalf("deploy_site: %v", err)
-		}
-		tc, _ := result.Content[0].(*mcpsdk.TextContent)
-		if tc.Text == "" {
-			t.Error("deploy_site: expected message")
-		}
+	// Successful deploy
+	result, err = session.CallTool(ctx, &mcpsdk.CallToolParams{
+		Name:      "deploy_site",
+		Arguments: map[string]interface{}{"repo_id": "repo-1", "branch": "main"},
 	})
+	if err != nil {
+		t.Fatalf("deploy_site: %v", err)
+	}
+	tc, _ = result.Content[0].(*mcpsdk.TextContent)
+	if !strings.Contains(tc.Text, "Deploy Started") {
+		t.Errorf("expected 'Deploy Started', got: %s", tc.Text)
+	}
+	if !strings.Contains(tc.Text, "my-sveltekit-app") {
+		t.Errorf("expected repo name, got: %s", tc.Text)
+	}
+	if !strings.Contains(tc.Text, "get_deploy_status") {
+		t.Error("deploy_site should mention get_deploy_status")
+	}
+	t.Logf("deploy_site: %d chars", len(tc.Text))
+}
+
+func TestGetDeployStatus(t *testing.T) {
+	db := deployTestDB(t)
+	defer func() { _ = db.Close() }()
+
+	c := mcp.New(mcp.Options{Enabled: true, DB: db})
+	ctx, session := connectMCPSession(t, c)
+
+	// No deployment_id — lists recent deployments
+	result, err := session.CallTool(ctx, &mcpsdk.CallToolParams{Name: "get_deploy_status"})
+	if err != nil {
+		t.Fatalf("get_deploy_status (no args): %v", err)
+	}
+	tc, _ := result.Content[0].(*mcpsdk.TextContent)
+	if !strings.Contains(tc.Text, "Recent Deployments") {
+		t.Errorf("expected 'Recent Deployments', got: %s", tc.Text)
+	}
+	t.Logf("get_deploy_status (recent): %d chars", len(tc.Text))
+
+	// Specific deployment — running
+	result, err = session.CallTool(ctx, &mcpsdk.CallToolParams{
+		Name:      "get_deploy_status",
+		Arguments: map[string]interface{}{"deployment_id": "dep-1234567890abcdef"},
+	})
+	if err != nil {
+		t.Fatalf("get_deploy_status (specific): %v", err)
+	}
+	tc, _ = result.Content[0].(*mcpsdk.TextContent)
+	if !strings.Contains(tc.Text, "running") {
+		t.Errorf("expected 'running', got: %s", tc.Text)
+	}
+	if !strings.Contains(tc.Text, "https://myapp.bigbase.click") {
+		t.Errorf("expected URL, got: %s", tc.Text)
+	}
+
+	// Specific deployment — failed
+	result, err = session.CallTool(ctx, &mcpsdk.CallToolParams{
+		Name:      "get_deploy_status",
+		Arguments: map[string]interface{}{"deployment_id": "dep-failed1234567890"},
+	})
+	if err != nil {
+		t.Fatalf("get_deploy_status (failed): %v", err)
+	}
+	tc, _ = result.Content[0].(*mcpsdk.TextContent)
+	if !strings.Contains(tc.Text, "failed") {
+		t.Errorf("expected 'failed', got: %s", tc.Text)
+	}
+	if !strings.Contains(tc.Text, "get_deploy_logs") {
+		t.Error("failed deployment should suggest get_deploy_logs")
+	}
+	t.Logf("get_deploy_status (failed): %d chars", len(tc.Text))
+}
+
+func TestGetDeployLogs(t *testing.T) {
+	db := deployTestDB(t)
+	defer func() { _ = db.Close() }()
+
+	c := mcp.New(mcp.Options{Enabled: true, DB: db})
+	ctx, session := connectMCPSession(t, c)
+
+	// No deployment_id — error message
+	result, err := session.CallTool(ctx, &mcpsdk.CallToolParams{Name: "get_deploy_logs"})
+	if err != nil {
+		t.Fatalf("get_deploy_logs (no args): %v", err)
+	}
+	tc, _ := result.Content[0].(*mcpsdk.TextContent)
+	if !strings.Contains(tc.Text, "deployment_id is required") {
+		t.Errorf("expected 'deployment_id is required', got: %s", tc.Text)
+	}
+
+	// Build logs for failed deployment
+	result, err = session.CallTool(ctx, &mcpsdk.CallToolParams{
+		Name:      "get_deploy_logs",
+		Arguments: map[string]interface{}{"deployment_id": "dep-failed1234567890"},
+	})
+	if err != nil {
+		t.Fatalf("get_deploy_logs (specific): %v", err)
+	}
+	tc, _ = result.Content[0].(*mcpsdk.TextContent)
+	if !strings.Contains(tc.Text, "go.mod file not found") {
+		t.Errorf("expected build log content, got: %s", tc.Text)
+	}
+	if !strings.Contains(tc.Text, "Build Logs") {
+		t.Error("expected 'Build Logs' header")
+	}
+
+	// No build logs for running deployment
+	result, err = session.CallTool(ctx, &mcpsdk.CallToolParams{
+		Name:      "get_deploy_logs",
+		Arguments: map[string]interface{}{"deployment_id": "dep-1234567890abcdef"},
+	})
+	if err != nil {
+		t.Fatalf("get_deploy_logs (running): %v", err)
+	}
+	tc, _ = result.Content[0].(*mcpsdk.TextContent)
+	if !strings.Contains(tc.Text, "No build logs") {
+		t.Errorf("expected 'No build logs', got: %s", tc.Text)
+	}
+	t.Logf("get_deploy_logs: %d chars", len(tc.Text))
 }

@@ -1,0 +1,51 @@
+story_id: e38s03
+verified_at: "2026-06-20T01:55:00Z"
+verifier: verify-work
+phases:
+  smoke:
+    passed: true
+  build:
+    passed: true
+    command: "go build -o bigbase ."
+  typecheck:
+    passed: true
+  lint:
+    passed: true
+    command: "golangci-lint run ./..."
+    notes: "Pre-existing issues only (auth, db, monitoring); none in mcp or proxy."
+  tests:
+    passed: true
+    command: "go test ./..."
+    coverage: "mcp:76.3%, proxy:71.7%"
+  manual:
+    steps:
+      - step: "TestListRepos — queries git_repos table via SQLite and returns formatted repo list"
+        expected: "Returns repos 'my-sveltekit-app' and 'go-api' with deploy_site prompt"
+        actual: "PASS — 168 chars response, both repos listed with deploy_site suggestion"
+        passed: true
+      - step: "TestDeploySite — validates repo_id, triggers via mock Deployer, returns deployment info"
+        expected: "Requires repo_id; triggers deployment via Deployer; returns ID, URL, status"
+        actual: "PASS — repo_id required checked, deploy triggers with mock deployer, output includes 'Deploy Started' and get_deploy_status suggestion"
+        passed: true
+      - step: "TestGetDeployStatus — lists recent deployments; returns details for specific ID"
+        expected: "No ID → 'Recent Deployments' list; with ID → status, URL, commit, error"
+        actual: "PASS — recent list with 2 entries; running deployment shows URL; failed deployment shows error and suggests get_deploy_logs"
+        passed: true
+      - step: "TestGetDeployLogs — fetches build_log for specific deployment"
+        expected: "No ID → 'required' message; with valid ID → build log content; empty log → 'No build logs'"
+        actual: "PASS — 'deployment_id is required' checked; failed build log contains 'go: go.mod file not found'; empty log returns 'No build logs'"
+        passed: true
+      - step: "TestDeployGuide — returns step-by-step deployment workflow guide"
+        expected: "Guide text mentioning deploy_site, list_repos, get_deploy_status, get_deploy_logs"
+        actual: "PASS — 949 chars, mentions all 4 deploy tools"
+        passed: true
+      - step: "Proxy — MCP discovery at /.well-known/mcp.json returns JSON with mcpServers"
+        expected: "200 OK, Content-Type: application/json, body contains mcpServers.bigbase with mcp.bigbase.click URL"
+        actual: "PASS — returns {\"mcpServers\":{\"bigbase\":{\"url\":\"https://mcp.bigbase.click/mcp\"}}}"
+        passed: true
+      - step: "Proxy — mcp.bigbase.click allowed for TLS certs via caddy-allow"
+        expected: "200 OK for mcp.bigbase.click without registered deployment"
+        actual: "PASS — caddy-allow returns 200 for mcp.bigbase.click"
+        passed: true
+  gaps:
+    closed: true
