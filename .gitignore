@@ -50,3 +50,4 @@ playwright-report/
 .envrc
 .rtk/
 .vscode/mcp.json
+.greptile/

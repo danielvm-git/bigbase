@@ -18,11 +18,11 @@ metrics:
   stories_completed: 19
   bcps_per_hour: 5.7
   story_start: '2026-06-19T17:45:00Z'
-  story_end: null
+  story_end: '2026-06-20T02:05:00Z'
 epic_cycle:
-  step: 7
-  current_step: commit-message
-  next_skill: release-branch
+  step: done
+  current_step: null
+  next_skill: survey-context
   completed_steps:
     - survey-context
     - plan-work
@@ -37,8 +37,8 @@ git:
   hash: a1410df
   worktree: null
 handoff:
-  last_step_completed: "e38s02 released — knowledge tools merged to main"
+  last_step_completed: "e38s03 released — deploy workflow tools merged to main"
   open_decisions: []
-  next_skill: kickoff-branch
-  summary: 'Building e38s03 — Deploy Workflow Tools'
-  context: e38s02 done. Starting e38s03 (5 tasks, BCP=3). Needs DB and deploy component integration.
+  next_skill: survey-context
+  summary: 'e38s03 done. 6 files changed, +385/-49. MCP discovery endpoint + deploy tool tests.'
+  context: e38 has 2 remaining planned stories (e38s01, e38s02). Next: survey-context to decide next story.
