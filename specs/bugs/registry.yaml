@@ -316,6 +316,23 @@ bugs:
     summary: "Reviewer must-fix findings on prototype-fidelity-parity: mock success leaks /api/auth, ThemePicker loses focus on close, 5 of 15 planned icon names were silently substituted"
     file: specs/bugs/BUG-2026-06-04T100000-reviewer-must-fix-on-prototype-fidelity.md
     status: fixed
+  - id: BUG-2026-06-20T125952
+    date: "2026-06-20"
+    severity: medium
+    priority: high
+    scope: mcp
+    summary: MCP SSE connection fails with 405 — GET /mcp blocked by POST-only method guard
+    file: specs/bugs/BUG-2026-06-20T125952-mcp-sse-405-get.md
+    status: fixed
+    files_changed:
+      - components/mcp/mcp.go
+      - components/mcp/mcp_test.go
+    approach: Remove POST-only method guard from /mcp handler; let mcpsdk.NewStreamableHTTPHandler route GET/POST/DELETE per MCP Streamable HTTP spec
+    risk_level: low
+    commit_message: "fix(mcp): allow GET /mcp for SSE connections (remove 405 method guard)"
+    regression_guards:
+      - components/mcp/mcp_test.go TestMCPGetSSE
+      - components/mcp/mcp_test.go TestHTTPTransport
   - id: BUG-2026-06-20T014500
     date: "2026-06-20"
     severity: high

@@ -456,15 +456,11 @@ func (c *Component) ServeStdio(ctx context.Context) error {
 }
 
 // Handler returns an HTTP handler for the MCP server.
-// Routes: POST /mcp — MCP messages, GET /health — health check.
+// Routes: GET /mcp — SSE stream, POST /mcp — MCP messages, GET /health — health check.
 func (c *Component) Handler() http.Handler {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/mcp", func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodPost {
-			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
-			return
-		}
 		srv, err := c.NewMCPServer()
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
