@@ -281,9 +281,8 @@ func (d *Deploy) resumeCandidates(candidates []resumeCandidate) {
 				// SvelteKit adapter-static outputs to build/ by default
 				serveDir = filepath.Join(buildDir, "build")
 				appType = AppStatic
-			} else {
-				continue
 			}
+			// Node SSR apps (no dist/build) fall through to process resume below.
 		}
 		if appType == AppStatic {
 			if _, err := os.Stat(filepath.Join(buildDir, "dist")); err == nil {
@@ -291,20 +290,30 @@ func (d *Deploy) resumeCandidates(candidates []resumeCandidate) {
 			} else if _, err := os.Stat(filepath.Join(buildDir, "build")); err == nil {
 				serveDir = filepath.Join(buildDir, "build")
 			}
-		}
-		if appType != AppStatic {
+			deploy := &Deployment{
+				ID:      c.id,
+				RepoID:  c.repoID,
+				SiteID:  c.siteID,
+				Port:    c.port,
+				URL:     c.rawURL,
+				AppType: AppStatic,
+			}
+			go d.serveStatic(context.Background(), serveDir, deploy, c.repoName)
+			d.logger.Info("resumed static deployment", "id", c.id, "port", c.port, "host", HostFromDeploymentURL(c.rawURL))
 			continue
 		}
+		// Resume process-based apps (Python, Go, Node SSR).
+		// These are killed when BigBase stops; restart them from the existing build directory.
 		deploy := &Deployment{
 			ID:      c.id,
 			RepoID:  c.repoID,
 			SiteID:  c.siteID,
 			Port:    c.port,
 			URL:     c.rawURL,
-			AppType: AppStatic,
+			AppType: appType,
 		}
-		go d.serveStatic(context.Background(), serveDir, deploy, c.repoName)
-		d.logger.Info("resumed static deployment", "id", c.id, "port", c.port, "host", HostFromDeploymentURL(c.rawURL))
+		go d.startApp(context.Background(), serveDir, deploy, appType, c.repoName)
+		d.logger.Info("resumed process deployment", "id", c.id, "appType", string(appType), "port", c.port, "host", HostFromDeploymentURL(c.rawURL))
 	}
 }
 
