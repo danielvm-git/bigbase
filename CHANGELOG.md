@@ -1,3 +1,12 @@
+# [2.38.0](https://github.com/danielvm-git/bigbase/compare/v2.37.0...v2.38.0) (2026-06-21)
+
+
+### Features
+
+* **ui:** add WebSocket streaming to useBuildLogs hook with isStreaming state ([608e5a7](https://github.com/danielvm-git/bigbase/commit/608e5a7a0cd5ffc54a23446f64f2150aaa2485a8))
+* **ui:** create TerminalLogViewer component and replace BuildLogs in SiteDetailPage ([512b3da](https://github.com/danielvm-git/bigbase/commit/512b3da4be82abfa3a887fdb5bc3277e1fc1e7b4))
+* **ui:** enhance StreamLog with terminal toolbar, search, copy, timestamps, and ANSI color support ([b8acd65](https://github.com/danielvm-git/bigbase/commit/b8acd65841394e3ed2ec464a8458c39a0219e9f4))
+
 # [2.37.0](https://github.com/danielvm-git/bigbase/compare/v2.36.2...v2.37.0) (2026-06-21)
 
 
