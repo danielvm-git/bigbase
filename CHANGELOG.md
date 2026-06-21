@@ -1,3 +1,15 @@
+# [2.34.0](https://github.com/danielvm-git/bigbase/compare/v2.33.0...v2.34.0) (2026-06-21)
+
+
+### Features
+
+* **deploy:** add app_type override to deploy API and sites trigger ([451ea5e](https://github.com/danielvm-git/bigbase/commit/451ea5ec935246d3dc0c83e1d27e3ea3a09f87f2))
+
+
+### Reverts
+
+* **ci:** restore original semantic-release flow; remove branch protection ([95876d6](https://github.com/danielvm-git/bigbase/commit/95876d6f1da3bf3d728b0c5cac7accbc55824c84))
+
 # [2.32.0](https://github.com/danielvm-git/bigbase/compare/v2.31.0...v2.32.0) (2026-06-20)
 
 
