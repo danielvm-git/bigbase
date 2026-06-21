@@ -20,7 +20,6 @@ class MockWebSocket {
   }
 }
 
-const CONNECTING = 0
 const OPEN = 1
 const CLOSED = 3
 
@@ -117,7 +116,7 @@ describe('useBuildLogs', () => {
       log_available: true
     }
 
-    const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValue({
+    vi.spyOn(global, 'fetch').mockResolvedValue({
       ok: true,
       json: async () => mockLogs
     } as Response)
@@ -130,7 +129,7 @@ describe('useBuildLogs', () => {
     expect(ws.url).toContain('/api/deploy/dep-456/logs/stream')
 
     // Simulate WebSocket open
-    act(() => { ws.readyState = OPEN; ws.onopen?.({} as Event) })
+    act(() => { ws.readyState = OPEN; ws.onopen?.() })
 
     // Should be streaming
     await vi.waitFor(() => expect(result.current.isStreaming).toBe(true))

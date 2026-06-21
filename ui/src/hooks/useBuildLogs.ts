@@ -70,7 +70,7 @@ export function useBuildLogs(deploymentId: string) {
         }
       }
 
-      ws.onclose = (event: CloseEvent) => {
+      ws.onclose = () => {
         if (closed) return
         setIsStreaming(false)
         wsRef.current = null
