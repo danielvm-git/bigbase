@@ -1,3 +1,10 @@
+## [2.36.2](https://github.com/danielvm-git/bigbase/compare/v2.36.1...v2.36.2) (2026-06-21)
+
+
+### Bug Fixes
+
+* **deploy:** resume process-based apps (Python/Go/Node SSR) after BigBase restart ([dc5b5c6](https://github.com/danielvm-git/bigbase/commit/dc5b5c643c73126a20fb303a6a98b8d0926faa20))
+
 ## [2.36.1](https://github.com/danielvm-git/bigbase/compare/v2.36.0...v2.36.1) (2026-06-21)
 
 
