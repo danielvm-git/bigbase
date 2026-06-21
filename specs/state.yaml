@@ -2,7 +2,7 @@ type: session-state
 context: infra
 active_flow: build_epic
 active_epic_id: e39
-active_story_id: e39s02
+active_story_id: e39s01
 release:
   target_version: 2.13.0
   codename: "Solo Dev Complete"
@@ -14,33 +14,21 @@ metrics:
   session_end: null
   cycle_minutes: 0
   epics_completed: 38
-  stories_completed: 119
+  stories_completed: 118
   bcps_per_hour: 0
-epic_cycle:
-  step: 3
-  current_step: kickoff-branch
-  completed_steps: [survey-context, plan-work]
-  story_bcps: 3
+epic_cycle: {}
 bug_cycle: {}
 git:
   branch: main
   hash: HEAD
   worktree: null
 handoff:
-  last_step_completed: e39s01-complete
+  last_step_completed: null
   open_decisions: []
-  next_skill: kickoff-branch
-  summary: "Step 2 plan-work done. Step 3 kickoff-branch: create feature branch for e39s02."
+  next_skill: survey-context
+  summary: "e39s02 reverted: deployment state machine caused bolao outage. Back to pre-e39s02 state."
   context: |
     e39s01: ✅ Released — Real-time WebSocket log streaming
-    e39s02: 🔄 In progress — Deployment state machine
-    
-    e39s02 has 5 tasks defined:
-      t1: state_machine.go - types + transition rules (pure Go)
-      t2: TransitionState() method - validated transitions + DB + status_history
-      t3: Event bus emission for deploy.state_changed
-      t4: Admin UI - status timeline + visual indicators
-      t5: Full lifecycle integration test
+    e39s02: ❌ Reverted — Deployment state machine (caused prod outage)
     e39s03: ⏳ Planned — Terminal-style log viewer UI
     e40+: Remaining backlog
-
