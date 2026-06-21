@@ -17,9 +17,9 @@ metrics:
   stories_completed: 118
   bcps_per_hour: 0
 epic_cycle:
-  step: 3
-  current_step: kickoff-branch
-  completed_steps: [survey-context, plan-work]
+  step: 8
+  current_step: release-branch
+  completed_steps: [survey-context, plan-work, kickoff-branch, develop-tdd, verify-work, audit-code, commit-message]
   story_bcps: 7
 bug_cycle: {}
 git:
