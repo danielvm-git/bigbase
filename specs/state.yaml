@@ -7,7 +7,8 @@ release:
   target_version: 2.13.0
   codename: "Solo Dev Complete"
   last_tag: v2.12.0
-  last_publish: '2026-06-20'
+  last_publish: '2026-06-21'
+  ci_verified: true
 metrics:
   session_start: '2026-06-20T00:00:00Z'
   session_end: null
@@ -28,8 +29,8 @@ git:
 handoff:
   last_step_completed: e38-complete
   open_decisions: []
-  next_skill: build-epic
-  summary: "e38 MCP Server complete (all 3 stories verified). 38 epics done. Next: e39 Deploy Streaming Logs & State Machine."
+  next_skill: survey-context
+  summary: "BUG-2026-06-21T120000 fixed and released: orphaned process recovery + list_repos SQL fix. CI verified. 38 epics done. Next: survey-context."
   context: |
     Remaining Backlog (e39-e52):
     e39  → Streaming Logs & State Machine
