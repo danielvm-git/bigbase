@@ -32,9 +32,15 @@ stories:
         verify: "go test ./components/deploy/ -run TestLogLifecycle -v"
 
   - id: e39s02
-    title: "Deployment state machine — pending -> building -> deploying -> live/failed"
+    title: "Deployment state machine — pending -> building -> deploying -> running/failed"
     status: active
     bcps: 3
+    notes: |
+      v2 SAFETY DESIGN: 'running' is terminal state (NOT 'live'). Zero SQL queries change.
+      'deploying' is the only new state (transitional).
+      Lenient mode: unknown statuses are allowed through.
+      stopDeployment() bypasses state machine for 'replaced'.
+      Root cause of v1 outage: pre-existing resumeCandidates bug (fixed v2.36.2).
     tasks:
       - id: e39s02t1
         desc: "New file: components/deploy/state_machine.go — define DeploymentState type + stateMachine with valid transitions"
@@ -43,19 +49,21 @@ stories:
           StatePending   = "pending"
           StateBuilding  = "building"
           StateDeploying = "deploying"
-          StateLive      = "live"
+          StateRunning   = "running"
           StateFailed    = "failed"
 
           --- stateMachine struct ---
           valid map[string][]string:
-            pending   -> [building, failed]
-            building  -> [deploying, failed]
-            deploying -> [live, failed]
-            live      -> [failed]
+            pending   -> [building]
+            building  -> [deploying, running, failed]
+            deploying -> [running, failed]
+            running   -> []         (terminal)
+            failed    -> []         (terminal)
 
           --- Methods ---
           CanTransition(from, to string) bool
           ValidTransitions(from string) []string
+          IsValidState(status string) bool
 
           --- StatusTransition struct ---
           type StatusTransition struct {
@@ -68,27 +76,34 @@ stories:
         verify: "go test ./components/deploy/ -run TestStateMachine -v"
 
       - id: e39s02t2
-        desc: "Add TransitionState() method to Deploy — validated transition + DB persistence"
+        desc: "Add TransitionState() method to Deploy — validated transition + DB persistence + lenient mode"
         notes: |
           func (d *Deploy) TransitionState(ctx, id, newStatus string) error:
             1. Query current status from DB
-            2. Validate transition via stateMachine.CanTransition()
-            3. Return error if invalid (with allowed next states in message)
-            4. Build StatusTransition{From, To, Timestamp=time.Now().UTC().RFC3339}
-            5. UPDATE deployments SET status = ? WHERE id = ?
-            6. Append to status_history TEXT column (JSON array)
-            7. Emit kernel event (see e39s02t3)
-            8. If terminal state (live/failed), persist build_log
-            9. Return nil
+            2. If same status — return nil (idempotent, no error)
+            3. If current status is UNKNOWN to state machine — ALLOW (lenient mode, log warning)
+            4. Validate transition via stateMachine.CanTransition()
+            5. Return error if invalid (with allowed next states in message)
+            6. Build StatusTransition{From, To, Timestamp=time.Now().UTC().RFC3339}
+            7. UPDATE deployments SET status = ? WHERE id = ?
+            8. Append to status_history TEXT column (JSON array)
+            9. Emit kernel event 'deploy.state_changed' (nil-safe, see e39s02t3)
+            10. Return nil
 
           DB migration (idempotent, in Start()):
             ALTER TABLE deployments ADD COLUMN status_history TEXT DEFAULT '[]'
+            (Existing rows get '[]' — no data migration needed)
+
+          CRITICAL: DO NOT change any SQL query that uses WHERE status = 'running'.
+          The state machine keeps 'running' as terminal state; zero queries change.
 
           Refactor existing call sites:
             - runDeployment(): use TransitionState() instead of updateStatus()
             - failDeployment(): use TransitionState(id, "failed")
-            - startApp()/serveStatic() on exit: TransitionState(id, "failed")
+            - startApp() on failure: TransitionState(id, "failed")
+            - updateStatus() now delegates to TransitionState() (keep the method name)
 
+          Do NOT touch stopDeployment() — it uses direct DB UPDATE for 'replaced'.
           Update Deployment struct to include StatusHistory field.
         verify: "go test ./components/deploy/ -run TestDeployStateMachine -v"
 
@@ -118,32 +133,44 @@ stories:
         notes: |
           Backend: Deployment JSON now includes status_history.
           Frontend (ui/src/pages/SiteDetailPage.tsx):
-            - Add 'deploying' and 'live' to DeploymentStatus type
+            - Add 'deploying' to DeploymentStatus type (running already exists)
             - StatusTimeline renders full transition history
             - Visual indicators:
               pending   -> gray dot
               building  -> spinning animation
-              deploying -> yellow dot
-              live      -> green checkmark
+              deploying -> yellow/pulse animation
+              running   -> green checkmark (display as 'Live' in UI)
               failed    -> red X
             - Auto-poll every 2s when status is in-progress (already exists)
 
           Types (ui/src/types/sites.ts):
-            type DeploymentStatus = 'pending' | 'building' | 'deploying' | 'live' | 'failed'
+            type DeploymentStatus = 'pending' | 'building' | 'deploying' | 'running' | 'failed'
             interface StatusTransition { from: string; to: string; timestamp: string }
             interface Deployment { status_history?: StatusTransition[] }
         verify: "cd ui && npm run build"
 
       - id: e39s02t5
-        desc: "Integration test — full lifecycle through all state transitions"
+        desc: "Integration test — full lifecycle + restart cycle"
         notes: |
-          Test creates static repo, triggers deploy, waits for 'live'.
-          Verifies:
-            - Status history: pending -> building -> live
-            - Each transition has valid timestamps
-            - State change events emitted per transition
-            - Failed deployment: building -> failed
-            - Invalid transition returns error
+          Test 1: Full lifecycle (static site)
+            - Create repo, trigger deploy
+            - Verify: pending -> building -> running
+            - Verify: status_history has 2 transitions with valid timestamps
+            - Verify: state change events emitted per transition
+            - Verify: failed deployment: building -> failed
+            - Verify: invalid transition returns error
+
+          Test 2: Process app lifecycle
+            - Create Go/Python/Node repo, trigger deploy
+            - Verify: pending -> building -> deploying -> running
+            - Verify: 'deploying' is transient (exists before startApp)
+
+          Test 3: RESTART CYCLE (critical safety test)
+            - Deploy process app → status = 'running'
+            - Stop Deploy component, start NEW Deploy component (same DB)
+            - Verify: resumeCandidates found and resumed the app
+            - Verify: status still 'running' (not converted to unknown state)
+            - Verify: TransitionState lenient mode doesn't block resume
         verify: "go test ./components/deploy/ -run TestStateLifecycle -v"
 
   - id: e39s03
