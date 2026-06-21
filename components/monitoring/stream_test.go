@@ -30,7 +30,7 @@ func TestMetricsStream(t *testing.T) {
 	if err != nil {
 		t.Fatalf("GET stream: %v", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	t.Run("content-type is text/event-stream", func(t *testing.T) {
 		ct := resp.Header.Get("Content-Type")

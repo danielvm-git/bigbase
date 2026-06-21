@@ -1402,6 +1402,16 @@ func insertDeployment(t *testing.T, database *db.DB, id, status, buildsDir strin
 	}
 }
 
+// TestPythonBuildCommandIncludesBreakSystemPackages hardens against PEP 668
+// regression: Ubuntu 24.04 blocks pip install without --break-system-packages.
+func TestPythonBuildCommandIncludesBreakSystemPackages(t *testing.T) {
+	expected := "pip install --break-system-packages -r requirements.txt"
+	actual := deploy.FormatBuildCommand("pip", "install", "--break-system-packages", "-r", "requirements.txt")
+	if actual != expected {
+		t.Fatalf("pip command changed — PEP 668 fix may be lost:\n  got:  %s\n  want: %s", actual, expected)
+	}
+}
+
 func TestDeleteDeployment(t *testing.T) {
 	_, handler, database, _ := setupDeploy(t)
 	buildsDir := t.TempDir()

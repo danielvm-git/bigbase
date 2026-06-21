@@ -2,6 +2,7 @@ package monitoring_test
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -310,6 +311,46 @@ func TestMonitoringAlertCreateAndList(t *testing.T) {
 	alerts, ok := result["data"].([]any)
 	if !ok || len(alerts) != 1 {
 		t.Fatalf("expected 1 alert, got %v", result)
+	}
+}
+
+// TestMonitoringDurationColumnMigrationIsIdempotent hardens against
+// regression of the "no such column: duration_seconds" error. Running
+// Start() twice must not fail — the migration silently handles
+// "duplicate column" errors.
+func TestMonitoringDurationColumnMigrationIsIdempotent(t *testing.T) {
+	logger := testLogger{}
+	d := db.New(db.Options{Path: ":memory:", Logger: logger})
+	m := monitoring.New(monitoring.Options{DB: d, Logger: logger})
+
+	_ = d.Start(&kernel.Context{})
+
+	// First Start — creates table + adds column
+	if err := m.Start(&kernel.Context{}); err != nil {
+		t.Fatalf("first Start: %v", err)
+	}
+
+	// Second Start — migration must be idempotent (duplicate column → no error)
+	if err := m.Start(&kernel.Context{}); err != nil {
+		t.Fatalf("second Start should be idempotent, got: %v", err)
+	}
+
+	// Verify column exists by writing a row
+	_, err := d.ExecContext(context.Background(),
+		`INSERT INTO monitoring_alerts (id, name, metric, threshold, operator, enabled, duration_seconds)
+		 VALUES ('test-1', 'test', 'cpu', 80, 'gt', 1, 60)`)
+	if err != nil {
+		t.Fatalf("insert test alert: %v", err)
+	}
+
+	var dur int64
+	err = d.QueryRowContext(context.Background(),
+		"SELECT duration_seconds FROM monitoring_alerts WHERE id = ?", "test-1").Scan(&dur)
+	if err != nil {
+		t.Fatalf("read duration_seconds: %v", err)
+	}
+	if dur != 60 {
+		t.Fatalf("expected 60, got %d", dur)
 	}
 }
 

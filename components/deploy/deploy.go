@@ -742,13 +742,13 @@ func (d *Deploy) buildApp(ctx context.Context, deployID string, buildDir string,
 	return nil
 }
 
-func formatBuildCommand(name string, args ...string) string {
+func FormatBuildCommand(name string, args ...string) string {
 	parts := append([]string{name}, args...)
 	return strings.Join(parts, " ")
 }
 
 func (d *Deploy) runBuildCommand(ctx context.Context, deployID, dir, name string, args ...string) error {
-	label := formatBuildCommand(name, args...)
+	label := FormatBuildCommand(name, args...)
 	d.appendDeployLog(deployID, "→ Running: "+label)
 
 	var stderr, stdout bytes.Buffer

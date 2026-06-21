@@ -301,9 +301,16 @@ bugs:
     scope: deploy,monitoring,vps
     summary: Python deploys fail with PEP 668 + alert checker missing duration_seconds column
     file: specs/bugs/BUG-2026-06-19T173242-pip-pep668-and-alert-column.md
-    status: open
+    status: fixed
     files_changed:
-      - components/sites/sites.go
+      - components/deploy/deploy.go
+      - components/monitoring/monitoring.go
+    approach: "1. Add --break-system-packages to pip install for Ubuntu 24.04. 2. Add ALTER TABLE ADD COLUMN duration_seconds migration to monitoring Start()"
+    risk_level: low
+    commit_message: "fix(deploy,monitoring): break-system-packages for pip + duration_seconds column migration"
+    regression_guards:
+      - components/deploy/deploy_test.go TestBuildPython
+      - components/monitoring/monitoring_test.go TestAlertRules
       - components/sites/sites_test.go
       - specs/bugs/registry.yaml
       - specs/execution-status.yaml
