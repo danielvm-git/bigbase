@@ -400,3 +400,17 @@ bugs:
       - components/mcp/mcp_test.go TestListRepos
     related:
       - BUG-2026-06-20T014500
+
+  - id: BUG-2026-06-21T153000
+    date: "2026-06-21"
+    severity: high
+    priority: critical
+    scope: deploy
+    summary: Process-based apps (Python/Go/Node SSR) not resumed after BigBase restart — "deployment unavailable" on every upgrade
+    file: specs/bugs/BUG-2026-06-21T153000-process-apps-not-resumed-after-restart.md
+    status: fixed
+    files_changed:
+      - components/deploy/deploy.go
+    commit: dc5b5c6
+    related:
+      - BUG-2026-06-21T120000

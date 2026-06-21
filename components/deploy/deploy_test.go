@@ -1942,6 +1942,7 @@ func TestValidateNodeBuildScriptNoPackageJSON(t *testing.T) {
 	}
 }
 
+
 func TestStopDeploymentKillsOrphanedProcess(t *testing.T) {
 	// RED: After a BigBase restart (d.apps cleared), a subsequent redeploy for
 	// the same site must kill the previously running process-based app.
@@ -2065,4 +2066,91 @@ func TestEnsurePIDColumnIdempotent(t *testing.T) {
 		t.Fatalf("second Start (idempotent): %v", err)
 	}
 	_ = k2.Stop()
+}
+
+// TestResumeCandidatesAttemptsProcessApps verifies that resumeCandidates does NOT
+// silently skip Python/Go/Node-SSR deployments after a BigBase restart.
+// Regression guard for: "deployment unavailable" on bolao after e39 deploy cycle.
+//
+// Strategy: seed a "running" Go deployment with a missing binary. The old code silently
+// skipped non-static apps (status stays "running" forever). The fixed code calls
+// startApp, which fails immediately (no binary) and marks the deployment "failed".
+// Status changing from "running" to "failed" proves startApp was attempted.
+func TestResumeCandidatesAttemptsProcessApps(t *testing.T) {
+	logger := testLogger{}
+	database := db.New(db.Options{Path: ":memory:", Logger: logger})
+	buildsDir := t.TempDir()
+
+	// dep0 starts first: creates the deployments table via migrations.
+	dep0 := deploy.New(deploy.Options{
+		DB: database, Logger: logger, BuildsDir: buildsDir, GitDir: t.TempDir(),
+	})
+	if err := database.Start(&kernel.Context{}); err != nil {
+		t.Fatalf("db start: %v", err)
+	}
+	if err := dep0.Start(&kernel.Context{}); err != nil {
+		t.Fatalf("dep0 start: %v", err)
+	}
+
+	// git_repos is created by the git component; gitStub doesn't create it.
+	// Create it manually so loadResumeCandidates JOIN resolves.
+	_, _ = database.ExecContext(context.Background(),
+		`CREATE TABLE IF NOT EXISTS git_repos (
+			id TEXT PRIMARY KEY, name TEXT NOT NULL UNIQUE, owner_id INTEGER NOT NULL,
+			private INTEGER NOT NULL DEFAULT 1, default_branch TEXT NOT NULL DEFAULT 'main',
+			description TEXT DEFAULT '', created_at TEXT NOT NULL DEFAULT (datetime('now'))
+		)`)
+	if _, err := database.ExecContext(context.Background(),
+		`INSERT INTO git_repos (id, name, owner_id, private, default_branch, description, created_at)
+		 VALUES ('rp-go', 'go-app', 0, 0, 'main', '', datetime('now'))`); err != nil {
+		t.Fatalf("insert git_repos: %v", err)
+	}
+
+	const depID = "dep-go-resume"
+	buildDir := filepath.Join(buildsDir, depID)
+	if err := os.MkdirAll(buildDir, 0755); err != nil {
+		t.Fatalf("mkdir: %v", err)
+	}
+	// No "app" binary in buildDir → startApp("go") exec.Start() fails → updateStatus("failed").
+
+	if _, err := database.ExecContext(context.Background(),
+		`INSERT INTO deployments (id, repo_id, site_id, branch, status, port, url, app_type, passthrough_paths, created_at)
+		 VALUES (?, 'rp-go', 'site-go', 'main', 'running', 19778, 'https://go-app.bigbase.click', 'go', '', datetime('now'))`,
+		depID); err != nil {
+		t.Fatalf("insert deployment: %v", err)
+	}
+
+	// dep0.Stop() clears d.apps — simulates BigBase restart wiping in-memory app state.
+	// The database connection and data are preserved (same in-memory SQLite).
+	if err := dep0.Stop(&kernel.Context{}); err != nil {
+		t.Fatalf("dep0 stop: %v", err)
+	}
+
+	// Fresh Deploy — d.apps is empty, same database. Mirrors a BigBase restart.
+	dep2 := deploy.New(deploy.Options{
+		DB: database, Logger: logger, BuildsDir: buildsDir, GitDir: t.TempDir(),
+	})
+	if err := dep2.Start(&kernel.Context{}); err != nil {
+		t.Fatalf("dep2 start: %v", err)
+	}
+	t.Cleanup(func() { _ = dep2.Stop(&kernel.Context{}) })
+
+	// resumeCandidates is async — give it time to attempt startApp.
+	// Fixed: startApp("go") runs → binary missing → updateStatus("failed").
+	// Broken (pre-fix): non-static app silently skipped → status stays "running".
+	deadline := time.Now().Add(5 * time.Second)
+	var finalStatus string
+	for time.Now().Before(deadline) {
+		_ = database.QueryRowContext(context.Background(),
+			"SELECT status FROM deployments WHERE id = ?", depID).Scan(&finalStatus)
+		if finalStatus != "running" {
+			break
+		}
+		time.Sleep(100 * time.Millisecond)
+	}
+
+	if finalStatus == "running" {
+		t.Fatal("resumeCandidates silently skipped the process app (status stayed 'running')" +
+			" — regression: non-static deployments must call startApp on resume")
+	}
 }
