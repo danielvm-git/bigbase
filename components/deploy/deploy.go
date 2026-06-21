@@ -61,6 +61,7 @@ type Deployment struct {
 	ErrorMessage     string   `json:"error_message,omitempty"`
 	PassthroughPaths []string `json:"passthrough_paths,omitempty"`
 	CreatedAt        string   `json:"created_at"`
+	StatusHistory    []StatusTransition `json:"status_history,omitempty"`
 }
 
 type runningApp struct {
@@ -95,6 +96,8 @@ type Deploy struct {
 	unsubscribe  func()
 	logHubsMu    sync.RWMutex
 	logHubs      map[string]*logHub
+	sm           *stateMachine
+	eventBus     *kernel.EventBus
 }
 
 type Options struct {
@@ -151,6 +154,7 @@ func New(opts Options) *Deploy {
 		nextPort:     basePort,
 		apps:         make(map[string]*runningApp),
 		logHubs:      make(map[string]*logHub),
+		sm:           newStateMachine(),
 	}
 }
 
@@ -160,11 +164,20 @@ func (d *Deploy) Dependencies() []string        { return []string{"db", "git"} }
 func (d *Deploy) ConfigSchema() json.RawMessage { return nil }
 func (d *Deploy) Hooks() []kernel.HookDef       { return nil }
 
+// EventBus sets the kernel event bus for emitting deploy.state_changed events.
+// Nil-safe: if nil, events are silently dropped.
+func (d *Deploy) EventBus(bus *kernel.EventBus) {
+	d.eventBus = bus
+}
+
 func (d *Deploy) Init(ctx *kernel.Context, config json.RawMessage) error {
 	return nil
 }
 
 func (d *Deploy) Start(ctx *kernel.Context) error {
+	if ctx != nil && ctx.Kernel != nil {
+		d.eventBus = ctx.Kernel.EventBus()
+	}
 	if err := os.MkdirAll(d.buildsDir, 0755); err != nil {
 		return fmt.Errorf("create builds dir: %w", err)
 	}
@@ -197,6 +210,9 @@ func (d *Deploy) Start(ctx *kernel.Context) error {
 		return err
 	}
 	if err := d.ensurePIDColumn(); err != nil {
+		return err
+	}
+	if err := d.ensureStatusHistoryColumn(); err != nil {
 		return err
 	}
 	if err := d.db.Migrate(`CREATE TABLE IF NOT EXISTS site_request_logs (
@@ -883,19 +899,99 @@ func (d *Deploy) serveStatic(ctx context.Context, buildDir string, deploy *Deplo
 	}
 }
 
-func (d *Deploy) updateStatus(id, status string) {
+// TransitionState validates and applies a state change via the state machine.
+// If the current status is unknown (e.g., "replaced" from legacy code), lenient mode
+// allows the transition with a warning log instead of rejecting it.
+func (d *Deploy) TransitionState(ctx context.Context, id, newStatus string) error {
+	if d.sm == nil {
+		return fmt.Errorf("state machine not initialized")
+	}
+
+	// Query current status
+	var current string
+	if err := d.db.QueryRowContext(ctx,
+		"SELECT status FROM deployments WHERE id = ?", id).Scan(&current); err != nil {
+		return fmt.Errorf("query current status: %w", err)
+	}
+
+	// Idempotent: same status is a no-op
+	if current == newStatus {
+		return nil
+	}
+
+	// Lenient mode: if current status is unknown to the state machine, allow transition
+	if !d.sm.IsValidState(current) {
+		d.logger.Warn("transition from unknown state (lenient mode)",
+			"id", id, "from", current, "to", newStatus)
+	} else if !d.sm.CanTransition(current, newStatus) {
+		allowed := d.sm.ValidTransitions(current)
+		return fmt.Errorf("invalid transition: %s → %s (allowed: %v)", current, newStatus, allowed)
+	}
+
+	// Persist status change
 	d.mu.Lock()
 	defer d.mu.Unlock()
-	_, _ = d.db.ExecContext(context.Background(),
-		"UPDATE deployments SET status = ? WHERE id = ?", status, id)
+	_, _ = d.db.ExecContext(ctx,
+		"UPDATE deployments SET status = ? WHERE id = ?", newStatus, id)
 
-	if status == "running" || status == "failed" {
+	// Append to status_history
+	transition := StatusTransition{
+		From:      current,
+		To:        newStatus,
+		Timestamp: time.Now().UTC().Format(time.RFC3339),
+	}
+	d.appendStatusHistory(ctx, id, transition)
+
+	// Emit event (nil-safe)
+	if d.eventBus != nil {
+		_ = d.eventBus.Emit(kernel.Event{
+			Name: "deploy.state_changed",
+			Data: map[string]any{
+				"deployment_id": id,
+				"from_state":    current,
+				"to_state":      newStatus,
+				"timestamp":     transition.Timestamp,
+			},
+		}, &kernel.Context{})
+	}
+
+	// Persist build_log on terminal states
+	if newStatus == string(StateRunning) || newStatus == string(StateFailed) {
 		lines := d.getDeployLogs(id)
 		if len(lines) > 0 {
-			_, _ = d.db.ExecContext(context.Background(),
+			_, _ = d.db.ExecContext(ctx,
 				"UPDATE deployments SET build_log = ? WHERE id = ?", strings.Join(lines, "\n"), id)
 		}
 	}
+
+	return nil
+}
+
+// appendStatusHistory reads, appends, and writes the status_history JSON array.
+func (d *Deploy) appendStatusHistory(ctx context.Context, id string, tr StatusTransition) {
+	var current string
+	if err := d.db.QueryRowContext(ctx,
+		"SELECT status_history FROM deployments WHERE id = ?", id).Scan(&current); err != nil {
+		return
+	}
+	if current == "" {
+		current = "[]"
+	}
+	var history []StatusTransition
+	if err := json.Unmarshal([]byte(current), &history); err != nil {
+		history = nil
+	}
+	history = append(history, tr)
+	data, err := json.Marshal(history)
+	if err != nil {
+		return
+	}
+	_, _ = d.db.ExecContext(ctx,
+		"UPDATE deployments SET status_history = ? WHERE id = ?", string(data), id)
+}
+
+func (d *Deploy) updateStatus(id, status string) {
+	_ = d.TransitionState(context.Background(), id, status)
 }
 
 func (d *Deploy) failDeployment(id string, buildErr error) {
@@ -908,17 +1004,14 @@ func (d *Deploy) failDeployment(id string, buildErr error) {
 	// Close the log stream so WebSocket subscribers know the deployment failed.
 	d.closeLogStream(id)
 
-	// Use a more direct update here since we have the message
+	// Use TransitionState for validated status change
+	_ = d.TransitionState(context.Background(), id, "failed")
+
+	// Update error_message (separate from TransitionState to keep it focused on status)
 	d.mu.Lock()
 	defer d.mu.Unlock()
 	_, _ = d.db.ExecContext(context.Background(),
-		"UPDATE deployments SET status = ?, error_message = ? WHERE id = ?", "failed", msg, id)
-
-	lines := d.getDeployLogs(id)
-	if len(lines) > 0 {
-		_, _ = d.db.ExecContext(context.Background(),
-			"UPDATE deployments SET build_log = ? WHERE id = ?", strings.Join(lines, "\n"), id)
-	}
+		"UPDATE deployments SET error_message = ? WHERE id = ?", msg, id)
 }
 
 func (d *Deploy) ensureSiteIDColumn() error {
@@ -979,6 +1072,18 @@ func (d *Deploy) ensurePIDColumn() error {
 		return nil
 	}
 	return fmt.Errorf("add pid column: %w", err)
+}
+
+func (d *Deploy) ensureStatusHistoryColumn() error {
+	_, err := d.db.ExecContext(context.Background(),
+		`ALTER TABLE deployments ADD COLUMN status_history TEXT DEFAULT '[]'`)
+	if err == nil {
+		return nil
+	}
+	if strings.Contains(strings.ToLower(err.Error()), "duplicate column") {
+		return nil
+	}
+	return fmt.Errorf("add status_history column: %w", err)
 }
 
 func (d *Deploy) finalizeDeploymentURL(deploy *Deployment, repoName string) {
