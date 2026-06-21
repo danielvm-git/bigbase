@@ -9,13 +9,12 @@ import {
   statusBadgeVariant,
   PreviewBanner,
   SitesListSkeleton,
-  BuildLogs,
+  TerminalLogViewer,
   Tabs,
   RequestLogs,
 } from '../components'
 import { getSite, getSiteDeployments, deleteSite } from '../lib/sitesData'
 import { isPreviewForced, previewQuerySuffix } from '../lib/previewMode'
-import { useBuildLogs } from '../hooks/useBuildLogs'
 import { useRequestLogs } from '../hooks/useRequestLogs'
 import type { Deployment, Site } from '../types/sites'
 
@@ -62,7 +61,6 @@ export default function SiteDetailPage() {
   const pq = previewQuerySuffix()
 
   const latestFromDeployments = deployments[0]
-  const { lines, loading: logsLoading, error: logsError } = useBuildLogs(latestFromDeployments?.id || site?.latest_deployment?.id || '')
 
   const {
     logs, loading: reqLogsLoading, error: reqLogsError,
@@ -272,7 +270,7 @@ export default function SiteDetailPage() {
       {activeTab === 'logs' && (
         <div>
           <h2 className="section-title">Build Logs</h2>
-          <BuildLogs lines={lines} loading={logsLoading} error={logsError} />
+          <TerminalLogViewer deploymentId={latestFromDeployments?.id || site?.latest_deployment?.id || ''} />
         </div>
       )}
 

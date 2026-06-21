@@ -41,7 +41,7 @@ describe('StreamLog', () => {
   it('renders with custom className', () => {
     render(<StreamLog logs={['test']} className="custom-log" />)
 
-    const container = screen.getByTestId('stream-log')
+    const container = screen.getByTestId('stream-log-container')
     expect(container.className).toContain('custom-log')
   })
 })
