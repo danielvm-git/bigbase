@@ -1,3 +1,10 @@
+## [2.36.1](https://github.com/danielvm-git/bigbase/compare/v2.36.0...v2.36.1) (2026-06-21)
+
+
+### Reverts
+
+* Revert "feat(deploy): deployment state machine with validated transitions and events" ([c058782](https://github.com/danielvm-git/bigbase/commit/c058782f95b32d8aa3a74c52ac44863ad572627b))
+
 # [2.36.0](https://github.com/danielvm-git/bigbase/compare/v2.35.0...v2.36.0) (2026-06-21)
 
 
