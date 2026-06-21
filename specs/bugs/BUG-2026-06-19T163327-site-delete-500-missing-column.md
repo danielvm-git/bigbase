@@ -92,4 +92,22 @@ were upgraded from older BigBase versions.
 
 ## Resolution
 
-<!-- filled in by validate-fix -->
+**Status:** fixed
+
+Root cause confirmed: `isMissingOptionalTable` did not match column-level SQL errors.
+
+**Fix:** Expanded the `isMissingOptionalTable` helper in `components/sites/sites.go:457-466`
+to match:
+- `"no such column"` (SQLite)
+- `"column" ... "does not exist"` (PostgreSQL)
+
+This causes `hasActiveDeployment` to return `(false, nil)` when columns are missing,
+and `deleteSiteRecords` to skip cascade DELETE errors on missing columns.
+
+**Verification:**
+```
+go test ./components/sites/ -run TestDeleteSite -v
+# All 6 tests pass, including TestDeleteSiteHandlesMissingColumn
+```
+
+**Files changed:** `components/sites/sites.go` (isMissingOptionalTable helper)

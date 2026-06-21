@@ -426,6 +426,7 @@ func (d *Deploy) HandleCreate(w http.ResponseWriter, r *http.Request) {
 		SiteName         string   `json:"site_name"`
 		SiteID           string   `json:"site_id"`
 		PassthroughPaths []string `json:"passthrough_paths"`
+		AppType          string   `json:"app_type"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid JSON"})
@@ -439,7 +440,7 @@ func (d *Deploy) HandleCreate(w http.ResponseWriter, r *http.Request) {
 		req.Branch = "main"
 	}
 
-	deploy, err := d.Trigger(r.Context(), req.RepoID, req.Branch, req.SiteName, req.SiteID, req.PassthroughPaths)
+	deploy, err := d.Trigger(r.Context(), req.RepoID, req.Branch, req.SiteName, req.SiteID, req.PassthroughPaths, req.AppType)
 	if err != nil {
 		switch err.Error() {
 		case "repo not found":
@@ -454,7 +455,7 @@ func (d *Deploy) HandleCreate(w http.ResponseWriter, r *http.Request) {
 }
 
 // Trigger starts a deployment for a git repo without going through HTTP.
-func (d *Deploy) Trigger(ctx context.Context, repoID, branch, siteName, siteID string, passthroughPaths []string) (*Deployment, error) {
+func (d *Deploy) Trigger(ctx context.Context, repoID, branch, siteName, siteID string, passthroughPaths []string, appType string) (*Deployment, error) {
 	if repoID == "" {
 		return nil, fmt.Errorf("repo_id is required")
 	}
@@ -493,6 +494,7 @@ func (d *Deploy) Trigger(ctx context.Context, repoID, branch, siteName, siteID s
 		Branch:           branch,
 		Status:           "pending",
 		Port:             port,
+		AppType:          AppType(appType),
 		PassthroughPaths: passthroughPaths,
 		URL:              deploymentURL(d.publicDomain, d.useHTTPS, siteName, port),
 		CreatedAt:        time.Now().UTC().Format(time.RFC3339),
@@ -635,8 +637,10 @@ func (d *Deploy) runDeployment(deploy *Deployment, buildDir, repoName string) {
 		d.appendDeployLog(deploy.ID, fmt.Sprintf("→ Commit: %s", short))
 	}
 
-	appType := DetectAppType(buildDir)
-	deploy.AppType = appType
+	appType := deploy.AppType
+	if appType == "" {
+		appType = DetectAppType(buildDir)
+	}
 	_, _ = d.db.ExecContext(context.Background(),
 		"UPDATE deployments SET app_type = ? WHERE id = ?", string(appType), deploy.ID)
 	d.appendDeployLog(deploy.ID, fmt.Sprintf("→ Detected app type: %s", appType))

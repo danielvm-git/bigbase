@@ -285,7 +285,15 @@ bugs:
     scope: sites,deploy
     summary: Site deletion returns 500 when deployments table missing site_id column
     file: specs/bugs/BUG-2026-06-19T163327-site-delete-500-missing-column.md
-    status: open
+    status: fixed
+    files_changed:
+      - components/sites/sites.go
+      - components/sites/sites_test.go
+    approach: Expand isMissingOptionalTable to match "no such column" (SQLite) and "column"+"does not exist" (PostgreSQL) errors
+    risk_level: low
+    commit_message: "fix(sites): handle missing column errors in site deletion cascade"
+    regression_guards:
+      - components/sites/sites_test.go TestDeleteSiteHandlesMissingColumn
   - id: BUG-2026-06-19T173242
     date: "2026-06-19"
     severity: high

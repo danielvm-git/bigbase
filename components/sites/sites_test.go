@@ -47,7 +47,7 @@ func TestSitesCreateTriggersDeploy(t *testing.T) {
 	s := sites.New(sites.Options{
 		DB:     d,
 		Logger: logger,
-		TriggerDeploy: func(_ context.Context, repoID, branch, siteName, siteID string, _ []string) (*sites.Deployment, error) {
+		TriggerDeploy: func(_ context.Context, repoID, branch, siteName, siteID string, _ []string, _ string) (*sites.Deployment, error) {
 			triggered = true
 			if repoID != "repo-1" || branch != "main" || siteName != "my-site" {
 				t.Fatalf("trigger args repoID=%s branch=%s siteName=%s", repoID, branch, siteName)
@@ -100,7 +100,7 @@ func TestSitesCreateTriggersDeployWithCustomName(t *testing.T) {
 	s := sites.New(sites.Options{
 		DB:     d,
 		Logger: logger,
-		TriggerDeploy: func(_ context.Context, repoID, branch, siteName, siteID string, _ []string) (*sites.Deployment, error) {
+		TriggerDeploy: func(_ context.Context, repoID, branch, siteName, siteID string, _ []string, _ string) (*sites.Deployment, error) {
 			receivedSiteName = siteName
 			return &sites.Deployment{
 				ID: "dep-1", RepoID: repoID, Branch: branch, Status: "pending",

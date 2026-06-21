@@ -265,8 +265,8 @@ func startProxy() {
 	st := sites.New(sites.Options{
 		DB:     d,
 		Logger: logger,
-		TriggerDeploy: func(ctx context.Context, repoID, branch, siteName, siteID string, passthroughPaths []string) (*sites.Deployment, error) {
-			dep, err := depComp.Trigger(ctx, repoID, branch, siteName, siteID, passthroughPaths)
+		TriggerDeploy: func(ctx context.Context, repoID, branch, siteName, siteID string, passthroughPaths []string, appType string) (*sites.Deployment, error) {
+			dep, err := depComp.Trigger(ctx, repoID, branch, siteName, siteID, passthroughPaths, appType)
 			if err != nil {
 				return nil, err
 			}
