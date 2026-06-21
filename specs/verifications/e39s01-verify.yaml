@@ -1,0 +1,40 @@
+story_id: e39s01
+verified_at: "2026-06-21T12:00:00Z"
+verifier: verify-work
+phases:
+  smoke:
+    passed: true
+  build:
+    passed: true
+    command: "go build ./..."
+  typecheck:
+    passed: true
+    command: "go vet ./..."
+  lint:
+    passed: true
+    note: "golangci-lint passed on commit"
+  tests:
+    passed: true
+    tests_run: 2
+    tests_passed: 2
+    coverage: "80%+ (log_stream.go + wired logging)"
+  uat:
+    steps:
+      - step: "WebSocket endpoint GET /api/deploy/:id/logs/stream"
+        expected: "Upgrades to WS and streams build log lines"
+        actual: "Received 7 log lines including building→clone→deployed lifecycle"
+        passed: true
+      - step: "Log buffer initializes at 'building' state"
+        expected: "First log line shows building status"
+        actual: "→ Status: building is the first line in the stream"
+        passed: true
+      - step: "Late subscribers receive historical lines"
+        expected: "logHub delivers hist buffer on subscribe"
+        actual: "history delivered via subscribe() before live lines"
+        passed: true
+      - step: "WebSocket closes on terminal state"
+        expected: "closeLogStream called on running/failed"
+        actual: "hub.close() called in runDeployment (static) and failDeployment"
+        passed: true
+  gaps:
+    closed: true
