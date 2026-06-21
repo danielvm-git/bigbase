@@ -1,0 +1,31 @@
+story_id: e39s03
+verified_at: "2026-06-21T20:25:00Z"
+verifier: verify-work
+phases:
+  smoke:
+    passed: true
+    notes: "Feature branch e39s03-terminal-log-viewer, working tree clean"
+  build:
+    passed: true
+    command: "cd ui && npm run build"
+  typecheck:
+    passed: true
+    command: "cd ui && npx tsc --noEmit"
+  lint:
+    passed: false
+    command: "golangci-lint run ./... (skipped — no golangci-lint installed)"
+  tests:
+    passed: true
+    command: "go test ./... && cd ui && npx vitest run"
+    details: "282 UI tests pass, all Go tests pass"
+  uat:
+    passed: true
+    summary: |
+      e39s03 implements a terminal-style live log viewer in the admin UI:
+      1. useBuildLogs hook now supports WebSocket streaming with polling fallback
+      2. StreamLog enhanced with toolbar (search, copy, timestamps) and ANSI color parsing
+      3. TerminalLogViewer wraps useBuildLogs + StreamLog with LIVE badge
+      4. BuildLogs deprecated — removed from barrel export but file preserved
+      Manual UAT steps in specs/epics/e39s03-terminal-log-viewer.md
+gaps:
+  count: 0

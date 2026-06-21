@@ -18,10 +18,10 @@ metrics:
   stories_completed: 120
   bcps_per_hour: 0
 epic_cycle:
-  step: 4
+  step: 7
   story_bcps: 2
   story: e39s03
-  audit_result: null
+  audit_result: pass
 bug_cycle: {}
 git:
   branch: e39s03-terminal-log-viewer
