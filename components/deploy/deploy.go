@@ -93,6 +93,8 @@ type Deploy struct {
 	nextPort     int
 	apps         map[string]*runningApp
 	unsubscribe  func()
+	logHubsMu    sync.RWMutex
+	logHubs      map[string]*logHub
 }
 
 type Options struct {
@@ -148,6 +150,7 @@ func New(opts Options) *Deploy {
 		hostRouter:   opts.HostRouter,
 		nextPort:     basePort,
 		apps:         make(map[string]*runningApp),
+		logHubs:      make(map[string]*logHub),
 	}
 }
 
@@ -598,6 +601,9 @@ func (d *Deploy) runDeployment(deploy *Deployment, buildDir, repoName string) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 
+	// Eagerly create the logHub so all log lines from the very start are captured.
+	d.getOrCreateHub(deploy.ID)
+
 	d.updateStatus(deploy.ID, "building")
 	d.appendDeployLog(deploy.ID, "→ Status: building")
 
@@ -742,13 +748,13 @@ func (d *Deploy) buildApp(ctx context.Context, deployID string, buildDir string,
 	return nil
 }
 
-func formatBuildCommand(name string, args ...string) string {
+func FormatBuildCommand(name string, args ...string) string {
 	parts := append([]string{name}, args...)
 	return strings.Join(parts, " ")
 }
 
 func (d *Deploy) runBuildCommand(ctx context.Context, deployID, dir, name string, args ...string) error {
-	label := formatBuildCommand(name, args...)
+	label := FormatBuildCommand(name, args...)
 	d.appendDeployLog(deployID, "→ Running: "+label)
 
 	var stderr, stdout bytes.Buffer
@@ -890,6 +896,8 @@ func (d *Deploy) failDeployment(id string, buildErr error) {
 		msg = msg[:maxLen]
 	}
 	d.appendDeployLog(id, "✗ Deploy failed: "+msg)
+	// Close the log stream so WebSocket subscribers know the deployment failed.
+	d.closeLogStream(id)
 
 	// Use a more direct update here since we have the message
 	d.mu.Lock()
@@ -1106,7 +1114,12 @@ func (d *Deploy) handleDeployByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Check for logs sub-path: /api/deploy/:id/logs
+	// Check for logs sub-path: /api/deploy/:id/logs/stream (WebSocket) or /api/deploy/:id/logs
+	if strings.HasSuffix(path, "/logs/stream") {
+		id := strings.TrimSuffix(path, "/logs/stream")
+		d.handleLogsStream(w, r, id)
+		return
+	}
 	if strings.HasSuffix(path, "/logs") {
 		id := strings.TrimSuffix(path, "/logs")
 		d.handleDeployLogs(w, r, id)

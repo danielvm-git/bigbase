@@ -81,4 +81,34 @@ Risk level: **High** (blocks all Python deployments on production).
 
 ## Resolution
 
-<!-- filled in by validate-fix -->
+**Status:** fixed
+
+Root cause confirmed: two independent issues.
+
+1. **PEP 668**: `pip install -r requirements.txt` blocked by Ubuntu 24.04's
+externally-managed-environment enforcement.
+   **Fix**: Added `--break-system-packages` to the pip install args in
+   `components/deploy/deploy.go:740`.
+
+2. **Missing duration_seconds column**: `monitoring_alerts` table created by
+an older migration didn't include the column. The `CREATE TABLE IF NOT EXISTS`
+pattern silently skipped the migration because the table already existed.
+   **Fix**: Added `ALTER TABLE ADD COLUMN duration_seconds` migration in
+   `components/monitoring/monitoring.go:153-156` with duplicate-column handling.
+
+**Verification:**
+```
+go test ./components/deploy/ -run TestBuild -v   # PASS
+go test ./components/monitoring/ -run TestAlert -v  # PASS (6 sub-tests)
+go test ./...                                        # 24/24 packages PASS
+```
+
+**Files changed:**
+- `components/deploy/deploy.go` (--break-system-packages)
+- `components/monitoring/monitoring.go` (ALTER TABLE ADD COLUMN duration_seconds)
+
+**Hardening added:**
+- `TestPythonBuildCommandIncludesBreakSystemPackages` — verifies the exact pip
+  command string includes `--break-system-packages` (prevents accidental removal)
+- `TestMonitoringDurationColumnMigrationIsIdempotent` — verifies Start() can be
+  called twice without error (column migration handles duplicate column gracefully)
