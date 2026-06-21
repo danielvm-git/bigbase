@@ -86,12 +86,23 @@ jobs:
         if: github.event_name == 'push'
         run: npm ci
 
+      - name: Configure git credentials
+        if: github.event_name == 'push'
+        run: |
+          if [ -n "${{ secrets.GH_RELEASE_TOKEN }}" ]; then
+            echo "Using GH_RELEASE_TOKEN for git auth (bypasses branch protection)"
+            git remote set-url origin https://x-access-token:${{ secrets.GH_RELEASE_TOKEN }}@github.com/${{ github.repository }}
+          else
+            echo "No GH_RELEASE_TOKEN — git push may fail on protected branches"
+          fi
+
       - name: Semantic Release
         if: github.event_name == 'push'
         id: semantic
         run: npx --no-install semantic-release
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GH_RELEASE_TOKEN || secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GH_RELEASE_TOKEN || secrets.GITHUB_TOKEN }}
 
       # --- Detect if a release was created ---
       - name: Detect new release
