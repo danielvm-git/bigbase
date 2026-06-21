@@ -27,14 +27,15 @@ git:
   hash: HEAD
   worktree: null
 handoff:
-  last_step_completed: e38-complete
+  last_step_completed: e39s01-complete
   open_decisions: []
   next_skill: survey-context
-  summary: "BUG-2026-06-21T120000 fixed and released: orphaned process recovery + list_repos SQL fix. CI verified. 38 epics done. Next: survey-context."
+  summary: "e39s01 released: WebSocket log streaming + lifecycle integration. 119 stories complete. Next: survey-context (e39s02 or continue)."
   context: |
-    Remaining Backlog (e39-e52):
-    e39  → Streaming Logs & State Machine
-    e40  → App Manifest (bigbase.yaml)
+    e39s01: ✅ Released — Real-time WebSocket log streaming
+    e39s02: ⏳ Planned — Deployment state machine
+    e39s03: ⏳ Planned — Terminal-style log viewer UI
+    e40+: Remaining backlog
     e40  → App Manifest (bigbase.yaml)
     e41  → Environment Variables UI
     e42  → Build Cache
