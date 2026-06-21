@@ -178,15 +178,39 @@ stories:
     status: planned
     bcps: 2
     tasks:
-      - desc: "Build a terminal-style log viewer component in the admin UI"
+      - id: e39s03t1
+        desc: "Add WebSocket streaming support to useBuildLogs hook"
         notes: |
-          Dark background, monospace font, auto-scroll to bottom.
-          ANSI color support for build output (npm/yarn use colors).
-          Search/filter within logs. Copy button. Timestamp toggle.
-          Connect to WebSocket endpoint when available, fall back to polling.
+          Connect to /api/deploy/:id/logs/stream WebSocket endpoint.
+          Accumulate lines from WebSocket messages. On disconnect, settle.
+          Fall back to existing polling if WebSocket fails (network error or 404).
+          Expose isStreaming boolean so UI can show live indicator.
+          Keep existing lines[], loading, error, status return shape.
+        verify: "cd ui && npx tsc --noEmit"
+      - id: e39s03t2
+        desc: "Enhance StreamLog component with terminal toolbar and ANSI colors"
+        notes: |
+          Add toolbar: search/filter input, "Copy all" button, timestamp toggle.
+          ANSI color parsing: strip or convert ANSI escape sequences (npm/yarn use colors).
+          Use ansi-to-html or a minimal regex-based converter (no new deps if possible).
+          Keep existing StreamLog props + add new optional ones (searchQuery, onSearchChange).
+          Keep the dark theme (#0d1117 bg, #e6edf3 text, monospace).
+          Add LoadingDots animation during streaming.
         verify: "cd ui && npm run build"
-      - desc: "Add log viewer to deployment detail page replacing the current static log block"
+      - id: e39s03t3
+        desc: "Create TerminalLogViewer and replace BuildLogs in SiteDetailPage"
         notes: |
-          Replace the existing static <pre> block with the new live viewer.
-          Reuse the existing GET /api/deployments/:id/logs endpoint for initial load.
+          New component TerminalLogViewer wraps StreamLog + toolbar + useBuildLogs.
+          Props: deploymentId (string). Handles loading/error/empty states internally.
+          Replaces <BuildLogs> in SiteDetailPage.tsx logs tab.
+          Wire the existing isStreaming from the hook to show LIVE badge.
+          Keep polling fallback — WebSocket degrades gracefully to polling.
         verify: "cd ui && npm run build && go test ./components/deploy/ -run TestLogsAPI -v"
+      - id: e39s03t4
+        desc: "Deprecate old BuildLogs — remove export, clean up index"
+        notes: |
+          Remove BuildLogs from ui/src/components/index.ts export list.
+          Keep BuildLogs.tsx file on disk (git history reference, no breaking imports).
+          Verify no remaining imports of BuildLogs across the UI codebase.
+          Run full build to confirm no broken references.
+        verify: "cd ui && npm run build"
