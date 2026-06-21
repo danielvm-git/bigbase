@@ -77,6 +77,11 @@ jobs:
           node-version: '${{ env.NODE_VERSION }}'
           cache: 'npm'
 
+      - name: Save pre-release HEAD
+        id: pre-release
+        if: github.event_name == 'push'
+        run: echo "head=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
       - name: Install dependencies
         if: github.event_name == 'push'
         run: npm ci
@@ -86,8 +91,7 @@ jobs:
         id: semantic
         run: npx --no-install semantic-release
         env:
-          GITHUB_TOKEN: ${{ secrets.GH_RELEASE_TOKEN || secrets.GITHUB_TOKEN }}
-          GH_TOKEN: ${{ secrets.GH_RELEASE_TOKEN || secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       # --- Detect if a release was created ---
       - name: Detect new release
@@ -100,14 +104,13 @@ jobs:
             echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
             echo "Manual deploy — version ${VERSION}"
           else
-            # Push event — check if sem-rel created a new tag on HEAD
-            git fetch --tags
-            NEW_TAG=$(git describe --exact-match HEAD 2>/dev/null || echo "")
-            if [ -n "$NEW_TAG" ]; then
-              VERSION=$(echo "$NEW_TAG" | sed 's/^v//')
+            # Push event — check if sem-rel created a new commit
+            NEW_HEAD=$(git rev-parse HEAD)
+            if [ "${{ steps.pre-release.outputs.head }}" != "$NEW_HEAD" ]; then
+              VERSION=$(cat VERSION)
               echo "new_release=true" >> "$GITHUB_OUTPUT"
               echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
-              echo "New release detected: ${NEW_TAG}"
+              echo "New release detected: v${VERSION}"
             else
               echo "new_release=false" >> "$GITHUB_OUTPUT"
               echo "No new release"
