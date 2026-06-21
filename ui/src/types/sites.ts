@@ -1,10 +1,4 @@
-export type DeploymentStatus = 'pending' | 'building' | 'deploying' | 'running' | 'live' | 'failed'
-
-export interface StatusTransition {
-  from: string
-  to: string
-  timestamp: string
-}
+export type DeploymentStatus = 'pending' | 'building' | 'running' | 'failed'
 
 export interface Deployment {
   id: string
@@ -17,7 +11,6 @@ export interface Deployment {
   app_type: string
   created_at: string
   error_message?: string
-  status_history?: StatusTransition[]
 }
 
 export interface GitRepo {
