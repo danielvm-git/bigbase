@@ -18,24 +18,24 @@ metrics:
   stories_completed: 120
   bcps_per_hour: 0
 epic_cycle:
-  step: 3
+  step: 4
   story_bcps: 2
   story: e39s03
   audit_result: null
 bug_cycle: {}
 git:
-  branch: main
+  branch: e39s03-terminal-log-viewer
   hash: HEAD
-  worktree: null
+  worktree: ../bigbase-e39s03-terminal-log-viewer
 handoff:
-  last_step_completed: e39s03-step2-plan-work
+  last_step_completed: e39s03-step3-kickoff-branch
   open_decisions: []
-  next_skill: kickoff-branch
-  summary: "Step 2 done. Plan-work fleshed out: 4 tasks (2 BCPS). WebSocket streaming → StreamLog enhancement → TerminalLogViewer → deprecate BuildLogs. Ready for kickoff-branch."
+  next_skill: develop-tdd
+  summary: "Step 3 done. Worktree created at ../bigbase-e39s03-terminal-log-viewer. All 19 Go packages pass. UI build OK. Ready for TDD."
   context: |
     e39s01: ✅ Released — Real-time WebSocket log streaming (log_stream.go, logHub)
     e39s02: ✅ Released — Deployment state machine v2 (safe, lenient mode)
-    e39s03: ⏳ Step 2 complete — Terminal-style log viewer UI (4 tasks planned)
+    e39s03: ⏳ Step 3 complete — Terminal-style log viewer UI (4 tasks planned)
     Plan: specs/epics/e39s03-terminal-log-viewer.md + specs/epics/e39s03-tasks.yaml
     Existing: StreamLog component (dark theme, line numbers, cursor). BuildLogs (pre block).
     WebSocket endpoint: GET /api/deploy/:id/logs/stream (logHub in log_stream.go)
