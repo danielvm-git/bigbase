@@ -1,3 +1,10 @@
+# [2.37.0](https://github.com/danielvm-git/bigbase/compare/v2.36.2...v2.37.0) (2026-06-21)
+
+
+### Features
+
+* **deploy:** deployment state machine with validated transitions and events ([64ac6c5](https://github.com/danielvm-git/bigbase/commit/64ac6c5235062f7f2676f09439ba029bd20f1c4b))
+
 ## [2.36.2](https://github.com/danielvm-git/bigbase/compare/v2.36.1...v2.36.2) (2026-06-21)
 
 
