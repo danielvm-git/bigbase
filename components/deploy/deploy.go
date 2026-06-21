@@ -601,6 +601,9 @@ func (d *Deploy) runDeployment(deploy *Deployment, buildDir, repoName string) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 
+	// Eagerly create the logHub so all log lines from the very start are captured.
+	d.getOrCreateHub(deploy.ID)
+
 	d.updateStatus(deploy.ID, "building")
 	d.appendDeployLog(deploy.ID, "→ Status: building")
 
@@ -883,8 +886,6 @@ func (d *Deploy) updateStatus(id, status string) {
 			_, _ = d.db.ExecContext(context.Background(),
 				"UPDATE deployments SET build_log = ? WHERE id = ?", strings.Join(lines, "\n"), id)
 		}
-		// Close the log stream so WebSocket subscribers know the deployment finished.
-		d.closeLogStream(id)
 	}
 }
 
@@ -895,6 +896,8 @@ func (d *Deploy) failDeployment(id string, buildErr error) {
 		msg = msg[:maxLen]
 	}
 	d.appendDeployLog(id, "✗ Deploy failed: "+msg)
+	// Close the log stream so WebSocket subscribers know the deployment failed.
+	d.closeLogStream(id)
 
 	// Use a more direct update here since we have the message
 	d.mu.Lock()

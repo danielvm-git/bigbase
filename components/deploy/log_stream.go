@@ -115,7 +115,7 @@ func (d *Deploy) handleLogsStream(w http.ResponseWriter, r *http.Request, id str
 	if err != nil {
 		return
 	}
-	defer conn.Close()
+	defer func() { _ = conn.Close() }()
 
 	hub := d.getOrCreateHub(id)
 	ch, unsub := hub.subscribe()
