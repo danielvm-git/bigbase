@@ -1,0 +1,50 @@
+type: epic-shard
+context: domain
+id: e42
+title: "Deploy — Build Cache"
+wsjf: 4.5
+wsjf_rationale: "BV=7(high: every deploy rebuilds from scratch — cache compounds over hundreds of deploys) TC=3(no deadline) RR=8(elimoinates wait time: cache skips npm install when nothing changed) / JS=3(~2 days across 2 stories)"
+status: planned
+tier: 3
+depends_on:
+  - e40
+  - e47
+covers:
+  - components/deploy/
+stories:
+  - id: e42s01
+    title: "Cache key derivation and storage"
+    status: planned
+    bcps: 2
+    tasks:
+      - desc: "Derive cache key from repo + branch + lockfile hash (package-lock.json, yarn.lock, go.sum)"
+        notes: |
+          Cache key: sha256(repo_id + ":" + branch + ":" + lockfile_hash).
+          Lockfile hash computed at build start. If no lockfile, hash the dependency manifest (package.json, go.mod).
+          Store cache as tar.gz files on disk under data/cache/deploy/.
+          Each cache entry has metadata: created_at, hit_count, size, key.
+        verify: "go test ./components/deploy/ -run TestCacheKey -v"
+      - desc: "Restore cache at build start, save at build end"
+        notes: |
+          Before npm install / go mod download: check if cache key exists.
+          If hit: extract tar.gz into repo directory (restores node_modules, vendor, etc.).
+          If miss: run install as normal, then tar.gz the result and save.
+          Cache invalidation: lockfile change = new key. Manual purge button in admin.
+          Max cache size: configurable (--build-cache-max-size, default 2GB). LRU eviction.
+        verify: "go test ./components/deploy/ -run TestCacheSaveRestore -v"
+  - id: e42s02
+    title: "Admin UI — cache management"
+    status: planned
+    bcps: 1
+    tasks:
+      - desc: "Add cache status widget to SiteDetailPage"
+        notes: |
+          Show: cache key, last hit/miss, cache size, hit count.
+          "Clear cache" button per site (invalidates all cached entries for that site).
+          Cache hit rate over time (hit_count / total_builds).
+        verify: "cd ui && npm run build"
+      - desc: "Global cache management in admin settings"
+        notes: |
+          Total cache usage across all sites. Clear all caches.
+          Configure max cache size. Prune stale entries (older than 7 days).
+        verify: "cd ui && npm run build"

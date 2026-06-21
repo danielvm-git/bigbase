@@ -240,7 +240,7 @@ Use list_services to see the full catalog, get_service_docs for details on a spe
 		if c.db == nil {
 			return textResult("Deploy tools require a database connection. Start BigBase with `serve` to enable deploy workflows."), nil, nil
 		}
-		rows, err := c.db.QueryContext(ctx, "SELECT id, name, description, updated_at FROM git_repos ORDER BY updated_at DESC LIMIT 50")
+		rows, err := c.db.QueryContext(ctx, "SELECT id, name, description, created_at FROM git_repos ORDER BY created_at DESC LIMIT 50")
 		if err != nil {
 			return textResult(fmt.Sprintf("Error listing repos: %v", err)), nil, nil
 		}
@@ -249,8 +249,8 @@ Use list_services to see the full catalog, get_service_docs for details on a spe
 		b.WriteString("# Git Repositories\n\n")
 		count := 0
 		for rows.Next() {
-			var id, name, desc, updated string
-			if err := rows.Scan(&id, &name, &desc, &updated); err != nil {
+			var id, name, desc, created string
+			if err := rows.Scan(&id, &name, &desc, &created); err != nil {
 				continue
 			}
 			fmt.Fprintf(&b, "- **%s** (`%s`) — %s\n", name, id, desc)

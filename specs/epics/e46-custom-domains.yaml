@@ -1,0 +1,72 @@
+type: epic-shard
+context: domain
+id: e46
+title: "Infra — Custom Domains & Auto SSL"
+wsjf: 4.5
+wsjf_rationale: "BV=8(high: production apps need myapp.com not myapp.bigbase.click — this is table stakes for a BaaS) TC=5(blocks making BigBase a primary hosting platform) RR=5(auto Let's Encrypt removes manual SSL management) / JS=4(~3 days across 3 stories)"
+status: planned
+tier: 5
+depends_on: []
+covers:
+  - components/proxy/
+  - components/deploy/
+  - ui/
+stories:
+  - id: e46s01
+    title: "Custom domain mapping and verification"
+    status: planned
+    bcps: 2
+    tasks:
+      - desc: "Create custom_domains table and CRUD API"
+        notes: |
+          Table: custom_domains(id, site_id, domain, verification_method, verified_at, cert_status, cert_expires_at).
+          API: POST /api/sites/:id/domains (add), GET /api/sites/:id/domains (list), DELETE (remove).
+          Verification: user adds CNAME record pointing to bigbase.click (or TXT record).
+          Background verifier: poll DNS every 60s, mark as verified when DNS propagates.
+        verify: "go test ./components/deploy/ -run TestCustomDomainsAPI -v"
+      - desc: "Proxy routing for custom domains — map domain to site deployment"
+        notes: |
+          When proxy receives a request with Host: myapp.com, look up custom_domains table.
+          Route to the site's current live deployment port.
+          Handle both root domain and www subdomain (auto-redirect www → root).
+          Fall through to default routing if no custom domain match.
+        verify: "go test ./components/proxy/ -run TestCustomDomainRouting -v"
+  - id: e46s02
+    title: "Auto SSL via Let's Encrypt (ACME)"
+    status: planned
+    bcps: 2
+    tasks:
+      - desc: "Integrate ACME client for automatic certificate provisioning"
+        notes: |
+          Use golang.org/x/crypto/acme/autocert or lego library.
+          On domain verification: request cert from Let's Encrypt.
+          Store cert + key in DB (or disk cache).
+          Renew certs 30 days before expiry (auto-renewal goroutine).
+          Handle both HTTP-01 and DNS-01 challenges (HTTP-01 is default, DNS-01 for wildcards).
+        verify: "go test ./components/proxy/ -run TestACMEProvision -v"
+      - desc: "Serve HTTPS for custom domains with provisioned certs"
+        notes: |
+          Proxy listens on :443 alongside :80.
+          Auto-redirect HTTP → HTTPS for custom domains.
+          Use the provisioned cert for TLS. Fall back to self-signed for unmatched domains.
+          Support multiple SNI names per listener.
+        verify: "go test ./components/proxy/ -run TestHTTPServing -v"
+  - id: e46s03
+    title: "Admin UI — custom domain management"
+    status: planned
+    bcps: 2
+    tasks:
+      - desc: "Add 'Domains' tab to SiteDetailPage"
+        notes: |
+          List custom domains: domain name, verification status, SSL status, expiry.
+          Add domain form: input field, validation (valid domain format, no duplicate).
+          Show DNS setup instructions: "Add a CNAME record pointing myapp.com → yoursite.bigbase.click".
+          Verify button: manually trigger DNS re-check.
+        verify: "cd ui && npm run build"
+      - desc: "SSL certificate status dashboard"
+        notes: |
+          Show cert status per domain: valid, expiring soon, expired, provisioning, failed.
+          Color codes: green (30+ days), yellow (< 30 days), red (expired).
+          Auto-renewal status and last renewal date.
+          Manual renew button for troubleshooting.
+        verify: "cd ui && npm run build"

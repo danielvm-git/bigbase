@@ -4,13 +4,14 @@ id: e38
 title: "MCP Server — Agent-Native Platform Education"
 wsjf: 4.2
 wsjf_rationale: "BV=8(significant: MCP is the new standard for agent-platform interaction; makes BigBase visible to all AI coding agents) TC=8(competitive window: agent-native platforms are the current wave; being early matters) RR=5(moderate: reduces onboarding friction + unblocks agent-driven development) / JS=5(~1 week: Go MCP server + knowledge tools + deploy integration)"
-status: planned
+status: done
+tier: 1
 covers:
   - components/mcp/
 stories:
   - id: e38s01
     title: "MCP Server Foundation — stdio + HTTP transport, tools registry"
-    status: planned
+    status: done
     bcps: 3
     wsjf: 4.2
     wsjf_rationale: "BV=8 TC=8 RR=5 / JS=5"
@@ -46,7 +47,7 @@ stories:
 
   - id: e38s02
     title: "Platform Knowledge Tools — service catalog, docs, code examples"
-    status: planned
+    status: done
     bcps: 4
     wsjf: 6.0
     wsjf_rationale: "BV=8 TC=8 RR=5 / JS=3.5(~3 days: knowledge base + tool implementations)"
@@ -93,7 +94,7 @@ stories:
 
   - id: e38s03
     title: "Deploy Workflow Tools — repo listing, deploy trigger, status, logs"
-    status: planned
+    status: done
     bcps: 3
     wsjf: 5.33
     wsjf_rationale: "BV=8 TC=8 RR=8(eliminates deploy knowledge gap for agents; agents can't deploy without this) / JS=4.5(~3-4 days: API integration + tools)"

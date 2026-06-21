@@ -13,6 +13,7 @@ import (
 	"os/exec"
 	"sync"
 	"path/filepath"
+	"syscall"
 	"strings"
 	"testing"
 	"time"
@@ -1929,4 +1930,129 @@ func TestValidateNodeBuildScriptNoPackageJSON(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected error when package.json missing")
 	}
+}
+
+func TestStopDeploymentKillsOrphanedProcess(t *testing.T) {
+	// RED: After a BigBase restart (d.apps cleared), a subsequent redeploy for
+	// the same site must kill the previously running process-based app.
+	//
+	// Setup: start a real subprocess, insert its PID in the DB, then create a
+	// fresh Deploy (d.apps empty — simulating a restart). Trigger a new
+	// deployment for the same site_id and verify the orphaned process is killed.
+	logger := testLogger{}
+	database := db.New(db.Options{Path: ":memory:", Logger: logger})
+	gitDir := t.TempDir()
+	buildsDir := t.TempDir()
+
+	// Start a long-running sleep process to simulate an orphaned app
+	sleepCmd := exec.Command("sleep", "300")
+	if err := sleepCmd.Start(); err != nil {
+		t.Fatalf("start sleep: %v", err)
+	}
+	defer func() {
+		_ = sleepCmd.Process.Kill()
+	}()
+	pid := sleepCmd.Process.Pid
+
+	// Create a fresh Deploy component (d.apps starts empty — simulating restart)
+	gitComp := newGitStub(gitDir)
+	dep := deploy.New(deploy.Options{
+		DB:        database,
+		Logger:    logger,
+		BuildsDir: buildsDir,
+		GitDir:    gitDir,
+	})
+	k := kernel.New(logger)
+	k.Register(database)
+	k.Register(gitComp)
+	k.Register(dep)
+	if err := k.Start(); err != nil {
+		t.Fatalf("kernel start: %v", err)
+	}
+	t.Cleanup(func() { _ = k.Stop() })
+
+	// Now insert the orphaned deployment record AFTER Start() — which runs
+	// migrations including ensurePIDColumn that creates the pid column.
+	_, err := database.ExecContext(context.Background(),
+		`INSERT INTO deployments (id, site_id, repo_id, status, pid, port, created_at)
+		 VALUES (?, ?, ?, ?, ?, ?, datetime('now'))`,
+		"orphan-dep-1", "site-orphan-test", "repo-orphan", "running", pid, 20000)
+	if err != nil {
+		t.Fatalf("insert orphan deployment: %v", err)
+	}
+
+	// Verify process is alive before redeploy
+	_processCheckAlive(t, pid, true)
+
+	// Create a valid static-site repo for the new deployment
+	repoID := createTestRepo(t, database, "repo-redeploy-orphan", gitDir)
+
+	// Trigger a new deployment for the same site_id.
+	// This calls stopPreviousDeployments which finds the orphaned deployment
+	// and calls stopDeployment. Since d.apps is empty for this deployment,
+	// hasApp=false — the new code reads PID from DB and kills the process.
+	_, err = dep.Trigger(context.Background(), repoID, "main", "test-site", "site-orphan-test", nil)
+	if err != nil {
+		t.Fatalf("Trigger: %v", err)
+	}
+
+	// Allow async stopDeployment to execute
+	time.Sleep(500 * time.Millisecond)
+
+	// Verify orphaned process is no longer running
+	_processCheckAlive(t, pid, false)
+}
+
+func _processCheckAlive(t *testing.T, pid int, expectAlive bool) {
+	t.Helper()
+	p, err := os.FindProcess(pid)
+	// On Unix, FindProcess always succeeds. Use Signal(0) to check liveness.
+	if err != nil {
+		// On some platforms (e.g. Windows), FindProcess may fail for dead procs.
+		if expectAlive {
+			t.Fatalf("FindProcess(%d): %v — expected alive", pid, err)
+		}
+		return
+	}
+	err = p.Signal(os.Signal(syscall.Signal(0)))
+	if expectAlive && err != nil {
+		t.Fatalf("process %d should be alive, got Signal(0): %v", pid, err)
+	}
+	if !expectAlive && err == nil {
+		t.Fatalf("process %d should be dead after redeploy, but Signal(0) succeeded", pid)
+	}
+}
+
+func TestEnsurePIDColumnIdempotent(t *testing.T) {
+	// RED: ensurePIDColumn must be safe to call twice against the same DB.
+	logger := testLogger{}
+	database := db.New(db.Options{Path: ":memory:", Logger: logger})
+	gitDir := t.TempDir()
+	gitComp := newGitStub(gitDir)
+
+	dep := deploy.New(deploy.Options{
+		DB:     database,
+		Logger: logger,
+		GitDir: gitDir,
+	})
+	k := kernel.New(logger)
+	k.Register(database)
+	k.Register(gitComp)
+	k.Register(dep)
+	if err := k.Start(); err != nil {
+		t.Fatalf("first Start: %v", err)
+	}
+	if err := k.Stop(); err != nil {
+		t.Fatalf("first Stop: %v", err)
+	}
+
+	// Second Start must not error on duplicate PID column
+	k2 := kernel.New(logger)
+	k2.Register(database)
+	k2.Register(gitComp)
+	k2.Register(dep)
+	if err := k2.Start(); err != nil {
+		t.Fatalf("second Start (idempotent): %v", err)
+	}
+	_ = k2.Stop()
 }

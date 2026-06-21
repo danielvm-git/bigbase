@@ -1,0 +1,53 @@
+type: epic-shard
+context: domain
+id: e51
+title: "Deploy — Preview Environments"
+wsjf: 2.5
+wsjf_rationale: "BV=3(low: per-branch previews are great for teams — solo dev works one branch at a time) TC=1(no deadline) RR=2(nice-to-have for testing branches before merge) / JS=4(~3 days across 2 stories)"
+status: planned
+tier: 8
+depends_on:
+  - e40
+  - e47
+covers:
+  - components/deploy/
+  - ui/
+stories:
+  - id: e51s01
+    title: "Branch-based preview deployments"
+    status: planned
+    bcps: 2
+    tasks:
+      - desc: "Add preview deployment creation by branch"
+        notes: |
+          POST /api/sites/:id/preview?branch=feature-xyz — deploys the branch to an isolated preview URL.
+          Preview URL pattern: {branch-slug}.preview.{site}.bigbase.click or {site--branch-slug}.bigbase.click.
+          Preview deployments use the site's bigbase.yaml for build config.
+          Each preview runs on an isolated port (same port allocation as regular deploys).
+          List previews: GET /api/sites/:id/previews.
+        verify: "go test ./components/deploy/ -run TestPreviewDeploy -v"
+      - desc: "Auto-deploy previews on git push to non-main branches"
+        notes: |
+          Webhook: when git push event arrives for a non-main branch, auto-create/update preview.
+          Update existing preview if one already exists for that branch.
+          Skip if branch starts with 'dependabot/' or is a merge commit.
+        verify: "go test ./components/deploy/ -run TestAutoPreview -v"
+  - id: e51s02
+    title: "Preview lifecycle management"
+    status: planned
+    bcps: 2
+    tasks:
+      - desc: "Auto-cleanup previews on branch delete or merge"
+        notes: |
+          Webhook: on branch delete, stop and remove the preview deployment.
+          On PR merge to main, optionally promote preview to production.
+          Configurable max previews per site (default 5, oldest evicted).
+          Stale preview cleanup: auto-delete previews older than 7 days with no updates.
+        verify: "go test ./components/deploy/ -run TestPreviewCleanup -v"
+      - desc: "Admin UI — preview environment management"
+        notes: |
+          'Previews' tab on SiteDetailPage: list active previews with branch name, URL, last deploy time, status.
+          Promote button: deploy preview branch to production (triggers regular deploy).
+          Delete button: remove preview.
+          Link to open preview URL in new tab.
+        verify: "cd ui && npm run build"

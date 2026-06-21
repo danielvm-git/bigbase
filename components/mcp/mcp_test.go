@@ -163,7 +163,7 @@ func deployTestDB(t *testing.T) *sql.DB {
 		t.Fatalf("open in-memory sqlite: %v", err)
 	}
 	for _, stmt := range []string{
-		`CREATE TABLE git_repos (id TEXT PRIMARY KEY, name TEXT, description TEXT, updated_at TEXT)`,
+		`CREATE TABLE git_repos (id TEXT PRIMARY KEY, name TEXT, description TEXT, created_at TEXT)`,
 		`CREATE TABLE deployments (id TEXT PRIMARY KEY, status TEXT, url TEXT, app_type TEXT, commit_sha TEXT, error_message TEXT, build_log TEXT, created_at TEXT)`,
 		`INSERT INTO git_repos VALUES ('repo-1', 'my-sveltekit-app', 'A SvelteKit demo', '2026-06-01T10:00:00Z')`,
 		`INSERT INTO git_repos VALUES ('repo-2', 'go-api', 'A Go API server', '2026-06-02T11:00:00Z')`,

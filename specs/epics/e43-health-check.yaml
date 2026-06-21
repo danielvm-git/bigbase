@@ -1,0 +1,58 @@
+type: epic-shard
+context: domain
+id: e43
+title: "Deploy — Semantic Health Check"
+wsjf: 4.0
+wsjf_rationale: "BV=8(high: auto-verifies the app is actually working, not just process running) TC=5(pairs with rollback — no health check means blind rollback) RR=7(elimoinates manual curl-after-deploy ritual) / JS=3(~2 days across 2 stories)"
+status: planned
+tier: 4
+depends_on:
+  - e39
+covers:
+  - components/deploy/
+  - components/proxy/
+stories:
+  - id: e43s01
+    title: "Configurable health check endpoint probing"
+    status: planned
+    bcps: 2
+    tasks:
+      - desc: "Add health check configuration to deployment lifecycle"
+        notes: |
+          After the app process starts, probe it on its internal port before marking it live.
+          Configurable via bigbase.yaml:
+          ```yaml
+          health_check:
+            path: /api/health
+            expected_status: 200
+            expected_body_contains: "ok"
+            timeout_seconds: 30
+            interval_seconds: 2
+            max_retries: 5
+          ```
+          Default: GET / with 200, 30s timeout, 5 retries every 2s.
+        verify: "go test ./components/deploy/ -run TestHealthCheckConfig -v"
+      - desc: "Integrate health check into state machine — passes before transitioning to 'live'"
+        notes: |
+          After deployStartCommand(), enter 'deploying' state.
+          Run health check loop: probe → wait → probe.
+          All probes pass → transition to 'live'. Any probe fails after max_retries → transition to 'failed'.
+          If health check fails, keep the previous deployment running (no downtime).
+        verify: "go test ./components/deploy/ -run TestHealthCheckIntegration -v"
+  - id: e43s02
+    title: "Health check failure handling and reporting"
+    status: planned
+    bcps: 1
+    tasks:
+      - desc: "Report health check results in deployment logs and status"
+        notes: |
+          Log each probe attempt: GET /health → 200 (12ms), GET /health → 503 (timeout), etc.
+          On failure: include the response body in the error log so the user sees what went wrong.
+          Store health check summary in deployment metadata: probe_count, avg_response_time, first_failure_reason.
+        verify: "go test ./components/deploy/ -run TestHealthCheckReporting -v"
+      - desc: "Admin UI — health check status on deployment detail page"
+        notes: |
+          Show health check step in the deployment timeline.
+          Green checkmark for passed probes, red X for failures, grey for pending.
+          Show response time chart across probes.
+        verify: "cd ui && npm run build"

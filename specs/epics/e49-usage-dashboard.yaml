@@ -1,0 +1,48 @@
+type: epic-shard
+context: domain
+id: e49
+title: "Admin — Usage Dashboard"
+wsjf: 3.0
+wsjf_rationale: "BV=5(moderate: nice to know storage/API calls at a glance — reduces 'am I hitting limits?' anxiety) TC=1(no deadline) RR=3(awareness only, doesn't block shipping) / JS=2(~1.5 days across 2 stories)"
+status: planned
+tier: 7
+depends_on: []
+covers:
+  - ui/
+  - components/deploy/
+stories:
+  - id: e49s01
+    title: "Usage metrics aggregation backend"
+    status: planned
+    bcps: 2
+    tasks:
+      - desc: "Aggregate platform-wide usage metrics"
+        notes: |
+          Metrics to track: total sites, total deployments, active deployments (status=live), total storage used (sum of all file sizes in storage component), total API requests (by month), deployments this week/month, registered users.
+          Query from existing tables: sites, deployments, storage_files, request_logs, users.
+          Cache aggregate results (computed daily or on-demand, cache TTL 5 min).
+          Endpoint: GET /api/admin/usage returning all metrics.
+        verify: "go test ./components/deploy/ -run TestUsageMetrics -v"
+      - desc: "Per-site usage metrics"
+        notes: |
+          Per site: deployments count, storage used (site's files + logs), request count (from request_logs), bandwidth estimate (response sizes).
+          Endpoint: GET /api/sites/:id/usage.
+        verify: "go test ./components/deploy/ -run TestSiteUsageMetrics -v"
+  - id: e49s02
+    title: "Usage dashboard UI"
+    status: planned
+    bcps: 1
+    tasks:
+      - desc: "Add 'Usage' page to admin dashboard"
+        notes: |
+          Overview cards: Total Sites, Active Deployments, Storage Used, API Calls (month), Users.
+          Trend indicators: up/down arrows with percentage change from last month.
+          Simple bar or line charts for: API calls over time, storage growth, deploy frequency.
+          Responsive layout — works on mobile.
+        verify: "cd ui && npm run build"
+      - desc: "Per-site usage view"
+        notes: |
+          Show per-site breakdown in a table or list.
+          Click a site to see its detailed usage: storage, deploys, requests.
+          Export option: download usage data as CSV.
+        verify: "cd ui && npm run build"

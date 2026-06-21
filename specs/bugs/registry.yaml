@@ -358,3 +358,30 @@ bugs:
       - components/deploy/deploy_test.go TestRedeployReplacesPrevious
       - components/proxy/hosts_test.go TestRegisterDeploymentHostReplacesExisting
       - components/deploy/deploy_test.go TestDetectAppTypePythonRequirementsOnlyFallsToStatic
+
+  - id: BUG-2026-06-21T120000
+    date: "2026-06-21"
+    severity: high
+    priority: high
+    scope: deploy,mcp
+    summary: Orphaned process-based apps (Python/Go/Node) survive BigBase restart and accumulate on redeploy; list_repos MCP tool fails with updated_at SQL error
+    file: specs/bugs/BUG-2026-06-21T120000-orphaned-process-apps-and-list-repos-sql.md
+    status: fixed
+    files_changed:
+      - components/deploy/deploy.go
+      - components/deploy/deploy_test.go
+      - components/mcp/mcp.go
+      - components/mcp/mcp_test.go
+    approach: |
+      1. Add pid column to deployments table (ensurePIDColumn migration)
+      2. Persist PID in startApp after cmd.Start() succeeds
+      3. stopDeployment reads PID from DB and kills orphaned process when hasApp=false
+      4. Fix list_repos query from updated_at to created_at
+    risk_level: medium
+    commit_message: "fix(deploy,mcp): persist PID for orphaned process recovery; fix list_repos SQL"
+    regression_guards:
+      - components/deploy/deploy_test.go TestStopDeploymentKillsOrphanedProcess
+      - components/deploy/deploy_test.go TestEnsurePIDColumnIdempotent
+      - components/mcp/mcp_test.go TestListRepos
+    related:
+      - BUG-2026-06-20T014500

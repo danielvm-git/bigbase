@@ -18,7 +18,6 @@ epics:
   e14: done
   e15: done
   e16: done
-  e29: done
   e17: done
   e18: done
   e19: done
@@ -29,14 +28,32 @@ epics:
   e24: done
   e25: done
   e26: done
-  e28: done
   e27: done
+  e28: done
+  e29: done
   e30: done
-  e38: planned
-  e41: done
+  e31: done
+  e32: done
+  e33: done
+  e34: done
+  e35: done
+  e36: done
   e37: pending
+  e38: done
   e39: planned
-  e40: in_progress
+  e40: planned
+  e41: planned
+  e42: planned
+  e43: planned
+  e44: planned
+  e45: planned
+  e46: planned
+  e47: planned
+  e48: planned
+  e49: planned
+  e50: planned
+  e51: planned
+  e52: planned
 stories:
   e01s01: done
   e02s01: done
@@ -54,10 +71,6 @@ stories:
   e14s01: done
   e15s01: done
   e16s01: done
-  e29s01: done
-  e29s02: done
-  e29s03: done
-  e29s04: done
   e17s01: done
   e17s02: done
   e17s03: done
@@ -119,26 +132,74 @@ stories:
   e26s01: done
   e26s02: done
   e26s03: done
-  e28s01: done
-  e28s02: done
   e27s01: done
   e27s02: done
   e27s03: done
   e27s04: done
+  e28s01: done
+  e28s02: done
+  e29s01: done
+  e29s02: done
+  e29s03: done
+  e29s04: done
   e30s01: done
   e30s02: done
   e30s03: done
-  e38s01: planned
-  e38s02: planned
-  e38s03: planned
-  e41s01: done
-  e41s02: done
-  e41s03: done
-  e41s04: done
+  e31s01: done
+  e31s02: done
+  e31s03: done
+  e32s01: done
+  e32s02: done
+  e32s03: done
+  e33s01: done
+  e33s02: done
+  e33s03: done
+  e33s04: done
+  e33s05: done
+  e34s01: done
+  e34s02: done
+  e34s03: done
+  e34s04: done
+  e35s01: done
+  e35s02: done
+  e35s03: done
+  e36s01: done
+  e36s02: done
+  e36s03: done
+  e36s04: done
   e37s01: done
+  e38s01: done
+  e38s02: done
+  e38s03: done
   e39s01: planned
   e39s02: planned
   e39s03: planned
-  e40s01: done
-  e40s02: done
-  e40s03: done
+  e40s01: planned
+  e40s02: planned
+  e40s03: planned
+  e41s01: planned
+  e41s02: planned
+  e42s01: planned
+  e42s02: planned
+  e43s01: planned
+  e43s02: planned
+  e44s01: planned
+  e44s02: planned
+  e45s01: planned
+  e45s02: planned
+  e46s01: planned
+  e46s02: planned
+  e46s03: planned
+  e47s01: planned
+  e47s02: planned
+  e48s01: planned
+  e48s02: planned
+  e49s01: planned
+  e49s02: planned
+  e50s01: planned
+  e50s02: planned
+  e51s01: planned
+  e51s02: planned
+  e52s01: planned
+  e52s02: planned
+  e52s03: planned

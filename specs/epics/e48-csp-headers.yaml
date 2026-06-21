@@ -1,0 +1,52 @@
+type: epic-shard
+context: domain
+id: e48
+title: "Proxy — Configurable CSP Headers"
+wsjf: 2.5
+wsjf_rationale: "BV=4(low-moderate: important security hardening but solo instance is lower attack surface) TC=1(no deadline) RR=3(reduces XSS risk) / JS=1(~1 day across 2 stories)"
+status: planned
+tier: 6
+depends_on: []
+covers:
+  - components/proxy/
+  - ui/
+stories:
+  - id: e48s01
+    title: "CSP header generation with per-site configuration"
+    status: planned
+    bcps: 2
+    tasks:
+      - desc: "Add per-site Content-Security-Policy header generation to the proxy"
+        notes: |
+          Default CSP: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; font-src 'self'".
+          Per-site overridable via bigbase.yaml or admin UI.
+          Support for all standard CSP directives: default-src, script-src, style-src, img-src, connect-src, font-src, frame-src, manifest-src, media-src, object-src, prefetch-src, worker-src.
+          Support CSP nonce/hash for inline scripts.
+        verify: "go test ./components/proxy/ -run TestCSPGeneration -v"
+      - desc: "Apply CSP headers to proxied responses for deployment sites"
+        notes: |
+          Proxy middleware: for requests routed to a deployment, add Content-Security-Policy header.
+          If site has no CSP config, use the default. If bigbase.yaml specifies CSP, use that.
+          Merge strategy: site config overrides default per-directive.
+        verify: "go test ./components/proxy/ -run TestCSPApplication -v"
+  - id: e48s02
+    title: "Admin UI — CSP policy builder"
+    status: planned
+    bcps: 1
+    tasks:
+      - desc: "Add 'Security Headers' section to site settings"
+        notes: |
+          CSP policy builder with presets:
+          - Strict: default-src 'self' (maximum security)
+          - Recommended: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' (balanced)
+          - Relaxed: default-src 'self' 'unsafe-inline' 'unsafe-eval'; connect-src * (dev mode)
+          - Custom: free-form directive editor
+          Show the resulting policy string live as the user configures.
+        verify: "cd ui && npm run build"
+      - desc: "CSP Report-URI / Report-To integration"
+        notes: |
+          Add report-uri or report-to directive pointing to /api/csp-report.
+          Backend: ingest CSP violation reports, store in csp_reports table.
+          Admin UI: view recent CSP violations with source, directive, blocked URI.
+          Helps fine-tune the policy without breaking the site.
+        verify: "go test ./components/proxy/ -run TestCSPReporting -v"

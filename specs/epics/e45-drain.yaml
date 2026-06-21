@@ -1,0 +1,52 @@
+type: epic-shard
+context: domain
+id: e45
+title: "Deploy — Zero-Downtime Drain"
+wsjf: 3.5
+wsjf_rationale: "BV=6(moderate: keeps live traffic flowing during deploys — essential for production, less critical for solo dev instance) TC=3(no deadline, but becomes urgent when users complain about brief outages) RR=5(reduces deploy anxiety: safe to deploy during business hours) / JS=4(~3 days across 2 stories)"
+status: planned
+tier: 4
+depends_on: []
+covers:
+  - components/deploy/
+  - components/proxy/
+stories:
+  - id: e45s01
+    title: "Graceful connection draining on deployment switchover"
+    status: planned
+    bcps: 3
+    tasks:
+      - desc: "Track active connections per deployment instance"
+        notes: |
+          When the proxy routes to a deployment, track the connection.
+          On deployment stop: signal the old process that new connections should be rejected.
+          Wait for existing connections to finish (configurable drain timeout, default 30s).
+          After timeout, force-kill remaining connections.
+          During drain, new connections go to the new deployment.
+        verify: "go test ./components/deploy/ -run TestConnectionDrain -v"
+      - desc: "Integrate drain into deployment lifecycle"
+        notes: |
+          After health check passes on new deployment, begin drain on old.
+          State machine transition: old goes from 'live' → 'draining' → 'stopped'.
+          New goes from 'deploying' → 'live' (only after old starts draining).
+          If drain fails (connections hang beyond timeout), log warning and force-stop.
+        verify: "go test ./components/deploy/ -run TestDrainLifecycle -v"
+  - id: e45s02
+    title: "Proxy integration — smooth traffic migration"
+    status: planned
+    bcps: 2
+    tasks:
+      - desc: "Update proxy routing to support dual-deployment during drain"
+        notes: |
+          During drain: proxy serves new connections to the new deployment.
+          Existing connections on the old deployment continue until they complete.
+          Update routing table atomically to avoid race conditions.
+          Support for sticky sessions (same IP → same deployment) if needed.
+        verify: "go test ./components/proxy/ -run TestDualDeployRouting -v"
+      - desc: "Admin UI — show drain status on deployment detail"
+        notes: |
+          Deployment timeline: show 'draining' state with active connection count.
+          Show remaining connections and drain progress bar.
+          Log when all connections drained and old process stopped.
+          If timeout forced, show warning with count of dropped connections.
+        verify: "cd ui && npm run build"

@@ -1,0 +1,52 @@
+type: epic-shard
+context: domain
+id: e44
+title: "Deploy — One-Click Rollback"
+wsjf: 5.0
+wsjf_rationale: "BV=9(critical: solo dev safety net — bad deploy at midnight needs one-click fix, not git revert + rebuild) TC=5(more urgent as more sites go live) RR=9(elimoinates multi-minute recovery: rollback is seconds) / JS=2(~1.5 days across 2 stories)"
+status: planned
+tier: 4
+depends_on:
+  - e43
+covers:
+  - components/deploy/
+  - ui/
+stories:
+  - id: e44s01
+    title: "Backend — rollback to previous successful deployment"
+    status: planned
+    bcps: 2
+    tasks:
+      - desc: "Add POST /api/sites/:id/rollback endpoint"
+        notes: |
+          Look up the most recent deployment for the site with status 'live' (excluding current).
+          Redeploy that deployment: reuse its build artifacts and commit SHA.
+          Set the rolled-back deployment as the current live version.
+          Store rollback metadata: rolled_back_from (deployment_id), rolled_back_to (deployment_id), timestamp.
+          Error if no previous successful deployment exists.
+        verify: "go test ./components/deploy/ -run TestRollbackAPI -v"
+      - desc: "Rollback by reusing build artifacts (not rebuilding)"
+        notes: |
+          Store a pointer to the build output directory per deployment.
+          On rollback: stop current process, symlink the old build output, start old process.
+          If old process uses a different port, update the proxy routing.
+          This makes rollback fast (seconds) since no rebuild is needed.
+        verify: "go test ./components/deploy/ -run TestRollbackArtifacts -v"
+  - id: e44s02
+    title: "Admin UI — rollback button and history"
+    status: planned
+    bcps: 1
+    tasks:
+      - desc: "Add rollback button to deployment detail page"
+        notes: |
+          Button: "Rollback to previous version" with confirmation dialog.
+          Show what version it will roll back to: timestamp, commit SHA, app type.
+          Disable button if no previous deployment exists.
+          After rollback: redirect to the new live deployment with success toast.
+        verify: "cd ui && npm run build"
+      - desc: "Rollback history timeline on site detail page"
+        notes: |
+          Show all rollback events with: timestamp, rolled from, rolled to, who triggered.
+          Link to the specific deployment pages.
+          Highlight current live deployment vs rollback targets.
+        verify: "cd ui && npm run build"

@@ -1,196 +1,233 @@
 type: release-plan
 context: domain
 release:
-  version: "2.7.0"
-  codename: BigBase v2
-  status: done
+  version: "2.13.0"
+  codename: "Solo Dev Complete"
+  status: in_progress
   semantic_release: true
   bump_hint: minor
 epics:
+  # ─── Completed (e01-e37) ───
   - id: e01
     title: CLI — BigBase Breathes
     wsjf: 1.0
     file: epics/e01-cli.yaml
     mode: flat
+    status: done
   - id: e02
     title: Proxy + Landing Page
     wsjf: 1.0
     file: epics/e02-proxy.yaml
     mode: flat
+    status: done
   - id: e03
     title: DB + Auto API
     wsjf: 1.0
     file: epics/e03-db-auto-api.yaml
     mode: flat
+    status: done
   - id: e04
     title: Auth — Register, Login, JWT
     wsjf: 1.0
     file: epics/e04-auth.yaml
     mode: flat
+    status: done
   - id: e05
     title: Admin UI — Dashboard
     wsjf: 1.0
     file: epics/e05-admin-ui.yaml
     mode: flat
+    status: done
   - id: e06
     title: Storage + Appwrite Look & Feel
     wsjf: 1.0
     file: epics/e06-storage.yaml
     mode: flat
+    status: done
   - id: e07
     title: Git + Commercial Landing Page
     wsjf: 1.0
     file: epics/e07-git.yaml
     mode: flat
+    status: done
   - id: e08
     title: Forge — Issues, Labels, Kanban, Wiki
     wsjf: 1.0
     file: epics/e08-forge.yaml
     mode: flat
+    status: done
   - id: e09
     title: CI/CD — Pipelines & Workflows
     wsjf: 1.0
     file: epics/e09-cici.yaml
     mode: flat
+    status: done
   - id: e10
     title: Functions — Serverless JS Runtime
     wsjf: 1.0
     file: epics/e10-functions.yaml
     mode: flat
+    status: done
   - id: e11
     title: Realtime — WebSocket & Event Broadcast
     wsjf: 1.0
     file: epics/e11-realtime.yaml
     mode: flat
+    status: done
   - id: e12
     title: Messaging — Email, SMS, Push
     wsjf: 1.0
     file: epics/e12-messaging.yaml
     mode: flat
+    status: done
   - id: e13
     title: Deploy — Build & Run Web Apps
     wsjf: 1.0
     file: epics/e13-deploy.yaml
     mode: flat
+    status: done
   - id: e14
     title: Monitoring — Metrics, Logs, Alerts, Health
     wsjf: 1.0
     file: epics/e14-monitoring.yaml
     mode: flat
+    status: done
   - id: e15
     title: Sites — Deploy from GitHub Journey
     wsjf: 1.0
     file: epics/e15-sites.yaml
     mode: flat
+    status: done
   - id: e16
     title: Developer Onboarding Journey
     wsjf: 1.0
     file: epics/e16-onboarding.yaml
     mode: flat
-  - id: e29
-    title: Security Vulnerability Fixes (2026-06 audit)
-    wsjf: 9.3
-    file: epics/e29-security-vuln-fixes.yaml
-    mode: flat
+    status: done
   - id: e17
     title: Enhanced Admin UI
     wsjf: 1.0
     file: epics/e17-enhanced-admin-ui/epic.yaml
     mode: folder
+    status: done
   - id: e18
     title: Multi-DB Support
     wsjf: 2.0
     file: epics/e18-multi-db.yaml
     mode: flat
+    status: done
   - id: e19
     title: Security Hardening
     wsjf: 3.0
     file: epics/e19-security.yaml
     mode: flat
+    status: done
   - id: e20
     title: Platform Operations
     wsjf: 4.0
     file: epics/e20-platform-ops.yaml
     mode: flat
+    status: done
   - id: e21
     title: Testing and Quality Hardening
     wsjf: 3.5
     file: epics/e21-testing.yaml
     mode: flat
+    status: done
   - id: e22
     title: Developer Experience
     wsjf: 5.0
     file: epics/e22-developer-experience.yaml
     mode: flat
+    status: done
   - id: e23
     title: Multi-Tenancy and Organizations
     wsjf: 6.0
     file: epics/e23-multi-tenancy.yaml
     mode: flat
+    status: done
   - id: e24
     title: Wire Observability
     wsjf: 5.0
     file: epics/e24-wire-observability.yaml
     mode: flat
+    status: done
   - id: e25
     title: Hardware Monitoring
     wsjf: 4.25
     file: epics/e25-hardware-monitoring.yaml
     mode: flat
+    status: done
   - id: e26
     title: Site Build Logs UI
     wsjf: 4.5
     file: epics/e26-site-build-logs.yaml
     mode: flat
-  - id: e28
-    title: Delete Deployment
-    wsjf: 5.0
-    file: epics/e28-delete-deployment.yaml
-    mode: flat
+    status: done
   - id: e27
     title: Site Request Logs
     wsjf: 5.5
     file: epics/e27-site-request-logs.yaml
     mode: flat
+    status: done
+  - id: e28
+    title: Delete Deployment
+    wsjf: 5.0
+    file: epics/e28-delete-deployment.yaml
+    mode: flat
+    status: done
+  - id: e29
+    title: Security Vulnerability Fixes (2026-06 audit)
+    wsjf: 9.3
+    file: epics/e29-security-vuln-fixes.yaml
+    mode: flat
+    status: done
   - id: e30
     title: Backend for Bots & Integrations
     wsjf: 3.25
     file: epics/e30-backend-for-integrations.yaml
     mode: flat
+    status: done
   - id: e31
     title: SPA-Friendly Auth — CORS, OAuth redirect, logout
     wsjf: 4.8
-    file: archive/e31-spa-friendly-auth.yaml
+    file: epics/archive/e31-spa-friendly-auth.yaml
     mode: flat
     status: done
   - id: e32
     title: Passwordless Auth + User Management
     wsjf: 6.0
-    file: archive/e32-passwordless-auth.yaml
+    file: epics/archive/e32-passwordless-auth.yaml
     mode: flat
     status: done
   - id: e33
     title: Client SDK + Multi-Framework Adapters
     wsjf: 5.2
-    file: archive/e33-sdk-adapters.yaml
+    file: epics/archive/e33-sdk-adapters.yaml
     mode: flat
     status: done
   - id: e34
     title: Auth UI Components — Multi-Framework
     wsjf: 3.6
-    file: archive/e34-auth-ui-components.yaml
+    file: epics/archive/e34-auth-ui-components.yaml
     mode: flat
     status: done
   - id: e35
     title: Advanced Auth — Phone, Anonymous, OAuth popup
     wsjf: 2.2
-    file: archive/e35-advanced-auth.yaml
+    file: epics/archive/e35-advanced-auth.yaml
     mode: flat
     status: done
   - id: e36
-    title: Delete Deployed Site — backend cascade, deploy cleanup, UI delete action, E2E
+    title: Delete Deployed Site
     wsjf: 6.0
-    file: archive/e36-delete-site.yaml
+    file: epics/archive/e36-delete-site.yaml
+    mode: flat
+    status: done
+  - id: e37
+    title: SvelteKit Deployment — static & SSR
+    wsjf: 4.0
+    file: epics/e37-sveltekit.yaml
     mode: flat
     status: done
   - id: e38
@@ -199,29 +236,105 @@ epics:
     file: epics/e38-mcp-server.yaml
     mode: flat
     status: done
-  - id: e41
-    title: PR-Agent Automated Code Review
-    wsjf: 4.0
-    file: epics/e41-pr-agent-code-review.yaml
-    mode: flat
-    status: done
+  # New Relic integration — completed without a formal epic capsule
+  # PR-Agent setup — completed without a formal epic capsule (work tracked in git history)
 
-  # ─── Next release (v2.13.0) ───
-  - id: e37
-    title: SvelteKit Deployment — static (adapter-static) & SSR (adapter-node)
-    wsjf: 4.0
-    file: epics/e37-sveltekit.yaml
-    mode: flat
-    status: done
+  # ─── Solo Dev Backlog (planned, priority order) ───
   - id: e39
-    title: Multi-User Platform — Admin panel, role switching, friend invites
-    wsjf: 3.6
-    file: epics/e39-multi-user-platform.yaml
+    title: Deploy — Streaming Logs & State Machine
+    wsjf: 5.0
+    file: epics/e39-streaming-logs.yaml
     mode: flat
+    tier: 1
     status: planned
   - id: e40
-    title: New Relic Integration — Application and Server Monitoring
-    wsjf: 5.33
-    file: epics/e40-newrelic/epic.yaml
-    mode: folder
-    status: in_progress
+    title: Deploy — App Manifest (bigbase.yaml)
+    wsjf: 4.5
+    file: epics/e40-app-manifest.yaml
+    mode: flat
+    tier: 2
+    status: planned
+  - id: e41
+    title: Deploy — Environment Variables UI
+    wsjf: 4.0
+    file: epics/e41-env-vars-ui.yaml
+    mode: flat
+    tier: 2
+    status: planned
+  - id: e42
+    title: Deploy — Build Cache
+    wsjf: 4.5
+    file: epics/e42-build-cache.yaml
+    mode: flat
+    tier: 3
+    status: planned
+  - id: e43
+    title: Deploy — Semantic Health Check
+    wsjf: 4.0
+    file: epics/e43-health-check.yaml
+    mode: flat
+    tier: 4
+    status: planned
+  - id: e44
+    title: Deploy — One-Click Rollback
+    wsjf: 5.0
+    file: epics/e44-rollback.yaml
+    mode: flat
+    tier: 4
+    status: planned
+  - id: e45
+    title: Deploy — Zero-Downtime Drain
+    wsjf: 3.5
+    file: epics/e45-drain.yaml
+    mode: flat
+    tier: 4
+    status: planned
+  - id: e46
+    title: Infra — Custom Domains & Auto SSL
+    wsjf: 4.5
+    file: epics/e46-custom-domains.yaml
+    mode: flat
+    tier: 5
+    status: planned
+  - id: e47
+    title: Deploy — Secrets Management
+    wsjf: 3.5
+    file: epics/e47-secrets.yaml
+    mode: flat
+    tier: 5
+    status: planned
+  - id: e48
+    title: Proxy — Configurable CSP Headers
+    wsjf: 2.5
+    file: epics/e48-csp-headers.yaml
+    mode: flat
+    tier: 6
+    status: planned
+  - id: e49
+    title: Admin — Usage Dashboard
+    wsjf: 3.0
+    file: epics/e49-usage-dashboard.yaml
+    mode: flat
+    tier: 7
+    status: planned
+  - id: e50
+    title: Admin — Collection Schema Designer
+    wsjf: 2.5
+    file: epics/e50-schema-designer.yaml
+    mode: flat
+    tier: 8
+    status: planned
+  - id: e51
+    title: Deploy — Preview Environments
+    wsjf: 2.5
+    file: epics/e51-preview-envs.yaml
+    mode: flat
+    tier: 8
+    status: planned
+  - id: e52
+    title: Multi-User Platform — Admin panel, role switching, friend invites
+    wsjf: 3.6
+    file: epics/e52-multi-user-platform.yaml
+    mode: flat
+    tier: 8
+    status: planned

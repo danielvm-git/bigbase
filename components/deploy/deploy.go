@@ -193,6 +193,9 @@ func (d *Deploy) Start(ctx *kernel.Context) error {
 	if err := d.ensurePassthroughPathsColumn(); err != nil {
 		return err
 	}
+	if err := d.ensurePIDColumn(); err != nil {
+		return err
+	}
 	if err := d.db.Migrate(`CREATE TABLE IF NOT EXISTS site_request_logs (
 		id TEXT PRIMARY KEY,
 		site_id TEXT NOT NULL,
@@ -532,6 +535,20 @@ func (d *Deploy) stopDeployment(id, newStatus string) {
 		if d.hostRouter != nil && app.host != "" {
 			d.hostRouter.UnregisterDeploymentHost(app.host)
 		}
+	} else {
+		// Orphaned process recovery: the deployment was started in a previous
+		// BigBase session (or survived a crash). Read the PID from DB and kill.
+		var pid int
+		err := d.db.QueryRowContext(context.Background(),
+			"SELECT pid FROM deployments WHERE id = ?", id).Scan(&pid)
+		if err == nil && pid > 0 {
+			if p, err := os.FindProcess(pid); err == nil {
+				if err := p.Kill(); err == nil {
+					d.logger.Info("killed orphaned process", "id", id, "pid", pid)
+				}
+				_, _ = p.Wait() // reap zombie so Signal(0) reflects dead state
+			}
+		}
 	}
 
 	if newStatus != "" {
@@ -799,6 +816,12 @@ func (d *Deploy) startApp(ctx context.Context, buildDir string, deploy *Deployme
 		return
 	}
 
+	// Persist PID to DB so orphaned processes can be killed after restart
+	if pid := cmd.Process.Pid; pid > 0 {
+		_, _ = d.db.ExecContext(context.Background(),
+			"UPDATE deployments SET pid = ? WHERE id = ?", pid, deploy.ID)
+	}
+
 	go func() {
 		scanner := bufio.NewScanner(stdout)
 		for scanner.Scan() {
@@ -923,6 +946,18 @@ func (d *Deploy) ensurePassthroughPathsColumn() error {
 		return nil
 	}
 	return fmt.Errorf("add passthrough_paths column: %w", err)
+}
+
+func (d *Deploy) ensurePIDColumn() error {
+	_, err := d.db.ExecContext(context.Background(),
+		`ALTER TABLE deployments ADD COLUMN pid INTEGER NOT NULL DEFAULT 0`)
+	if err == nil {
+		return nil
+	}
+	if strings.Contains(strings.ToLower(err.Error()), "duplicate column") {
+		return nil
+	}
+	return fmt.Errorf("add pid column: %w", err)
 }
 
 func (d *Deploy) finalizeDeploymentURL(deploy *Deployment, repoName string) {

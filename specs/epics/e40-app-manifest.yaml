@@ -1,0 +1,77 @@
+type: epic-shard
+context: domain
+id: e40
+title: "Deploy — App Manifest (bigbase.yaml)"
+wsjf: 4.5
+wsjf_rationale: "BV=7(high: stops config drift — one YAML file vs memorizing CLI flags) TC=5(no urgent deadline, but compounds with every new deploy feature) RR=7(reduces cognitive load: version-controlled, reproducible builds) / JS=3(~2 days across 3 stories)"
+status: planned
+tier: 2
+depends_on: []
+covers:
+  - components/deploy/
+  - components/git/
+stories:
+  - id: e40s01
+    title: "Manifest parsing — detect bigbase.yaml in repo root, extract config"
+    status: planned
+    bcps: 2
+    tasks:
+      - desc: "Define bigbase.yaml schema with fields for build_command, start_command, port, env, framework, publish_dir"
+        notes: |
+          Schema:
+          ```yaml
+          version: 1
+          framework: sveltekit | astro | next | vue | react | static | go | python | node
+          build:
+            command: npm run build
+            output: build/
+          start:
+            command: node build/index.js
+            port: 3000
+          env:
+            NODE_VERSION: "20"
+          ```
+          Validate on read: required fields, valid framework values, port range.
+        verify: "go test ./components/deploy/ -run TestManifestParse -v"
+      - desc: "Integrate manifest into deploy flow — check bigbase.yaml before falling back to auto-detection"
+        notes: |
+          In buildApp(): look for /repo/bigbase.yaml. If found, use its config.
+          If not found, fall back to existing DetectAppType() logic.
+          Merge: manifest values override auto-detection where both exist.
+        verify: "go test ./components/deploy/ -run TestManifestIntegration -v"
+  - id: e40s02
+    title: "bigbase init CLI — generate default manifest for detected framework"
+    status: planned
+    bcps: 1
+    tasks:
+      - desc: "Add bigbase init command that detects framework and writes bigbase.yaml"
+        notes: |
+          Run from repo root. Uses existing DetectAppType() to identify framework.
+          Writes a sensible default bigbase.yaml tailored to that framework.
+          SvelteKit → adapter-node + node build/index.js.
+          Static → no build output, serve static.
+          Go → go build -o app . + ./app.
+        verify: "go run . init --repo /tmp/test-repo && test -f /tmp/test-repo/bigbase.yaml"
+      - desc: "Add --manifest flag to deploy command to use a specific manifest path"
+        notes: |
+          Allow override: bigbase.yaml at repo root is default.
+          --manifest ./custom.yaml for alternative config.
+          Merge order: CLI flags > manifest > auto-detection.
+        verify: "go test ./components/deploy/ -run TestManifestFlags -v"
+  - id: e40s03
+    title: "Admin UI — view and edit bigbase.yaml from site settings"
+    status: planned
+    bcps: 2
+    tasks:
+      - desc: "Add 'Manifest' tab to SiteDetailPage showing current bigbase.yaml content"
+        notes: |
+          Read-only view by default. Syntax-highlighted YAML display.
+          Show a warning if no bigbase.yaml exists (using auto-detection).
+          Link to docs explaining how to add one.
+        verify: "cd ui && npm run build"
+      - desc: "Inline YAML editor with validation and save"
+        notes: |
+          Editable mode: toggle edit/view. Monaco or CodeMirror YAML editor.
+          Validate on save: parse YAML, check schema, show errors inline.
+          Write updated bigbase.yaml back to the repo via git API.
+        verify: "cd ui && npm run build"

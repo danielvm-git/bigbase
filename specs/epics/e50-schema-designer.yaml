@@ -1,0 +1,52 @@
+type: epic-shard
+context: domain
+id: e50
+title: "Admin — Collection Schema Designer"
+wsjf: 2.5
+wsjf_rationale: "BV=4(low-moderate: visual schema editing is convenient but SQL works fine for a solo dev) TC=1(no deadline) RR=2(slightly reduces friction for non-SQL tasks) / JS=4(~3 days across 2 stories)"
+status: planned
+tier: 8
+depends_on:
+  - e03
+covers:
+  - components/api/
+  - ui/
+stories:
+  - id: e50s01
+    title: "Schema definition CRUD and storage"
+    status: planned
+    bcps: 2
+    tasks:
+      - desc: "Create collection_schemas table and API for schema CRUD"
+        notes: |
+          Table: collection_schemas(id, name, slug (unique), fields JSON, created_at, updated_at).
+          Fields JSON schema: [{name, type (string|number|boolean|date|json|relation|file), required, default, unique, indexed}].
+          API: GET/POST/PUT/DELETE /api/collections/schemas.
+          Auto-migration: on schema create/update, ALTER TABLE the backing SQLite table to match.
+          Support additive changes only (adding nullable columns). Destructive changes (removing columns) require explicit confirmation.
+        verify: "go test ./components/api/ -run TestSchemaCRUD -v"
+      - desc: "Type system with validation and indexing"
+        notes: |
+          Supported types: string, text, number (int/float), boolean, date, datetime, json, file (reference to storage), relation (reference to another collection).
+          Field validation: required fields reject empty values, unique fields reject duplicates, type validation on write.
+          Auto-index: primary key (id), unique fields, explicitly marked indexed fields.
+        verify: "go test ./components/api/ -run TestSchemaTypes -v"
+  - id: e50s02
+    title: "Visual schema editor in admin UI"
+    status: planned
+    bcps: 2
+    tasks:
+      - desc: "Add 'Schema Designer' page to admin dashboard"
+        notes: |
+          List existing collections with their field count, record count, and last modified.
+          "Create Collection" button: name + slug input.
+          Click a collection to open the field editor.
+        verify: "cd ui && npm run build"
+      - desc: "Field editor with drag-and-drop reordering"
+        notes: |
+          For each field: name, type picker (dropdown), required toggle, default value, unique toggle, indexed toggle.
+          Drag to reorder fields. Add field button appends at cursor position.
+          Delete field: confirmation with warning about data loss (NULLs or migration).
+          Save: writes schema + triggers migration if needed.
+          Preview: show a sample record with the current schema.
+        verify: "cd ui && npm run build"

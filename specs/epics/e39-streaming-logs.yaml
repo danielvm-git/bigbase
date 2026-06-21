@@ -1,0 +1,72 @@
+type: epic-shard
+context: domain
+id: e39
+title: "Deploy — Streaming Build Logs & State Machine"
+wsjf: 5.0
+wsjf_rationale: "BV=9(critical: debugging alone is the #1 solo dev pain — real-time logs are your only pair programmer) TC=5(no deadline, but every failed deploy without logs is a productivity black hole) RR=8(elimoinates 'why did my deploy fail?' guesswork) / JS=4(~3 days across 3 stories)"
+status: planned
+tier: 1
+depends_on: []
+covers:
+  - components/deploy/deploy.go
+  - components/proxy/proxy.go
+  - ui/
+stories:
+  - id: e39s01
+    title: "Real-time log streaming — WebSocket endpoint for build logs"
+    status: planned
+    bcps: 2
+    tasks:
+      - desc: "Add WebSocket endpoint GET /api/deployments/:id/logs/stream that streams build log lines in real-time as the build progresses"
+        notes: |
+          Replace the current polling-based log fetch with a push model.
+          Use a channel/buffer per deployment that the build process writes to.
+          WebSocket reads from the channel and sends each line as a text frame.
+          Fall back to polling if WebSocket not available (existing GET /api/deployments/:id/logs).
+        verify: "go test ./components/deploy/ -run TestStreamingLogs -v"
+      - desc: "Wire the streaming endpoint into the deployment lifecycle — start buffering logs at 'building' state"
+        notes: |
+          In runDeployment(), before starting the build, initialize a line buffer.
+          Capture build stdout+stderr into the buffer line-by-line.
+          Broadcast via event bus for any subscribed WebSocket connections.
+        verify: "go test ./components/deploy/ -run TestLogLifecycle -v"
+  - id: e39s02
+    title: "Deployment state machine — queued → building → deploying → live/failed"
+    status: planned
+    bcps: 3
+    tasks:
+      - desc: "Refactor deployment status transitions into a proper state machine with valid transitions"
+        notes: |
+          States: pending → building → deploying → live | failed.
+          Transitions are explicit methods: StartBuild(), FinishBuild(), HealthCheckPass(), HealthCheckFail(), Timeout(), Rollback().
+          Invalid transitions return errors (e.g. you can't go from pending to live).
+          Store transition timestamps for audit.
+        verify: "go test ./components/deploy/ -run TestStateMachine -v"
+      - desc: "Emit state change events on the kernel event bus for other components to react"
+        notes: |
+          Event: deploy.state_changed {deployment_id, from_state, to_state, timestamp}.
+          Allow hooks to react: monitoring logs state transitions, MCP broadcasts status, proxy re-routes traffic.
+        verify: "go test ./components/deploy/ -run TestStateEvents -v"
+      - desc: "Add status polling to the admin UI — show live state transitions on deployment detail page"
+        notes: |
+          SiteDetailPage: auto-refresh deployment status via WebSocket or short polling.
+          Visual indicators per state: spinning for building, green check for live, red X for failed, yellow for deploying.
+          Show state history as a timeline.
+        verify: "cd ui && npm run build"
+  - id: e39s03
+    title: "Terminal-style live log viewer in admin UI"
+    status: planned
+    bcps: 2
+    tasks:
+      - desc: "Build a terminal-style log viewer component in the admin UI"
+        notes: |
+          Dark background, monospace font, auto-scroll to bottom.
+          ANSI color support for build output (npm/yarn use colors).
+          Search/filter within logs. Copy button. Timestamp toggle.
+          Connect to WebSocket endpoint when available, fall back to polling.
+        verify: "cd ui && npm run build"
+      - desc: "Add log viewer to deployment detail page replacing the current static log block"
+        notes: |
+          Replace the existing static <pre> block with the new live viewer.
+          Reuse the existing GET /api/deployments/:id/logs endpoint for initial load.
+        verify: "cd ui && npm run build && go test ./components/deploy/ -run TestLogsAPI -v"

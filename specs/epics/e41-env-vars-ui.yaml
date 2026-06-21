@@ -1,0 +1,51 @@
+type: epic-shard
+context: domain
+id: e41
+title: "Deploy — Environment Variables UI"
+wsjf: 4.0
+wsjf_rationale: "BV=6(moderate: stops SSH-based env var management — daily quality-of-life win for solo dev) TC=3(no urgent deadline) RR=6(reduces friction: env vars in UI vs CLI flags) / JS=2(~1.5 days across 2 stories)"
+status: planned
+tier: 2
+depends_on: []
+covers:
+  - components/deploy/
+  - ui/
+stories:
+  - id: e41s01
+    title: "Backend CRUD for site-scoped environment variables"
+    status: planned
+    bcps: 2
+    tasks:
+      - desc: "Create site_env_vars table and CRUD API"
+        notes: |
+          Table: site_env_vars(id, site_id, key, value_encrypted, is_build_time, is_runtime, created_at, updated_at).
+          Encrypt values at rest using AES-256-GCM with a server-side key (--env-encryption-key flag).
+          API: GET /api/sites/:id/env-vars, POST, PUT /api/sites/:id/env-vars/:key, DELETE.
+          Keys are uppercase alphanumeric + underscore (convention: DATABASE_URL, API_KEY, etc.).
+          List is filtered by site_id. Keys must be unique per site.
+        verify: "go test ./components/deploy/ -run TestEnvVarsAPI -v"
+      - desc: "Inject env vars into build and runtime environments"
+        notes: |
+          In buildApp(): fetch site env vars,export them as process env for the build command.
+          In startApp(): pass runtime env vars to the child process.
+          Both build-time and runtime flags in is_build_time / is_runtime columns.
+          Sensible defaults: API keys are build-time, DATABASE_URL is runtime.
+        verify: "go test ./components/deploy/ -run TestEnvVarInjection -v"
+  - id: e41s02
+    title: "Admin UI — environment variables management page"
+    status: planned
+    bcps: 2
+    tasks:
+      - desc: "Add 'Environment Variables' tab to SiteDetailPage"
+        notes: |
+          Table view: key, masked value (show last 4 chars), build/runtime toggles, created date.
+          Add new: key input, value input (show/hide toggle), build/runtime checkboxes.
+          Edit: change value, toggle build/runtime. Delete: confirm dialog.
+          Validation: key format check, duplicate detection.
+        verify: "cd ui && npm run build"
+      - desc: "Bulk import/export env vars"
+        notes: |
+          Import from .env file (drag & drop or file picker).
+          Export current env vars as .env download.
+          Warn on overwrite of existing keys during import.
+        verify: "cd ui && npm run build"

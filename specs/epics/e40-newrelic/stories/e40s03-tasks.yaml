@@ -1,9 +1,0 @@
-story_id: e40s03
-title: "Instrument Database Segment Tracing"
-status: done
-bcps: 2
-tasks:
-  - id: 1
-    description: "Wrap ExecContext, QueryContext, QueryRowContext with NR datastore segments"
-    verify: "grep -q 'nrDatastoreSegment' components/db/db.go && go test ./... && echo '✅ All pass'"
-    status: done
