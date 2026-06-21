@@ -1,0 +1,17 @@
+story_id: e39s03
+title: "Terminal-style live log viewer in admin UI"
+status: planned
+bcps: 2
+tasks:
+  - id: 1
+    description: "Add WebSocket streaming support to useBuildLogs hook — connect to /api/deploy/:id/logs/stream, accumulate lines, fall back to polling"
+    verify: "cd ui && npx tsc --noEmit"
+  - id: 2
+    description: "Enhance StreamLog component — add terminal toolbar (search/filter input, copy button, timestamp toggle), ANSI color parsing for build output"
+    verify: "cd ui && npm run build"
+  - id: 3
+    description: "Create TerminalLogViewer component composing StreamLog + toolbar + WebSocket, replace BuildLogs usage in SiteDetailPage"
+    verify: "cd ui && npm run build && go test ./components/deploy/ -run TestLogsAPI -v"
+  - id: 4
+    description: "Deprecate old BuildLogs component (remove export, keep file for reference), update component index"
+    verify: "cd ui && npm run build"

@@ -11,23 +11,31 @@ release:
   ci_verified: true
 metrics:
   session_start: '2026-06-21T16:00:00Z'
+  story_start: '2026-06-21T17:30:00Z'
   session_end: null
   cycle_minutes: 0
   epics_completed: 38
   stories_completed: 120
   bcps_per_hour: 0
-epic_cycle: {}
+epic_cycle:
+  step: 3
+  story_bcps: 2
+  story: e39s03
+  audit_result: null
 bug_cycle: {}
 git:
   branch: main
   hash: HEAD
   worktree: null
 handoff:
-  last_step_completed: e39s02-release-branch
+  last_step_completed: e39s03-step2-plan-work
   open_decisions: []
-  next_skill: survey-context
-  summary: "e39s02 v2 released: Deployment state machine. 120 stories complete. Next: e39s03."
+  next_skill: kickoff-branch
+  summary: "Step 2 done. Plan-work fleshed out: 4 tasks (2 BCPS). WebSocket streaming → StreamLog enhancement → TerminalLogViewer → deprecate BuildLogs. Ready for kickoff-branch."
   context: |
-    e39s01: ✅ Released — Real-time WebSocket log streaming
+    e39s01: ✅ Released — Real-time WebSocket log streaming (log_stream.go, logHub)
     e39s02: ✅ Released — Deployment state machine v2 (safe, lenient mode)
-    e39s03: ⏳ Planned — Terminal-style log viewer UI
+    e39s03: ⏳ Step 2 complete — Terminal-style log viewer UI (4 tasks planned)
+    Plan: specs/epics/e39s03-terminal-log-viewer.md + specs/epics/e39s03-tasks.yaml
+    Existing: StreamLog component (dark theme, line numbers, cursor). BuildLogs (pre block).
+    WebSocket endpoint: GET /api/deploy/:id/logs/stream (logHub in log_stream.go)
