@@ -93,6 +93,8 @@ type Deploy struct {
 	nextPort     int
 	apps         map[string]*runningApp
 	unsubscribe  func()
+	logHubsMu    sync.RWMutex
+	logHubs      map[string]*logHub
 }
 
 type Options struct {
@@ -148,6 +150,7 @@ func New(opts Options) *Deploy {
 		hostRouter:   opts.HostRouter,
 		nextPort:     basePort,
 		apps:         make(map[string]*runningApp),
+		logHubs:      make(map[string]*logHub),
 	}
 }
 
@@ -880,6 +883,8 @@ func (d *Deploy) updateStatus(id, status string) {
 			_, _ = d.db.ExecContext(context.Background(),
 				"UPDATE deployments SET build_log = ? WHERE id = ?", strings.Join(lines, "\n"), id)
 		}
+		// Close the log stream so WebSocket subscribers know the deployment finished.
+		d.closeLogStream(id)
 	}
 }
 
@@ -1106,7 +1111,12 @@ func (d *Deploy) handleDeployByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Check for logs sub-path: /api/deploy/:id/logs
+	// Check for logs sub-path: /api/deploy/:id/logs/stream (WebSocket) or /api/deploy/:id/logs
+	if strings.HasSuffix(path, "/logs/stream") {
+		id := strings.TrimSuffix(path, "/logs/stream")
+		d.handleLogsStream(w, r, id)
+		return
+	}
 	if strings.HasSuffix(path, "/logs") {
 		id := strings.TrimSuffix(path, "/logs")
 		d.handleDeployLogs(w, r, id)

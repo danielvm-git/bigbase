@@ -33,7 +33,6 @@ func (d *Deploy) appendDeployLog(id, line string) {
 		return
 	}
 	d.deployLogsMu.Lock()
-	defer d.deployLogsMu.Unlock()
 	if d.deployLogs == nil {
 		d.deployLogs = make(map[string][]string)
 	}
@@ -42,6 +41,15 @@ func (d *Deploy) appendDeployLog(id, line string) {
 		buf = buf[len(buf)-maxDeployLogLines:]
 	}
 	d.deployLogs[id] = buf
+	d.deployLogsMu.Unlock()
+
+	// Broadcast to WebSocket subscribers (non-blocking).
+	d.logHubsMu.RLock()
+	h := d.logHubs[id]
+	d.logHubsMu.RUnlock()
+	if h != nil {
+		h.broadcast(line)
+	}
 }
 
 func (d *Deploy) appendDeployLogBlock(id, text string) {
