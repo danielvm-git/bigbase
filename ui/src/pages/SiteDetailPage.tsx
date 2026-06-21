@@ -19,30 +19,83 @@ import { useBuildLogs } from '../hooks/useBuildLogs'
 import { useRequestLogs } from '../hooks/useRequestLogs'
 import type { Deployment, Site } from '../types/sites'
 
-const STATUS_STEPS = ['pending', 'building', 'deploying', 'running']
+// Visual states for the status timeline dots
+function statusColor(status: string): string {
+  if (status === 'live' || status === 'running') return 'var(--success)'
+  if (status === 'failed') return 'var(--error)'
+  if (status === 'deploying') return 'var(--warning)'
+  if (status === 'building') return 'var(--brand-500)'
+  return 'var(--border-default)' // pending
+}
 
-function StatusTimeline({ status }: { status: string }) {
+function statusIndicator(status: string): string {
+  if (status === 'building') return 'var(--brand-500)'
+  if (status === 'deploying') return 'var(--warning)'
+  return statusColor(status)
+}
+
+const STATUS_STEPS = ['pending', 'building', 'deploying', 'running', 'live']
+
+function StatusTimeline({ status, history }: { status: string; history?: Array<{ from: string; to: string; timestamp: string }> }) {
   const currentIdx = STATUS_STEPS.indexOf(status)
-  if (currentIdx < 0) return null
+  if (currentIdx < 0 && !history) return null
+
+  // If we have history, render it as a chronological list
+  if (history && history.length > 0) {
+    return (
+      <div style={{ padding: 'var(--space-3) 0' }}>
+        {history.map((tr, i) => (
+          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', marginBottom: 'var(--space-2)' }}>
+            <div style={{
+              width: 10, height: 10, borderRadius: '50%', flexShrink: 0,
+              background: statusColor(tr.to),
+              animation: tr.to === 'building' || tr.to === 'deploying' ? 'status-pulse 1.5s ease-in-out infinite' : 'none',
+            }} />
+            <div style={{ fontSize: 'var(--text-xs)', display: 'flex', gap: 'var(--space-2)', alignItems: 'baseline' }}>
+              <span style={{ fontWeight: i === history.length - 1 ? 600 : 400, textTransform: 'capitalize' }}>{tr.to}</span>
+              <span style={{ color: 'var(--fg-tertiary)' }}>
+                {new Date(tr.timestamp).toLocaleTimeString()}
+              </span>
+            </div>
+          </div>
+        ))}
+      </div>
+    )
+  }
+
+  // Fall back to step-based timeline for deployments without history
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', padding: 'var(--space-3) 0' }}>
-      {STATUS_STEPS.map((step, i) => (
-        <div key={step} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', flex: 1 }}>
-          <div style={{
-            width: 10, height: 10, borderRadius: '50%', flexShrink: 0,
-            background: i <= currentIdx ? (status === 'failed' && i === currentIdx ? 'var(--error)' : 'var(--brand-500)') : 'var(--border-default)',
-            transition: 'background var(--duration-medium) var(--ease-standard)',
-          }} />
-          <span style={{
-            fontSize: 'var(--text-xs)', textTransform: 'capitalize', whiteSpace: 'nowrap',
-            color: i <= currentIdx ? 'var(--fg-primary)' : 'var(--fg-tertiary)',
-            fontWeight: i === currentIdx ? 600 : 400,
-          }}>{step}</span>
-          {i < STATUS_STEPS.length - 1 && (
-            <div style={{ flex: 1, height: 2, background: i < currentIdx ? 'var(--brand-500)' : 'var(--border-default)', minWidth: 16 }} />
-          )}
-        </div>
-      ))}
+      {STATUS_STEPS.map((step, i) => {
+        const dotColor = i <= currentIdx ? statusIndicator(status) : 'var(--border-default)'
+        const labelColor = i <= currentIdx ? 'var(--fg-primary)' : 'var(--fg-tertiary)'
+        const isCurrent = i === currentIdx
+        return (
+          <div key={step} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', flex: 1 }}>
+            <div style={{
+              width: 10, height: 10, borderRadius: '50%', flexShrink: 0,
+              background: dotColor,
+              transition: 'background var(--duration-medium) var(--ease-standard)',
+              animation: (step === 'building' || step === 'deploying') && isCurrent ? 'status-pulse 1.5s ease-in-out infinite' : 'none',
+            }}>
+              {(step === 'live' || step === 'running') && isCurrent && (
+                <span style={{ position: 'absolute', fontSize: '8px' }}>✓</span>
+              )}
+              {status === 'failed' && isCurrent && (
+                <span style={{ position: 'absolute', fontSize: '8px' }}>✗</span>
+              )}
+            </div>
+            <span style={{
+              fontSize: 'var(--text-xs)', textTransform: 'capitalize', whiteSpace: 'nowrap',
+              color: labelColor,
+              fontWeight: isCurrent ? 600 : 400,
+            }}>{step}</span>
+            {i < STATUS_STEPS.length - 1 && (
+              <div style={{ flex: 1, height: 2, background: i < currentIdx ? statusIndicator(status) : 'var(--border-default)', minWidth: 16 }} />
+            )}
+          </div>
+        )
+      })}
     </div>
   )
 }
@@ -89,7 +142,9 @@ export default function SiteDetailPage() {
   useEffect(() => { load() }, [load])
 
   useEffect(() => {
-    const active = deployments.some(d => d.status === 'pending' || d.status === 'building')
+    const active = deployments.some(d =>
+      d.status === 'pending' || d.status === 'building' || d.status === 'deploying'
+    )
     if (!active || previewMode) return
     const t = setInterval(load, 3000)
     return () => clearInterval(t)
@@ -199,7 +254,7 @@ export default function SiteDetailPage() {
                 <Badge variant={statusBadgeVariant(latest.status)}>{latest.status}</Badge>
                 {site.production_branch && <code style={{ marginLeft: 'var(--space-4)' }}>{site.production_branch}</code>}
               </div>
-              <StatusTimeline status={latest.status} />
+              <StatusTimeline status={latest.status} history={latest.status_history} />
               {latest.url && (
                 <p style={{ marginTop: 'var(--space-6)' }}>
                   <Button as="a" href={latest.url} target="_blank" rel="noreferrer" variant="primary" size="sm">

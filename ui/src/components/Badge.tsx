@@ -24,7 +24,7 @@ export function Badge({ variant = 'neutral', className = '', ...rest }: BadgePro
 
 export function statusBadgeVariant(status: string): BadgeVariant {
   const s = status.toLowerCase()
-  if (s === 'running' || s === 'active' || s === 'ok' || s === 'healthy') return 'success'
+  if (s === 'running' || s === 'live' || s === 'active' || s === 'ok' || s === 'healthy') return 'success'
   if (s === 'failed' || s === 'error' || s === 'deleted') return 'error'
   if (s === 'building' || s === 'pending' || s === 'deploying') return 'warning'
   return 'neutral'

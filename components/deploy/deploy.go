@@ -49,18 +49,19 @@ const (
 )
 
 type Deployment struct {
-	ID               string   `json:"id"`
-	RepoID           string   `json:"repo_id"`
-	SiteID           string   `json:"site_id"`
-	Branch           string   `json:"branch"`
-	CommitSHA        string   `json:"commit_sha"`
-	Status           string   `json:"status"`
-	URL              string   `json:"url"`
-	Port             int      `json:"port"`
-	AppType          AppType  `json:"app_type"`
-	ErrorMessage     string   `json:"error_message,omitempty"`
-	PassthroughPaths []string `json:"passthrough_paths,omitempty"`
-	CreatedAt        string   `json:"created_at"`
+	ID               string             `json:"id"`
+	RepoID           string             `json:"repo_id"`
+	SiteID           string             `json:"site_id"`
+	Branch           string             `json:"branch"`
+	CommitSHA        string             `json:"commit_sha"`
+	Status           string             `json:"status"`
+	URL              string             `json:"url"`
+	Port             int                `json:"port"`
+	AppType          AppType            `json:"app_type"`
+	ErrorMessage     string             `json:"error_message,omitempty"`
+	PassthroughPaths []string           `json:"passthrough_paths,omitempty"`
+	StatusHistory    []StatusTransition `json:"status_history,omitempty"`
+	CreatedAt        string             `json:"created_at"`
 }
 
 type runningApp struct {
@@ -95,6 +96,8 @@ type Deploy struct {
 	unsubscribe  func()
 	logHubsMu    sync.RWMutex
 	logHubs      map[string]*logHub
+	sm           *stateMachine
+	eventBus     *kernel.EventBus
 }
 
 type Options struct {
@@ -151,6 +154,7 @@ func New(opts Options) *Deploy {
 		nextPort:     basePort,
 		apps:         make(map[string]*runningApp),
 		logHubs:      make(map[string]*logHub),
+		sm:           NewStateMachine(),
 	}
 }
 
@@ -160,11 +164,18 @@ func (d *Deploy) Dependencies() []string        { return []string{"db", "git"} }
 func (d *Deploy) ConfigSchema() json.RawMessage { return nil }
 func (d *Deploy) Hooks() []kernel.HookDef       { return nil }
 
+func (d *Deploy) EventBus() *kernel.EventBus {
+	return d.eventBus
+}
+
 func (d *Deploy) Init(ctx *kernel.Context, config json.RawMessage) error {
 	return nil
 }
 
 func (d *Deploy) Start(ctx *kernel.Context) error {
+	if ctx != nil && ctx.Kernel != nil {
+		d.eventBus = ctx.Kernel.EventBus()
+	}
 	if err := os.MkdirAll(d.buildsDir, 0755); err != nil {
 		return fmt.Errorf("create builds dir: %w", err)
 	}
@@ -197,6 +208,9 @@ func (d *Deploy) Start(ctx *kernel.Context) error {
 		return err
 	}
 	if err := d.ensurePIDColumn(); err != nil {
+		return err
+	}
+	if err := d.ensureStatusHistoryColumn(); err != nil {
 		return err
 	}
 	if err := d.db.Migrate(`CREATE TABLE IF NOT EXISTS site_request_logs (
@@ -875,18 +889,7 @@ func (d *Deploy) serveStatic(ctx context.Context, buildDir string, deploy *Deplo
 }
 
 func (d *Deploy) updateStatus(id, status string) {
-	d.mu.Lock()
-	defer d.mu.Unlock()
-	_, _ = d.db.ExecContext(context.Background(),
-		"UPDATE deployments SET status = ? WHERE id = ?", status, id)
-
-	if status == "running" || status == "failed" {
-		lines := d.getDeployLogs(id)
-		if len(lines) > 0 {
-			_, _ = d.db.ExecContext(context.Background(),
-				"UPDATE deployments SET build_log = ? WHERE id = ?", strings.Join(lines, "\n"), id)
-		}
-	}
+	_ = d.TransitionState(context.Background(), id, status)
 }
 
 func (d *Deploy) failDeployment(id string, buildErr error) {
@@ -896,20 +899,14 @@ func (d *Deploy) failDeployment(id string, buildErr error) {
 		msg = msg[:maxLen]
 	}
 	d.appendDeployLog(id, "✗ Deploy failed: "+msg)
-	// Close the log stream so WebSocket subscribers know the deployment failed.
 	d.closeLogStream(id)
 
-	// Use a more direct update here since we have the message
-	d.mu.Lock()
-	defer d.mu.Unlock()
-	_, _ = d.db.ExecContext(context.Background(),
-		"UPDATE deployments SET status = ?, error_message = ? WHERE id = ?", "failed", msg, id)
+	// Transition to failed state via state machine
+	_ = d.TransitionState(context.Background(), id, StateFailed)
 
-	lines := d.getDeployLogs(id)
-	if len(lines) > 0 {
-		_, _ = d.db.ExecContext(context.Background(),
-			"UPDATE deployments SET build_log = ? WHERE id = ?", strings.Join(lines, "\n"), id)
-	}
+	// Persist the error message separately
+	_, _ = d.db.ExecContext(context.Background(),
+		"UPDATE deployments SET error_message = ? WHERE id = ?", msg, id)
 }
 
 func (d *Deploy) ensureSiteIDColumn() error {
@@ -970,6 +967,18 @@ func (d *Deploy) ensurePIDColumn() error {
 		return nil
 	}
 	return fmt.Errorf("add pid column: %w", err)
+}
+
+func (d *Deploy) ensureStatusHistoryColumn() error {
+	_, err := d.db.ExecContext(context.Background(),
+		`ALTER TABLE deployments ADD COLUMN status_history TEXT DEFAULT '[]'`)
+	if err == nil {
+		return nil
+	}
+	if strings.Contains(strings.ToLower(err.Error()), "duplicate column") {
+		return nil
+	}
+	return fmt.Errorf("add status_history column: %w", err)
 }
 
 func (d *Deploy) finalizeDeploymentURL(deploy *Deployment, repoName string) {
