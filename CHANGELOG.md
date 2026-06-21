@@ -1,3 +1,15 @@
+# [2.35.0](https://github.com/danielvm-git/bigbase/compare/v2.34.0...v2.35.0) (2026-06-21)
+
+
+### Bug Fixes
+
+* **deploy,monitoring:** harden PEP 668 fix and duration_seconds migration ([673a92e](https://github.com/danielvm-git/bigbase/commit/673a92e76f033a4ef16cc6439216f16d4a824431))
+
+
+### Features
+
+* **deploy:** real-time WebSocket log streaming with lifecycle integration ([56cf3e1](https://github.com/danielvm-git/bigbase/commit/56cf3e1a91e0172c0df7461538b815848c0aa0e3))
+
 # [2.34.0](https://github.com/danielvm-git/bigbase/compare/v2.33.0...v2.34.0) (2026-06-21)
 
 
