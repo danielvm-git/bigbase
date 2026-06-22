@@ -331,6 +331,11 @@ bugs:
     summary: Code quality issues in e40s03 manifest implementation — error leak, DRY violation, long function, missing test
     file: specs/bugs/BUG-2026-06-22T030000-manifest-audit-issues.md
     status: fixed
+    files_changed:
+      - components/sites/sites.go
+      - components/deploy/manifest_test.go
+      - specs/bugs/BUG-2026-06-22T030000-manifest-audit-issues.md
+    commit: b1daf3f
     related:
       - BUG-2026-06-19T163327
   - id: BUG-2026-06-20T125952

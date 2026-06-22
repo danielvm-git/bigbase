@@ -26,4 +26,5 @@ The audit of commit `03a01e2` (e40s03: Admin UI manifest view and editor) found 
 2. DRY violation: extracted `resolveRepoBranch(ctx, id)` helper used by both `getSiteManifest` and `saveSiteManifest`.
 3. Function too long: extracted `commitManifestToRepo(ctx, repoPath, branch, content)` helper — `saveSiteManifest` reduced from 124 to ~30 lines.
 4. Missing direct test: added `TestValidateManifest` with 6 subtests (valid, invalid YAML, missing version, invalid framework, port out of range, missing build.command).  
-**Evidence:** 705 tests pass (`go test ./... -count=1`); 7 new test cases added in `TestValidateManifest`.
+**Evidence:** 705 tests pass (`go test ./... -count=1`); 7 new test cases added in `TestValidateManifest`.  
+**Commits:** `b1daf3f` (fix)
