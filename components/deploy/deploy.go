@@ -328,7 +328,7 @@ func (d *Deploy) resumeCandidates(candidates []resumeCandidate) {
 			URL:     c.rawURL,
 			AppType: appType,
 		}
-		go d.startApp(context.Background(), serveDir, deploy, appType, c.repoName)
+		go d.startApp(context.Background(), serveDir, deploy, appType, c.repoName, nil)
 		d.logger.Info("resumed process deployment", "id", c.id, "appType", string(appType), "port", c.port, "host", HostFromDeploymentURL(c.rawURL))
 	}
 }
@@ -668,9 +668,20 @@ func (d *Deploy) runDeployment(deploy *Deployment, buildDir, repoName string) {
 		d.appendDeployLog(deploy.ID, fmt.Sprintf("→ Commit: %s", short))
 	}
 
+	// Load deployment manifest (bigbase.yaml) if present in the repo root.
+	manifest, loadErr := LoadManifest(buildDir)
+	if loadErr != nil {
+		d.appendDeployLog(deploy.ID, fmt.Sprintf("⚠ Invalid bigbase.yaml: %v — falling back to auto-detection", loadErr))
+	}
+
 	appType := deploy.AppType
 	if appType == "" {
-		appType = DetectAppType(buildDir)
+		if manifest != nil {
+			appType = manifestToAppType(manifest)
+			d.appendDeployLog(deploy.ID, fmt.Sprintf("→ Manifest: framework=%s", manifest.Framework))
+		} else {
+			appType = DetectAppType(buildDir)
+		}
 	}
 	_, _ = d.db.ExecContext(context.Background(),
 		"UPDATE deployments SET app_type = ? WHERE id = ?", string(appType), deploy.ID)
@@ -685,14 +696,24 @@ func (d *Deploy) runDeployment(deploy *Deployment, buildDir, repoName string) {
 		return
 	}
 
-	if err := d.buildApp(ctx, deploy.ID, buildDir, appType); err != nil {
+	if err := d.buildApp(ctx, deploy.ID, buildDir, appType, manifest); err != nil {
 		d.logger.Error("build app", "type", appType, "error", err)
 		d.failDeployment(deploy.ID, err)
 		return
 	}
 
 	serveDir := buildDir
-	if appType == AppNode {
+	if manifest != nil && manifest.Build.Output != "" {
+		outputDir := filepath.Join(buildDir, manifest.Build.Output)
+		if _, err := os.Stat(outputDir); err == nil {
+			serveDir = outputDir
+			appType = AppStatic
+			deploy.AppType = AppStatic
+			_, _ = d.db.ExecContext(context.Background(),
+				"UPDATE deployments SET app_type = ? WHERE id = ?", string(AppStatic), deploy.ID)
+			d.appendDeployLog(deploy.ID, fmt.Sprintf("→ Serving manifest output: %s", manifest.Build.Output))
+		}
+	} else if appType == AppNode {
 		if _, err := os.Stat(filepath.Join(buildDir, "dist")); err == nil {
 			serveDir = filepath.Join(buildDir, "dist")
 			appType = AppStatic
@@ -718,7 +739,7 @@ func (d *Deploy) runDeployment(deploy *Deployment, buildDir, repoName string) {
 		go d.serveStatic(context.Background(), serveDir, deploy, repoName)
 	} else {
 		d.appendDeployLog(deploy.ID, "→ Starting application")
-		go d.startApp(context.Background(), serveDir, deploy, appType, repoName)
+		go d.startApp(context.Background(), serveDir, deploy, appType, repoName, manifest)
 	}
 }
 
@@ -751,7 +772,15 @@ func (d *Deploy) getCommitSHA(buildDir string) (string, error) {
 	return strings.TrimSpace(string(out)), nil
 }
 
-func (d *Deploy) buildApp(ctx context.Context, deployID string, buildDir string, appType AppType) error {
+func (d *Deploy) buildApp(ctx context.Context, deployID string, buildDir string, appType AppType, manifest *Manifest) error {
+	// Use manifest build command if present, falling back to auto-detection.
+	if manifest != nil && manifest.Build.Command != "" {
+		parts := strings.Fields(manifest.Build.Command)
+		if len(parts) > 0 {
+			return d.runBuildCommand(ctx, deployID, buildDir, parts[0], parts[1:]...)
+		}
+	}
+
 	switch appType {
 	case AppNode:
 		if err := d.runBuildCommand(ctx, deployID, buildDir, "npm", "install"); err != nil {
@@ -804,29 +833,38 @@ func (d *Deploy) runBuildCommand(ctx context.Context, deployID, dir, name string
 	return nil
 }
 
-func (d *Deploy) startApp(ctx context.Context, buildDir string, deploy *Deployment, appType AppType, repoName string) {
+func (d *Deploy) startApp(ctx context.Context, buildDir string, deploy *Deployment, appType AppType, repoName string, manifest *Manifest) {
 	var cmd *exec.Cmd
 
-	switch appType {
-	case AppNode:
-		startCmd := GetStartCommand(buildDir)
-		parts := strings.Fields(startCmd)
-		if len(parts) == 0 {
-			parts = []string{"node", "index.js"}
+	// Use manifest start command if present, falling back to auto-detection.
+	if manifest != nil && manifest.Start.Command != "" {
+		parts := strings.Fields(manifest.Start.Command)
+		if len(parts) > 0 {
+			cmd = exec.CommandContext(ctx, parts[0], parts[1:]...)
+			cmd.Dir = buildDir
 		}
-		args := append([]string{"exec", "--"}, parts...)
-		cmd = exec.CommandContext(ctx, "npm", args...)
-		cmd.Dir = buildDir
-	case AppGo:
-		cmd = exec.CommandContext(ctx, filepath.Join(buildDir, "app"))
-		cmd.Dir = buildDir
-	case AppPython:
-		pythonBin := "python3"
-		if _, err := exec.LookPath(pythonBin); err != nil {
-			pythonBin = "python"
+	} else {
+		switch appType {
+		case AppNode:
+			startCmd := GetStartCommand(buildDir)
+			parts := strings.Fields(startCmd)
+			if len(parts) == 0 {
+				parts = []string{"node", "index.js"}
+			}
+			args := append([]string{"exec", "--"}, parts...)
+			cmd = exec.CommandContext(ctx, "npm", args...)
+			cmd.Dir = buildDir
+		case AppGo:
+			cmd = exec.CommandContext(ctx, filepath.Join(buildDir, "app"))
+			cmd.Dir = buildDir
+		case AppPython:
+			pythonBin := "python3"
+			if _, err := exec.LookPath(pythonBin); err != nil {
+				pythonBin = "python"
+			}
+			cmd = exec.CommandContext(ctx, pythonBin, "app.py")
+			cmd.Dir = buildDir
 		}
-		cmd = exec.CommandContext(ctx, pythonBin, "app.py")
-		cmd.Dir = buildDir
 	}
 
 	if cmd == nil {
@@ -836,6 +874,13 @@ func (d *Deploy) startApp(ctx context.Context, buildDir string, deploy *Deployme
 	}
 
 	cmd.Env = append(os.Environ(), fmt.Sprintf("PORT=%d", deploy.Port))
+
+	// Inject manifest environment variables into the running process.
+	if manifest != nil {
+		for k, v := range manifest.Env {
+			cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", k, v))
+		}
+	}
 
 	stdout, _ := cmd.StdoutPipe()
 	stderr, _ := cmd.StderrPipe()

@@ -42,6 +42,22 @@ var validFrameworks = map[string]bool{
 	"node":      true,
 }
 
+// manifestToAppType converts a manifest framework string to an AppType.
+func manifestToAppType(m *Manifest) AppType {
+	switch m.Framework {
+	case "node", "sveltekit", "astro", "next", "vue", "react":
+		return AppNode
+	case "go":
+		return AppGo
+	case "python":
+		return AppPython
+	case "static":
+		return AppStatic
+	default:
+		return AppStatic
+	}
+}
+
 // LoadManifest reads and validates a bigbase.yaml from the given directory.
 // Returns nil, nil if the file does not exist — callers should fall back to
 // auto-detection.
