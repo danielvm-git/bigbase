@@ -700,8 +700,12 @@ func (s *Sites) commitManifestToRepo(ctx context.Context, repoPath, branch, cont
 		return fmt.Errorf("write manifest: %w", err)
 	}
 
-	_ = exec.CommandContext(ctx, "git", "config", "user.name", "BigBase Admin").Run()
-	_ = exec.CommandContext(ctx, "git", "config", "user.email", "admin@bigbase.local").Run()
+	configUserCmd := exec.CommandContext(ctx, "git", "config", "user.name", "BigBase Admin")
+	configUserCmd.Dir = tempDir
+	_ = configUserCmd.Run()
+	configEmailCmd := exec.CommandContext(ctx, "git", "config", "user.email", "admin@bigbase.local")
+	configEmailCmd.Dir = tempDir
+	_ = configEmailCmd.Run()
 
 	addCmd := exec.CommandContext(ctx, "git", "add", "bigbase.yaml")
 	addCmd.Dir = tempDir
