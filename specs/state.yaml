@@ -30,7 +30,7 @@ git:
 handoff:
   last_step_completed: e39s03-release-branch
   open_decisions: []
-  next_skill: survey-context
+  next_skill: commit-message
   summary: "e39s03 RELEASED: Terminal-style live log viewer. 5 commits (4 feat + 1 chore). All 282 UI tests pass. All Go tests pass. Epic e39 complete!"
   context: |
     e39s01: ✅ Released — Real-time WebSocket log streaming (log_stream.go, logHub)
