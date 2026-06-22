@@ -1,3 +1,10 @@
+# [2.39.0](https://github.com/danielvm-git/bigbase/compare/v2.38.0...v2.39.0) (2026-06-22)
+
+
+### Features
+
+* **deploy:** integrate bigbase.yaml manifest into deploy flow ([0598726](https://github.com/danielvm-git/bigbase/commit/0598726c16b04d9ebe952d9ee373c7b950994098))
+
 # [2.38.0](https://github.com/danielvm-git/bigbase/compare/v2.37.0...v2.38.0) (2026-06-21)
 
 
