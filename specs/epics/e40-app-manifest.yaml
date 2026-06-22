@@ -13,7 +13,7 @@ covers:
 stories:
   - id: e40s01
     title: "Manifest parsing — detect bigbase.yaml in repo root, extract config"
-    status: planned
+    status: done
     bcps: 2
     tasks:
       - desc: "Define bigbase.yaml schema with fields for build_command, start_command, port, env, framework, publish_dir"
