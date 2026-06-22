@@ -41,7 +41,7 @@ epics:
   e37: pending
   e38: done
   e39: planned
-  e40: planned
+  e40: done
   e41: planned
   e42: planned
   e43: planned
@@ -175,8 +175,8 @@ stories:
   e39s02: active
   e39s03: planned
   e40s01: done
-  e40s02: planned
-  e40s03: planned
+  e40s02: done
+  e40s03: done
   e41s01: planned
   e41s02: planned
   e42s01: planned

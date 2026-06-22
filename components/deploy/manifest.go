@@ -94,6 +94,15 @@ func LoadManifestPath(dir, manifestPath string) (*Manifest, error) {
 	return &m, nil
 }
 
+// ValidateManifest parses and validates manifest YAML content.
+func ValidateManifest(data []byte) error {
+	var m Manifest
+	if err := yaml.Unmarshal(data, &m); err != nil {
+		return fmt.Errorf("parse YAML: %w", err)
+	}
+	return m.validate()
+}
+
 func (m *Manifest) validate() error {
 	if m.Version <= 0 {
 		return fmt.Errorf("version is required")

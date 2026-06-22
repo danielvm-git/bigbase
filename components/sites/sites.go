@@ -1,6 +1,7 @@
 package sites
 
 import (
+	"bytes"
 	"context"
 	"crypto/rand"
 	"database/sql"
@@ -8,10 +9,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
+	"os/exec"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/danielvm/bigbase/components/deploy"
 	"github.com/danielvm/bigbase/kernel"
 )
 
@@ -63,6 +68,7 @@ type DeleteSiteCleanupFunc func(ctx context.Context, siteID, repoID string) erro
 type Sites struct {
 	db                DBer
 	logger            Logger
+	gitDir            string
 	triggerDeploy     DeployTrigger
 	deleteSiteCleanup DeleteSiteCleanupFunc
 }
@@ -70,6 +76,7 @@ type Sites struct {
 type Options struct {
 	DB                DBer
 	Logger            Logger
+	GitDir            string
 	TriggerDeploy     DeployTrigger
 	DeleteSiteCleanup DeleteSiteCleanupFunc
 }
@@ -79,7 +86,11 @@ func New(opts Options) *Sites {
 	if logger == nil {
 		logger = noopLogger{}
 	}
-	return &Sites{db: opts.DB, logger: logger, triggerDeploy: opts.TriggerDeploy, deleteSiteCleanup: opts.DeleteSiteCleanup}
+	gitDir := opts.GitDir
+	if gitDir == "" {
+		gitDir = "data/git"
+	}
+	return &Sites{db: opts.DB, logger: logger, gitDir: gitDir, triggerDeploy: opts.TriggerDeploy, deleteSiteCleanup: opts.DeleteSiteCleanup}
 }
 
 func (s *Sites) Name() string                  { return "sites" }
@@ -158,6 +169,20 @@ func (s *Sites) handleSiteByID(w http.ResponseWriter, r *http.Request) {
 	if len(parts) == 2 && parts[1] == "logs" && r.Method == http.MethodGet {
 		s.listSiteRequestLogs(w, r, id)
 		return
+	}
+
+	if len(parts) == 2 && parts[1] == "manifest" {
+		switch r.Method {
+		case http.MethodGet:
+			s.getSiteManifest(w, r, id)
+			return
+		case http.MethodPost:
+			s.saveSiteManifest(w, r, id)
+			return
+		default:
+			writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
+			return
+		}
 	}
 
 	// Route domain sub-paths: /api/sites/{id}/domains[/{domain}/verify]
@@ -566,6 +591,179 @@ func (s *Sites) redeploySite(w http.ResponseWriter, r *http.Request, id string) 
 		return
 	}
 	writeJSON(w, http.StatusCreated, dep)
+}
+
+func (s *Sites) getSiteManifest(w http.ResponseWriter, r *http.Request, id string) {
+	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
+	defer cancel()
+
+	var repoID, branch string
+	err := s.db.QueryRowContext(ctx,
+		"SELECT git_repo_id, production_branch FROM sites WHERE id = ?", id).
+		Scan(&repoID, &branch)
+	if err != nil {
+		// Fallback: check if id is a git_repos id
+		err = s.db.QueryRowContext(ctx,
+			"SELECT id, default_branch FROM git_repos WHERE id = ?", id).
+			Scan(&repoID, &branch)
+		if err != nil {
+			writeJSON(w, http.StatusNotFound, map[string]string{"error": "site or repository not found"})
+			return
+		}
+	}
+	if branch == "" {
+		branch = "main"
+	}
+
+	repoPath := filepath.Join(s.gitDir, repoID+".git")
+	if _, err := os.Stat(repoPath); os.IsNotExist(err) {
+		writeJSON(w, http.StatusNotFound, map[string]string{"error": "git repository directory not found"})
+		return
+	}
+
+	cmd := exec.CommandContext(ctx, "git", "-C", repoPath, "show", branch+":bigbase.yaml")
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		errMsg := string(out)
+		if strings.Contains(errMsg, "exists but is not") || strings.Contains(errMsg, "does not exist") || strings.Contains(errMsg, "Invalid object name") || strings.Contains(errMsg, "fatal: path") {
+			writeJSON(w, http.StatusOK, map[string]any{
+				"exists":  false,
+				"content": "",
+			})
+			return
+		}
+		s.logger.Error("git show failed", "error", err, "output", errMsg)
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": fmt.Sprintf("git show failed: %v", errMsg)})
+		return
+	}
+
+	writeJSON(w, http.StatusOK, map[string]any{
+		"exists":  true,
+		"content": string(out),
+	})
+}
+
+func (s *Sites) saveSiteManifest(w http.ResponseWriter, r *http.Request, id string) {
+	var req struct {
+		Content string `json:"content"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid JSON"})
+		return
+	}
+
+	if err := deploy.ValidateManifest([]byte(req.Content)); err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": fmt.Sprintf("invalid manifest: %v", err)})
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(r.Context(), 30*time.Second)
+	defer cancel()
+
+	var repoID, branch string
+	err := s.db.QueryRowContext(ctx,
+		"SELECT git_repo_id, production_branch FROM sites WHERE id = ?", id).
+		Scan(&repoID, &branch)
+	if err != nil {
+		// Fallback: check if id is a git_repos id
+		err = s.db.QueryRowContext(ctx,
+			"SELECT id, default_branch FROM git_repos WHERE id = ?", id).
+			Scan(&repoID, &branch)
+		if err != nil {
+			writeJSON(w, http.StatusNotFound, map[string]string{"error": "site or repository not found"})
+			return
+		}
+	}
+	if branch == "" {
+		branch = "main"
+	}
+
+	repoPath := filepath.Join(s.gitDir, repoID+".git")
+	if _, err := os.Stat(repoPath); os.IsNotExist(err) {
+		writeJSON(w, http.StatusNotFound, map[string]string{"error": "git repository directory not found"})
+		return
+	}
+
+	tempDir, err := os.MkdirTemp("", "bigbase-manifest-edit-*")
+	if err != nil {
+		s.logger.Error("failed to create temp dir", "error", err)
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "failed to create temp directory"})
+		return
+	}
+	defer func() { _ = os.RemoveAll(tempDir) }()
+
+	cloneCmd := exec.CommandContext(ctx, "git", "clone", repoPath, ".")
+	cloneCmd.Dir = tempDir
+	if out, err := cloneCmd.CombinedOutput(); err != nil {
+		s.logger.Error("git clone failed", "error", err, "output", string(out))
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "failed to clone repository"})
+		return
+	}
+
+	// Try checking out the branch. If it fails, check if the repo is empty and we need to create it,
+	// or if the branch doesn't exist yet but has commits on another branch.
+	// For simplicity, checkout the branch.
+	checkoutCmd := exec.CommandContext(ctx, "git", "checkout", branch)
+	checkoutCmd.Dir = tempDir
+	if out, err := checkoutCmd.CombinedOutput(); err != nil {
+		// If branch checkout fails, let's see if we should create it (e.g. git checkout -b branch)
+		checkoutNewCmd := exec.CommandContext(ctx, "git", "checkout", "-b", branch)
+		checkoutNewCmd.Dir = tempDir
+		if out2, err2 := checkoutNewCmd.CombinedOutput(); err2 != nil {
+			s.logger.Error("git checkout failed", "error", err, "output", string(out), "err2", err2, "out2", string(out2))
+			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": fmt.Sprintf("failed to checkout branch: %s", branch)})
+			return
+		}
+	}
+
+	manifestFile := filepath.Join(tempDir, "bigbase.yaml")
+	if err := os.WriteFile(manifestFile, []byte(req.Content), 0644); err != nil {
+		s.logger.Error("failed to write manifest", "error", err)
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "failed to write manifest file"})
+		return
+	}
+
+	configUserCmd := exec.CommandContext(ctx, "git", "config", "user.name", "BigBase Admin")
+	configUserCmd.Dir = tempDir
+	_ = configUserCmd.Run()
+
+	configEmailCmd := exec.CommandContext(ctx, "git", "config", "user.email", "admin@bigbase.local")
+	configEmailCmd.Dir = tempDir
+	_ = configEmailCmd.Run()
+
+	addCmd := exec.CommandContext(ctx, "git", "add", "bigbase.yaml")
+	addCmd.Dir = tempDir
+	if out, err := addCmd.CombinedOutput(); err != nil {
+		s.logger.Error("git add failed", "error", err, "output", string(out))
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "failed to add manifest file to git"})
+		return
+	}
+
+	statusCmd := exec.CommandContext(ctx, "git", "status", "--porcelain")
+	statusCmd.Dir = tempDir
+	statusOut, _ := statusCmd.Output()
+	if len(bytes.TrimSpace(statusOut)) == 0 {
+		writeJSON(w, http.StatusOK, map[string]any{"status": "ok", "message": "no changes to commit"})
+		return
+	}
+
+	commitCmd := exec.CommandContext(ctx, "git", "commit", "-m", "Update bigbase.yaml")
+	commitCmd.Dir = tempDir
+	if out, err := commitCmd.CombinedOutput(); err != nil {
+		s.logger.Error("git commit failed", "error", err, "output", string(out))
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "failed to commit changes"})
+		return
+	}
+
+	pushCmd := exec.CommandContext(ctx, "git", "push", "origin", branch)
+	pushCmd.Dir = tempDir
+	if out, err := pushCmd.CombinedOutput(); err != nil {
+		s.logger.Error("git push failed", "error", err, "output", string(out))
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "failed to push changes to repository"})
+		return
+	}
+
+	writeJSON(w, http.StatusOK, map[string]any{"status": "ok"})
 }
 
 func writeJSON(w http.ResponseWriter, status int, data any) {

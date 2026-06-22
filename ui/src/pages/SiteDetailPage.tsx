@@ -13,7 +13,7 @@ import {
   Tabs,
   RequestLogs,
 } from '../components'
-import { getSite, getSiteDeployments, deleteSite } from '../lib/sitesData'
+import { getSite, getSiteDeployments, deleteSite, getSiteManifest, saveSiteManifest } from '../lib/sitesData'
 import { isPreviewForced, previewQuerySuffix } from '../lib/previewMode'
 import { useRequestLogs } from '../hooks/useRequestLogs'
 import type { Deployment, Site } from '../types/sites'
@@ -46,6 +46,165 @@ function StatusTimeline({ status }: { status: string }) {
   )
 }
 
+function SiteManifest({ site, latestDeployment }: { site: Site; latestDeployment?: Deployment }) {
+  const [exists, setExists] = useState(false)
+  const [content, setContent] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [isEditing, setIsEditing] = useState(false)
+  const [editedContent, setEditedContent] = useState('')
+  const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState<string | null>(null)
+  const [saveSuccess, setSaveSuccess] = useState(false)
+
+  const loadManifest = useCallback(async () => {
+    setLoading(true)
+    setError(null)
+    const result = await getSiteManifest(site.id)
+    setExists(result.data.exists)
+    setContent(result.data.content)
+    setEditedContent(result.data.content)
+    setLoading(false)
+  }, [site.id])
+
+  useEffect(() => {
+    loadManifest()
+  }, [loadManifest])
+
+  const handleCreate = () => {
+    const appType = latestDeployment?.app_type || 'static'
+    let template = `version: 1
+framework: static
+build:
+  command: "npm run build"
+start:
+  command: "serve"
+  port: 3000
+`
+    if (appType === 'node') {
+      template = `version: 1
+framework: node
+build:
+  command: "npm run build"
+start:
+  command: "npm run start"
+  port: 3000
+`
+    } else if (appType === 'go') {
+      template = `version: 1
+framework: go
+build:
+  command: "go build -o app ."
+start:
+  command: "./app"
+  port: 8080
+`
+    } else if (appType === 'python') {
+      template = `version: 1
+framework: python
+build:
+  command: "pip install -r requirements.txt"
+start:
+  command: "python app.py"
+  port: 8080
+`
+    }
+    setEditedContent(template)
+    setIsEditing(true)
+  }
+
+  const handleSave = async () => {
+    setSaving(true)
+    setSaveError(null)
+    setSaveSuccess(false)
+    const res = await saveSiteManifest(site.id, editedContent)
+    setSaving(false)
+    if (res.ok) {
+      setContent(editedContent)
+      setExists(true)
+      setIsEditing(false)
+      setSaveSuccess(true)
+      setTimeout(() => setSaveSuccess(false), 3000)
+    } else {
+      setSaveError(res.error || 'Failed to save manifest')
+    }
+  }
+
+  if (loading) return <p className="dim">Loading manifest...</p>
+
+  return (
+    <div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-4)' }}>
+        <h2 className="section-title" style={{ margin: 0 }}>App Manifest (bigbase.yaml)</h2>
+        {!loading && !isEditing && exists && (
+          <Button variant="secondary" size="sm" onClick={() => setIsEditing(true)}>
+            Edit Manifest
+          </Button>
+        )}
+      </div>
+
+      {error && <p className="input-error-text">{error}</p>}
+      {saveError && <p className="input-error-text" style={{ marginBottom: 'var(--space-4)' }}>{saveError}</p>}
+      {saveSuccess && <p style={{ color: 'var(--brand-500)', marginBottom: 'var(--space-4)', fontSize: 'var(--text-sm)' }}>Manifest saved successfully!</p>}
+
+      {!exists && !isEditing ? (
+        <Card style={{ padding: 'var(--space-6)', textAlign: 'center' }}>
+          <p className="dim" style={{ marginBottom: 'var(--space-6)' }}>
+            No <code>bigbase.yaml</code> manifest file found in the repository root. Auto-detection is currently active (Framework: <strong>{latestDeployment?.app_type || 'unknown'}</strong>).
+          </p>
+          <Button variant="primary" size="sm" onClick={handleCreate}>
+            Create bigbase.yaml
+          </Button>
+        </Card>
+      ) : isEditing ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+          <textarea
+            value={editedContent}
+            onChange={(e) => setEditedContent(e.target.value)}
+            style={{
+              fontFamily: 'monospace',
+              fontSize: 'var(--text-sm)',
+              width: '100%',
+              height: '350px',
+              padding: 'var(--space-4)',
+              background: 'var(--bg-secondary)',
+              color: 'var(--fg-primary)',
+              border: '1px solid var(--border-default)',
+              borderRadius: 'var(--radius-md)',
+              outline: 'none',
+              resize: 'vertical',
+            }}
+          />
+          <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
+            <Button variant="primary" size="sm" onClick={handleSave} disabled={saving}>
+              {saving ? 'Saving...' : 'Save'}
+            </Button>
+            <Button variant="secondary" size="sm" onClick={() => { setIsEditing(false); setEditedContent(content); setSaveError(null); }} disabled={saving}>
+              Cancel
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <pre
+          style={{
+            whiteSpace: 'pre-wrap',
+            padding: 'var(--space-4)',
+            background: 'var(--bg-secondary)',
+            color: 'var(--fg-primary)',
+            borderRadius: 'var(--radius-md)',
+            fontFamily: 'monospace',
+            fontSize: 'var(--text-sm)',
+            border: '1px solid var(--border-default)',
+            margin: 0,
+          }}
+        >
+          {content}
+        </pre>
+      )}
+    </div>
+  )
+}
+
 export default function SiteDetailPage() {
   const { siteId = '' } = useParams()
   const [site, setSite] = useState<Site | null>(null)
@@ -71,6 +230,7 @@ export default function SiteDetailPage() {
     { id: 'deployments', label: 'Deployments' },
     { id: 'logs', label: 'Build Logs' },
     { id: 'request-logs', label: 'Request Logs' },
+    { id: 'manifest', label: 'Manifest' },
   ]
 
   const load = useCallback(async () => {
@@ -288,6 +448,10 @@ export default function SiteDetailPage() {
             onRefresh={refreshReqLogs}
           />
         </div>
+      )}
+
+      {activeTab === 'manifest' && (
+        <SiteManifest site={site} latestDeployment={latest} />
       )}
 
       {deleteError && (

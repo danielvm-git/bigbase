@@ -277,3 +277,52 @@ export async function deleteSite(siteId: string): Promise<{ ok: boolean; error?:
     return { ok: false, error: 'Delete failed — network error' }
   }
 }
+
+export interface SiteManifestResult {
+  exists: boolean
+  content: string
+}
+
+export async function getSiteManifest(siteId: string): Promise<SitesDataResult<SiteManifestResult>> {
+  if (isPreviewForced()) {
+    return {
+      data: {
+        exists: true,
+        content: `version: 1
+framework: static
+build:
+  command: "npm run build"
+start:
+  command: "serve"
+  port: 3000`,
+      },
+      previewMode: true,
+    }
+  }
+  const { ok, data } = await fetchJSON<SiteManifestResult>(`/api/sites/${siteId}/manifest`)
+  if (ok && data) {
+    return { data, previewMode: false }
+  }
+  return { data: { exists: false, content: '' }, previewMode: false }
+}
+
+export async function saveSiteManifest(siteId: string, content: string): Promise<{ ok: boolean; error?: string; previewMode: boolean }> {
+  if (isPreviewForced()) {
+    return { ok: true, previewMode: true }
+  }
+  try {
+    const res = await fetch(`/api/sites/${siteId}/manifest`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content }),
+    })
+    const body = await res.json().catch(() => ({ error: '' })) as { error?: string }
+    if (!res.ok) {
+      return { ok: false, error: body.error || `Save failed (HTTP ${res.status})`, previewMode: false }
+    }
+    return { ok: true, previewMode: false }
+  } catch {
+    return { ok: false, error: 'Save failed — network error', previewMode: false }
+  }
+}
+

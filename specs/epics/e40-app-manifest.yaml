@@ -4,7 +4,7 @@ id: e40
 title: "Deploy — App Manifest (bigbase.yaml)"
 wsjf: 4.5
 wsjf_rationale: "BV=7(high: stops config drift — one YAML file vs memorizing CLI flags) TC=5(no urgent deadline, but compounds with every new deploy feature) RR=7(reduces cognitive load: version-controlled, reproducible builds) / JS=3(~2 days across 3 stories)"
-status: planned
+status: done
 tier: 2
 depends_on: []
 covers:
@@ -41,7 +41,7 @@ stories:
         verify: "go test ./components/deploy/ -run TestManifestIntegration -v"
   - id: e40s02
     title: "bigbase init CLI — generate default manifest for detected framework"
-    status: planned
+    status: done
     bcps: 1
     tasks:
       - desc: "Add bigbase init command that detects framework and writes bigbase.yaml"
@@ -60,7 +60,7 @@ stories:
         verify: "go test ./components/deploy/ -run TestManifestFlags -v"
   - id: e40s03
     title: "Admin UI — view and edit bigbase.yaml from site settings"
-    status: planned
+    status: done
     bcps: 2
     tasks:
       - desc: "Add 'Manifest' tab to SiteDetailPage showing current bigbase.yaml content"

@@ -4,8 +4,13 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/danielvm/bigbase/components/db"
@@ -455,3 +460,143 @@ func TestDeleteSiteHandlesMissingColumn(t *testing.T) {
 		t.Fatalf("site should be deleted, got %d", got)
 	}
 }
+
+func TestSiteManifestGetAndSave(t *testing.T) {
+	logger := testLogger{}
+	k := kernel.New(logger)
+	d := db.New(db.Options{Path: ":memory:", Logger: logger})
+	gitDir := t.TempDir()
+
+	// Create bare git repo manually for test
+	repoID := "repo-1"
+	bareRepoPath := filepath.Join(gitDir, repoID+".git")
+	if err := os.MkdirAll(bareRepoPath, 0755); err != nil {
+		t.Fatalf("failed to create bare repo dir: %v", err)
+	}
+	cmd := exec.Command("git", "init", "--bare", bareRepoPath)
+	if err := cmd.Run(); err != nil {
+		t.Fatalf("git init --bare: %v", err)
+	}
+
+	// Seed an initial commit with a main branch
+	tempClone := t.TempDir()
+	cmd = exec.Command("git", "clone", bareRepoPath, tempClone)
+	if err := cmd.Run(); err != nil {
+		t.Fatalf("git clone bare repo: %v", err)
+	}
+
+	cmd = exec.Command("git", "config", "user.name", "Test User")
+	cmd.Dir = tempClone
+	_ = cmd.Run()
+	cmd = exec.Command("git", "config", "user.email", "test@example.com")
+	cmd.Dir = tempClone
+	_ = cmd.Run()
+
+	err := os.WriteFile(filepath.Join(tempClone, "README.md"), []byte("# Hello"), 0644)
+	if err != nil {
+		t.Fatalf("write README.md: %v", err)
+	}
+	cmd = exec.Command("git", "add", "README.md")
+	cmd.Dir = tempClone
+	_ = cmd.Run()
+	cmd = exec.Command("git", "commit", "-m", "Initial commit")
+	cmd.Dir = tempClone
+	_ = cmd.Run()
+	cmd = exec.Command("git", "push", "origin", "main")
+	cmd.Dir = tempClone
+	_ = cmd.Run()
+
+	g := git.New(git.Options{DB: d, Logger: logger, Dir: gitDir})
+	s := sites.New(sites.Options{
+		DB:     d,
+		Logger: logger,
+		GitDir: gitDir,
+	})
+	k.Register(d)
+	k.Register(g)
+	k.Register(s)
+	if err := k.Start(); err != nil {
+		t.Fatalf("kernel start: %v", err)
+	}
+	defer func() { _ = k.Stop() }()
+
+	_, err = d.ExecContext(context.Background(),
+		`INSERT INTO git_repos (id, name, owner_id, private, default_branch, description, created_at)
+		 VALUES ('repo-1', 'test-site', 0, 1, 'main', '', datetime('now'))`)
+	if err != nil {
+		t.Fatalf("insert git_repo: %v", err)
+	}
+	_, err = d.ExecContext(context.Background(),
+		`INSERT INTO sites (id, name, git_repo_id, production_branch, root_path, created_at)
+		 VALUES ('site-1', 'test-site', 'repo-1', 'main', './', datetime('now'))`)
+	if err != nil {
+		t.Fatalf("insert site: %v", err)
+	}
+
+	// 1. GET manifest -> should return exists = false
+	req := httptest.NewRequest(http.MethodGet, "/api/sites/site-1/manifest", nil)
+	w := httptest.NewRecorder()
+	s.Handler().ServeHTTP(w, req)
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d: %s", w.Code, w.Body.String())
+	}
+	var getResp struct {
+		Exists  bool   `json:"exists"`
+		Content string `json:"content"`
+	}
+	if err := json.Unmarshal(w.Body.Bytes(), &getResp); err != nil {
+		t.Fatalf("failed to parse get response: %v", err)
+	}
+	if getResp.Exists {
+		t.Fatalf("expected exists to be false, got true")
+	}
+
+	// 2. POST manifest -> with invalid content (fails validation)
+	invalidYAML := `
+version: 1
+framework: unknown-framework
+`
+	body := bytes.NewBufferString(fmt.Sprintf(`{"content": %q}`, invalidYAML))
+	req = httptest.NewRequest(http.MethodPost, "/api/sites/site-1/manifest", body)
+	w = httptest.NewRecorder()
+	s.Handler().ServeHTTP(w, req)
+	if w.Code != http.StatusBadRequest {
+		t.Fatalf("expected status 400 for invalid manifest, got %d: %s", w.Code, w.Body.String())
+	}
+
+	// 3. POST manifest -> with valid content
+	validYAML := `
+version: 1
+framework: static
+build:
+  command: "echo"
+start:
+  command: "serve"
+  port: 8080
+`
+	body = bytes.NewBufferString(fmt.Sprintf(`{"content": %q}`, validYAML))
+	req = httptest.NewRequest(http.MethodPost, "/api/sites/site-1/manifest", body)
+	w = httptest.NewRecorder()
+	s.Handler().ServeHTTP(w, req)
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected status 200 for valid manifest, got %d: %s", w.Code, w.Body.String())
+	}
+
+	// 4. GET manifest -> should return exists = true, content = validYAML
+	req = httptest.NewRequest(http.MethodGet, "/api/sites/site-1/manifest", nil)
+	w = httptest.NewRecorder()
+	s.Handler().ServeHTTP(w, req)
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d: %s", w.Code, w.Body.String())
+	}
+	if err := json.Unmarshal(w.Body.Bytes(), &getResp); err != nil {
+		t.Fatalf("failed to parse get response: %v", err)
+	}
+	if !getResp.Exists {
+		t.Fatalf("expected exists to be true, got false")
+	}
+	if !strings.Contains(getResp.Content, "framework: static") {
+		t.Fatalf("expected content to contain static, got: %s", getResp.Content)
+	}
+}
+

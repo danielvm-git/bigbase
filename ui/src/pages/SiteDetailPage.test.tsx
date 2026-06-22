@@ -16,6 +16,8 @@ const mockDeployments = [
 vi.mock('../lib/sitesData', () => ({
   getSite: () => Promise.resolve({ data: mockSite, previewMode: false }),
   getSiteDeployments: () => Promise.resolve({ data: mockDeployments, previewMode: false }),
+  getSiteManifest: () => Promise.resolve({ data: { exists: false, content: '' }, previewMode: false }),
+  saveSiteManifest: () => Promise.resolve({ ok: true, previewMode: false }),
 }))
 
 // eslint-disable-next-line import/first
