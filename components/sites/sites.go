@@ -597,22 +597,10 @@ func (s *Sites) getSiteManifest(w http.ResponseWriter, r *http.Request, id strin
 	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
 	defer cancel()
 
-	var repoID, branch string
-	err := s.db.QueryRowContext(ctx,
-		"SELECT git_repo_id, production_branch FROM sites WHERE id = ?", id).
-		Scan(&repoID, &branch)
+	repoID, branch, err := s.resolveRepoBranch(ctx, id)
 	if err != nil {
-		// Fallback: check if id is a git_repos id
-		err = s.db.QueryRowContext(ctx,
-			"SELECT id, default_branch FROM git_repos WHERE id = ?", id).
-			Scan(&repoID, &branch)
-		if err != nil {
-			writeJSON(w, http.StatusNotFound, map[string]string{"error": "site or repository not found"})
-			return
-		}
-	}
-	if branch == "" {
-		branch = "main"
+		writeJSON(w, http.StatusNotFound, map[string]string{"error": "site or repository not found"})
+		return
 	}
 
 	repoPath := filepath.Join(s.gitDir, repoID+".git")
@@ -633,7 +621,7 @@ func (s *Sites) getSiteManifest(w http.ResponseWriter, r *http.Request, id strin
 			return
 		}
 		s.logger.Error("git show failed", "error", err, "output", errMsg)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": fmt.Sprintf("git show failed: %v", errMsg)})
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "failed to read manifest file"})
 		return
 	}
 
@@ -660,22 +648,10 @@ func (s *Sites) saveSiteManifest(w http.ResponseWriter, r *http.Request, id stri
 	ctx, cancel := context.WithTimeout(r.Context(), 30*time.Second)
 	defer cancel()
 
-	var repoID, branch string
-	err := s.db.QueryRowContext(ctx,
-		"SELECT git_repo_id, production_branch FROM sites WHERE id = ?", id).
-		Scan(&repoID, &branch)
+	repoID, branch, err := s.resolveRepoBranch(ctx, id)
 	if err != nil {
-		// Fallback: check if id is a git_repos id
-		err = s.db.QueryRowContext(ctx,
-			"SELECT id, default_branch FROM git_repos WHERE id = ?", id).
-			Scan(&repoID, &branch)
-		if err != nil {
-			writeJSON(w, http.StatusNotFound, map[string]string{"error": "site or repository not found"})
-			return
-		}
-	}
-	if branch == "" {
-		branch = "main"
+		writeJSON(w, http.StatusNotFound, map[string]string{"error": "site or repository not found"})
+		return
 	}
 
 	repoPath := filepath.Join(s.gitDir, repoID+".git")
@@ -684,86 +660,96 @@ func (s *Sites) saveSiteManifest(w http.ResponseWriter, r *http.Request, id stri
 		return
 	}
 
+	if err := s.commitManifestToRepo(ctx, repoPath, branch, req.Content); err != nil {
+		s.logger.Error("failed to commit manifest", "error", err)
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "failed to save manifest"})
+		return
+	}
+
+	writeJSON(w, http.StatusOK, map[string]any{"status": "ok"})
+}
+
+// commitManifestToRepo clones the repository, writes bigbase.yaml,
+// and commits/pushes the change to the given branch.
+func (s *Sites) commitManifestToRepo(ctx context.Context, repoPath, branch, content string) error {
 	tempDir, err := os.MkdirTemp("", "bigbase-manifest-edit-*")
 	if err != nil {
-		s.logger.Error("failed to create temp dir", "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "failed to create temp directory"})
-		return
+		return fmt.Errorf("create temp dir: %w", err)
 	}
 	defer func() { _ = os.RemoveAll(tempDir) }()
 
 	cloneCmd := exec.CommandContext(ctx, "git", "clone", repoPath, ".")
 	cloneCmd.Dir = tempDir
 	if out, err := cloneCmd.CombinedOutput(); err != nil {
-		s.logger.Error("git clone failed", "error", err, "output", string(out))
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "failed to clone repository"})
-		return
+		return fmt.Errorf("clone: %w (output: %s)", err, string(out))
 	}
 
-	// Try checking out the branch. If it fails, check if the repo is empty and we need to create it,
-	// or if the branch doesn't exist yet but has commits on another branch.
-	// For simplicity, checkout the branch.
+	// Checkout branch — create it if it doesn't exist yet
 	checkoutCmd := exec.CommandContext(ctx, "git", "checkout", branch)
 	checkoutCmd.Dir = tempDir
 	if out, err := checkoutCmd.CombinedOutput(); err != nil {
-		// If branch checkout fails, let's see if we should create it (e.g. git checkout -b branch)
 		checkoutNewCmd := exec.CommandContext(ctx, "git", "checkout", "-b", branch)
 		checkoutNewCmd.Dir = tempDir
 		if out2, err2 := checkoutNewCmd.CombinedOutput(); err2 != nil {
-			s.logger.Error("git checkout failed", "error", err, "output", string(out), "err2", err2, "out2", string(out2))
-			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": fmt.Sprintf("failed to checkout branch: %s", branch)})
-			return
+			return fmt.Errorf("checkout: %w (out: %s), create-branch: %v (out: %s)", err, string(out), err2, string(out2))
 		}
 	}
 
 	manifestFile := filepath.Join(tempDir, "bigbase.yaml")
-	if err := os.WriteFile(manifestFile, []byte(req.Content), 0644); err != nil {
-		s.logger.Error("failed to write manifest", "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "failed to write manifest file"})
-		return
+	if err := os.WriteFile(manifestFile, []byte(content), 0644); err != nil {
+		return fmt.Errorf("write manifest: %w", err)
 	}
 
-	configUserCmd := exec.CommandContext(ctx, "git", "config", "user.name", "BigBase Admin")
-	configUserCmd.Dir = tempDir
-	_ = configUserCmd.Run()
-
-	configEmailCmd := exec.CommandContext(ctx, "git", "config", "user.email", "admin@bigbase.local")
-	configEmailCmd.Dir = tempDir
-	_ = configEmailCmd.Run()
+	_ = exec.CommandContext(ctx, "git", "config", "user.name", "BigBase Admin").Run()
+	_ = exec.CommandContext(ctx, "git", "config", "user.email", "admin@bigbase.local").Run()
 
 	addCmd := exec.CommandContext(ctx, "git", "add", "bigbase.yaml")
 	addCmd.Dir = tempDir
 	if out, err := addCmd.CombinedOutput(); err != nil {
-		s.logger.Error("git add failed", "error", err, "output", string(out))
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "failed to add manifest file to git"})
-		return
+		return fmt.Errorf("add: %w (output: %s)", err, string(out))
 	}
 
 	statusCmd := exec.CommandContext(ctx, "git", "status", "--porcelain")
 	statusCmd.Dir = tempDir
 	statusOut, _ := statusCmd.Output()
 	if len(bytes.TrimSpace(statusOut)) == 0 {
-		writeJSON(w, http.StatusOK, map[string]any{"status": "ok", "message": "no changes to commit"})
-		return
+		return nil // no changes to commit
 	}
 
 	commitCmd := exec.CommandContext(ctx, "git", "commit", "-m", "Update bigbase.yaml")
 	commitCmd.Dir = tempDir
 	if out, err := commitCmd.CombinedOutput(); err != nil {
-		s.logger.Error("git commit failed", "error", err, "output", string(out))
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "failed to commit changes"})
-		return
+		return fmt.Errorf("commit: %w (output: %s)", err, string(out))
 	}
 
 	pushCmd := exec.CommandContext(ctx, "git", "push", "origin", branch)
 	pushCmd.Dir = tempDir
 	if out, err := pushCmd.CombinedOutput(); err != nil {
-		s.logger.Error("git push failed", "error", err, "output", string(out))
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "failed to push changes to repository"})
-		return
+		return fmt.Errorf("push: %w (output: %s)", err, string(out))
 	}
 
-	writeJSON(w, http.StatusOK, map[string]any{"status": "ok"})
+	return nil
+}
+
+// resolveRepoBranch looks up a site's git_repo_id and production_branch.
+// Falls back to querying git_repos directly if the sites lookup fails.
+func (s *Sites) resolveRepoBranch(ctx context.Context, id string) (repoID, branch string, err error) {
+	err = s.db.QueryRowContext(ctx,
+		"SELECT git_repo_id, production_branch FROM sites WHERE id = ?", id).
+		Scan(&repoID, &branch)
+	if err != nil {
+		// Fallback: check if id is a git_repos id
+		err = s.db.QueryRowContext(ctx,
+			"SELECT id, default_branch FROM git_repos WHERE id = ?", id).
+			Scan(&repoID, &branch)
+		if err != nil {
+			return "", "", err
+		}
+	}
+	if branch == "" {
+		branch = "main"
+	}
+	return repoID, branch, nil
 }
 
 func writeJSON(w http.ResponseWriter, status int, data any) {

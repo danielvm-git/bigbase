@@ -323,14 +323,16 @@ bugs:
       4. **Verify**: Ensure scoped code passes, full repo passes, UI lint passes.
     risk_level: high
     commit_message: "fix(lint): resolve baseline violations and exclude dependencies"
-  - id: BUG-2026-06-04T100000
-    date: "2026-06-04"
-    severity: high
-    priority: high
-    scope: ui
-    summary: "Reviewer must-fix findings on prototype-fidelity-parity: mock success leaks /api/auth, ThemePicker loses focus on close, 5 of 15 planned icon names were silently substituted"
-    file: specs/bugs/BUG-2026-06-04T100000-reviewer-must-fix-on-prototype-fidelity.md
+  - id: BUG-2026-06-22T030000
+    date: "2026-06-22"
+    severity: low
+    priority: medium
+    scope: sites,deploy
+    summary: Code quality issues in e40s03 manifest implementation — error leak, DRY violation, long function, missing test
+    file: specs/bugs/BUG-2026-06-22T030000-manifest-audit-issues.md
     status: fixed
+    related:
+      - BUG-2026-06-19T163327
   - id: BUG-2026-06-20T125952
     date: "2026-06-20"
     severity: medium
