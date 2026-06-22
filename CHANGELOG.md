@@ -1,3 +1,10 @@
+# [2.40.0](https://github.com/danielvm-git/bigbase/compare/v2.39.0...v2.40.0) (2026-06-22)
+
+
+### Features
+
+* **deploy:** add bigbase init CLI command and --manifest deploy flag ([7d419f0](https://github.com/danielvm-git/bigbase/commit/7d419f0f0c3a7cb70d8be9c82a67f4043147007c))
+
 # [2.39.0](https://github.com/danielvm-git/bigbase/compare/v2.38.0...v2.39.0) (2026-06-22)
 
 
