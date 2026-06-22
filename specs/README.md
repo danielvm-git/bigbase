@@ -22,7 +22,7 @@ Epic shards use `type: epic-shard` and `context: domain`. Dev dependency slopche
 | Story/epic status | [`execution-status.yaml`](execution-status.yaml) |
 | In/out of scope | [`requirements/SCOPE_LATEST.yaml`](requirements/SCOPE_LATEST.yaml) |
 | Domain glossary | [`requirements/GLOSSARY_LATEST.yaml`](requirements/GLOSSARY_LATEST.yaml) |
-| Architecture and stack | [`plans/TECH_STACK_LATEST.md`](plans/TECH_STACK_LATEST.md) |
+| Architecture and stack | [`tech-architecture/tech-stack.md`](tech-architecture/tech-stack.md) |
 | Active epic tasks | [`epics/`](epics/) shard for `active_epic_id` in `state.yaml` |
 | ADRs | [`adr/`](adr/) |
 | Bug investigations | [`bugs/`](bugs/) + [`bugs/registry.yaml`](bugs/registry.yaml) |

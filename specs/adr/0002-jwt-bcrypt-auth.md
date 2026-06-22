@@ -26,6 +26,33 @@ Implement authentication as a kernel component using bcrypt for password hashing
 - **Login not rate-limited** — vulnerable to brute force at the application layer. Mitigated partially by the per-IP rate limiting at the proxy level (future work). ADR 003 should address auth-specific rate limiting.
 - **Rows returned for non-existent user vs wrong password** — both paths return the same generic "invalid email or password" error to prevent user enumeration.
 
+## Amendments
+
+### Amendment 1 (v2.7) — Google OAuth Social Login
+
+**Date:** Epic e26
+
+Google OAuth was implemented, superseding the "No OAuth/SSO — deferred" consequence. A
+built-in OAuth relay eliminates the need for users to create their own Google Cloud project.
+
+- `--google-client-id` / `--google-client-secret` flags (or `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` env vars)
+- Post-login redirect configurable via `--auth-post-login-redirect` (default: `/admin/`)
+- SPA origin allowlist via `--auth-spa-origin-allowlist` for OAuth token delivery
+- CORS support via `--cors-allowed-origins`
+
+The original JWT + bcrypt path remains the default local auth mechanism. OAuth tokens
+are exchanged for BigBase JWTs, maintaining the stateless verification model.
+
+### Amendment 2 (v2.10) — API Keys, Orgs, Roles, Invites
+
+**Date:** Epic e23, e24
+
+Multi-tenancy support added:
+- API key authentication (`X-API-Key` header)
+- Organization scoping (org isolation at API/DB layer)
+- Role-based access control (admin, member roles)
+- Invite flow for org membership
+
 ## Status
 
-Accepted (Slice 4, commit dbbb7e2).
+Accepted (Slice 4, commit dbbb7e2). Last amended v2.10.

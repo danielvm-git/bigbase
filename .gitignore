@@ -40,6 +40,11 @@ node_modules/
 test-results/
 playwright-report/
 
+# Allure — generated artifacts, never committed
+allure-results/
+allure-report/
+allure-history/
+
 
 # Ctxo local cache (auto-rebuilt, never committed)
 .ctxo/.cache/

@@ -1,5 +1,13 @@
 # BigBase — Domain Context & Architecture
 
+> **⚠️ SUPERSEDED** — This document is no longer the authoritative architecture reference.
+> The canonical source is [`specs/tech-architecture/tech-stack.md`](../tech-architecture/tech-stack.md)
+> (version 2.13.0). This file is preserved for historical reference; do not edit.
+>
+> **Key drift**: TECH_STACK_LATEST.md lists 16 components; the actual codebase has 19
+> (MCP, Webhooks, Backup were added). The canonical doc also covers PostgreSQL
+> dual-driver, orgs/multi-tenant, Google OAuth, New Relic, and MCP server.
+
 ## Overview
 
 BigBase is a single-binary, open-source Backend-as-a-Service (BaaS) platform built

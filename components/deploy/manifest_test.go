@@ -116,6 +116,113 @@ framework: node
 	})
 }
 
+func TestInitManifest(t *testing.T) {
+	t.Run("detects SvelteKit framework", func(t *testing.T) {
+		dir := t.TempDir()
+		writeFile(t, filepath.Join(dir, "package.json"), `{"devDependencies":{"@sveltejs/kit":"^2.0.0"}}`)
+		err := InitManifest(dir)
+		if err != nil {
+			t.Fatalf("InitManifest failed: %v", err)
+		}
+		m, err := LoadManifest(dir)
+		if err != nil {
+			t.Fatalf("LoadManifest failed: %v", err)
+		}
+		if m.Framework != "sveltekit" || m.Build.Command != "npm run build" || m.Start.Command != "node build/index.js" {
+			t.Errorf("unexpected sveltekit manifest: %+v", m)
+		}
+	})
+
+	t.Run("detects generic Node framework with scripts", func(t *testing.T) {
+		dir := t.TempDir()
+		writeFile(t, filepath.Join(dir, "package.json"), `{"scripts":{"build":"npm run compile","start":"node server.js"}}`)
+		err := InitManifest(dir)
+		if err != nil {
+			t.Fatalf("InitManifest failed: %v", err)
+		}
+		m, err := LoadManifest(dir)
+		if err != nil {
+			t.Fatalf("LoadManifest failed: %v", err)
+		}
+		if m.Framework != "node" || m.Build.Command != "npm run compile" || m.Start.Command != "npm start" {
+			t.Errorf("unexpected node manifest: %+v", m)
+		}
+	})
+
+	t.Run("detects generic Node framework without scripts", func(t *testing.T) {
+		dir := t.TempDir()
+		writeFile(t, filepath.Join(dir, "package.json"), `{}`)
+		err := InitManifest(dir)
+		if err != nil {
+			t.Fatalf("InitManifest failed: %v", err)
+		}
+		m, err := LoadManifest(dir)
+		if err != nil {
+			t.Fatalf("LoadManifest failed: %v", err)
+		}
+		if m.Framework != "node" || m.Build.Command != "echo build" || m.Start.Command != "node index.js" {
+			t.Errorf("unexpected node manifest: %+v", m)
+		}
+	})
+
+	t.Run("detects Go framework", func(t *testing.T) {
+		dir := t.TempDir()
+		writeFile(t, filepath.Join(dir, "go.mod"), "module test")
+		err := InitManifest(dir)
+		if err != nil {
+			t.Fatalf("InitManifest failed: %v", err)
+		}
+		m, err := LoadManifest(dir)
+		if err != nil {
+			t.Fatalf("LoadManifest failed: %v", err)
+		}
+		if m.Framework != "go" || m.Build.Command != "go build -o app ." || m.Start.Command != "./app" {
+			t.Errorf("unexpected go manifest: %+v", m)
+		}
+	})
+
+	t.Run("detects Python framework", func(t *testing.T) {
+		dir := t.TempDir()
+		writeFile(t, filepath.Join(dir, "main.py"), "print('hi')")
+		writeFile(t, filepath.Join(dir, "requirements.txt"), "flask")
+		err := InitManifest(dir)
+		if err != nil {
+			t.Fatalf("InitManifest failed: %v", err)
+		}
+		m, err := LoadManifest(dir)
+		if err != nil {
+			t.Fatalf("LoadManifest failed: %v", err)
+		}
+		if m.Framework != "python" || m.Build.Command != "pip install -r requirements.txt" || m.Start.Command != "python main.py" {
+			t.Errorf("unexpected python manifest: %+v", m)
+		}
+	})
+
+	t.Run("falls back to Static framework", func(t *testing.T) {
+		dir := t.TempDir()
+		err := InitManifest(dir)
+		if err != nil {
+			t.Fatalf("InitManifest failed: %v", err)
+		}
+		m, err := LoadManifest(dir)
+		if err != nil {
+			t.Fatalf("LoadManifest failed: %v", err)
+		}
+		if m.Framework != "static" || m.Build.Command != "echo static" || m.Start.Command != "echo static" {
+			t.Errorf("unexpected static manifest: %+v", m)
+		}
+	})
+
+	t.Run("fails if bigbase.yaml already exists", func(t *testing.T) {
+		dir := t.TempDir()
+		writeFile(t, filepath.Join(dir, "bigbase.yaml"), "exists")
+		err := InitManifest(dir)
+		if err == nil {
+			t.Fatal("expected error, got nil")
+		}
+	})
+}
+
 func writeFile(t *testing.T, path, content string) {
 	t.Helper()
 	if err := os.WriteFile(path, []byte(content), 0644); err != nil {

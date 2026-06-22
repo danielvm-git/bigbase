@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"strings"
 	"syscall"
 	"text/tabwriter"
@@ -107,6 +108,9 @@ func main() {
 		return
 	case "deploy":
 		runDeployCmd()
+		return
+	case "init":
+		runInitCmd()
 		return
 	}
 
@@ -266,7 +270,7 @@ func startProxy() {
 		DB:     d,
 		Logger: logger,
 		TriggerDeploy: func(ctx context.Context, repoID, branch, siteName, siteID string, passthroughPaths []string, appType string) (*sites.Deployment, error) {
-			dep, err := depComp.Trigger(ctx, repoID, branch, siteName, siteID, passthroughPaths, appType)
+			dep, err := depComp.Trigger(ctx, repoID, branch, siteName, siteID, passthroughPaths, appType, "")
 			if err != nil {
 				return nil, err
 			}
@@ -429,7 +433,42 @@ Usage:
   bigbase restore --input FILE --db PATH        Replay SQL dump into database
   bigbase migrate up|down|status [--db PATH]    Run database migrations
   bigbase deploy [--server URL] [--repo ID]     Deploy a git repo
+  bigbase init [--repo PATH]                     Generate default bigbase.yaml
   bigbase help                                  Show this help`)
+}
+
+func runInitCmd() {
+	fs := flag.NewFlagSet("init", flag.ExitOnError)
+	repo := fs.String("repo", ".", "Repository path")
+	_ = fs.Parse(os.Args[2:])
+
+	repoPath := *repo
+	absPath, err := filepath.Abs(repoPath)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "error: resolve path: %v\n", err)
+		os.Exit(1)
+	}
+
+	fi, err := os.Stat(absPath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			fmt.Fprintf(os.Stderr, "error: directory %s does not exist\n", absPath)
+		} else {
+			fmt.Fprintf(os.Stderr, "error: stat path: %v\n", err)
+		}
+		os.Exit(1)
+	}
+	if !fi.IsDir() {
+		fmt.Fprintf(os.Stderr, "error: %s is not a directory\n", absPath)
+		os.Exit(1)
+	}
+
+	if err := deploy.InitManifest(absPath); err != nil {
+		fmt.Fprintf(os.Stderr, "error: %v\n", err)
+		os.Exit(1)
+	}
+
+	fmt.Printf("Initialized default bigbase.yaml in %s\n", absPath)
 }
 
 func runDeployCmd() {
@@ -441,6 +480,7 @@ func runDeployCmd() {
 	siteID := fs.String("site-id", "", "Site ID (optional)")
 	apiKey := fs.String("api-key", "", "API key for authentication")
 	wait := fs.Bool("wait", true, "Wait for deployment to complete")
+	manifest := fs.String("manifest", "", "Manifest file path relative to repo root")
 	_ = fs.Parse(os.Args[2:])
 
 	serverURL := config.FlagOrEnv(*server, "BIGBASE_SERVER")
@@ -448,7 +488,7 @@ func runDeployCmd() {
 
 	if *repoID == "" {
 		fmt.Fprintln(os.Stderr, "error: --repo is required")
-		fmt.Fprintln(os.Stderr, "Usage: bigbase deploy --repo <repo_id> [--branch main] [--server http://...]")
+		fmt.Fprintln(os.Stderr, "Usage: bigbase deploy --repo <repo_id> [--branch main] [--server http://...] [--manifest path]")
 		os.Exit(1)
 	}
 
@@ -459,10 +499,11 @@ func runDeployCmd() {
 	serverURL = strings.TrimRight(serverURL, "/")
 
 	body := map[string]string{
-		"repo_id":   *repoID,
-		"branch":    *branch,
-		"site_name": *siteName,
-		"site_id":   *siteID,
+		"repo_id":       *repoID,
+		"branch":        *branch,
+		"site_name":     *siteName,
+		"site_id":       *siteID,
+		"manifest_path": *manifest,
 	}
 	jsonBody, err := json.Marshal(body)
 	if err != nil {
