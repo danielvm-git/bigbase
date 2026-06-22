@@ -430,3 +430,4 @@ bugs:
     summary: "CI failures: TestSiteManifestGetAndSave assumes git default branch is 'main'; allure-report-action v1.7 uses removed openjdk:8-jre-alpine image"
     file: specs/bugs/BUG-2026-06-22T031000-ci-failures.md
     status: fixed
+    commit: 2f9132c
