@@ -246,7 +246,7 @@ epics:
     file: epics/e39-streaming-logs.yaml
     mode: flat
     tier: 1
-    status: planned
+    status: done
   - id: e40
     title: Deploy — App Manifest (bigbase.yaml)
     wsjf: 4.5

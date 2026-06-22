@@ -1,8 +1,8 @@
 type: session-state
 context: infra
 active_flow: build_epic
-active_epic_id: e39
-active_story_id: e39s03
+active_epic_id: e40
+active_story_id: e40s01
 release:
   target_version: 2.13.0
   codename: "Solo Dev Complete"
@@ -14,26 +14,26 @@ metrics:
   story_start: '2026-06-21T17:30:00Z'
   session_end: null
   cycle_minutes: 0
-  epics_completed: 38
-  stories_completed: 120
+  epics_completed: 39
+  stories_completed: 121
   bcps_per_hour: 0
 epic_cycle:
-  step: 8
+  step: 3
   story_bcps: 2
-  story: e39s03
-  audit_result: pass
+  story: e40s01
+  audit_result: ""
 bug_cycle: {}
 git:
-  branch: main
-  hash: HEAD
-  worktree: null
+  branch: feat/e40s01-app-manifest-parse
+  hash: e963a10
+  worktree: ../feat/e40s01-app-manifest-parse
 handoff:
-  last_step_completed: e39s03-release-branch
+  last_step_completed: e40s01-kickoff-branch
   open_decisions: []
-  next_skill: commit-message
-  summary: "e39s03 RELEASED: Terminal-style live log viewer. 5 commits (4 feat + 1 chore). All 282 UI tests pass. All Go tests pass. Epic e39 complete!"
+  next_skill: develop-tdd
+  summary: "e40s01 kickoff complete — worktree at ../feat/e40s01-app-manifest-parse, branch feat/e40s01-app-manifest-parse. Clean baseline: 22 Go pkgs + 282 UI tests pass."
   context: |
     e39s01: ✅ Released — Real-time WebSocket log streaming (log_stream.go, logHub)
     e39s02: ✅ Released — Deployment state machine v2 (safe, lenient mode)
     e39s03: ✅ Released — Terminal-style log viewer UI (4 tasks, 2 BCPS)
-    Next: e40 — App Manifest (bigbase.yaml) or update execution-status.yaml
+    → e40: App Manifest (bigbase.yaml) — 3 stories, next: e40s01 plan-work
