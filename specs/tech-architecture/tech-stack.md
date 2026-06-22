@@ -2,7 +2,7 @@
 
 **type:** tech-stack
 **context:** infra
-**version:** 2.12.0
+**version:** 2.13.0
 **supersedes:** `specs/plans/TECH_STACK_LATEST.md`, `specs/tech-architecture/TECH_STACK_ARCHIVE.md`
 **verify:** `go test ./... && go build ./...`
 
@@ -99,6 +99,7 @@ kernel discovers, starts, and connects independent components via an event bus.
 | 16 | GitHub | `components/github/` | HTTP | GitHub App auth, repo listing |
 | 17 | Webhooks | `components/webhooks/` | HTTP | Outbound webhook delivery, retry, exponential backoff |
 | 18 | Backup | `components/backup/` | CLI | Backup/restore, migration tooling |
+| 19 | MCP | `components/mcp/` | HTTP | Model Context Protocol server (SSE + stdio transport) |
 
 ## Release History
 
@@ -120,6 +121,8 @@ api.onMutation ──► realtime broadcasts ──► webhooks deliver
 git.onPush ──► cici runs workflow ──► deploy builds & serves
 
 db.onBackup ──► monitoring logs
+
+mcp.onToolCall ──► deploy deploys, db queries, api routes
 ```
 
 ## External Services
@@ -132,6 +135,8 @@ db.onBackup ──► monitoring logs
 | PostgreSQL | Dual-driver DB | `--db-driver postgres`, `--db-dsn` |
 | Telegram | Bot messaging | Messenger WebhookProvider, `--messaging-webhook-token` |
 | Cron | Function scheduling | `--functions-schedule` flag, robfig/cron v3 |
+| New Relic | APM monitoring | `--newrelic-license-key`, `NEW_RELIC_LICENSE_KEY` |
+| MCP | AI tool integration (SSE/stdio) | `--mcp-port`, `--mcp-transport` |
 
 ## Key Design Decisions
 
@@ -149,16 +154,28 @@ db.onBackup ──► monitoring logs
 ## CLI Reference
 
 ```bash
+# Serve
 go run . serve [--port PORT] [--db PATH] [--db-driver DRIVER] [--db-dsn DSN]
                [--google-client-id ID] [--google-client-secret SECRET]
-               [--messaging-webhook-url URL] [--messaging-webhook-token TOKEN]
-               [--functions-schedule]
+               [--github-app-id ID] [--github-app-slug SLUG]
+               [--github-app-private-key-path PATH] [--github-webhook-secret SECRET]
+               [--sites-domain DOMAIN] [--log-level LEVEL]
+               [--cors-allowed-origins ORIGINS]
+               [--auth-post-login-redirect URL] [--auth-spa-origin-allowlist ORIGINS]
+               [--mcp-disabled] [--mcp-port PORT] [--mcp-transport TRANSPORT]
+               [--newrelic-license-key KEY] [--newrelic-app-name NAME] [--newrelic-enabled]
 
+# Info
 go run . version
 go run . status
 go run . components list
+
+# Data
+go run . init [--repo PATH]
+go run . deploy --repo ID [--branch main] [--server URL] [--api-key KEY] [--wait]
 go run . backup --db FILE --output FILE
-go run . migrate up|down|status
+go run . restore --input FILE --db FILE
+go run . migrate up|down|status [--db PATH]
 ```
 
 ## Verification
@@ -167,7 +184,7 @@ go run . migrate up|down|status
 # Architecture integrity: no direct component imports
 grep -r "components/" kernel/ | grep -v "_test.go" | grep -v '//' || echo "No cross-component imports"
 
-# All components implement kernel.Component
+# All 19 components implement kernel.Component
 grep -l "kernel.Component" components/*/**.go | wc -l
 
 # Event bus is sole communication channel

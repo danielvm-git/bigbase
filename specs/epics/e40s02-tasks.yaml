@@ -1,0 +1,17 @@
+story_id: e40s02
+title: "bigbase init CLI — generate default manifest for detected framework"
+status: planned
+bcps: 1
+tasks:
+  - id: 1
+    description: "Implement framework detection and manifest generation in manifest.go"
+    verify: "go test ./components/deploy/ -run TestInitManifest -v"
+  - id: 2
+    description: "Add init command to main.go with framework detection"
+    verify: "go run . init --repo /tmp/test-repo && test -f /tmp/test-repo/bigbase.yaml"
+  - id: 3
+    description: "Add manifest_path field to Database and Trigger"
+    verify: "go test ./components/deploy/ -run TestManifestPathPersistence -v"
+  - id: 4
+    description: "Add --manifest flag to deploy command and verify merge order"
+    verify: "go test ./components/deploy/ -run TestManifestFlags -v"

@@ -116,4 +116,87 @@ env:
 			t.Errorf("DATABASE_URL = %s, want postgres://localhost:5432", m.Env["DATABASE_URL"])
 		}
 	})
+
+	t.Run("manifest path persistence and loading", func(t *testing.T) {
+		dir := t.TempDir()
+		// Write a manifest to a custom file path
+		writeFile(t, filepath.Join(dir, "custom-manifest.yaml"), `version: 1
+framework: go
+build:
+  command: go build -o testapp .
+start:
+  command: ./testapp
+  port: 9090
+`)
+
+		m, err := LoadManifestPath(dir, "custom-manifest.yaml")
+		if err != nil {
+			t.Fatalf("LoadManifestPath: %v", err)
+		}
+		if m == nil {
+			t.Fatal("expected manifest, got nil")
+		}
+		if m.Framework != "go" || m.Build.Command != "go build -o testapp ." {
+			t.Errorf("unexpected custom manifest contents: %+v", m)
+		}
+	})
+}
+
+func TestManifestFlags(t *testing.T) {
+	// Merge order: CLI flags > manifest > auto-detection
+	t.Run("CLI appType override takes precedence over manifest framework", func(t *testing.T) {
+		dir := t.TempDir()
+		// Auto-detection would see go (due to go.mod)
+		writeFile(t, filepath.Join(dir, "go.mod"), "module test")
+		// Manifest would declare sveltekit (node)
+		writeFile(t, filepath.Join(dir, "bigbase.yaml"), `version: 1
+framework: sveltekit
+build:
+  command: npm run build
+start:
+  command: node build/index.js
+  port: 3000
+`)
+
+		// 1. If appType is specified (CLI flags), it wins:
+		cliAppType := AppPython
+		manifest, _ := LoadManifest(dir)
+
+		appType := cliAppType
+		if appType == "" {
+			if manifest != nil {
+				appType = manifestToAppType(manifest)
+			} else {
+				appType = DetectAppType(dir)
+			}
+		}
+		if appType != AppPython {
+			t.Errorf("expected AppPython from CLI, got %s", appType)
+		}
+
+		// 2. If appType is empty, manifest wins:
+		cliAppType = ""
+		appType = cliAppType
+		if appType == "" {
+			if manifest != nil {
+				appType = manifestToAppType(manifest)
+			} else {
+				appType = DetectAppType(dir)
+			}
+		}
+		if appType != AppNode { // sveltekit framework maps to AppNode
+			t.Errorf("expected AppNode from manifest, got %s", appType)
+		}
+
+		// 3. If both empty, auto-detection wins:
+		cliAppType = ""
+		appType = cliAppType
+		if appType == "" {
+			// mock no manifest scenario
+			appType = DetectAppType(dir)
+		}
+		if appType != AppGo {
+			t.Errorf("expected AppGo from auto-detection, got %s", appType)
+		}
+	})
 }

@@ -1053,7 +1053,7 @@ func TestDeployLogsPersisted(t *testing.T) {
 	defer func() { _ = dep.Stop(&kernel.Context{}) }()
 
 	repoID := createTestRepo(t, database, "repo-logs", gitDir)
-	deployment, err := dep.Trigger(context.Background(), repoID, "main", "", "s123", nil, "")
+	deployment, err := dep.Trigger(context.Background(), repoID, "main", "", "s123", nil, "", "")
 	if err != nil {
 		t.Fatalf("trigger failed: %v", err)
 	}
@@ -1108,7 +1108,7 @@ func TestDeployLogsRetrievalFallback(t *testing.T) {
 	defer func() { _ = dep.Stop(&kernel.Context{}) }()
 
 	repoID := createTestRepo(t, database, "repo-retrieval", gitDir)
-	deployment, err := dep.Trigger(context.Background(), repoID, "main", "", "s123", nil, "")
+	deployment, err := dep.Trigger(context.Background(), repoID, "main", "", "s123", nil, "", "")
 	if err != nil {
 		t.Fatalf("trigger failed: %v", err)
 	}
@@ -1245,7 +1245,7 @@ func TestRuntimeLogs(t *testing.T) {
 
 	repoID := createTestRuntimeRepo(t, database, "repo-runtime", gitDir)
 
-	deployment, err := dep.Trigger(context.Background(), repoID, "main", "", "s-runtime", nil, "")
+	deployment, err := dep.Trigger(context.Background(), repoID, "main", "", "s-runtime", nil, "", "")
 	if err != nil {
 		t.Fatalf("trigger failed: %v", err)
 	}
@@ -2002,7 +2002,7 @@ func TestStopDeploymentKillsOrphanedProcess(t *testing.T) {
 	// This calls stopPreviousDeployments which finds the orphaned deployment
 	// and calls stopDeployment. Since d.apps is empty for this deployment,
 	// hasApp=false — the new code reads PID from DB and kills the process.
-	_, err = dep.Trigger(context.Background(), repoID, "main", "test-site", "site-orphan-test", nil, "")
+	_, err = dep.Trigger(context.Background(), repoID, "main", "test-site", "site-orphan-test", nil, "", "")
 	if err != nil {
 		t.Fatalf("Trigger: %v", err)
 	}

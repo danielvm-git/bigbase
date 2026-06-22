@@ -82,7 +82,7 @@ func (d *Deploy) handleSamples(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	deployment, err := d.Trigger(r.Context(), repoID, "main", "", "sample-site", nil, "")
+	deployment, err := d.Trigger(r.Context(), repoID, "main", "", "sample-site", nil, "", "")
 	if err != nil {
 		d.logger.Error("trigger sample deploy", "name", name, "error", err)
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})

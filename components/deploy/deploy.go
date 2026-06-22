@@ -60,6 +60,7 @@ type Deployment struct {
 	AppType          AppType  `json:"app_type"`
 	ErrorMessage     string   `json:"error_message,omitempty"`
 	PassthroughPaths []string `json:"passthrough_paths,omitempty"`
+	ManifestPath     string   `json:"manifest_path,omitempty"`
 	CreatedAt        string   `json:"created_at"`
 	StatusHistory    []StatusTransition `json:"status_history,omitempty"`
 }
@@ -193,6 +194,7 @@ func (d *Deploy) Start(ctx *kernel.Context) error {
 		app_type TEXT DEFAULT '',
 		error_message TEXT NOT NULL DEFAULT '',
 		build_log TEXT DEFAULT '',
+		manifest_path TEXT DEFAULT '',
 		created_at TEXT NOT NULL DEFAULT (datetime('now'))
 	)`); err != nil {
 		return fmt.Errorf("migrate deployments table: %w", err)
@@ -213,6 +215,9 @@ func (d *Deploy) Start(ctx *kernel.Context) error {
 		return err
 	}
 	if err := d.ensureStatusHistoryColumn(); err != nil {
+		return err
+	}
+	if err := d.ensureManifestPathColumn(); err != nil {
 		return err
 	}
 	if err := d.db.Migrate(`CREATE TABLE IF NOT EXISTS site_request_logs (
@@ -455,6 +460,7 @@ func (d *Deploy) HandleCreate(w http.ResponseWriter, r *http.Request) {
 		SiteID           string   `json:"site_id"`
 		PassthroughPaths []string `json:"passthrough_paths"`
 		AppType          string   `json:"app_type"`
+		ManifestPath     string   `json:"manifest_path"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid JSON"})
@@ -468,7 +474,7 @@ func (d *Deploy) HandleCreate(w http.ResponseWriter, r *http.Request) {
 		req.Branch = "main"
 	}
 
-	deploy, err := d.Trigger(r.Context(), req.RepoID, req.Branch, req.SiteName, req.SiteID, req.PassthroughPaths, req.AppType)
+	deploy, err := d.Trigger(r.Context(), req.RepoID, req.Branch, req.SiteName, req.SiteID, req.PassthroughPaths, req.AppType, req.ManifestPath)
 	if err != nil {
 		switch err.Error() {
 		case "repo not found":
@@ -483,7 +489,7 @@ func (d *Deploy) HandleCreate(w http.ResponseWriter, r *http.Request) {
 }
 
 // Trigger starts a deployment for a git repo without going through HTTP.
-func (d *Deploy) Trigger(ctx context.Context, repoID, branch, siteName, siteID string, passthroughPaths []string, appType string) (*Deployment, error) {
+func (d *Deploy) Trigger(ctx context.Context, repoID, branch, siteName, siteID string, passthroughPaths []string, appType string, manifestPath string) (*Deployment, error) {
 	if repoID == "" {
 		return nil, fmt.Errorf("repo_id is required")
 	}
@@ -524,13 +530,14 @@ func (d *Deploy) Trigger(ctx context.Context, repoID, branch, siteName, siteID s
 		Port:             port,
 		AppType:          AppType(appType),
 		PassthroughPaths: passthroughPaths,
+		ManifestPath:     manifestPath,
 		URL:              deploymentURL(d.publicDomain, d.useHTTPS, siteName, port),
 		CreatedAt:        time.Now().UTC().Format(time.RFC3339),
 	}
 
 	if _, err := d.db.ExecContext(ctx,
-		"INSERT INTO deployments (id, repo_id, site_id, branch, status, port, url, passthrough_paths, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-		id, repoID, siteID, branch, deploy.Status, deploy.Port, deploy.URL, passthroughJSON, deploy.CreatedAt); err != nil {
+		"INSERT INTO deployments (id, repo_id, site_id, branch, status, port, url, passthrough_paths, manifest_path, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+		id, repoID, siteID, branch, deploy.Status, deploy.Port, deploy.URL, passthroughJSON, deploy.ManifestPath, deploy.CreatedAt); err != nil {
 		return nil, err
 	}
 
@@ -668,10 +675,14 @@ func (d *Deploy) runDeployment(deploy *Deployment, buildDir, repoName string) {
 		d.appendDeployLog(deploy.ID, fmt.Sprintf("→ Commit: %s", short))
 	}
 
-	// Load deployment manifest (bigbase.yaml) if present in the repo root.
-	manifest, loadErr := LoadManifest(buildDir)
+	// Load deployment manifest if present in the repo root.
+	manifestPathStr := "bigbase.yaml"
+	if deploy.ManifestPath != "" {
+		manifestPathStr = deploy.ManifestPath
+	}
+	manifest, loadErr := LoadManifestPath(buildDir, deploy.ManifestPath)
 	if loadErr != nil {
-		d.appendDeployLog(deploy.ID, fmt.Sprintf("⚠ Invalid bigbase.yaml: %v — falling back to auto-detection", loadErr))
+		d.appendDeployLog(deploy.ID, fmt.Sprintf("⚠ Invalid %s: %v — falling back to auto-detection", manifestPathStr, loadErr))
 	}
 
 	appType := deploy.AppType
@@ -1131,6 +1142,18 @@ func (d *Deploy) ensureStatusHistoryColumn() error {
 	return fmt.Errorf("add status_history column: %w", err)
 }
 
+func (d *Deploy) ensureManifestPathColumn() error {
+	_, err := d.db.ExecContext(context.Background(),
+		`ALTER TABLE deployments ADD COLUMN manifest_path TEXT DEFAULT ''`)
+	if err == nil {
+		return nil
+	}
+	if strings.Contains(strings.ToLower(err.Error()), "duplicate column") {
+		return nil
+	}
+	return fmt.Errorf("add manifest_path column: %w", err)
+}
+
 func (d *Deploy) finalizeDeploymentURL(deploy *Deployment, repoName string) {
 	url := deploymentURL(d.publicDomain, d.useHTTPS, repoName, deploy.Port)
 	host := deploymentHost(d.publicDomain, repoName)
@@ -1233,7 +1256,7 @@ func (d *Deploy) HandleList(w http.ResponseWriter, r *http.Request) {
 	}
 
 	rows, err := d.db.QueryContext(r.Context(),
-		"SELECT id, repo_id, site_id, COALESCE(branch,'main'), COALESCE(commit_sha,''), COALESCE(status,'pending'), COALESCE(url,''), COALESCE(port,0), COALESCE(app_type,''), COALESCE(error_message,''), COALESCE(passthrough_paths,''), created_at FROM deployments ORDER BY created_at DESC")
+		"SELECT id, repo_id, site_id, COALESCE(branch,'main'), COALESCE(commit_sha,''), COALESCE(status,'pending'), COALESCE(url,''), COALESCE(port,0), COALESCE(app_type,''), COALESCE(error_message,''), COALESCE(passthrough_paths,''), COALESCE(manifest_path,''), created_at FROM deployments ORDER BY created_at DESC")
 	if err != nil {
 		d.logger.Error("list deployments", "error", err)
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
@@ -1245,7 +1268,7 @@ func (d *Deploy) HandleList(w http.ResponseWriter, r *http.Request) {
 	for rows.Next() {
 		var dep Deployment
 		var passthroughJSON string
-		if err := rows.Scan(&dep.ID, &dep.RepoID, &dep.SiteID, &dep.Branch, &dep.CommitSHA, &dep.Status, &dep.URL, &dep.Port, &dep.AppType, &dep.ErrorMessage, &passthroughJSON, &dep.CreatedAt); err != nil {
+		if err := rows.Scan(&dep.ID, &dep.RepoID, &dep.SiteID, &dep.Branch, &dep.CommitSHA, &dep.Status, &dep.URL, &dep.Port, &dep.AppType, &dep.ErrorMessage, &passthroughJSON, &dep.ManifestPath, &dep.CreatedAt); err != nil {
 			d.logger.Error("scan deployment", "error", err)
 			continue
 		}
@@ -1293,8 +1316,8 @@ func (d *Deploy) handleDeployByID(w http.ResponseWriter, r *http.Request) {
 		var dep Deployment
 		var appType, passthroughJSON string
 		err := d.db.QueryRowContext(r.Context(),
-			"SELECT id, repo_id, site_id, branch, commit_sha, status, url, port, app_type, COALESCE(error_message,''), COALESCE(passthrough_paths,''), created_at FROM deployments WHERE id = ?", id).
-			Scan(&dep.ID, &dep.RepoID, &dep.SiteID, &dep.Branch, &dep.CommitSHA, &dep.Status, &dep.URL, &dep.Port, &appType, &dep.ErrorMessage, &passthroughJSON, &dep.CreatedAt)
+			"SELECT id, repo_id, site_id, branch, commit_sha, status, url, port, app_type, COALESCE(error_message,''), COALESCE(passthrough_paths,''), COALESCE(manifest_path,''), created_at FROM deployments WHERE id = ?", id).
+			Scan(&dep.ID, &dep.RepoID, &dep.SiteID, &dep.Branch, &dep.CommitSHA, &dep.Status, &dep.URL, &dep.Port, &appType, &dep.ErrorMessage, &passthroughJSON, &dep.ManifestPath, &dep.CreatedAt)
 		if err != nil {
 			writeJSON(w, http.StatusNotFound, map[string]string{"error": "deployment not found"})
 			return
