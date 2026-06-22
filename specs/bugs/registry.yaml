@@ -421,3 +421,12 @@ bugs:
     commit: dc5b5c6
     related:
       - BUG-2026-06-21T120000
+
+  - id: BUG-2026-06-22T031000
+    date: "2026-06-22"
+    severity: low
+    priority: high
+    scope: ci,deploy,test
+    summary: "CI failures: TestSiteManifestGetAndSave assumes git default branch is 'main'; allure-report-action v1.7 uses removed openjdk:8-jre-alpine image"
+    file: specs/bugs/BUG-2026-06-22T031000-ci-failures.md
+    status: fixed

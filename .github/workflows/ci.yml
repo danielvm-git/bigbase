@@ -107,8 +107,8 @@ jobs:
           path: gh-pages
 
       - name: Generate Allure Report
-        # pinned to v1.7 — SHA: e3e158032c1140676ea295a073942850d68bae29
-        uses: simple-elf/allure-report-action@e3e158032c1140676ea295a073942850d68bae29
+        # pinned to v1.14 — SHA: e463a472d3b1d750f9544369d60589ff1964c820
+        uses: simple-elf/allure-report-action@e463a472d3b1d750f9544369d60589ff1964c820
         if: always()
         id: allure-report
         with:

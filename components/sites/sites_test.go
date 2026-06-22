@@ -502,6 +502,10 @@ func TestSiteManifestGetAndSave(t *testing.T) {
 	cmd = exec.Command("git", "commit", "-m", "Initial commit")
 	cmd.Dir = tempClone
 	_ = cmd.Run()
+	// Rename branch to main regardless of init.defaultBranch setting
+	cmd = exec.Command("git", "branch", "-M", "main")
+	cmd.Dir = tempClone
+	_ = cmd.Run()
 	cmd = exec.Command("git", "push", "origin", "main")
 	cmd.Dir = tempClone
 	_ = cmd.Run()
