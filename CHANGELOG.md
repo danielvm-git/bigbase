@@ -1,3 +1,10 @@
+# [2.41.0](https://github.com/danielvm-git/bigbase/compare/v2.40.0...v2.41.0) (2026-06-22)
+
+
+### Features
+
+* **e40s03:** implement Admin UI manifest view and editor ([03a01e2](https://github.com/danielvm-git/bigbase/commit/03a01e23c47d24f03f45e60c952a9e64a8e3f780))
+
 # [2.40.0](https://github.com/danielvm-git/bigbase/compare/v2.39.0...v2.40.0) (2026-06-22)
 
 
