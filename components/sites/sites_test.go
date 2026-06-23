@@ -461,8 +461,16 @@ func TestDeleteSiteHandlesMissingColumn(t *testing.T) {
 	}
 }
 
+// debugLoggerForTest logs to t.Log so we can see git errors in CI output.
+type debugLoggerForTest struct{ *testing.T }
+
+func (d debugLoggerForTest) Info(msg string, args ...any)  { d.Logf("[INFO] "+msg, args...) }
+func (d debugLoggerForTest) Warn(msg string, args ...any)  { d.Logf("[WARN] "+msg, args...) }
+func (d debugLoggerForTest) Error(msg string, args ...any) { d.Logf("[ERROR] "+msg, args...) }
+func (d debugLoggerForTest) Debug(msg string, args ...any) {}
+
 func TestSiteManifestGetAndSave(t *testing.T) {
-	logger := testLogger{}
+	logger := debugLoggerForTest{T: t}
 	k := kernel.New(logger)
 	d := db.New(db.Options{Path: ":memory:", Logger: logger})
 	gitDir := t.TempDir()
@@ -500,6 +508,10 @@ func TestSiteManifestGetAndSave(t *testing.T) {
 	cmd.Dir = tempClone
 	_ = cmd.Run()
 	cmd = exec.Command("git", "commit", "-m", "Initial commit")
+	cmd.Dir = tempClone
+	_ = cmd.Run()
+	// Rename branch to main regardless of init.defaultBranch setting
+	cmd = exec.Command("git", "branch", "-M", "main")
 	cmd.Dir = tempClone
 	_ = cmd.Run()
 	cmd = exec.Command("git", "push", "origin", "main")

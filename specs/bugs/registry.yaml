@@ -323,14 +323,21 @@ bugs:
       4. **Verify**: Ensure scoped code passes, full repo passes, UI lint passes.
     risk_level: high
     commit_message: "fix(lint): resolve baseline violations and exclude dependencies"
-  - id: BUG-2026-06-04T100000
-    date: "2026-06-04"
-    severity: high
-    priority: high
-    scope: ui
-    summary: "Reviewer must-fix findings on prototype-fidelity-parity: mock success leaks /api/auth, ThemePicker loses focus on close, 5 of 15 planned icon names were silently substituted"
-    file: specs/bugs/BUG-2026-06-04T100000-reviewer-must-fix-on-prototype-fidelity.md
+  - id: BUG-2026-06-22T030000
+    date: "2026-06-22"
+    severity: low
+    priority: medium
+    scope: sites,deploy
+    summary: Code quality issues in e40s03 manifest implementation — error leak, DRY violation, long function, missing test
+    file: specs/bugs/BUG-2026-06-22T030000-manifest-audit-issues.md
     status: fixed
+    files_changed:
+      - components/sites/sites.go
+      - components/deploy/manifest_test.go
+      - specs/bugs/BUG-2026-06-22T030000-manifest-audit-issues.md
+    commit: b1daf3f
+    related:
+      - BUG-2026-06-19T163327
   - id: BUG-2026-06-20T125952
     date: "2026-06-20"
     severity: medium
@@ -414,3 +421,21 @@ bugs:
     commit: dc5b5c6
     related:
       - BUG-2026-06-21T120000
+
+  - id: BUG-2026-06-22T031000
+    date: "2026-06-22"
+    severity: low
+    priority: high
+    scope: ci,deploy,test
+    summary: "CI failures: TestSiteManifestGetAndSave assumes git default branch is 'main'; allure-report-action v1.7 uses removed openjdk:8-jre-alpine image"
+    file: specs/bugs/BUG-2026-06-22T031000-ci-failures.md
+    status: fixed
+    commit: 2f9132c
+  - id: BUG-2026-06-23T184500
+    date: "2026-06-23"
+    severity: medium
+    priority: medium
+    scope: monitoring
+    summary: BigBase app logs not forwarded to New Relic — nrslog integration missing, slog handler not wrapped through nrApp
+    file: specs/bugs/BUG-2026-06-23T184500-newrelic-logs-not-forwarded.md
+    status: open

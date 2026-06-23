@@ -223,6 +223,83 @@ func TestInitManifest(t *testing.T) {
 	})
 }
 
+func TestValidateManifest(t *testing.T) {
+	t.Run("valid manifest passes", func(t *testing.T) {
+		data := []byte(`version: 1
+framework: static
+build:
+  command: echo hi
+start:
+  command: serve
+  port: 3000
+`)
+		if err := ValidateManifest(data); err != nil {
+			t.Fatalf("ValidateManifest: unexpected error: %v", err)
+		}
+	})
+
+	t.Run("invalid YAML fails", func(t *testing.T) {
+		data := []byte(`version: [broken yaml{{{`)
+		if err := ValidateManifest(data); err == nil {
+			t.Fatal("expected error for invalid YAML, got nil")
+		}
+	})
+
+	t.Run("missing version fails", func(t *testing.T) {
+		data := []byte(`framework: static
+build:
+  command: echo
+start:
+  command: serve
+  port: 3000
+`)
+		if err := ValidateManifest(data); err == nil {
+			t.Fatal("expected error for missing version, got nil")
+		}
+	})
+
+	t.Run("invalid framework fails", func(t *testing.T) {
+		data := []byte(`version: 1
+framework: unknown-framework
+build:
+  command: echo
+start:
+  command: serve
+  port: 3000
+`)
+		if err := ValidateManifest(data); err == nil {
+			t.Fatal("expected error for invalid framework, got nil")
+		}
+	})
+
+	t.Run("port out of range fails", func(t *testing.T) {
+		data := []byte(`version: 1
+framework: static
+build:
+  command: echo
+start:
+  command: serve
+  port: 99999
+`)
+		if err := ValidateManifest(data); err == nil {
+			t.Fatal("expected error for port out of range, got nil")
+		}
+	})
+
+	t.Run("missing build.command fails", func(t *testing.T) {
+		data := []byte(`version: 1
+framework: static
+build: {}
+start:
+  command: serve
+  port: 3000
+`)
+		if err := ValidateManifest(data); err == nil {
+			t.Fatal("expected error for missing build.command, got nil")
+		}
+	})
+}
+
 func writeFile(t *testing.T, path, content string) {
 	t.Helper()
 	if err := os.WriteFile(path, []byte(content), 0644); err != nil {

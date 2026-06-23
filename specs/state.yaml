@@ -1,8 +1,8 @@
 type: session-state
 context: infra
-active_flow: build_epic
-active_epic_id: e40
-active_story_id: e40s03
+active_flow: null
+active_epic_id: null
+active_story_id: null
 release:
   target_version: 2.13.0
   codename: "Solo Dev Complete"
@@ -12,28 +12,30 @@ release:
 metrics:
   session_start: '2026-06-21T16:00:00Z'
   story_start: '2026-06-22T02:09:00Z'
-  session_end: '2026-06-21T23:00:00Z'
-  cycle_minutes: 300
+  session_end: '2026-06-22T03:00:00Z'
+  cycle_minutes: 0
   epics_completed: 40
   stories_completed: 124
   bcps_per_hour: 0.4
 epic_cycle:
-  step: 8
-  story_bcps: 2
-  story: e40s03
-  audit_result: pass
-bug_cycle: {}
+  step: 0
+  story_bcps: 0
+  story: null
+  audit_result: null
+bug_cycle:
+  current_step: 0
+  completed_steps: []
+  bug_file: null
 git:
   branch: main
   hash: 481c0d4
   worktree: null
 handoff:
-  last_step_completed: e40s03-release-branch
+  last_step_completed: audit-code
   open_decisions: []
-  next_skill: null
-  summary: "e40s03 RELEASED: Completed Epic e40 (App Manifest). Admin UI manifest editor and backend read/save handlers are fully integrated and verified."
+  next_skill: commit-message
+  summary: "Allure progress dashboard: 7 code review findings fixed. Dashboard now accurately includes all 50 epics (was silently dropping e17's 18 done stories). Third-party actions SHA-pinned. CI now runs sync-status before generation. All 22 Go packages pass tests."
   context: |
-    e39: ✅ Complete — Streaming Logs & State Machine (3 stories)
-    e40s01: ✅ Released — Manifest parsing + deploy integration (2 BCPS)
-    e40s02: ✅ Released — bigbase init CLI (1 BCP)
-    e40s03: In Progress — Admin UI manifest editor (2 BCPS)
+    Branch: feat/allure-progress-dashboard
+    Commits: 3 (chore: add allure progress report generation to CI, etc.)
+    Diff: scripts/generate-allure-report.py, .github/workflows/ci.yml, .gitignore, specs/state.yaml
