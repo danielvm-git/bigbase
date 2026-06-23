@@ -36,6 +36,7 @@ import (
 	"github.com/danielvm/bigbase/components/storage"
 	"github.com/danielvm/bigbase/config"
 	"github.com/danielvm/bigbase/kernel"
+	"github.com/newrelic/go-agent/v3/integrations/logcontext-v2/nrslog"
 	"github.com/newrelic/go-agent/v3/newrelic"
 )
 
@@ -78,6 +79,19 @@ func parseLogLevel(level string) (slog.Level, error) {
 	default:
 		return slog.LevelInfo, fmt.Errorf("unknown log level: %q (valid: debug, info, warn, error)", level)
 	}
+}
+
+// buildHandler returns the slog handler for the application logger. When a New
+// Relic application is present, logs are routed through nrslog so they are
+// forwarded to New Relic Logs and correlated with the active APM transaction.
+// When nrApp is nil (New Relic disabled), it returns a plain JSON handler so
+// local/dev behaviour is unchanged.
+func buildHandler(nrApp *newrelic.Application, w io.Writer, opts *slog.HandlerOptions) slog.Handler {
+	base := slog.NewJSONHandler(w, opts)
+	if nrApp == nil {
+		return base
+	}
+	return nrslog.WrapHandler(nrApp, base)
 }
 
 func main() {
@@ -189,7 +203,7 @@ func startProxy() {
 	// Parse CORS allowed origins (empty = CORS disabled, default safe).
 	corsAllowedOrigins := parseCORSOrigins(*corsOrigins)
 
-	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: level}))
+	logger := slog.New(buildHandler(nrApp, os.Stdout, &slog.HandlerOptions{Level: level}))
 
 	// New Relic Application agent initialization
 	if newRelicEnabled && newRelicLicenseKey != "" {

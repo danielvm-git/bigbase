@@ -1,9 +1,19 @@
 package main
 
 import (
+	"bytes"
 	"log/slog"
 	"testing"
 )
+
+// When New Relic is disabled (nil app), buildHandler must return a plain
+// slog JSON handler so local/dev logging is unchanged.
+func TestBuildHandler_NRDisabled(t *testing.T) {
+	h := buildHandler(nil, &bytes.Buffer{}, &slog.HandlerOptions{Level: slog.LevelInfo})
+	if _, ok := h.(*slog.JSONHandler); !ok {
+		t.Fatalf("buildHandler(nil, ...) = %T, want *slog.JSONHandler", h)
+	}
+}
 
 func TestParseLogLevel(t *testing.T) {
 	tests := []struct {
