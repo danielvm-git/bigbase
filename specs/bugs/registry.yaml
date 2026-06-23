@@ -431,3 +431,11 @@ bugs:
     file: specs/bugs/BUG-2026-06-22T031000-ci-failures.md
     status: fixed
     commit: 2f9132c
+  - id: BUG-2026-06-23T184500
+    date: "2026-06-23"
+    severity: medium
+    priority: medium
+    scope: monitoring
+    summary: BigBase app logs not forwarded to New Relic — nrslog integration missing, slog handler not wrapped through nrApp
+    file: specs/bugs/BUG-2026-06-23T184500-newrelic-logs-not-forwarded.md
+    status: open

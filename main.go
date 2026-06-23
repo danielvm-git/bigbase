@@ -203,22 +203,27 @@ func startProxy() {
 	// Parse CORS allowed origins (empty = CORS disabled, default safe).
 	corsAllowedOrigins := parseCORSOrigins(*corsOrigins)
 
-	logger := slog.New(buildHandler(nrApp, os.Stdout, &slog.HandlerOptions{Level: level}))
-
-	// New Relic Application agent initialization
+	// New Relic Application agent initialization. Must precede logger
+	// construction so buildHandler can route logs through the agent for
+	// forwarding to New Relic Logs (Logs in Context).
+	var nrInitErr error
 	if newRelicEnabled && newRelicLicenseKey != "" {
-		var err error
-		nrApp, err = newrelic.NewApplication(
+		nrApp, nrInitErr = newrelic.NewApplication(
 			newrelic.ConfigAppName(newRelicAppName),
 			newrelic.ConfigLicense(newRelicLicenseKey),
+			newrelic.ConfigAppLogForwardingEnabled(true),
 			newrelic.ConfigDebugLogger(os.Stdout),
 		)
-		if err != nil {
-			logger.Warn("new relic agent initialization failed", "error", err)
-		} else {
-			logger.Info("new relic agent initialized", "app", newRelicAppName)
-		}
-	} else {
+	}
+
+	logger := slog.New(buildHandler(nrApp, os.Stdout, &slog.HandlerOptions{Level: level}))
+
+	switch {
+	case nrInitErr != nil:
+		logger.Warn("new relic agent initialization failed", "error", nrInitErr)
+	case nrApp != nil:
+		logger.Info("new relic agent initialized", "app", newRelicAppName)
+	default:
 		logger.Debug("new relic agent disabled")
 	}
 	k := kernel.New(logger)

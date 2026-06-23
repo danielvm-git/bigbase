@@ -125,6 +125,26 @@ db.onBackup ──► monitoring logs
 mcp.onToolCall ──► deploy deploys, db queries, api routes
 ```
 
+## Deploy Supervisor (vocabulary)
+
+BigBase replicates the supervision Docker gives Appwrite — restart-on-crash, health
+checks, resource isolation — in a lightweight, in-process Go module rather than
+containers (see ADR 0004). Canonical terms:
+
+- **Supervisor** — owns the fleet of running deployments: restart policy (backoff +
+  crash-loop detection), health probing, resume-on-boot, and guaranteed proxy host
+  (re)registration. The Go equivalent of Docker `restart: unless-stopped` + healthchecks.
+- **Instance** — one running deployment (a subprocess app or an in-process static server)
+  behind the `Runner` seam. Exposes `Start` / `Stop(grace)` / `Health`.
+- **Runner** — the seam that spawns Instances (`Spawn(spec)`); a `FakeRunner` makes
+  supervision logic testable without real processes.
+- **Isolator** — the seam that applies per-app resource caps. Production adapter spawns
+  through a **systemd transient scope** (`MemoryMax` / `CPUQuota` / `TasksMax`); a no-op
+  adapter is used on macOS dev. BigBase never reimplements cgroups.
+- **DeploymentHostRegistry** — the existing proxy seam that maps host → port; extended to
+  own connection counting and **drain** (the proxy is the only layer that sees in-flight
+  connections, since all deployment traffic is reverse-proxied).
+
 ## External Services
 
 | Service | Integration | Config |
@@ -145,6 +165,7 @@ mcp.onToolCall ──► deploy deploys, db queries, api routes
 | 0001 | SQLite + JSON Blob API | Accepted |
 | 0002 | JWT + bcrypt Auth | Accepted |
 | 0003 | GitHub App for Sites | Accepted |
+| 0004 | No containers (Docker/K8s) ever — in-process Go Supervisor + systemd isolation | Accepted |
 | — | ECC pattern (no direct component imports) | Accepted |
 | — | PostgreSQL dual-driver (modernc.org/sqlite + lib/pq) | Accepted (e18) |
 | — | Multi-tenant org isolation at API/DB layer | Accepted (e23) |
