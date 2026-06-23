@@ -1,3 +1,18 @@
+# [2.42.0](https://github.com/danielvm-git/bigbase/compare/v2.41.0...v2.42.0) (2026-06-23)
+
+
+### Bug Fixes
+
+* **ci:** resolve CI failures — test branch assumption + stale allure action SHA ([55b6dd2](https://github.com/danielvm-git/bigbase/commit/55b6dd20d589be1f1f29e0216485f938a2136051))
+* **monitoring:** init NR agent before logger so log forwarding actually works ([8487171](https://github.com/danielvm-git/bigbase/commit/84871717e9928f5d5df356d2ce780cf1247eb1a2))
+* **sites:** address e40s03 audit findings — error leak, DRY violation, long function, missing test ([b1daf3f](https://github.com/danielvm-git/bigbase/commit/b1daf3fa720db0bd850e6aa67fe281b1e4b3d63f))
+* **sites:** set git config Dir in commitManifestToRepo ([2f9132c](https://github.com/danielvm-git/bigbase/commit/2f9132c81e82aca37ddf8ef81aa013e719fabc41))
+
+
+### Features
+
+* **monitoring:** extract buildHandler for New Relic log forwarding ([4eb28a0](https://github.com/danielvm-git/bigbase/commit/4eb28a074e8c110ce4c93ee9642284d954becfc1))
+
 # [2.41.0](https://github.com/danielvm-git/bigbase/compare/v2.40.0...v2.41.0) (2026-06-22)
 
 
