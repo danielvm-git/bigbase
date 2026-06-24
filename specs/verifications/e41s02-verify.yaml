@@ -1,0 +1,66 @@
+story_id: e41s02
+verified_at: "2026-06-24T17:00:00Z"
+verifier: verify-work
+branch: e41-env-vars-s02
+phases:
+  build:
+    passed: true
+    command: "cd ui && node_modules/.bin/tsc --noEmit && node_modules/.bin/vite build"
+  typecheck:
+    passed: true
+  tests:
+    passed: true
+    command: "go test ./..."
+    count: 745
+  verify_commands:
+    task1:
+      command: "cd ui && npm run build"
+      passed: true
+    task2:
+      command: "cd ui && npm run build"
+      passed: true
+  manual:
+    steps:
+      - step: "Env Vars tab appears in SiteDetailPage tab bar"
+        expected: "Tab labeled 'Env Vars' renders between Request Logs and Manifest"
+        actual: "Confirmed via code review — tab added at correct position"
+        passed: true
+      - step: "Empty state shows drag-and-drop hint"
+        expected: "Card with .env drop zone message"
+        actual: "Renders 'No environment variables yet. Drag & drop .env' card"
+        passed: true
+      - step: "Add variable form: key auto-uppercases, validation works"
+        expected: "Lowercase input is uppercased; invalid format shows error"
+        actual: "onChange handler calls toUpperCase(); client-side KEY_RE regex validation"
+        passed: true
+      - step: "Value show/hide toggle"
+        expected: "Password input toggles to text on 'Show' click"
+        actual: "input type switches via showValue state"
+        passed: true
+      - step: "Masked value display (last 4 chars)"
+        expected: "Values show ••••XXXX format"
+        actual: "maskValue() returns '••••' + value.slice(-4)"
+        passed: true
+      - step: "Build/Runtime checkboxes"
+        expected: "Two checkboxes; runtime checked by default for new vars"
+        actual: "isBuildTime defaults false, isRuntime defaults true"
+        passed: true
+      - step: "Delete confirm dialog"
+        expected: "window.confirm shown with key name before deletion"
+        actual: "window.confirm call in handleDelete with key in message"
+        passed: true
+      - step: "Export .env downloads file"
+        expected: ".env file downloaded with KEY=value lines"
+        actual: "Blob URL created, anchor click triggered, URL revoked"
+        passed: true
+      - step: "Import .env: parses KEY=value, strips comments"
+        expected: "Valid pairs imported; # lines and blank lines ignored"
+        actual: "parseEnvFile filters comments and blanks"
+        passed: true
+      - step: "Import overwrites warning"
+        expected: "window.confirm shown listing keys that will be overwritten"
+        actual: "overlapping keys computed, confirm shown before proceeding"
+        passed: true
+  gaps:
+    closed: true
+    count: 0

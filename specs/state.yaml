@@ -1,8 +1,8 @@
 type: session-state
 context: infra
-active_flow: build_epic
-active_epic_id: e41
-active_story_id: e41s01
+active_flow: null
+active_epic_id: null
+active_story_id: null
 release:
   target_version: 2.13.0
   codename: "Solo Dev Complete"
@@ -19,10 +19,10 @@ metrics:
   bcps_per_hour: 0.4
 epic_cycle:
   step: done
-  story_bcps: 2
-  story: e41s01
+  story_bcps: 4
+  story: e41s02
   audit_result: pass
-  note: "e41s01 released — env vars CRUD + AES-256-GCM + build/runtime injection. CI passed."
+  note: "e41 complete — backend CRUD + UI tab (masked display, import/export). Both CI runs passed."
 bug_cycle:
   current_step: 0
   completed_steps: []
@@ -35,10 +35,9 @@ handoff:
   last_step_completed: release-branch
   open_decisions: []
   next_skill: survey-context
-  summary: "e39s02 released — UI timeline animations, polling fix, lifecycle integration tests. Merged to main via solo-local. 42/55 epics complete."
+  summary: "e41 complete — env vars CRUD backend (AES-256-GCM) + UI tab (masked display, import/export). 745 Go tests. 44/55 epics done."
   context: |
-    Epic: e39 (Deploy — Streaming Logs & State Machine)
-    e39s01: done (log streaming)
-    e39s02: done (state machine — t1-t3 on main, t4+t5 done: UI timeline + lifecycle tests)
-    e39s03: planned (terminal-style log viewer)
-    720 Go tests + 282 UI tests pass on main
+    Epic: e41 (Deploy — Environment Variables UI)
+    e41s01: done (backend CRUD + AES-256-GCM + build/runtime injection)
+    e41s02: done (Admin UI tab — add/edit/delete, masked display, .env import/export)
+    Next: e42 (Deploy — Build Cache, WSJF 4.5)
