@@ -2,7 +2,7 @@ type: session-state
 context: infra
 active_flow: build_epic
 active_epic_id: e53
-active_story_id: e53s01
+active_story_id: e53s03
 release:
   target_version: 2.13.0
   codename: "Solo Dev Complete"
@@ -19,8 +19,8 @@ metrics:
   bcps_per_hour: 0.4
 epic_cycle:
   step: 7
-  story_bcps: 2
-  story: e53s01
+  story_bcps: 3
+  story: e53s03
   audit_result: pass
   note: "e53s02 (nextBackoff/isCrashLooping pure fns) bootstrapped in deepen-architecture session; s01 (interfaces+fakes) is the logical first story"
 bug_cycle:
