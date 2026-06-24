@@ -1,3 +1,12 @@
+# [2.43.0](https://github.com/danielvm-git/bigbase/compare/v2.42.0...v2.43.0) (2026-06-24)
+
+
+### Features
+
+* **deploy:** introduce Supervisor seam — Runner/Instance/Spec interfaces + restart policy (e53s01-s02) ([a0d6bb7](https://github.com/danielvm-git/bigbase/commit/a0d6bb7f6908142b34ab0158d3630aea2b321094)), closes [#40](https://github.com/danielvm-git/bigbase/issues/40)
+* **deploy:** Supervisor restart loop with crash-loop detection (e53s03) ([5a9dd77](https://github.com/danielvm-git/bigbase/commit/5a9dd7718233a72467f14dec300ed08168df619e))
+* **deploy:** wire Supervisor into resume path — static apps supervised on restart (e53s04) ([d195bd4](https://github.com/danielvm-git/bigbase/commit/d195bd4ed0302937f57b00361f4e93868acd0d46))
+
 # [2.42.0](https://github.com/danielvm-git/bigbase/compare/v2.41.0...v2.42.0) (2026-06-23)
 
 
