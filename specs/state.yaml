@@ -1,8 +1,8 @@
 type: session-state
 context: infra
-active_flow: null
-active_epic_id: null
-active_story_id: null
+active_flow: build_epic
+active_epic_id: e41
+active_story_id: e41s01
 release:
   target_version: 2.13.0
   codename: "Solo Dev Complete"
@@ -18,11 +18,11 @@ metrics:
   stories_completed: 138
   bcps_per_hour: 0.4
 epic_cycle:
-  step: done
+  step: 3
   story_bcps: 2
-  story: e39s03
-  audit_result: pass
-  note: "e39 complete — all 3 stories released (log streaming, state machine, terminal log viewer). e39s03 was already on main from prior release. Marked done."
+  story: e41s01
+  audit_result: null
+  note: "e41 starting — env vars backend (e41s01) first."
 bug_cycle:
   current_step: 0
   completed_steps: []
