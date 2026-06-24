@@ -18,23 +18,23 @@ metrics:
   stories_completed: 138
   bcps_per_hour: 0.4
 epic_cycle:
-  step: 3
+  step: done
   story_bcps: 2
   story: e41s01
-  audit_result: null
-  note: "e41 starting — env vars backend (e41s01) first."
+  audit_result: pass
+  note: "e41s01 released — env vars CRUD + AES-256-GCM + build/runtime injection. CI passed."
 bug_cycle:
   current_step: 0
   completed_steps: []
   bug_file: null
 git:
   branch: main
-  hash: 4309c10
+  hash: 8fd1501
   worktree: null
 handoff:
   last_step_completed: release-branch
   open_decisions: []
-  next_skill: null
+  next_skill: survey-context
   summary: "e39s02 released — UI timeline animations, polling fix, lifecycle integration tests. Merged to main via solo-local. 42/55 epics complete."
   context: |
     Epic: e39 (Deploy — Streaming Logs & State Machine)

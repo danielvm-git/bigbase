@@ -23,7 +23,7 @@ stories:
           API: GET /api/sites/:id/env-vars, POST, PUT /api/sites/:id/env-vars/:key, DELETE.
           Keys are uppercase alphanumeric + underscore (convention: DATABASE_URL, API_KEY, etc.).
           List is filtered by site_id. Keys must be unique per site.
-        verify: "go test ./components/deploy/ -run TestEnvVarsAPI -v"
+        verify: "go test ./components/sites/ -run TestEnvVarsAPI -v"
       - desc: "Inject env vars into build and runtime environments"
         notes: |
           In buildApp(): fetch site env vars,export them as process env for the build command.

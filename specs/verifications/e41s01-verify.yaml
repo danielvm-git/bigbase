@@ -1,0 +1,75 @@
+story_id: e41s01
+verified_at: "2026-06-24T16:28:17Z"
+verifier: verify-work
+branch: e41-env-vars-ui
+phases:
+  smoke:
+    passed: true
+    note: "Server started clean on port 9191; sites component logged 'ready'; env-vars migration ran automatically"
+  build:
+    passed: true
+    command: "go build ./..."
+  lint:
+    passed: true
+    note: "0 issues in components/sites/ and components/deploy/; pre-existing issues in auth/db not introduced by this story"
+  tests:
+    passed: true
+    command: "go test ./..."
+    count: 745
+    new_tests: 25
+    coverage_note: "15 TestEnvVarsAPI cases, 3 TestEnvVarsAPIWithEncryption, 1 TestEnvVarsSiteIsolation, 6 TestEnvVarInjection"
+  verify_commands:
+    task1:
+      command: "go test ./components/sites/ -run TestEnvVarsAPI -v"
+      passed: true
+      note: "Corrected from epic (was ./components/deploy/); TestEnvVarsAPI lives in sites package"
+    task2:
+      command: "go test ./components/deploy/ -run TestEnvVarInjection -v"
+      passed: true
+  manual:
+    steps:
+      - step: "GET /api/sites/:id/env-vars (empty)"
+        expected: "200 {data:[]}"
+        actual: "200 {data:[]}"
+        passed: true
+      - step: "POST DATABASE_URL (is_runtime=true)"
+        expected: "201 with key, value, is_runtime=true, timestamps"
+        actual: "201 correct — id, site_id, key, value, is_build_time=false, is_runtime=true, created_at, updated_at"
+        passed: true
+      - step: "POST API_KEY (is_build_time=true)"
+        expected: "201 with is_build_time=true"
+        actual: "201 correct"
+        passed: true
+      - step: "GET /api/sites/:id/env-vars (2 vars, sorted by key)"
+        expected: "200 data with 2 entries, sorted alphabetically"
+        actual: "200 — API_KEY first, DATABASE_URL second (alphabetical). Plaintext values returned."
+        passed: true
+      - step: "PUT DATABASE_URL — update value"
+        expected: "200 with new value, updated_at changed"
+        actual: "200 — postgres://prod/mydb, updated_at refreshed"
+        passed: true
+      - step: "POST DATABASE_URL again (duplicate)"
+        expected: "409 Conflict"
+        actual: "409"
+        passed: true
+      - step: "POST invalid_key (lowercase)"
+        expected: "400 Bad Request"
+        actual: "400"
+        passed: true
+      - step: "DELETE DATABASE_URL"
+        expected: "204 No Content"
+        actual: "204"
+        passed: true
+      - step: "GET after delete — only API_KEY"
+        expected: "200 data with 1 entry"
+        actual: "200 — only API_KEY remains"
+        passed: true
+      - step: "DELETE DATABASE_URL again (non-existent)"
+        expected: "404 Not Found"
+        actual: "404"
+        passed: true
+  gaps:
+    closed: true
+    count: 0
+    notes:
+      - "Epic verify command for task1 pointed to wrong package (deploy vs sites) — corrected in epic.yaml"
