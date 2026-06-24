@@ -19,10 +19,10 @@ metrics:
   bcps_per_hour: 0.4
 epic_cycle:
   step: done
-  story_bcps: 3
-  story: e39s02
+  story_bcps: 2
+  story: e39s03
   audit_result: pass
-  note: "e39s02 released — UI timeline animations, polling fix, lifecycle integration tests. Merged to main via solo-local. 42/55 epics complete."
+  note: "e39 complete — all 3 stories released (log streaming, state machine, terminal log viewer). e39s03 was already on main from prior release. Marked done."
 bug_cycle:
   current_step: 0
   completed_steps: []

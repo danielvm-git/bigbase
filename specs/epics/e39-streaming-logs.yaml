@@ -4,7 +4,7 @@ id: e39
 title: "Deploy — Streaming Build Logs & State Machine"
 wsjf: 5.0
 wsjf_rationale: "BV=9(critical: debugging alone is the #1 solo dev pain — real-time logs are your only pair programmer) TC=5(no deadline, but every failed deploy without logs is a productivity black hole) RR=8(elimoinates 'why did my deploy fail?' guesswork) / JS=4(~3 days across 3 stories)"
-status: in_progress
+status: done
 tier: 1
 depends_on: []
 covers:
@@ -117,7 +117,7 @@ stories:
 
   - id: e39s03
     title: "Terminal-style live log viewer in admin UI"
-    status: planned
+    status: done
     bcps: 2
     tasks:
       - id: e39s03t1
