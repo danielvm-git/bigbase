@@ -1,0 +1,90 @@
+type: epic-shard
+context: domain
+id: e53
+title: "Deploy — Process Supervisor (Runner/Instance seam)"
+wsjf: 6.0
+wsjf_rationale: "BV=10(keystone: 5/6 live sites broken from missing supervision — restart-on-crash + guaranteed host re-registration) TC=9(blocks e43 health, e44 rollback, e45 drain — all are tenants of this seam per ADR 0004) RR=8(closes the 502 / TLS-refused / wrong-landing failure classes by construction) / JS=4.5(~3 days, 4 TDD stories)"
+status: planned
+tier: 4
+github_issue: 40
+adr: specs/adr/0004-no-docker-go-supervisor.md
+depends_on:
+  - e40
+covers:
+  - components/deploy/
+keystone_for:
+  - e43  # health probe fills Instance.Health() (stubbed here)
+  - e44  # rollback re-spawns a prior Spec through the same Runner
+  - e45  # drain coordinates Stop(grace) with the proxy DeploymentHostRegistry
+
+# Design crystallized via /deepen-architecture (2026-06-23). Forks resolved:
+#   - Scope: restart policy + resume-on-boot. Instance.Health() is a `return nil`
+#     stub this epic; e43 makes it real.
+#   - Instance: unified — process apps (exec.Cmd) AND static servers (http.Server)
+#     both satisfy it. Formalizes the nil-field union that runningApp already is.
+#   - Restart model: single-use Instance. Supervisor re-calls Runner.Spawn(spec)
+#     per attempt — honest about exec.Cmd's one-shot lifecycle (Ousterhout: define
+#     errors out of existence; no re-callable Start() hiding a rebuild side effect).
+#   - Boot paths: triggerDeploy AND resumeCandidates both funnel through
+#     Supervisor.Run(spec), collapsing the two split boot paths that exist today.
+#
+# Seam (the test surface):
+#   type Spec struct { DeployID, Host string; Port int; Dir string; AppType AppType;
+#                      Env, StartCmd []string }   # immutable; only state that survives a restart
+#   type Instance interface { Wait() error; Stop(grace time.Duration) error; Health(ctx) error }
+#   type Runner   interface { Spawn(ctx, spec Spec) (Instance, error) }   # FakeRunner returns scripted Instances
+#   type Clock    interface { Now() time.Time; Sleep(d time.Duration) }   # FakeClock for backoff + window
+
+stories:
+  - id: e53s01
+    title: "Runner/Instance/Spec seam + FakeRunner; existing fleet tests stay green"
+    bcps: 2
+    status: in_progress
+    tasks:
+      - desc: "components/deploy/runner.go — Spec struct (DeployID, Host, Port, Dir, AppType, Env, StartCmd); Instance interface (Wait/Stop/Health); Runner interface (Spawn); Clock interface (Now/Sleep)"
+        verify: "go build ./components/deploy/"
+      - desc: "components/deploy/supervisor_fakes_test.go (package deploy) — FakeInstance(waitErr error, stopCh); FakeRunner(queue []*FakeInstance) Spawn pops next; FakeClock(Sleeps []time.Duration); TestFakeRunnerSpawnsScriptedInstances drives [crash,crash,ok] sequence"
+        verify: "go test ./components/deploy/ -run TestFakeRunnerSpawnsScriptedInstances -v"
+      - desc: "Existing safety-net tests unaffected — runner.go adds interface types only, no Deploy struct modifications"
+        notes: "Production adapters (processInstance, staticInstance) are added in e53s03 when wired into the Supervisor — YAGNI."
+        verify: "go test ./components/deploy/ -run 'TestRestoreFleetHostsOnRestart|TestDeployRestoresHostsOnStart' -v"
+
+  - id: e53s02
+    title: "Restart policy — pure nextBackoff + isCrashLooping (clock-injected)"
+    bcps: 2
+    tasks:
+      - desc: "nextBackoff(attempt) = jitter(min(cap, base*factor^attempt)); base 1s, factor 2, cap 60s; full jitter"
+        notes: |
+          Full jitter is load-bearing, not cosmetic: resume re-spawns the whole fleet
+          at once, so synchronized backoff would crash-and-retry in lockstep (thundering
+          herd on the VPS). Test asserts bounds [0, min(cap, base*factor^attempt)] and
+          that the cap holds for large attempt.
+        verify: "go test ./components/deploy/ -run TestNextBackoff -v"
+      - desc: "isCrashLooping(history, now) — N=5 restarts within window T=60s → true; named constants exposed as flags (no magic numbers)"
+        verify: "go test ./components/deploy/ -run TestIsCrashLooping -v"
+
+  - id: e53s03
+    title: "Supervisor restart loop — crash → respawn; crash-loop → failed + de-register + event"
+    bcps: 3
+    tasks:
+      - desc: "Supervisor.supervise: Spawn → register host → Wait → backoff → re-Spawn, driven by FakeRunner + FakeClock"
+        verify: "go test ./components/deploy/ -run TestSupervisorRespawnsAfterBackoff -v"
+      - desc: "Crash-loop trip: status→failed, UnregisterDeploymentHost(host), emit deploy.crash_looped with remediation hint"
+        notes: |
+          This is the primary correctness argument (ADR 0004): because a host is
+          registered only while supervised-alive and de-registered on `failed`, the
+          live failure classes from the 2026-06-23 audit — registered-but-dead (502),
+          registered-stale (wrong landing), unregistered (on-demand-TLS refuses a cert)
+          — become unreachable states, not merely recoverable ones.
+        verify: "go test ./components/deploy/ -run TestSupervisorCrashLoopDeregistersHost -v"
+      - desc: "Explicit Stop(grace) is distinguished from a crash — Supervisor does not respawn after an intentional stop"
+        verify: "go test ./components/deploy/ -run TestSupervisorNoRespawnAfterStop -v"
+
+  - id: e53s04
+    title: "Unify boot paths — triggerDeploy and resume both funnel through Supervisor.Run(spec)"
+    bcps: 2
+    tasks:
+      - desc: "triggerDeploy builds a Spec and calls Supervisor.Run for both static and process apps"
+        verify: "go test ./components/deploy/ -run TestTriggerRunsThroughSupervisor -v"
+      - desc: "resumeCandidates builds Specs from running rows and calls Supervisor.Run; host guaranteed registered on resume"
+        verify: "go test ./components/deploy/ -run TestRestoreFleetHostsOnRestart -v"
