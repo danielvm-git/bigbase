@@ -100,20 +100,22 @@ type Deploy struct {
 	sm           *stateMachine
 	eventBus     *kernel.EventBus
 	supervisor   *Supervisor
+	envKey       []byte
 }
 
 type Options struct {
-	DB           DBer
-	Logger       Logger
-	BuildsDir    string
-	GitDir       string
-	BuildHome    string
-	BasePort     int
-	PublicDomain string
-	UseHTTPS     bool
-	HostRouter   DeploymentHostRegistry
+	DB               DBer
+	Logger           Logger
+	BuildsDir        string
+	GitDir           string
+	BuildHome        string
+	BasePort         int
+	PublicDomain     string
+	UseHTTPS         bool
+	HostRouter       DeploymentHostRegistry
+	EnvEncryptionKey string
 	// Runner is injected for tests; nil uses the production deployRunner.
-	Runner       Runner
+	Runner Runner
 }
 
 func New(opts Options) *Deploy {
@@ -159,6 +161,9 @@ func New(opts Options) *Deploy {
 		apps:         make(map[string]*runningApp),
 		logHubs:      make(map[string]*logHub),
 		sm:           newStateMachine(),
+	}
+	if envKey, err := parseEnvEncryptionKey(opts.EnvEncryptionKey); err == nil {
+		d.envKey = envKey
 	}
 	runner := opts.Runner
 	if runner == nil {
@@ -730,7 +735,7 @@ func (d *Deploy) runDeployment(deploy *Deployment, buildDir, repoName string) {
 		return
 	}
 
-	if err := d.buildApp(ctx, deploy.ID, buildDir, appType, manifest); err != nil {
+	if err := d.buildApp(ctx, deploy.ID, deploy.SiteID, buildDir, appType, manifest); err != nil {
 		d.logger.Error("build app", "type", appType, "error", err)
 		d.failDeployment(deploy.ID, err)
 		return
@@ -806,32 +811,34 @@ func (d *Deploy) getCommitSHA(buildDir string) (string, error) {
 	return strings.TrimSpace(string(out)), nil
 }
 
-func (d *Deploy) buildApp(ctx context.Context, deployID string, buildDir string, appType AppType, manifest *Manifest) error {
+func (d *Deploy) buildApp(ctx context.Context, deployID, siteID, buildDir string, appType AppType, manifest *Manifest) error {
+	siteEnv, _ := d.FetchSiteEnvVars(ctx, siteID, true)
+
 	// Use manifest build command if present, falling back to auto-detection.
 	if manifest != nil && manifest.Build.Command != "" {
 		parts := strings.Fields(manifest.Build.Command)
 		if len(parts) > 0 {
-			return d.runBuildCommand(ctx, deployID, buildDir, parts[0], parts[1:]...)
+			return d.runBuildCommand(ctx, deployID, buildDir, siteEnv, parts[0], parts[1:]...)
 		}
 	}
 
 	switch appType {
 	case AppNode:
-		if err := d.runBuildCommand(ctx, deployID, buildDir, "npm", "install"); err != nil {
+		if err := d.runBuildCommand(ctx, deployID, buildDir, nil, "npm", "install"); err != nil {
 			return fmt.Errorf("npm install: %w", err)
 		}
 		if err := ValidateNodeBuildScript(buildDir); err != nil {
 			d.appendDeployLog(deployID, "✗ "+err.Error())
 			return err
 		}
-		if err := d.runBuildCommand(ctx, deployID, buildDir, "npm", "run", "build"); err != nil {
+		if err := d.runBuildCommand(ctx, deployID, buildDir, siteEnv, "npm", "run", "build"); err != nil {
 			return fmt.Errorf("npm run build: %w", err)
 		}
 		return nil
 	case AppGo:
-		return d.runBuildCommand(ctx, deployID, buildDir, "go", "build", "-o", "app", ".")
+		return d.runBuildCommand(ctx, deployID, buildDir, siteEnv, "go", "build", "-o", "app", ".")
 	case AppPython:
-		return d.runBuildCommand(ctx, deployID, buildDir, "pip", "install", "--break-system-packages", "-r", "requirements.txt")
+		return d.runBuildCommand(ctx, deployID, buildDir, siteEnv, "pip", "install", "--break-system-packages", "-r", "requirements.txt")
 	}
 	return nil
 }
@@ -841,14 +848,14 @@ func FormatBuildCommand(name string, args ...string) string {
 	return strings.Join(parts, " ")
 }
 
-func (d *Deploy) runBuildCommand(ctx context.Context, deployID, dir, name string, args ...string) error {
+func (d *Deploy) runBuildCommand(ctx context.Context, deployID, dir string, extraEnv []string, name string, args ...string) error {
 	label := FormatBuildCommand(name, args...)
 	d.appendDeployLog(deployID, "→ Running: "+label)
 
 	var stderr, stdout bytes.Buffer
 	cmd := exec.CommandContext(ctx, name, args...)
 	cmd.Dir = dir
-	cmd.Env = d.buildCmdEnv()
+	cmd.Env = append(d.buildCmdEnv(), extraEnv...)
 	cmd.Stderr = &stderr
 	cmd.Stdout = &stdout
 	if err := cmd.Run(); err != nil {
@@ -908,6 +915,11 @@ func (d *Deploy) startApp(ctx context.Context, buildDir string, deploy *Deployme
 	}
 
 	cmd.Env = append(os.Environ(), fmt.Sprintf("PORT=%d", deploy.Port))
+
+	// Inject site env vars (runtime) into the running process.
+	if siteEnv, err := d.FetchSiteEnvVars(ctx, deploy.SiteID, false); err == nil {
+		cmd.Env = append(cmd.Env, siteEnv...)
+	}
 
 	// Inject manifest environment variables into the running process.
 	if manifest != nil {

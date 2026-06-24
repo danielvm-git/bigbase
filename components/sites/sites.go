@@ -71,6 +71,7 @@ type Sites struct {
 	gitDir            string
 	triggerDeploy     DeployTrigger
 	deleteSiteCleanup DeleteSiteCleanupFunc
+	encryptionKey     []byte
 }
 
 type Options struct {
@@ -79,6 +80,7 @@ type Options struct {
 	GitDir            string
 	TriggerDeploy     DeployTrigger
 	DeleteSiteCleanup DeleteSiteCleanupFunc
+	EnvEncryptionKey  string
 }
 
 func New(opts Options) *Sites {
@@ -90,7 +92,8 @@ func New(opts Options) *Sites {
 	if gitDir == "" {
 		gitDir = "data/git"
 	}
-	return &Sites{db: opts.DB, logger: logger, gitDir: gitDir, triggerDeploy: opts.TriggerDeploy, deleteSiteCleanup: opts.DeleteSiteCleanup}
+	key, _ := parseEncryptionKey(opts.EnvEncryptionKey)
+	return &Sites{db: opts.DB, logger: logger, gitDir: gitDir, triggerDeploy: opts.TriggerDeploy, deleteSiteCleanup: opts.DeleteSiteCleanup, encryptionKey: key}
 }
 
 func (s *Sites) Name() string                  { return "sites" }
@@ -117,6 +120,9 @@ func (s *Sites) Start(ctx *kernel.Context) error {
 	}
 	if err := s.migrateDomains(); err != nil {
 		return fmt.Errorf("migrate site_domains: %w", err)
+	}
+	if err := s.migrateEnvVars(); err != nil {
+		return fmt.Errorf("migrate site_env_vars: %w", err)
 	}
 	s.logger.Info("sites component ready")
 	return nil
@@ -188,6 +194,11 @@ func (s *Sites) handleSiteByID(w http.ResponseWriter, r *http.Request) {
 	// Route domain sub-paths: /api/sites/{id}/domains[/{domain}/verify]
 	if len(parts) >= 2 && parts[1] == "domains" {
 		s.handleDomains(w, r)
+		return
+	}
+
+	if len(parts) >= 2 && parts[1] == "env-vars" {
+		s.handleEnvVarsRoute(w, r, id, parts)
 		return
 	}
 
