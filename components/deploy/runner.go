@@ -2,6 +2,8 @@ package deploy
 
 import (
 	"context"
+	"net/http"
+	"os/exec"
 	"time"
 )
 
@@ -46,3 +48,43 @@ type Clock interface {
 	Now() time.Time
 	Sleep(d time.Duration)
 }
+
+// processInstance wraps exec.Cmd. Single-use: Wait calls cmd.Wait; Stop kills
+// the process. Production log streaming is driven by the deployRunner goroutines.
+type processInstance struct {
+	cmd *exec.Cmd
+}
+
+func (p *processInstance) Wait() error { return p.cmd.Wait() }
+
+func (p *processInstance) Stop(_ time.Duration) error {
+	if p.cmd.Process == nil {
+		return nil
+	}
+	_ = p.cmd.Process.Kill()
+	return nil
+}
+
+func (p *processInstance) Health(_ context.Context) error { return nil }
+
+// staticInstance wraps http.Server. Wait calls ListenAndServe (blocks until
+// the server closes); Stop calls Shutdown with the given grace period.
+type staticInstance struct {
+	srv *http.Server
+}
+
+func (s *staticInstance) Wait() error {
+	err := s.srv.ListenAndServe()
+	if err == http.ErrServerClosed {
+		return nil
+	}
+	return err
+}
+
+func (s *staticInstance) Stop(grace time.Duration) error {
+	ctx, cancel := context.WithTimeout(context.Background(), grace)
+	defer cancel()
+	return s.srv.Shutdown(ctx)
+}
+
+func (s *staticInstance) Health(_ context.Context) error { return nil }

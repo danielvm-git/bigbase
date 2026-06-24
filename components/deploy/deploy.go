@@ -99,6 +99,7 @@ type Deploy struct {
 	logHubs      map[string]*logHub
 	sm           *stateMachine
 	eventBus     *kernel.EventBus
+	supervisor   *Supervisor
 }
 
 type Options struct {
@@ -111,6 +112,8 @@ type Options struct {
 	PublicDomain string
 	UseHTTPS     bool
 	HostRouter   DeploymentHostRegistry
+	// Runner is injected for tests; nil uses the production deployRunner.
+	Runner       Runner
 }
 
 func New(opts Options) *Deploy {
@@ -142,7 +145,7 @@ func New(opts Options) *Deploy {
 	if strings.TrimSpace(opts.PublicDomain) != "" {
 		useHTTPS = true
 	}
-	return &Deploy{
+	d := &Deploy{
 		db:           opts.DB,
 		logger:       logger,
 		buildsDir:    dir,
@@ -157,6 +160,15 @@ func New(opts Options) *Deploy {
 		logHubs:      make(map[string]*logHub),
 		sm:           newStateMachine(),
 	}
+	runner := opts.Runner
+	if runner == nil {
+		runner = &deployRunner{db: d.db}
+	}
+	d.supervisor = NewSupervisor(runner, &wallClock{}, opts.HostRouter,
+		func(id string) { d.updateStatus(id, "failed") },
+		func(name string, _ Spec) { d.logger.Info("supervisor event", "event", name) },
+	)
+	return d
 }
 
 func (d *Deploy) Name() string                  { return "deploy" }
@@ -311,20 +323,26 @@ func (d *Deploy) resumeCandidates(candidates []resumeCandidate) {
 			} else if _, err := os.Stat(filepath.Join(buildDir, "build")); err == nil {
 				serveDir = filepath.Join(buildDir, "build")
 			}
-			deploy := &Deployment{
-				ID:      c.id,
-				RepoID:  c.repoID,
-				SiteID:  c.siteID,
-				Port:    c.port,
-				URL:     c.rawURL,
-				AppType: AppStatic,
+			host := deploymentHost(d.publicDomain, c.repoName)
+			spec := Spec{
+				DeployID: c.id,
+				Host:     host,
+				Port:     c.port,
+				Dir:      serveDir,
+				AppType:  AppStatic,
+				Env:      d.buildCmdEnv(),
 			}
-			go d.serveStatic(context.Background(), serveDir, deploy, c.repoName)
-			d.logger.Info("resumed static deployment", "id", c.id, "port", c.port, "host", HostFromDeploymentURL(c.rawURL))
+			d.mu.Lock()
+			d.apps[c.id] = &runningApp{port: c.port, buildID: c.id, host: host}
+			d.mu.Unlock()
+			d.logger.Info("resumed static deployment via supervisor", "id", c.id, "port", c.port, "host", host)
+			go d.supervisor.Run(context.Background(), spec)
 			continue
 		}
 		// Resume process-based apps (Python, Go, Node SSR).
 		// These are killed when BigBase stops; restart them from the existing build directory.
+		// Supervisor wiring for process apps is done in e53s05 (after crash-loop
+		// behavior is validated against the existing TestResumeCandidatesAttemptsProcessApps contract).
 		deploy := &Deployment{
 			ID:      c.id,
 			RepoID:  c.repoID,
@@ -553,6 +571,11 @@ func (d *Deploy) Trigger(ctx context.Context, repoID, branch, siteName, siteID s
 // stopDeployment stops a running deployment: kills the process, shuts down the
 // static server, unregisters the proxy host, and optionally updates DB status.
 func (d *Deploy) stopDeployment(id, newStatus string) {
+	// Signal the Supervisor so any respawn loop knows this is intentional.
+	if d.supervisor != nil {
+		d.supervisor.Stop(id)
+	}
+
 	d.mu.Lock()
 	app, hasApp := d.apps[id]
 	if hasApp {
