@@ -1,3 +1,15 @@
+# [2.44.0](https://github.com/danielvm-git/bigbase/compare/v2.43.0...v2.44.0) (2026-06-24)
+
+
+### Bug Fixes
+
+* **ui:** reduce poll interval to 2s and include 'deploying' in active-status check ([a98b303](https://github.com/danielvm-git/bigbase/commit/a98b303e0173f671f3545a7e54aad71996fdb002))
+
+
+### Features
+
+* **ui:** enhance StatusTimeline with animations, Live badge, and failed indicator ([491afa4](https://github.com/danielvm-git/bigbase/commit/491afa44b825318daddbc4b6eb47326a6e1d25c0))
+
 # [2.43.0](https://github.com/danielvm-git/bigbase/compare/v2.42.0...v2.43.0) (2026-06-24)
 
 
