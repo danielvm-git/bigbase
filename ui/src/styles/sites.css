@@ -723,3 +723,45 @@ ol.wizard-steps,
 .source-panel {
   margin-top: var(--space-8);
 }
+
+/* ── StatusTimeline animations ── */
+@keyframes status-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+@keyframes status-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: 0.5; transform: scale(0.7); }
+}
+
+.status-dot-spin {
+  animation: status-spin 1.5s linear infinite;
+}
+
+.status-dot-pulse {
+  animation: status-pulse 1s ease-in-out infinite;
+  box-shadow: 0 0 6px rgba(255, 183, 0, 0.6);
+}
+
+.status-dot-live::after {
+  content: '✓';
+  display: block;
+  width: 100%;
+  height: 100%;
+  font-size: 8px;
+  line-height: 10px;
+  text-align: center;
+  color: #fff;
+}
+
+.status-dot-failed::after {
+  content: '✕';
+  display: block;
+  width: 100%;
+  height: 100%;
+  font-size: 8px;
+  line-height: 10px;
+  text-align: center;
+  color: #fff;
+}
