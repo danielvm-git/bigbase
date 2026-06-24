@@ -247,9 +247,9 @@ export default function SiteDetailPage() {
   useEffect(() => { load() }, [load])
 
   useEffect(() => {
-    const active = deployments.some(d => d.status === 'pending' || d.status === 'building')
+    const active = deployments.some(d => d.status === 'pending' || d.status === 'building' || d.status === 'deploying')
     if (!active || previewMode) return
-    const t = setInterval(load, 3000)
+    const t = setInterval(load, 2000)
     return () => clearInterval(t)
   }, [deployments, previewMode, load])
 
