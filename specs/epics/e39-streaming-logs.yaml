@@ -33,7 +33,7 @@ stories:
 
   - id: e39s02
     title: "Deployment state machine — pending -> building -> deploying -> running/failed"
-    status: active
+    status: done
     bcps: 3
     notes: |
       v2 SAFETY DESIGN: 'running' is terminal state (NOT 'live'). Zero SQL queries change.
@@ -72,7 +72,7 @@ stories:
 
       - id: e39s02t4
         desc: "Enhance admin UI status timeline — animations, polling, Live badge"
-        status: active
+        status: done
         notes: |
           Already done on main:
             - Types: DeploymentStatus includes 'deploying' ✅
@@ -92,6 +92,7 @@ stories:
 
       - id: e39s02t5
         desc: "Integration test — full lifecycle + restart cycle"
+        status: done
         notes: |
           Test 1: Full lifecycle (static site)
             - Create repo, trigger deploy
