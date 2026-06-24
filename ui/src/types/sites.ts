@@ -52,6 +52,17 @@ export interface Site {
   github_connected?: boolean
 }
 
+export interface EnvVar {
+  id: string
+  site_id: string
+  key: string
+  value: string
+  is_build_time: boolean
+  is_runtime: boolean
+  created_at: string
+  updated_at: string
+}
+
 export type SiteSource = 'github' | 'existing' | 'empty' | 'template'
 
 export interface SitesDataResult<T> {

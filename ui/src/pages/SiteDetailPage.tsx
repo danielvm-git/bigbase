@@ -12,6 +12,7 @@ import {
   TerminalLogViewer,
   Tabs,
   RequestLogs,
+  SiteEnvVarsTab,
 } from '../components'
 import { getSite, getSiteDeployments, deleteSite, getSiteManifest, saveSiteManifest } from '../lib/sitesData'
 import { isPreviewForced, previewQuerySuffix } from '../lib/previewMode'
@@ -261,6 +262,7 @@ export default function SiteDetailPage() {
     { id: 'deployments', label: 'Deployments' },
     { id: 'logs', label: 'Build Logs' },
     { id: 'request-logs', label: 'Request Logs' },
+    { id: 'env-vars', label: 'Env Vars' },
     { id: 'manifest', label: 'Manifest' },
   ]
 
@@ -479,6 +481,10 @@ export default function SiteDetailPage() {
             onRefresh={refreshReqLogs}
           />
         </div>
+      )}
+
+      {activeTab === 'env-vars' && (
+        <SiteEnvVarsTab siteId={siteId} />
       )}
 
       {activeTab === 'manifest' && (
