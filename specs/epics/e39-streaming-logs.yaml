@@ -4,7 +4,7 @@ id: e39
 title: "Deploy — Streaming Build Logs & State Machine"
 wsjf: 5.0
 wsjf_rationale: "BV=9(critical: debugging alone is the #1 solo dev pain — real-time logs are your only pair programmer) TC=5(no deadline, but every failed deploy without logs is a productivity black hole) RR=8(elimoinates 'why did my deploy fail?' guesswork) / JS=4(~3 days across 3 stories)"
-status: planned
+status: in_progress
 tier: 1
 depends_on: []
 covers:
@@ -43,110 +43,51 @@ stories:
       Root cause of v1 outage: pre-existing resumeCandidates bug (fixed v2.36.2).
     tasks:
       - id: e39s02t1
-        desc: "New file: components/deploy/state_machine.go — define DeploymentState type + stateMachine with valid transitions"
+        desc: "components/deploy/state_machine.go — define DeploymentState type + stateMachine with valid transitions"
+        status: done
         notes: |
-          --- DeploymentState type (string) with constants ---
-          StatePending   = "pending"
-          StateBuilding  = "building"
-          StateDeploying = "deploying"
-          StateRunning   = "running"
-          StateFailed    = "failed"
-
-          --- stateMachine struct ---
-          valid map[string][]string:
-            pending   -> [building]
-            building  -> [deploying, running, failed]
-            deploying -> [running, failed]
-            running   -> []         (terminal)
-            failed    -> []         (terminal)
-
-          --- Methods ---
-          CanTransition(from, to string) bool
-          ValidTransitions(from string) []string
-          IsValidState(status string) bool
-
-          --- StatusTransition struct ---
-          type StatusTransition struct {
-            From      string `json:"from"`
-            To        string `json:"to"`
-            Timestamp string `json:"timestamp"`
-          }
-
-          All logic is pure Go, no DB dependency — fully testable standalone.
+          Already implemented and on main. Verified: 4 tests pass (TestStateMachineValidTransitions,
+          TestStateMachineInvalidTransitions, TestStateMachineIsValidState, TestStateConstants).
+          TestStateMachineStruct also passes.
         verify: "go test ./components/deploy/ -run TestStateMachine -v"
 
       - id: e39s02t2
-        desc: "Add TransitionState() method to Deploy — validated transition + DB persistence + lenient mode"
+        desc: "TransitionState() method — validated transition + DB persistence + lenient mode"
+        status: done
         notes: |
-          func (d *Deploy) TransitionState(ctx, id, newStatus string) error:
-            1. Query current status from DB
-            2. If same status — return nil (idempotent, no error)
-            3. If current status is UNKNOWN to state machine — ALLOW (lenient mode, log warning)
-            4. Validate transition via stateMachine.CanTransition()
-            5. Return error if invalid (with allowed next states in message)
-            6. Build StatusTransition{From, To, Timestamp=time.Now().UTC().RFC3339}
-            7. UPDATE deployments SET status = ? WHERE id = ?
-            8. Append to status_history TEXT column (JSON array)
-            9. Emit kernel event 'deploy.state_changed' (nil-safe, see e39s02t3)
-            10. Return nil
-
-          DB migration (idempotent, in Start()):
-            ALTER TABLE deployments ADD COLUMN status_history TEXT DEFAULT '[]'
-            (Existing rows get '[]' — no data migration needed)
-
-          CRITICAL: DO NOT change any SQL query that uses WHERE status = 'running'.
-          The state machine keeps 'running' as terminal state; zero queries change.
-
-          Refactor existing call sites:
-            - runDeployment(): use TransitionState() instead of updateStatus()
-            - failDeployment(): use TransitionState(id, "failed")
-            - startApp() on failure: TransitionState(id, "failed")
-            - updateStatus() now delegates to TransitionState() (keep the method name)
-
-          Do NOT touch stopDeployment() — it uses direct DB UPDATE for 'replaced'.
-          Update Deployment struct to include StatusHistory field.
-        verify: "go test ./components/deploy/ -run TestDeployStateMachine -v"
+          Already implemented and on main. TransitionState() at deploy.go:984.
+          5 tests pass: TestTransitionStateValidTransitions, TestTransitionStateInvalidRejected,
+          TestTransitionStateIdempotent, TestTransitionStateLenientMode,
+          TestTransitionStateStatusHistoryPersistence.
+          Deployment struct includes StatusHistory field. Call sites already refactored.
+        verify: "go test ./components/deploy/ -run TestTransitionState -v"
 
       - id: e39s02t3
         desc: "Emit deploy.state_changed events on kernel event bus"
+        status: done
         notes: |
-          Add field to Deploy struct: eventBus *kernel.EventBus
-          In Start(): d.eventBus = ctx.Kernel.EventBus()
-
-          In TransitionState(), after DB update:
-            d.eventBus.Emit(kernel.Event{
-              Name: "deploy.state_changed",
-              Data: map[string]any{
-                "deployment_id": id,
-                "from_state":    from,
-                "to_state":      to,
-                "timestamp":     timestamp,
-              },
-            })
-
-          Wire Hooks() to return handlers (monitoring logs state transitions).
-          Nil-safe: skip emit if eventBus is nil (tests without full kernel).
+          Already implemented and on main. eventBus field at deploy.go:101.
+          2 tests pass: TestTransitionStateEmitsEvent, TestTransitionStateNilEventBus.
         verify: "go test ./components/deploy/ -run TestStateEvents -v"
 
       - id: e39s02t4
-        desc: "Add status polling + state history timeline to admin UI"
+        desc: "Enhance admin UI status timeline — animations, polling, Live badge"
+        status: active
         notes: |
-          Backend: Deployment JSON now includes status_history.
-          Frontend (ui/src/pages/SiteDetailPage.tsx):
-            - Add 'deploying' to DeploymentStatus type (running already exists)
-            - StatusTimeline renders full transition history
+          Already done on main:
+            - Types: DeploymentStatus includes 'deploying' ✅
+            - StatusTransition + status_history in Deployment interface ✅
+            - StatusTimeline component renders colored dots + step labels ✅
+          
+          Remaining:
             - Visual indicators:
-              pending   -> gray dot
-              building  -> spinning animation
-              deploying -> yellow/pulse animation
-              running   -> green checkmark (display as 'Live' in UI)
-              failed    -> red X
-            - Auto-poll every 2s when status is in-progress (already exists)
-
-          Types (ui/src/types/sites.ts):
-            type DeploymentStatus = 'pending' | 'building' | 'deploying' | 'running' | 'failed'
-            interface StatusTransition { from: string; to: string; timestamp: string }
-            interface Deployment { status_history?: StatusTransition[] }
+              pending   -> gray dot (exists)
+              building  -> spinning/pulse animation (currently plain dot)
+              deploying -> yellow/pulse animation (currently plain dot)
+              running   -> green checkmark, display as 'Live' badge (currently brand dot)
+              failed    -> red X (exists as red dot)
+            - Poll interval: currently 3s → change to 2s; add 'deploying' to active-status check
+            - Add CSS keyframe animations for in-progress states
         verify: "cd ui && npm run build"
 
       - id: e39s02t5

@@ -4,7 +4,7 @@ id: e37
 title: "SvelteKit Deployment — static (adapter-static) & SSR (adapter-node)"
 wsjf: 4.0
 wsjf_rationale: "BV=6 (removes friction for major framework) TC=3 (no deadline) RR=3 (fixes known gap) / JS=3 (2-3 days)"
-status: pending
+status: done
 stories:
   - id: e37s01
     title: "SvelteKit static and SSR deployment from git repos"
