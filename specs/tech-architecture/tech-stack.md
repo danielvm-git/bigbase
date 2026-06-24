@@ -134,10 +134,20 @@ containers (see ADR 0004). Canonical terms:
 - **Supervisor** — owns the fleet of running deployments: restart policy (backoff +
   crash-loop detection), health probing, resume-on-boot, and guaranteed proxy host
   (re)registration. The Go equivalent of Docker `restart: unless-stopped` + healthchecks.
-- **Instance** — one running deployment (a subprocess app or an in-process static server)
-  behind the `Runner` seam. Exposes `Start` / `Stop(grace)` / `Health`.
-- **Runner** — the seam that spawns Instances (`Spawn(spec)`); a `FakeRunner` makes
-  supervision logic testable without real processes.
+- **Instance** — one *single-use* live run of a deployment (a subprocess app or an
+  in-process static server), unified behind the `Runner` seam. Exposes `Wait` /
+  `Stop(grace)` / `Health`. Spawning belongs to the `Runner`, not the Instance: `Wait`
+  returns once, then the Instance is spent. The Supervisor restarts by re-spawning a
+  fresh Instance from the `Spec`, never by re-starting a dead one — this keeps
+  `exec.Cmd`'s real one-shot lifecycle honest at the interface rather than hidden
+  behind a re-callable `Start`.
+- **Spec** — the immutable description of *what* to run (deploy ID, host, port, dir,
+  app type, env, start command). Built once by Deploy from the deployment row + manifest
+  and handed to `Runner.Spawn(ctx, spec)`. The only state that survives a restart;
+  restart history lives in the Supervisor, not the Instance.
+- **Runner** — the seam that spawns Instances (`Spawn(ctx, spec) → Instance`); a
+  `FakeRunner` returns scripted Instances (e.g. `[crash, crash, ok]`) so supervision
+  logic is testable without real processes.
 - **Isolator** — the seam that applies per-app resource caps. Production adapter spawns
   through a **systemd transient scope** (`MemoryMax` / `CPUQuota` / `TasksMax`); a no-op
   adapter is used on macOS dev. BigBase never reimplements cgroups.
