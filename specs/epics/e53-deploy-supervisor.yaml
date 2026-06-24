@@ -4,7 +4,7 @@ id: e53
 title: "Deploy — Process Supervisor (Runner/Instance seam)"
 wsjf: 6.0
 wsjf_rationale: "BV=10(keystone: 5/6 live sites broken from missing supervision — restart-on-crash + guaranteed host re-registration) TC=9(blocks e43 health, e44 rollback, e45 drain — all are tenants of this seam per ADR 0004) RR=8(closes the 502 / TLS-refused / wrong-landing failure classes by construction) / JS=4.5(~3 days, 4 TDD stories)"
-status: planned
+status: done
 tier: 4
 github_issue: 40
 adr: specs/adr/0004-no-docker-go-supervisor.md
@@ -39,7 +39,7 @@ stories:
   - id: e53s01
     title: "Runner/Instance/Spec seam + FakeRunner; existing fleet tests stay green"
     bcps: 2
-    status: in_progress
+    status: done
     tasks:
       - desc: "components/deploy/runner.go — Spec struct (DeployID, Host, Port, Dir, AppType, Env, StartCmd); Instance interface (Wait/Stop/Health); Runner interface (Spawn); Clock interface (Now/Sleep)"
         verify: "go build ./components/deploy/"
@@ -52,6 +52,7 @@ stories:
   - id: e53s02
     title: "Restart policy — pure nextBackoff + isCrashLooping (clock-injected)"
     bcps: 2
+    status: done
     tasks:
       - desc: "nextBackoff(attempt) = jitter(min(cap, base*factor^attempt)); base 1s, factor 2, cap 60s; full jitter"
         notes: |
@@ -66,6 +67,7 @@ stories:
   - id: e53s03
     title: "Supervisor restart loop — crash → respawn; crash-loop → failed + de-register + event"
     bcps: 3
+    status: done
     tasks:
       - desc: "Supervisor.supervise: Spawn → register host → Wait → backoff → re-Spawn, driven by FakeRunner + FakeClock"
         verify: "go test ./components/deploy/ -run TestSupervisorRespawnsAfterBackoff -v"
@@ -83,6 +85,7 @@ stories:
   - id: e53s04
     title: "Unify boot paths — triggerDeploy and resume both funnel through Supervisor.Run(spec)"
     bcps: 2
+    status: done
     tasks:
       - desc: "triggerDeploy builds a Spec and calls Supervisor.Run for both static and process apps"
         verify: "go test ./components/deploy/ -run TestTriggerRunsThroughSupervisor -v"

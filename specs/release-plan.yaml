@@ -253,7 +253,7 @@ epics:
     file: epics/e40-app-manifest.yaml
     mode: flat
     tier: 2
-    status: planned
+    status: done
   - id: e41
     title: Deploy — Environment Variables UI
     wsjf: 4.0
@@ -344,5 +344,5 @@ epics:
     file: epics/e53-deploy-supervisor.yaml
     mode: flat
     tier: 4
-    status: planned
+    status: done
     note: "Keystone (GitHub #40, ADR 0004) for e43/e44/e45 — extracts the Supervisor/Runner/Instance seam."
