@@ -22,21 +22,52 @@ const STATUS_STEPS = ['pending', 'building', 'deploying', 'running']
 
 function StatusTimeline({ status }: { status: string }) {
   const currentIdx = STATUS_STEPS.indexOf(status)
+  const isTerminal = status === 'running' || status === 'failed'
   if (currentIdx < 0) return null
+
+  const dotStyle = (step: string, i: number): React.CSSProperties => {
+    const isPast = i < currentIdx
+    const isCurrent = i === currentIdx
+    if (isCurrent && status === 'failed') {
+      return { width: 16, height: 16, borderRadius: '50%', flexShrink: 0, background: 'var(--error)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, color: '#fff', lineHeight: '16px' }
+    }
+    if (isCurrent && status === 'running') {
+      return { width: 16, height: 16, borderRadius: '50%', flexShrink: 0, background: 'var(--brand-500)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, color: '#fff', lineHeight: '16px' }
+    }
+    const bg = isPast || (isCurrent && isTerminal) ? 'var(--brand-500)' : isCurrent && step === 'building' ? 'var(--brand-500)' : isCurrent && step === 'deploying' ? 'rgba(255, 183, 0, 0.8)' : 'var(--border-default)'
+    return { width: 10, height: 10, borderRadius: '50%', flexShrink: 0, background: bg }
+  }
+
+  const dotClass = (step: string, i: number): string => {
+    if (i !== currentIdx) return ''
+    switch (step) {
+      case 'building': return 'status-dot-spin'
+      case 'deploying': return 'status-dot-pulse'
+      case 'running': return 'status-dot-live'
+      case 'failed': return 'status-dot-failed'
+      default: return ''
+    }
+  }
+
+  const label = (step: string, i: number): string => {
+    if (i === currentIdx && step === 'running') return 'Live'
+    if (i === currentIdx && step === 'deployed') return 'Deployed'
+    return step
+  }
+
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', padding: 'var(--space-3) 0' }}>
       {STATUS_STEPS.map((step, i) => (
         <div key={step} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', flex: 1 }}>
-          <div style={{
-            width: 10, height: 10, borderRadius: '50%', flexShrink: 0,
-            background: i <= currentIdx ? (status === 'failed' && i === currentIdx ? 'var(--error)' : 'var(--brand-500)') : 'var(--border-default)',
-            transition: 'background var(--duration-medium) var(--ease-standard)',
-          }} />
+          <div className={dotClass(step, i)} style={dotStyle(step, i)} />
           <span style={{
             fontSize: 'var(--text-xs)', textTransform: 'capitalize', whiteSpace: 'nowrap',
             color: i <= currentIdx ? 'var(--fg-primary)' : 'var(--fg-tertiary)',
             fontWeight: i === currentIdx ? 600 : 400,
-          }}>{step}</span>
+          }}>
+            {label(step, i)}
+            {i === currentIdx && step === 'running' && <span style={{ marginLeft: 'var(--space-1)', color: 'var(--brand-500)', fontWeight: 600, fontSize: 'var(--text-xs)' }}>●</span>}
+          </span>
           {i < STATUS_STEPS.length - 1 && (
             <div style={{ flex: 1, height: 2, background: i < currentIdx ? 'var(--brand-500)' : 'var(--border-default)', minWidth: 16 }} />
           )}
@@ -247,9 +278,9 @@ export default function SiteDetailPage() {
   useEffect(() => { load() }, [load])
 
   useEffect(() => {
-    const active = deployments.some(d => d.status === 'pending' || d.status === 'building')
+    const active = deployments.some(d => d.status === 'pending' || d.status === 'building' || d.status === 'deploying')
     if (!active || previewMode) return
-    const t = setInterval(load, 3000)
+    const t = setInterval(load, 2000)
     return () => clearInterval(t)
   }, [deployments, previewMode, load])
 
