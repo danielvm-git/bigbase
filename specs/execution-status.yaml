@@ -54,8 +54,10 @@ epics:
   e50: planned
   e51: planned
   e52: planned
-  e53: planned
+  e53: in_progress
 stories:
+  e53s01: done
+  e53s02: done
   e01s01: done
   e02s01: done
   e03s01: done
