@@ -1,3 +1,10 @@
+# [2.45.0](https://github.com/danielvm-git/bigbase/compare/v2.44.0...v2.45.0) (2026-06-24)
+
+
+### Features
+
+* **ui:** add Env Vars tab to SiteDetailPage with CRUD and .env import/export ([4686942](https://github.com/danielvm-git/bigbase/commit/4686942f76f423898f1bfdb09e6861eca80b07d2))
+
 # [2.44.0](https://github.com/danielvm-git/bigbase/compare/v2.43.0...v2.44.0) (2026-06-24)
 
 
