@@ -71,7 +71,6 @@ func (d *Deploy) decryptEnvValue(stored string) (string, error) {
 	return decryptAESGCM(d.envKey, stored)
 }
 
-
 func isNoSuchTable(err error) bool {
 	if err == nil {
 		return false
