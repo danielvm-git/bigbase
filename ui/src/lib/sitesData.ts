@@ -2,6 +2,7 @@ import { isPreviewForced } from './previewMode'
 import { mockDeployments, mockGitHubRepos, mockSites } from '../mocks/sites'
 import type {
   Deployment,
+  EnvVar,
   GitHubRepo,
   GitHubStatus,
   GitRepo,
@@ -323,6 +324,62 @@ export async function saveSiteManifest(siteId: string, content: string): Promise
     return { ok: true, previewMode: false }
   } catch {
     return { ok: false, error: 'Save failed — network error', previewMode: false }
+  }
+}
+
+export async function getEnvVars(siteId: string): Promise<EnvVar[]> {
+  const { ok, data } = await fetchJSON<{ data: EnvVar[] }>(`/api/sites/${siteId}/env-vars`)
+  if (ok && data.data) return data.data
+  return []
+}
+
+export async function createEnvVar(
+  siteId: string,
+  payload: { key: string; value: string; is_build_time: boolean; is_runtime: boolean },
+): Promise<{ ok: boolean; error?: string }> {
+  try {
+    const res = await fetch(`/api/sites/${siteId}/env-vars`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+    const body = await res.json().catch(() => ({ error: '' })) as { error?: string }
+    if (!res.ok) return { ok: false, error: body.error || `Failed (HTTP ${res.status})` }
+    return { ok: true }
+  } catch {
+    return { ok: false, error: 'Network error' }
+  }
+}
+
+export async function updateEnvVar(
+  siteId: string,
+  key: string,
+  payload: { value: string; is_build_time: boolean; is_runtime: boolean },
+): Promise<{ ok: boolean; error?: string }> {
+  try {
+    const res = await fetch(`/api/sites/${siteId}/env-vars/${key}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+    const body = await res.json().catch(() => ({ error: '' })) as { error?: string }
+    if (!res.ok) return { ok: false, error: body.error || `Failed (HTTP ${res.status})` }
+    return { ok: true }
+  } catch {
+    return { ok: false, error: 'Network error' }
+  }
+}
+
+export async function deleteEnvVar(siteId: string, key: string): Promise<{ ok: boolean; error?: string }> {
+  try {
+    const res = await fetch(`/api/sites/${siteId}/env-vars/${key}`, { method: 'DELETE' })
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({ error: '' })) as { error?: string }
+      return { ok: false, error: body.error || `Failed (HTTP ${res.status})` }
+    }
+    return { ok: true }
+  } catch {
+    return { ok: false, error: 'Network error' }
   }
 }
 
