@@ -236,9 +236,6 @@ epics:
     file: epics/e38-mcp-server.yaml
     mode: flat
     status: done
-  # New Relic integration — completed without a formal epic capsule
-  # PR-Agent setup — completed without a formal epic capsule (work tracked in git history)
-
   # ─── Solo Dev Backlog (planned, priority order) ───
   - id: e39
     title: Deploy — Streaming Logs & State Machine
@@ -246,7 +243,8 @@ epics:
     file: epics/e39-streaming-logs.yaml
     mode: flat
     tier: 1
-    status: done
+    status: in_progress
+    note: "s01 done (WebSocket streams), s02 active (state machine), s03 planned (terminal viewer)"
   - id: e40
     title: Deploy — App Manifest (bigbase.yaml)
     wsjf: 4.5
@@ -346,3 +344,19 @@ epics:
     tier: 4
     status: done
     note: "Keystone (GitHub #40, ADR 0004) for e43/e44/e45 — extracts the Supervisor/Runner/Instance seam."
+
+  # ─── Previously uncovered — formalized from git history ───
+  - id: e54
+    title: "New Relic Integration — Application and Server Monitoring"
+    wsjf: 5.33
+    file: epics/e54-newrelic-integration.yaml
+    mode: flat
+    tier: 2
+    status: done
+  - id: e55
+    title: "DX — Automated PR Code Review via PR-Agent + DeepSeek"
+    wsjf: 7.0
+    file: epics/e55-pr-agent-review.yaml
+    mode: flat
+    tier: 2
+    status: done

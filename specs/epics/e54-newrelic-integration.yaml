@@ -1,0 +1,63 @@
+type: epic-shard
+context: domain
+id: e54
+title: "New Relic Integration — Application and Server Monitoring"
+wsjf: 5.33
+wsjf_rationale: "BV=5(notable operator value for production) TC=3(flexible deadline) RR=8(critical visibility/observability for diagnosing production failures) / JS=3(2-3 days: SDK integration, HTTP middleware, DB wrapper, flags)"
+status: done
+tier: 2
+covers:
+  - main.go
+  - components/proxy/proxy.go
+  - components/db/db.go
+  - scripts/setup-newrelic.sh
+evidence: |
+  6 commits across 2 feature branches merged to main:
+  feat/e40-newrelic: Go agent init with CLI flags, VPS setup script
+  feat/e40-newrelic-http-tracing: HTTP proxy middleware, DB datastore segments, build handler for log forwarding
+  Also: MCP server config for real-time monitoring access, infrastructure agent on VPS
+
+stories:
+  - id: e54s01
+    title: "New Relic Go Agent Initialization"
+    status: done
+    bcps: 2
+    tasks:
+      - desc: "Add github.com/newrelic/go-agent/v3/newrelic dependency to go.mod"
+        verify: "grep -q 'github.com/newrelic/go-agent/v3' go.mod"
+      - desc: "Add CLI flags: --newrelic-license-key, --newrelic-app-name, --newrelic-enabled"
+        verify: "go run . serve --help 2>&1 | grep -q 'new-relic'"
+      - desc: "Initialize newrelic.Application in main.go serve command with env var mapping"
+        verify: "go run . serve --log-level debug --newrelic-license-key test --newrelic-enabled=false 2>&1"
+
+  - id: e54s02
+    title: "Instrument HTTP Proxy Request Tracing"
+    status: done
+    bcps: 2
+    tasks:
+      - desc: "Inject newrelic.NewContext into proxy request handler chain"
+        verify: "grep -q 'newrelic.NewContext' components/proxy/proxy.go"
+      - desc: "Wire NRApp from main.go into proxy component config"
+        verify: "grep -q 'NRApp' components/proxy/proxy.go"
+      - desc: "Log forwarding — buildHandler extracts NR txn from context for structured logs"
+        verify: "grep -q 'buildHandler' main.go"
+
+  - id: e54s03
+    title: "Instrument Database Segment Tracing"
+    status: done
+    bcps: 2
+    tasks:
+      - desc: "Create nrDatastoreSegment helper wrapping query context in DatastoreSegment"
+        verify: "grep -q 'nrDatastoreSegment' components/db/db.go"
+      - desc: "Apply segments in ExecContext, QueryContext, QueryRowContext"
+        verify: "go test ./components/db/ -v"
+
+  - id: e54s04
+    title: "VPS Infrastructure Agent + MCP Access"
+    status: done
+    bcps: 1
+    tasks:
+      - desc: "Add New Relic infrastructure agent install to VPS setup script"
+        verify: "grep -q 'newrelic' scripts/setup-newrelic.sh"
+      - desc: "New Relic MCP server config for real-time monitoring queries"
+        verify: "test -f scripts/newrelic-mcp.sh"
