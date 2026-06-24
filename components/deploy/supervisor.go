@@ -73,7 +73,9 @@ func (s *Supervisor) Run(ctx context.Context, spec Spec) {
 			continue
 		}
 
-		_ = s.registry.RegisterDeploymentHost(spec.Host, spec.Port, spec.DeployID, nil, nil)
+		if s.registry != nil && spec.Host != "" {
+			_ = s.registry.RegisterDeploymentHost(spec.Host, spec.Port, spec.DeployID, nil, nil)
+		}
 		s.setInstance(spec.DeployID, inst)
 
 		waitErr := inst.Wait()
@@ -121,8 +123,9 @@ func (s *Supervisor) setInstance(deployID string, inst Instance) {
 }
 
 func (s *Supervisor) tripCrashLoop(spec Spec) {
-	// De-register unconditionally: safe if never registered (delete on missing key is a no-op).
-	s.registry.UnregisterDeploymentHost(spec.Host)
+	if s.registry != nil && spec.Host != "" {
+		s.registry.UnregisterDeploymentHost(spec.Host)
+	}
 	if s.onFailed != nil {
 		s.onFailed(spec.DeployID)
 	}
