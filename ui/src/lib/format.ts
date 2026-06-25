@@ -58,3 +58,17 @@ export function fmtMemoryMB(mb: number): string {
 export function memoryBarPercent(memoryMB: number): number {
   return Math.min(100, Math.round((memoryMB / 1024) * 100))
 }
+
+/** Human-readable byte size (binary units). Trims trailing .0 (e.g. "2 MB", "1.5 KB"). */
+export function fmtBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`
+  const units = ['KB', 'MB', 'GB', 'TB']
+  let value = bytes / 1024
+  let i = 0
+  while (value >= 1024 && i < units.length - 1) {
+    value /= 1024
+    i++
+  }
+  const rounded = Math.round(value * 10) / 10
+  return `${Number.isInteger(rounded) ? rounded : rounded.toFixed(1)} ${units[i]}`
+}

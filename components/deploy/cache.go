@@ -179,6 +179,86 @@ func (c *Cache) Evict() error {
 	return nil
 }
 
+// SiteEntries returns all cache entries belonging to siteID, oldest first.
+func (c *Cache) SiteEntries(siteID string) ([]CacheEntry, error) {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+
+	all, err := c.listEntries()
+	if err != nil {
+		return nil, err
+	}
+	out := make([]CacheEntry, 0, len(all))
+	for _, e := range all {
+		if e.SiteID == siteID {
+			out = append(out, e)
+		}
+	}
+	return out, nil
+}
+
+// Clear removes every cache entry. Returns the first removal error, if any.
+func (c *Cache) Clear() error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	entries, err := c.listEntries()
+	if err != nil {
+		return err
+	}
+	var firstErr error
+	for _, e := range entries {
+		if rmErr := c.removeEntry(e.Key); rmErr != nil && firstErr == nil {
+			firstErr = rmErr
+		}
+	}
+	return firstErr
+}
+
+// Prune removes entries whose CreatedAt is older than maxAge and returns the
+// number removed. A non-positive maxAge prunes nothing.
+func (c *Cache) Prune(maxAge time.Duration) (int, error) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	if maxAge <= 0 {
+		return 0, nil
+	}
+	entries, err := c.listEntries()
+	if err != nil {
+		return 0, err
+	}
+	cutoff := time.Now().UTC().Add(-maxAge)
+	pruned := 0
+	for _, e := range entries {
+		if e.CreatedAt.Before(cutoff) {
+			if rmErr := c.removeEntry(e.Key); rmErr != nil {
+				return pruned, rmErr
+			}
+			pruned++
+		}
+	}
+	return pruned, nil
+}
+
+// MaxBytes returns the current eviction threshold in bytes.
+func (c *Cache) MaxBytes() int64 {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	return c.maxBytes
+}
+
+// SetMaxBytes updates the live eviction threshold. Non-positive values are
+// ignored so the limit can never be zeroed out by a bad request.
+func (c *Cache) SetMaxBytes(n int64) {
+	if n <= 0 {
+		return
+	}
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.maxBytes = n
+}
+
 // PurgeSite removes all cache entries associated with siteID.
 func (c *Cache) PurgeSite(siteID string) error {
 	c.mu.Lock()

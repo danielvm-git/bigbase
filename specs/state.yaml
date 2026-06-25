@@ -1,8 +1,8 @@
 type: session-state
 context: infra
-active_flow: null
-active_epic_id: null
-active_story_id: null
+active_flow: build_epic
+active_epic_id: e42
+active_story_id: e42s01
 release:
   target_version: 2.13.0
   codename: "Solo Dev Complete"
@@ -18,11 +18,11 @@ metrics:
   stories_completed: 138
   bcps_per_hour: 0.4
 epic_cycle:
-  step: done
-  story_bcps: 4
-  story: e41s02
-  audit_result: pass
-  note: "e41 complete — backend CRUD + UI tab (masked display, import/export). Both CI runs passed."
+  step: 1
+  story_bcps: 1
+  story: e42s02
+  audit_result: null
+  note: "e42s01 merged (PR #47, 29238a6) — incl. post-review fix (mutex + eviction error propagation, 1a0968e). Starting e42s02 — Admin UI cache management."
 bug_cycle:
   current_step: 0
   completed_steps: []

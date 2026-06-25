@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { PageHeader, Button, Input, PreviewBanner, SitesListSkeleton } from '../components'
+import { PageHeader, Button, Input, PreviewBanner, SitesListSkeleton, BuildCachePanel } from '../components'
 import { SiteCard } from '../components/SiteCard'
 import { Icon } from '../components/Icon'
 import { getSites, deleteSite } from '../lib/sitesData'
@@ -158,6 +158,8 @@ export default function DeployPage() {
               ))}
             </div>
           )}
+
+          <BuildCachePanel />
         </>
       )}
     </div>

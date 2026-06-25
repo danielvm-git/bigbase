@@ -7,6 +7,11 @@ const getSites = vi.fn()
 
 vi.mock('../lib/sitesData', () => ({
   getSites: (...args: unknown[]) => getSites(...args),
+  // BuildCachePanel renders at the bottom of the populated list.
+  getCacheStats: () => Promise.resolve({ total_entries: 0, total_size_bytes: 0, max_size_bytes: 2147483648 }),
+  clearAllCache: () => Promise.resolve({ ok: true }),
+  pruneCache: () => Promise.resolve({ ok: true, pruned: 0 }),
+  setCacheMaxSize: () => Promise.resolve({ ok: true }),
 }))
 
 vi.mock('../lib/previewMode', () => ({

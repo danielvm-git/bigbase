@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { timeAgo, siteDisplayUrl, mapDeployStatus, fmtUptime, fmtMemoryMB, memoryBarPercent } from './format'
+import { timeAgo, siteDisplayUrl, mapDeployStatus, fmtUptime, fmtMemoryMB, memoryBarPercent, fmtBytes } from './format'
 
 describe('format helpers', () => {
   it('timeAgo returns relative labels', () => {
@@ -27,5 +27,14 @@ describe('format helpers', () => {
 
   it('memoryBarPercent caps at 100', () => {
     expect(memoryBarPercent(2048)).toBe(100)
+  })
+
+  it('fmtBytes scales to the right unit', () => {
+    expect(fmtBytes(0)).toBe('0 B')
+    expect(fmtBytes(512)).toBe('512 B')
+    expect(fmtBytes(1024)).toBe('1 KB')
+    expect(fmtBytes(1536)).toBe('1.5 KB')
+    expect(fmtBytes(2 * 1024 * 1024)).toBe('2 MB')
+    expect(fmtBytes(2 * 1024 * 1024 * 1024)).toBe('2 GB')
   })
 })

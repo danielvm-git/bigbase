@@ -14,7 +14,7 @@ covers:
 stories:
   - id: e42s01
     title: "Cache key derivation and storage"
-    status: planned
+    status: done
     bcps: 2
     tasks:
       - desc: "Derive cache key from repo + branch + lockfile hash (package-lock.json, yarn.lock, go.sum)"
@@ -36,15 +36,45 @@ stories:
     title: "Admin UI — cache management"
     status: planned
     bcps: 1
+    design_decisions:
+      - "All cache HTTP endpoints live in components/deploy (cache is owned there); sites stays decoupled. UI calls /api/deploy/cache* routes."
+      - "Global cache management lives in a 'Build Cache' panel on DeployPage (sites overview), not SettingsPage — SettingsPage is user account/workspace/billing."
+      - "Max-size override persists in a deploy_cache_config DB table (single row); --build-cache-max-size is the default, UI override wins on restart."
     tasks:
-      - desc: "Add cache status widget to SiteDetailPage"
+      - desc: "Backend: cache management methods + HTTP endpoints in deploy component"
         notes: |
-          Show: cache key, last hit/miss, cache size, hit count.
-          "Clear cache" button per site (invalidates all cached entries for that site).
-          Cache hit rate over time (hit_count / total_builds).
-        verify: "cd ui && npm run build"
-      - desc: "Global cache management in admin settings"
+          New Cache methods (cache.go, all mutex-guarded, TDD):
+            - SiteEntries(siteID) []CacheEntry — entries for one site (sorted)
+            - Clear() error — remove all entries
+            - Prune(maxAge time.Duration) (int, error) — remove entries older than cutoff, return count
+            - MaxBytes() int64 / SetMaxBytes(n int64) — read/update live eviction limit
+          Persist config (deploy.go): deploy_cache_config table (single row, max_bytes).
+            On New(): load persisted max_bytes if present, else opts.CacheMaxSize/default.
+            SetMaxBytes also writes the row.
+          HTTP handlers (deploy.go Handler, mux):
+            GET    /api/deploy/cache          → {total_entries, total_size_bytes, max_size_bytes}
+            DELETE /api/deploy/cache          → clear all
+            POST   /api/deploy/cache/prune    → body {max_age_days:7 default}, returns {pruned:N}
+            PUT    /api/deploy/cache/config   → body {max_size_bytes}, persists + SetMaxBytes
+            GET    /api/deploy/cache/site/{id} → {entries:[...], total_size_bytes, total_hits}
+            DELETE /api/deploy/cache/site/{id} → PurgeSite
+          Validation: max_size_bytes > 0; max_age_days >= 1. Generic error messages to client.
+        verify: "go test ./components/deploy/ -run TestCache -v && go test ./... "
+      - desc: "UI: per-site Cache tab on SiteDetailPage"
         notes: |
-          Total cache usage across all sites. Clear all caches.
-          Configure max cache size. Prune stale entries (older than 7 days).
-        verify: "cd ui && npm run build"
+          New component SiteCacheTab.tsx (mirrors SiteEnvVarsTab pattern).
+          Add 'Cache' tab to SiteDetailPage tabs[].
+          Data layer: getSiteCache(siteId), clearSiteCache(siteId) in sitesData.ts.
+          Show per cache entry: key (short), size, hit_count, created_at.
+          Aggregate: total size, total hits for the site.
+          "Clear cache" button (confirm dialog) → DELETE site cache, reload.
+          Empty state when no cached entries. Preview-mode safe (mock data).
+        verify: "cd ui && npm run build && npm test -- SiteCacheTab"
+      - desc: "UI: global Build Cache panel on DeployPage"
+        notes: |
+          New component BuildCachePanel.tsx rendered as a section on DeployPage.
+          Data layer: getCacheStats(), clearAllCache(), pruneCache(days), setCacheMaxSize(bytes).
+          Show: total usage (size / max), entry count.
+          Actions: "Clear all" (confirm), "Prune >7d", max-size input (GB) + Save.
+          Preview-mode safe. Surface errors inline; no internal error leakage.
+        verify: "cd ui && npm run build && npm test -- BuildCachePanel"
