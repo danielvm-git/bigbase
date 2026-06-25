@@ -117,6 +117,43 @@ func TestCacheAPI_Prune(t *testing.T) {
 	}
 }
 
+func TestCacheAPI_Prune_RejectsZeroDays(t *testing.T) {
+	d, cleanup := newCacheTestDeploy(t)
+	defer cleanup()
+
+	// Explicit 0 must be rejected, not silently defaulted to 7.
+	req := httptest.NewRequest(http.MethodPost, "/api/deploy/cache/prune",
+		strings.NewReader(`{"max_age_days":0}`))
+	rec := httptest.NewRecorder()
+	d.Handler().ServeHTTP(rec, req)
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400 for max_age_days=0, got %d", rec.Code)
+	}
+}
+
+func TestCacheAPI_Prune_DefaultsWhenAbsent(t *testing.T) {
+	d, cleanup := newCacheTestDeploy(t)
+	defer cleanup()
+	seedCacheEntry(t, d, "stale", "siteA")
+	old := time.Now().UTC().Add(-10 * 24 * time.Hour)
+	_ = d.cache.updateMeta("stale", func(e *CacheEntry) { e.CreatedAt = old })
+
+	// Empty body → default 7-day cutoff applies, pruning the 10-day-old entry.
+	req := httptest.NewRequest(http.MethodPost, "/api/deploy/cache/prune", strings.NewReader(`{}`))
+	rec := httptest.NewRecorder()
+	d.Handler().ServeHTTP(rec, req)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d", rec.Code)
+	}
+	var body struct {
+		Pruned int `json:"pruned"`
+	}
+	_ = json.Unmarshal(rec.Body.Bytes(), &body)
+	if body.Pruned != 1 {
+		t.Errorf("expected default prune to remove 1, got %d", body.Pruned)
+	}
+}
+
 func TestCacheAPI_SetConfig_Persists(t *testing.T) {
 	d, cleanup := newCacheTestDeploy(t)
 	defer cleanup()

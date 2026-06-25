@@ -78,22 +78,25 @@ func (d *Deploy) handleCachePrune(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
+	// MaxAgeDays is a pointer so an absent field (nil → default 7) is
+	// distinguishable from an explicit 0 (invalid → 400).
 	var req struct {
-		MaxAgeDays int `json:"max_age_days"`
+		MaxAgeDays *int `json:"max_age_days"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil && err.Error() != "EOF" {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json or body too large"})
 		return
 	}
-	if req.MaxAgeDays == 0 {
-		req.MaxAgeDays = defaultPruneDays
+	days := defaultPruneDays
+	if req.MaxAgeDays != nil {
+		days = *req.MaxAgeDays
 	}
-	if req.MaxAgeDays < 1 {
+	if days < 1 {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "max_age_days must be at least 1"})
 		return
 	}
 
-	pruned, err := d.cache.Prune(time.Duration(req.MaxAgeDays) * 24 * time.Hour)
+	pruned, err := d.cache.Prune(time.Duration(days) * 24 * time.Hour)
 	if err != nil {
 		d.logger.Error("cache prune", "error", err)
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
