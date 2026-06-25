@@ -1,8 +1,8 @@
 type: session-state
 context: infra
-active_flow: build_epic
-active_epic_id: e42
-active_story_id: e42s01
+active_flow: null
+active_epic_id: null
+active_story_id: null
 release:
   target_version: 2.13.0
   codename: "Solo Dev Complete"
@@ -18,27 +18,27 @@ metrics:
   stories_completed: 138
   bcps_per_hour: 0.4
 epic_cycle:
-  step: 8
+  step: done
   story_bcps: 1
   story: e42s02
   audit_result: pass
-  completed_steps: [1, 2, 3, 4, 5, 6, 7]
-  note: "e42s02 complete — PR #48 open. Backend cache endpoints + per-site Cache tab + global Build Cache panel. UAT smoke caught/fixed prune-0 bug. Go 803, UI 295, audit PASS. Awaiting CI/merge."
+  completed_steps: [1, 2, 3, 4, 5, 6, 7, 8]
+  note: "e42 COMPLETE — both stories merged. e42s01 (cache backend, PR #47) + e42s02 (cache management UI, PR #48). UAT smoke caught/fixed prune-0 bug; review fixes merged (errors.Is EOF, surfaced load errors)."
 bug_cycle:
   current_step: 0
   completed_steps: []
   bug_file: null
 git:
-  branch: feat/e42s02-cache-ui
-  hash: 29238a6
-  worktree: ../e42s02-cache-ui
+  branch: main
+  hash: HEAD
+  worktree: null
 handoff:
   last_step_completed: release-branch
   open_decisions: []
   next_skill: survey-context
-  summary: "e41 complete — env vars CRUD backend (AES-256-GCM) + UI tab (masked display, import/export). 745 Go tests. 44/55 epics done."
+  summary: "e42 complete — build cache backend (PR #47) + cache management UI (PR #48). 45/55 epics done. Next epic: e43."
   context: |
-    Epic: e41 (Deploy — Environment Variables UI)
-    e41s01: done (backend CRUD + AES-256-GCM + build/runtime injection)
-    e41s02: done (Admin UI tab — add/edit/delete, masked display, .env import/export)
-    Next: e42 (Deploy — Build Cache, WSJF 4.5)
+    Epic: e42 (Deploy — Build Cache, WSJF 4.5)
+    e42s01: done (cache key derivation + tar.gz storage, LRU eviction, mutex-safe; PR #47)
+    e42s02: done (HTTP endpoints + per-site Cache tab + global Build Cache panel, persisted max-size; PR #48)
+    Next: e43 (planned)

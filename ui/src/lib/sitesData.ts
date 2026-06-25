@@ -1,12 +1,14 @@
 import { isPreviewForced } from './previewMode'
 import { mockDeployments, mockGitHubRepos, mockSites } from '../mocks/sites'
 import type {
+  CacheStats,
   Deployment,
   EnvVar,
   GitHubRepo,
   GitHubStatus,
   GitRepo,
   Site,
+  SiteCacheStatus,
   SitesDataResult,
 } from '../types/sites'
 
@@ -373,6 +375,99 @@ export async function updateEnvVar(
 export async function deleteEnvVar(siteId: string, key: string): Promise<{ ok: boolean; error?: string }> {
   try {
     const res = await fetch(`/api/sites/${siteId}/env-vars/${key}`, { method: 'DELETE' })
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({ error: '' })) as { error?: string }
+      return { ok: false, error: body.error || `Failed (HTTP ${res.status})` }
+    }
+    return { ok: true }
+  } catch {
+    return { ok: false, error: 'Network error' }
+  }
+}
+
+// --- Build cache (e42s02) ---
+
+const emptySiteCache: SiteCacheStatus = { entries: [], total_size_bytes: 0, total_hits: 0 }
+
+export async function getSiteCache(siteId: string): Promise<{ status: SiteCacheStatus; ok: boolean }> {
+  if (isPreviewForced()) {
+    return {
+      status: {
+        entries: [
+          { key: 'a1b2c3d4e5f6', site_id: siteId, repo_id: 'repo', branch: 'main', size: 134217728, hit_count: 12, created_at: new Date(Date.now() - 86400000).toISOString() },
+        ],
+        total_size_bytes: 134217728,
+        total_hits: 12,
+      },
+      ok: true,
+    }
+  }
+  const { ok, data } = await fetchJSON<SiteCacheStatus>(`/api/deploy/cache/site/${siteId}`)
+  if (ok && data && Array.isArray(data.entries)) return { status: data, ok: true }
+  return { status: emptySiteCache, ok: false }
+}
+
+export async function clearSiteCache(siteId: string): Promise<{ ok: boolean; error?: string }> {
+  if (isPreviewForced()) return { ok: true }
+  try {
+    const res = await fetch(`/api/deploy/cache/site/${siteId}`, { method: 'DELETE' })
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({ error: '' })) as { error?: string }
+      return { ok: false, error: body.error || `Failed (HTTP ${res.status})` }
+    }
+    return { ok: true }
+  } catch {
+    return { ok: false, error: 'Network error' }
+  }
+}
+
+export async function getCacheStats(): Promise<CacheStats> {
+  if (isPreviewForced()) {
+    return { total_entries: 14, total_size_bytes: 1288490188, max_size_bytes: 2147483648 }
+  }
+  const { ok, data } = await fetchJSON<CacheStats>('/api/deploy/cache')
+  if (ok && data && typeof data.total_size_bytes === 'number') return data
+  return { total_entries: 0, total_size_bytes: 0, max_size_bytes: 0 }
+}
+
+export async function clearAllCache(): Promise<{ ok: boolean; error?: string }> {
+  if (isPreviewForced()) return { ok: true }
+  try {
+    const res = await fetch('/api/deploy/cache', { method: 'DELETE' })
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({ error: '' })) as { error?: string }
+      return { ok: false, error: body.error || `Failed (HTTP ${res.status})` }
+    }
+    return { ok: true }
+  } catch {
+    return { ok: false, error: 'Network error' }
+  }
+}
+
+export async function pruneCache(maxAgeDays: number): Promise<{ ok: boolean; pruned?: number; error?: string }> {
+  if (isPreviewForced()) return { ok: true, pruned: 0 }
+  try {
+    const res = await fetch('/api/deploy/cache/prune', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ max_age_days: maxAgeDays }),
+    })
+    const body = await res.json().catch(() => ({ error: '' })) as { error?: string; pruned?: number }
+    if (!res.ok) return { ok: false, error: body.error || `Failed (HTTP ${res.status})` }
+    return { ok: true, pruned: body.pruned }
+  } catch {
+    return { ok: false, error: 'Network error' }
+  }
+}
+
+export async function setCacheMaxSize(maxSizeBytes: number): Promise<{ ok: boolean; error?: string }> {
+  if (isPreviewForced()) return { ok: true }
+  try {
+    const res = await fetch('/api/deploy/cache/config', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ max_size_bytes: maxSizeBytes }),
+    })
     if (!res.ok) {
       const body = await res.json().catch(() => ({ error: '' })) as { error?: string }
       return { ok: false, error: body.error || `Failed (HTTP ${res.status})` }

@@ -412,3 +412,98 @@ func TestCacheConcurrentRestore_NoRace(t *testing.T) {
 		t.Errorf("expected HitCount %d, got %d (lost increments)", n, entries[0].HitCount)
 	}
 }
+
+// --- Cache management (e42s02) ---
+
+func TestCacheSiteEntries(t *testing.T) {
+	cacheDir := t.TempDir()
+	cache := NewCache(cacheDir, 0)
+	srcDir := t.TempDir()
+	_ = os.WriteFile(filepath.Join(srcDir, "f.txt"), []byte("x"), 0644)
+
+	_ = cache.Save("a1", srcDir, "siteA", "r1", "main", []string{"f.txt"})
+	_ = cache.Save("a2", srcDir, "siteA", "r1", "feat", []string{"f.txt"})
+	_ = cache.Save("b1", srcDir, "siteB", "r2", "main", []string{"f.txt"})
+
+	got, err := cache.SiteEntries("siteA")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(got) != 2 {
+		t.Fatalf("expected 2 entries for siteA, got %d", len(got))
+	}
+	for _, e := range got {
+		if e.SiteID != "siteA" {
+			t.Errorf("SiteEntries leaked entry for %q", e.SiteID)
+		}
+	}
+}
+
+func TestCacheClear(t *testing.T) {
+	cacheDir := t.TempDir()
+	cache := NewCache(cacheDir, 0)
+	srcDir := t.TempDir()
+	_ = os.WriteFile(filepath.Join(srcDir, "f.txt"), []byte("x"), 0644)
+	_ = cache.Save("k1", srcDir, "s1", "r1", "main", []string{"f.txt"})
+	_ = cache.Save("k2", srcDir, "s2", "r2", "main", []string{"f.txt"})
+
+	if err := cache.Clear(); err != nil {
+		t.Fatalf("Clear error: %v", err)
+	}
+
+	entries, _ := cache.ListEntries()
+	if len(entries) != 0 {
+		t.Errorf("expected 0 entries after Clear, got %d", len(entries))
+	}
+	// Archive files must also be gone, not just metadata.
+	if _, err := os.Stat(filepath.Join(cacheDir, "k1.tar.gz")); !os.IsNotExist(err) {
+		t.Error("k1.tar.gz should be removed by Clear")
+	}
+}
+
+func TestCachePrune_RemovesStaleOnly(t *testing.T) {
+	cacheDir := t.TempDir()
+	cache := NewCache(cacheDir, 0)
+	srcDir := t.TempDir()
+	_ = os.WriteFile(filepath.Join(srcDir, "f.txt"), []byte("x"), 0644)
+
+	_ = cache.Save("fresh", srcDir, "s1", "r1", "main", []string{"f.txt"})
+	_ = cache.Save("stale", srcDir, "s2", "r2", "main", []string{"f.txt"})
+	// Backdate "stale" to 10 days ago by rewriting its metadata.
+	old := time.Now().UTC().Add(-10 * 24 * time.Hour)
+	if err := cache.updateMeta("stale", func(e *CacheEntry) { e.CreatedAt = old }); err != nil {
+		t.Fatal(err)
+	}
+
+	pruned, err := cache.Prune(7 * 24 * time.Hour)
+	if err != nil {
+		t.Fatalf("Prune error: %v", err)
+	}
+	if pruned != 1 {
+		t.Errorf("expected 1 pruned, got %d", pruned)
+	}
+
+	entries, _ := cache.ListEntries()
+	if len(entries) != 1 || entries[0].Key != "fresh" {
+		t.Errorf("expected only 'fresh' to remain, got %+v", entries)
+	}
+}
+
+func TestCacheSetMaxBytes_Persists(t *testing.T) {
+	cacheDir := t.TempDir()
+	cache := NewCache(cacheDir, 0)
+	if cache.MaxBytes() != 2<<30 {
+		t.Errorf("expected default 2 GiB, got %d", cache.MaxBytes())
+	}
+
+	cache.SetMaxBytes(500 << 20) // 500 MiB
+	if cache.MaxBytes() != 500<<20 {
+		t.Errorf("expected 500 MiB after SetMaxBytes, got %d", cache.MaxBytes())
+	}
+
+	// Non-positive values are ignored (guard against zeroing the limit).
+	cache.SetMaxBytes(0)
+	if cache.MaxBytes() != 500<<20 {
+		t.Errorf("SetMaxBytes(0) should be a no-op, got %d", cache.MaxBytes())
+	}
+}

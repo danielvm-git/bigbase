@@ -1,3 +1,10 @@
+# [2.46.0](https://github.com/danielvm-git/bigbase/compare/v2.45.1...v2.46.0) (2026-06-25)
+
+
+### Features
+
+* **deploy:** build dependency cache — skip npm install on lockfile cache hit (e42s01) ([#47](https://github.com/danielvm-git/bigbase/issues/47)) ([29238a6](https://github.com/danielvm-git/bigbase/commit/29238a6334c45612507ce8dbe4cb41de61d032d0))
+
 ## [2.45.1](https://github.com/danielvm-git/bigbase/compare/v2.45.0...v2.45.1) (2026-06-25)
 
 

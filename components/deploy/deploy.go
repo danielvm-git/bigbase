@@ -268,6 +268,10 @@ func (d *Deploy) Start(ctx *kernel.Context) error {
 	if err := d.db.Migrate(`CREATE INDEX IF NOT EXISTS idx_srl_site_id ON site_request_logs(site_id, created_at DESC)`); err != nil {
 		return fmt.Errorf("migrate site_request_logs index: %w", err)
 	}
+	if err := d.ensureCacheConfigTable(); err != nil {
+		return fmt.Errorf("migrate deploy_cache_config table: %w", err)
+	}
+	d.loadCacheConfig()
 	d.restoreRunningDeploymentHosts()
 	candidates := d.loadResumeCandidates()
 	d.logger.Info("deploy component ready", "dir", d.buildsDir, "resume", len(candidates))
@@ -444,6 +448,7 @@ func (d *Deploy) Handler() http.Handler {
 	mux.HandleFunc("/api/samples", d.handleSamples)
 	mux.HandleFunc("/api/samples/", d.handleSamples)
 	mux.HandleFunc("/api/deploy/stats", d.handleDeployStats)
+	d.registerCacheRoutes(mux)
 	return mux
 }
 

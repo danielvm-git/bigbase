@@ -4,7 +4,7 @@ id: e42
 title: "Deploy — Build Cache"
 wsjf: 4.5
 wsjf_rationale: "BV=7(high: every deploy rebuilds from scratch — cache compounds over hundreds of deploys) TC=3(no deadline) RR=8(elimoinates wait time: cache skips npm install when nothing changed) / JS=3(~2 days across 2 stories)"
-status: planned
+status: done
 tier: 3
 depends_on:
   - e40
@@ -34,7 +34,7 @@ stories:
         verify: "go test ./components/deploy/ -run TestCacheSaveRestore -v"
   - id: e42s02
     title: "Admin UI — cache management"
-    status: planned
+    status: done
     bcps: 1
     design_decisions:
       - "All cache HTTP endpoints live in components/deploy (cache is owned there); sites stays decoupled. UI calls /api/deploy/cache* routes."
