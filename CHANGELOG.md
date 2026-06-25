@@ -1,3 +1,10 @@
+# [2.47.0](https://github.com/danielvm-git/bigbase/compare/v2.46.0...v2.47.0) (2026-06-25)
+
+
+### Features
+
+* **deploy:** cache management UI — per-site tab + global panel (e42s02) ([#48](https://github.com/danielvm-git/bigbase/issues/48)) ([a173b3f](https://github.com/danielvm-git/bigbase/commit/a173b3f7599a22033ba71537b28f17950a32a8de)), closes [#47](https://github.com/danielvm-git/bigbase/issues/47)
+
 # [2.46.0](https://github.com/danielvm-git/bigbase/compare/v2.45.1...v2.46.0) (2026-06-25)
 
 
