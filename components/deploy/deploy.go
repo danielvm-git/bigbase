@@ -101,6 +101,7 @@ type Deploy struct {
 	eventBus     *kernel.EventBus
 	supervisor   *Supervisor
 	envKey       []byte
+	cache        *Cache
 }
 
 type Options struct {
@@ -114,6 +115,10 @@ type Options struct {
 	UseHTTPS         bool
 	HostRouter       DeploymentHostRegistry
 	EnvEncryptionKey string
+	// CacheDir is the directory for build dependency archives (default: data/cache/deploy).
+	CacheDir string
+	// CacheMaxSize is the maximum cache size in bytes (default: 2 GiB).
+	CacheMaxSize int64
 	// Runner is injected for tests; nil uses the production deployRunner.
 	Runner Runner
 }
@@ -168,6 +173,15 @@ func New(opts Options) *Deploy {
 		// Encryption disabled — warn so operators notice the misconfiguration.
 		d.logger.Warn("env encryption key invalid — env vars stored without encryption", "error", envKeyErr)
 	}
+	cacheDir := opts.CacheDir
+	if cacheDir == "" {
+		cacheDir = "data/cache/deploy"
+	}
+	if abs, err := filepath.Abs(cacheDir); err == nil {
+		cacheDir = abs
+	}
+	d.cache = NewCache(cacheDir, opts.CacheMaxSize)
+
 	runner := opts.Runner
 	if runner == nil {
 		runner = &deployRunner{db: d.db}
@@ -738,7 +752,7 @@ func (d *Deploy) runDeployment(deploy *Deployment, buildDir, repoName string) {
 		return
 	}
 
-	if err := d.buildApp(ctx, deploy.ID, deploy.SiteID, buildDir, appType, manifest); err != nil {
+	if err := d.buildApp(ctx, deploy.ID, deploy.SiteID, deploy.RepoID, deploy.Branch, buildDir, appType, manifest); err != nil {
 		d.logger.Error("build app", "type", appType, "error", err)
 		d.failDeployment(deploy.ID, err)
 		return
@@ -814,7 +828,7 @@ func (d *Deploy) getCommitSHA(buildDir string) (string, error) {
 	return strings.TrimSpace(string(out)), nil
 }
 
-func (d *Deploy) buildApp(ctx context.Context, deployID, siteID, buildDir string, appType AppType, manifest *Manifest) error {
+func (d *Deploy) buildApp(ctx context.Context, deployID, siteID, repoID, branch, buildDir string, appType AppType, manifest *Manifest) error {
 	siteEnv, err := d.FetchSiteEnvVars(ctx, siteID, true)
 	if err != nil {
 		return fmt.Errorf("fetch build-time env vars: %w", err)
@@ -830,8 +844,8 @@ func (d *Deploy) buildApp(ctx context.Context, deployID, siteID, buildDir string
 
 	switch appType {
 	case AppNode:
-		if err := d.runBuildCommand(ctx, deployID, buildDir, nil, "npm", "install"); err != nil {
-			return fmt.Errorf("npm install: %w", err)
+		if err := d.nodeInstall(ctx, deployID, siteID, repoID, branch, buildDir); err != nil {
+			return err
 		}
 		if err := ValidateNodeBuildScript(buildDir); err != nil {
 			d.appendDeployLog(deployID, "✗ "+err.Error())
@@ -847,6 +861,46 @@ func (d *Deploy) buildApp(ctx context.Context, deployID, siteID, buildDir string
 		return d.runBuildCommand(ctx, deployID, buildDir, siteEnv, "pip", "install", "--break-system-packages", "-r", "requirements.txt")
 	}
 	return nil
+}
+
+// nodeInstall runs npm install with cache support.
+// On a cache hit, node_modules is restored and npm install is skipped.
+// Cache errors are logged and fall through to a full install — they never fail a build.
+func (d *Deploy) nodeInstall(ctx context.Context, deployID, siteID, repoID, branch, buildDir string) error {
+	key, keyErr := CacheKey(buildDir, repoID, branch)
+	if keyErr == nil && d.restoreNodeModules(deployID, key, buildDir) {
+		return nil
+	}
+	if err := d.runBuildCommand(ctx, deployID, buildDir, nil, "npm", "install"); err != nil {
+		return fmt.Errorf("npm install: %w", err)
+	}
+	if keyErr == nil {
+		d.saveNodeModules(deployID, siteID, repoID, branch, buildDir, key)
+	}
+	return nil
+}
+
+// restoreNodeModules attempts a cache restore; returns true on hit.
+func (d *Deploy) restoreNodeModules(deployID, key, buildDir string) bool {
+	hit, err := d.cache.Restore(key, buildDir)
+	if err != nil {
+		d.appendDeployLog(deployID, fmt.Sprintf("⚠ Cache restore failed: %v — running npm install", err))
+		return false
+	}
+	if hit {
+		d.appendDeployLog(deployID, "→ Cache hit: restored node_modules")
+	}
+	return hit
+}
+
+// saveNodeModules archives node_modules into the cache after a successful npm install.
+func (d *Deploy) saveNodeModules(deployID, siteID, repoID, branch, buildDir, key string) {
+	if err := d.cache.Save(key, buildDir, siteID, repoID, branch, []string{"node_modules"}); err != nil {
+		d.appendDeployLog(deployID, fmt.Sprintf("⚠ Cache save failed: %v", err))
+		return
+	}
+	d.appendDeployLog(deployID, "→ Cache saved: node_modules")
+	_ = d.cache.Evict()
 }
 
 func FormatBuildCommand(name string, args ...string) string {
