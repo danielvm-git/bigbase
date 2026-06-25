@@ -1,3 +1,10 @@
+## [2.45.1](https://github.com/danielvm-git/bigbase/compare/v2.45.0...v2.45.1) (2026-06-25)
+
+
+### Bug Fixes
+
+* **env-vars:** harden secret storage — server-side masking, shared crypto, and error propagation ([d62388d](https://github.com/danielvm-git/bigbase/commit/d62388d7459e1269381963269d5b9a1e202b2e40))
+
 # [2.45.0](https://github.com/danielvm-git/bigbase/compare/v2.44.0...v2.45.0) (2026-06-24)
 
 
