@@ -92,8 +92,13 @@ func New(opts Options) *Sites {
 	if gitDir == "" {
 		gitDir = "data/git"
 	}
-	key, _ := parseEncryptionKey(opts.EnvEncryptionKey)
-	return &Sites{db: opts.DB, logger: logger, gitDir: gitDir, triggerDeploy: opts.TriggerDeploy, deleteSiteCleanup: opts.DeleteSiteCleanup, encryptionKey: key}
+	key, keyErr := parseEncryptionKey(opts.EnvEncryptionKey)
+	s := &Sites{db: opts.DB, logger: logger, gitDir: gitDir, triggerDeploy: opts.TriggerDeploy, deleteSiteCleanup: opts.DeleteSiteCleanup, encryptionKey: key}
+	if keyErr != nil {
+		// Log immediately — encryption is silently disabled when the key is malformed.
+		logger.Warn("env encryption key invalid — env vars will be stored without encryption", "error", keyErr)
+	}
+	return s
 }
 
 func (s *Sites) Name() string                  { return "sites" }

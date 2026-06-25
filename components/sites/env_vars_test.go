@@ -169,8 +169,11 @@ func TestEnvVarsAPI(t *testing.T) {
 		_ = json.NewDecoder(w.Body).Decode(&res)
 		data := res["data"].([]any)
 		ev := data[0].(map[string]any)
-		if ev["value"] != "postgres://prod/db" {
-			t.Fatalf("expected updated value in list, got %v", ev["value"])
+		// List returns value_preview (server-masked), not full plaintext (F03).
+		// "postgres://prod/db" is > 4 chars so preview is "••••/db"
+		preview, _ := ev["value_preview"].(string)
+		if preview == "" {
+			t.Fatalf("expected value_preview in list response, got none; full record: %v", ev)
 		}
 	})
 
@@ -232,7 +235,8 @@ func TestEnvVarsAPIWithEncryption(t *testing.T) {
 			t.Fatalf("expected 201, got %d: %s", w.Code, w.Body.String())
 		}
 
-		// List and verify plaintext is returned
+		// List returns value_preview (server-masked), not full plaintext (F03).
+		// "secret-token" → preview "••••oken"
 		req2 := httptest.NewRequest(http.MethodGet, "/api/sites/"+siteID+"/env-vars", nil)
 		w2 := httptest.NewRecorder()
 		h.ServeHTTP(w2, req2)
@@ -243,8 +247,13 @@ func TestEnvVarsAPIWithEncryption(t *testing.T) {
 			t.Fatalf("expected 1 env var, got %d", len(data))
 		}
 		ev := data[0].(map[string]any)
-		if ev["value"] != "secret-token" {
-			t.Fatalf("expected decrypted value, got %v", ev["value"])
+		preview, _ := ev["value_preview"].(string)
+		if preview != "\u2022\u2022\u2022\u2022oken" {
+			t.Fatalf("expected masked preview '••••oken', got %q", preview)
+		}
+		// Full value must NOT be present in list response.
+		if ev["value"] != nil {
+			t.Fatalf("list must not return full plaintext value, got %v", ev["value"])
 		}
 	})
 
@@ -260,6 +269,44 @@ func TestEnvVarsAPIWithEncryption(t *testing.T) {
 			t.Fatal("expected encrypted value in DB, got plaintext")
 		}
 	})
+}
+
+func TestEnvVarsListDecryptFailure(t *testing.T) {
+	// Sites runs with a real key, but we seed a row whose stored value cannot be
+	// decrypted (garbage ciphertext, e.g. after a key rotation or DB corruption).
+	key := strings.Repeat("a1", 32)
+	_, h, d := setupSitesWithKey(t, key)
+	siteID := createTestSiteForEnvVars(t, d)
+
+	_, err := d.ExecContext(context.Background(),
+		`INSERT INTO site_env_vars (id, site_id, key, value_encrypted, is_build_time, is_runtime, created_at, updated_at)
+		 VALUES ('ev-bad', ?, 'BROKEN', 'not-valid-ciphertext!!!', 0, 1, datetime('now'), datetime('now'))`,
+		siteID)
+	if err != nil {
+		t.Fatalf("seed broken row: %v", err)
+	}
+
+	req := httptest.NewRequest(http.MethodGet, "/api/sites/"+siteID+"/env-vars", nil)
+	w := httptest.NewRecorder()
+	h.ServeHTTP(w, req)
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", w.Code, w.Body.String())
+	}
+	var res map[string]any
+	_ = json.NewDecoder(w.Body).Decode(&res)
+	data := res["data"].([]any)
+	if len(data) != 1 {
+		t.Fatalf("expected 1 env var, got %d", len(data))
+	}
+	ev := data[0].(map[string]any)
+	// F04: an undecryptable value must surface a visible sentinel, not masquerade
+	// as a normal "••••" short value.
+	if ev["value_preview"] != "<decrypt error>" {
+		t.Fatalf("expected '<decrypt error>' preview, got %v", ev["value_preview"])
+	}
+	if ev["value"] != nil {
+		t.Fatalf("list must not return a plaintext value, got %v", ev["value"])
+	}
 }
 
 func TestEnvVarsSiteIsolation(t *testing.T) {

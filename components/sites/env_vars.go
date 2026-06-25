@@ -2,33 +2,31 @@ package sites
 
 import (
 	"context"
-	"crypto/aes"
-	"crypto/cipher"
-	"crypto/rand"
 	"database/sql"
-	"encoding/base64"
-	"encoding/hex"
 	"encoding/json"
-	"fmt"
-	"io"
 	"net/http"
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/danielvm/bigbase/components/internal/envcrypto"
 )
 
 var validEnvKey = regexp.MustCompile(`^[A-Z][A-Z0-9_]*$`)
 
 // EnvVar represents a site-scoped environment variable.
+// Value is the plaintext in write/single-read paths.
+// ValuePreview is a masked preview (last 4 chars) returned by the list endpoint.
 type EnvVar struct {
-	ID          string `json:"id"`
-	SiteID      string `json:"site_id"`
-	Key         string `json:"key"`
-	Value       string `json:"value"`
-	IsBuildTime bool   `json:"is_build_time"`
-	IsRuntime   bool   `json:"is_runtime"`
-	CreatedAt   string `json:"created_at"`
-	UpdatedAt   string `json:"updated_at"`
+	ID           string `json:"id"`
+	SiteID       string `json:"site_id"`
+	Key          string `json:"key"`
+	Value        string `json:"value,omitempty"`
+	ValuePreview string `json:"value_preview"`
+	IsBuildTime  bool   `json:"is_build_time"`
+	IsRuntime    bool   `json:"is_runtime"`
+	CreatedAt    string `json:"created_at"`
+	UpdatedAt    string `json:"updated_at"`
 }
 
 func (s *Sites) migrateEnvVars() error {
@@ -72,6 +70,8 @@ func (s *Sites) handleEnvVarsRoute(w http.ResponseWriter, r *http.Request, siteI
 	writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid path"})
 }
 
+// listEnvVars returns env vars with values masked server-side (F03).
+// Full plaintext is never sent over the wire in list responses.
 func (s *Sites) listEnvVars(w http.ResponseWriter, r *http.Request, siteID string) {
 	rows, err := s.db.QueryContext(r.Context(),
 		`SELECT id, site_id, key, value_encrypted, is_build_time, is_runtime, created_at, updated_at
@@ -82,23 +82,55 @@ func (s *Sites) listEnvVars(w http.ResponseWriter, r *http.Request, siteID strin
 		return
 	}
 	defer func() { _ = rows.Close() }()
-	writeJSON(w, http.StatusOK, map[string]any{"data": s.scanEnvVarRows(rows)})
+
+	items, scanErr := s.scanEnvVarRows(rows)
+	// F04/F05: a scan failure or a row-iteration error both mean the result set is
+	// incomplete — treat them the same way (fail the request) rather than silently
+	// returning partial data with a 200.
+	if scanErr != nil {
+		s.logger.Error("list env vars scan", "error", scanErr)
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		return
+	}
+	if err := rows.Err(); err != nil {
+		s.logger.Error("list env vars rows iteration", "error", err)
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"data": items})
 }
 
-func (s *Sites) scanEnvVarRows(rows interface{ Next() bool; Scan(...any) error }) []EnvVar {
+// previewDecryptError is the visible sentinel preview shown for a row whose stored
+// value cannot be decrypted (e.g. key rotation or DB corruption). It is distinct
+// from a normal short-value mask so operators can tell corruption from a 4-char
+// secret rather than seeing an indistinguishable "••••".
+const previewDecryptError = "<decrypt error>"
+
+// scanEnvVarRows decrypts values and populates ValuePreview; Value is left empty
+// so the list response never leaks full secrets (F03). Returns the first scan
+// error encountered (F06) so the caller can fail the request.
+func (s *Sites) scanEnvVarRows(rows *sql.Rows) ([]EnvVar, error) {
 	out := make([]EnvVar, 0)
 	for rows.Next() {
 		var ev EnvVar
 		var encrypted string
 		var bt, rt int
 		if err := rows.Scan(&ev.ID, &ev.SiteID, &ev.Key, &encrypted, &bt, &rt, &ev.CreatedAt, &ev.UpdatedAt); err != nil {
-			continue
+			s.logger.Error("scan env var row", "error", err) // F06: log instead of silently skip
+			return nil, err
 		}
 		ev.IsBuildTime, ev.IsRuntime = bt == 1, rt == 1
-		ev.Value, _ = s.decryptValue(encrypted)
+		plaintext, err := envcrypto.Decrypt(s.encryptionKey, encrypted)
+		if err != nil {
+			s.logger.Warn("decrypt env var", "key", ev.Key, "error", err)
+			ev.ValuePreview = previewDecryptError // F04: surface corruption, don't masquerade as a value
+		} else {
+			ev.ValuePreview = envcrypto.MaskValue(plaintext) // F03: mask server-side
+			// ev.Value intentionally left empty in list responses
+		}
 		out = append(out, ev)
 	}
-	return out
+	return out, nil
 }
 
 func (s *Sites) createEnvVar(w http.ResponseWriter, r *http.Request, siteID string) {
@@ -106,7 +138,7 @@ func (s *Sites) createEnvVar(w http.ResponseWriter, r *http.Request, siteID stri
 	if !ok {
 		return
 	}
-	encrypted, err := s.encryptValue(value)
+	encrypted, err := envcrypto.Encrypt(s.encryptionKey, value)
 	if err != nil {
 		s.logger.Error("encrypt env var", "error", err)
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
@@ -130,7 +162,7 @@ func (s *Sites) updateEnvVar(w http.ResponseWriter, r *http.Request, siteID, key
 		s.handleEnvVarLookupErr(w, "lookup env var", err)
 		return
 	}
-	encrypted, err := s.encryptValue(value)
+	encrypted, err := envcrypto.Encrypt(s.encryptionKey, value)
 	if err != nil {
 		s.logger.Error("encrypt env var", "error", err)
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
@@ -142,7 +174,17 @@ func (s *Sites) updateEnvVar(w http.ResponseWriter, r *http.Request, siteID, key
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
-	writeJSON(w, http.StatusOK, EnvVar{ID: existingID, SiteID: siteID, Key: key, Value: value, IsBuildTime: buildTime, IsRuntime: isRuntime, UpdatedAt: now})
+	ev := EnvVar{
+		ID:           existingID,
+		SiteID:       siteID,
+		Key:          key,
+		Value:        value, // plaintext returned only on write response
+		ValuePreview: envcrypto.MaskValue(value),
+		IsBuildTime:  buildTime,
+		IsRuntime:    isRuntime,
+		UpdatedAt:    now,
+	}
+	writeJSON(w, http.StatusOK, ev)
 }
 
 func (s *Sites) deleteEnvVar(w http.ResponseWriter, r *http.Request, siteID, key string) {
@@ -193,7 +235,17 @@ func (s *Sites) insertEnvVar(ctx context.Context, siteID, key, plainValue, encry
 	if err != nil {
 		return EnvVar{}, err
 	}
-	return EnvVar{ID: id, SiteID: siteID, Key: key, Value: plainValue, IsBuildTime: buildTime, IsRuntime: isRuntime, CreatedAt: now, UpdatedAt: now}, nil
+	return EnvVar{
+		ID:           id,
+		SiteID:       siteID,
+		Key:          key,
+		Value:        plainValue, // plaintext on create response
+		ValuePreview: envcrypto.MaskValue(plainValue),
+		IsBuildTime:  buildTime,
+		IsRuntime:    isRuntime,
+		CreatedAt:    now,
+		UpdatedAt:    now,
+	}, nil
 }
 
 func (s *Sites) execUpdateEnvVar(ctx context.Context, siteID, key, encrypted string, buildTime, isRuntime bool, now string) error {
@@ -218,6 +270,7 @@ func (s *Sites) handleEnvVarLookupErr(w http.ResponseWriter, msg string, err err
 	s.logger.Error(msg, "error", err)
 	writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 }
+
 func (s *Sites) handleEnvVarWriteErr(w http.ResponseWriter, msg string, err error) {
 	if strings.Contains(err.Error(), "UNIQUE constraint") {
 		writeJSON(w, http.StatusConflict, map[string]string{"error": "env var with this key already exists"})
@@ -226,6 +279,7 @@ func (s *Sites) handleEnvVarWriteErr(w http.ResponseWriter, msg string, err erro
 	s.logger.Error(msg, "error", err)
 	writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 }
+
 func boolToInt(b bool) int {
 	if b {
 		return 1
@@ -233,66 +287,8 @@ func boolToInt(b bool) int {
 	return 0
 }
 
-// encryptValue uses AES-256-GCM when a key is configured; stores as-is otherwise.
-func (s *Sites) encryptValue(plaintext string) (string, error) {
-	if s.encryptionKey == nil {
-		return plaintext, nil
-	}
-	return siteEncryptAESGCM(s.encryptionKey, plaintext)
-}
-func (s *Sites) decryptValue(stored string) (string, error) {
-	if s.encryptionKey == nil {
-		return stored, nil
-	}
-	return siteDecryptAESGCM(s.encryptionKey, stored)
-}
-func siteEncryptAESGCM(key []byte, plaintext string) (string, error) {
-	block, err := aes.NewCipher(key)
-	if err != nil {
-		return "", fmt.Errorf("new cipher: %w", err)
-	}
-	gcm, err := cipher.NewGCM(block)
-	if err != nil {
-		return "", fmt.Errorf("new gcm: %w", err)
-	}
-	nonce := make([]byte, gcm.NonceSize())
-	if _, err := io.ReadFull(rand.Reader, nonce); err != nil {
-		return "", fmt.Errorf("generate nonce: %w", err)
-	}
-	return base64.StdEncoding.EncodeToString(gcm.Seal(nonce, nonce, []byte(plaintext), nil)), nil
-}
-func siteDecryptAESGCM(key []byte, stored string) (string, error) {
-	data, err := base64.StdEncoding.DecodeString(stored)
-	if err != nil {
-		return "", fmt.Errorf("base64 decode: %w", err)
-	}
-	block, err := aes.NewCipher(key)
-	if err != nil {
-		return "", fmt.Errorf("new cipher: %w", err)
-	}
-	gcm, err := cipher.NewGCM(block)
-	if err != nil {
-		return "", fmt.Errorf("new gcm: %w", err)
-	}
-	if len(data) < gcm.NonceSize() {
-		return "", fmt.Errorf("ciphertext too short")
-	}
-	plaintext, err := gcm.Open(nil, data[:gcm.NonceSize()], data[gcm.NonceSize():], nil)
-	if err != nil {
-		return "", fmt.Errorf("decrypt: %w", err)
-	}
-	return string(plaintext), nil
-}
+// parseEncryptionKey validates and decodes the hex env encryption key.
+// Returns nil, nil when empty (encryption disabled).
 func parseEncryptionKey(keyHex string) ([]byte, error) {
-	if keyHex == "" {
-		return nil, nil
-	}
-	key, err := hex.DecodeString(keyHex)
-	if err != nil {
-		return nil, fmt.Errorf("invalid hex key: %w", err)
-	}
-	if len(key) != 32 {
-		return nil, fmt.Errorf("env encryption key must be 32 bytes (64 hex chars), got %d bytes", len(key))
-	}
-	return key, nil
+	return envcrypto.ParseKey(keyHex)
 }

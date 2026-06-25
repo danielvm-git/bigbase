@@ -56,7 +56,8 @@ export interface EnvVar {
   id: string
   site_id: string
   key: string
-  value: string
+  value?: string         // present only on create/update responses
+  value_preview: string  // server-masked (e.g. ••••XXXX), always present
   is_build_time: boolean
   is_runtime: boolean
   created_at: string

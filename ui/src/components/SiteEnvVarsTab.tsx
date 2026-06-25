@@ -5,10 +5,6 @@ import type { EnvVar } from '../types/sites'
 
 const KEY_RE = /^[A-Z][A-Z0-9_]*$/
 
-function maskValue(value: string): string {
-  if (value.length <= 4) return '••••'
-  return '••••' + value.slice(-4)
-}
 
 function parseEnvFile(text: string): Array<{ key: string; value: string }> {
   return text
@@ -39,7 +35,7 @@ function EnvVarRow({
       <td><code style={{ fontSize: 'var(--text-sm)' }}>{ev.key}</code></td>
       <td>
         <code style={{ fontSize: 'var(--text-sm)', color: 'var(--fg-secondary)' }}>
-          {maskValue(ev.value)}
+          {ev.value_preview}
         </code>
       </td>
       <td style={{ textAlign: 'center' }}>{ev.is_build_time ? '✓' : '—'}</td>
@@ -78,6 +74,8 @@ function AddEditForm({
   saving: boolean
 }) {
   const [key, setKey] = useState(initial?.key ?? '')
+  // On edit, initial.value is undefined (list responses carry only masked previews),
+  // so the value field starts blank and an edit must re-enter the full value.
   const [value, setValue] = useState(initial?.value ?? '')
   const [showValue, setShowValue] = useState(false)
   const [isBuildTime, setIsBuildTime] = useState(initial?.is_build_time ?? false)
@@ -197,14 +195,9 @@ export function SiteEnvVarsTab({ siteId }: { siteId: string }) {
     void load()
   }
 
-  const handleExport = () => {
-    const lines = envVars.map(ev => `${ev.key}=${ev.value}`).join('\n')
-    const blob = new Blob([lines + '\n'], { type: 'text/plain' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url; a.download = '.env'; a.click()
-    URL.revokeObjectURL(url)
-  }
+  // No export: list responses only carry masked previews (F03), so a client-side
+  // export would emit unusable "••••xxxx" values and silently corrupt secrets on
+  // re-import. A real export needs a server-side decrypt endpoint (deferred).
 
   const handleImportFile = async (file: File) => {
     setImporting(true); setImportError(null)
@@ -220,14 +213,21 @@ export function SiteEnvVarsTab({ siteId }: { siteId: string }) {
       }
     }
 
+    // F04: collect per-item errors and report aggregate
+    const errors: string[] = []
     for (const { key, value } of pairs) {
+      let res: { ok: boolean; error?: string }
       if (existingKeys.has(key)) {
-        await updateEnvVar(siteId, key, { value, is_build_time: false, is_runtime: true })
+        res = await updateEnvVar(siteId, key, { value, is_build_time: false, is_runtime: true })
       } else {
-        await createEnvVar(siteId, { key, value, is_build_time: false, is_runtime: true })
+        res = await createEnvVar(siteId, { key, value, is_build_time: false, is_runtime: true })
       }
+      if (!res.ok) errors.push(`${key}: ${res.error ?? 'failed'}`)
     }
     setImporting(false)
+    if (errors.length > 0) {
+      setImportError(`${errors.length} var(s) failed to import:\n${errors.join('\n')}`)
+    }
     void load()
   }
 
@@ -254,9 +254,6 @@ export function SiteEnvVarsTab({ siteId }: { siteId: string }) {
           <Button variant="secondary" size="sm" onClick={() => fileRef.current?.click()} disabled={importing}>
             {importing ? 'Importing…' : 'Import .env'}
           </Button>
-          {envVars.length > 0 && (
-            <Button variant="secondary" size="sm" onClick={handleExport}>Export .env</Button>
-          )}
           <Button variant="primary" size="sm" onClick={() => { setShowAdd(true); setEditEv(null) }}>
             Add Variable
           </Button>

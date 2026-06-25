@@ -162,8 +162,11 @@ func New(opts Options) *Deploy {
 		logHubs:      make(map[string]*logHub),
 		sm:           newStateMachine(),
 	}
-	if envKey, err := parseEnvEncryptionKey(opts.EnvEncryptionKey); err == nil {
-		d.envKey = envKey
+	envKey, envKeyErr := parseEnvEncryptionKey(opts.EnvEncryptionKey)
+	d.envKey = envKey
+	if envKeyErr != nil {
+		// Encryption disabled — warn so operators notice the misconfiguration.
+		d.logger.Warn("env encryption key invalid — env vars stored without encryption", "error", envKeyErr)
 	}
 	runner := opts.Runner
 	if runner == nil {
@@ -812,7 +815,10 @@ func (d *Deploy) getCommitSHA(buildDir string) (string, error) {
 }
 
 func (d *Deploy) buildApp(ctx context.Context, deployID, siteID, buildDir string, appType AppType, manifest *Manifest) error {
-	siteEnv, _ := d.FetchSiteEnvVars(ctx, siteID, true)
+	siteEnv, err := d.FetchSiteEnvVars(ctx, siteID, true)
+	if err != nil {
+		return fmt.Errorf("fetch build-time env vars: %w", err)
+	}
 
 	// Use manifest build command if present, falling back to auto-detection.
 	if manifest != nil && manifest.Build.Command != "" {
@@ -916,8 +922,11 @@ func (d *Deploy) startApp(ctx context.Context, buildDir string, deploy *Deployme
 
 	cmd.Env = append(os.Environ(), fmt.Sprintf("PORT=%d", deploy.Port))
 
-	// Inject site env vars (runtime) into the running process.
-	if siteEnv, err := d.FetchSiteEnvVars(ctx, deploy.SiteID, false); err == nil {
+	// Inject site env vars (runtime) into the running process. A fetch failure
+	// must not be silent: the app would boot without its secrets (F09).
+	if siteEnv, err := d.FetchSiteEnvVars(ctx, deploy.SiteID, false); err != nil {
+		d.logger.Warn("fetch runtime env vars — app starting without site env", "site", deploy.SiteID, "error", err)
+	} else {
 		cmd.Env = append(cmd.Env, siteEnv...)
 	}
 
