@@ -3,6 +3,8 @@ package deploy
 import (
 	"context"
 	"encoding/json"
+	"errors"
+	"io"
 	"net/http"
 	"strings"
 	"time"
@@ -83,7 +85,7 @@ func (d *Deploy) handleCachePrune(w http.ResponseWriter, r *http.Request) {
 	var req struct {
 		MaxAgeDays *int `json:"max_age_days"`
 	}
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil && err.Error() != "EOF" {
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil && !errors.Is(err, io.EOF) {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json or body too large"})
 		return
 	}

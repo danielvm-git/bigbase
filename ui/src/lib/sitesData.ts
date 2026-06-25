@@ -389,19 +389,22 @@ export async function deleteEnvVar(siteId: string, key: string): Promise<{ ok: b
 
 const emptySiteCache: SiteCacheStatus = { entries: [], total_size_bytes: 0, total_hits: 0 }
 
-export async function getSiteCache(siteId: string): Promise<SiteCacheStatus> {
+export async function getSiteCache(siteId: string): Promise<{ status: SiteCacheStatus; ok: boolean }> {
   if (isPreviewForced()) {
     return {
-      entries: [
-        { key: 'a1b2c3d4e5f6', site_id: siteId, repo_id: 'repo', branch: 'main', size: 134217728, hit_count: 12, created_at: new Date(Date.now() - 86400000).toISOString() },
-      ],
-      total_size_bytes: 134217728,
-      total_hits: 12,
+      status: {
+        entries: [
+          { key: 'a1b2c3d4e5f6', site_id: siteId, repo_id: 'repo', branch: 'main', size: 134217728, hit_count: 12, created_at: new Date(Date.now() - 86400000).toISOString() },
+        ],
+        total_size_bytes: 134217728,
+        total_hits: 12,
+      },
+      ok: true,
     }
   }
   const { ok, data } = await fetchJSON<SiteCacheStatus>(`/api/deploy/cache/site/${siteId}`)
-  if (ok && data && Array.isArray(data.entries)) return data
-  return emptySiteCache
+  if (ok && data && Array.isArray(data.entries)) return { status: data, ok: true }
+  return { status: emptySiteCache, ok: false }
 }
 
 export async function clearSiteCache(siteId: string): Promise<{ ok: boolean; error?: string }> {

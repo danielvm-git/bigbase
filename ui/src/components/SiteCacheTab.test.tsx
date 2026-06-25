@@ -12,13 +12,15 @@ vi.mock('../lib/sitesData', () => ({
 // eslint-disable-next-line import/first
 import { SiteCacheTab } from './SiteCacheTab'
 
-const populated = {
+const populatedStatus = {
   entries: [
     { key: 'a1b2c3d4e5f6aaaa', site_id: 's1', repo_id: 'r1', branch: 'main', size: 134217728, hit_count: 7, created_at: '2026-06-01T10:00:00Z' },
   ],
   total_size_bytes: 134217728,
   total_hits: 7,
 }
+const populated = { status: populatedStatus, ok: true }
+const emptyOk = { status: { entries: [], total_size_bytes: 0, total_hits: 0 }, ok: true }
 
 describe('SiteCacheTab', () => {
   beforeEach(() => {
@@ -26,7 +28,7 @@ describe('SiteCacheTab', () => {
   })
 
   it('shows an empty state when no cache entries exist', async () => {
-    getSiteCache.mockResolvedValue({ entries: [], total_size_bytes: 0, total_hits: 0 })
+    getSiteCache.mockResolvedValue(emptyOk)
     render(<SiteCacheTab siteId="s1" />)
     await waitFor(() => {
       expect(screen.getByText(/No cached dependencies yet/)).toBeInTheDocument()
@@ -49,7 +51,7 @@ describe('SiteCacheTab', () => {
   })
 
   it('clears the cache after confirmation and reloads', async () => {
-    getSiteCache.mockResolvedValueOnce(populated).mockResolvedValueOnce({ entries: [], total_size_bytes: 0, total_hits: 0 })
+    getSiteCache.mockResolvedValueOnce(populated).mockResolvedValueOnce(emptyOk)
     clearSiteCache.mockResolvedValue({ ok: true })
     vi.spyOn(window, 'confirm').mockReturnValue(true)
 
@@ -72,6 +74,14 @@ describe('SiteCacheTab', () => {
     fireEvent.click(screen.getByRole('button', { name: /clear cache/i }))
 
     expect(clearSiteCache).not.toHaveBeenCalled()
+  })
+
+  it('surfaces an error when the initial load fails (not a false empty state)', async () => {
+    getSiteCache.mockResolvedValue({ status: { entries: [], total_size_bytes: 0, total_hits: 0 }, ok: false })
+    render(<SiteCacheTab siteId="s1" />)
+    await waitFor(() => {
+      expect(screen.getByText(/Could not load cache status/)).toBeInTheDocument()
+    })
   })
 
   it('surfaces an error when clearing fails', async () => {

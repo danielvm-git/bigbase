@@ -13,7 +13,9 @@ export function SiteCacheTab({ siteId }: { siteId: string }) {
   const load = async () => {
     setLoading(true)
     setError(null)
-    setStatus(await getSiteCache(siteId))
+    const res = await getSiteCache(siteId)
+    setStatus(res.status)
+    if (!res.ok) setError('Could not load cache status. Check that the server is reachable.')
     setLoading(false)
   }
 
