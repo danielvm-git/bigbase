@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sync"
 	"testing"
 	"time"
 )
@@ -348,5 +349,66 @@ func TestCacheStats(t *testing.T) {
 	}
 	if stats.TotalSizeB <= 0 {
 		t.Error("total size should be > 0")
+	}
+}
+
+// TestCacheRemoveEntry_PropagatesError verifies eviction surfaces real I/O
+// failures instead of silently believing a file was removed while it remains
+// on disk (which would let the cache grow past maxBytes forever).
+func TestCacheRemoveEntry_PropagatesError(t *testing.T) {
+	cacheDir := t.TempDir()
+	cache := NewCache(cacheDir, 0)
+
+	// Make "bad.tar.gz" a non-empty directory so os.Remove fails with ENOTEMPTY
+	// rather than a missing-file (IsNotExist) case, which is legitimately ignored.
+	tarAsDir := filepath.Join(cacheDir, "bad.tar.gz")
+	if err := os.Mkdir(tarAsDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(tarAsDir, "child"), []byte("x"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := cache.removeEntry("bad"); err == nil {
+		t.Error("removeEntry should propagate the os.Remove failure, got nil")
+	}
+}
+
+// TestCacheConcurrentRestore_NoRace exercises the mutex: many goroutines restore
+// the same key at once. Run with -race to catch the missing-lock regression.
+// The serialized read-modify-write must also leave HitCount exactly == N.
+func TestCacheConcurrentRestore_NoRace(t *testing.T) {
+	cacheDir := t.TempDir()
+	cache := NewCache(cacheDir, 0)
+
+	srcDir := t.TempDir()
+	_ = os.WriteFile(filepath.Join(srcDir, "f.txt"), []byte("payload"), 0644)
+	if err := cache.Save("shared", srcDir, "site1", "r1", "main", []string{"f.txt"}); err != nil {
+		t.Fatal(err)
+	}
+
+	const n = 16
+	var wg sync.WaitGroup
+	wg.Add(n)
+	for i := 0; i < n; i++ {
+		go func() {
+			defer wg.Done()
+			dst := t.TempDir()
+			if hit, err := cache.Restore("shared", dst); err != nil || !hit {
+				t.Errorf("Restore: hit=%v err=%v", hit, err)
+			}
+		}()
+	}
+	wg.Wait()
+
+	entries, err := cache.ListEntries()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(entries) != 1 {
+		t.Fatalf("expected 1 entry, got %d", len(entries))
+	}
+	if entries[0].HitCount != n {
+		t.Errorf("expected HitCount %d, got %d (lost increments)", n, entries[0].HitCount)
 	}
 }

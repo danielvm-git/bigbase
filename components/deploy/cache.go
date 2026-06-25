@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"sync"
 	"time"
 )
 
@@ -30,7 +31,10 @@ type CacheStats struct {
 
 // Cache manages on-disk build dependency archives.
 // All methods are safe to use even when the cache directory does not yet exist.
+// A mutex serialises every read-modify-write so concurrent deploys (each
+// launched as its own goroutine) never race on the archive or metadata files.
 type Cache struct {
+	mu       sync.RWMutex
 	dir      string
 	maxBytes int64
 }
@@ -86,6 +90,9 @@ func findLockfileHash(dir string) (string, error) {
 // Restore extracts a cached archive into dstDir.
 // Returns (true, nil) on cache hit, (false, nil) on miss, and (false, err) on I/O error.
 func (c *Cache) Restore(key, dstDir string) (bool, error) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
 	tarPath := filepath.Join(c.dir, key+".tar.gz")
 	f, err := os.Open(tarPath)
 	if os.IsNotExist(err) {
@@ -107,6 +114,9 @@ func (c *Cache) Restore(key, dstDir string) (bool, error) {
 // Save creates a gzipped tar of paths (relative to srcDir) and stores metadata.
 // Paths that do not exist in srcDir are silently skipped.
 func (c *Cache) Save(key, srcDir, siteID, repoID, branch string, paths []string) error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
 	size, err := c.writeArchive(key, srcDir, paths)
 	if err != nil {
 		return err
@@ -142,7 +152,10 @@ func (c *Cache) writeArchive(key, srcDir string, paths []string) (int64, error) 
 
 // Evict removes the oldest cache entries until total size falls below maxBytes.
 func (c *Cache) Evict() error {
-	entries, err := c.ListEntries()
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	entries, err := c.listEntries()
 	if err != nil {
 		return err
 	}
@@ -168,7 +181,10 @@ func (c *Cache) Evict() error {
 
 // PurgeSite removes all cache entries associated with siteID.
 func (c *Cache) PurgeSite(siteID string) error {
-	entries, err := c.ListEntries()
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	entries, err := c.listEntries()
 	if err != nil {
 		return err
 	}
@@ -184,6 +200,13 @@ func (c *Cache) PurgeSite(siteID string) error {
 
 // ListEntries returns all cache entries sorted by CreatedAt ascending.
 func (c *Cache) ListEntries() ([]CacheEntry, error) {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	return c.listEntries()
+}
+
+// listEntries is the lock-free core of ListEntries. Callers must hold c.mu.
+func (c *Cache) listEntries() ([]CacheEntry, error) {
 	files, err := filepath.Glob(filepath.Join(c.dir, "*.meta.json"))
 	if err != nil {
 		return nil, err
@@ -208,7 +231,10 @@ func (c *Cache) ListEntries() ([]CacheEntry, error) {
 
 // Stats returns aggregate cache statistics.
 func (c *Cache) Stats() (CacheStats, error) {
-	entries, err := c.ListEntries()
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+
+	entries, err := c.listEntries()
 	if err != nil {
 		return CacheStats{}, err
 	}
@@ -242,8 +268,15 @@ func (c *Cache) updateMeta(key string, fn func(*CacheEntry)) error {
 	return c.writeMeta(key, e)
 }
 
+// removeEntry deletes the archive and metadata for key. A missing file is not
+// an error (the entry is already gone), but any other I/O failure is returned
+// so Evict and PurgeSite never report a phantom deletion that left bytes on disk.
 func (c *Cache) removeEntry(key string) error {
-	_ = os.Remove(filepath.Join(c.dir, key+".tar.gz"))
-	_ = os.Remove(filepath.Join(c.dir, key+".meta.json"))
-	return nil
+	var firstErr error
+	for _, suffix := range []string{".tar.gz", ".meta.json"} {
+		if err := os.Remove(filepath.Join(c.dir, key+suffix)); err != nil && !os.IsNotExist(err) && firstErr == nil {
+			firstErr = err
+		}
+	}
+	return firstErr
 }
