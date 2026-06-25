@@ -66,6 +66,28 @@ export interface EnvVar {
 
 export type SiteSource = 'github' | 'existing' | 'empty' | 'template'
 
+export interface CacheEntry {
+  key: string
+  site_id: string
+  repo_id: string
+  branch: string
+  size: number
+  hit_count: number
+  created_at: string
+}
+
+export interface SiteCacheStatus {
+  entries: CacheEntry[]
+  total_size_bytes: number
+  total_hits: number
+}
+
+export interface CacheStats {
+  total_entries: number
+  total_size_bytes: number
+  max_size_bytes: number
+}
+
 export interface SitesDataResult<T> {
   data: T
   previewMode: boolean
