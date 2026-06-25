@@ -18,19 +18,20 @@ metrics:
   stories_completed: 138
   bcps_per_hour: 0.4
 epic_cycle:
-  step: 1
+  step: 4
   story_bcps: 1
   story: e42s02
   audit_result: null
-  note: "e42s01 merged (PR #47, 29238a6) — incl. post-review fix (mutex + eviction error propagation, 1a0968e). Starting e42s02 — Admin UI cache management."
+  completed_steps: [1, 2, 3]
+  note: "e42s02 in TDD. Branch feat/e42s02-cache-ui (worktree ../e42s02-cache-ui). Baseline clean: 179 deploy tests, UI build OK. Backend cache endpoints → per-site tab → global panel."
 bug_cycle:
   current_step: 0
   completed_steps: []
   bug_file: null
 git:
-  branch: main
-  hash: 8fd1501
-  worktree: null
+  branch: feat/e42s02-cache-ui
+  hash: 29238a6
+  worktree: ../e42s02-cache-ui
 handoff:
   last_step_completed: release-branch
   open_decisions: []
