@@ -18,12 +18,12 @@ metrics:
   stories_completed: 138
   bcps_per_hour: 0.4
 epic_cycle:
-  step: 4
+  step: 8
   story_bcps: 1
   story: e42s02
-  audit_result: null
-  completed_steps: [1, 2, 3]
-  note: "e42s02 in TDD. Branch feat/e42s02-cache-ui (worktree ../e42s02-cache-ui). Baseline clean: 179 deploy tests, UI build OK. Backend cache endpoints → per-site tab → global panel."
+  audit_result: pass
+  completed_steps: [1, 2, 3, 4, 5, 6, 7]
+  note: "e42s02 complete — PR #48 open. Backend cache endpoints + per-site Cache tab + global Build Cache panel. UAT smoke caught/fixed prune-0 bug. Go 803, UI 295, audit PASS. Awaiting CI/merge."
 bug_cycle:
   current_step: 0
   completed_steps: []
