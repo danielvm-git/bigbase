@@ -2154,3 +2154,167 @@ func TestResumeCandidatesAttemptsProcessApps(t *testing.T) {
 			" — regression: non-static deployments must call startApp on resume")
 	}
 }
+
+// createTestNodeRepoWithLockfile creates a minimal Node repo that has a
+// package-lock.json (so a cache key can be derived) and a trivial build script.
+func createTestNodeRepoWithLockfile(t *testing.T, database *db.DB, repoID, gitDir string) string {
+	t.Helper()
+
+	_, err := database.ExecContext(context.Background(),
+		`CREATE TABLE IF NOT EXISTS git_repos (
+			id TEXT PRIMARY KEY, name TEXT NOT NULL UNIQUE, owner_id INTEGER NOT NULL,
+			private INTEGER NOT NULL DEFAULT 1, default_branch TEXT NOT NULL DEFAULT 'main',
+			description TEXT DEFAULT '', created_at TEXT NOT NULL DEFAULT (datetime('now'))
+		)`)
+	if err != nil {
+		t.Fatalf("create git_repos table: %v", err)
+	}
+	_, err = database.ExecContext(context.Background(),
+		"INSERT INTO git_repos (id, name, owner_id, private, default_branch, description, created_at) VALUES (?, ?, ?, ?, ?, ?, datetime('now'))",
+		repoID, "node-cache-repo", 0, 1, "main", "node repo with lockfile")
+	if err != nil {
+		t.Fatalf("insert repo: %v", err)
+	}
+
+	repoPath := filepath.Join(gitDir, repoID+".git")
+	mustRun(t, "git", "init", "--bare", "-b", "main", repoPath)
+	mustRun(t, "git", "config", "--global", "--add", "safe.directory", repoPath)
+
+	sourceDir := t.TempDir()
+	mustRun(t, "git", "init", "-b", "main", sourceDir)
+	mustRun(t, "git", "config", "--global", "--add", "safe.directory", sourceDir)
+	mustRun(t, "git", "-C", sourceDir, "config", "user.email", "test@test.com")
+	mustRun(t, "git", "-C", sourceDir, "config", "user.name", "test")
+
+	// package.json: no dependencies (npm install is instant) + trivial build
+	pkg := `{"name":"cache-test","private":true,"scripts":{"build":"echo build-done"}}`
+	if err := os.WriteFile(filepath.Join(sourceDir, "package.json"), []byte(pkg), 0644); err != nil {
+		t.Fatalf("write package.json: %v", err)
+	}
+	// package-lock.json: minimal v3 lockfile (required for cache key derivation)
+	lockfile := `{"name":"cache-test","version":"1.0.0","lockfileVersion":3,"requires":true,"packages":{}}`
+	if err := os.WriteFile(filepath.Join(sourceDir, "package-lock.json"), []byte(lockfile), 0644); err != nil {
+		t.Fatalf("write package-lock.json: %v", err)
+	}
+
+	mustRun(t, "git", "-C", sourceDir, "add", ".")
+	mustRun(t, "git", "-C", sourceDir, "commit", "-m", "initial commit")
+	mustRun(t, "git", "-C", sourceDir, "remote", "add", "origin", repoPath)
+	mustRun(t, "git", "-C", sourceDir, "push", "-u", "origin", "main")
+	return repoID
+}
+
+func getDeployLogs(t *testing.T, handler http.Handler, depID string) []string {
+	t.Helper()
+	req := httptest.NewRequest("GET", "/api/deploy/"+depID+"/logs", nil)
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+	if w.Code != http.StatusOK {
+		t.Fatalf("get logs: expected 200, got %d", w.Code)
+	}
+	var body map[string]any
+	_ = json.NewDecoder(w.Body).Decode(&body)
+	raw, _ := body["lines"].([]any)
+	out := make([]string, 0, len(raw))
+	for _, l := range raw {
+		if s, ok := l.(string); ok {
+			out = append(out, s)
+		}
+	}
+	return out
+}
+
+func triggerDeploy(t *testing.T, handler http.Handler, repoID string) string {
+	t.Helper()
+	var buf bytes.Buffer
+	_ = json.NewEncoder(&buf).Encode(map[string]string{"repo_id": repoID})
+	req := httptest.NewRequest("POST", "/api/deploy", &buf)
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+	if w.Code != http.StatusCreated {
+		t.Fatalf("trigger deploy: expected 201, got %d: %s", w.Code, w.Body.String())
+	}
+	var created map[string]any
+	_ = json.NewDecoder(w.Body).Decode(&created)
+	id, _ := created["id"].(string)
+	return id
+}
+
+// TestBuildCache_NodeInstall_HitSkipsInstall verifies the end-to-end cache flow:
+// first deploy populates the cache, second deploy restores from it and skips npm install.
+func TestBuildCache_NodeInstall_HitSkipsInstall(t *testing.T) {
+	if _, err := exec.LookPath("npm"); err != nil {
+		t.Skip("npm not in PATH")
+	}
+
+	logger := testLogger{}
+	k := kernel.New(logger)
+	database := db.New(db.Options{Path: ":memory:", Logger: logger})
+	gitDir := t.TempDir()
+	gitComp := newGitStub(gitDir)
+	buildsDir := t.TempDir()
+	cacheDir := t.TempDir()
+
+	dep := deploy.New(deploy.Options{
+		DB:        database,
+		Logger:    logger,
+		BuildsDir: buildsDir,
+		GitDir:    gitDir,
+		CacheDir:  cacheDir,
+	})
+	k.Register(database)
+	k.Register(gitComp)
+	k.Register(dep)
+	if err := k.Start(); err != nil {
+		t.Fatalf("kernel start: %v", err)
+	}
+	t.Cleanup(func() { _ = k.Stop() })
+
+	handler := dep.Handler()
+	repoID := createTestNodeRepoWithLockfile(t, database, "repo-cache-e2e", gitDir)
+
+	// First deploy: cache miss — npm install runs and result is saved.
+	dep1 := triggerDeploy(t, handler, repoID)
+	waitForDeploymentTerminal(t, handler, dep1, 60*time.Second)
+
+	logs1 := getDeployLogs(t, handler, dep1)
+	hasNpmInstall := false
+	hasCacheSaved := false
+	for _, l := range logs1 {
+		if strings.Contains(l, "npm install") {
+			hasNpmInstall = true
+		}
+		if strings.Contains(l, "Cache saved") {
+			hasCacheSaved = true
+		}
+	}
+	if !hasNpmInstall {
+		t.Error("first deploy should run npm install on cache miss")
+	}
+	if !hasCacheSaved {
+		t.Errorf("first deploy should save to cache; logs: %v", logs1)
+	}
+
+	// Second deploy: cache hit — npm install must be skipped.
+	dep2 := triggerDeploy(t, handler, repoID)
+	waitForDeploymentTerminal(t, handler, dep2, 60*time.Second)
+
+	logs2 := getDeployLogs(t, handler, dep2)
+	hasCacheHit := false
+	hasNpmInstall2 := false
+	for _, l := range logs2 {
+		if strings.Contains(l, "Cache hit") {
+			hasCacheHit = true
+		}
+		if strings.Contains(l, "Running: npm install") {
+			hasNpmInstall2 = true
+		}
+	}
+	if !hasCacheHit {
+		t.Errorf("second deploy should hit cache; logs: %v", logs2)
+	}
+	if hasNpmInstall2 {
+		t.Errorf("second deploy should skip npm install on cache hit; logs: %v", logs2)
+	}
+}
