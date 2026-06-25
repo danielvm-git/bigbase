@@ -14,7 +14,7 @@ covers:
 stories:
   - id: e42s01
     title: "Cache key derivation and storage"
-    status: planned
+    status: done
     bcps: 2
     tasks:
       - desc: "Derive cache key from repo + branch + lockfile hash (package-lock.json, yarn.lock, go.sum)"
