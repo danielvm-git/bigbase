@@ -19,12 +19,12 @@ metrics:
   stories_completed: 140
   bcps_per_hour: 0.4
 epic_cycle:
-  step: 3
+  step: 5
   story_bcps: 2
   story: e44s01
   audit_result: null
-  completed_steps: [1, 2]
-  note: "e44s01 — Step 1+2 done (survey + plan-work). Moving to Step 3: kickoff-branch."
+  completed_steps: [1, 2, 3, 4]
+  note: "e44s01 — Step 3 (kickoff-branch) + Step 4 (develop-tdd) complete. All 4 rollback tests + all deploy tests + full project pass."
   fast_mode: true
 bug_cycle:
   current_step: 0
@@ -37,6 +37,6 @@ git:
 handoff:
   last_step_completed: release-branch
   open_decisions: []
-  next_skill: kickoff-branch
-  summary: "e44s01 build_epic — Step 1+2 complete"
-  context: "e44s01: POST /api/sites/:id/rollback endpoint + artifact reuse (no rebuild). Moving to kickoff-branch."
+  next_skill: verify-work
+  summary: "e44s01 build_epic — Step 4 complete, Step 5 next"
+  context: "e44s01: Rollback backend implemented. Moving to Step 5 (verify-work)."

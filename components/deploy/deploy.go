@@ -258,6 +258,9 @@ func (d *Deploy) Start(ctx *kernel.Context) error {
 	if err := d.ensureHealthSummaryColumn(); err != nil {
 		return err
 	}
+	if err := d.ensureRollbackEventsTable(); err != nil {
+		return fmt.Errorf("migrate rollback_events table: %w", err)
+	}
 	if err := d.db.Migrate(`CREATE TABLE IF NOT EXISTS site_request_logs (
 		id TEXT PRIMARY KEY,
 		site_id TEXT NOT NULL,
@@ -1476,7 +1479,7 @@ func (d *Deploy) handleDeployByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Check for logs sub-path: /api/deploy/:id/logs/stream (WebSocket) or /api/deploy/:id/logs
+	// Check for sub-paths: /api/deploy/:id/logs/stream, /api/deploy/:id/logs, /api/deploy/:id/rollback
 	if strings.HasSuffix(path, "/logs/stream") {
 		id := strings.TrimSuffix(path, "/logs/stream")
 		d.handleLogsStream(w, r, id)
@@ -1485,6 +1488,11 @@ func (d *Deploy) handleDeployByID(w http.ResponseWriter, r *http.Request) {
 	if strings.HasSuffix(path, "/logs") {
 		id := strings.TrimSuffix(path, "/logs")
 		d.handleDeployLogs(w, r, id)
+		return
+	}
+	if strings.HasSuffix(path, "/rollback") {
+		id := strings.TrimSuffix(path, "/rollback")
+		d.handleRollback(w, r, id)
 		return
 	}
 

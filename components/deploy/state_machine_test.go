@@ -14,8 +14,9 @@ func TestStateMachineValidTransitions(t *testing.T) {
 		{StatePending, []DeploymentState{StateBuilding}},
 		{StateBuilding, []DeploymentState{StateDeploying, StateRunning, StateFailed}},
 		{StateDeploying, []DeploymentState{StateRunning, StateFailed}},
-		{StateRunning, []DeploymentState{StateFailed}},
+		{StateRunning, []DeploymentState{StateFailed, StateRolledBack}},
 		{StateFailed, nil},
+		{StateRolledBack, nil},
 	}
 
 	for _, tt := range tests {
@@ -43,6 +44,7 @@ func TestStateMachineCanTransition(t *testing.T) {
 		{"deploying", "running"},
 		{"deploying", "failed"},
 		{"running", "failed"},
+		{"running", "rolled_back"},
 	}
 	for _, v := range valid {
 		if !sm.CanTransition(v.from, v.to) {
@@ -60,6 +62,9 @@ func TestStateMachineCanTransition(t *testing.T) {
 		{"failed", "building"},
 		{"failed", "running"},
 		{"failed", "pending"},
+		{"rolled_back", "running"},
+		{"rolled_back", "failed"},
+		{"rolled_back", "pending"},
 	}
 	for _, v := range invalid {
 		if sm.CanTransition(v.from, v.to) {
@@ -71,7 +76,7 @@ func TestStateMachineCanTransition(t *testing.T) {
 func TestStateMachineIsValidState(t *testing.T) {
 	sm := newStateMachine()
 
-	valid := []string{"pending", "building", "deploying", "running", "failed"}
+	valid := []string{"pending", "building", "deploying", "running", "failed", "rolled_back"}
 	for _, s := range valid {
 		if !sm.IsValidState(s) {
 			t.Errorf("IsValidState(%s) = false, want true", s)
@@ -112,5 +117,8 @@ func TestStateConstants(t *testing.T) {
 	}
 	if StateFailed != "failed" {
 		t.Errorf("StateFailed = %s, want failed", StateFailed)
+	}
+	if StateRolledBack != "rolled_back" {
+		t.Errorf("StateRolledBack = %s, want rolled_back", StateRolledBack)
 	}
 }
