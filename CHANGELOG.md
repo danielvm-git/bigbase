@@ -1,3 +1,10 @@
+# [2.48.0](https://github.com/danielvm-git/bigbase/compare/v2.47.0...v2.48.0) (2026-06-26)
+
+
+### Features
+
+* **deploy:** semantic health check — probe before marking deployment live ([9b46836](https://github.com/danielvm-git/bigbase/commit/9b468360a23e4f4955d9a5209e5ddf35eb8f7b82))
+
 # [2.47.0](https://github.com/danielvm-git/bigbase/compare/v2.46.0...v2.47.0) (2026-06-25)
 
 
