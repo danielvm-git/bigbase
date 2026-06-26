@@ -4,18 +4,19 @@ active_flow: null
 active_epic_id: null
 active_story_id: null
 release:
-  target_version: 2.13.0
+  target_version: 2.48.0
   codename: "Solo Dev Complete"
-  last_tag: v2.12.0
-  last_publish: '2026-06-21'
+  last_tag: v2.48.0
+  last_publish: '2026-06-26'
   ci_verified: true
+  ci_verified_at: '2026-06-26'
 metrics:
   session_start: '2026-06-21T16:00:00Z'
   story_start: '2026-06-22T02:09:00Z'
   session_end: '2026-06-22T03:00:00Z'
   cycle_minutes: 0
-  epics_completed: 42
-  stories_completed: 138
+  epics_completed: 43
+  stories_completed: 140
   bcps_per_hour: 0.4
 epic_cycle:
   step: done
