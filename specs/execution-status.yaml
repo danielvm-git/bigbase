@@ -43,7 +43,7 @@ epics:
   e39: done
   e40: done
   e42: done
-  e44: in_progress
+  e44: done
   e45: planned
   e46: planned
   e47: planned
@@ -181,7 +181,7 @@ stories:
   e42s01: done
   e42s02: done
   e44s01: done
-  e44s02: planned
+  e44s02: done
   e45s01: planned
   e45s02: planned
   e46s01: planned
