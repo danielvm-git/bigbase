@@ -300,6 +300,133 @@ start:
 	})
 }
 
+func TestManifestHealthCheck(t *testing.T) {
+	t.Run("defaults when health_check omitted", func(t *testing.T) {
+		dir := t.TempDir()
+		writeFile(t, filepath.Join(dir, "bigbase.yaml"), `version: 1
+framework: node
+build:
+  command: npm run build
+start:
+  command: node index.js
+  port: 3000
+`)
+		m, err := LoadManifest(dir)
+		if err != nil {
+			t.Fatalf("LoadManifest: %v", err)
+		}
+		if m == nil {
+			t.Fatal("expected manifest")
+		}
+		hc := m.HealthCheck.WithDefaults()
+		if hc.Path != "/" {
+			t.Errorf("default path = %q, want /", hc.Path)
+		}
+		if hc.ExpectedStatus != 200 {
+			t.Errorf("default expected_status = %d, want 200", hc.ExpectedStatus)
+		}
+		if hc.TimeoutSeconds != 30 {
+			t.Errorf("default timeout_seconds = %d, want 30", hc.TimeoutSeconds)
+		}
+		if hc.IntervalSeconds != 2 {
+			t.Errorf("default interval_seconds = %d, want 2", hc.IntervalSeconds)
+		}
+		if hc.MaxRetries != 5 {
+			t.Errorf("default max_retries = %d, want 5", hc.MaxRetries)
+		}
+		if hc.ExpectedBodyContains != "" {
+			t.Errorf("default expected_body_contains = %q, want empty", hc.ExpectedBodyContains)
+		}
+	})
+
+	t.Run("partial health_check overrides only set fields", func(t *testing.T) {
+		dir := t.TempDir()
+		writeFile(t, filepath.Join(dir, "bigbase.yaml"), `version: 1
+framework: node
+build:
+  command: npm run build
+start:
+  command: node index.js
+  port: 3000
+health_check:
+  path: /api/health
+  expected_status: 204
+`)
+		m, err := LoadManifest(dir)
+		if err != nil {
+			t.Fatalf("LoadManifest: %v", err)
+		}
+		if m == nil {
+			t.Fatal("expected manifest")
+		}
+		hc := m.HealthCheck.WithDefaults()
+		if hc.Path != "/api/health" {
+			t.Errorf("path = %q, want /api/health", hc.Path)
+		}
+		if hc.ExpectedStatus != 204 {
+			t.Errorf("expected_status = %d, want 204", hc.ExpectedStatus)
+		}
+		// Non-overridden fields should get defaults
+		if hc.TimeoutSeconds != 30 {
+			t.Errorf("timeout_seconds = %d, want 30", hc.TimeoutSeconds)
+		}
+		if hc.IntervalSeconds != 2 {
+			t.Errorf("interval_seconds = %d, want 2", hc.IntervalSeconds)
+		}
+		if hc.MaxRetries != 5 {
+			t.Errorf("max_retries = %d, want 5", hc.MaxRetries)
+		}
+		if hc.ExpectedBodyContains != "" {
+			t.Errorf("expected_body_contains = %q, want empty", hc.ExpectedBodyContains)
+		}
+	})
+
+	t.Run("full health_check overrides all defaults", func(t *testing.T) {
+		dir := t.TempDir()
+		writeFile(t, filepath.Join(dir, "bigbase.yaml"), `version: 1
+framework: node
+build:
+  command: npm run build
+start:
+  command: node index.js
+  port: 3000
+health_check:
+  path: /healthz
+  expected_status: 200
+  expected_body_contains: ok
+  timeout_seconds: 60
+  interval_seconds: 5
+  max_retries: 10
+`)
+		m, err := LoadManifest(dir)
+		if err != nil {
+			t.Fatalf("LoadManifest: %v", err)
+		}
+		if m == nil {
+			t.Fatal("expected manifest")
+		}
+		hc := m.HealthCheck.WithDefaults()
+		if hc.Path != "/healthz" {
+			t.Errorf("path = %q, want /healthz", hc.Path)
+		}
+		if hc.ExpectedStatus != 200 {
+			t.Errorf("expected_status = %d, want 200", hc.ExpectedStatus)
+		}
+		if hc.ExpectedBodyContains != "ok" {
+			t.Errorf("expected_body_contains = %q, want ok", hc.ExpectedBodyContains)
+		}
+		if hc.TimeoutSeconds != 60 {
+			t.Errorf("timeout_seconds = %d, want 60", hc.TimeoutSeconds)
+		}
+		if hc.IntervalSeconds != 5 {
+			t.Errorf("interval_seconds = %d, want 5", hc.IntervalSeconds)
+		}
+		if hc.MaxRetries != 10 {
+			t.Errorf("max_retries = %d, want 10", hc.MaxRetries)
+		}
+	})
+}
+
 func writeFile(t *testing.T, path, content string) {
 	t.Helper()
 	if err := os.WriteFile(path, []byte(content), 0644); err != nil {

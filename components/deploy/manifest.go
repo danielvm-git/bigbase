@@ -9,13 +9,48 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+// ManifestHealthCheck defines the health check endpoint probe configuration.
+// Zero-valued fields are replaced by defaults via WithDefaults().
+type ManifestHealthCheck struct {
+	Path                 string `yaml:"path"`
+	ExpectedStatus       int    `yaml:"expected_status"`
+	ExpectedBodyContains string `yaml:"expected_body_contains"`
+	TimeoutSeconds       int    `yaml:"timeout_seconds"`
+	IntervalSeconds      int    `yaml:"interval_seconds"`
+	MaxRetries           int    `yaml:"max_retries"`
+}
+
+// WithDefaults returns a ManifestHealthCheck with zero-valued fields filled
+// from the defaults: path=/, expected_status=200, timeout_seconds=30,
+// interval_seconds=2, max_retries=5. expected_body_contains defaults to empty
+// (no body assertion).
+func (hc ManifestHealthCheck) WithDefaults() ManifestHealthCheck {
+	if hc.Path == "" {
+		hc.Path = "/"
+	}
+	if hc.ExpectedStatus == 0 {
+		hc.ExpectedStatus = 200
+	}
+	if hc.TimeoutSeconds == 0 {
+		hc.TimeoutSeconds = 30
+	}
+	if hc.IntervalSeconds == 0 {
+		hc.IntervalSeconds = 2
+	}
+	if hc.MaxRetries == 0 {
+		hc.MaxRetries = 5
+	}
+	return hc
+}
+
 // Manifest represents a bigbase.yaml configuration file in a repo root.
 type Manifest struct {
-	Version   int               `yaml:"version"`
-	Framework string            `yaml:"framework"`
-	Build     ManifestBuild     `yaml:"build"`
-	Start     ManifestStart     `yaml:"start"`
-	Env       map[string]string `yaml:"env"`
+	Version     int                  `yaml:"version"`
+	Framework   string               `yaml:"framework"`
+	Build       ManifestBuild        `yaml:"build"`
+	Start       ManifestStart        `yaml:"start"`
+	Env         map[string]string    `yaml:"env"`
+	HealthCheck ManifestHealthCheck  `yaml:"health_check"`
 }
 
 // ManifestBuild represents the build section of bigbase.yaml.

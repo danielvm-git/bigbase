@@ -22,8 +22,24 @@ import type { Deployment, Site } from '../types/sites'
 
 const STATUS_STEPS = ['pending', 'building', 'deploying', 'running']
 
-function StatusTimeline({ status }: { status: string }) {
-  const currentIdx = STATUS_STEPS.indexOf(status)
+interface HealthSummaryData {
+  probe_count?: number
+  avg_response_time_ms?: number
+  first_failure_reason?: string
+}
+
+function parseHealthSummary(summary: string | undefined | null): HealthSummaryData | null {
+  if (!summary) return null
+  try {
+    return JSON.parse(summary) as HealthSummaryData
+  } catch {
+    return null
+  }
+}
+
+function StatusTimeline({ status, healthSummary }: { status: string; healthSummary?: string | null }) {
+  const currentIdx = STATUS_STEPS.indexOf(status) // Default as fallback
+  const hs = parseHealthSummary(healthSummary)
   const isTerminal = status === 'running' || status === 'failed'
   if (currentIdx < 0) return null
 
@@ -58,6 +74,7 @@ function StatusTimeline({ status }: { status: string }) {
   }
 
   return (
+    <>
     <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', padding: 'var(--space-3) 0' }}>
       {STATUS_STEPS.map((step, i) => (
         <div key={step} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', flex: 1 }}>
@@ -76,6 +93,27 @@ function StatusTimeline({ status }: { status: string }) {
         </div>
       ))}
     </div>
+    {hs && hs.probe_count != null && hs.probe_count > 0 && (
+      <div style={{
+        display: 'flex', alignItems: 'center', gap: 'var(--space-2)',
+        padding: 'var(--space-2) 0 var(--space-1)', fontSize: 'var(--text-xs)',
+      }}>
+        <span style={{ fontWeight: 600, marginRight: 'var(--space-1)' }}>Health:</span>
+        {hs.first_failure_reason ? (
+          <span style={{ color: 'var(--error)' }}>
+            ✗ {hs.first_failure_reason}
+            {hs.probe_count != null && <span style={{ marginLeft: 'var(--space-1)', opacity: 0.7 }}>({hs.probe_count} probes)</span>}
+          </span>
+        ) : (
+          <span style={{ color: 'var(--brand-500)' }}>
+            ✓ Passed
+            {hs.avg_response_time_ms != null && <span style={{ marginLeft: 'var(--space-1)', opacity: 0.7 }}>({hs.avg_response_time_ms}ms avg)</span>}
+            {hs.probe_count != null && <span style={{ marginLeft: 'var(--space-1)', opacity: 0.7 }}>{hs.probe_count} probe{hs.probe_count !== 1 ? 's' : ''}</span>}
+          </span>
+        )}
+      </div>
+    )}
+    </>
   )
 }
 
@@ -392,7 +430,7 @@ export default function SiteDetailPage() {
                 <Badge variant={statusBadgeVariant(latest.status)}>{latest.status}</Badge>
                 {site.production_branch && <code style={{ marginLeft: 'var(--space-4)' }}>{site.production_branch}</code>}
               </div>
-              <StatusTimeline status={latest.status} />
+              <StatusTimeline status={latest.status} healthSummary={latest.health_summary} />
               {latest.url && (
                 <p style={{ marginTop: 'var(--space-6)' }}>
                   <Button as="a" href={latest.url} target="_blank" rel="noreferrer" variant="primary" size="sm">

@@ -18,12 +18,12 @@ metrics:
   stories_completed: 138
   bcps_per_hour: 0.4
 epic_cycle:
-  step: 3
+  step: 4
   story_bcps: 2
-  story: e43s01
+  story: e43
   audit_result: null
-  completed_steps: [1, 2]
-  note: "e43s01 Step 2 done — assess-impact pass (risk 5/10). IMPACT report written. Moving to Step 3: kickoff-branch."
+  completed_steps: [1, 2, 3, 4]
+  note: "e43 BOTH STORIES IMPLEMENTED. s01: manifest config + probeHealth + orchestrator gate. s02: per-attempt logging + health_summary migration + Admin UI. Tests: 60+ Go tests + 296 UI tests green. Step 5: verify-work."
 bug_cycle:
   current_step: 0
   completed_steps: []

@@ -12,6 +12,7 @@ export interface Deployment {
   created_at: string
   error_message?: string
   status_history?: StatusTransition[]
+  health_summary?: string
 }
 
 export interface StatusTransition {

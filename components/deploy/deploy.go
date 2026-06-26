@@ -63,6 +63,7 @@ type Deployment struct {
 	ManifestPath     string   `json:"manifest_path,omitempty"`
 	CreatedAt        string   `json:"created_at"`
 	StatusHistory    []StatusTransition `json:"status_history,omitempty"`
+	HealthSummary    string   `json:"health_summary,omitempty"`
 }
 
 type runningApp struct {
@@ -252,6 +253,9 @@ func (d *Deploy) Start(ctx *kernel.Context) error {
 		return err
 	}
 	if err := d.ensureManifestPathColumn(); err != nil {
+		return err
+	}
+	if err := d.ensureHealthSummaryColumn(); err != nil {
 		return err
 	}
 	if err := d.db.Migrate(`CREATE TABLE IF NOT EXISTS site_request_logs (
@@ -791,16 +795,33 @@ func (d *Deploy) runDeployment(deploy *Deployment, buildDir, repoName string) {
 		}
 	}
 
-	d.updateStatus(deploy.ID, "running")
-	d.finalizeDeploymentURL(deploy, repoName)
-	d.appendDeployLog(deploy.ID, fmt.Sprintf("→ Deployed at %s", deploy.URL))
-
 	if appType == AppStatic {
+		d.updateStatus(deploy.ID, "running")
+		d.finalizeDeploymentURL(deploy, repoName)
+		d.appendDeployLog(deploy.ID, fmt.Sprintf("→ Deployed at %s", deploy.URL))
 		d.appendDeployLog(deploy.ID, "→ Serving static files")
 		go d.serveStatic(context.Background(), serveDir, deploy, repoName)
+		return
+	}
+
+	// Process app: transition to deploying, start the app, then health-probe
+	// before marking running and registering the proxy host.
+	_ = d.TransitionState(ctx, deploy.ID, "deploying")
+	d.appendDeployLog(deploy.ID, "→ Status: deploying — starting application")
+	go d.startApp(context.Background(), serveDir, deploy, appType, repoName, manifest)
+
+	result := d.runHealthCheck(ctx, deploy, manifest)
+	if result.OK {
+		_ = d.TransitionState(ctx, deploy.ID, "running")
+		d.finalizeDeploymentURL(deploy, repoName)
+		d.appendDeployLog(deploy.ID, fmt.Sprintf("→ Deployed at %s", deploy.URL))
 	} else {
-		d.appendDeployLog(deploy.ID, "→ Starting application")
-		go d.startApp(context.Background(), serveDir, deploy, appType, repoName, manifest)
+		d.appendDeployLog(deploy.ID, fmt.Sprintf("✗ Health check failed after %d attempts: %s",
+			result.Attempts, result.FirstFailureReason))
+		_ = d.TransitionState(context.Background(), deploy.ID, "failed")
+		_, _ = d.db.ExecContext(context.Background(),
+			"UPDATE deployments SET error_message = ? WHERE id = ?",
+			fmt.Sprintf("Health check failed: %s", result.FirstFailureReason), deploy.ID)
 	}
 }
 
@@ -1153,6 +1174,50 @@ func (d *Deploy) updateStatus(id, status string) {
 	_ = d.TransitionState(context.Background(), id, status)
 }
 
+// runHealthCheck probes the deployment's HTTP endpoint on its internal port,
+// logs each attempt to the deploy log, and persists a health_summary JSON.
+// Returns the HealthResult from the probe sequence.
+func (d *Deploy) runHealthCheck(ctx context.Context, deploy *Deployment, manifest *Manifest) HealthResult {
+	cfg := ManifestHealthCheck{}.WithDefaults()
+	if manifest != nil {
+		cfg = manifest.HealthCheck.WithDefaults()
+	}
+	baseURL := fmt.Sprintf("http://localhost:%d", deploy.Port)
+	result := probeHealth(ctx, http.DefaultClient, baseURL, cfg, &wallClock{})
+
+	// Log each probe attempt
+	for i, probe := range result.Probes {
+		attempt := i + 1
+		if probe.Err != "" {
+			d.appendDeployLog(deploy.ID, fmt.Sprintf("→ Health [%d/%d]: GET %s → ERROR %s (%dms)",
+				attempt, cfg.MaxRetries, cfg.Path, probe.Err, probe.DurationMS))
+		} else {
+			d.appendDeployLog(deploy.ID, fmt.Sprintf("→ Health [%d/%d]: GET %s → %d (%dms)",
+				attempt, cfg.MaxRetries, cfg.Path, probe.Status, probe.DurationMS))
+		}
+	}
+
+	// On final failure, append the failure response body if available
+	if !result.OK && len(result.Probes) > 0 {
+		lastProbe := result.Probes[len(result.Probes)-1]
+		if lastProbe.Err != "" {
+			d.appendDeployLog(deploy.ID, fmt.Sprintf("✗ Health check failed: %s", result.FirstFailureReason))
+		}
+	}
+
+	// Persist health_summary JSON
+	summaryJSON, _ := json.Marshal(HealthSummary{
+		ProbeCount:         result.Attempts,
+		AvgResponseTimeMs:  result.AvgResponseTimeMS,
+		FirstFailureReason: result.FirstFailureReason,
+	})
+	_, _ = d.db.ExecContext(context.Background(),
+		"UPDATE deployments SET health_summary = ? WHERE id = ?",
+		string(summaryJSON), deploy.ID)
+
+	return result
+}
+
 func (d *Deploy) failDeployment(id string, buildErr error) {
 	msg := buildErr.Error()
 	const maxLen = 2000
@@ -1257,6 +1322,18 @@ func (d *Deploy) ensureManifestPathColumn() error {
 	return fmt.Errorf("add manifest_path column: %w", err)
 }
 
+func (d *Deploy) ensureHealthSummaryColumn() error {
+	_, err := d.db.ExecContext(context.Background(),
+		`ALTER TABLE deployments ADD COLUMN health_summary TEXT DEFAULT ''`)
+	if err == nil {
+		return nil
+	}
+	if strings.Contains(strings.ToLower(err.Error()), "duplicate column") {
+		return nil
+	}
+	return fmt.Errorf("add health_summary column: %w", err)
+}
+
 func (d *Deploy) finalizeDeploymentURL(deploy *Deployment, repoName string) {
 	url := deploymentURL(d.publicDomain, d.useHTTPS, repoName, deploy.Port)
 	host := deploymentHost(d.publicDomain, repoName)
@@ -1359,7 +1436,7 @@ func (d *Deploy) HandleList(w http.ResponseWriter, r *http.Request) {
 	}
 
 	rows, err := d.db.QueryContext(r.Context(),
-		"SELECT id, repo_id, site_id, COALESCE(branch,'main'), COALESCE(commit_sha,''), COALESCE(status,'pending'), COALESCE(url,''), COALESCE(port,0), COALESCE(app_type,''), COALESCE(error_message,''), COALESCE(passthrough_paths,''), COALESCE(manifest_path,''), created_at FROM deployments ORDER BY created_at DESC")
+		"SELECT id, repo_id, site_id, COALESCE(branch,'main'), COALESCE(commit_sha,''), COALESCE(status,'pending'), COALESCE(url,''), COALESCE(port,0), COALESCE(app_type,''), COALESCE(error_message,''), COALESCE(passthrough_paths,''), COALESCE(manifest_path,''), COALESCE(health_summary,''), created_at FROM deployments ORDER BY created_at DESC")
 	if err != nil {
 		d.logger.Error("list deployments", "error", err)
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
@@ -1371,7 +1448,7 @@ func (d *Deploy) HandleList(w http.ResponseWriter, r *http.Request) {
 	for rows.Next() {
 		var dep Deployment
 		var passthroughJSON string
-		if err := rows.Scan(&dep.ID, &dep.RepoID, &dep.SiteID, &dep.Branch, &dep.CommitSHA, &dep.Status, &dep.URL, &dep.Port, &dep.AppType, &dep.ErrorMessage, &passthroughJSON, &dep.ManifestPath, &dep.CreatedAt); err != nil {
+		if err := rows.Scan(&dep.ID, &dep.RepoID, &dep.SiteID, &dep.Branch, &dep.CommitSHA, &dep.Status, &dep.URL, &dep.Port, &dep.AppType, &dep.ErrorMessage, &passthroughJSON, &dep.ManifestPath, &dep.HealthSummary, &dep.CreatedAt); err != nil {
 			d.logger.Error("scan deployment", "error", err)
 			continue
 		}
@@ -1419,8 +1496,8 @@ func (d *Deploy) handleDeployByID(w http.ResponseWriter, r *http.Request) {
 		var dep Deployment
 		var appType, passthroughJSON string
 		err := d.db.QueryRowContext(r.Context(),
-			"SELECT id, repo_id, site_id, branch, commit_sha, status, url, port, app_type, COALESCE(error_message,''), COALESCE(passthrough_paths,''), COALESCE(manifest_path,''), created_at FROM deployments WHERE id = ?", id).
-			Scan(&dep.ID, &dep.RepoID, &dep.SiteID, &dep.Branch, &dep.CommitSHA, &dep.Status, &dep.URL, &dep.Port, &appType, &dep.ErrorMessage, &passthroughJSON, &dep.ManifestPath, &dep.CreatedAt)
+			"SELECT id, repo_id, site_id, branch, commit_sha, status, url, port, app_type, COALESCE(error_message,''), COALESCE(passthrough_paths,''), COALESCE(manifest_path,''), COALESCE(health_summary,''), created_at FROM deployments WHERE id = ?", id).
+			Scan(&dep.ID, &dep.RepoID, &dep.SiteID, &dep.Branch, &dep.CommitSHA, &dep.Status, &dep.URL, &dep.Port, &appType, &dep.ErrorMessage, &passthroughJSON, &dep.ManifestPath, &dep.HealthSummary, &dep.CreatedAt)
 		if err != nil {
 			writeJSON(w, http.StatusNotFound, map[string]string{"error": "deployment not found"})
 			return
