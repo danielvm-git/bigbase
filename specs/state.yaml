@@ -2,7 +2,7 @@ type: session-state
 context: infra
 active_flow: build_epic
 active_epic_id: e44
-active_story_id: e44s01
+active_story_id: e44s02
 release:
   target_version: 2.49.0
   codename: "Solo Dev Complete"
@@ -19,12 +19,12 @@ metrics:
   stories_completed: 140
   bcps_per_hour: 0.4
 epic_cycle:
-  step: done
-  story_bcps: 2
-  story: e44s01
-  audit_result: pass
-  completed_steps: [1, 2, 3, 4, 5, 6, 7, 8]
-  note: "e44s01 COMPLETE — Backend rollback endpoint + artifact reuse. Merged via PR #49. CI verified (sqlite + postgres). v2.49.0 released."
+  step: 1
+  story_bcps: 1
+  story: e44s02
+  audit_result: null
+  completed_steps: []
+  note: "e44s02 START — Admin UI rollback button + history timeline"
   fast_mode: true
 bug_cycle:
   current_step: 0
@@ -38,5 +38,5 @@ handoff:
   last_step_completed: release-branch
   open_decisions: []
   next_skill: survey-context
-  summary: "e44s01 complete — backend rollback merged in v2.49.0"
-  context: "e44s01 (Backend rollback) shipped in v2.49.0. Next: e44s02 (Admin UI — rollback button and history)."
+  summary: "e44s02 build_epic started — Admin UI rollback"
+  context: "e44s02: Rollback button + confirmation dialog + history timeline in Admin UI."

@@ -227,6 +227,36 @@ func (d *Deploy) updateStatusHistory(ctx context.Context, id, from, to string) {
 		"UPDATE deployments SET status_history = ? WHERE id = ?", string(data), id)
 }
 
+// handleRollbackEvents returns all rollback events for a site.
+// GET /api/deploy/{siteID}/rollback-events
+func (d *Deploy) handleRollbackEvents(w http.ResponseWriter, r *http.Request, siteID string) {
+	if r.Method != http.MethodGet {
+		writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
+		return
+	}
+
+	rows, err := d.db.QueryContext(r.Context(),
+		`SELECT id, site_id, rolled_back_from, rolled_back_to, created_at
+		 FROM rollback_events
+		 WHERE site_id = ?
+		 ORDER BY created_at DESC`, siteID)
+	if err != nil {
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "query rollback events"})
+		return
+	}
+	defer func() { _ = rows.Close() }()
+
+	events := make([]RollbackEvent, 0)
+	for rows.Next() {
+		var ev RollbackEvent
+		if err := rows.Scan(&ev.ID, &ev.SiteID, &ev.RolledBackFrom, &ev.RolledBackTo, &ev.CreatedAt); err != nil {
+			continue
+		}
+		events = append(events, ev)
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"data": events})
+}
+
 // extractRepoName extracts the subdomain part from a hostname.
 // e.g., "myapp.example.com" → "myapp"
 func extractRepoName(host string) string {

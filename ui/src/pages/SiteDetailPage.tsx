@@ -15,10 +15,10 @@ import {
   SiteEnvVarsTab,
   SiteCacheTab,
 } from '../components'
-import { getSite, getSiteDeployments, deleteSite, getSiteManifest, saveSiteManifest } from '../lib/sitesData'
+import { getSite, getSiteDeployments, deleteSite, getSiteManifest, saveSiteManifest, rollbackDeployment, getRollbackEvents } from '../lib/sitesData'
 import { isPreviewForced, previewQuerySuffix } from '../lib/previewMode'
 import { useRequestLogs } from '../hooks/useRequestLogs'
-import type { Deployment, Site } from '../types/sites'
+import type { Deployment, RollbackEvent, Site } from '../types/sites'
 
 const STATUS_STEPS = ['pending', 'building', 'deploying', 'running']
 
@@ -287,6 +287,10 @@ export default function SiteDetailPage() {
   const [deleteError, setDeleteError] = useState<string | null>(null)
   const [deletingSite, setDeletingSite] = useState(false)
   const [deleteSiteError, setDeleteSiteError] = useState<string | null>(null)
+  const [rollbackTarget, setRollbackTarget] = useState<Deployment | null>(null)
+  const [rollbacking, setRollbacking] = useState(false)
+  const [rollbackError, setRollbackError] = useState<string | null>(null)
+  const [rollbackEvents, setRollbackEvents] = useState<RollbackEvent[]>([])
   const [activeTab, setActiveTab] = useState('deployments')
   const pq = previewQuerySuffix()
 
@@ -314,6 +318,8 @@ export default function SiteDetailPage() {
     const d = await getSiteDeployments(siteId)
     setDeployments(d.data)
     setPreviewMode(p => p || d.previewMode)
+    const evRes = await getRollbackEvents(siteId)
+    if (evRes.ok) setRollbackEvents(evRes.events)
     setLoading(false)
   }, [siteId])
 
@@ -389,6 +395,34 @@ export default function SiteDetailPage() {
     } catch {
       setRedeployError('Redeploy failed — network error')
     }
+  }
+
+  const handleRollbackClick = (dep: Deployment) => {
+    setRollbackTarget(dep)
+    setRollbackError(null)
+  }
+
+  const handleRollbackConfirm = async () => {
+    if (!rollbackTarget) return
+    setRollbacking(true)
+    setRollbackError(null)
+    const result = await rollbackDeployment(rollbackTarget.id)
+    setRollbacking(false)
+    setRollbackTarget(null)
+    if (result.ok) {
+      load()
+      // Fetch updated rollback events
+      const evRes = await getRollbackEvents(siteId)
+      if (evRes.ok) setRollbackEvents(evRes.events)
+    } else {
+      setRollbackError(result.error || 'Rollback failed')
+    }
+  }
+
+  const canRollback = (dep: Deployment): boolean => {
+    if (dep.status !== 'running') return false
+    // Can only rollback if there's at least one previous deployment
+    return deployments.some(d => d.id !== dep.id && (d.status === 'replaced' || d.status === 'rolled_back'))
   }
 
   if (loading) return <SitesListSkeleton />
@@ -481,7 +515,7 @@ export default function SiteDetailPage() {
                         ) : '—'}
                       </td>
                       <td>{new Date(d.created_at).toLocaleString()}</td>
-                      <td>
+                      <td style={{ display: 'flex', gap: 'var(--space-1)' }}>
                         <Button
                           variant="ghost"
                           size="sm"
@@ -490,6 +524,15 @@ export default function SiteDetailPage() {
                         >
                           {deletingId === d.id ? '…' : 'Delete'}
                         </Button>
+                        {d.status === 'running' && canRollback(d) && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleRollbackClick(d)}
+                          >
+                            Rollback
+                          </Button>
+                        )}
                       </td>
                     </tr>
                   ))}
@@ -533,6 +576,82 @@ export default function SiteDetailPage() {
 
       {activeTab === 'manifest' && (
         <SiteManifest site={site} latestDeployment={latest} />
+      )}
+
+      {activeTab === 'deployments' && rollbackEvents.length > 0 && (
+        <div style={{ marginTop: 'var(--space-8)' }}>
+          <h2 className="section-title">Rollback History</h2>
+          <div className="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Timestamp</th>
+                  <th>Rolled Back From</th>
+                  <th>Rolled Back To</th>
+                  <th>Details</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rollbackEvents.map(ev => (
+                  <tr key={ev.id}>
+                    <td>{new Date(ev.created_at).toLocaleString()}</td>
+                    <td><code>{ev.rolled_back_from.slice(0, 8)}</code></td>
+                    <td><code>{ev.rolled_back_to.slice(0, 8)}</code></td>
+                    <td>
+                      Rolled back from{' '}
+                      <Link to={`/deploy/deployment/${ev.rolled_back_from}${pq}`}>{ev.rolled_back_from.slice(0, 8)}</Link>
+                      {' → '}
+                      <Link to={`/deploy/deployment/${ev.rolled_back_to}${pq}`}>{ev.rolled_back_to.slice(0, 8)}</Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Rollback confirmation dialog */}
+      {rollbackTarget && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 1000,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          background: 'rgba(0,0,0,0.5)',
+        }} onClick={() => setRollbackTarget(null)}>
+          <Card style={{ maxWidth: 480, width: '90vw', padding: 'var(--space-6)' }} onClick={e => e.stopPropagation()}>
+            <h3 style={{ margin: '0 0 var(--space-4)' }}>Rollback Deployment?</h3>
+            <p style={{ marginBottom: 'var(--space-4)', fontSize: 'var(--text-sm)' }}>
+              This will stop the current live deployment and restore the previous
+              successful deployment using its build artifacts. The current deployment
+              will be marked as <strong>rolled_back</strong>.
+            </p>
+            <p className="dim" style={{ marginBottom: 'var(--space-6)', fontSize: 'var(--text-sm)' }}>
+              Commit: <code>{rollbackTarget.commit_sha ? rollbackTarget.commit_sha.slice(0, 7) : '—'}</code>
+              {' · '}Deployed: {new Date(rollbackTarget.created_at).toLocaleString()}
+            </p>
+            {rollbackError && (
+              <p className="input-error-text" style={{ marginBottom: 'var(--space-4)' }}>{rollbackError}</p>
+            )}
+            <div style={{ display: 'flex', gap: 'var(--space-2)', justifyContent: 'flex-end' }}>
+              <Button variant="secondary" size="sm" onClick={() => setRollbackTarget(null)} disabled={rollbacking}>
+                Cancel
+              </Button>
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={handleRollbackConfirm}
+                disabled={rollbacking}
+                style={{ background: 'var(--error)', borderColor: 'var(--error)' }}
+              >
+                {rollbacking ? 'Rolling back…' : 'Confirm Rollback'}
+              </Button>
+            </div>
+          </Card>
+        </div>
+      )}
+
+      {rollbackError && !rollbackTarget && (
+        <p className="input-error-text" style={{ marginTop: 'var(--space-4)' }}>{rollbackError}</p>
       )}
 
       {deleteError && (

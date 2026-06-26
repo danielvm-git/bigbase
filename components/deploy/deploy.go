@@ -1490,6 +1490,11 @@ func (d *Deploy) handleDeployByID(w http.ResponseWriter, r *http.Request) {
 		d.handleDeployLogs(w, r, id)
 		return
 	}
+	if strings.HasSuffix(path, "/rollback-events") {
+		id := strings.TrimSuffix(path, "/rollback-events")
+		d.handleRollbackEvents(w, r, id)
+		return
+	}
 	if strings.HasSuffix(path, "/rollback") {
 		id := strings.TrimSuffix(path, "/rollback")
 		d.handleRollback(w, r, id)

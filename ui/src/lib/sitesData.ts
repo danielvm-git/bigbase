@@ -7,6 +7,7 @@ import type {
   GitHubRepo,
   GitHubStatus,
   GitRepo,
+  RollbackEvent,
   Site,
   SiteCacheStatus,
   SitesDataResult,
@@ -259,6 +260,65 @@ export async function createSite(input: CreateSiteInput): Promise<CreateSiteResu
     return { previewMode: false, error: body.error || 'create failed' }
   }
   return { previewMode: false, site: body as Site, deployment: (body as Site).latest_deployment }
+}
+
+export async function rollbackDeployment(deploymentID: string): Promise<{ ok: boolean; event?: RollbackEvent; error?: string }> {
+  if (isPreviewForced()) {
+    return {
+      ok: true,
+      event: {
+        id: 'rollback-preview',
+        site_id: 'preview',
+        rolled_back_from: 'dep-old',
+        rolled_back_to: deploymentID,
+        created_at: new Date().toISOString(),
+      },
+    }
+  }
+  try {
+    const res = await fetch(`/api/deploy/${deploymentID}/rollback`, { method: 'POST' })
+    const body = await res.json().catch(() => ({ error: '' })) as { error?: string } & Partial<RollbackEvent>
+    if (!res.ok) {
+      return { ok: false, error: body.error || `Rollback failed (HTTP ${res.status})` }
+    }
+    const event: RollbackEvent = {
+      id: body.id || '',
+      site_id: body.site_id || '',
+      rolled_back_from: body.rolled_back_from || '',
+      rolled_back_to: body.rolled_back_to || '',
+      created_at: body.created_at || '',
+    }
+    return { ok: true, event }
+  } catch {
+    return { ok: false, error: 'Rollback failed — network error' }
+  }
+}
+
+export async function getRollbackEvents(siteId: string): Promise<{ ok: boolean; events: RollbackEvent[] }> {
+  if (isPreviewForced()) {
+    return {
+      ok: true,
+      events: [
+        {
+          id: 'rb-preview-1',
+          site_id: siteId,
+          rolled_back_from: 'dep-old',
+          rolled_back_to: 'dep-current',
+          created_at: new Date(Date.now() - 3600000).toISOString(),
+        },
+      ],
+    }
+  }
+  try {
+    const res = await fetch(`/api/deploy/${siteId}/rollback-events`)
+    const body = await res.json().catch(() => ({ error: '', data: [] as RollbackEvent[] })) as { data?: RollbackEvent[] }
+    if (res.ok && body.data) {
+      return { ok: true, events: body.data }
+    }
+    return { ok: false, events: [] }
+  } catch {
+    return { ok: false, events: [] }
+  }
 }
 
 export function githubInstallURL(): string {

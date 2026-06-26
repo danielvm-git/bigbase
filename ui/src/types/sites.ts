@@ -1,4 +1,4 @@
-export type DeploymentStatus = 'pending' | 'building' | 'deploying' | 'running' | 'failed'
+export type DeploymentStatus = 'pending' | 'building' | 'deploying' | 'running' | 'failed' | 'rolled_back' | 'replaced'
 
 export interface Deployment {
   id: string
@@ -19,6 +19,14 @@ export interface StatusTransition {
   from: string
   to: string
   timestamp: string
+}
+
+export interface RollbackEvent {
+  id: string
+  site_id: string
+  rolled_back_from: string
+  rolled_back_to: string
+  created_at: string
 }
 
 export interface GitRepo {
