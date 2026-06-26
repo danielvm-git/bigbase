@@ -34,8 +34,8 @@ git:
   hash: HEAD
   worktree: null
 handoff:
-  last_step_completed: audit-code
+  last_step_completed: release-branch
   open_decisions: []
-  next_skill: commit-message
-  summary: "e43 audit PASS — spec consistency fixed (e43 done across all 3 files; e41 restored). Next: commit-message."
-  context: "e43 COMPLETE. Audit found execution-status.yaml inconsistency (e43 planned vs done elsewhere) + lossy-sync drop of archived e41. Both fixed surgically. AUDIT-e43.md written. Tests green."
+  next_skill: survey-context
+  summary: "e43 COMPLETE — both stories merged. v2.48.0 released by semantic-release. CI verified."
+  context: "e43 (Deploy — Semantic Health Check) shipped in v2.48.0. e43s01: manifest config + probeHealth + orchestrator gate. e43s02: per-attempt logging + health_summary migration + Admin UI. Next: e44 (One-Click Rollback) in backlog."
