@@ -439,3 +439,28 @@ bugs:
     summary: BigBase app logs not forwarded to New Relic — nrslog integration missing, slog handler not wrapped through nrApp
     file: specs/bugs/BUG-2026-06-23T184500-newrelic-logs-not-forwarded.md
     status: open
+  - id: BUG-2026-06-26T200000
+    date: "2026-06-26"
+    severity: medium
+    priority: high
+    scope: ui,test
+    summary: "e44s02: Missing test coverage for rollback UI functions — SiteDetailPage test mock missing getRollbackEvents causes all tests to crash"
+    file: specs/bugs/BUG-2026-06-26T200000-e44s02-missing-ui-tests.md
+    status: fixed
+    files_changed:
+      - ui/src/lib/sitesData.test.ts
+      - ui/src/pages/SiteDetailPage.test.tsx
+    approach: |
+      1. Added 7 tests to sitesData.test.ts (rollbackDeployment success/error paths, getRollbackEvents success/error paths)
+      2. Fixed mock in SiteDetailPage.test.tsx to include all 7 imported functions from sitesData
+      3. Added 6 new integration tests (button visibility, dialog open/cancel/confirm, error handling)
+      4. Added hardening test to verify mock exports all required functions
+    risk_level: low
+    commit_message: "fix(ui): add missing tests for e44s02 rollback functions"
+    regression_guards:
+      - ui/src/lib/sitesData.test.ts rollbackDeployment suite (4 tests)
+      - ui/src/lib/sitesData.test.ts getRollbackEvents suite (3 tests)
+      - ui/src/pages/SiteDetailPage.test.tsx rollback UI tests (7 tests)
+      - ui/src/pages/SiteDetailPage.test.tsx mock invariant assertion test
+    related:
+      - (e44s02 audit failure: missing test coverage)

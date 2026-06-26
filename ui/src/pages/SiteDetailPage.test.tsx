@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, fireEvent } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 
 const mockSite = {
@@ -13,14 +13,27 @@ const mockDeployments = [
   { id: 'd2', repo_id: 'r1', branch: 'main', commit_sha: 'def5678', status: 'failed', url: '', app_type: 'node', created_at: '2026-06-01T09:00:00Z' },
 ]
 
+// Includes a 'replaced' deployment so canRollback(d1) returns true
+const mockDeploymentsWithPrevious = [
+  { id: 'd1', repo_id: 'r1', branch: 'main', commit_sha: 'abc1234', status: 'running', url: 'http://localhost:4000', app_type: 'static', created_at: '2026-06-01T10:00:00Z' },
+  { id: 'd-prev', repo_id: 'r1', branch: 'main', commit_sha: 'bbb0000', status: 'replaced', url: '', app_type: 'static', created_at: '2026-06-01T08:00:00Z' },
+]
+
+// vi.fn() references kept outside vi.mock so tests can override per-describe
+const getSiteDeploymentsMock = vi.fn()
+const getRollbackEventsMock = vi.fn()
+const rollbackDeploymentMock = vi.fn()
+
 vi.mock('../lib/sitesData', () => ({
   getSite: () => Promise.resolve({ data: mockSite, previewMode: false }),
-  getSiteDeployments: () => Promise.resolve({ data: mockDeployments, previewMode: false }),
+  getSiteDeployments: (...args: unknown[]) => getSiteDeploymentsMock(...args),
   getSiteManifest: () => Promise.resolve({ data: { exists: false, content: '' }, previewMode: false }),
   saveSiteManifest: () => Promise.resolve({ ok: true, previewMode: false }),
+  deleteSite: () => Promise.resolve({ ok: true }),
+  getRollbackEvents: (...args: unknown[]) => getRollbackEventsMock(...args),
+  rollbackDeployment: (...args: unknown[]) => rollbackDeploymentMock(...args),
 }))
 
-// eslint-disable-next-line import/first
 import SiteDetailPage from './SiteDetailPage'
 
 function renderPage() {
@@ -36,6 +49,19 @@ function renderPage() {
 describe('SiteDetailPage', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    getSiteDeploymentsMock.mockResolvedValue({ data: mockDeployments, previewMode: false })
+    getRollbackEventsMock.mockResolvedValue({ ok: true, events: [] })
+    rollbackDeploymentMock.mockResolvedValue({ ok: true })
+  })
+
+  it('mock includes all required sitesData functions (hardening against missing mock exports)', () => {
+    // If SiteDetailPage imports a new function from sitesData but the mock
+    // doesn't include it, the component crashes on render with a confusing
+    // "No export is defined on the mock" error. This test verifies all mocks exist.
+    // Expected: getSite, getSiteDeployments, deleteSite, getSiteManifest, saveSiteManifest, rollbackDeployment, getRollbackEvents
+    expect(typeof getSiteDeploymentsMock).toBe('function')
+    expect(typeof getRollbackEventsMock).toBe('function')
+    expect(typeof rollbackDeploymentMock).toBe('function')
   })
 
   it('renders site name as page header', async () => {
@@ -98,6 +124,80 @@ describe('SiteDetailPage', () => {
     await waitFor(() => {
       expect(screen.getByText('Redeploy')).toBeInTheDocument()
       expect(screen.getByText('Refresh')).toBeInTheDocument()
+    })
+  })
+
+  it('does not show rollback button when no previous deployment exists', async () => {
+    // d1=running, d2=failed → canRollback(d1) = false (no replaced/rolled_back)
+    renderPage()
+    await waitFor(() => {
+      expect(screen.getByText('abc1234')).toBeInTheDocument()
+    })
+    expect(screen.queryByText('Rollback')).not.toBeInTheDocument()
+  })
+
+  describe('with a previous (replaced) deployment', () => {
+    beforeEach(() => {
+      getSiteDeploymentsMock.mockResolvedValue({ data: mockDeploymentsWithPrevious, previewMode: false })
+    })
+
+    it('shows rollback button for running deployment with previous', async () => {
+      renderPage()
+      await waitFor(() => {
+        expect(screen.getByText('Rollback')).toBeInTheDocument()
+      })
+    })
+
+    it('opens confirmation dialog when rollback button is clicked', async () => {
+      renderPage()
+      await waitFor(() => {
+        expect(screen.getByText('Rollback')).toBeInTheDocument()
+      })
+      fireEvent.click(screen.getByText('Rollback'))
+      await waitFor(() => {
+        expect(screen.getByText('Rollback Deployment?')).toBeInTheDocument()
+        expect(screen.getByText('Confirm Rollback')).toBeInTheDocument()
+        expect(screen.getByText('Cancel')).toBeInTheDocument()
+      })
+    })
+
+    it('closes dialog on cancel without calling rollbackDeployment', async () => {
+      renderPage()
+      await waitFor(() => screen.getByText('Rollback'))
+      fireEvent.click(screen.getByText('Rollback'))
+      await waitFor(() => screen.getByText('Rollback Deployment?'))
+      fireEvent.click(screen.getByText('Cancel'))
+      await waitFor(() => {
+        expect(screen.queryByText('Rollback Deployment?')).not.toBeInTheDocument()
+      })
+      expect(rollbackDeploymentMock).not.toHaveBeenCalled()
+    })
+
+    it('calls rollbackDeployment with the deployment id on confirm', async () => {
+      rollbackDeploymentMock.mockResolvedValue({
+        ok: true,
+        event: { id: 'rb-1', site_id: 'site-1', rolled_back_from: 'd-prev', rolled_back_to: 'd1', created_at: '2026-06-26T20:00:00Z' },
+      })
+      renderPage()
+      await waitFor(() => screen.getByText('Rollback'))
+      fireEvent.click(screen.getByText('Rollback'))
+      await waitFor(() => screen.getByText('Confirm Rollback'))
+      fireEvent.click(screen.getByText('Confirm Rollback'))
+      await waitFor(() => {
+        expect(rollbackDeploymentMock).toHaveBeenCalledWith('d1')
+      })
+    })
+
+    it('shows error message when rollback API returns failure', async () => {
+      rollbackDeploymentMock.mockResolvedValue({ ok: false, error: 'no previous deployment found' })
+      renderPage()
+      await waitFor(() => screen.getByText('Rollback'))
+      fireEvent.click(screen.getByText('Rollback'))
+      await waitFor(() => screen.getByText('Confirm Rollback'))
+      fireEvent.click(screen.getByText('Confirm Rollback'))
+      await waitFor(() => {
+        expect(screen.getByText('no previous deployment found')).toBeInTheDocument()
+      })
     })
   })
 })

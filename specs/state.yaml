@@ -1,6 +1,6 @@
 type: session-state
 context: infra
-active_flow: build_epic
+active_flow: fix_bug
 active_epic_id: e44
 active_story_id: e44s02
 active_story_status: done
@@ -28,9 +28,9 @@ epic_cycle:
   note: "e44s02 COMPLETE — Rollback button + confirmation dialog + rollback history timeline in Admin UI. Pushed to main. UI builds clean."
   fast_mode: true
 bug_cycle:
-  current_step: 0
-  completed_steps: []
-  bug_file: null
+  current_step: 5
+  completed_steps: [1, 2, 3, 4]
+  bug_file: specs/bugs/BUG-2026-06-26T200000-e44s02-missing-ui-tests.md
 git:
   branch: main
   hash: HEAD
