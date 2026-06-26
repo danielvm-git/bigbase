@@ -1,0 +1,14 @@
+story_id: e43s02
+title: "Health check failure handling and reporting"
+status: planned
+bcps: 1
+tasks:
+  - id: 1
+    description: "Log each probe attempt; persist health_summary JSON (probe_count, avg_response_time_ms, first_failure_reason) via additive migration"
+    verify: "go test ./components/deploy/ -run TestHealthCheckReporting -v"
+  - id: 2
+    description: "Expose health_summary in the deployment status JSON"
+    verify: "go test ./components/deploy/ -run TestHealthSummaryInStatusAPI -v"
+  - id: 3
+    description: "Admin UI — health check step on deployment detail page"
+    verify: "cd ui && npm run build && npm test -- DeployPage"

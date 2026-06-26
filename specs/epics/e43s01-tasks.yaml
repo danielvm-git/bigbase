@@ -1,0 +1,14 @@
+story_id: e43s01
+title: "Configurable health check endpoint probing"
+status: planned
+bcps: 2
+tasks:
+  - id: 1
+    description: "Add health_check section + withDefaults() to the manifest"
+    verify: "go test ./components/deploy/ -run TestHealthCheckConfig -v"
+  - id: 2
+    description: "Pure probeHealth retry loop (injected httpDoer + Clock) in health.go"
+    verify: "go test ./components/deploy/ -run TestProbeHealth -v"
+  - id: 3
+    description: "Gate orchestrator building->deploying->running|failed for process apps; register host only after probe passes"
+    verify: "go test ./components/deploy/ -run TestHealthCheckIntegration -v"
