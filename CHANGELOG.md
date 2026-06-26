@@ -1,3 +1,10 @@
+# [2.50.0](https://github.com/danielvm-git/bigbase/compare/v2.49.0...v2.50.0) (2026-06-26)
+
+
+### Features
+
+* **ui:** add rollback button to deployment detail + rollback history timeline ([b97fd9f](https://github.com/danielvm-git/bigbase/commit/b97fd9f17fe4f8f9feb34ea9d32cb2c43c5c7c8a))
+
 # [2.49.0](https://github.com/danielvm-git/bigbase/compare/v2.48.0...v2.49.0) (2026-06-26)
 
 
