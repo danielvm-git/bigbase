@@ -1,3 +1,10 @@
+## [2.50.1](https://github.com/danielvm-git/bigbase/compare/v2.50.0...v2.50.1) (2026-06-26)
+
+
+### Bug Fixes
+
+* **ui:** add missing tests for e44s02 rollback functions ([a0e8852](https://github.com/danielvm-git/bigbase/commit/a0e8852094a08009ba368066d9b5636e49448b05))
+
 # [2.50.0](https://github.com/danielvm-git/bigbase/compare/v2.49.0...v2.50.0) (2026-06-26)
 
 
