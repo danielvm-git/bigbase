@@ -1,8 +1,8 @@
 type: session-state
 context: infra
-active_flow: null
-active_epic_id: null
-active_story_id: null
+active_flow: build_epic
+active_epic_id: e44
+active_story_id: e44s01
 release:
   target_version: 2.48.0
   codename: "Solo Dev Complete"
@@ -19,12 +19,13 @@ metrics:
   stories_completed: 140
   bcps_per_hour: 0.4
 epic_cycle:
-  step: done
-  story_bcps: 3
-  story: e43
-  audit_result: pass
-  completed_steps: [1, 2, 3, 4, 5, 6, 7, 8]
-  note: "e43 COMPLETE — both stories merged. e43s01 (manifest config + probeHealth + orchestrator gate) + e43s02 (logging + health_summary + Admin UI). All tests green. Squash-merged to main."
+  step: 3
+  story_bcps: 2
+  story: e44s01
+  audit_result: null
+  completed_steps: [1, 2]
+  note: "e44s01 — Step 1+2 done (survey + plan-work). Moving to Step 3: kickoff-branch."
+  fast_mode: true
 bug_cycle:
   current_step: 0
   completed_steps: []
@@ -36,6 +37,6 @@ git:
 handoff:
   last_step_completed: release-branch
   open_decisions: []
-  next_skill: survey-context
-  summary: "e43 COMPLETE — both stories merged. v2.48.0 released by semantic-release. CI verified."
-  context: "e43 (Deploy — Semantic Health Check) shipped in v2.48.0. e43s01: manifest config + probeHealth + orchestrator gate. e43s02: per-attempt logging + health_summary migration + Admin UI. Next: e44 (One-Click Rollback) in backlog."
+  next_skill: kickoff-branch
+  summary: "e44s01 build_epic — Step 1+2 complete"
+  context: "e44s01: POST /api/sites/:id/rollback endpoint + artifact reuse (no rebuild). Moving to kickoff-branch."
