@@ -4,9 +4,9 @@ active_flow: build_epic
 active_epic_id: e44
 active_story_id: e44s01
 release:
-  target_version: 2.48.0
+  target_version: 2.49.0
   codename: "Solo Dev Complete"
-  last_tag: v2.48.0
+  last_tag: v2.49.0
   last_publish: '2026-06-26'
   ci_verified: true
   ci_verified_at: '2026-06-26'
@@ -19,12 +19,12 @@ metrics:
   stories_completed: 140
   bcps_per_hour: 0.4
 epic_cycle:
-  step: 5
+  step: done
   story_bcps: 2
   story: e44s01
-  audit_result: null
-  completed_steps: [1, 2, 3, 4]
-  note: "e44s01 — Step 3 (kickoff-branch) + Step 4 (develop-tdd) complete. All 4 rollback tests + all deploy tests + full project pass."
+  audit_result: pass
+  completed_steps: [1, 2, 3, 4, 5, 6, 7, 8]
+  note: "e44s01 COMPLETE — Backend rollback endpoint + artifact reuse. Merged via PR #49. CI verified (sqlite + postgres). v2.49.0 released."
   fast_mode: true
 bug_cycle:
   current_step: 0
@@ -37,6 +37,6 @@ git:
 handoff:
   last_step_completed: release-branch
   open_decisions: []
-  next_skill: verify-work
-  summary: "e44s01 build_epic — Step 4 complete, Step 5 next"
-  context: "e44s01: Rollback backend implemented. Moving to Step 5 (verify-work)."
+  next_skill: survey-context
+  summary: "e44s01 complete — backend rollback merged in v2.49.0"
+  context: "e44s01 (Backend rollback) shipped in v2.49.0. Next: e44s02 (Admin UI — rollback button and history)."

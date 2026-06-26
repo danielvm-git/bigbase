@@ -4,7 +4,8 @@ id: e44
 title: "Deploy — One-Click Rollback"
 wsjf: 5.0
 wsjf_rationale: "BV=9(critical: solo dev safety net — bad deploy at midnight needs one-click fix, not git revert + rebuild) TC=5(more urgent as more sites go live) RR=9(elimoinates multi-minute recovery: rollback is seconds) / JS=2(~1.5 days across 2 stories)"
-status: planned
+status: in_progress
+note: "e44s01 done (backend rollback via PR #49, v2.49.0), e44s02 planned (Admin UI)"
 tier: 4
 depends_on:
   - e43
@@ -14,7 +15,7 @@ covers:
 stories:
   - id: e44s01
     title: "Backend — rollback to previous successful deployment"
-    status: planned
+    status: done
     bcps: 2
     tasks:
       - desc: "Add rollback table migration + API endpoint POST /api/sites/:id/rollback"
