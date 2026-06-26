@@ -272,7 +272,7 @@ epics:
     file: epics/e43-health-check.yaml
     mode: flat
     tier: 4
-    status: planned
+    status: done
   - id: e44
     title: Deploy — One-Click Rollback
     wsjf: 5.0
