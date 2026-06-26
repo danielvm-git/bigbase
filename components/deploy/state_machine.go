@@ -4,11 +4,12 @@ package deploy
 type DeploymentState string
 
 const (
-	StatePending   DeploymentState = "pending"
-	StateBuilding  DeploymentState = "building"
-	StateDeploying DeploymentState = "deploying"
-	StateRunning   DeploymentState = "running"
-	StateFailed    DeploymentState = "failed"
+	StatePending    DeploymentState = "pending"
+	StateBuilding   DeploymentState = "building"
+	StateDeploying  DeploymentState = "deploying"
+	StateRunning    DeploymentState = "running"
+	StateFailed     DeploymentState = "failed"
+	StateRolledBack DeploymentState = "rolled_back"
 )
 
 // StatusTransition records a single state change in the deployment lifecycle.
@@ -29,11 +30,12 @@ type stateMachine struct {
 func newStateMachine() *stateMachine {
 	return &stateMachine{
 		valid: map[string][]string{
-			string(StatePending):   {string(StateBuilding)},
-			string(StateBuilding):  {string(StateDeploying), string(StateRunning), string(StateFailed)},
-			string(StateDeploying): {string(StateRunning), string(StateFailed)},
-			string(StateRunning):   {string(StateFailed)},
-			string(StateFailed):    {},
+			string(StatePending):            {string(StateBuilding)},
+			string(StateBuilding):           {string(StateDeploying), string(StateRunning), string(StateFailed)},
+			string(StateDeploying):          {string(StateRunning), string(StateFailed)},
+			string(StateRunning):            {string(StateFailed), string(StateRolledBack)},
+			string(StateFailed):             {},
+			string(StateRolledBack):         {},
 		},
 	}
 }
