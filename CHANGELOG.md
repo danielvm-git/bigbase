@@ -1,3 +1,10 @@
+# [2.49.0](https://github.com/danielvm-git/bigbase/compare/v2.48.0...v2.49.0) (2026-06-26)
+
+
+### Features
+
+* **deploy:** add one-click rollback endpoint + artifact reuse ([#49](https://github.com/danielvm-git/bigbase/issues/49)) ([77132c7](https://github.com/danielvm-git/bigbase/commit/77132c782be2345c6e399456065d8e129419e6e1))
+
 # [2.48.0](https://github.com/danielvm-git/bigbase/compare/v2.47.0...v2.48.0) (2026-06-26)
 
 
