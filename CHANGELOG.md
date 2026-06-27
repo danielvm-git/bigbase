@@ -1,3 +1,10 @@
+# [2.57.0](https://github.com/danielvm-git/bigbase/compare/v2.56.0...v2.57.0) (2026-06-27)
+
+
+### Features
+
+* **proxy:** block .git exposure and harden /health with Bearer auth ([#50](https://github.com/danielvm-git/bigbase/issues/50)) ([085db49](https://github.com/danielvm-git/bigbase/commit/085db4948cf01f1fa6f1399ba124ce0e542dad90))
+
 # [2.56.0](https://github.com/danielvm-git/bigbase/compare/v2.55.1...v2.56.0) (2026-06-27)
 
 
