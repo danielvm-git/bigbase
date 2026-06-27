@@ -1,9 +1,9 @@
 type: session-state
 context: infra
 active_flow: build_epic
-active_epic_id: e45
-active_story_id: e45s01
-active_story_status: in_progress
+active_epic_id: e46
+active_story_id: e46s01
+active_story_status: planned
 release:
   target_version: 2.49.0
   codename: "Solo Dev Complete"
@@ -20,24 +20,25 @@ metrics:
   stories_completed: 140
   bcps_per_hour: 0.4
 epic_cycle:
-  step: 2
-  story_bcps: 3
-  story: e45s01
+  step: 1
+  story_bcps: 2
+  story: e46s01
   audit_result: pending
-  completed_steps: [1, 2]
-  note: "e45s01 Step 1+2 complete (fast mode) — survey + plan-work done. 6 tasks defined. BCPs=3. Next: kickoff-branch"
+  completed_steps: []
+  note: "Starting e46s01 — Custom domain mapping and verification"
   fast_mode: true
 bug_cycle:
   current_step: 0
   completed_steps: [1, 2, 3, 4, 5]
   bug_file: specs/bugs/BUG-2026-06-26T200000-e44s02-missing-ui-tests.md
 git:
-  branch: main
+  branch: feat/e45s01-drain
   hash: HEAD
   worktree: null
 handoff:
-  last_step_completed: plan-work
+  last_step_completed: 
   open_decisions: []
-  next_skill: kickoff-branch
-  summary: "e45s01 plan complete — 6 tasks, defer stopPreviousDeployments, add draining state, graceful SIGTERM drain"
-  context: "e45 (Zero-Downtime Drain) story e45s01 active. Surveyed deploy.go, proxy/hosts.go, state_machine.go. Core design: defer stopPreviousDeployments until new deployment passes health check, then drain old with SIGTERM + timeout + SIGKILL. No proxy changes needed — RegisterDeploymentHost already supports replacing host mapping atomically."
+  next_skill: survey-context
+  summary: "Starting e46s01 — Custom domain mapping and verification"
+  context: "e46s01: Create custom_domains table, CRUD API, DNS verification, proxy routing for custom domains"
+  fast_mode: true

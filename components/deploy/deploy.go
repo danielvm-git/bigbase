@@ -13,6 +13,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"syscall"
 	"strings"
 	"sync"
 	"time"
@@ -100,9 +101,12 @@ type Deploy struct {
 	logHubs      map[string]*logHub
 	sm           *stateMachine
 	eventBus     *kernel.EventBus
-	supervisor   *Supervisor
-	envKey       []byte
-	cache        *Cache
+	supervisor       *Supervisor
+	envKey           []byte
+	cache            *Cache
+	DrainTimeout     time.Duration
+	oldDeploymentsMu sync.RWMutex
+	oldDeployments   map[string][]string
 }
 
 type Options struct {
@@ -122,6 +126,9 @@ type Options struct {
 	CacheMaxSize int64
 	// Runner is injected for tests; nil uses the production deployRunner.
 	Runner Runner
+	// DrainTimeout is how long to wait for existing connections to complete
+	// during zero-downtime deployment drain. Default: 30s.
+	DrainTimeout time.Duration
 }
 
 func New(opts Options) *Deploy {
@@ -153,6 +160,10 @@ func New(opts Options) *Deploy {
 	if strings.TrimSpace(opts.PublicDomain) != "" {
 		useHTTPS = true
 	}
+	drainTimeout := opts.DrainTimeout
+	if drainTimeout <= 0 {
+		drainTimeout = 30 * time.Second
+	}
 	d := &Deploy{
 		db:           opts.DB,
 		logger:       logger,
@@ -164,9 +175,11 @@ func New(opts Options) *Deploy {
 		useHTTPS:     useHTTPS,
 		hostRouter:   opts.HostRouter,
 		nextPort:     basePort,
-		apps:         make(map[string]*runningApp),
-		logHubs:      make(map[string]*logHub),
-		sm:           newStateMachine(),
+		apps:             make(map[string]*runningApp),
+		logHubs:          make(map[string]*logHub),
+		sm:               newStateMachine(),
+		DrainTimeout:     drainTimeout,
+		oldDeployments:   make(map[string][]string),
 	}
 	envKey, envKeyErr := parseEnvEncryptionKey(opts.EnvEncryptionKey)
 	d.envKey = envKey
@@ -559,10 +572,11 @@ func (d *Deploy) Trigger(ctx context.Context, repoID, branch, siteName, siteID s
 		siteName = repoName
 	}
 
-	// Stop any previous running deployment for the same site or repo.
-	// By unregistering the old host before the new deployment starts,
-	// finalizeDeploymentURL will successfully register the new port.
-	d.stopPreviousDeployments(ctx, siteID, repoID)
+	// Collect previous running deployments for zero-downtime drain.
+	// Old deployments are NOT stopped here — they continue serving existing
+	// connections until the new deployment passes health check, at which point
+	// drainOldDeployments() signals them to drain gracefully.
+	d.collectPreviousDeployments(ctx, siteID, repoID)
 
 	id, err := generateID()
 	if err != nil {
@@ -597,7 +611,7 @@ func (d *Deploy) Trigger(ctx context.Context, repoID, branch, siteName, siteID s
 	d.appendDeployLog(id, fmt.Sprintf("→ Deployment started (branch: %s)", branch))
 
 	// After finalizeDeploymentURL runs, the proxy will route to the new port.
-	// Any old deployment stopped above is already unregistered and cleaned up.
+	// Old deployments are drained after health check passes — zero-downtime.
 	go d.runDeployment(deploy, buildDir, siteName)
 	return deploy, nil
 }
@@ -651,23 +665,25 @@ func (d *Deploy) stopDeployment(id, newStatus string) {
 	}
 }
 
-// stopPreviousDeployments finds and stops any running deployments for the same
-// site (by site_id) or same repo (by repo_id), marking them as "replaced".
-// IDs are collected first, then stopped, to avoid nesting DB queries on a
-// single-connection SQLite pool.
-func (d *Deploy) stopPreviousDeployments(ctx context.Context, siteID, repoID string) {
+// collectPreviousDeployments finds running deployments for the same site/repo
+// and stores their IDs for later drain. Unlike stopPreviousDeployments, it does
+// NOT stop them — old deployments continue serving until the new one is healthy.
+func (d *Deploy) collectPreviousDeployments(ctx context.Context, siteID, repoID string) {
+	if siteID == "" && repoID == "" {
+		return
+	}
 	var query string
 	var args []any
 	if siteID != "" {
-		query = "SELECT id FROM deployments WHERE site_id = ? AND status = 'running'"
+		query = "SELECT id FROM deployments WHERE site_id = ? AND status IN ('running')"
 		args = []any{siteID}
 	} else {
-		query = "SELECT id FROM deployments WHERE repo_id = ? AND status = 'running'"
+		query = "SELECT id FROM deployments WHERE repo_id = ? AND status IN ('running')"
 		args = []any{repoID}
 	}
 	rows, err := d.db.QueryContext(ctx, query, args...)
 	if err != nil {
-		d.logger.Warn("query previous deployments", "error", err)
+		d.logger.Warn("collect previous deployments", "error", err)
 		return
 	}
 	var ids []string
@@ -680,10 +696,122 @@ func (d *Deploy) stopPreviousDeployments(ctx context.Context, siteID, repoID str
 	}
 	_ = rows.Close()
 
-	for _, id := range ids {
-		d.stopDeployment(id, "replaced")
-		d.logger.Info("stopped previous deployment", "replaced", id)
+	if len(ids) == 0 {
+		return
 	}
+
+	d.oldDeploymentsMu.Lock()
+	d.oldDeployments[siteID] = append(d.oldDeployments[siteID], ids...)
+	d.oldDeploymentsMu.Unlock()
+	d.logger.Info("collected previous deployments for drain", "site_id", siteID, "count", len(ids))
+}
+
+// drainOldDeployments drains all previously-collected deployments for the given site.
+// Called after the new deployment passes health check and its host is registered.
+func (d *Deploy) drainOldDeployments(siteID string) {
+	d.oldDeploymentsMu.Lock()
+	ids := d.oldDeployments[siteID]
+	delete(d.oldDeployments, siteID)
+	d.oldDeploymentsMu.Unlock()
+
+	for _, id := range ids {
+		d.logger.Info("draining old deployment", "id", id)
+		go d.drainDeployment(id)
+	}
+}
+
+// drainDeployment performs a graceful drain on a running deployment:
+// 1. Transition status to 'draining'
+// 2. Signal the process/server to stop accepting new connections
+// 3. Wait for existing connections to complete (DrainTimeout)
+// 4. Force-kill remaining connections on timeout
+// 5. Transition to 'stopped'
+func (d *Deploy) drainDeployment(id string) {
+	d.mu.Lock()
+	app, hasApp := d.apps[id]
+	d.mu.Unlock()
+
+	if !hasApp {
+		d.logger.Warn("drain: no running app found", "id", id)
+		// Try to stop via DB (orphaned process handling)
+		d.stopDeployment(id, "stopped")
+		return
+	}
+
+	// Transition to draining
+	ctx := context.Background()
+	if err := d.TransitionState(ctx, id, "draining"); err != nil {
+		d.logger.Warn("drain: transition to draining failed", "id", id, "error", err)
+	}
+
+	// Signal the Supervisor so any respawn loop knows this is intentional.
+	if d.supervisor != nil {
+		d.supervisor.Stop(id)
+	}
+
+	// Create a context with the drain timeout
+	drainCtx, cancel := context.WithTimeout(ctx, d.DrainTimeout)
+	defer cancel()
+
+	drained := make(chan struct{}, 1)
+
+	if app.server != nil {
+		// Static server: use Go http.Server.Shutdown which handles graceful drain
+		go func() {
+			shutdownCtx, shutdownCancel := context.WithTimeout(ctx, d.DrainTimeout)
+			defer shutdownCancel()
+			if err := app.server.Shutdown(shutdownCtx); err != nil {
+				d.logger.Warn("drain: static server shutdown timed out", "id", id, "error", err)
+			}
+			drained <- struct{}{}
+		}()
+	} else if app.cmd != nil && app.cmd.Process != nil {
+		// Process app: send SIGTERM, wait for graceful exit
+		d.logger.Info("drain: sending SIGTERM to process", "id", id, "pid", app.cmd.Process.Pid)
+		if err := app.cmd.Process.Signal(syscall.SIGTERM); err != nil {
+			d.logger.Warn("drain: SIGTERM failed, falling back to kill", "id", id, "error", err)
+			_ = app.cmd.Process.Kill()
+			drained <- struct{}{}
+		} else {
+			go func() {
+				_, waitErr := app.cmd.Process.Wait()
+				if waitErr != nil {
+					d.logger.Debug("drain: process wait done", "id", id, "error", waitErr)
+				}
+				drained <- struct{}{}
+			}()
+		}
+	} else {
+		// No server or cmd — mark as drained immediately
+		drained <- struct{}{}
+	}
+
+	// Wait for drain or timeout
+	select {
+	case <-drained:
+		d.logger.Info("drain: completed gracefully", "id", id)
+	case <-drainCtx.Done():
+		d.logger.Warn("drain: timeout — force killing", "id", id, "timeout", d.DrainTimeout)
+		// Force kill
+		if app.cmd != nil && app.cmd.Process != nil {
+			_ = app.cmd.Process.Kill()
+		}
+		if app.server != nil {
+			_ = app.server.Close()
+		}
+	}
+
+	// Do NOT unregister the host — the new deployment already registered on the
+	// same host via finalizeDeploymentURL. Unregistering here would delete the
+	// new deployment's host mapping, breaking traffic routing.
+
+	// Remove from apps map and transition to stopped
+	d.mu.Lock()
+	delete(d.apps, id)
+	d.mu.Unlock()
+
+	_ = d.TransitionState(ctx, id, string(StateStopped))
+	d.logger.Info("drain: deployment stopped", "id", id)
 }
 
 func (d *Deploy) runDeployment(deploy *Deployment, buildDir, repoName string) {
@@ -760,6 +888,8 @@ func (d *Deploy) runDeployment(deploy *Deployment, buildDir, repoName string) {
 		d.updateStatus(deploy.ID, "running")
 		d.finalizeDeploymentURL(deploy, repoName)
 		d.appendDeployLog(deploy.ID, fmt.Sprintf("→ Deployed at %s", deploy.URL))
+		// Drain old deployments now that new host is registered
+		d.drainOldDeployments(deploy.SiteID)
 		go d.serveStatic(context.Background(), buildDir, deploy, repoName)
 		return
 	}
@@ -803,6 +933,7 @@ func (d *Deploy) runDeployment(deploy *Deployment, buildDir, repoName string) {
 		d.finalizeDeploymentURL(deploy, repoName)
 		d.appendDeployLog(deploy.ID, fmt.Sprintf("→ Deployed at %s", deploy.URL))
 		d.appendDeployLog(deploy.ID, "→ Serving static files")
+		d.drainOldDeployments(deploy.SiteID)
 		go d.serveStatic(context.Background(), serveDir, deploy, repoName)
 		return
 	}
@@ -818,6 +949,8 @@ func (d *Deploy) runDeployment(deploy *Deployment, buildDir, repoName string) {
 		_ = d.TransitionState(ctx, deploy.ID, "running")
 		d.finalizeDeploymentURL(deploy, repoName)
 		d.appendDeployLog(deploy.ID, fmt.Sprintf("→ Deployed at %s", deploy.URL))
+		// Drain old deployments now that new host is registered
+		d.drainOldDeployments(deploy.SiteID)
 	} else {
 		d.appendDeployLog(deploy.ID, fmt.Sprintf("✗ Health check failed after %d attempts: %s",
 			result.Attempts, result.FirstFailureReason))
@@ -1057,9 +1190,9 @@ func (d *Deploy) startApp(ctx context.Context, buildDir string, deploy *Deployme
 		d.logger.Error("app exited", "id", deploy.ID, "error", err)
 		d.appendDeployLog(deploy.ID, fmt.Sprintf("✗ App exited: %v", err))
 		d.updateStatus(deploy.ID, "failed")
-		if host != "" && d.hostRouter != nil {
-			d.hostRouter.UnregisterDeploymentHost(host)
-		}
+		// Do NOT unregister the host here — the host may be shared with another
+		// running deployment for the same site. Host cleanup is handled by
+		// stopDeployment and drainDeployment.
 	}
 }
 

@@ -14,7 +14,9 @@ func TestStateMachineValidTransitions(t *testing.T) {
 		{StatePending, []DeploymentState{StateBuilding}},
 		{StateBuilding, []DeploymentState{StateDeploying, StateRunning, StateFailed}},
 		{StateDeploying, []DeploymentState{StateRunning, StateFailed}},
-		{StateRunning, []DeploymentState{StateFailed, StateRolledBack}},
+		{StateRunning, []DeploymentState{StateFailed, StateRolledBack, StateDraining}},
+		{StateDraining, []DeploymentState{StateStopped, StateFailed, StateRunning}},
+		{StateStopped, []DeploymentState{StateRunning}},
 		{StateFailed, nil},
 		{StateRolledBack, nil},
 	}
@@ -45,6 +47,11 @@ func TestStateMachineCanTransition(t *testing.T) {
 		{"deploying", "failed"},
 		{"running", "failed"},
 		{"running", "rolled_back"},
+		{"running", "draining"},
+		{"draining", "stopped"},
+		{"draining", "failed"},
+		{"draining", "running"},
+		{"stopped", "running"},
 	}
 	for _, v := range valid {
 		if !sm.CanTransition(v.from, v.to) {
@@ -65,6 +72,11 @@ func TestStateMachineCanTransition(t *testing.T) {
 		{"rolled_back", "running"},
 		{"rolled_back", "failed"},
 		{"rolled_back", "pending"},
+		{"running", "stopped"},
+		{"pending", "draining"},
+		{"draining", "building"},
+		{"stopped", "building"},
+		{"stopped", "failed"},
 	}
 	for _, v := range invalid {
 		if sm.CanTransition(v.from, v.to) {
@@ -76,14 +88,14 @@ func TestStateMachineCanTransition(t *testing.T) {
 func TestStateMachineIsValidState(t *testing.T) {
 	sm := newStateMachine()
 
-	valid := []string{"pending", "building", "deploying", "running", "failed", "rolled_back"}
+	valid := []string{"pending", "building", "deploying", "running", "failed", "rolled_back", "draining", "stopped"}
 	for _, s := range valid {
 		if !sm.IsValidState(s) {
 			t.Errorf("IsValidState(%s) = false, want true", s)
 		}
 	}
 
-	invalid := []string{"live", "replaced", "", "unknown"}
+	invalid := []string{"live", "replaced", "", "unknown", "drain"}
 	for _, s := range invalid {
 		if sm.IsValidState(s) {
 			t.Errorf("IsValidState(%s) = true, want false", s)

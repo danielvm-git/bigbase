@@ -8,6 +8,8 @@ const (
 	StateBuilding   DeploymentState = "building"
 	StateDeploying  DeploymentState = "deploying"
 	StateRunning    DeploymentState = "running"
+	StateDraining  DeploymentState = "draining"
+	StateStopped   DeploymentState = "stopped"
 	StateFailed     DeploymentState = "failed"
 	StateRolledBack DeploymentState = "rolled_back"
 )
@@ -33,7 +35,9 @@ func newStateMachine() *stateMachine {
 			string(StatePending):            {string(StateBuilding)},
 			string(StateBuilding):           {string(StateDeploying), string(StateRunning), string(StateFailed)},
 			string(StateDeploying):          {string(StateRunning), string(StateFailed)},
-			string(StateRunning):            {string(StateFailed), string(StateRolledBack)},
+			string(StateRunning):            {string(StateFailed), string(StateRolledBack), string(StateDraining)},
+			string(StateDraining):          {string(StateStopped), string(StateFailed), string(StateRunning)},
+			string(StateStopped):           {string(StateRunning)},
 			string(StateFailed):             {},
 			string(StateRolledBack):         {},
 		},

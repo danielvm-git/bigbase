@@ -13,7 +13,7 @@ covers:
 stories:
   - id: e45s01
     title: "Graceful connection draining on deployment switchover"
-    status: in_progress
+    status: done
     bcps: 3
     tasks:
       - id: e45s01t1
@@ -168,20 +168,49 @@ stories:
             - Static → use server.Shutdown which waits for connections
   - id: e45s02
     title: "Proxy integration — smooth traffic migration"
-    status: planned
+    status: in_progress
     bcps: 2
     tasks:
-      - desc: "Update proxy routing to support dual-deployment during drain"
+      - id: e45s02t1
+        desc: "Test: proxy routing atomic host replacement during drain"
         notes: |
-          During drain: proxy serves new connections to the new deployment.
-          Existing connections on the old deployment continue until they complete.
-          Update routing table atomically to avoid race conditions.
-          Support for sticky sessions (same IP → same deployment) if needed.
+          The proxy's RegisterDeploymentHost already supports atomic replacement
+          (same host → different port). Add a test that proves:
+          - RegisterDeploymentHost(host, port1)
+          - GetDeploymentHostInfo(host) returns port1
+          - RegisterDeploymentHost(host, port2) overwrites atomically
+          - GetDeploymentHostInfo(host) returns port2
+          - Old registered host has NO lingering stale entries
+          - concurrent reads during replacement see either old or new (no partial state)
+          
+          This test validates the proxy routing layer works correctly with
+          the drain flow built in e45s01.
         verify: "go test ./components/proxy/ -run TestDualDeployRouting -v"
-      - desc: "Admin UI — show drain status on deployment detail"
+      - id: e45s02t2
+        desc: "Admin UI: add 'draining' and 'stopped' to DeploymentStatus type"
         notes: |
-          Deployment timeline: show 'draining' state with active connection count.
-          Show remaining connections and drain progress bar.
-          Log when all connections drained and old process stopped.
-          If timeout forced, show warning with count of dropped connections.
+          In ui/src/types/sites.ts:
+            - Add 'draining' | 'stopped' to the DeploymentStatus union type
+        verify: "cd ui && npx tsc --noEmit"
+      - id: e45s02t3
+        desc: "Admin UI: add draining/stopped to status timeline"
+        notes: |
+          In ui/src/pages/SiteDetailPage.tsx:
+            - Update STATUS_STEPS to include 'draining' after 'running'
+            - 'draining' should have a yellow/pulse animation (similar to 'deploying')
+            - 'stopped' is terminal (not in STATUS_STEPS — it replaces 'replaced' in rollback logic)
+            - Handle 'draining' and 'stopped' in the rollback canRollback check:
+              canRollback(d) = d.status === 'stopped' (was 'replaced')
+          
+          In ui/src/components/Badge.tsx:
+            - Add statusBadgeVariant for 'draining' → 'warning'
+            - Add statusBadgeVariant for 'stopped' → 'neutral'
         verify: "cd ui && npm run build"
+      - id: e45s02t4
+        desc: "Admin UI: update SiteDetailPage test for new statuses"
+        notes: |
+          In ui/src/pages/SiteDetailPage.test.tsx:
+            - Update test fixtures that used 'replaced' to use 'stopped'
+            - Add test for 'draining' status rendering
+            - Keep backward compat with rollout of new statuses
+        verify: "cd ui && npx tsc --noEmit && cd ../.. && go test ./components/proxy/ -run TestDualDeployRouting -v"

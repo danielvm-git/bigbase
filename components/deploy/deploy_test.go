@@ -1860,24 +1860,46 @@ func TestRedeployReplacesPrevious(t *testing.T) {
 		t.Fatalf("second deploy status = %q, want running", status2)
 	}
 
-	// Host should now point to second deployment's port
-	gotPort2, ok := hostReg.getPort(host)
-	if !ok {
+	// Host should now point to second deployment's port.
+	// Wait for finalizeDeploymentURL to register the host.
+	var gotPort2 int
+	var hostOK bool
+	for i := 0; i < 20; i++ {
+		gotPort2, hostOK = hostReg.getPort(host)
+		if hostOK && gotPort2 == int(port2) {
+			break
+		}
+		time.Sleep(50 * time.Millisecond)
+	}
+	if !hostOK {
 		t.Fatal("host not registered after second deploy")
 	}
 	if gotPort2 != int(port2) {
 		t.Fatalf("after redeploy host port = %d, want %d (second deploy port)", gotPort2, int(port2))
 	}
 
-	// First deployment should be marked as replaced
-	getAgain1 := httptest.NewRequest("GET", "/api/deploy/"+depID1, nil)
-	getWAgain1 := httptest.NewRecorder()
-	handler.ServeHTTP(getWAgain1, getAgain1)
-	var dep1Again map[string]any
-	_ = json.NewDecoder(getWAgain1.Body).Decode(&dep1Again)
-	status1After, _ := dep1Again["status"].(string)
-	if status1After != "replaced" {
-		t.Fatalf("first deploy status after redeploy = %q, want replaced", status1After)
+	// First deployment should be drained (running → draining → stopped)
+	// Drain happens asynchronously after the new deployment is healthy,
+	// so poll until it reaches a terminal state.
+	var status1After string
+	for i := 0; i < 40; i++ {
+		getAgain1 := httptest.NewRequest("GET", "/api/deploy/"+depID1, nil)
+		getWAgain1 := httptest.NewRecorder()
+		handler.ServeHTTP(getWAgain1, getAgain1)
+		var dep1Again map[string]any
+		_ = json.NewDecoder(getWAgain1.Body).Decode(&dep1Again)
+		s, _ := dep1Again["status"].(string)
+		if s == "stopped" {
+			status1After = s
+			break
+		}
+		if s == "failed" {
+			t.Fatalf("first deployment failed during drain: %s", s)
+		}
+		time.Sleep(100 * time.Millisecond)
+	}
+	if status1After != "stopped" {
+		t.Fatalf("first deploy status after redeploy = %q, want stopped (drain timeout)", status1After)
 	}
 
 	// Verify second deployment service is reachable (static server running).

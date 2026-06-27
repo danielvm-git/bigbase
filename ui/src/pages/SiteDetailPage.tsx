@@ -20,7 +20,7 @@ import { isPreviewForced, previewQuerySuffix } from '../lib/previewMode'
 import { useRequestLogs } from '../hooks/useRequestLogs'
 import type { Deployment, RollbackEvent, Site } from '../types/sites'
 
-const STATUS_STEPS = ['pending', 'building', 'deploying', 'running']
+const STATUS_STEPS = ['pending', 'building', 'deploying', 'running', 'draining', 'stopped']
 
 interface HealthSummaryData {
   probe_count?: number
@@ -40,7 +40,7 @@ function parseHealthSummary(summary: string | undefined | null): HealthSummaryDa
 function StatusTimeline({ status, healthSummary }: { status: string; healthSummary?: string | null }) {
   const currentIdx = STATUS_STEPS.indexOf(status) // Default as fallback
   const hs = parseHealthSummary(healthSummary)
-  const isTerminal = status === 'running' || status === 'failed'
+  const isTerminal = status === 'running' || status === 'failed' || status === 'stopped'
   if (currentIdx < 0) return null
 
   const dotStyle = (step: string, i: number): React.CSSProperties => {
@@ -52,7 +52,7 @@ function StatusTimeline({ status, healthSummary }: { status: string; healthSumma
     if (isCurrent && status === 'running') {
       return { width: 16, height: 16, borderRadius: '50%', flexShrink: 0, background: 'var(--brand-500)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, color: '#fff', lineHeight: '16px' }
     }
-    const bg = isPast || (isCurrent && isTerminal) ? 'var(--brand-500)' : isCurrent && step === 'building' ? 'var(--brand-500)' : isCurrent && step === 'deploying' ? 'rgba(255, 183, 0, 0.8)' : 'var(--border-default)'
+    const bg = isPast || (isCurrent && isTerminal) ? 'var(--brand-500)' : isCurrent && step === 'building' ? 'var(--brand-500)' : (isCurrent && step === 'deploying') || (isCurrent && step === 'draining') ? 'rgba(255, 183, 0, 0.8)' : 'var(--border-default)'
     return { width: 10, height: 10, borderRadius: '50%', flexShrink: 0, background: bg }
   }
 
@@ -61,6 +61,7 @@ function StatusTimeline({ status, healthSummary }: { status: string; healthSumma
     switch (step) {
       case 'building': return 'status-dot-spin'
       case 'deploying': return 'status-dot-pulse'
+      case 'draining': return 'status-dot-pulse'
       case 'running': return 'status-dot-live'
       case 'failed': return 'status-dot-failed'
       default: return ''
@@ -69,6 +70,7 @@ function StatusTimeline({ status, healthSummary }: { status: string; healthSumma
 
   const label = (step: string, i: number): string => {
     if (i === currentIdx && step === 'running') return 'Live'
+    if (i === currentIdx && step === 'draining') return 'Draining…'
     if (i === currentIdx && step === 'deployed') return 'Deployed'
     return step
   }
@@ -422,7 +424,7 @@ export default function SiteDetailPage() {
   const canRollback = (dep: Deployment): boolean => {
     if (dep.status !== 'running') return false
     // Can only rollback if there's at least one previous deployment
-    return deployments.some(d => d.id !== dep.id && (d.status === 'replaced' || d.status === 'rolled_back'))
+    return deployments.some(d => d.id !== dep.id && (d.status === 'stopped' || d.status === 'replaced' || d.status === 'rolled_back'))
   }
 
   if (loading) return <SitesListSkeleton />

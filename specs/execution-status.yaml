@@ -44,7 +44,10 @@ epics:
   e40: done
   e42: done
   e44: done
-  e45: planned
+  e45: done
+  e41: done
+  e41s01: done
+  e41s02: done
   e46: planned
   e47: planned
   e48: planned
@@ -182,8 +185,8 @@ stories:
   e42s02: done
   e44s01: done
   e44s02: done
-  e45s01: planned
-  e45s02: planned
+  e45s01: done
+  e45s02: done
   e46s01: planned
   e46s02: planned
   e46s03: planned

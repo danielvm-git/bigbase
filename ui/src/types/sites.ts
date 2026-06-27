@@ -1,4 +1,4 @@
-export type DeploymentStatus = 'pending' | 'building' | 'deploying' | 'running' | 'failed' | 'rolled_back' | 'replaced'
+export type DeploymentStatus = 'pending' | 'building' | 'deploying' | 'running' | 'draining' | 'stopped' | 'failed' | 'rolled_back' | 'replaced'
 
 export interface Deployment {
   id: string

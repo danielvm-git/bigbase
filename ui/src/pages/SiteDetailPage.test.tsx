@@ -13,10 +13,10 @@ const mockDeployments = [
   { id: 'd2', repo_id: 'r1', branch: 'main', commit_sha: 'def5678', status: 'failed', url: '', app_type: 'node', created_at: '2026-06-01T09:00:00Z' },
 ]
 
-// Includes a 'replaced' deployment so canRollback(d1) returns true
+// Includes a 'stopped' deployment so canRollback(d1) returns true
 const mockDeploymentsWithPrevious = [
   { id: 'd1', repo_id: 'r1', branch: 'main', commit_sha: 'abc1234', status: 'running', url: 'http://localhost:4000', app_type: 'static', created_at: '2026-06-01T10:00:00Z' },
-  { id: 'd-prev', repo_id: 'r1', branch: 'main', commit_sha: 'bbb0000', status: 'replaced', url: '', app_type: 'static', created_at: '2026-06-01T08:00:00Z' },
+  { id: 'd-prev', repo_id: 'r1', branch: 'main', commit_sha: 'bbb0000', status: 'stopped', url: '', app_type: 'static', created_at: '2026-06-01T08:00:00Z' },
 ]
 
 // vi.fn() references kept outside vi.mock so tests can override per-describe
@@ -128,7 +128,7 @@ describe('SiteDetailPage', () => {
   })
 
   it('does not show rollback button when no previous deployment exists', async () => {
-    // d1=running, d2=failed → canRollback(d1) = false (no replaced/rolled_back)
+    // d1=running, d2=failed → canRollback(d1) = false (no stopped/rolled_back)
     renderPage()
     await waitFor(() => {
       expect(screen.getByText('abc1234')).toBeInTheDocument()
@@ -136,7 +136,7 @@ describe('SiteDetailPage', () => {
     expect(screen.queryByText('Rollback')).not.toBeInTheDocument()
   })
 
-  describe('with a previous (replaced) deployment', () => {
+  describe('with a previous (stopped) deployment', () => {
     beforeEach(() => {
       getSiteDeploymentsMock.mockResolvedValue({ data: mockDeploymentsWithPrevious, previewMode: false })
     })
