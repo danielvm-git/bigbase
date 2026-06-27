@@ -1,0 +1,55 @@
+story_id: e47s01
+verified_at: "2026-06-27T11:15:00Z"
+verifier: verify-work
+phases:
+  smoke:
+    passed: true
+    note: "No server process — middleware test verified via HTTP handler unit/integration tests"
+  build:
+    passed: true
+    command: "go build ./..."
+  typecheck:
+    passed: true
+    command: "go vet ./..."
+  lint:
+    passed: true
+    command: "golangci-lint run (pre-commit hook)"
+  tests:
+    passed: true
+    coverage: "25/25 packages, auth component tests all pass"
+  manual:
+    steps:
+      - step: "RateLimiter Reconfigure updates limits for new buckets"
+        expected: "After reconfigure, new IPs get updated limits"
+        actual: "TestRateLimit/reconfigure passes"
+        passed: true
+      - step: "CLI flags --rate-limit-enabled, --rate-limit-ip-max, --rate-limit-user-max present"
+        expected: "Build succeeds, flags are parsed at startup with env fallbacks"
+        actual: "go build passes; flags defined in startProxy() FlagSet with RATE_LIMIT_* env vars"
+        passed: true
+      - step: "RateLimiter instantiated with config from flags"
+        expected: "RateLimiter created after authComp, config logged at startup"
+        actual: "rl := auth.NewRateLimiter(rlCfg) wired in main.go startProxy()"
+        passed: true
+      - step: "Auth public routes wrapped with rl.Middleware"
+        expected: "/api/auth/* uses mComp.Middleware(rl.Middleware(authComp.Handler())) chain when enabled"
+        actual: "Conditional wiring in main.go; when disabled, uses mComp.Middleware(authComp.Handler()) only"
+        passed: true
+      - step: "61st login POST returns 429"
+        expected: "Rate limiter blocks after 60 req/min per IP"
+        actual: "TestRateLimitIntegration: 60 login POSTs pass, 61st returns 429 with 'rate limit exceeded' body"
+        passed: true
+      - step: "429 includes Retry-After header"
+        expected: "Retry-After > 0 on 429 response"
+        actual: "TestRateLimitHeaders: 429 response has Retry-After header with positive value"
+        passed: true
+      - step: "Authenticated requests use user bucket"
+        expected: "User bucket (300/min) takes precedence over IP bucket (60/min)"
+        actual: "TestRateLimitUserBucket: 5 auth requests pass with user bucket, unauthenticated exhausts IP bucket"
+        passed: true
+      - step: "Disabled mode allows unbounded requests"
+        expected: "Without rate limiter middleware, requests pass unhindered"
+        actual: "TestRateLimitDisabled: with middleware blocks after 2; without middleware 100 pass"
+        passed: true
+  gaps:
+    closed: true

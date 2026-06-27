@@ -1,0 +1,21 @@
+story_id: e49s01
+title: "Fix anonymous tokens — add org_id context"
+status: planned
+bcps: 2
+tasks:
+  - id: 1
+    description: "Add TestAnonymousToken — table-driven tests for mint, read, write, expiry, tampering"
+    verify: "go test ./components/auth/ -run TestAnonymousToken -v"
+    status: todo
+  - id: 2
+    description: "Switch handleAnonymousToken from jwt.MapClaims to Claims struct (Role: anonymous, OrgID: 0)"
+    verify: "go test ./components/auth/ -run TestAnonymousToken -v"
+    status: todo
+  - id: 3
+    description: "Add anonymous role bypass in Middleware() — skip email verification and org check for role=anonymous"
+    verify: "go test ./components/auth/ -run TestAnonymousToken -v"
+    status: todo
+  - id: 4
+    description: "Run full auth test suite — confirm no regressions"
+    verify: "go test ./components/auth/ -v"
+    status: todo

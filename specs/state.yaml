@@ -20,12 +20,13 @@ metrics:
   stories_completed: 140
   bcps_per_hour: 0.4
 epic_cycle:
-  step: 5
+  step: 8
   story_bcps: 2
   story: e47s01
-  audit_result: pending
-  completed_steps: [1, 2, 3, 4]
-  note: "e47s01 — TDD done. 8 tasks completed: Reconfigure, CLI flags, wiring, integration tests. Vet+test+build all green. Advancing to verify-work."
+  audit_result: pass
+  completed_steps: [1, 2, 3, 4, 5, 6, 7]
+  note: "e47s01 — Audit PASS (all sections). Commit drafted: feat(auth) wire rate limiter. F.I.R.S.T check clean. Advancing to release-branch."
+  fast_mode: true
   fast_mode: true
 bug_cycle:
   current_step: 0
