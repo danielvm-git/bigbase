@@ -7,7 +7,7 @@ wsjf_rationale: "BV=9(high: comprehensive component library unblocks ALL downstr
 status: planned
 tier: 1
 depends_on: []
-blocks: [e49, e50, e51, e52, e56, e57, e58, e59]
+blocks: [e49, e51, e56, e57, e58, e59]
 covers:
   - ui/
 notes: |

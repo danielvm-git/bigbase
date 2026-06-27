@@ -301,9 +301,7 @@ epics:
   status: planned
   blocks:
   - e49
-  - e50
   - e51
-  - e52
   - e56
   - e57
   - e58

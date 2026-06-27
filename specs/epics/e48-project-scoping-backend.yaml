@@ -5,8 +5,9 @@ title: "Architecture — Project Scoping (DB + Auth + Sites container)"
 wsjf: 7.0
 wsjf_rationale: "BV=10(critical: flat architecture blocks all multi-project features — DB branching, auth isolation, MCP tools) TC=8(blocks e57 Neon port and any multi-tenant work) RR=10(affects every component) / JS=5(~4 days across 5 stories, 16 BCPs total)"
 status: planned
-tier: 5
+tier: 0
 depends_on: []
+blocks: [e49, e50, e51, e52, e56, e57, e58, e59]
 covers:
   - kernel/
   - components/db/
