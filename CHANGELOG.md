@@ -1,3 +1,10 @@
+# [2.58.0](https://github.com/danielvm-git/bigbase/compare/v2.57.0...v2.58.0) (2026-06-27)
+
+
+### Features
+
+* **proxy:** add Permissions-Policy, Cache-Control headers and CI scanning preflight ([#51](https://github.com/danielvm-git/bigbase/issues/51)) ([f5b5a32](https://github.com/danielvm-git/bigbase/commit/f5b5a32c881880f7cb6201db3d5399cdffcdb1d3))
+
 # [2.57.0](https://github.com/danielvm-git/bigbase/compare/v2.56.0...v2.57.0) (2026-06-27)
 
 

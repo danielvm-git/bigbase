@@ -1,0 +1,15 @@
+{
+  "Global": {
+    "Exclude": [
+      "G115",
+      "G404",
+      "G704",
+      "G703",
+      "G118",
+      "G702"
+    ],
+    "Nosec": true
+  },
+  "includes": [],
+  "excludes": []
+}
