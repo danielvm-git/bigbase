@@ -243,7 +243,7 @@ epics:
     file: epics/e39-streaming-logs.yaml
     mode: flat
     tier: 1
-    status: in_progress
+    status: done
     note: "s01 done (WebSocket streams), s02 active (state machine), s03 planned (terminal viewer)"
   - id: e40
     title: Deploy — App Manifest (bigbase.yaml)
@@ -258,14 +258,14 @@ epics:
     file: epics/e41-env-vars-ui.yaml
     mode: flat
     tier: 2
-    status: planned
+    status: done
   - id: e42
     title: Deploy — Build Cache
     wsjf: 4.5
     file: epics/e42-build-cache.yaml
     mode: flat
     tier: 3
-    status: planned
+    status: done
   - id: e43
     title: Deploy — Semantic Health Check
     wsjf: 4.0
