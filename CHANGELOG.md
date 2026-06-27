@@ -1,3 +1,10 @@
+# [2.59.0](https://github.com/danielvm-git/bigbase/compare/v2.58.0...v2.59.0) (2026-06-27)
+
+
+### Features
+
+* **security:** DAST baseline scan and header audit scripts ([#52](https://github.com/danielvm-git/bigbase/issues/52)) ([0f0d58b](https://github.com/danielvm-git/bigbase/commit/0f0d58bc5d0be1d0171d371d408a1b7c928e93bf))
+
 # [2.58.0](https://github.com/danielvm-git/bigbase/compare/v2.57.0...v2.58.0) (2026-06-27)
 
 

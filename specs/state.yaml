@@ -7,7 +7,7 @@ active_story_status: done
 release:
   target_version: 2.55.0
   codename: "Live Surface Hardening"
-  last_tag: v2.58.0
+  last_tag: v2.55.0
   last_publish: '2026-06-27'
   ci_verified: true
   ci_verified_at: '2026-06-27T16:35:00Z'
@@ -23,7 +23,7 @@ epic_cycle:
   step: 7
   story_bcps: 2
   story: e48s03
-  audit_result: pass
+  audit_result: null
   completed_steps:
     - 0
     - 1
@@ -33,7 +33,7 @@ epic_cycle:
     - 5
     - 6
     - 7
-  note: "Epic e48 complete: Live Surface Hardening (3 stories, 6 BCPs)."
+  note: "Epic e48 complete: Live Surface Hardening (3 stories, 6 BCPs). All stories released to main."
   fast_mode: true
   story_complete: true
 bug_cycle:
