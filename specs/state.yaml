@@ -2,7 +2,7 @@ type: session-state
 context: infra
 active_flow: build_epic
 active_epic_id: e48
-active_story_id: e48s02
+active_story_id: e48s03
 active_story_status: planned
 release:
   target_version: 2.55.0
@@ -22,11 +22,11 @@ metrics:
 epic_cycle:
   step: 3
   story_bcps: 2
-  story: e48s02
+  story: e48s03
   audit_result: null
   completed_steps:
     - 0
-  note: "e48: Security — Live Surface Hardening. Moving to e48s02: Security headers + CI scanning."
+  note: "e48: Security — Live Surface Hardening. Moving to e48s03: DAST baseline scan + scheduled automation."
   fast_mode: true
   story_complete: false
 bug_cycle:
@@ -41,6 +41,6 @@ handoff:
   last_step_completed: "release-branch"
   open_decisions: []
   next_skill: kickoff-branch
-  summary: "e48s01 released to main. Starting e48s02: Security headers + CI scanning."
-  context: "Epic e48: Security — Live Surface Hardening. e48s01 done. Next: e48s02 — Add Permissions-Policy and Cache-Control headers, create npm preflight scripts, integrate gosec/govulncheck/gitleaks."
+  summary: "e48s02 released to main. Starting e48s03: DAST baseline scan + scheduled automation."
+  context: "Epic e48: Security — Live Surface Hardening. e48s01+e48s02 done. Next: e48s03 — OWASP ZAP baseline scan, Mozilla Observatory check, scanning docs."
   fast_mode: true
