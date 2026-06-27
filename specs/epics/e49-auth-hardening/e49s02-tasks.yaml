@@ -1,0 +1,33 @@
+story_id: e49s02
+title: "Fix OAuth redirect URI — use configured base URL"
+status: planned
+bcps: 2
+tasks:
+  - id: 1
+    description: "Add PublicURL field to Options and Auth struct; add publicURLOrDefault(r) helper method"
+    verify: "go build ./..."
+    status: todo
+  - id: 2
+    description: "Replace r.Host-based redirect URI in handleGoogleOAuth with publicURLOrDefault"
+    verify: "go test ./components/auth/ -run TestGoogleCallbackRedirectConfigurable -v"
+    status: todo
+  - id: 3
+    description: "Replace r.Host-based redirect URI in handleGoogleCallback (realGoogleVerifier)"
+    verify: "go test ./components/auth/ -run TestGoogleCallbackSPATokenDelivery -v"
+    status: todo
+  - id: 4
+    description: "Replace r.Host-based redirect URI in handlePopupCallback"
+    verify: "go test ./components/auth/ -run TestGoogleCallback -v"
+    status: todo
+  - id: 5
+    description: "Add TestOAuthPublicURL — verifies PublicURL takes precedence over Host header"
+    verify: "go test ./components/auth/ -run TestOAuthPublicURL -v"
+    status: todo
+  - id: 6
+    description: "Wire --public-url CLI flag to BIGBASE_PUBLIC_URL env var in main.go"
+    verify: "go build . && go run . serve --help 2>&1 | grep public-url"
+    status: todo
+  - id: 7
+    description: "Run full auth test suite — confirm no regressions"
+    verify: "go test ./components/auth/ -v"
+    status: todo
