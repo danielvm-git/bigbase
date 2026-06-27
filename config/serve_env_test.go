@@ -43,6 +43,7 @@ func TestFlagOrEnvBool(t *testing.T) {
 	t.Setenv("BOOL_ONE", "1")
 	t.Setenv("BOOL_FALSE", "false")
 	t.Setenv("BOOL_ZERO", "0")
+	t.Setenv("BOOL_EMPTY", "")
 	t.Setenv("BOOL_GARBAGE", "garbage")
 
 	tests := []struct {
@@ -58,6 +59,7 @@ func TestFlagOrEnvBool(t *testing.T) {
 		{name: "env absent falls back to flag true", flagVal: true, envKey: "BOOL_MISSING", want: true},
 		{name: "env absent falls back to flag false", flagVal: false, envKey: "BOOL_MISSING", want: false},
 		{name: "env garbage treated as false", flagVal: true, envKey: "BOOL_GARBAGE", want: false},
+		{name: "env empty string falls back to flag", flagVal: true, envKey: "BOOL_EMPTY", want: true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

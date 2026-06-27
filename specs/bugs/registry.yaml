@@ -1,6 +1,23 @@
 type: bug-registry
 context: infra
 bugs:
+  - id: BUG-2026-06-27T131500
+    date: "2026-06-27"
+    severity: low
+    priority: medium
+    scope: config,main
+    summary: rate-limit-enabled bool flag uses manual os.Getenv instead of FlagOrEnv pattern
+    file: specs/bugs/BUG-2026-06-27T131500-rate-limit-bool-flag-inconsistency.md
+    status: fixed
+    files_changed:
+      - config/serve_env.go
+      - config/serve_env_test.go
+      - main.go
+    approach: Added FlagOrEnvBool helper to config package; replaced manual os.Getenv in main.go.
+    risk_level: low
+    commit_message: "fix(config): add FlagOrEnvBool for consistent bool flag env resolution"
+    regression_guards:
+      - config/serve_env_test.go TestFlagOrEnvBool (8 cases)
   - id: BUG-2026-06-04T152200
     date: "2026-06-04"
     severity: high
@@ -438,7 +455,7 @@ bugs:
     scope: monitoring
     summary: BigBase app logs not forwarded to New Relic — nrslog integration missing, slog handler not wrapped through nrApp
     file: specs/bugs/BUG-2026-06-23T184500-newrelic-logs-not-forwarded.md
-    status: open
+    status: fixed
   - id: BUG-2026-06-26T200000
     date: "2026-06-26"
     severity: medium

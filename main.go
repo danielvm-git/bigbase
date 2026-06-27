@@ -195,6 +195,8 @@ func startProxy() {
 	dbDSNVal := config.FlagOrEnv(*dbDSN, "BIGBASE_DB_DSN")
 
 	// Rate limit config with env var fallbacks (BIGBASE_ prefix for consistency).
+	// Boolean flags use config.FlagOrEnvBool; string/integer flags use config.FlagOrEnv.
+	// When adding new env-backed flags, use these helpers — never raw os.Getenv.
 	rlIPMaxStr := config.FlagOrEnv(*rateLimitIPMaxStr, "BIGBASE_RATE_LIMIT_IP_MAX")
 	rlUserMaxStr := config.FlagOrEnv(*rateLimitUserMaxStr, "BIGBASE_RATE_LIMIT_USER_MAX")
 
