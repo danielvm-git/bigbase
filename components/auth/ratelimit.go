@@ -87,6 +87,18 @@ type RateLimiter struct {
 	userMap map[int64]*bucket
 }
 
+// Reconfigure updates the rate limiter configuration at runtime.
+// Existing buckets retain their current limits until their windows reset;
+// new callers see the updated config immediately.
+// Thread-safe: acquires write locks on ipMap and userMap during the swap.
+func (rl *RateLimiter) Reconfigure(cfg RateLimiterConfig) {
+	rl.ipMu.Lock()
+	rl.userMu.Lock()
+	rl.cfg = cfg
+	rl.userMu.Unlock()
+	rl.ipMu.Unlock()
+}
+
 // NewRateLimiter creates a new RateLimiter with the given config and starts
 // the background cleanup goroutine.
 func NewRateLimiter(cfg RateLimiterConfig) *RateLimiter {

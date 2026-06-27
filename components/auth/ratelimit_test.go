@@ -146,6 +146,57 @@ func TestRateLimit(t *testing.T) {
 		}
 	})
 
+	t.Run("reconfigure_updates_limits_for_new_buckets", func(t *testing.T) {
+		rl := auth.NewRateLimiter(auth.RateLimiterConfig{
+			IPLimit:      2,
+			IPWindow:     time.Minute,
+			UserLimit:    2,
+			UserWindow:   time.Minute,
+			CleanupEvery: time.Hour,
+		})
+
+		handler := rl.Middleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusOK)
+		}))
+
+		// Exhaust IP1 with old limit of 2
+		for i := 0; i < 2; i++ {
+			req := httptest.NewRequest("GET", "/", nil)
+			req.RemoteAddr = "192.0.2.10:1234"
+			w := httptest.NewRecorder()
+			handler.ServeHTTP(w, req)
+		}
+
+		// 3rd from IP1 should be blocked
+		req := httptest.NewRequest("GET", "/", nil)
+		req.RemoteAddr = "192.0.2.10:1234"
+		w := httptest.NewRecorder()
+		handler.ServeHTTP(w, req)
+		if w.Code != http.StatusTooManyRequests {
+			t.Fatalf("expected 429 after exhausting old limit, got %d", w.Code)
+		}
+
+		// Reconfigure with higher limit
+		rl.Reconfigure(auth.RateLimiterConfig{
+			IPLimit:      10,
+			IPWindow:     time.Minute,
+			UserLimit:    10,
+			UserWindow:   time.Minute,
+			CleanupEvery: time.Hour,
+		})
+
+		// A new IP should get the new limit (10)
+		for i := 0; i < 5; i++ {
+			req := httptest.NewRequest("GET", "/", nil)
+			req.RemoteAddr = "192.0.2.20:5678"
+			w := httptest.NewRecorder()
+			handler.ServeHTTP(w, req)
+			if w.Code != http.StatusOK {
+				t.Fatalf("new IP request %d: expected 200 after reconfig, got %d", i+1, w.Code)
+			}
+		}
+	})
+
 	t.Run("default_limits_are_sane", func(t *testing.T) {
 		cfg := auth.DefaultRateLimiterConfig()
 		if cfg.IPLimit != 60 {
