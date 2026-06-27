@@ -33,7 +33,7 @@ stories:
         verify: "go test ./components/proxy/ -run TestCustomDomainRouting -v"
   - id: e46s02
     title: "Auto SSL via Let's Encrypt (ACME)"
-    status: planned
+    status: done
     bcps: 2
     tasks:
       - desc: "Integrate ACME client for automatic certificate provisioning"
