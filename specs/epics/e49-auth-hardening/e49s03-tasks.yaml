@@ -1,0 +1,17 @@
+story_id: e49s03
+title: "Add path traversal defense to file downloads"
+status: planned
+bcps: 1
+tasks:
+  - id: 1
+    description: "Add TestFileDownloadPathTraversal — table-driven: normal path (200), ../ blocked (403), absolute path blocked (403), ./ normalized (200)"
+    verify: "go test ./components/storage/ -run TestFileDownloadPathTraversal -v"
+    status: todo
+  - id: 2
+    description: "Apply filepath.Clean + filepath.Abs + prefix check to handleFileDownload, matching handleThumbnail pattern"
+    verify: "go test ./components/storage/ -run TestFileDownloadPathTraversal -v"
+    status: todo
+  - id: 3
+    description: "Run full storage test suite — confirm no regressions"
+    verify: "go test ./components/storage/ -v"
+    status: todo

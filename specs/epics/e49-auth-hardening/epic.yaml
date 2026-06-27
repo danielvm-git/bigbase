@@ -5,6 +5,8 @@ title: "Security — Auth Hardening (Anonymous, OAuth, Path Traversal)"
 wsjf: 3.2
 total_bcps: 5
 status: planned
+tier: 1
+note: "3 stories, 5 BCPs. Fix anonymous tokens (Claims struct + middleware bypass), OAuth Host header poisoning (PublicURL), storage path traversal (Clean+Abs+prefix check)."
 stories:
   - id: e49s01
     title: "Fix anonymous tokens — add org_id context"
