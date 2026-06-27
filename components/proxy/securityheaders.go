@@ -1,6 +1,9 @@
 package proxy
 
-import "net/http"
+import (
+	"net/http"
+	"strings"
+)
 
 const (
 	// strictCSP is for API and JSON routes.
@@ -8,6 +11,9 @@ const (
 
 	// permissiveCSP is for HTML routes (home, docs) that need inline styles and Google Fonts.
 	permissiveCSP = "default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com"
+
+	// restrictivePermissionsPolicy disables browser features that are not needed.
+	restrictivePermissionsPolicy = "accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()"
 )
 
 // securityHeadersMiddleware adds standard security headers to every response.
@@ -23,6 +29,14 @@ func (p *Proxy) securityHeadersMiddleware(next http.Handler) http.Handler {
 		w.Header().Set("X-Frame-Options", "DENY")
 		w.Header().Set("X-Content-Type-Options", "nosniff")
 		w.Header().Set("Referrer-Policy", "strict-origin-when-cross-origin")
+		w.Header().Set("Permissions-Policy", restrictivePermissionsPolicy)
+
+		// Set Cache-Control: no-store for API and health endpoints to prevent
+		// sensitive response caching.
+		if strings.HasPrefix(r.URL.Path, "/api/") || r.URL.Path == "/health" {
+			w.Header().Set("Cache-Control", "no-store")
+		}
+
 		next.ServeHTTP(w, r)
 	})
 }

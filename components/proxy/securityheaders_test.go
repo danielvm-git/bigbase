@@ -98,4 +98,68 @@ func TestSecurityHeaders(t *testing.T) {
 			}
 		}
 	})
+
+	t.Run("Permissions-Policy header is present with restrictive defaults", func(t *testing.T) {
+		resp, err := http.Get("http://localhost:" + port + "/")
+		if err != nil {
+			t.Fatalf("GET /: %v", err)
+		}
+		defer func() { _ = resp.Body.Close() }()
+
+		pp := resp.Header.Get("Permissions-Policy")
+		if pp == "" {
+			t.Fatal("expected Permissions-Policy header")
+		}
+		if !strings.Contains(pp, "accelerometer=()") {
+			t.Errorf("expected Permissions-Policy to restrict accelerometer, got %q", pp)
+		}
+		if !strings.Contains(pp, "camera=()") {
+			t.Errorf("expected Permissions-Policy to restrict camera, got %q", pp)
+		}
+		if !strings.Contains(pp, "geolocation=()") {
+			t.Errorf("expected Permissions-Policy to restrict geolocation, got %q", pp)
+		}
+		if !strings.Contains(pp, "microphone=()") {
+			t.Errorf("expected Permissions-Policy to restrict microphone, got %q", pp)
+		}
+	})
+
+	t.Run("Cache-Control no-store on health endpoint", func(t *testing.T) {
+		resp, err := http.Get("http://localhost:" + port + "/health")
+		if err != nil {
+			t.Fatalf("GET /health: %v", err)
+		}
+		defer func() { _ = resp.Body.Close() }()
+
+		cc := resp.Header.Get("Cache-Control")
+		if cc != "no-store" {
+			t.Errorf("expected Cache-Control: no-store on /health, got %q", cc)
+		}
+	})
+
+	t.Run("Cache-Control no-store on API routes", func(t *testing.T) {
+		resp, err := http.Get("http://localhost:" + port + "/api/version")
+		if err != nil {
+			t.Fatalf("GET /api/version: %v", err)
+		}
+		defer func() { _ = resp.Body.Close() }()
+
+		cc := resp.Header.Get("Cache-Control")
+		if cc != "no-store" {
+			t.Errorf("expected Cache-Control: no-store on /api/version, got %q", cc)
+		}
+	})
+
+	t.Run("Cache-Control absent on home page", func(t *testing.T) {
+		resp, err := http.Get("http://localhost:" + port + "/")
+		if err != nil {
+			t.Fatalf("GET /: %v", err)
+		}
+		defer func() { _ = resp.Body.Close() }()
+
+		cc := resp.Header.Get("Cache-Control")
+		if cc != "" {
+			t.Errorf("expected no Cache-Control on /, got %q", cc)
+		}
+	})
 }
