@@ -1,3 +1,10 @@
+## [2.54.2](https://github.com/danielvm-git/bigbase/compare/v2.54.1...v2.54.2) (2026-06-27)
+
+
+### Bug Fixes
+
+* **e46:** address 10 post-review findings on custom domains ([742be86](https://github.com/danielvm-git/bigbase/commit/742be869d5ed1138090ffc6466826ac7fc7eb7bb))
+
 ## [2.54.1](https://github.com/danielvm-git/bigbase/compare/v2.54.0...v2.54.1) (2026-06-27)
 
 
