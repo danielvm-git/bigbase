@@ -14,6 +14,7 @@ import {
   RequestLogs,
   SiteEnvVarsTab,
   SiteCacheTab,
+  SiteDomainsTab,
 } from '../components'
 import { getSite, getSiteDeployments, deleteSite, getSiteManifest, saveSiteManifest, rollbackDeployment, getRollbackEvents } from '../lib/sitesData'
 import { isPreviewForced, previewQuerySuffix } from '../lib/previewMode'
@@ -308,6 +309,7 @@ export default function SiteDetailPage() {
     { id: 'logs', label: 'Build Logs' },
     { id: 'request-logs', label: 'Request Logs' },
     { id: 'env-vars', label: 'Env Vars' },
+    { id: 'domains', label: 'Domains' },
     { id: 'cache', label: 'Cache' },
     { id: 'manifest', label: 'Manifest' },
   ]
@@ -570,6 +572,10 @@ export default function SiteDetailPage() {
 
       {activeTab === 'env-vars' && (
         <SiteEnvVarsTab siteId={siteId} />
+      )}
+
+      {activeTab === 'domains' && (
+        <SiteDomainsTab siteId={siteId} />
       )}
 
       {activeTab === 'cache' && (

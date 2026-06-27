@@ -51,6 +51,8 @@ func (s *Sites) handleDomains(w http.ResponseWriter, r *http.Request) {
 		s.listDomains(w, r, siteID)
 	case len(parts) == 2 && r.Method == http.MethodPost:
 		s.registerDomain(w, r, siteID)
+	case len(parts) == 3 && r.Method == http.MethodDelete:
+		s.deleteDomain(w, r, siteID, parts[2])
 	case len(parts) == 4 && parts[3] == "verify" && r.Method == http.MethodGet:
 		s.verifyDomain(w, r, siteID, parts[2])
 	default:
@@ -141,6 +143,27 @@ func (s *Sites) registerDomain(w http.ResponseWriter, r *http.Request, siteID st
 		VerifyToken: verifyToken,
 		CreatedAt:   now,
 	})
+}
+
+func (s *Sites) deleteDomain(w http.ResponseWriter, r *http.Request, siteID, domain string) {
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	res, err := s.db.ExecContext(ctx,
+		`DELETE FROM site_domains WHERE site_id = ? AND domain = ?`,
+		siteID, domain)
+	if err != nil {
+		s.logger.Error("delete domain", "error", err)
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		return
+	}
+	affected, _ := res.RowsAffected()
+	if affected == 0 {
+		writeJSON(w, http.StatusNotFound, map[string]string{"error": "domain not found"})
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func (s *Sites) verifyDomain(w http.ResponseWriter, r *http.Request, siteID, domain string) {

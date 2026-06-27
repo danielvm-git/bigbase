@@ -10,6 +10,7 @@ import type {
   RollbackEvent,
   Site,
   SiteCacheStatus,
+  SiteDomain,
   SitesDataResult,
 } from '../types/sites'
 
@@ -435,6 +436,62 @@ export async function updateEnvVar(
 export async function deleteEnvVar(siteId: string, key: string): Promise<{ ok: boolean; error?: string }> {
   try {
     const res = await fetch(`/api/sites/${siteId}/env-vars/${key}`, { method: 'DELETE' })
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({ error: '' })) as { error?: string }
+      return { ok: false, error: body.error || `Failed (HTTP ${res.status})` }
+    }
+    return { ok: true }
+  } catch {
+    return { ok: false, error: 'Network error' }
+  }
+}
+
+// --- Custom domains (e46) ---
+
+export async function getDomains(siteId: string): Promise<SiteDomain[]> {
+  const { ok, data } = await fetchJSON<{ data: SiteDomain[] }>(`/api/sites/${siteId}/domains`)
+  if (ok && data.data) return data.data
+  return []
+}
+
+export async function addDomain(
+  siteId: string,
+  domain: string,
+): Promise<{ ok: boolean; error?: string }> {
+  try {
+    const res = await fetch(`/api/sites/${siteId}/domains`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ domain }),
+    })
+    const body = await res.json().catch(() => ({ error: '' })) as { error?: string }
+    if (!res.ok) return { ok: false, error: body.error || `Failed (HTTP ${res.status})` }
+    return { ok: true }
+  } catch {
+    return { ok: false, error: 'Network error' }
+  }
+}
+
+export async function verifyDomain(
+  siteId: string,
+  domain: string,
+): Promise<{ ok: boolean; verified?: boolean; error?: string }> {
+  try {
+    const res = await fetch(`/api/sites/${siteId}/domains/${encodeURIComponent(domain)}/verify`)
+    const body = await res.json().catch(() => ({ error: '' })) as { verified?: boolean; error?: string }
+    if (!res.ok) return { ok: false, error: body.error || `Failed (HTTP ${res.status})` }
+    return { ok: true, verified: body.verified }
+  } catch {
+    return { ok: false, error: 'Network error' }
+  }
+}
+
+export async function deleteDomain(
+  siteId: string,
+  domain: string,
+): Promise<{ ok: boolean; error?: string }> {
+  try {
+    const res = await fetch(`/api/sites/${siteId}/domains/${encodeURIComponent(domain)}`, { method: 'DELETE' })
     if (!res.ok) {
       const body = await res.json().catch(() => ({ error: '' })) as { error?: string }
       return { ok: false, error: body.error || `Failed (HTTP ${res.status})` }

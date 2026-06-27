@@ -97,6 +97,18 @@ export interface CacheStats {
   max_size_bytes: number
 }
 
+export interface SiteDomain {
+  id: string
+  site_id: string
+  domain: string
+  verify_token: string
+  verified_at: string | null
+  created_at: string
+  // Computed / display-only fields
+  cert_status?: string
+  cert_expires_at?: string | null
+}
+
 export interface SitesDataResult<T> {
   data: T
   previewMode: boolean
