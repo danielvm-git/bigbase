@@ -2,9 +2,48 @@ story_id: e51s04
 title: "Console Page Templates"
 status: planned
 bcps: 3
-note: "Full task breakdown deferred to plan-work. Run plan-work for detailed steps."
 tasks:
   - id: 1
-    description: "Plan detailed implementation steps"
-    verify: "echo 'plan-work needed for e51s04'"
+    description: "Create Page component (ui/src/components/Page.tsx) — base page wrapper with consistent padding/max-width"
+    verify: "cd ui && npx vitest run src/components/Page.test.tsx"
+    status: todo
+
+  - id: 2
+    description: "Create ListPage component (ui/src/components/ListPage.tsx) — header + filters + content + pagination + loading/error/empty states"
+    verify: "cd ui && npx vitest run src/components/ListPage.test.tsx"
+    status: todo
+
+  - id: 3
+    description: "Create DetailPage component (ui/src/components/DetailPage.tsx) — header + back nav + tabs + loading/error"
+    verify: "cd ui && npx vitest run src/components/DetailPage.test.tsx"
+    status: todo
+
+  - id: 4
+    description: "Create SettingsPage component (ui/src/components/SettingsPage.tsx) — section-based layout with dividers"
+    verify: "cd ui && npx vitest run src/components/SettingsPage.test.tsx"
+    status: todo
+
+  - id: 5
+    description: "Refactor UsersPage to use ListPage template"
+    verify: "cd ui && npx vitest run src/pages/UsersPage.test.tsx"
+    status: todo
+
+  - id: 6
+    description: "Refactor SiteDetailPage to use DetailPage template"
+    verify: "cd ui && npx vitest run src/pages/SiteDetailPage.test.tsx"
+    status: todo
+
+  - id: 7
+    description: "Refactor SettingsPage to use SettingsPage template"
+    verify: "cd ui && npx vitest run src/pages/SettingsPage.test.tsx"
+    status: todo
+
+  - id: 8
+    description: "Export Page, ListPage, DetailPage, SettingsPage from components/index.ts"
+    verify: "cd ui && npx tsc --noEmit"
+    status: todo
+
+  - id: 9
+    description: "Run full test suite and Go build to confirm no regressions"
+    verify: "cd ui && npm test && cd .. && go build ./..."
     status: todo

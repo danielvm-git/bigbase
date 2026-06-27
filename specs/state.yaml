@@ -40,6 +40,6 @@ handoff:
   last_step_completed: "plan-work"
   open_decisions: []
   next_skill: kickoff-branch
-  summary: "e50 JWT Secret & Token Lifecycle Management — plan-work COMPLETE. 3 stories planned (e50s01-e50s03) with runnable verify commands, countable-story-format specs, and decoupled tasks.yaml files. Ready for kickoff-branch."
-  context: "Epic e50: 5 BCPs across 3 stories. e50s01: BIGBASE_JWT_SECRET env var. e50s02: --jwt-access-expiry/--jwt-refresh-expiry flags. e50s03: POST /api/auth/logout-all. All changes to components/auth/ only. Next: kickoff-branch -> build-epic or develop-tdd."
+  summary: "e51 UI Design System & Component Library — plan-work COMPLETE. 7 stories planned (e51s01-e51s07) with 26 BCPs total. All stories have countable-story-format specs with 20 sections and runnable verify commands in decoupled tasks.yaml files. Ready for kickoff-branch."
+  context: "Epic e51: 26 BCPs across 7 stories. e51s01: Design Tokens & Theme System (4 BCPs) — TS token constants + prefers-reduced-motion. e51s02: Core Component Library (4 BCPs) — Checkbox, Spinner, Switch, Select, Label, Table. e51s03: Layout Components (4 BCPs) — AppShell, Sidebar, AppFooter extraction + mobile drawer. e51s04: Console Page Templates (3 BCPs) — ListPage, DetailPage, SettingsPage + refactor 3 pages. e51s05: Accessibility & Responsive Audit (2 BCPs) — axe-core integration + WCAG 2.2 AA fixes. e51s06: Extended Component Library (5 BCPs) — Tooltip, DropdownMenu, Dialog, FileUpload, CopyButton, TagInput, Alert. e51s07: Data Visualization & Editor Components (4 BCPs) — AreaChart, CodeBlock, JsonTree + enhanced BarGauge. Blocks e57, e59, e61, e62, e63, e64. Next: kickoff-branch -> develop-tdd."
   fast_mode: false

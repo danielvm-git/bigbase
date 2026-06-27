@@ -2,9 +2,43 @@ story_id: e51s05
 title: "Accessibility & Responsive Audit"
 status: planned
 bcps: 2
-note: "Full task breakdown deferred to plan-work. Run plan-work for detailed steps."
 tasks:
   - id: 1
-    description: "Plan detailed implementation steps"
-    verify: "echo 'plan-work needed for e51s05'"
+    description: "Install @axe-core/react as devDependency"
+    verify: "cd ui && npm ls @axe-core/react 2>/dev/null | grep @axe-core/react"
+    status: todo
+
+  - id: 2
+    description: "Create ui/src/__tests__/a11y/axe-pages.test.tsx — render each route and run axe, assert 0 critical/serious violations"
+    verify: "cd ui && npx vitest run src/__tests__/a11y/axe-pages.test.tsx"
+    status: todo
+
+  - id: 3
+    description: "Create ui/src/__tests__/a11y/axe-components.test.tsx — render isolated shared components and run axe"
+    verify: "cd ui && npx vitest run src/__tests__/a11y/axe-components.test.tsx"
+    status: todo
+
+  - id: 4
+    description: "Fix all critical and serious axe violations across pages and components"
+    verify: "cd ui && npx vitest run src/__tests__/a11y/"
+    status: todo
+
+  - id: 5
+    description: "Fix heading hierarchy violations (no skipped levels, one h1 per page)"
+    verify: "cd ui && npx vitest run src/__tests__/a11y/"
+    status: todo
+
+  - id: 6
+    description: "Add responsive breakpoints at 480px for proper mobile layout (improve from current 768px-only breakpoint)"
+    verify: "cd ui && npx tsc --noEmit"
+    status: todo
+
+  - id: 7
+    description: "Document findings in specs/epics/e51-design-system/a11y-audit-report.md"
+    verify: "test -f specs/epics/e51-design-system/a11y-audit-report.md"
+    status: todo
+
+  - id: 8
+    description: "Run full test suite and Go build to confirm no regressions"
+    verify: "cd ui && npm test && cd .. && go build ./..."
     status: todo

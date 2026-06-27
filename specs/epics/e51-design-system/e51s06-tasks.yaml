@@ -2,9 +2,48 @@ story_id: e51s06
 title: "Extended Component Library"
 status: planned
 bcps: 5
-note: "Full task breakdown deferred to plan-work. Run plan-work for detailed steps."
 tasks:
   - id: 1
-    description: "Plan detailed implementation steps"
-    verify: "echo 'plan-work needed for e51s06'"
+    description: "Create Tooltip component (ui/src/components/Tooltip.tsx) — hover/focus tooltip with top/bottom/left/right positioning, aria-describedby"
+    verify: "cd ui && npx vitest run src/components/Tooltip.test.tsx"
+    status: todo
+
+  - id: 2
+    description: "Create DropdownMenu component (ui/src/components/DropdownMenu.tsx) — trigger + portal menu with keyboard nav, focus trap, dividers, danger items"
+    verify: "cd ui && npx vitest run src/components/DropdownMenu.test.tsx"
+    status: todo
+
+  - id: 3
+    description: "Create Dialog component (ui/src/components/Dialog.tsx) — confirm/cancel dialog with danger variant, loading state, focus trap"
+    verify: "cd ui && npx vitest run src/components/Dialog.test.tsx"
+    status: todo
+
+  - id: 4
+    description: "Create FileUpload component (ui/src/components/FileUpload.tsx) — drag-and-drop zone + native file input, type/size validation"
+    verify: "cd ui && npx vitest run src/components/FileUpload.test.tsx"
+    status: todo
+
+  - id: 5
+    description: "Create CopyButton component (ui/src/components/CopyButton.tsx) — copies value to clipboard with visual feedback"
+    verify: "cd ui && npx vitest run src/components/CopyButton.test.tsx"
+    status: todo
+
+  - id: 6
+    description: "Create TagInput component (ui/src/components/TagInput.tsx) — multi-value tag entry with remove, suggestions, max limit"
+    verify: "cd ui && npx vitest run src/components/TagInput.test.tsx"
+    status: todo
+
+  - id: 7
+    description: "Create Alert component (ui/src/components/Alert.tsx) — inline notification banner with info/success/warning/error variants, dismissible"
+    verify: "cd ui && npx vitest run src/components/Alert.test.tsx"
+    status: todo
+
+  - id: 8
+    description: "Add all 7 new components to ui/src/components/index.ts barrel export"
+    verify: "cd ui && npx tsc --noEmit"
+    status: todo
+
+  - id: 9
+    description: "Run full test suite and Go build to confirm no regressions"
+    verify: "cd ui && npm test && cd .. && go build ./..."
     status: todo

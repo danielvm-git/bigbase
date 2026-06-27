@@ -2,9 +2,43 @@ story_id: e51s02
 title: "Core Component Library"
 status: planned
 bcps: 4
-note: "Full task breakdown deferred to plan-work. Run plan-work for detailed steps."
 tasks:
   - id: 1
-    description: "Plan detailed implementation steps"
-    verify: "echo 'plan-work needed for e51s02'"
+    description: "Create Checkbox component (ui/src/components/Checkbox.tsx) with controlled/uncontrolled support, label association, focus-visible ring"
+    verify: "cd ui && npx vitest run src/components/Checkbox.test.tsx"
+    status: todo
+
+  - id: 2
+    description: "Create Spinner component (ui/src/components/Spinner.tsx) with sm/md/lg sizes, role=status, aria-label"
+    verify: "cd ui && npx vitest run src/components/Spinner.test.tsx"
+    status: todo
+
+  - id: 3
+    description: "Create Switch component (ui/src/components/Switch.tsx) with role=switch, aria-checked, keyboard activation, sm/md sizes"
+    verify: "cd ui && npx vitest run src/components/Switch.test.tsx"
+    status: todo
+
+  - id: 4
+    description: "Create Select component (ui/src/components/Select.tsx) as standalone with options prop, label, error, hint"
+    verify: "cd ui && npx vitest run src/components/Select.test.tsx"
+    status: todo
+
+  - id: 5
+    description: "Create Label component (ui/src/components/Label.tsx) with required indicator"
+    verify: "cd ui && npx vitest run src/components/Label.test.tsx"
+    status: todo
+
+  - id: 6
+    description: "Create Table components (Table, TableHead, TableBody, TableRow, TableCell) with semantic structure"
+    verify: "cd ui && npx vitest run src/components/Table.test.tsx"
+    status: todo
+
+  - id: 7
+    description: "Add Checkbox, Spinner, Switch, Select, Label, Table to components/index.ts barrel export"
+    verify: "cd ui && npx tsc --noEmit"
+    status: todo
+
+  - id: 8
+    description: "Run full test suite and Go build to confirm no regressions"
+    verify: "cd ui && npm test && cd .. && go build ./..."
     status: todo

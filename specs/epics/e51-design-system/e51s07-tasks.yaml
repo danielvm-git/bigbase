@@ -2,9 +2,33 @@ story_id: e51s07
 title: "Data Visualization & Editor Components"
 status: planned
 bcps: 4
-note: "Full task breakdown deferred to plan-work. Run plan-work for detailed steps."
 tasks:
   - id: 1
-    description: "Plan detailed implementation steps"
-    verify: "echo 'plan-work needed for e51s07'"
+    description: "Create AreaChart component (ui/src/components/AreaChart.tsx) — SVG time-series area chart with multi-series, legend, accessible data table"
+    verify: "cd ui && npx vitest run src/components/AreaChart.test.tsx"
+    status: todo
+
+  - id: 2
+    description: "Create CodeBlock component (ui/src/components/CodeBlock.tsx) — styled code display with optional line numbers, maxHeight scroll"
+    verify: "cd ui && npx vitest run src/components/CodeBlock.test.tsx"
+    status: todo
+
+  - id: 3
+    description: "Create JsonTree component (ui/src/components/JsonTree.tsx) — recursive collapsible JSON viewer with search, maxDepth, circular ref handling"
+    verify: "cd ui && npx vitest run src/components/JsonTree.test.tsx"
+    status: todo
+
+  - id: 4
+    description: "Enhance BarGauge with grouped/stacked mode — add mode prop and segments array support; preserve existing single-series API"
+    verify: "cd ui && npx vitest run src/components/BarGauge.test.tsx"
+    status: todo
+
+  - id: 5
+    description: "Add AreaChart, CodeBlock, JsonTree to ui/src/components/index.ts barrel export"
+    verify: "cd ui && npx tsc --noEmit"
+    status: todo
+
+  - id: 6
+    description: "Run full test suite and Go build to confirm no regressions"
+    verify: "cd ui && npm test && cd .. && go build ./..."
     status: todo

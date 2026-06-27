@@ -2,9 +2,38 @@ story_id: e51s03
 title: "Layout Components"
 status: planned
 bcps: 4
-note: "Full task breakdown deferred to plan-work. Run plan-work for detailed steps."
 tasks:
   - id: 1
-    description: "Plan detailed implementation steps"
-    verify: "echo 'plan-work needed for e51s03'"
+    description: "Extract AppFooter from Layout.tsx into ui/src/components/AppFooter.tsx — footer bar with version, copyright, links, tutorial trigger"
+    verify: "cd ui && npx vitest run src/components/AppFooter.test.tsx"
+    status: todo
+
+  - id: 2
+    description: "Extract SidebarSection and SidebarItem from Layout.tsx into ui/src/components/Sidebar.tsx — nav section grouping + NavLink items"
+    verify: "cd ui && npx vitest run src/components/Sidebar.test.tsx"
+    status: todo
+
+  - id: 3
+    description: "Create AppShell component (ui/src/components/AppShell.tsx) — outer grid layout with sidebar + content + footer slots"
+    verify: "cd ui && npx vitest run src/components/AppShell.test.tsx"
+    status: todo
+
+  - id: 4
+    description: "Refactor Layout.tsx to compose AppShell + Sidebar + AppFooter; keep auth and data fetching in Layout"
+    verify: "cd ui && npx vitest run src/Layout.test.tsx"
+    status: todo
+
+  - id: 5
+    description: "Add mobile drawer behavior to Sidebar (slide-over with overlay at < 480px width)"
+    verify: "cd ui && npx vitest run src/components/Sidebar.test.tsx"
+    status: todo
+
+  - id: 6
+    description: "Add all new components to ui/src/components/index.ts barrel export"
+    verify: "cd ui && npx tsc --noEmit"
+    status: todo
+
+  - id: 7
+    description: "Run full test suite and Go build to confirm no regressions"
+    verify: "cd ui && npm test && cd .. && go build ./..."
     status: todo

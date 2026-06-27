@@ -2,9 +2,38 @@ story_id: e51s01
 title: "Design Tokens & Theme System"
 status: planned
 bcps: 4
-note: "Full task breakdown deferred to plan-work. Run plan-work for detailed steps."
 tasks:
   - id: 1
-    description: "Plan detailed implementation steps"
-    verify: "echo 'plan-work needed for e51s01'"
+    description: "Create ui/src/tokens/ directory with types.ts defining DesignTokens interface"
+    verify: "cd ui && npx tsc --noEmit"
+    status: todo
+
+  - id: 2
+    description: "Create ui/src/tokens/tokens.ts with TOKENS constant, token() and cssVar() helpers — mirror all values from tokens.css"
+    verify: "cd ui && npx tsc --noEmit"
+    status: todo
+
+  - id: 3
+    description: "Create ui/src/tokens/tokens.test.ts — contract test rendering a component and comparing computed styles to TOKENS constants"
+    verify: "cd ui && npx vitest run src/tokens/tokens.test.ts"
+    status: todo
+
+  - id: 4
+    description: "Create ui/src/tokens/motion.ts — MOTION_TOKENS constant + usePrefersReducedMotion hook"
+    verify: "cd ui && npx tsc --noEmit"
+    status: todo
+
+  - id: 5
+    description: "Create ui/src/tokens/motion.test.ts — test usePrefersReducedMotion with mocked matchMedia"
+    verify: "cd ui && npx vitest run src/tokens/motion.test.ts"
+    status: todo
+
+  - id: 6
+    description: "Export all token modules from ui/src/tokens/index.ts barrel file"
+    verify: "cd ui && npx tsc --noEmit"
+    status: todo
+
+  - id: 7
+    description: "Run full test suite and Go build to confirm no regressions"
+    verify: "cd ui && npm test && cd .. && go build ./..."
     status: todo
