@@ -1,11 +1,11 @@
 type: release-plan
 context: domain
 release:
-  version: 2.13.0
-  codename: Solo Dev Complete
-  status: in_progress
+  version: 3.0.0
+  codename: Project Scoping + Neon Native Port
+  status: planning
   semantic_release: true
-  bump_hint: minor
+  bump_hint: major
 epics:
 - id: e01
   title: "CLI \u2014 BigBase Breathes"
@@ -295,8 +295,7 @@ epics:
 - id: e47
   title: UI Design System & Component Library (Evolved v2)
   wsjf: 6.5
-  file: epics/e47-design-system.yaml
-  mode: flat
+  mode: capsule
   tier: 0
   status: planned
   blocks:
@@ -307,11 +306,12 @@ epics:
   - e58
   - e59
   note: 7 stories, 26 BCPs. Foundation.
+  capsule_dir: epics/e47-design-system
+  file: epics/e47-design-system/epic.yaml
 - id: e48
   title: "Project Scoping \u2014 Backend (DB + Auth + Sites)"
   wsjf: 7.0
-  file: epics/e48-project-scoping-backend.yaml
-  mode: flat
+  mode: capsule
   tier: 0
   status: planned
   blocks:
@@ -324,46 +324,52 @@ epics:
   - e58
   - e59
   note: 4 stories, 13 BCPs.
+  capsule_dir: epics/e48-project-scoping-backend
+  file: epics/e48-project-scoping-backend/epic.yaml
 - id: e49
   title: "Project Scoping \u2014 Admin UI"
   wsjf: 5.0
-  file: epics/e49-project-scoping-ui.yaml
-  mode: flat
+  mode: capsule
   tier: 1
   status: planned
   depends_on:
   - e47
   - e48
   note: 1 story, 3 BCPs.
+  capsule_dir: epics/e49-project-scoping-ui
+  file: epics/e49-project-scoping-ui/epic.yaml
 - id: e50
   title: "Native Feature Port \u2014 SQL-over-HTTP, Better Auth, MCP Tools"
   wsjf: 6.0
-  file: epics/e50-neon-native-port.yaml
-  mode: flat
+  mode: capsule
   tier: 1
   status: planned
   depends_on:
   - e48
   note: 5 stories, 15 BCPs.
+  capsule_dir: epics/e50-neon-native-port
+  file: epics/e50-neon-native-port/epic.yaml
 - id: e51
   title: "Deploy \u2014 Secrets Management"
   wsjf: 3.5
-  file: epics/e51-secrets.yaml
-  mode: flat
+  mode: capsule
   tier: 2
   status: planned
   depends_on:
   - e47
   - e48
+  capsule_dir: epics/e51-secrets
+  file: epics/e51-secrets/epic.yaml
 - id: e52
   title: "Proxy \u2014 Configurable CSP Headers"
   wsjf: 2.5
-  file: epics/e52-csp-headers.yaml
-  mode: flat
+  mode: capsule
   tier: 2
   status: planned
   depends_on:
   - e48
+  capsule_dir: epics/e52-csp-headers
+  file: epics/e52-csp-headers/epic.yaml
 - id: e53
   title: "Deploy \u2014 Process Supervisor"
   wsjf: 6.0
@@ -388,41 +394,45 @@ epics:
 - id: e56
   title: "Admin \u2014 Usage Dashboard"
   wsjf: 3.0
-  file: epics/e56-usage-dashboard.yaml
-  mode: flat
+  mode: capsule
   tier: 2
   status: planned
   depends_on:
   - e47
   - e48
+  capsule_dir: epics/e56-usage-dashboard
+  file: epics/e56-usage-dashboard/epic.yaml
 - id: e57
   title: "Admin \u2014 Collection Schema Designer"
   wsjf: 2.5
-  file: epics/e57-schema-designer.yaml
-  mode: flat
+  mode: capsule
   tier: 2
   status: planned
   depends_on:
   - e47
   - e48
+  capsule_dir: epics/e57-schema-designer
+  file: epics/e57-schema-designer/epic.yaml
 - id: e58
   title: "Deploy \u2014 Preview Environments"
   wsjf: 2.5
-  file: epics/e58-preview-envs.yaml
-  mode: flat
+  mode: capsule
   tier: 2
   status: planned
   depends_on:
   - e47
   - e48
   - e50
+  capsule_dir: epics/e58-preview-envs
+  file: epics/e58-preview-envs/epic.yaml
 - id: e59
   title: "Multi-User Platform \u2014 Admin, roles, invites"
   wsjf: 3.6
-  file: epics/e59-multi-user-platform.yaml
-  mode: flat
+  mode: capsule
   tier: 2
   status: planned
   depends_on:
   - e47
   - e48
+  capsule_dir: epics/e59-multi-user-platform
+  file: epics/e59-multi-user-platform/epic.yaml
