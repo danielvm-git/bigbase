@@ -5,7 +5,7 @@ title: "Deploy — One-Click Rollback"
 wsjf: 5.0
 wsjf_rationale: "BV=9(critical: solo dev safety net — bad deploy at midnight needs one-click fix, not git revert + rebuild) TC=5(more urgent as more sites go live) RR=9(elimoinates multi-minute recovery: rollback is seconds) / JS=2(~1.5 days across 2 stories)"
 status: done
-note: "e44 complete — both stories shipped. e44s01 (backend rollback) in v2.49.0 via PR #49, e44s02 (Admin UI) pushed to main."
+note: "e44 complete — both stories shipped. e4401 (backend rollback) in v2.49.0 via PR #49, e4402 (Admin UI) pushed to main."
 tier: 4
 depends_on:
   - e43

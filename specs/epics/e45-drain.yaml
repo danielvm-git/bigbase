@@ -185,7 +185,7 @@ stories:
           - concurrent reads during replacement see either old or new (no partial state)
           
           This test validates the proxy routing layer works correctly with
-          the drain flow built in e45s01.
+          the drain flow built in e4501.
         verify: "go test ./components/proxy/ -run TestDualDeployRouting -v"
       - id: e45s02t2
         desc: "Admin UI: add draining and stopped to DeploymentStatus type"

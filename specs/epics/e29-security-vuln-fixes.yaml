@@ -23,7 +23,7 @@ covers:
 #   callers: main.go mounts behind authComp.Middleware at /api/collections/, /api/sql.
 #   contracts: OrgIDFromContext(ctx)->(int64,bool); handlers already branch on it.
 #
-# KEY ARCHITECTURAL FACT (drives e29s02):
+# KEY ARCHITECTURAL FACT (drives e2902):
 #   auth.ctxUser* and api.ctxOrgID are DISTINCT unexported contextKey types in
 #   DIFFERENT packages. auth.Middleware cannot write api's key without importing
 #   api (cycle risk) OR via a bridge. Chosen approach: carry org_id in JWT claims,

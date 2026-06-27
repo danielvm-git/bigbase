@@ -46,7 +46,7 @@ stories:
       - desc: "components/deploy/supervisor_fakes_test.go (package deploy) — FakeInstance(waitErr error, stopCh); FakeRunner(queue []*FakeInstance) Spawn pops next; FakeClock(Sleeps []time.Duration); TestFakeRunnerSpawnsScriptedInstances drives [crash,crash,ok] sequence"
         verify: "go test ./components/deploy/ -run TestFakeRunnerSpawnsScriptedInstances -v"
       - desc: "Existing safety-net tests unaffected — runner.go adds interface types only, no Deploy struct modifications"
-        notes: "Production adapters (processInstance, staticInstance) are added in e53s03 when wired into the Supervisor — YAGNI."
+        notes: "Production adapters (processInstance, staticInstance) are added in e5303 when wired into the Supervisor — YAGNI."
         verify: "go test ./components/deploy/ -run 'TestRestoreFleetHostsOnRestart|TestDeployRestoresHostsOnStart' -v"
 
   - id: e53s02
