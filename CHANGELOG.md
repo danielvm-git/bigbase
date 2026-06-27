@@ -1,3 +1,10 @@
+# [2.51.0](https://github.com/danielvm-git/bigbase/compare/v2.50.1...v2.51.0) (2026-06-27)
+
+
+### Features
+
+* **deploy:** zero-downtime connection draining on deployment switchover (e45) ([40287fb](https://github.com/danielvm-git/bigbase/commit/40287fbc5ea901d5337adc152abe67c04b113dd1))
+
 ## [2.50.1](https://github.com/danielvm-git/bigbase/compare/v2.50.0...v2.50.1) (2026-06-26)
 
 
