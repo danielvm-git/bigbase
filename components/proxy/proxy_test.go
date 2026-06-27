@@ -561,6 +561,213 @@ func TestProxyVersionEndpoint(t *testing.T) {
 	}
 }
 
+func TestGitPathBlocked(t *testing.T) {
+	logger := testLogger{}
+	k := kernel.New(logger)
+
+	port := freePort(t)
+	p := proxy.New(proxy.Options{
+		Port:   port,
+		Kernel: k,
+		Logger: logger,
+	})
+
+	if err := p.Start(&kernel.Context{}); err != nil {
+		t.Fatalf("failed to start proxy: %v", err)
+	}
+	defer func() { _ = p.Stop(&kernel.Context{}) }()
+
+	waitForServer(t, port, "/health")
+
+	tests := []struct {
+		name       string
+		path       string
+		expected   int
+	}{
+		{".git/config returns 404", "/.git/config", http.StatusNotFound},
+		{".git/HEAD returns 404", "/.git/HEAD", http.StatusNotFound},
+		{".git//objects returns 404", "/.git//objects", http.StatusNotFound},
+		{"/not-git unaffected", "/not-git", http.StatusOK}, // catch-all handler serves home
+		{"/api/version unaffected", "/api/version", http.StatusOK},
+		{"root unaffected", "/", http.StatusOK},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			resp, err := http.Get("http://localhost:" + port + tt.path)
+			if err != nil {
+				t.Fatalf("GET %s: %v", tt.path, err)
+			}
+			defer func() { _ = resp.Body.Close() }()
+
+			if resp.StatusCode != tt.expected {
+				t.Errorf("GET %s: expected status %d, got %d", tt.path, tt.expected, resp.StatusCode)
+			}
+		})
+	}
+}
+
+func TestHealthAuth(t *testing.T) {
+	t.Run("no token set — health is public", func(t *testing.T) {
+		logger := testLogger{}
+		k := kernel.New(logger)
+
+		port := freePort(t)
+		p := proxy.New(proxy.Options{
+			Port:        port,
+			Kernel:      k,
+			Logger:      logger,
+			HealthToken: "",
+		})
+
+		if err := p.Start(&kernel.Context{}); err != nil {
+			t.Fatalf("failed to start proxy: %v", err)
+		}
+		defer func() { _ = p.Stop(&kernel.Context{}) }()
+
+		waitForServer(t, port, "/health")
+
+		resp, err := http.Get("http://localhost:" + port + "/health")
+		if err != nil {
+			t.Fatalf("GET /health: %v", err)
+		}
+		defer func() { _ = resp.Body.Close() }()
+
+		if resp.StatusCode != http.StatusOK {
+			t.Fatalf("expected 200 without token when HEALTH_TOKEN is empty, got %d", resp.StatusCode)
+		}
+	})
+
+	t.Run("token set, no header — returns 401", func(t *testing.T) {
+		logger := testLogger{}
+		k := kernel.New(logger)
+
+		port := freePort(t)
+		p := proxy.New(proxy.Options{
+			Port:        port,
+			Kernel:      k,
+			Logger:      logger,
+			HealthToken: "secret123",
+		})
+
+		if err := p.Start(&kernel.Context{}); err != nil {
+			t.Fatalf("failed to start proxy: %v", err)
+		}
+		defer func() { _ = p.Stop(&kernel.Context{}) }()
+
+		waitForServer(t, port, "/")
+
+		resp, err := http.Get("http://localhost:" + port + "/health")
+		if err != nil {
+			t.Fatalf("GET /health: %v", err)
+		}
+		defer func() { _ = resp.Body.Close() }()
+
+		if resp.StatusCode != http.StatusUnauthorized {
+			t.Fatalf("expected 401 without token, got %d", resp.StatusCode)
+		}
+
+		body, _ := io.ReadAll(resp.Body)
+		if !strings.Contains(string(body), "unauthorized") {
+			t.Fatalf("expected body to contain 'unauthorized', got %s", string(body))
+		}
+	})
+
+	t.Run("token set, wrong token — returns 401", func(t *testing.T) {
+		logger := testLogger{}
+		k := kernel.New(logger)
+
+		port := freePort(t)
+		p := proxy.New(proxy.Options{
+			Port:        port,
+			Kernel:      k,
+			Logger:      logger,
+			HealthToken: "secret123",
+		})
+
+		if err := p.Start(&kernel.Context{}); err != nil {
+			t.Fatalf("failed to start proxy: %v", err)
+		}
+		defer func() { _ = p.Stop(&kernel.Context{}) }()
+
+		waitForServer(t, port, "/")
+
+		req, _ := http.NewRequest("GET", "http://localhost:"+port+"/health", nil)
+		req.Header.Set("Authorization", "Bearer wrong-token")
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			t.Fatalf("GET /health: %v", err)
+		}
+		defer func() { _ = resp.Body.Close() }()
+
+		if resp.StatusCode != http.StatusUnauthorized {
+			t.Fatalf("expected 401 with wrong token, got %d", resp.StatusCode)
+		}
+	})
+
+	t.Run("token set, correct token — returns 200", func(t *testing.T) {
+		logger := testLogger{}
+		k := kernel.New(logger)
+
+		port := freePort(t)
+		p := proxy.New(proxy.Options{
+			Port:        port,
+			Kernel:      k,
+			Logger:      logger,
+			HealthToken: "secret123",
+		})
+
+		if err := p.Start(&kernel.Context{}); err != nil {
+			t.Fatalf("failed to start proxy: %v", err)
+		}
+		defer func() { _ = p.Stop(&kernel.Context{}) }()
+
+		waitForServer(t, port, "/")
+
+		req, _ := http.NewRequest("GET", "http://localhost:"+port+"/health", nil)
+		req.Header.Set("Authorization", "Bearer secret123")
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			t.Fatalf("GET /health: %v", err)
+		}
+		defer func() { _ = resp.Body.Close() }()
+
+		if resp.StatusCode != http.StatusOK {
+			t.Fatalf("expected 200 with correct token, got %d", resp.StatusCode)
+		}
+	})
+
+	t.Run("token set, other routes unaffected", func(t *testing.T) {
+		logger := testLogger{}
+		k := kernel.New(logger)
+
+		port := freePort(t)
+		p := proxy.New(proxy.Options{
+			Port:        port,
+			Kernel:      k,
+			Logger:      logger,
+			HealthToken: "secret123",
+		})
+
+		if err := p.Start(&kernel.Context{}); err != nil {
+			t.Fatalf("failed to start proxy: %v", err)
+		}
+		defer func() { _ = p.Stop(&kernel.Context{}) }()
+
+		waitForServer(t, port, "/")
+
+		resp, err := http.Get("http://localhost:" + port + "/")
+		if err != nil {
+			t.Fatalf("GET /: %v", err)
+		}
+		defer func() { _ = resp.Body.Close() }()
+
+		if resp.StatusCode != http.StatusOK {
+			t.Fatalf("expected 200 on / without token, got %d", resp.StatusCode)
+		}
+	})
+}
+
 func freePort(t testing.TB) string {
 	t.Helper()
 	l, err := net.Listen("tcp", ":0")

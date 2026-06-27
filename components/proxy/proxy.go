@@ -3,6 +3,7 @@ package proxy
 import (
 	"context"
 	"crypto/rand"
+	"crypto/subtle"
 	"crypto/x509"
 	"encoding/hex"
 	"encoding/json"
@@ -67,6 +68,7 @@ type Options struct {
 	NRApp              *newrelic.Application
 	CertDir            string
 	ACMEEmail          string
+	HealthToken        string
 }
 
 type Proxy struct {
@@ -83,6 +85,7 @@ type Proxy struct {
 	acmeManager        *autocert.Manager
 	certDir            string
 	acmeEmail          string
+	healthToken        string
 
 	starsMu       sync.Mutex
 	starsVal      string
@@ -145,6 +148,7 @@ func New(opts Options) *Proxy {
 		acmeEmail:          opts.ACMEEmail,
 		corsAllowedOrigins: opts.CORSAllowedOrigins,
 		nrApp:              opts.NRApp,
+		healthToken:        opts.HealthToken,
 	}
 }
 
@@ -188,7 +192,7 @@ func (p *Proxy) Init(ctx *kernel.Context, config json.RawMessage) error {
 }
 
 func (p *Proxy) Handler() http.Handler {
-	h := p.corsMiddleware(p.httpsRedirectMiddleware(p.securityHeadersMiddleware(p.loggingMiddleware(p.requestIDMiddleware(p.deploymentHostMiddleware(p.mux))))))
+	h := p.corsMiddleware(p.httpsRedirectMiddleware(p.securityHeadersMiddleware(p.loggingMiddleware(p.requestIDMiddleware(p.gitPathBlockMiddleware(p.deploymentHostMiddleware(p.mux)))))))
 	if p.nrApp != nil {
 		h = p.newRelicMiddleware(h)
 	}
@@ -275,6 +279,18 @@ func (p *Proxy) requestIDMiddleware(next http.Handler) http.Handler {
 		ctx := context.WithValue(r.Context(), requestIDKey{}, rid)
 		w.Header().Set("X-Request-ID", rid)
 		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
+
+// gitPathBlockMiddleware returns 404 for any request path containing "/.git" to prevent
+// exposure of repository metadata.
+func (p *Proxy) gitPathBlockMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if strings.Contains(r.URL.Path, "/.git") {
+			http.NotFound(w, r)
+			return
+		}
+		next.ServeHTTP(w, r)
 	})
 }
 
@@ -465,6 +481,16 @@ func (p *Proxy) handleHome(w http.ResponseWriter, r *http.Request) {
 }
 
 func (p *Proxy) handleHealth(w http.ResponseWriter, r *http.Request) {
+	// When healthToken is configured, require Authorization: Bearer <token>.
+	if p.healthToken != "" {
+		auth := r.Header.Get("Authorization")
+		if !strings.HasPrefix(auth, "Bearer ") || subtle.ConstantTimeCompare([]byte(auth[7:]), []byte(p.healthToken)) != 1 {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusUnauthorized)
+			_, _ = fmt.Fprintf(w, `{"error":"unauthorized"}`+"\n")
+			return
+		}
+	}
 	w.Header().Set("Content-Type", "application/json")
 	statuses := p.kernel.ListComponents()
 	total := len(statuses)
