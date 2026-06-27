@@ -20,25 +20,25 @@ metrics:
   stories_completed: 140
   bcps_per_hour: 0.4
 epic_cycle:
-  step: 3
+  step: 8
   story_bcps: 2
   story: e46s01
-  audit_result: pending
-  completed_steps: ["1+2 (survey+plan --fast)"]
-  note: "Step 1+2 done (--fast). e45 released. Starting kickoff-branch for e46s01."
+  audit_result: pass
+  completed_steps: ["1+2 (survey+plan --fast)", "3 (kickoff-branch)", "4 (develop-tdd)", "5 (verify-work)", "6+7 (audit-code + commit-message --fast)"]
+  note: "Release-branch: squash-merge to main."
   fast_mode: true
 bug_cycle:
   current_step: 0
   completed_steps: [1, 2, 3, 4, 5]
   bug_file: specs/bugs/BUG-2026-06-26T200000-e44s02-missing-ui-tests.md
 git:
-  branch: main
+  branch: feat/e46s01-custom-domains
   hash: HEAD
-  worktree: null
+  worktree: ../bigbase-e46s01-custom-domains
 handoff:
-  last_step_completed: "1+2 (survey+plan --fast)"
+  last_step_completed: "8 (release-branch)"
   open_decisions: []
-  next_skill: kickoff-branch
-  summary: "e45 released, starting e46s01 — Custom domain mapping and verification"
-  context: "e46s01: Create custom_domains table, CRUD API, DNS verification, proxy routing for custom domains"
+  next_skill: none
+  summary: "e46s01 released — custom domain proxy routing"
+  context: "e46s01 complete. Squash-merged to main. Custom domains API is in sites component (pre-existing), proxy integration in deploy component."
   fast_mode: true

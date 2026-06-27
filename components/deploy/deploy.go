@@ -888,6 +888,7 @@ func (d *Deploy) runDeployment(deploy *Deployment, buildDir, repoName string) {
 		d.updateStatus(deploy.ID, "running")
 		d.finalizeDeploymentURL(deploy, repoName)
 		d.appendDeployLog(deploy.ID, fmt.Sprintf("→ Deployed at %s", deploy.URL))
+		_ = d.RegisterCustomDomainHosts(context.Background(), deploy.SiteID, deploy.Port)
 		// Drain old deployments now that new host is registered
 		d.drainOldDeployments(deploy.SiteID)
 		go d.serveStatic(context.Background(), buildDir, deploy, repoName)
@@ -933,6 +934,7 @@ func (d *Deploy) runDeployment(deploy *Deployment, buildDir, repoName string) {
 		d.finalizeDeploymentURL(deploy, repoName)
 		d.appendDeployLog(deploy.ID, fmt.Sprintf("→ Deployed at %s", deploy.URL))
 		d.appendDeployLog(deploy.ID, "→ Serving static files")
+		_ = d.RegisterCustomDomainHosts(context.Background(), deploy.SiteID, deploy.Port)
 		d.drainOldDeployments(deploy.SiteID)
 		go d.serveStatic(context.Background(), serveDir, deploy, repoName)
 		return
@@ -949,6 +951,7 @@ func (d *Deploy) runDeployment(deploy *Deployment, buildDir, repoName string) {
 		_ = d.TransitionState(ctx, deploy.ID, "running")
 		d.finalizeDeploymentURL(deploy, repoName)
 		d.appendDeployLog(deploy.ID, fmt.Sprintf("→ Deployed at %s", deploy.URL))
+		_ = d.RegisterCustomDomainHosts(context.Background(), deploy.SiteID, deploy.Port)
 		// Drain old deployments now that new host is registered
 		d.drainOldDeployments(deploy.SiteID)
 	} else {
