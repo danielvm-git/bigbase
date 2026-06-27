@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"html/template"
 	"io"
+	"net"
 	"net/http"
 	"strconv"
 	"strings"
@@ -16,6 +17,7 @@ import (
 
 	"github.com/danielvm/bigbase/kernel"
 	"github.com/newrelic/go-agent/v3/newrelic"
+	"golang.org/x/crypto/acme/autocert"
 )
 
 // requestIDKey is the context key for request-scoped request IDs.
@@ -55,22 +57,30 @@ type RequestLogger interface {
 
 type Options struct {
 	Port               string
+	HTTPSPort          string
 	Kernel             *kernel.Kernel
 	Logger             Logger
 	RequestLogger      RequestLogger
 	CORSAllowedOrigins []string
 	NRApp              *newrelic.Application
+	CertDir            string
+	ACMEEmail          string
 }
 
 type Proxy struct {
 	port               string
+	httpsPort          string
 	kernel             *kernel.Kernel
 	logger             Logger
 	requestLogger      RequestLogger
 	server             *http.Server
+	httpsServer        *http.Server
 	mux                *http.ServeMux
 	corsAllowedOrigins []string
 	nrApp              *newrelic.Application
+	acmeManager        *autocert.Manager
+	certDir            string
+	acmeEmail          string
 
 	starsMu       sync.Mutex
 	starsVal      string
@@ -124,17 +134,38 @@ func (p *Proxy) fetchStars() (string, error) {
 func New(opts Options) *Proxy {
 	return &Proxy{
 		port:               opts.Port,
+		httpsPort:          opts.HTTPSPort,
 		kernel:             opts.Kernel,
 		logger:             opts.Logger,
 		requestLogger:      opts.RequestLogger,
 		mux:                http.NewServeMux(),
+		certDir:            opts.CertDir,
+		acmeEmail:          opts.ACMEEmail,
 		corsAllowedOrigins: opts.CORSAllowedOrigins,
 		nrApp:              opts.NRApp,
 	}
 }
 
+// Port returns the HTTP listen port (resolved after Start if 
+
 func (p *Proxy) SetRequestLogger(rl RequestLogger) {
 	p.requestLogger = rl
+}
+
+// Port returns the HTTP listen port (resolved after Start if port was "0").
+func (p *Proxy) Port() string {
+	if p.server != nil {
+		return portFromAddr(p.server.Addr)
+	}
+	return p.port
+}
+
+// HTTPSAddr returns the HTTPS listen address (host:port), empty if not configured.
+func (p *Proxy) HTTPSAddr() string {
+	if p.httpsServer != nil {
+		return p.httpsServer.Addr
+	}
+	return ""
 }
 
 func (p *Proxy) Name() string                     { return "proxy" }
@@ -155,7 +186,7 @@ func (p *Proxy) Init(ctx *kernel.Context, config json.RawMessage) error {
 }
 
 func (p *Proxy) Handler() http.Handler {
-	h := p.corsMiddleware(p.securityHeadersMiddleware(p.loggingMiddleware(p.requestIDMiddleware(p.deploymentHostMiddleware(p.mux)))))
+	h := p.corsMiddleware(p.httpsRedirectMiddleware(p.securityHeadersMiddleware(p.loggingMiddleware(p.requestIDMiddleware(p.deploymentHostMiddleware(p.mux))))))
 	if p.nrApp != nil {
 		h = p.newRelicMiddleware(h)
 	}
@@ -192,6 +223,33 @@ func (p *Proxy) Start(ctx *kernel.Context) error {
 			p.logger.Error("proxy server error", "error", err)
 		}
 	}()
+
+	// Start HTTPS server with autocert if HTTPS port is configured.
+	if p.httpsPort != "" {
+		certDir := p.certDir
+		if certDir == "" {
+			certDir = "data/certs"
+		}
+		p.acmeManager = &autocert.Manager{
+			Prompt:     autocert.AcceptTOS,
+			HostPolicy: p.acmeHostPolicy,
+			Cache:      autocert.DirCache(certDir),
+			Email:      p.acmeEmail,
+		}
+
+		p.httpsServer = &http.Server{
+			Addr:      ":" + p.httpsPort,
+			Handler:   p.acmeManager.HTTPHandler(p.Handler()),
+			TLSConfig: p.acmeManager.TLSConfig(),
+		}
+
+		go func() {
+			p.logger.Info("proxy listening for HTTPS", "port", p.httpsPort, "cert_dir", certDir)
+			if err := p.httpsServer.ListenAndServeTLS("", ""); err != nil && err != http.ErrServerClosed {
+				p.logger.Error("https server error", "error", err)
+			}
+		}()
+	}
 
 	return nil
 }
@@ -254,10 +312,67 @@ func (p *Proxy) Handle(pattern string, handler http.HandlerFunc) {
 }
 
 func (p *Proxy) Stop(ctx *kernel.Context) error {
+	if p.httpsServer != nil {
+		_ = p.httpsServer.Shutdown(context.Background())
+	}
 	if p.server != nil {
 		return p.server.Shutdown(context.Background())
 	}
 	return nil
+}
+
+// ACME returns the autocert manager, or nil if HTTPS is not configured.
+func (p *Proxy) ACME() *autocert.Manager {
+	return p.acmeManager
+}
+
+// acmeHostPolicy limits certificate provisioning to registered deployment hosts
+// and explicitly allowed hosts. Loopback addresses and IPs are denied.
+func (p *Proxy) acmeHostPolicy(_ context.Context, host string) error {
+	host = normalizeHost(host)
+	if host == "" {
+		return fmt.Errorf("empty host")
+	}
+	// Loopback hosts don't need Let's Encrypt certs.
+	if loopbackHosts[host] || net.ParseIP(host) != nil {
+		return fmt.Errorf("acme: skipping loopback host %q", host)
+	}
+	// Allow explicitly whitelisted service hosts (e.g. mcp.bigbase.click).
+	if allowedHosts[host] {
+		return nil
+	}
+	// Allow registered deployment hosts (custom domains registered via RegisterDeploymentHost).
+	if p.isDeploymentHostRegistered(host) {
+		return nil
+	}
+	return fmt.Errorf("acme: host %q not allowed for certificate provisioning", host)
+}
+
+// httpsRedirectMiddleware redirects HTTP requests for registered deployment hosts
+// to HTTPS when the HTTPS server is configured. Loopback hosts are not redirected.
+func (p *Proxy) httpsRedirectMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		host := normalizeHost(r.Host)
+		// Only redirect custom domains when HTTPS is configured.
+		if p.httpsPort != "" && host != "" && !loopbackHosts[host] && net.ParseIP(host) == nil {
+			if p.isDeploymentHostRegistered(host) {
+				target := "https://" + host + r.URL.RequestURI()
+				http.Redirect(w, r, target, http.StatusMovedPermanently)
+				return
+			}
+		}
+		next.ServeHTTP(w, r)
+	})
+}
+
+
+
+// portFromAddr extracts the port portion from an address string like ":8080".
+func portFromAddr(addr string) string {
+	if idx := strings.LastIndex(addr, ":"); idx >= 0 {
+		return addr[idx+1:]
+	}
+	return addr
 }
 
 func (p *Proxy) handleDocs(w http.ResponseWriter, r *http.Request) {
