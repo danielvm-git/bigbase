@@ -168,12 +168,20 @@ func TestHTTPServing(t *testing.T) {
 		t.Logf("HTTPS listening on %s", httpsAddr)
 
 		// Verify the HTTPS port is actually listening by checking the raw TCP connection.
+		// Retry for up to 1s to handle startup race condition in CI.
 		_, portStr, err := net.SplitHostPort(httpsAddr)
 		if err != nil {
 			t.Fatalf("parse addr %q: %v", httpsAddr, err)
 		}
 
-		conn, err := net.DialTimeout("tcp", net.JoinHostPort("127.0.0.1", portStr), 3*time.Second)
+		var conn net.Conn
+		for i := 0; i < 10; i++ {
+			conn, err = net.DialTimeout("tcp", net.JoinHostPort("127.0.0.1", portStr), 500*time.Millisecond)
+			if err == nil {
+				break
+			}
+			time.Sleep(100 * time.Millisecond)
+		}
 		if err != nil {
 			t.Fatalf("HTTPS port %s not accepting connections: %v", portStr, err)
 		}
