@@ -1,6 +1,6 @@
 type: session-state
 context: infra
-active_flow: null
+active_flow: build_epic
 active_epic_id: e48
 active_story_id: e48s01
 active_story_status: planned
@@ -20,13 +20,15 @@ metrics:
   stories_completed: 141
   bcps_per_hour: 0.4
 epic_cycle:
-  step: 0
+  step: 1
   story_bcps: 2
   story: e48s01
   audit_result: null
-  completed_steps: []
+  completed_steps:
+    - 0
   note: "e48: Security — Live Surface Hardening. 3 stories, 6 BCPs. Start with e48s01: Block .git exposure and harden /health endpoint."
-  fast_mode: false
+  fast_mode: true
+  story_complete: false
 bug_cycle:
   current_step: 0
   completed_steps: []
