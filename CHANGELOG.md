@@ -1,3 +1,10 @@
+# [2.52.0](https://github.com/danielvm-git/bigbase/compare/v2.51.0...v2.52.0) (2026-06-27)
+
+
+### Features
+
+* **deploy:** custom domain proxy routing for deployments (e46s01) ([e84c60a](https://github.com/danielvm-git/bigbase/commit/e84c60aed6a16d7b02beafd4a9a7da9e3934a5c6))
+
 # [2.51.0](https://github.com/danielvm-git/bigbase/compare/v2.50.1...v2.51.0) (2026-06-27)
 
 
