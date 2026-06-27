@@ -1,3 +1,10 @@
+# [2.53.0](https://github.com/danielvm-git/bigbase/compare/v2.52.0...v2.53.0) (2026-06-27)
+
+
+### Features
+
+* **proxy:** auto SSL via Let's Encrypt ACME + HTTP to HTTPS redirect (e46s02) ([34aba05](https://github.com/danielvm-git/bigbase/commit/34aba05233196ca6b7c99002e1f4b42470bdc56c))
+
 # [2.52.0](https://github.com/danielvm-git/bigbase/compare/v2.51.0...v2.52.0) (2026-06-27)
 
 
