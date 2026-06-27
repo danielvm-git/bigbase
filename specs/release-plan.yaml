@@ -297,11 +297,11 @@ epics:
   wsjf: 1.5
   mode: capsule
   tier: 1
-  status: planned
+  status: done
   depends_on: []
-  note: 1 story, 2 BCPs. Wire existing rate limiter to auth.
-  capsule_dir: epics/e47-rate-limiter-wiring
-  file: epics/e47-rate-limiter-wiring/epic.yaml
+  note: 1 story, 2 BCPs. Wire existing rate limiter to auth. DONE.
+  capsule_dir: epics/archive/e47-rate-limiter-wiring
+  file: epics/archive/e47-rate-limiter-wiring/epic.yaml
 - id: e48
   title: "Security \u2014 Live Surface Hardening"
   wsjf: 4.0
