@@ -1,0 +1,25 @@
+story_id: e48s02
+title: "Fix OAuth redirect URI — use configured base URL"
+status: planned
+bcps: 2
+tasks:
+  - id: 1
+    description: "Add --public-url CLI flag and BIGBASE_PUBLIC_URL env var"
+    verify: "go build ./... && go run . serve --help 2>&1 | grep -c 'public-url'"
+    status: todo
+  - id: 2
+    description: "Add PublicURL field to auth.Options and Auth struct"
+    verify: "go test ./components/auth/ -run TestPublicURLConfig -v"
+    status: todo
+  - id: 3
+    description: "Use a.publicURL for OAuth redirect URIs in handleGoogleOAuth (fallback to r.Host with warning)"
+    verify: "go test ./components/auth/ -run TestOAuthRedirectPublicURL -v"
+    status: todo
+  - id: 4
+    description: "Apply same fix to handleGoogleCallback and handlePopupCallback"
+    verify: "go test ./components/auth/ -run TestPopupCallbackPublicURL -v"
+    status: todo
+  - id: 5
+    description: "Use configured origin for postMessage targetOrigin in popup callback"
+    verify: "go test ./components/auth/ -run TestPopupTargetOrigin -v"
+    status: todo

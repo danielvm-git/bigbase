@@ -1,0 +1,10 @@
+story_id: e57s01
+title: "Project Scoping Admin UI"
+status: planned
+bcps: 3
+note: "Full task breakdown deferred to plan-work. Run plan-work for detailed steps."
+tasks:
+  - id: 1
+    description: "Plan detailed implementation steps"
+    verify: "echo 'plan-work needed for e57s01'"
+    status: todo

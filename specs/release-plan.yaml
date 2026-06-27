@@ -293,83 +293,79 @@ epics:
   tier: 5
   status: done
 - id: e47
+  title: "Security \u2014 Rate Limiter Wiring"
+  wsjf: 1.5
+  mode: capsule
+  tier: 1
+  status: planned
+  depends_on: []
+  note: 1 story, 2 BCPs. Wire existing rate limiter to auth.
+  capsule_dir: epics/e47-rate-limiter-wiring
+  file: epics/e47-rate-limiter-wiring/epic.yaml
+- id: e48
+  title: "Security \u2014 Live Surface Hardening"
+  wsjf: 4.0
+  mode: capsule
+  tier: 1
+  status: planned
+  depends_on: []
+  note: 3 stories, 6 BCPs. Block .git, gate /health, security headers, CI scanning.
+  capsule_dir: epics/e48-live-surface-hardening
+  file: epics/e48-live-surface-hardening/epic.yaml
+- id: e49
+  title: "Security \u2014 Auth Hardening (Anonymous, OAuth, Path Traversal)"
+  wsjf: 3.2
+  mode: capsule
+  tier: 1
+  status: planned
+  depends_on: []
+  note: 3 stories, 5 BCPs. Fix anonymous tokens, OAuth host header, path traversal.
+  capsule_dir: epics/e49-auth-hardening
+  file: epics/e49-auth-hardening/epic.yaml
+- id: e50
+  title: "Security \u2014 JWT Secret & Token Lifecycle Management"
+  wsjf: 3.0
+  mode: capsule
+  tier: 2
+  status: planned
+  depends_on: []
+  note: 3 stories, 5 BCPs. Persistent JWT secret, configurable lifetimes, logout-all.
+  capsule_dir: epics/e50-jwt-token-management
+  file: epics/e50-jwt-token-management/epic.yaml
+- id: e51
   title: UI Design System & Component Library (Evolved v2)
   wsjf: 6.5
   mode: capsule
-  tier: 0
+  tier: 1
   status: planned
   blocks:
-  - e49
-  - e51
-  - e56
   - e57
-  - e58
   - e59
-  note: 7 stories, 26 BCPs. Foundation.
-  capsule_dir: epics/e47-design-system
-  file: epics/e47-design-system/epic.yaml
-- id: e48
+  - e61
+  - e62
+  - e63
+  - e64
+  note: 7 stories, 26 BCPs. Foundation for all UI work.
+  capsule_dir: epics/e51-design-system
+  file: epics/e51-design-system/epic.yaml
+- id: e52
   title: "Project Scoping \u2014 Backend (DB + Auth + Sites)"
   wsjf: 7.0
   mode: capsule
   tier: 0
   status: planned
   blocks:
-  - e49
-  - e50
-  - e51
-  - e52
-  - e56
   - e57
   - e58
   - e59
-  note: 4 stories, 13 BCPs.
-  capsule_dir: epics/e48-project-scoping-backend
-  file: epics/e48-project-scoping-backend/epic.yaml
-- id: e49
-  title: "Project Scoping \u2014 Admin UI"
-  wsjf: 5.0
-  mode: capsule
-  tier: 1
-  status: planned
-  depends_on:
-  - e47
-  - e48
-  note: 1 story, 3 BCPs.
-  capsule_dir: epics/e49-project-scoping-ui
-  file: epics/e49-project-scoping-ui/epic.yaml
-- id: e50
-  title: "Native Feature Port \u2014 SQL-over-HTTP, Better Auth, MCP Tools"
-  wsjf: 6.0
-  mode: capsule
-  tier: 1
-  status: planned
-  depends_on:
-  - e48
-  note: 5 stories, 15 BCPs.
-  capsule_dir: epics/e50-neon-native-port
-  file: epics/e50-neon-native-port/epic.yaml
-- id: e51
-  title: "Deploy \u2014 Secrets Management"
-  wsjf: 3.5
-  mode: capsule
-  tier: 2
-  status: planned
-  depends_on:
-  - e47
-  - e48
-  capsule_dir: epics/e51-secrets
-  file: epics/e51-secrets/epic.yaml
-- id: e52
-  title: "Proxy \u2014 Configurable CSP Headers"
-  wsjf: 2.5
-  mode: capsule
-  tier: 2
-  status: planned
-  depends_on:
-  - e48
-  capsule_dir: epics/e52-csp-headers
-  file: epics/e52-csp-headers/epic.yaml
+  - e60
+  - e61
+  - e62
+  - e63
+  - e64
+  note: 5 stories, 21 BCPs. Foundation for multi-tenant isolation.
+  capsule_dir: epics/e52-project-scoping-backend
+  file: epics/e52-project-scoping-backend/epic.yaml
 - id: e53
   title: "Deploy \u2014 Process Supervisor"
   wsjf: 6.0
@@ -392,47 +388,108 @@ epics:
   tier: 2
   status: done
 - id: e56
+  title: "Security \u2014 OTP Persistence & Session Audit"
+  wsjf: 2.8
+  mode: capsule
+  tier: 3
+  status: planned
+  depends_on:
+  - e52
+  note: 2 stories, 4 BCPs. DB-backed OTP, audit events. Needs e52 kernel scope.
+  capsule_dir: epics/e56-otp-session-hardening
+  file: epics/e56-otp-session-hardening/epic.yaml
+- id: e57
+  title: "Project Scoping \u2014 Admin UI"
+  wsjf: 5.0
+  mode: capsule
+  tier: 1
+  status: planned
+  depends_on:
+  - e51
+  - e52
+  note: 1 story, 3 BCPs.
+  capsule_dir: epics/e57-project-scoping-ui
+  file: epics/e57-project-scoping-ui/epic.yaml
+- id: e58
+  title: "Native Feature Port \u2014 SQL-over-HTTP, Better Auth, MCP Tools"
+  wsjf: 6.0
+  mode: capsule
+  tier: 1
+  status: planned
+  depends_on:
+  - e52
+  note: 5 stories, 15 BCPs.
+  capsule_dir: epics/e58-neon-native-port
+  file: epics/e58-neon-native-port/epic.yaml
+- id: e59
+  title: "Deploy \u2014 Secrets Management"
+  wsjf: 3.5
+  mode: capsule
+  tier: 2
+  status: planned
+  depends_on:
+  - e51
+  - e52
+  note: 2 stories, 3 BCPs.
+  capsule_dir: epics/e59-secrets
+  file: epics/e59-secrets/epic.yaml
+- id: e60
+  title: "Proxy \u2014 Configurable CSP Headers (incl. unsafe-inline fix)"
+  wsjf: 3.0
+  mode: capsule
+  tier: 2
+  status: planned
+  depends_on:
+  - e52
+  note: 2 stories, 3 BCPs. Per-site CSP with nonce support.
+  capsule_dir: epics/e60-csp-headers
+  file: epics/e60-csp-headers/epic.yaml
+- id: e61
   title: "Admin \u2014 Usage Dashboard"
   wsjf: 3.0
   mode: capsule
   tier: 2
   status: planned
   depends_on:
-  - e47
-  - e48
-  capsule_dir: epics/e56-usage-dashboard
-  file: epics/e56-usage-dashboard/epic.yaml
-- id: e57
+  - e51
+  - e52
+  note: 2 stories, 3 BCPs.
+  capsule_dir: epics/e61-usage-dashboard
+  file: epics/e61-usage-dashboard/epic.yaml
+- id: e62
   title: "Admin \u2014 Collection Schema Designer"
   wsjf: 2.5
   mode: capsule
   tier: 2
   status: planned
   depends_on:
-  - e47
-  - e48
-  capsule_dir: epics/e57-schema-designer
-  file: epics/e57-schema-designer/epic.yaml
-- id: e58
+  - e51
+  - e52
+  note: 2 stories, 2 BCPs.
+  capsule_dir: epics/e62-schema-designer
+  file: epics/e62-schema-designer/epic.yaml
+- id: e63
   title: "Deploy \u2014 Preview Environments"
   wsjf: 2.5
   mode: capsule
   tier: 2
   status: planned
   depends_on:
-  - e47
-  - e48
-  - e50
-  capsule_dir: epics/e58-preview-envs
-  file: epics/e58-preview-envs/epic.yaml
-- id: e59
+  - e51
+  - e52
+  - e58
+  note: 2 stories, 2 BCPs.
+  capsule_dir: epics/e63-preview-envs
+  file: epics/e63-preview-envs/epic.yaml
+- id: e64
   title: "Multi-User Platform \u2014 Admin, roles, invites"
   wsjf: 3.6
   mode: capsule
   tier: 2
   status: planned
   depends_on:
-  - e47
-  - e48
-  capsule_dir: epics/e59-multi-user-platform
-  file: epics/e59-multi-user-platform/epic.yaml
+  - e51
+  - e52
+  note: 3 stories, 8 BCPs.
+  capsule_dir: epics/e64-multi-user-platform
+  file: epics/e64-multi-user-platform/epic.yaml

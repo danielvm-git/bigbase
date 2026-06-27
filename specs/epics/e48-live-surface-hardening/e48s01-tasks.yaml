@@ -1,0 +1,25 @@
+story_id: e48s01
+title: "Block .git exposure and harden /health endpoint"
+status: planned
+bcps: 2
+tasks:
+  - id: 1
+    description: "Add middleware to reject /.git/* paths with 404 in proxy component"
+    verify: "go test ./components/proxy/ -run TestGitPathBlocked -v"
+    status: todo
+  - id: 2
+    description: "Add HEALTH_TOKEN env var support and Bearer auth gate to /health endpoint"
+    verify: "go test ./components/proxy/ -run TestHealthAuth -v"
+    status: todo
+  - id: 3
+    description: "Add Permissions-Policy header to securityHeadersMiddleware"
+    verify: "go test ./components/proxy/ -run TestPermissionsPolicy -v"
+    status: todo
+  - id: 4
+    description: "Add Cache-Control: no-store to /health and /api responses"
+    verify: "go test ./components/proxy/ -run TestCacheControl -v"
+    status: todo
+  - id: 5
+    description: "Verify .git/config returns 404 on live deployment"
+    verify: "curl -s -o /dev/null -w '%{http_code}' https://bigbase.click/.git/config | grep 404"
+    status: todo

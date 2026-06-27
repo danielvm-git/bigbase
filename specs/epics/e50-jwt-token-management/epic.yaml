@@ -1,0 +1,26 @@
+type: epic-shard
+context: domain
+id: e50
+title: "Security — JWT Secret & Token Lifecycle Management"
+wsjf: 3.0
+total_bcps: 5
+status: planned
+stories:
+  - id: e50s01
+    title: "Persist JWT secret — env var with fallback"
+    bcps: 2
+    status: planned
+    spec: e50s01-jwt-secret.md
+    tasks: e50s01-tasks.yaml
+  - id: e50s02
+    title: "Configurable token lifetimes"
+    bcps: 2
+    status: planned
+    spec: e50s02-token-lifetimes.md
+    tasks: e50s02-tasks.yaml
+  - id: e50s03
+    title: "Refresh token revocation — per-user invalidation"
+    bcps: 1
+    status: planned
+    spec: e50s03-token-revocation.md
+    tasks: e50s03-tasks.yaml

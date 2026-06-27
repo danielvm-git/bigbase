@@ -1,0 +1,17 @@
+story_id: e48s03
+title: "DAST baseline scan and scheduled automation"
+status: planned
+bcps: 2
+tasks:
+  - id: 1
+    description: "Create scripts/zap-baseline.sh with Docker ZAP baseline scan"
+    verify: "bash scripts/zap-baseline.sh && test -f zap-report.html"
+    status: todo
+  - id: 2
+    description: "Add Observatory check script and document current score"
+    verify: "bash scripts/observatory-check.sh"
+    status: todo
+  - id: 3
+    description: "Document DAST and header audit in specs/security/scanning.md"
+    verify: "test -f specs/security/scanning.md"
+    status: todo

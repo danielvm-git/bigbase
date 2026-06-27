@@ -1,0 +1,10 @@
+story_id: e58s04
+title: "MCP Database Migration Tools"
+status: planned
+bcps: 3
+note: "Full task breakdown deferred to plan-work. Run plan-work for detailed steps."
+tasks:
+  - id: 1
+    description: "Plan detailed implementation steps"
+    verify: "echo 'plan-work needed for e58s04'"
+    status: todo

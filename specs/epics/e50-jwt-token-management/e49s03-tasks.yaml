@@ -1,0 +1,17 @@
+story_id: e49s03
+title: "Refresh token revocation — per-user invalidation"
+status: planned
+bcps: 1
+tasks:
+  - id: 1
+    description: "Add POST /api/auth/logout-all endpoint to ProtectedHandler"
+    verify: "go test ./components/auth/ -run TestLogoutAll -v"
+    status: todo
+  - id: 2
+    description: "Invalidate all refresh tokens for the authenticated user (UPDATE used=1)"
+    verify: "go test ./components/auth/ -run TestLogoutAllInvalidates -v"
+    status: todo
+  - id: 3
+    description: "Clear token cookie in logout-all response"
+    verify: "go test ./components/auth/ -run TestLogoutAllClearsCookie -v"
+    status: todo

@@ -1,8 +1,8 @@
 type: session-state
 context: infra
 active_flow: build_epic
-active_epic_id: e56
-active_story_id: e56s01
+active_epic_id: e47
+active_story_id: e47s01
 active_story_status: planned
 release:
   target_version: 2.49.0
@@ -20,12 +20,12 @@ metrics:
   stories_completed: 140
   bcps_per_hour: 0.4
 epic_cycle:
-  step: 1
-  story_bcps: 3
-  story: e56s01
+  step: 3
+  story_bcps: 2
+  story: e47s01
   audit_result: pending
-  completed_steps: []
-  note: "Starting e56 — UI Design System. Foundation for all UI work."
+  completed_steps: [1, 2]
+  note: "e47s01 — Steps 1+2 done (fast). Survey confirms RateLimiter built/tested, zero callers. Tasks ready. Impact: Low (0/10). Advancing to kickoff-branch."
   fast_mode: true
 bug_cycle:
   current_step: 0
@@ -39,6 +39,6 @@ handoff:
   last_step_completed: ""
   open_decisions: []
   next_skill: survey-context
-  summary: "e46 complete. Epics renumbered e56-e65. Starting e56 — UI Design System."
-  context: "10 epics, 33 stories, 91 BCPs. e56+e57 = foundation (parallel). e58+e59 = core. e60-e65 = features."
+  summary: "Live surface scan found .git exposure + /health leak on bigbase.click. Inserted e48 Live Surface Hardening. Renumbered e48-e52. Active: e47 Rate Limiter."
+  context: "15 planned epics: e47-e52 (security), e53-e55 (done), e56-e65 (features). Next: e48 .git block + /health gate (live P0). SAST via gosec, SCA via govulncheck, DAST via OWASP ZAP — all open-source, no Seal needed."
   fast_mode: true

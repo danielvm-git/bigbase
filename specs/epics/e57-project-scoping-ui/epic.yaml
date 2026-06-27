@@ -1,0 +1,10 @@
+type: epic-shard
+context: domain
+id: e57
+title: "Project Scoping — Admin UI"
+wsjf: 5.0
+total_bcps: 3
+status: planned
+depends_on: [e51, e52]
+stories:
+  - id: e57s01

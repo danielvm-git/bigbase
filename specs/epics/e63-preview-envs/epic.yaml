@@ -1,0 +1,11 @@
+type: epic-shard
+context: domain
+id: e63
+title: "Deploy — Preview Environments"
+wsjf: 2.5
+total_bcps: 2
+status: planned
+depends_on: [e51, e52, e58]
+stories:
+  - id: e63s01
+  - id: e63s02

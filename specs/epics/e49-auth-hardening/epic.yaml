@@ -1,0 +1,26 @@
+type: epic-shard
+context: domain
+id: e49
+title: "Security — Auth Hardening (Anonymous, OAuth, Path Traversal)"
+wsjf: 3.2
+total_bcps: 5
+status: planned
+stories:
+  - id: e49s01
+    title: "Fix anonymous tokens — add org_id context"
+    bcps: 2
+    status: planned
+    spec: e49s01-anonymous-fix.md
+    tasks: e49s01-tasks.yaml
+  - id: e49s02
+    title: "Fix OAuth redirect URI — use configured base URL"
+    bcps: 2
+    status: planned
+    spec: e49s02-oauth-redirect.md
+    tasks: e49s02-tasks.yaml
+  - id: e49s03
+    title: "Add path traversal defense to file downloads"
+    bcps: 1
+    status: planned
+    spec: e49s03-path-traversal.md
+    tasks: e49s03-tasks.yaml

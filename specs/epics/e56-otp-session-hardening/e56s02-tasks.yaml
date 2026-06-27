@@ -1,0 +1,25 @@
+story_id: e56s02
+title: "Audit log for security-sensitive operations"
+status: planned
+bcps: 2
+tasks:
+  - id: 1
+    description: "Create audit_events table migration in auth.Start()"
+    verify: "go test ./components/auth/ -run TestAuditEventsTable -v"
+    status: todo
+  - id: 2
+    description: "Add recordAudit(ctx, eventType, userID, email, ip, metadata) helper on Auth"
+    verify: "go test ./components/auth/ -run TestRecordAudit -v"
+    status: todo
+  - id: 3
+    description: "Wire audit recording into handleRegister, handleLogin (success/fail), handleLogout"
+    verify: "go test ./components/auth/ -run TestAuditLoginEvents -v"
+    status: todo
+  - id: 4
+    description: "Wire audit recording into handleRefresh, handleGoogleCallback, handleSendOTP, handleVerifyOTP"
+    verify: "go test ./components/auth/ -run TestAuditIntegration -v"
+    status: todo
+  - id: 5
+    description: "Wire audit recording into handleCreateAPIKey, handleDeleteAPIKey, handleForgotPassword, handleResetPassword, handleAnonymousToken, handleUserByID"
+    verify: "go test ./components/auth/ -run TestAuditAllEvents -v"
+    status: todo

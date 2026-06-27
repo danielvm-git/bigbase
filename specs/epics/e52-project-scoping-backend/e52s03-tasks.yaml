@@ -1,0 +1,10 @@
+story_id: e52s03
+title: "Database Isolation Per Project"
+status: planned
+bcps: 3
+note: "Full task breakdown deferred to plan-work. Run plan-work for detailed steps."
+tasks:
+  - id: 1
+    description: "Plan detailed implementation steps"
+    verify: "echo 'plan-work needed for e52s03'"
+    status: todo

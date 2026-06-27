@@ -1,0 +1,25 @@
+story_id: e56s01
+title: "Move OTP store from in-memory to database"
+status: planned
+bcps: 2
+tasks:
+  - id: 1
+    description: "Create otp_codes table migration in auth.Start()"
+    verify: "go test ./components/auth/ -run TestOTPDBMigration -v"
+    status: todo
+  - id: 2
+    description: "Implement OTPStore interface and dbOTPStore backed by otp_codes table"
+    verify: "go test ./components/auth/ -run TestOTPDBStore -v"
+    status: todo
+  - id: 3
+    description: "Replace global otpStore map with a.otpStore in auth handlers"
+    verify: "go test ./components/auth/ -run TestOTP -v"
+    status: todo
+  - id: 4
+    description: "Create otp_rate_limits table for persistent rate limiting"
+    verify: "go test ./components/auth/ -run TestOTPRateLimitPersistent -v"
+    status: todo
+  - id: 5
+    description: "Replace in-memory otpRates map with DB-backed rate limiter"
+    verify: "go test ./components/auth/ -run TestOTPRateLimit -v"
+    status: todo

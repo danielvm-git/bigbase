@@ -1,0 +1,11 @@
+type: epic-shard
+context: domain
+id: e56
+title: "Security — OTP Persistence & Session Audit"
+wsjf: 2.8
+total_bcps: 4
+status: planned
+depends_on: [e52]
+stories:
+  - id: e56s01
+  - id: e56s02

@@ -1,0 +1,10 @@
+story_id: e60s02
+title: "Admin UI — CSP Policy Builder"
+status: planned
+bcps: 1
+note: "Full task breakdown deferred to plan-work. Run plan-work for detailed steps."
+tasks:
+  - id: 1
+    description: "Plan detailed implementation steps"
+    verify: "echo 'plan-work needed for e60s02'"
+    status: todo

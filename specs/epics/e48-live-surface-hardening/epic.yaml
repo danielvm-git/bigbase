@@ -1,0 +1,26 @@
+type: epic-shard
+context: domain
+id: e48
+title: "Security — Live Surface Hardening"
+wsjf: 4.0
+total_bcps: 6
+status: planned
+stories:
+  - id: e48s01
+    title: "Block .git exposure and harden /health endpoint"
+    bcps: 2
+    status: planned
+    spec: e48s01-git-health-block.md
+    tasks: e48s01-tasks.yaml
+  - id: e48s02
+    title: "Add missing security headers and CI scanning"
+    bcps: 2
+    status: planned
+    spec: e48s02-headers-ci-scan.md
+    tasks: e48s02-tasks.yaml
+  - id: e48s03
+    title: "DAST baseline scan and scheduled automation"
+    bcps: 2
+    status: planned
+    spec: e48s03-dast-scan.md
+    tasks: e48s03-tasks.yaml

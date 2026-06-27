@@ -1,0 +1,10 @@
+story_id: e58s05
+title: "Astro SDK Refactor"
+status: planned
+bcps: 2
+note: "Full task breakdown deferred to plan-work. Run plan-work for detailed steps."
+tasks:
+  - id: 1
+    description: "Plan detailed implementation steps"
+    verify: "echo 'plan-work needed for e58s05'"
+    status: todo

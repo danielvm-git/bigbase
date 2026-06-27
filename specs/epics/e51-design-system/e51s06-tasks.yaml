@@ -1,0 +1,10 @@
+story_id: e51s06
+title: "Extended Component Library"
+status: planned
+bcps: 5
+note: "Full task breakdown deferred to plan-work. Run plan-work for detailed steps."
+tasks:
+  - id: 1
+    description: "Plan detailed implementation steps"
+    verify: "echo 'plan-work needed for e51s06'"
+    status: todo

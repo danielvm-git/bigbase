@@ -1,0 +1,14 @@
+type: epic-shard
+context: domain
+id: e58
+title: "Native Feature Port"
+wsjf: 6.0
+total_bcps: 15
+status: planned
+depends_on: [e52]
+stories:
+  - id: e58s01
+  - id: e58s02
+  - id: e58s03
+  - id: e58s04
+  - id: e58s05

@@ -1,0 +1,21 @@
+story_id: e48s02
+title: "Add missing security headers and CI scanning"
+status: planned
+bcps: 2
+tasks:
+  - id: 1
+    description: "Add Permissions-Policy header to security headers middleware"
+    verify: "go test ./components/proxy/ -run TestPermissionsPolicy -v"
+    status: todo
+  - id: 2
+    description: "Integrate gosec SAST into npm run preflight"
+    verify: "gosec -quiet ./... && echo 'gosec: OK'"
+    status: todo
+  - id: 3
+    description: "Integrate govulncheck SCA into npm run preflight"
+    verify: "go run golang.org/x/vuln/cmd/govulncheck@latest ./... && echo 'govulncheck: OK'"
+    status: todo
+  - id: 4
+    description: "Add gitleaks pre-commit hook and CI scan"
+    verify: "gitleaks detect --source . --no-git --verbose && echo 'gitleaks: OK'"
+    status: todo
