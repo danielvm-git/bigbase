@@ -2,20 +2,25 @@ story_id: e48s03
 title: "DAST baseline scan and scheduled automation"
 status: planned
 bcps: 2
+security: low
 tasks:
   - id: 1
     description: "Create scripts/zap-baseline.sh — Docker-based OWASP ZAP baseline scan with TARGET_URL and graceful Docker-missing handling"
+    security: low
     verify: "bash -n scripts/zap-baseline.sh && test -x scripts/zap-baseline.sh"
     status: todo
   - id: 2
     description: "Create scripts/observatory-check.sh — curl-based HTTP security header audit"
+    security: low
     verify: "bash -n scripts/observatory-check.sh && test -x scripts/observatory-check.sh"
     status: todo
   - id: 3
     description: "Create specs/security/scanning.md — document DAST and header audit setup"
+    security: none
     verify: "test -f specs/security/scanning.md"
     status: todo
   - id: 4
     description: "Test ZAP scan against local running instance (if Docker available)"
+    security: low
     verify: "(docker info > /dev/null 2>&1 && TARGET_URL=http://localhost:9999 bash scripts/zap-baseline.sh && test -f zap-report.html) || echo 'Docker not available, skipping ZAP integration test'"
     status: todo
