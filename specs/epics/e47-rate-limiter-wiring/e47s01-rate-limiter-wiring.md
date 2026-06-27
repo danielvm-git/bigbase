@@ -58,12 +58,12 @@ GET/POST /api/auth/* → 429 Too Many Requests
 ## 12. Testing Strategy
 | Test | Type | What |
 |------|------|------|
-| `TestRateLimit` | Unit | Token-bucket allows N requests, blocks N+1 |
-| `TestRateLimitIntegration` | Integration | 61st login POST from same IP returns 429 |
-| `TestRateLimitUserBucket` | Integration | Auth'd user uses user bucket, not IP bucket |
-| `TestRateLimitDisabled` | Unit | `--rate-limit-enabled=false` skips middleware |
-| `TestRateLimitHeaders` | Unit | 429 response includes `Retry-After` header |
-| `TestRateLimitCLIFlags` | Unit | `serve --help` includes rate-limit flags |
+| `TestRateLimiterReconfigure` | Unit | Reconfigure() is thread-safe and updates limits atomically |
+| `TestRateLimit` | Unit | Token-bucket allows N requests, blocks N+1 (already passing) |
+| `TestRateLimitIntegration` | Integration | 61st login POST from same IP returns 429 with Retry-After |
+| `TestRateLimitUserBucket` | Integration | Auth'd user uses user bucket (300/min), not IP bucket (60/min) |
+| `TestRateLimitDisabled` | Integration | `--rate-limit-enabled=false` means 1000 requests all succeed |
+| CLI flag smoke | Build | `serve --help` includes all 3 `--rate-limit-*` flags |
 
 ## 13. Component Contract
 ```
@@ -130,11 +130,14 @@ Feature: Rate limiting on auth endpoints
 5. If production can't tolerate any rate limiting yet, deploy with `--rate-limit-enabled=false` and re-enable after tuning
 
 ## 19. Definition of Done
-- [ ] `go test ./components/auth/ -run TestRateLimit -v` passes (unit)
+- [ ] `go test ./components/auth/ -run TestRateLimiterReconfigure -v` passes (unit)
+- [ ] `go test ./components/auth/ -run TestRateLimit -v` passes (unit, already green)
 - [ ] `go test ./components/auth/ -run TestRateLimitIntegration -v` passes (integration)
+- [ ] `go test ./components/auth/ -run TestRateLimitUserBucket -v` passes (integration)
+- [ ] `go test ./components/auth/ -run TestRateLimitDisabled -v` passes (integration)
 - [ ] `go build ./...` succeeds with no new warnings
 - [ ] `go run . serve --help` shows `--rate-limit-enabled`, `--rate-limit-ip-max`, `--rate-limit-user-max`
-- [ ] Manual: `curl -X POST http://localhost:8080/api/auth/login -d '{"email":"x@x.com","password":"x"}'` 61 times — 61st returns 429
+- [ ] Startup log includes `rate limiter configured ip=60/min user=300/min`
 - [ ] CI passes (`npm run preflight`)
 - [ ] PR merged to main, semantic-release deploys
 

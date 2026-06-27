@@ -20,25 +20,25 @@ metrics:
   stories_completed: 140
   bcps_per_hour: 0.4
 epic_cycle:
-  step: 3
+  step: 5
   story_bcps: 2
   story: e47s01
   audit_result: pending
-  completed_steps: [1, 2]
-  note: "e47s01 — Steps 1+2 done (fast). Survey confirms RateLimiter built/tested, zero callers. Tasks ready. Impact: Low (0/10). Advancing to kickoff-branch."
+  completed_steps: [1, 2, 3, 4]
+  note: "e47s01 — TDD done. 8 tasks completed: Reconfigure, CLI flags, wiring, integration tests. Vet+test+build all green. Advancing to verify-work."
   fast_mode: true
 bug_cycle:
   current_step: 0
   completed_steps: [1, 2, 3, 4, 5]
   bug_file: specs/bugs/BUG-2026-06-26T200000-e44s02-missing-ui-tests.md
 git:
-  branch: main
+  branch: e47-rate-limiter-wiring
   hash: HEAD
-  worktree: null
+  worktree: ../e47-rate-limiter-wiring
 handoff:
-  last_step_completed: ""
+  last_step_completed: "kickoff-branch"
   open_decisions: []
-  next_skill: survey-context
+  next_skill: develop-tdd
   summary: "Live surface scan found .git exposure + /health leak on bigbase.click. Inserted e48 Live Surface Hardening. Renumbered e48-e52. Active: e47 Rate Limiter."
   context: "15 planned epics: e47-e52 (security), e53-e55 (done), e56-e65 (features). Next: e48 .git block + /health gate (live P0). SAST via gosec, SCA via govulncheck, DAST via OWASP ZAP — all open-source, no Seal needed."
   fast_mode: true

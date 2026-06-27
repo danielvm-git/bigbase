@@ -5,6 +5,8 @@ title: "Security — Live Surface Hardening"
 wsjf: 4.0
 total_bcps: 6
 status: planned
+tier: 1
+note: "3 stories, 6 BCPs. Block .git, gate /health, security headers, CI scanning (gosec/govulncheck/gitleaks), DAST (ZAP/Observatory)."
 stories:
   - id: e48s01
     title: "Block .git exposure and harden /health endpoint"

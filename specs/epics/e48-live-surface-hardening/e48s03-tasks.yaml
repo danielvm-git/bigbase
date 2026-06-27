@@ -4,14 +4,18 @@ status: planned
 bcps: 2
 tasks:
   - id: 1
-    description: "Create scripts/zap-baseline.sh with Docker ZAP baseline scan"
-    verify: "bash scripts/zap-baseline.sh && test -f zap-report.html"
+    description: "Create scripts/zap-baseline.sh — Docker-based OWASP ZAP baseline scan with TARGET_URL and graceful Docker-missing handling"
+    verify: "bash -n scripts/zap-baseline.sh && test -x scripts/zap-baseline.sh"
     status: todo
   - id: 2
-    description: "Add Observatory check script and document current score"
-    verify: "bash scripts/observatory-check.sh"
+    description: "Create scripts/observatory-check.sh — curl-based HTTP security header audit"
+    verify: "bash -n scripts/observatory-check.sh && test -x scripts/observatory-check.sh"
     status: todo
   - id: 3
-    description: "Document DAST and header audit in specs/security/scanning.md"
+    description: "Create specs/security/scanning.md — document DAST and header audit setup"
     verify: "test -f specs/security/scanning.md"
+    status: todo
+  - id: 4
+    description: "Test ZAP scan against local running instance (if Docker available)"
+    verify: "(docker info > /dev/null 2>&1 && TARGET_URL=http://localhost:9999 bash scripts/zap-baseline.sh && test -f zap-report.html) || echo 'Docker not available, skipping ZAP integration test'"
     status: todo

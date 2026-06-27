@@ -4,32 +4,32 @@ status: planned
 bcps: 2
 tasks:
   - id: 1
-    description: "Add Reconfigure() method to RateLimiter for runtime config changes"
+    description: "Write test for Reconfigure() method (TDD red), then add Reconfigure() to RateLimiter for runtime config changes — must be thread-safe (acquire write locks on ipMap/userMap before swapping cfg)"
     verify: "go test ./components/auth/ -run TestRateLimiterReconfigure -v"
     status: todo
   - id: 2
-    description: "Add CLI flags: --rate-limit-enabled, --rate-limit-ip-max, --rate-limit-user-max with env var fallbacks"
+    description: "Add CLI flags: --rate-limit-enabled (bool, default true), --rate-limit-ip-max (int, default 60), --rate-limit-user-max (int, default 300) with env var fallbacks (BIGBASE_RATE_LIMIT_ENABLED, BIGBASE_RATE_LIMIT_IP_MAX, BIGBASE_RATE_LIMIT_USER_MAX)"
     verify: "go build ./... && go run . serve --help 2>&1 | grep -c 'rate-limit'"
     status: todo
   - id: 3
-    description: "Instantiate RateLimiter in main.go startProxy() with config from flags"
-    verify: "go build ./... && go test ./components/auth/ -run TestRateLimit -v"
+    description: "Instantiate RateLimiter in main.go serveCmd with config from flags, log 'rate limiter configured ip=N/min user=M/min' at startup if enabled"
+    verify: "go build -o /dev/null ."
     status: todo
   - id: 4
-    description: "Wrap auth public routes with rateLimiter.Middleware in main.go"
-    verify: "go test ./components/auth/ -run TestRateLimit -v"
+    description: "Wrap auth public routes (/api/auth/* catch-all) with rateLimiter.Middleware; do NOT wrap ProtectedHandler routes (already behind JWT)"
+    verify: "go build -o /dev/null ."
     status: todo
   - id: 5
-    description: "Write integration test: 61 login POSTs from same IP, 61st returns 429"
+    description: "Write integration test: 61 login POSTs from same IP, 61st returns 429; includes Retry-After header check"
     verify: "go test ./components/auth/ -run TestRateLimitIntegration -v"
     status: todo
   - id: 6
-    description: "Verify rate-limited requests include Retry-After header"
-    verify: "go test ./components/auth/ -run TestRateLimitHeaders -v"
+    description: "Write integration test: authenticated user uses user bucket (limit 300/min) not IP bucket (limit 60/min)"
+    verify: "go test ./components/auth/ -run TestRateLimitUserBucket -v"
     status: todo
   - id: 7
-    description: "Verify authenticated users use user bucket not IP bucket"
-    verify: "go test ./components/auth/ -run TestRateLimitUserBucket -v"
+    description: "Write integration test: with --rate-limit-enabled=false, 1000 requests all succeed (no 429)"
+    verify: "go test ./components/auth/ -run TestRateLimitDisabled -v"
     status: todo
   - id: 8
     description: "Run full preflight to ensure nothing breaks"

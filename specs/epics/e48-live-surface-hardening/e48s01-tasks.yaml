@@ -4,22 +4,26 @@ status: planned
 bcps: 2
 tasks:
   - id: 1
-    description: "Add middleware to reject /.git/* paths with 404 in proxy component"
-    verify: "go test ./components/proxy/ -run TestGitPathBlocked -v"
+    description: "Add HealthToken field to Options and Proxy struct; wire in New()"
+    verify: "go build ./components/proxy/"
     status: todo
   - id: 2
-    description: "Add HEALTH_TOKEN env var support and Bearer auth gate to /health endpoint"
-    verify: "go test ./components/proxy/ -run TestHealthAuth -v"
+    description: "Add gitPathBlockMiddleware returning 404 for /.git paths; insert into Handler() chain"
+    verify: "go test ./components/proxy/ -run TestGitPathBlocked -v"
     status: todo
   - id: 3
-    description: "Add Permissions-Policy header to securityHeadersMiddleware"
-    verify: "go test ./components/proxy/ -run TestPermissionsPolicy -v"
+    description: "Add Bearer-token auth to handleHealth when HEALTH_TOKEN is configured"
+    verify: "go test ./components/proxy/ -run TestHealthAuth -v"
     status: todo
   - id: 4
-    description: "Add Cache-Control: no-store to /health and /api responses"
-    verify: "go test ./components/proxy/ -run TestCacheControl -v"
+    description: "Update existing health endpoint tests for backward-compatible no-token mode"
+    verify: "go test ./components/proxy/ -run 'TestProxyHealthEndpoint|TestPerComponentHealth' -v"
     status: todo
   - id: 5
-    description: "Verify .git/config returns 404 on live deployment"
+    description: "Full proxy test suite — confirm no regressions"
+    verify: "go test ./components/proxy/ -v"
+    status: todo
+  - id: 6
+    description: "Verify .git block on live deployment"
     verify: "curl -s -o /dev/null -w '%{http_code}' https://bigbase.click/.git/config | grep 404"
     status: todo
