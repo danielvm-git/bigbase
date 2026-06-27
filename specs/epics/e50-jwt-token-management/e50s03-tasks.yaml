@@ -1,0 +1,25 @@
+story_id: e50s03
+title: Refresh token revocation — per-user invalidation
+status: todo
+bcps: 1
+tasks:
+  - id: 1
+    description: "Add invalidateAllUserTokens(ctx, userID) to refreshtoken.go that marks all refresh_tokens for the user as used=1 (leaves access tokens valid as Short-Lived Token pattern)"
+    verify: "go test -run 'TestTokenRevocation' ./components/auth/ -v -count=1"
+    status: todo
+  - id: 2
+    description: "Add handleLogoutAll handler at POST /api/auth/logout-all to auth.go Handler() and ProtectedHandler(); extracts userID from context, calls invalidateAllUserTokens, returns 200 OK"
+    verify: "go test -run 'TestLogoutAll' ./components/auth/ -v -count=1"
+    status: todo
+  - id: 3
+    description: "Add unit tests: single refresh token invalidated, multiple tokens invalidated, subsequent refresh returns 401, unauthenticated returns 401, access token still valid after logout-all"
+    verify: "go test -run 'TestLogoutAll' ./components/auth/ -v -count=1"
+    status: todo
+  - id: 4
+    description: "Update epic.yaml manifest to list all 3 stories with task file paths; run sync-status-from-epics.sh"
+    verify: "bash scripts/sync-status-from-epics.sh && rg 'e50s03' specs/epics/e50-jwt-token-management/epic.yaml"
+    status: todo
+  - id: 5
+    description: "Run full auth test suite + go vet to confirm no regressions"
+    verify: "go test ./components/auth/... -count=1 && go vet ./components/auth/..."
+    status: todo

@@ -10,7 +10,7 @@ release:
   last_tag: v2.49.0
   last_publish: '2026-06-26'
   ci_verified: true
-  ci_verified_at: '2026-06-26'
+  ci_verified_at: '2026-06-27T11:35:00Z'
 metrics:
   session_start: '2026-06-21T16:00:00Z'
   story_start: '2026-06-22T02:09:00Z'
@@ -37,9 +37,9 @@ git:
   hash: HEAD
   worktree: ../e47-rate-limiter-wiring
 handoff:
-  last_step_completed: "release-branch"
+  last_step_completed: "plan-work"
   open_decisions: []
-  next_skill: survey-context
-  summary: "e47 Rate Limiter Wiring COMPLETE. Merged to main, pushed, worktree cleaned. 44 epics done, 141 stories done. Next: e48 Live Surface Hardening (P0 — .git exposure + /health leak)."
-  context: "15 planned epics: e48-e52 (security), e53-e55 (done), e56-e65 (features). Next: e48 .git block + /health gate (live P0). SAST via gosec, SCA via govulncheck, DAST via OWASP ZAP — all open-source, no Seal needed."
-  fast_mode: true
+  next_skill: kickoff-branch
+  summary: "e50 JWT Secret & Token Lifecycle Management — plan-work COMPLETE. 3 stories planned (e50s01-e50s03) with runnable verify commands, countable-story-format specs, and decoupled tasks.yaml files. Ready for kickoff-branch."
+  context: "Epic e50: 5 BCPs across 3 stories. e50s01: BIGBASE_JWT_SECRET env var. e50s02: --jwt-access-expiry/--jwt-refresh-expiry flags. e50s03: POST /api/auth/logout-all. All changes to components/auth/ only. Next: kickoff-branch -> build-epic or develop-tdd."
+  fast_mode: false
