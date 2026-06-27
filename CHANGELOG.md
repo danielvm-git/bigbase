@@ -1,3 +1,10 @@
+# [2.54.0](https://github.com/danielvm-git/bigbase/compare/v2.53.0...v2.54.0) (2026-06-27)
+
+
+### Features
+
+* **ui:** add custom domain management tab to SiteDetailPage (e46s03) ([cad5956](https://github.com/danielvm-git/bigbase/commit/cad59563567bd3e00e0d07c353ba6d216ebb3fbd))
+
 # [2.53.0](https://github.com/danielvm-git/bigbase/compare/v2.52.0...v2.53.0) (2026-06-27)
 
 
