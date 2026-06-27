@@ -374,3 +374,51 @@ func TestRateLimitUserBucket(t *testing.T) {
 		t.Fatalf("unauthenticated request 2: expected 429 (IP bucket exhausted), got %d", w.Code)
 	}
 }
+
+// TestRateLimitDisabled verifies that when the rate limiter middleware
+// is not applied (simulating --rate-limit-enabled=false), requests pass
+// unhindered even with a restrictive config.
+func TestRateLimitDisabled(t *testing.T) {
+	rl := auth.NewRateLimiter(auth.RateLimiterConfig{
+		IPLimit:      2,
+		IPWindow:     time.Minute,
+		UserLimit:    300,
+		UserWindow:   time.Minute,
+		CleanupEvery: time.Hour,
+	})
+
+	inner := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	})
+
+	// With middleware applied: only 2 requests allowed
+	withRL := rl.Middleware(inner)
+	for i := 0; i < 2; i++ {
+		req := httptest.NewRequest("GET", "/", nil)
+		req.RemoteAddr = "10.0.0.1:1234"
+		w := httptest.NewRecorder()
+		withRL.ServeHTTP(w, req)
+		if w.Code != http.StatusOK {
+			t.Fatalf("with middleware request %d: expected 200, got %d", i+1, w.Code)
+		}
+	}
+	req := httptest.NewRequest("GET", "/", nil)
+	req.RemoteAddr = "10.0.0.1:1234"
+	w := httptest.NewRecorder()
+	withRL.ServeHTTP(w, req)
+	if w.Code != http.StatusTooManyRequests {
+		t.Fatalf("with middleware request 3: expected 429, got %d", w.Code)
+	}
+
+	// Without middleware (disabled mode): all requests pass
+	// Fresh IP to avoid the exhausted bucket
+	for i := 0; i < 100; i++ {
+		req := httptest.NewRequest("GET", "/", nil)
+		req.RemoteAddr = "10.0.0.2:5678"
+		w := httptest.NewRecorder()
+		inner.ServeHTTP(w, req) // inner only — no rate limiter middleware
+		if w.Code != http.StatusOK {
+			t.Fatalf("disabled mode request %d: expected 200, got %d", i+1, w.Code)
+		}
+	}
+}
