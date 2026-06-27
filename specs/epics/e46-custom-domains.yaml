@@ -53,7 +53,7 @@ stories:
         verify: "go test ./components/proxy/ -run TestHTTPServing -v"
   - id: e46s03
     title: "Admin UI — custom domain management"
-    status: planned
+    status: done
     bcps: 2
     tasks:
       - desc: "Add 'Domains' tab to SiteDetailPage"
