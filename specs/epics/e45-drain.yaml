@@ -13,24 +13,159 @@ covers:
 stories:
   - id: e45s01
     title: "Graceful connection draining on deployment switchover"
-    status: planned
+    status: in_progress
     bcps: 3
     tasks:
-      - desc: "Track active connections per deployment instance"
+      - id: e45s01t1
+        desc: "Add 'draining' and 'stopped' states to state machine"
         notes: |
-          When the proxy routes to a deployment, track the connection.
-          On deployment stop: signal the old process that new connections should be rejected.
-          Wait for existing connections to finish (configurable drain timeout, default 30s).
-          After timeout, force-kill remaining connections.
-          During drain, new connections go to the new deployment.
+          In state_machine.go:
+            - Add StateDraining DeploymentState = "draining"
+            - Add StateStopped DeploymentState = "stopped"
+            - Add valid transitions: StateRunning → StateDraining
+            - Add valid transitions: StateDraining → {StateStopped, StateFailed}
+            - Update StateRunning valid transitions: {StateFailed, StateRolledBack} → {StateFailed, StateRolledBack, StateDraining}
+            - StateStopped is terminal (no outgoing transitions)
+          In state_machine_test.go:
+            - Add TestStateMachineDrainingTransitions
+            - Verify StateDraining is valid, StateStopped is valid
+            - Verify: running → draining → stopped
+            - Verify: running → draining → failed
+            - Verify invalid: running → stopped (must go through draining)
+            - Verify invalid: pending → draining
+        verify: "go test ./components/deploy/ -run TestStateMachine -v"
+
+      - id: e45s01t2
+        desc: "Add DrainTimeout config and defer stopPreviousDeployments"
+        notes: |
+          In deploy.go:
+            - Add DrainTimeout time.Duration field to Deploy struct (default 30s)
+            - Add DrainTimeout field to Options struct
+            - In New(), set DrainTimeout from opts or default to 30s
+            - In Trigger(): REMOVE the immediate d.stopPreviousDeployments(ctx, siteID, repoID) call
+              Instead, COLLECT old deployment IDs into a slice and store on the Deploy struct
+              or pass via context to runDeployment
+            - Create a new oldDeployments []oldDeploymentRef field on Deploy struct (protected by mu)
+            - Add method d.collectPreviousDeployments(siteID, repoID) []string that returns IDs without stopping
+          This is the core architectural change: old deployments stay running until the new one is healthy.
+        verify: "go build ./..."
+
+      - id: e45s01t3
+        desc: "Implement drainDeployment() — graceful SIGTERM + timeout + force-kill"
+        notes: |
+          New function drainDeployment(id string) called after new deployment is healthy.
+          
+          Flow:
+            1. Read deployment status from DB — must be 'running'
+            2. TransitionState(ctx, id, "draining") — set status to draining
+            3. d.logger.Info("draining deployment", "id", id)
+            4. Find app in d.apps[id]:
+               a. Process app (has cmd):
+                  - Send SIGTERM to cmd.Process (graceful — app should finish in-flight requests)
+                  - Start timer for DrainTimeout
+                  - Poll cmd.ProcessState.Exited() every 500ms
+                  - If exited before timeout: log "drain complete"
+                  - If timeout: log "drain timeout — force killing", SIGKILL
+               b. Static server (has server):
+                  - Call server.Shutdown(shutdownCtx) — Go http.Server handles drain internally
+                  - It waits for active connections to complete
+                  - Set shutdownCtx timeout = DrainTimeout
+                  - If Shutdown returns nil: log "static server drain complete"
+                  - If Shutdown returns error (timeout): log "static server drain timeout"
+            5. After process/server stopped:
+               - Unregister host from hostRouter
+               - TransitionState(ctx, id, "stopped") 
+               - Delete from d.apps
+          
+          Edge cases:
+            - Deployment already stopped (race): log and return
+            - No running app in d.apps: query DB for PID, send SIGTERM to PID
+            - Supervisor running for this deployment: signal d.supervisor.Stop(id) before draining
         verify: "go test ./components/deploy/ -run TestConnectionDrain -v"
-      - desc: "Integrate drain into deployment lifecycle"
+
+      - id: e45s01t4
+        desc: "Integrate drain into runDeployment lifecycle"
         notes: |
-          After health check passes on new deployment, begin drain on old.
-          State machine transition: old goes from 'live' → 'draining' → 'stopped'.
-          New goes from 'deploying' → 'live' (only after old starts draining).
-          If drain fails (connections hang beyond timeout), log warning and force-stop.
+          In runDeployment(), after the new deployment passes health check and is marked 'running':
+            - After TransitionState(ctx, deploy.ID, "running")
+            - After finalizeDeploymentURL (registers new host in proxy — NEW connections go here)
+            - Check if there are old deployments to drain (d.collectPreviousDeployments had collected)
+            - For each old deployment, call d.drainDeployment(oldID) in a goroutine
+            - Log "draining old deployment" for each
+          
+          For static sites:
+            - Currently: updateStatus → "running", finalizeDeploymentURL → serveStatic
+            - After serveStatic starts (new host registered): drain old
+            - Since serveStatic is blocking (server.ListenAndServe), we need to handle this differently
+            - Register the drain in finalizeDeploymentURL phase, or use a goroutine
+          
+          Key behavior:
+            - If new deployment FAILS health check: old deployment continues serving (zero-downtime!)
+            - This is a safety improvement over current behavior (old is killed before new is built)
+            - If new deployment succeeds: old drains gracefully, connections complete, then old stops
+          
+          Update d.collectPreviousDeployments:
+            - Query IDs WHERE site_id = ? AND status IN ('running')
+            - Store them on d.oldDeployments (a map[string][]string keyed by siteID)
+            - In drainOldDeployments(siteID): iterate, drain each goroutine
         verify: "go test ./components/deploy/ -run TestDrainLifecycle -v"
+
+      - id: e45s01t5
+        desc: "Test: ConnectionDrain — drain timeout, smooth transition, force-kill fallback"
+        notes: |
+          New test file or test cases in deploy_test.go:
+          
+          TestConnectionDrainTimeout:
+            - Create a Deploy with short DrainTimeout (1s)
+            - Create a "running" deployment (mock app in d.apps)
+            - Call drainDeployment(id)
+            - Verify: status → 'draining' → then still forces stop
+            - Verify: hostRouter.UnregisterDeploymentHost called
+            - Verify: app removed from d.apps
+            - Verify: final status is 'stopped'
+          
+          TestConnectionDrainSmooth:
+            - Create a Deploy with DrainTimeout 5s
+            - Create a static server deployment (mock in d.apps with server)
+            - Start the server, establish a connection
+            - Call drainDeployment(id)
+            - The server should gracefully drain (server.Shutdown waits for connections)
+            - Assert drain completes without force-kill
+          
+          TestDrainAlreadyStopped:
+            - drainDeployment called on a deployment not in d.apps and not in DB
+            - Should log warning and return nil (no error)
+          
+          TestDrainNoCurrentConnections:
+            - Static server with no active connections
+            - drainDeployment should complete immediately
+        verify: "go test ./components/deploy/ -run TestConnectionDrain -v"
+
+      - id: e45s01t6
+        desc: "Test: DrainLifecycle — full lifecycle with drain phase"
+        notes: |
+          New integration test TestDrainLifecycle:
+            - Create two deployments for the same site
+            - First deployment: insert into DB as 'running'
+            - Second deployment: run Trigger()
+            - The Trigger should NOT kill the first deployment
+            - After second deployment completes lifecycle (simulate health check pass):
+              - Verify second deployment status = 'running'
+              - Verify hostRouter has second deployment's port
+              - Verify first deployment transitions: 'running' → 'draining' → 'stopped'
+              - Verify first deployment hostRouter unregistered
+              - Verify status_history shows drain transitions
+          
+          TestDrainFailedDeployment:
+            - Create first deployment as 'running'
+            - Trigger() a second deployment that FAILS health check
+            - Verify: first deployment remains 'running' (zero-downtime!)
+            - Verify: second deployment status = 'failed'
+            - Verify: no drain attempted on first deployment
+          
+          TestDrainLifecycleStatic:
+            - Same as TestDrainLifecycle but with AppStatic deployments
+            - Static → use server.Shutdown which waits for connections
   - id: e45s02
     title: "Proxy integration — smooth traffic migration"
     status: planned
