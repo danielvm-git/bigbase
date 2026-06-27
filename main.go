@@ -11,6 +11,7 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"syscall"
 	"text/tabwriter"
@@ -172,6 +173,9 @@ func startProxy() {
 	corsOrigins := serveFS.String("cors-allowed-origins", "", "Comma-separated list of allowed CORS origins (empty = CORS disabled)")
 	postLoginRedirect := serveFS.String("auth-post-login-redirect", "/admin/", "Post-login redirect URL for OAuth callbacks")
 	spaOriginAllowlist := serveFS.String("auth-spa-origin-allowlist", "", "Comma-separated list of allowed SPA origins for OAuth token delivery (empty = disabled)")
+	rateLimitEnabled := serveFS.Bool("rate-limit-enabled", true, "Enable rate limiting on auth endpoints (env: RATE_LIMIT_ENABLED)")
+	rateLimitIPMaxStr := serveFS.String("rate-limit-ip-max", "60", "Max requests per minute per IP (env: RATE_LIMIT_IP_MAX)")
+	rateLimitUserMaxStr := serveFS.String("rate-limit-user-max", "300", "Max requests per minute per authenticated user (env: RATE_LIMIT_USER_MAX)")
 	mcpDisabled := serveFS.Bool("mcp-disabled", false, "Disable MCP server")
 	mcpPort := serveFS.Int("mcp-port", 3900, "MCP server HTTP port")
 	mcpTransport := serveFS.String("mcp-transport", "http", "MCP transport (stdio, http)")
@@ -189,6 +193,23 @@ func startProxy() {
 	sitesDomainVal := config.FlagOrEnv(*sitesDomain, "BIGBASE_SITES_DOMAIN")
 	dbDriverVal := config.FlagOrEnv(*dbDriver, "BIGBASE_DB_DRIVER")
 	dbDSNVal := config.FlagOrEnv(*dbDSN, "BIGBASE_DB_DSN")
+
+	// Rate limit config with env var fallbacks
+	rlIPMaxStr := config.FlagOrEnv(*rateLimitIPMaxStr, "RATE_LIMIT_IP_MAX")
+	rlUserMaxStr := config.FlagOrEnv(*rateLimitUserMaxStr, "RATE_LIMIT_USER_MAX")
+	rlIPMax, _ := strconv.Atoi(rlIPMaxStr)
+	rlUserMax, _ := strconv.Atoi(rlUserMaxStr)
+	if rlIPMax < 1 {
+		rlIPMax = 60
+	}
+	if rlUserMax < 1 {
+		rlUserMax = 300
+	}
+	rlEnabled := *rateLimitEnabled
+	if e := os.Getenv("RATE_LIMIT_ENABLED"); e != "" {
+		rlEnabled = e == "true" || e == "1"
+	}
+
 	newRelicLicenseKey := config.FlagOrEnv(*nrLicenseKey, "NEW_RELIC_LICENSE_KEY")
 	newRelicAppName := config.FlagOrEnv(*nrAppName, "NEW_RELIC_APP_NAME")
 	newRelicEnabled := *nrEnabled
@@ -254,6 +275,21 @@ func startProxy() {
 		PostLoginRedirect:  *postLoginRedirect,
 		SPAOriginAllowlist: parseCORSOrigins(*spaOriginAllowlist),
 	})
+
+	// Rate limiter for auth public endpoints
+	rlCfg := auth.RateLimiterConfig{
+		IPLimit:      rlIPMax,
+		IPWindow:     time.Minute,
+		UserLimit:    rlUserMax,
+		UserWindow:   time.Minute,
+		CleanupEvery: 5 * time.Minute,
+	}
+	rl := auth.NewRateLimiter(rlCfg)
+	if rlEnabled {
+		logger.Info("rate limiter enabled", "ip_max_per_min", rlIPMax, "user_max_per_min", rlUserMax)
+	} else {
+		logger.Info("rate limiter disabled")
+	}
 
 	ad := admin.New(admin.Options{Logger: logger})
 	s := storage.New(storage.Options{DB: d, Logger: logger})
@@ -396,7 +432,12 @@ func startProxy() {
 	p.Handle("/api/deploy", mComp.Middleware(authComp.Middleware(depComp.Handler())).ServeHTTP)
 	p.Handle("/api/deploy/", mComp.Middleware(authComp.Middleware(depComp.Handler())).ServeHTTP)
 	p.Handle("/realtime", mComp.Middleware(rt.Handler()).ServeHTTP)
-	p.Handle("/api/auth/", mComp.Middleware(authComp.Handler()).ServeHTTP)
+	// Auth public routes: rate-limited when enabled
+	if rlEnabled {
+		p.Handle("/api/auth/", mComp.Middleware(rl.Middleware(authComp.Handler())).ServeHTTP)
+	} else {
+		p.Handle("/api/auth/", mComp.Middleware(authComp.Handler()).ServeHTTP)
+	}
 	p.Handle("GET /api/auth/users", mComp.Middleware(authComp.ProtectedHandler()).ServeHTTP)
 	p.Handle("GET /api/auth/me", mComp.Middleware(authComp.ProtectedHandler()).ServeHTTP)
 	p.Handle("DELETE /api/auth/users/", mComp.Middleware(authComp.ProtectedHandler()).ServeHTTP)
