@@ -2,7 +2,7 @@ type: session-state
 context: infra
 active_flow: build_epic
 active_epic_id: e46
-active_story_id: e46s01
+active_story_id: e46s02
 active_story_status: planned
 release:
   target_version: 2.49.0
@@ -20,25 +20,25 @@ metrics:
   stories_completed: 140
   bcps_per_hour: 0.4
 epic_cycle:
-  step: 8
+  step: 1
   story_bcps: 2
-  story: e46s01
-  audit_result: pass
-  completed_steps: ["1+2 (survey+plan --fast)", "3 (kickoff-branch)", "4 (develop-tdd)", "5 (verify-work)", "6+7 (audit-code + commit-message --fast)"]
-  note: "Release-branch: squash-merge to main."
+  story: e46s02
+  audit_result: pending
+  completed_steps: []
+  note: "Starting e46s02 — Auto SSL via Let's Encrypt (ACME)"
   fast_mode: true
 bug_cycle:
   current_step: 0
   completed_steps: [1, 2, 3, 4, 5]
   bug_file: specs/bugs/BUG-2026-06-26T200000-e44s02-missing-ui-tests.md
 git:
-  branch: feat/e46s01-custom-domains
+  branch: main
   hash: HEAD
-  worktree: ../bigbase-e46s01-custom-domains
+  worktree: null
 handoff:
-  last_step_completed: "8 (release-branch)"
+  last_step_completed: ""
   open_decisions: []
-  next_skill: none
-  summary: "e46s01 released — custom domain proxy routing"
-  context: "e46s01 complete. Squash-merged to main. Custom domains API is in sites component (pre-existing), proxy integration in deploy component."
+  next_skill: survey-context
+  summary: "Starting e46s02 — Auto SSL via Let's Encrypt (ACME)"
+  context: "e46s02: Integrate ACME client (autocert) for cert provisioning, serve HTTPS on :443, HTTP→HTTPS redirect for custom domains"
   fast_mode: true
