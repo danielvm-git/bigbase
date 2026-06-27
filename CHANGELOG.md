@@ -1,3 +1,10 @@
+## [2.55.1](https://github.com/danielvm-git/bigbase/compare/v2.55.0...v2.55.1) (2026-06-27)
+
+
+### Bug Fixes
+
+* **state:** restore e47 done state after rebase ([e560b35](https://github.com/danielvm-git/bigbase/commit/e560b35be6401f5b9ba1f8e77d765194360a62e1))
+
 # [2.55.0](https://github.com/danielvm-git/bigbase/compare/v2.54.2...v2.55.0) (2026-06-27)
 
 
