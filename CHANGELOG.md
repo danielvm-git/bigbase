@@ -1,3 +1,15 @@
+# [2.56.0](https://github.com/danielvm-git/bigbase/compare/v2.55.1...v2.56.0) (2026-06-27)
+
+
+### Bug Fixes
+
+* **config:** harden FlagOrEnvBool test coverage and add convention comment ([1dc9c64](https://github.com/danielvm-git/bigbase/commit/1dc9c64b3f5c0bfe09983cae590014ccc5d13a84))
+
+
+### Features
+
+* **auth:** wire rate limiter with graceful shutdown and env prefix ([57829a7](https://github.com/danielvm-git/bigbase/commit/57829a79851daff81804d4a16ec95008f4caab6c))
+
 ## [2.55.1](https://github.com/danielvm-git/bigbase/compare/v2.55.0...v2.55.1) (2026-06-27)
 
 
