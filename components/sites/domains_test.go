@@ -124,8 +124,8 @@ func TestCustomDomain(t *testing.T) {
 			t.Fatalf("register: %d", w.Code)
 		}
 
-		// Verify
-		req = httptest.NewRequest(http.MethodGet,
+		// Verify (POST — it mutates verified_at and triggers a DNS lookup)
+		req = httptest.NewRequest(http.MethodPost,
 			"/api/sites/"+siteID+"/domains/notexist.invalid/verify", nil)
 		w = httptest.NewRecorder()
 		h.ServeHTTP(w, req)
@@ -174,6 +174,102 @@ func TestCustomDomain(t *testing.T) {
 
 		if w.Code != http.StatusBadRequest {
 			t.Fatalf("expected 400, got %d", w.Code)
+		}
+	})
+
+	t.Run("register malformed domain returns 400", func(t *testing.T) {
+		_, h := setupSitesWithHandler(t)
+		siteID := createTestSite(t, h)
+
+		for _, bad := range []string{"not a domain", "no-tld", "http://example.com", "exa_mple.com"} {
+			body := `{"domain":"` + bad + `"}`
+			req := httptest.NewRequest(http.MethodPost,
+				"/api/sites/"+siteID+"/domains", strings.NewReader(body))
+			req.Header.Set("Content-Type", "application/json")
+			w := httptest.NewRecorder()
+			h.ServeHTTP(w, req)
+			if w.Code != http.StatusBadRequest {
+				t.Errorf("domain %q: expected 400, got %d", bad, w.Code)
+			}
+		}
+	})
+
+	t.Run("register domain for unknown site returns 404", func(t *testing.T) {
+		_, h := setupSitesWithHandler(t)
+
+		body := `{"domain":"orphan.com"}`
+		req := httptest.NewRequest(http.MethodPost,
+			"/api/sites/does-not-exist/domains", strings.NewReader(body))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+		h.ServeHTTP(w, req)
+
+		if w.Code != http.StatusNotFound {
+			t.Fatalf("expected 404, got %d: %s", w.Code, w.Body.String())
+		}
+	})
+
+	t.Run("delete domain removes it", func(t *testing.T) {
+		_, h := setupSitesWithHandler(t)
+		siteID := createTestSite(t, h)
+
+		body := `{"domain":"gone.com"}`
+		req := httptest.NewRequest(http.MethodPost,
+			"/api/sites/"+siteID+"/domains", strings.NewReader(body))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+		h.ServeHTTP(w, req)
+		if w.Code != http.StatusCreated {
+			t.Fatalf("register: expected 201, got %d", w.Code)
+		}
+
+		// Delete
+		req = httptest.NewRequest(http.MethodDelete, "/api/sites/"+siteID+"/domains/gone.com", nil)
+		w = httptest.NewRecorder()
+		h.ServeHTTP(w, req)
+		if w.Code != http.StatusNoContent {
+			t.Fatalf("delete: expected 204, got %d: %s", w.Code, w.Body.String())
+		}
+
+		// List is now empty
+		req = httptest.NewRequest(http.MethodGet, "/api/sites/"+siteID+"/domains", nil)
+		w = httptest.NewRecorder()
+		h.ServeHTTP(w, req)
+		var resp map[string]any
+		_ = json.Unmarshal(w.Body.Bytes(), &resp)
+		if data, _ := resp["data"].([]any); len(data) != 0 {
+			t.Errorf("expected 0 domains after delete, got %v", resp)
+		}
+
+		// Deleting again returns 404
+		req = httptest.NewRequest(http.MethodDelete, "/api/sites/"+siteID+"/domains/gone.com", nil)
+		w = httptest.NewRecorder()
+		h.ServeHTTP(w, req)
+		if w.Code != http.StatusNotFound {
+			t.Fatalf("second delete: expected 404, got %d", w.Code)
+		}
+	})
+
+	t.Run("GET on verify is rejected (POST only)", func(t *testing.T) {
+		_, h := setupSitesWithHandler(t)
+		siteID := createTestSite(t, h)
+
+		body := `{"domain":"getverify.com"}`
+		req := httptest.NewRequest(http.MethodPost,
+			"/api/sites/"+siteID+"/domains", strings.NewReader(body))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+		h.ServeHTTP(w, req)
+		if w.Code != http.StatusCreated {
+			t.Fatalf("register: %d", w.Code)
+		}
+
+		req = httptest.NewRequest(http.MethodGet,
+			"/api/sites/"+siteID+"/domains/getverify.com/verify", nil)
+		w = httptest.NewRecorder()
+		h.ServeHTTP(w, req)
+		if w.Code != http.StatusMethodNotAllowed {
+			t.Fatalf("GET verify: expected 405, got %d", w.Code)
 		}
 	})
 }

@@ -58,3 +58,32 @@ func (d *Deploy) RegisterCustomDomainHosts(ctx context.Context, siteID string, p
 	}
 	return nil
 }
+
+// ActivateCustomDomain registers a single freshly verified domain against the
+// site's currently running deployment, so it routes immediately rather than
+// waiting for the next deploy. It is a no-op (nil error) when the site has no
+// live deployment yet — the domain will then activate on the next deploy via
+// RegisterCustomDomainHosts.
+func (d *Deploy) ActivateCustomDomain(ctx context.Context, siteID, domain string) error {
+	if d.hostRouter == nil || siteID == "" || domain == "" {
+		return nil
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	var port int
+	err := d.db.QueryRowContext(ctx,
+		`SELECT port FROM deployments WHERE site_id = ? AND status = 'running' AND port > 0
+		 ORDER BY created_at DESC LIMIT 1`, siteID).Scan(&port)
+	if err != nil {
+		// No live deployment (or table missing) — activation deferred to next deploy.
+		return nil
+	}
+
+	if err := d.hostRouter.RegisterDeploymentHost(domain, port, siteID, nil, nil); err != nil {
+		return fmt.Errorf("register custom domain host: %w", err)
+	}
+	d.logger.Info("activated custom domain", "site_id", siteID, "domain", domain, "port", port)
+	return nil
+}

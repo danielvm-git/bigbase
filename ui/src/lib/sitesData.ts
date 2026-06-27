@@ -477,7 +477,7 @@ export async function verifyDomain(
   domain: string,
 ): Promise<{ ok: boolean; verified?: boolean; error?: string }> {
   try {
-    const res = await fetch(`/api/sites/${siteId}/domains/${encodeURIComponent(domain)}/verify`)
+    const res = await fetch(`/api/sites/${siteId}/domains/${encodeURIComponent(domain)}/verify`, { method: 'POST' })
     const body = await res.json().catch(() => ({ error: '' })) as { verified?: boolean; error?: string }
     if (!res.ok) return { ok: false, error: body.error || `Failed (HTTP ${res.status})` }
     return { ok: true, verified: body.verified }

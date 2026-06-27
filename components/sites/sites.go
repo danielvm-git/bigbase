@@ -65,6 +65,14 @@ type Site struct {
 type DeployTrigger func(ctx context.Context, repoID, branch, siteName, siteID string, passthroughPaths []string, appType string) (*Deployment, error)
 type DeleteSiteCleanupFunc func(ctx context.Context, siteID, repoID string) error
 
+// CertInfoFunc returns the expiry of the cached TLS certificate for a domain.
+// ok is false when no certificate is cached yet (provisioning) or HTTPS is off.
+type CertInfoFunc func(ctx context.Context, domain string) (notAfter time.Time, ok bool)
+
+// ActivateDomainFunc registers a freshly verified domain with the proxy so it
+// routes immediately, without waiting for the next deployment.
+type ActivateDomainFunc func(ctx context.Context, siteID, domain string) error
+
 type Sites struct {
 	db                DBer
 	logger            Logger
@@ -72,6 +80,10 @@ type Sites struct {
 	triggerDeploy     DeployTrigger
 	deleteSiteCleanup DeleteSiteCleanupFunc
 	encryptionKey     []byte
+	certInfo          CertInfoFunc
+	unregisterHost    func(domain string)
+	activateDomain    ActivateDomainFunc
+	verifyLim         *verifyLimiter
 }
 
 type Options struct {
@@ -81,6 +93,12 @@ type Options struct {
 	TriggerDeploy     DeployTrigger
 	DeleteSiteCleanup DeleteSiteCleanupFunc
 	EnvEncryptionKey  string
+	// CertInfo resolves live TLS certificate status for verified domains.
+	CertInfo CertInfoFunc
+	// UnregisterHost removes a proxy host route when a domain is deleted.
+	UnregisterHost func(domain string)
+	// ActivateDomain registers a domain with the proxy on successful verification.
+	ActivateDomain ActivateDomainFunc
 }
 
 func New(opts Options) *Sites {
@@ -93,7 +111,18 @@ func New(opts Options) *Sites {
 		gitDir = "data/git"
 	}
 	key, keyErr := parseEncryptionKey(opts.EnvEncryptionKey)
-	s := &Sites{db: opts.DB, logger: logger, gitDir: gitDir, triggerDeploy: opts.TriggerDeploy, deleteSiteCleanup: opts.DeleteSiteCleanup, encryptionKey: key}
+	s := &Sites{
+		db:                opts.DB,
+		logger:            logger,
+		gitDir:            gitDir,
+		triggerDeploy:     opts.TriggerDeploy,
+		deleteSiteCleanup: opts.DeleteSiteCleanup,
+		encryptionKey:     key,
+		certInfo:          opts.CertInfo,
+		unregisterHost:    opts.UnregisterHost,
+		activateDomain:    opts.ActivateDomain,
+		verifyLim:         newVerifyLimiter(5 * time.Second),
+	}
 	if keyErr != nil {
 		// Log immediately — encryption is silently disabled when the key is malformed.
 		logger.Warn("env encryption key invalid — env vars will be stored without encryption", "error", keyErr)

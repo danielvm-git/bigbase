@@ -30,7 +30,14 @@ function DomainRow({
 
   return (
     <tr>
-      <td><code style={{ fontSize: 'var(--text-sm)' }}>{d.domain}</code></td>
+      <td>
+        <code style={{ fontSize: 'var(--text-sm)' }}>{d.domain}</code>
+        {!isVerified && d.verify_token && (
+          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--fg-tertiary)', marginTop: 'var(--space-1)' }}>
+            TXT: <code>bigbase-verify={d.verify_token}</code>
+          </div>
+        )}
+      </td>
       <td>
         {isVerified
           ? <span style={{ color: 'var(--success)', fontSize: 'var(--text-sm)' }}>✓ Verified</span>
@@ -38,6 +45,11 @@ function DomainRow({
       </td>
       <td>
         <span style={{ color: certColor, fontSize: 'var(--text-sm)' }}>{certLabel}</span>
+        {d.cert_expires_at && (
+          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--fg-tertiary)', marginTop: 'var(--space-1)' }}>
+            exp {new Date(d.cert_expires_at).toLocaleDateString()}
+          </div>
+        )}
       </td>
       <td style={{ fontSize: 'var(--text-xs)', color: 'var(--fg-tertiary)' }}>
         {d.created_at ? new Date(d.created_at).toLocaleDateString() : '—'}
@@ -182,9 +194,18 @@ export function SiteDomainsTab({ siteId }: { siteId: string }) {
           marginTop: 'var(--space-3)', padding: 'var(--space-3)', background: 'var(--surface-secondary)',
           borderRadius: 'var(--radius-s)', fontSize: 'var(--text-xs)', color: 'var(--fg-secondary)',
         }}>
-          <strong>DNS Setup:</strong> Add a CNAME record pointing your domain to{' '}
-          <code>yoursite.bigbase.click</code>, then click <strong>Verify</strong> to confirm.
-          The system will check for a TXT record with value <code>bigbase-verify=…</code>.
+          <strong>DNS Setup (two records):</strong>
+          <ol style={{ margin: 'var(--space-1) 0 0', paddingLeft: 'var(--space-4)' }}>
+            <li>
+              <strong>Route traffic</strong> — add a CNAME (or A) record pointing your
+              domain to <code>yoursite.bigbase.click</code>.
+            </li>
+            <li>
+              <strong>Prove ownership</strong> — add the TXT record shown next to the
+              domain below (<code>bigbase-verify=…</code>), then click <strong>Verify</strong>.
+            </li>
+          </ol>
+          Once verified, an SSL certificate is provisioned automatically.
         </div>
       </Card>
 

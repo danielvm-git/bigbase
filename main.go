@@ -308,6 +308,9 @@ func startProxy() {
 		DeleteSiteCleanup: func(ctx context.Context, siteID, repoID string) error {
 			return depComp.DeleteSiteDeployments(ctx, siteID, repoID)
 		},
+		CertInfo:       p.CertInfo,
+		UnregisterHost: p.UnregisterDeploymentHost,
+		ActivateDomain: depComp.ActivateCustomDomain,
 	})
 	rt := realtime.New(realtime.Options{
 		Logger: logger,

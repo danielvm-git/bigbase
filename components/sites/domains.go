@@ -8,18 +8,34 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"regexp"
 	"strings"
+	"sync"
 	"time"
 )
 
+// site_domains uses a composite UNIQUE(site_id, domain): a domain is scoped to a
+// site rather than globally exclusive. Registration alone never routes traffic
+// (only verified domains are registered with the proxy), so DNS ownership — not
+// first-to-register — is the source of truth. This removes the squatting vector
+// where an unverified registration could globally block a domain.
 const domainsMigration = `CREATE TABLE IF NOT EXISTS site_domains (
 	id TEXT PRIMARY KEY,
 	site_id TEXT NOT NULL,
-	domain TEXT NOT NULL UNIQUE,
+	domain TEXT NOT NULL,
 	verify_token TEXT NOT NULL,
 	verified_at TEXT,
-	created_at TEXT NOT NULL DEFAULT (datetime('now'))
+	created_at TEXT NOT NULL DEFAULT (datetime('now')),
+	UNIQUE(site_id, domain)
 )`
+
+// domainRE validates a fully-qualified domain name (one or more labels). Mirrors
+// the client-side check in SiteDomainsTab.tsx so the API is not dependent on the
+// UI for input validation.
+var domainRE = regexp.MustCompile(`^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9][a-z0-9-]{0,61}[a-z0-9]$`)
+
+// certWarnWindow is how far before expiry a certificate is flagged "expiring_soon".
+const certWarnWindow = 30 * 24 * time.Hour
 
 type SiteDomain struct {
 	ID          string  `json:"id"`
@@ -28,6 +44,32 @@ type SiteDomain struct {
 	VerifyToken string  `json:"verify_token"`
 	VerifiedAt  *string `json:"verified_at,omitempty"`
 	CreatedAt   string  `json:"created_at"`
+	// Computed display fields — populated from the proxy's certificate cache,
+	// never stored. Empty when the domain is unverified or HTTPS is disabled.
+	CertStatus    string  `json:"cert_status,omitempty"`
+	CertExpiresAt *string `json:"cert_expires_at,omitempty"`
+}
+
+// verifyLimiter throttles the (DNS-lookup-backed) verify endpoint per site+domain
+// so an authenticated caller cannot drive unbounded outbound DNS traffic.
+type verifyLimiter struct {
+	mu       sync.Mutex
+	last     map[string]time.Time
+	interval time.Duration
+}
+
+func newVerifyLimiter(interval time.Duration) *verifyLimiter {
+	return &verifyLimiter{last: make(map[string]time.Time), interval: interval}
+}
+
+func (v *verifyLimiter) allow(key string, now time.Time) bool {
+	v.mu.Lock()
+	defer v.mu.Unlock()
+	if t, ok := v.last[key]; ok && now.Sub(t) < v.interval {
+		return false
+	}
+	v.last[key] = now
+	return true
 }
 
 func (s *Sites) migrateDomains() error {
@@ -35,9 +77,8 @@ func (s *Sites) migrateDomains() error {
 }
 
 func (s *Sites) handleDomains(w http.ResponseWriter, r *http.Request) {
-	// Path: /api/sites/{id}/domains[/{domain}/verify]
+	// Path: /api/sites/{id}/domains[/{domain}[/verify]]
 	path := strings.TrimPrefix(r.URL.Path, "/api/sites/")
-	// path = "{id}/domains" or "{id}/domains/{domain}/verify"
 	parts := strings.Split(strings.Trim(path, "/"), "/")
 	// parts[0] = site id, parts[1] = "domains", parts[2] = domain, parts[3] = "verify"
 	if len(parts) < 2 || parts[1] != "domains" {
@@ -53,7 +94,7 @@ func (s *Sites) handleDomains(w http.ResponseWriter, r *http.Request) {
 		s.registerDomain(w, r, siteID)
 	case len(parts) == 3 && r.Method == http.MethodDelete:
 		s.deleteDomain(w, r, siteID, parts[2])
-	case len(parts) == 4 && parts[3] == "verify" && r.Method == http.MethodGet:
+	case len(parts) == 4 && parts[3] == "verify" && r.Method == http.MethodPost:
 		s.verifyDomain(w, r, siteID, parts[2])
 	default:
 		writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
@@ -90,7 +131,44 @@ func (s *Sites) listDomains(w http.ResponseWriter, r *http.Request, siteID strin
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
+
+	// Annotate verified domains with live certificate status from the proxy.
+	for i := range domains {
+		if domains[i].VerifiedAt == nil {
+			continue
+		}
+		status, expiresAt := s.certStatusFor(ctx, domains[i].Domain)
+		domains[i].CertStatus = status
+		domains[i].CertExpiresAt = expiresAt
+	}
+
 	writeJSON(w, http.StatusOK, map[string]any{"data": domains})
+}
+
+// certStatusFor resolves the certificate status for a verified domain via the
+// optional CertInfo hook. Returns "provisioning" when no cert is cached yet.
+func (s *Sites) certStatusFor(ctx context.Context, domain string) (string, *string) {
+	if s.certInfo == nil {
+		return "", nil
+	}
+	notAfter, ok := s.certInfo(ctx, domain)
+	return certStatus(notAfter, ok, time.Now())
+}
+
+// certStatus maps a certificate expiry to a display status + ISO expiry string.
+func certStatus(notAfter time.Time, haveCert bool, now time.Time) (string, *string) {
+	if !haveCert {
+		return "provisioning", nil
+	}
+	iso := notAfter.UTC().Format(time.RFC3339)
+	switch {
+	case now.After(notAfter):
+		return "expired", &iso
+	case notAfter.Sub(now) < certWarnWindow:
+		return "expiring_soon", &iso
+	default:
+		return "valid", &iso
+	}
 }
 
 func (s *Sites) registerDomain(w http.ResponseWriter, r *http.Request, siteID string) {
@@ -102,8 +180,22 @@ func (s *Sites) registerDomain(w http.ResponseWriter, r *http.Request, siteID st
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json"})
 		return
 	}
-	if req.Domain == "" {
+	domain := strings.ToLower(strings.TrimSpace(req.Domain))
+	if domain == "" {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "domain is required"})
+		return
+	}
+	if !domainRE.MatchString(domain) {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid domain format"})
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	// Guard against attaching domains to non-existent sites (no FK on the table).
+	if !s.siteExists(ctx, siteID) {
+		writeJSON(w, http.StatusNotFound, map[string]string{"error": "site not found"})
 		return
 	}
 
@@ -120,15 +212,12 @@ func (s *Sites) registerDomain(w http.ResponseWriter, r *http.Request, siteID st
 	verifyToken := hex.EncodeToString(tokenBytes)
 	now := time.Now().UTC().Format(time.RFC3339)
 
-	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
-	defer cancel()
-
 	_, err = s.db.ExecContext(ctx,
 		`INSERT INTO site_domains (id, site_id, domain, verify_token, created_at) VALUES (?, ?, ?, ?, ?)`,
-		id, siteID, req.Domain, verifyToken, now)
+		id, siteID, domain, verifyToken, now)
 	if err != nil {
 		if isUniqueViolation(err) {
-			writeJSON(w, http.StatusConflict, map[string]string{"error": "domain already registered"})
+			writeJSON(w, http.StatusConflict, map[string]string{"error": "domain already registered for this site"})
 			return
 		}
 		s.logger.Error("insert domain", "error", err)
@@ -139,10 +228,16 @@ func (s *Sites) registerDomain(w http.ResponseWriter, r *http.Request, siteID st
 	writeJSON(w, http.StatusCreated, SiteDomain{
 		ID:          id,
 		SiteID:      siteID,
-		Domain:      req.Domain,
+		Domain:      domain,
 		VerifyToken: verifyToken,
 		CreatedAt:   now,
 	})
+}
+
+func (s *Sites) siteExists(ctx context.Context, siteID string) bool {
+	var one int
+	err := s.db.QueryRowContext(ctx, `SELECT 1 FROM sites WHERE id = ?`, siteID).Scan(&one)
+	return err == nil
 }
 
 func (s *Sites) deleteDomain(w http.ResponseWriter, r *http.Request, siteID, domain string) {
@@ -163,10 +258,22 @@ func (s *Sites) deleteDomain(w http.ResponseWriter, r *http.Request, siteID, dom
 		return
 	}
 
+	// Stop routing live traffic for the removed domain. Without this the proxy
+	// keeps the host registered (and serving its cert) until the next redeploy.
+	if s.unregisterHost != nil {
+		s.unregisterHost(domain)
+	}
+
 	w.WriteHeader(http.StatusNoContent)
 }
 
 func (s *Sites) verifyDomain(w http.ResponseWriter, r *http.Request, siteID, domain string) {
+	if !s.verifyLim.allow(siteID+"|"+domain, time.Now()) {
+		w.Header().Set("Retry-After", "5")
+		writeJSON(w, http.StatusTooManyRequests, map[string]string{"error": "too many verification attempts, try again shortly"})
+		return
+	}
+
 	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
 	defer cancel()
 
@@ -187,6 +294,12 @@ func (s *Sites) verifyDomain(w http.ResponseWriter, r *http.Request, siteID, dom
 		_, _ = s.db.ExecContext(ctx,
 			`UPDATE site_domains SET verified_at = ? WHERE site_id = ? AND domain = ?`,
 			now, siteID, domain)
+		// Activate routing immediately rather than waiting for the next deploy.
+		if s.activateDomain != nil {
+			if err := s.activateDomain(ctx, siteID, domain); err != nil {
+				s.logger.Warn("activate custom domain", "domain", domain, "error", err)
+			}
+		}
 	}
 
 	writeJSON(w, http.StatusOK, map[string]any{

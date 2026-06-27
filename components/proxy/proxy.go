@@ -3,8 +3,10 @@ package proxy
 import (
 	"context"
 	"crypto/rand"
+	"crypto/x509"
 	"encoding/hex"
 	"encoding/json"
+	"encoding/pem"
 	"fmt"
 	"html/template"
 	"io"
@@ -324,6 +326,39 @@ func (p *Proxy) Stop(ctx *kernel.Context) error {
 // ACME returns the autocert manager, or nil if HTTPS is not configured.
 func (p *Proxy) ACME() *autocert.Manager {
 	return p.acmeManager
+}
+
+// CertInfo returns the expiry of the cached Let's Encrypt certificate for host.
+// ok is false when HTTPS is disabled, no cert is cached yet (still provisioning),
+// or the cache entry can't be parsed. It reads the autocert cache directly and
+// does not trigger provisioning.
+func (p *Proxy) CertInfo(ctx context.Context, host string) (time.Time, bool) {
+	if p.acmeManager == nil || p.acmeManager.Cache == nil {
+		return time.Time{}, false
+	}
+	host = normalizeHost(host)
+	data, err := p.acmeManager.Cache.Get(ctx, host)
+	if err != nil {
+		return time.Time{}, false
+	}
+	// Cache entries are PEM bundles (private key followed by the cert chain).
+	// The first CERTIFICATE block is the leaf — its NotAfter is the expiry.
+	for len(data) > 0 {
+		var block *pem.Block
+		block, data = pem.Decode(data)
+		if block == nil {
+			break
+		}
+		if block.Type != "CERTIFICATE" {
+			continue
+		}
+		cert, err := x509.ParseCertificate(block.Bytes)
+		if err != nil {
+			continue
+		}
+		return cert.NotAfter, true
+	}
+	return time.Time{}, false
 }
 
 // acmeHostPolicy limits certificate provisioning to registered deployment hosts
