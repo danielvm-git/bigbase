@@ -1,20 +1,17 @@
 type: epic-shard
 context: domain
-id: e52
+id: e65
 title: "Multi-User Platform — Admin panel, role switching, friend invites"
 wsjf: 3.6
 wsjf_rationale: "BV=8(significant: unlocks multi-user platform usage; without this BigBase is effectively single-user despite multi-tenancy backend) TC=5(blocks sharing and adoption; defers milestone if skipped) RR=5(moderate: reduces adoption risk, prevents confusion between backend capability and user-facing availability) / JS=5(~1 week: admin UI + invite UX + role switching, wiring existing e23 backend)"
 status: planned
 tier: 8
-depends_on:
-  - e23
-  - e04
-  - e17
+depends_on: [e56, e57]
 covers:
   - ui/
   - components/auth/
 stories:
-  - id: e52s01
+  - id: e65s01
     title: "Admin User Management Dashboard"
     status: planned
     bcps: 3
@@ -40,11 +37,11 @@ stories:
         notes: |
           Admin dashboard home (or top of users page): summary cards.
           Stats from DB queries: COUNT users, COUNT users WHERE last_login > 7 days ago,
-          COUNT invites WHERE status='pending', COUNT deployments.
+          COUNT invites WHERE status=pending, COUNT deployments.
           Refresh on page load. Add to existing admin dashboard if e17 enhanced admin UI exists.
         verify: "cd ui && npm run build"
 
-  - id: e52s02
+  - id: e65s02
     title: "Friend Invitation Flow — email invite, accept, onboard"
     status: planned
     bcps: 3
@@ -75,7 +72,7 @@ stories:
           Backend: GET /api/invites (admin-only), POST /api/invites/:id/resend, DELETE /api/invites/:id.
         verify: "go test ./components/auth/ -run TestInviteManagement -v"
 
-  - id: e52s03
+  - id: e65s03
     title: "Role Switching — enter as admin or user, per-user workspaces"
     status: planned
     bcps: 2

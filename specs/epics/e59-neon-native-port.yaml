@@ -1,12 +1,12 @@
 type: epic-shard
 context: domain
-id: e57
+id: e59
 title: "Native Feature Port — SQL-over-HTTP, Better Auth, MCP Migration Tools"
 wsjf: 6.0
 wsjf_rationale: "BV=9(high: makes BigBase self-sufficient — no Neon dependency for SQL SDK, auth, or migrations) TC=6(blocks big-news and any project wanting native SQL access) RR=7(foundational for developer DX) / JS=4(~3 days across 5 stories, 15 BCPs)"
 status: planned
 tier: 1
-depends_on: [e56]
+depends_on: [e57']
 covers:
   - components/db/
   - components/auth/
@@ -24,7 +24,7 @@ notes: |
     3. MCP database migration tools (Neon MCP server pattern)
     4. Astro SDK refactored to match @danielvm/neon-astro-auth reference
 stories:
-  - id: e57s01
+  - id: e59s01
     title: "@bigbase/sql — HTTP SQL transport with tagged template literals"
     status: planned
     bcps: 3
@@ -56,7 +56,7 @@ stories:
           Implemented in both backend endpoint and TypeScript client.
           Document the API with JSDoc examples matching Neon's docs style.
         verify: "go test ./components/db/ -run TestSQLArrayMode -v"
-  - id: e57s02
+  - id: e59s02
     title: "Database branching — CREATE DATABASE WITH TEMPLATE per project"
     status: planned
     bcps: 4
@@ -64,7 +64,7 @@ stories:
       - desc: "Backend: branch creation via Postgres CREATE DATABASE WITH TEMPLATE"
         notes: |
           POST /api/projects/:projectId/branches — create a new branch.
-          Body: { name: string, source?: string } (source defaults to 'main').
+          Body: { name: string, source?: string } (source defaults to main).
           SQLite: copy data/projects/{projectId}/main.db → data/projects/{projectId}/{branch}.db.
           Postgres: CREATE DATABASE {branch} WITH TEMPLATE {source} OWNER {project_owner}.
           Branch metadata stored in project_branches table: id, project_id, name, source_branch, db_name/db_path, created_at, last_active.
@@ -88,7 +88,7 @@ stories:
             - [Create branch] modal: name input, source branch dropdown
           Branch context hook: useBranchScope() → { branch, branches, setBranch, createBranch, deleteBranch }.
         verify: "cd ui && npm run build"
-  - id: e57s03
+  - id: e59s03
     title: "Better Auth backend engine — adapter for BigBase auth endpoints"
     status: planned
     bcps: 3
@@ -127,7 +127,7 @@ stories:
           Each plugin is opt-in per project (configured in project_settings).
           Email sending: uses BigBase's messaging component for SMTP delivery.
         verify: "go test ./components/auth/ -run TestAuthPlugins -v"
-  - id: e57s04
+  - id: e59s04
     title: "MCP database migration tools — prepare, apply, describe, diff"
     status: planned
     bcps: 3
@@ -160,14 +160,14 @@ stories:
         verify: "go test ./components/mcp/ -run TestSchemaDiff -v"
       - desc: "Connection string tool — pooled + direct endpoints"
         notes: |
-          MCP tool: bigbase_get_connection_string(project_id: string, branch: string?, type: 'pooled' | 'direct')
+          MCP tool: bigbase_get_connection_string(project_id: string, branch: string?, type: pooled | direct)
             - Pooled: returns connection string for pgbouncer/pool endpoint
             - Direct: returns connection string for direct database access
           For Postgres: pooled uses pgbouncer port (if configured), direct uses db port.
           For SQLite: returns file path (pooled/direct distinction not applicable).
           Document the distinction: pooled for web traffic, direct for DDL/migrations.
         verify: "go test ./components/mcp/ -run TestConnectionStringTool -v"
-  - id: e57s05
+  - id: e59s05
     title: "Astro SDK refactor — middleware, route handler, client pattern"
     status: planned
     bcps: 2
@@ -179,7 +179,7 @@ stories:
                export function bigbaseAuth(config?: { baseUrl?: string }) → AstroIntegration
                Sets environment variables: BIGBASE_AUTH_BASE_URL, BIGBASE_AUTH_COOKIE_SECRET
                Injects route: /api/auth/[...slug] → route-handler.ts
-               Adds middleware: order 'pre' → middleware-handler.ts
+               Adds middleware: order pre → middleware-handler.ts
             2. middleware-handler.ts — validates session cookie, attached to Astro.locals.session
                Reads BIGBASE_AUTH_BASE_URL env var
                Gets session via fetch to /api/auth/get-session

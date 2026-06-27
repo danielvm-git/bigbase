@@ -58,6 +58,6 @@ stories:
     bcps: 1
     tasks:
       - desc: "Add New Relic infrastructure agent install to VPS setup script"
-        verify: "grep -q 'newrelic' scripts/setup-newrelic.sh"
+        verify: "grep -q newrelic scripts/setup-newrelic.sh"
       - desc: "New Relic MCP server config for real-time monitoring queries"
         verify: "test -f scripts/newrelic-mcp.sh"

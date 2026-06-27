@@ -22,14 +22,14 @@ stories:
         notes: |
           Create `rollback_events` table: id, site_id, deployment_id, rolled_back_to_id, created_at.
           Add route `/api/sites/{id}/rollback` to Handler() mux.
-          Look up the most recent deployment for the site with status 'running' (the codebase uses 'running' not 'live').
+          Look up the most recent deployment for the site with status running (the codebase uses running not live).
           Exclude the current active deployment (the one to be rolled away from).
-          Query: SELECT id, port, app_type, build_dir FROM deployments WHERE site_id = ? AND status = 'running' AND id != ? ORDER BY created_at DESC LIMIT 1.
+          Query: SELECT id, port, app_type, build_dir FROM deployments WHERE site_id = ? AND status = running AND id != ? ORDER BY created_at DESC LIMIT 1.
           Error 409 if no previous successful deployment exists.
-          On success 200, call d.stopDeployment(currentID, 'rolled_back') to stop the current app.
-          Call d.TransitionState(ctx, currentID, 'rolled_back') for state tracking.
+          On success 200, call d.stopDeployment(currentID, rolled_back) to stop the current app.
+          Call d.TransitionState(ctx, currentID, rolled_back) for state tracking.
           Create rollback_event record: rolled_from=currentID, rolled_to=oldID.
-          Update old deployment status back to 'running'.
+          Update old deployment status back to running.
           Re-register host router with old deployment's port.
           Implement Rollback(ctx, siteID) method on Deploy struct.
         verify: "go test ./components/deploy/ -run TestRollbackAPI -v"
@@ -43,7 +43,7 @@ stories:
           Register host router with old host + old port so proxy routes traffic.
           No clone, npm install, or build step needed — rollback is <1s.
           Append deploy log: "→ Rolled back to deployment {id} (commit {sha})".
-          Update old deployment's status_history with transition to 'running'.
+          Update old deployment's status_history with transition to running.
         verify: "go test ./components/deploy/ -run TestRollbackArtifacts -v"
   - id: e44s02
     title: "Admin UI — rollback button and history"

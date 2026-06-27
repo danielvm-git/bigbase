@@ -44,7 +44,7 @@ stories:
     bcps: 2
     tasks:
       - desc: "Configure PR-Agent with BigBase-specific reviewer instructions, DeepSeek V4 Pro model"
-        verify: "grep -q 'deepseek' .pr_agent.toml"
+        verify: "grep -q deepseek .pr_agent.toml"
       - desc: "Add .github/PULL_REQUEST_TEMPLATE.md aligned with conventional commits"
         verify: "test -f .github/PULL_REQUEST_TEMPLATE.md"
 
@@ -62,4 +62,4 @@ stories:
     bcps: 2
     tasks:
       - desc: "Configure branch protection: PR required, status checks, strict mode, admin exempt"
-        verify: "gh api repos/:owner/:repo/branches/main/protection 2>/dev/null | grep -q 'required_pull_request_reviews' || echo 'manual: branch protection set via GitHub UI'"
+        verify: "gh api repos/:owner/:repo/branches/main/protection 2>/dev/null | grep -q required_pull_request_reviews || echo 'manual: branch protection set via GitHub UI'"

@@ -12,7 +12,7 @@ stories:
     tasks:
       - desc: >
           Add DELETE handler in handleDeployByID: look up deployment by id (404 if missing);
-          if status is 'pending' or 'building' return 409 (build in progress — caller should
+          if status is pending or building return 409 (build in progress — caller should
           redeploy instead of delete); if running, kill process via d.processes map (SIGTERM)
           or deregister the static host from DeploymentHostRegistry; delete build directory
           from d.buildsDir/<id>/; evict in-memory deploy logs via d.deleteDeployLogs(id);
@@ -37,8 +37,8 @@ stories:
       - desc: >
           Add a Delete column to the deployments table in SiteDetailPage.tsx.
           Each row gets a small "Delete" Button (variant="ghost", size="sm") that is
-          disabled (and shows a tooltip "Build in progress") when d.status is 'pending'
-          or 'building'. On click, show an inline confirmation row or window.confirm dialog
+          disabled (and shows a tooltip "Build in progress") when d.status is pending
+          or building. On click, show an inline confirmation row or window.confirm dialog
           asking "Delete deployment from [date]? This cannot be undone." On confirm,
           call DELETE /api/deployments/{d.id}, then reload the deployments list.
           Show a brief error message if the request fails.
@@ -63,7 +63,7 @@ stories:
           4. Add <th>Actions</th> to the thead.
           5. Add <td> per row with:
                <Button variant="ghost" size="sm"
-                 disabled={deletingId === d.id || d.status === 'pending' || d.status === 'building'}
+                 disabled={deletingId === d.id || d.status === pending || d.status === building}
                  onClick={() => handleDelete(d.id)}>
                  {deletingId === d.id ? '…' : 'Delete'}
                </Button>

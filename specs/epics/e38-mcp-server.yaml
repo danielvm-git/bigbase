@@ -110,7 +110,7 @@ stories:
         notes: |
           Tool: deploy_site(repo_id, branch?, site_name?) — calls deploy.Trigger() via component API or internal import path.
           Returns deployment ID, URL, status.
-          Validate repo exists, branch defaults to 'main', site_name defaults to repo name.
+          Validate repo exists, branch defaults to main, site_name defaults to repo name.
           If deploy component is not loaded, return clear error message.
         verify: "go test ./components/mcp/ -run TestDeploySite -v"
       - desc: "Register get_deploy_status tool — check deployment status and details"

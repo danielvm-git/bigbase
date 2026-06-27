@@ -12,7 +12,7 @@ stories:
     tasks:
       - desc: "Add 'Logs' tab to SiteDetailPage that fetches GET /api/deployments/:id/logs for the active deployment and renders lines in a terminal-style <pre> block with auto-scroll"
         notes: |
-          ui/src/pages/SiteDetailPage.tsx: add tab 'logs' to the existing tabs array.
+          ui/src/pages/SiteDetailPage.tsx: add tab logs to the existing tabs array.
           On tab activation, call GET /api/deployments/{latest.id}/logs.
           Response shape: { deployment_id, status, lines: string[], log_available: bool, error_message? }.
           Render lines in a <pre> with monospace font, dark background (var(--bg-code) or inline style),
@@ -26,13 +26,13 @@ stories:
     title: Live log streaming during active build
     status: done
     tasks:
-      - desc: "When deployment status is 'building', poll GET /api/deployments/:id/logs every 2s and append new lines; stop polling when status transitions to running/failed"
+      - desc: "When deployment status is building, poll GET /api/deployments/:id/logs every 2s and append new lines; stop polling when status transitions to running/failed"
         notes: |
-          In the SiteDetailPage Logs tab: if status === 'building', set up a setInterval(2000) that
+          In the SiteDetailPage Logs tab: if status === building, set up a setInterval(2000) that
           re-fetches /api/deployments/{id}/logs and updates state.
-          Clear the interval when component unmounts or when status is no longer 'building'.
+          Clear the interval when component unmounts or when status is no longer building.
           The deploy component already polls the DB status — re-use the existing load() interval pattern
-          already present for 'pending'/'building' deployments.
+          already present for pending/building deployments.
           No backend changes needed: GET /api/deployments/:id/logs already returns current in-memory lines.
         verify: "cd ui && npm run build"
 
@@ -43,7 +43,7 @@ stories:
       - desc: "Add build_log TEXT column to deployments table; on deploy finish (success or fail), write the full log lines as newline-joined string; serve from DB when in-memory log is evicted"
         notes: |
           components/deploy/deploy.go: ALTER TABLE migration to add build_log TEXT DEFAULT '' column.
-          In the finish path (after updateStatus to 'running' or 'failed'), call:
+          In the finish path (after updateStatus to running or failed), call:
             d.db.ExecContext(ctx, "UPDATE deployments SET build_log = ? WHERE id = ?",
               strings.Join(lines, "\n"), id)
           In handleDeployLogs: if getDeployLogs(id) returns empty AND db has build_log != '',

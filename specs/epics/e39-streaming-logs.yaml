@@ -24,7 +24,7 @@ stories:
           WebSocket reads from the channel and sends each line as a text frame.
           Fall back to polling if WebSocket not available (existing GET /api/deployments/:id/logs).
         verify: "go test ./components/deploy/ -run TestStreamingLogs -v"
-      - desc: "Wire the streaming endpoint into the deployment lifecycle — start buffering logs at 'building' state"
+      - desc: "Wire the streaming endpoint into the deployment lifecycle — start buffering logs at building state"
         notes: |
           In runDeployment(), before starting the build, initialize a line buffer.
           Capture build stdout+stderr into the buffer line-by-line.
@@ -36,10 +36,10 @@ stories:
     status: done
     bcps: 3
     notes: |
-      v2 SAFETY DESIGN: 'running' is terminal state (NOT 'live'). Zero SQL queries change.
-      'deploying' is the only new state (transitional).
+      v2 SAFETY DESIGN: running is terminal state (NOT live). Zero SQL queries change.
+      deploying is the only new state (transitional).
       Lenient mode: unknown statuses are allowed through.
-      stopDeployment() bypasses state machine for 'replaced'.
+      stopDeployment() bypasses state machine for replaced.
       Root cause of v1 outage: pre-existing resumeCandidates bug (fixed v2.36.2).
     tasks:
       - id: e39s02t1
@@ -75,7 +75,7 @@ stories:
         status: done
         notes: |
           Already done on main:
-            - Types: DeploymentStatus includes 'deploying' ✅
+            - Types: DeploymentStatus includes deploying ✅
             - StatusTransition + status_history in Deployment interface ✅
             - StatusTimeline component renders colored dots + step labels ✅
           
@@ -86,7 +86,7 @@ stories:
               deploying -> yellow/pulse animation (currently plain dot)
               running   -> green checkmark, display as 'Live' badge (currently brand dot)
               failed    -> red X (exists as red dot)
-            - Poll interval: currently 3s → change to 2s; add 'deploying' to active-status check
+            - Poll interval: currently 3s → change to 2s; add deploying to active-status check
             - Add CSS keyframe animations for in-progress states
         verify: "cd ui && npm run build"
 
@@ -105,13 +105,13 @@ stories:
           Test 2: Process app lifecycle
             - Create Go/Python/Node repo, trigger deploy
             - Verify: pending -> building -> deploying -> running
-            - Verify: 'deploying' is transient (exists before startApp)
+            - Verify: deploying is transient (exists before startApp)
 
           Test 3: RESTART CYCLE (critical safety test)
-            - Deploy process app → status = 'running'
+            - Deploy process app → status = running
             - Stop Deploy component, start NEW Deploy component (same DB)
             - Verify: resumeCandidates found and resumed the app
-            - Verify: status still 'running' (not converted to unknown state)
+            - Verify: status still running (not converted to unknown state)
             - Verify: TransitionState lenient mode doesn't block resume
         verify: "go test ./components/deploy/ -run TestStateLifecycle -v"
 

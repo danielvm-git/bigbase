@@ -1,6 +1,6 @@
 type: epic-shard
 context: domain
-id: e56
+id: e57
 title: "Architecture — Project Scoping (DB + Auth + Sites container)"
 wsjf: 7.0
 wsjf_rationale: "BV=10(critical: flat architecture blocks all multi-project features — DB branching, auth isolation, MCP tools) TC=8(blocks e57 Neon port and any multi-tenant work) RR=10(affects every component) / JS=5(~4 days across 5 stories, 16 BCPs total)"
@@ -15,7 +15,7 @@ covers:
   - components/deploy/
   - ui/
 stories:
-  - id: e56s01
+  - id: e57s01
     title: "Projects table — backend CRUD + context resolution"
     status: planned
     bcps: 3
@@ -44,7 +44,7 @@ stories:
           All downstream handlers call `ProjectIDFromContext(ctx)` to get scope.
           Backward compat: when no project_id, treat as "global" (legacy flat mode).
         verify: "go test ./kernel/ -run TestProjectContextMiddleware -v"
-  - id: e56s02
+  - id: e57s02
     title: "Database isolation — per-project SQLite files and Postgres schemas"
     status: planned
     bcps: 3
@@ -75,7 +75,7 @@ stories:
           When no project_id: use global DB (legacy mode).
           Cache open DB handles per project to avoid repeated file opens.
         verify: "go test ./components/db/ -run TestDBResolver -v"
-  - id: e56s03
+  - id: e57s03
     title: "Auth namespacing — project-scoped users, JWT keys, and sessions"
     status: planned
     bcps: 4
@@ -103,7 +103,7 @@ stories:
           Login flow: determine project from request context, use that project's OAuth config.
           Backward compat: global OAuth flags still work when no project context.
         verify: "go test ./components/auth/ -run TestProjectOAuthScoping -v"
-  - id: e56s04
+  - id: e57s04
     title: "Site → Project linkage — backfill, migration, and resource transfer"
     status: planned
     bcps: 3
@@ -130,72 +130,3 @@ stories:
           RegisterCustomDomainHosts: resolve domains from project (not just site).
           Host registration: include project_id in metadata for observability.
         verify: "go test ./components/deploy/ -run TestCustomDomainRouting -v"
-  - id: e56s05
-    title: "Admin UI — project-scoped routing, selector, and pages"
-    status: planned
-    bcps: 3
-    tasks:
-      - desc: "URL restructure — /project/:projectId/... with backward compat"
-        notes: |
-          New routes (project-scoped):
-            /project/:projectId → dashboard
-            /project/:projectId/sql/:branch? → SQL editor
-            /project/:projectId/site → site detail + deployments
-            /project/:projectId/site/domains → custom domains
-            /project/:projectId/site/env-vars → env vars
-            /project/:projectId/auth → auth settings
-            /project/:projectId/functions → functions
-            /project/:projectId/storage → storage
-            /project/:projectId/branches → DB branches
-            /project/:projectId/settings → project settings
-          Legacy flat routes (/data, /sql, /deploy) redirect to /project/:lastProjectId/... using localStorage.
-          When no project selected: show project picker + global-only pages (users, monitoring, system health).
-        verify: "cd ui && npm run build"
-      - desc: "Project selector — header dropdown + context hook"
-        notes: |
-          Header component: project selector dropdown (left of breadcrumb bar).
-          Lists all projects for current org. "Create new project" option at bottom.
-          Selecting a project updates URL to /project/:projectId/...
-          Branch selector: dropdown listing branches of current project (only visible on SQL/branches pages).
-          React hook: useProjectScope() → { project, projectId, branch, setProject, setBranch, projects, branches }.
-        verify: "cd ui && npm run build"
-      - desc: "Project-scoped sidebar — two-zone layout"
-        notes: |
-          Project Zone (visible when project selected):
-            - Dashboard
-            - SQL Editor
-            - Site (deployments, logs, env vars, domains)
-            - Functions
-            - Storage
-            - Auth
-            - Branches
-            - Settings
-          Global Zone (always visible):
-            - Users
-            - System Monitoring
-            - Platform Settings
-          Visual distinction: Project Zone has a light background tint or accent border.
-        verify: "cd ui && npm run build"
-      - desc: "Project pages — dashboard, settings, create/list"
-        notes: |
-          Project Dashboard (/project/:projectId):
-            - Connection string card (copyable, format toggle: psql / URI / env var)
-            - Quick stats: tables count, rows, storage used
-            - Recent deployments list
-            - Branch cards
-          Project Settings (/project/:projectId/settings):
-            - General: name, description, delete project
-            - Database: connection pool config
-            - Environment Variables (shared across project sites)
-            - Danger Zone: delete project + all resources
-          Project List (/projects or global dashboard):
-            - Card grid of all projects
-            - "Create Project" button → form: name, slug, db type
-        verify: "cd ui && npm run build"
-      - desc: "Backward compatibility — legacy routes still work"
-        notes: |
-          All existing routes (/deploy, /data, /sql, /functions, /storage, /users, /forge, /cici, /messaging, /monitoring, /realtime, /settings) remain functional.
-          When accessed without project context: redirect to project picker with a "Select a project to continue" banner.
-          API backward compat: all existing API endpoints accept project_id as optional query parameter.
-          When project_id is absent, operate in legacy global mode.
-        verify: "cd ui && npm run build && go test ./components/deploy/ -run TestDeploy -v"

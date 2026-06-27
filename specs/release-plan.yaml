@@ -294,87 +294,92 @@ epics:
     mode: flat
     tier: 5
     status: done
-  - id: e47
-    title: Deploy — Secrets Management
-    wsjf: 3.5
-    file: epics/e47-secrets.yaml
-    mode: flat
-    tier: 5
-    status: planned
-  - id: e48
-    title: Proxy — Configurable CSP Headers
-    wsjf: 2.5
-    file: epics/e48-csp-headers.yaml
-    mode: flat
-    tier: 6
-    status: planned
-  - id: e49
-    title: Admin — Usage Dashboard
-    wsjf: 3.0
-    file: epics/e49-usage-dashboard.yaml
-    mode: flat
-    tier: 7
-    status: planned
-  - id: e50
-    title: Admin — Collection Schema Designer
-    wsjf: 2.5
-    file: epics/e50-schema-designer.yaml
-    mode: flat
-    tier: 8
-    status: planned
-  - id: e51
-    title: Deploy — Preview Environments
-    wsjf: 2.5
-    file: epics/e51-preview-envs.yaml
-    mode: flat
-    tier: 8
-    status: planned
-  - id: e52
-    title: Multi-User Platform — Admin panel, role switching, friend invites
-    wsjf: 3.6
-    file: epics/e52-multi-user-platform.yaml
-    mode: flat
-    tier: 8
-    status: planned
-  - id: e53
-    title: Deploy — Process Supervisor (Runner/Instance seam)
-    wsjf: 6.0
-    file: epics/e53-deploy-supervisor.yaml
-    mode: flat
-    tier: 4
-    status: done
-    note: "Keystone (GitHub #40, ADR 0004) for e43/e44/e45 — extracts the Supervisor/Runner/Instance seam."
-
-  # ─── Previously uncovered — formalized from git history ───
-  - id: e54
-    title: "New Relic Integration — Application and Server Monitoring"
-    wsjf: 5.33
-    file: epics/e54-newrelic-integration.yaml
-    mode: flat
-    tier: 2
-    status: done
-  - id: e55
-    title: "DX — Automated PR Code Review via PR-Agent + DeepSeek"
-    wsjf: 7.0
-    file: epics/e55-pr-agent-review.yaml
-    mode: flat
-    tier: 2
-    status: done
-
-  # ─── Project Architecture (post-e46) ───
+  # ─── Foundation (Tier 0) — parallel start, no dependencies ───
   - id: e56
-    title: Architecture — Project Scoping (DB + Auth + Sites container)
-    wsjf: 7.0
-    file: epics/e56-project-scoping.yaml
+    title: UI Design System & Component Library (Evolved v2)
+    wsjf: 6.5
+    file: epics/e56-design-system.yaml
     mode: flat
     tier: 0
     status: planned
-    note: "HARD DEP for e57. Establishes project as parent container for DB, Auth, and Sites."
+    blocks: [e58, e59, e60, e61, e62, e63, e64, e65]
+    note: "7 stories, 26 BCPs. Critical path blocker — unblocks ALL downstream UI work."
   - id: e57
+    title: Project Scoping — Backend (DB + Auth + Sites container)
+    wsjf: 7.0
+    file: epics/e57-project-scoping-backend.yaml
+    mode: flat
+    tier: 0
+    status: planned
+    blocks: [e58, e59, e60, e61, e62, e63, e64, e65]
+    note: "4 stories, 13 BCPs. Projects table, DB isolation, auth scoping, site backfill."
+
+  # ─── Core Platform (Tier 1) — after e56 + e57 ───
+  - id: e58
+    title: Project Scoping — Admin UI
+    wsjf: 5.0
+    file: epics/e58-project-scoping-ui.yaml
+    mode: flat
+    tier: 1
+    status: planned
+    depends_on: [e56, e57]
+    note: "1 story, 3 BCPs. Project selector, routing, sidebar, dashboard, settings."
+  - id: e59
     title: Native Feature Port — SQL-over-HTTP, Better Auth, MCP Migration Tools
     wsjf: 6.0
-    file: epics/e57-neon-native-port.yaml
+    file: epics/e59-neon-native-port.yaml
     mode: flat
-    tier: 0
+    tier: 1
     status: planned
-    note: "Depends on e56. Ports four Neon capabilities natively."
+    depends_on: [e57]
+    note: "5 stories, 15 BCPs. @bigbase/sql, DB branching, Better Auth, MCP tools, Astro SDK."
+
+  # ─── Feature Epics (Tier 2) — after e56 + e57 + e59 ───
+  - id: e60
+    title: Deploy — Secrets Management
+    wsjf: 3.5
+    file: epics/e60-secrets.yaml
+    mode: flat
+    tier: 2
+    status: planned
+    depends_on: [e56, e57]
+  - id: e61
+    title: Proxy — Configurable CSP Headers
+    wsjf: 2.5
+    file: epics/e61-csp-headers.yaml
+    mode: flat
+    tier: 2
+    status: planned
+    depends_on: [e57]
+  - id: e62
+    title: Admin — Usage Dashboard
+    wsjf: 3.0
+    file: epics/e62-usage-dashboard.yaml
+    mode: flat
+    tier: 2
+    status: planned
+    depends_on: [e56, e57]
+  - id: e63
+    title: Admin — Collection Schema Designer
+    wsjf: 2.5
+    file: epics/e63-schema-designer.yaml
+    mode: flat
+    tier: 2
+    status: planned
+    depends_on: [e56, e57]
+  - id: e64
+    title: Deploy — Preview Environments
+    wsjf: 2.5
+    file: epics/e64-preview-envs.yaml
+    mode: flat
+    tier: 2
+    status: planned
+    depends_on: [e56, e57, e59]
+  - id: e65
+    title: Multi-User Platform — Admin panel, role switching, friend invites
+    wsjf: 3.6
+    file: epics/e65-multi-user-platform.yaml
+    mode: flat
+    tier: 2
+    status: planned
+    depends_on: [e56, e57]

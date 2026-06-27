@@ -25,7 +25,7 @@ epic_cycle:
   story: e56s01
   audit_result: pending
   completed_steps: []
-  note: "Starting e56 — Project Scoping. Foundation for multi-project BaaS."
+  note: "Starting e56 — UI Design System. Foundation for all UI work."
   fast_mode: true
 bug_cycle:
   current_step: 0
@@ -39,6 +39,6 @@ handoff:
   last_step_completed: ""
   open_decisions: []
   next_skill: survey-context
-  summary: "e46 complete. e56 drafted — Project Scoping."
-  context: "e56: Project as container for DB + Auth + Sites. 5 stories, 16 BCPs. HARD DEP for e57 Neon port."
+  summary: "e46 complete. Epics renumbered e56-e65. Starting e56 — UI Design System."
+  context: "10 epics, 33 stories, 91 BCPs. e56+e57 = foundation (parallel). e58+e59 = core. e60-e65 = features."
   fast_mode: true

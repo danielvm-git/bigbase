@@ -48,17 +48,16 @@ epics:
   e44: done
   e45: done
   e46: in_progress
-  e47: planned
-  e48: planned
-  e49: planned
-  e50: planned
-  e51: planned
-  e52: planned
-  e53: done
-  e54: done
-  e55: done
   e56: planned
   e57: planned
+  e58: planned
+  e59: planned
+  e60: planned
+  e61: planned
+  e62: planned
+  e63: planned
+  e64: planned
+  e65: planned
 stories:
   e01s01: done
   e02s01: done
@@ -193,38 +192,33 @@ stories:
   e46s01: done
   e46s02: done
   e46s03: done
-  e47s01: planned
-  e47s02: planned
-  e48s01: planned
-  e48s02: planned
-  e49s01: planned
-  e49s02: planned
-  e50s01: planned
-  e50s02: planned
-  e51s01: planned
-  e51s02: planned
-  e52s01: planned
-  e52s02: planned
-  e52s03: planned
-  e53s01: done
-  e53s02: done
-  e53s03: done
-  e53s04: done
-  e54s01: done
-  e54s02: done
-  e54s03: done
-  e54s04: done
-  e55s01: done
-  e55s02: done
-  e55s03: done
-  e55s04: done
   e56s01: planned
   e56s02: planned
   e56s03: planned
   e56s04: planned
   e56s05: planned
+  e56s06: planned
+  e56s07: planned
   e57s01: planned
   e57s02: planned
   e57s03: planned
   e57s04: planned
-  e57s05: planned
+  e58s01: planned
+  e59s01: planned
+  e59s02: planned
+  e59s03: planned
+  e59s04: planned
+  e59s05: planned
+  e60s01: planned
+  e60s02: planned
+  e61s01: planned
+  e61s02: planned
+  e62s01: planned
+  e62s02: planned
+  e63s01: planned
+  e63s02: planned
+  e64s01: planned
+  e64s02: planned
+  e65s01: planned
+  e65s02: planned
+  e65s03: planned

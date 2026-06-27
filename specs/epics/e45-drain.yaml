@@ -17,7 +17,7 @@ stories:
     bcps: 3
     tasks:
       - id: e45s01t1
-        desc: "Add 'draining' and 'stopped' states to state machine"
+        desc: "Add draining and stopped states to state machine"
         notes: |
           In state_machine.go:
             - Add StateDraining DeploymentState = "draining"
@@ -56,7 +56,7 @@ stories:
           New function drainDeployment(id string) called after new deployment is healthy.
           
           Flow:
-            1. Read deployment status from DB — must be 'running'
+            1. Read deployment status from DB — must be running
             2. TransitionState(ctx, id, "draining") — set status to draining
             3. d.logger.Info("draining deployment", "id", id)
             4. Find app in d.apps[id]:
@@ -86,7 +86,7 @@ stories:
       - id: e45s01t4
         desc: "Integrate drain into runDeployment lifecycle"
         notes: |
-          In runDeployment(), after the new deployment passes health check and is marked 'running':
+          In runDeployment(), after the new deployment passes health check and is marked running:
             - After TransitionState(ctx, deploy.ID, "running")
             - After finalizeDeploymentURL (registers new host in proxy — NEW connections go here)
             - Check if there are old deployments to drain (d.collectPreviousDeployments had collected)
@@ -105,7 +105,7 @@ stories:
             - If new deployment succeeds: old drains gracefully, connections complete, then old stops
           
           Update d.collectPreviousDeployments:
-            - Query IDs WHERE site_id = ? AND status IN ('running')
+            - Query IDs WHERE site_id = ? AND status IN (running)
             - Store them on d.oldDeployments (a map[string][]string keyed by siteID)
             - In drainOldDeployments(siteID): iterate, drain each goroutine
         verify: "go test ./components/deploy/ -run TestDrainLifecycle -v"
@@ -119,10 +119,10 @@ stories:
             - Create a Deploy with short DrainTimeout (1s)
             - Create a "running" deployment (mock app in d.apps)
             - Call drainDeployment(id)
-            - Verify: status → 'draining' → then still forces stop
+            - Verify: status → draining → then still forces stop
             - Verify: hostRouter.UnregisterDeploymentHost called
             - Verify: app removed from d.apps
-            - Verify: final status is 'stopped'
+            - Verify: final status is stopped
           
           TestConnectionDrainSmooth:
             - Create a Deploy with DrainTimeout 5s
@@ -146,21 +146,21 @@ stories:
         notes: |
           New integration test TestDrainLifecycle:
             - Create two deployments for the same site
-            - First deployment: insert into DB as 'running'
+            - First deployment: insert into DB as running
             - Second deployment: run Trigger()
             - The Trigger should NOT kill the first deployment
             - After second deployment completes lifecycle (simulate health check pass):
-              - Verify second deployment status = 'running'
+              - Verify second deployment status = running
               - Verify hostRouter has second deployment's port
-              - Verify first deployment transitions: 'running' → 'draining' → 'stopped'
+              - Verify first deployment transitions: running → draining → stopped
               - Verify first deployment hostRouter unregistered
               - Verify status_history shows drain transitions
           
           TestDrainFailedDeployment:
-            - Create first deployment as 'running'
+            - Create first deployment as running
             - Trigger() a second deployment that FAILS health check
-            - Verify: first deployment remains 'running' (zero-downtime!)
-            - Verify: second deployment status = 'failed'
+            - Verify: first deployment remains running (zero-downtime!)
+            - Verify: second deployment status = failed
             - Verify: no drain attempted on first deployment
           
           TestDrainLifecycleStatic:
@@ -188,30 +188,30 @@ stories:
           the drain flow built in e45s01.
         verify: "go test ./components/proxy/ -run TestDualDeployRouting -v"
       - id: e45s02t2
-        desc: "Admin UI: add 'draining' and 'stopped' to DeploymentStatus type"
+        desc: "Admin UI: add draining and stopped to DeploymentStatus type"
         notes: |
           In ui/src/types/sites.ts:
-            - Add 'draining' | 'stopped' to the DeploymentStatus union type
+            - Add draining | stopped to the DeploymentStatus union type
         verify: "cd ui && npx tsc --noEmit"
       - id: e45s02t3
         desc: "Admin UI: add draining/stopped to status timeline"
         notes: |
           In ui/src/pages/SiteDetailPage.tsx:
-            - Update STATUS_STEPS to include 'draining' after 'running'
-            - 'draining' should have a yellow/pulse animation (similar to 'deploying')
-            - 'stopped' is terminal (not in STATUS_STEPS — it replaces 'replaced' in rollback logic)
-            - Handle 'draining' and 'stopped' in the rollback canRollback check:
-              canRollback(d) = d.status === 'stopped' (was 'replaced')
+            - Update STATUS_STEPS to include draining after running
+            - draining should have a yellow/pulse animation (similar to deploying)
+            - stopped is terminal (not in STATUS_STEPS — it replaces replaced in rollback logic)
+            - Handle draining and stopped in the rollback canRollback check:
+              canRollback(d) = d.status === stopped (was replaced)
           
           In ui/src/components/Badge.tsx:
-            - Add statusBadgeVariant for 'draining' → 'warning'
-            - Add statusBadgeVariant for 'stopped' → 'neutral'
+            - Add statusBadgeVariant for draining → warning
+            - Add statusBadgeVariant for stopped → neutral
         verify: "cd ui && npm run build"
       - id: e45s02t4
         desc: "Admin UI: update SiteDetailPage test for new statuses"
         notes: |
           In ui/src/pages/SiteDetailPage.test.tsx:
-            - Update test fixtures that used 'replaced' to use 'stopped'
-            - Add test for 'draining' status rendering
+            - Update test fixtures that used replaced to use stopped
+            - Add test for draining status rendering
             - Keep backward compat with rollout of new statuses
         verify: "cd ui && npx tsc --noEmit && cd ../.. && go test ./components/proxy/ -run TestDualDeployRouting -v"
