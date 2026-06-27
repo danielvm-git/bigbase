@@ -1,17 +1,17 @@
 type: epic-shard
 context: domain
-id: e62
+id: e56
 title: "Admin — Usage Dashboard"
 wsjf: 3.0
 wsjf_rationale: "BV=5(moderate: nice to know storage/API calls at a glance — reduces 'am I hitting limits?' anxiety) TC=1(no deadline) RR=3(awareness only, doesn't block shipping) / JS=2(~1.5 days across 2 stories)"
 status: planned
 tier: 7
-depends_on: [e56', e57]
+depends_on: [e47, e48]
 covers:
   - ui/
   - components/deploy/
 stories:
-  - id: e62s01
+  - id: e56s01
     title: "Usage metrics aggregation backend"
     status: planned
     bcps: 2
@@ -28,7 +28,7 @@ stories:
           Per site: deployments count, storage used (site's files + logs), request count (from request_logs), bandwidth estimate (response sizes).
           Endpoint: GET /api/sites/:id/usage.
         verify: "go test ./components/deploy/ -run TestSiteUsageMetrics -v"
-  - id: e62s02
+  - id: e56s02
     title: "Usage dashboard UI"
     status: planned
     bcps: 1

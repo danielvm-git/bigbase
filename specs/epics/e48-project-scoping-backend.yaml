@@ -1,6 +1,6 @@
 type: epic-shard
 context: domain
-id: e57
+id: e48
 title: "Architecture — Project Scoping (DB + Auth + Sites container)"
 wsjf: 7.0
 wsjf_rationale: "BV=10(critical: flat architecture blocks all multi-project features — DB branching, auth isolation, MCP tools) TC=8(blocks e57 Neon port and any multi-tenant work) RR=10(affects every component) / JS=5(~4 days across 5 stories, 16 BCPs total)"
@@ -15,7 +15,7 @@ covers:
   - components/deploy/
   - ui/
 stories:
-  - id: e57s01
+  - id: e48s01
     title: "Projects table — backend CRUD + context resolution"
     status: planned
     bcps: 3
@@ -44,7 +44,7 @@ stories:
           All downstream handlers call `ProjectIDFromContext(ctx)` to get scope.
           Backward compat: when no project_id, treat as "global" (legacy flat mode).
         verify: "go test ./kernel/ -run TestProjectContextMiddleware -v"
-  - id: e57s02
+  - id: e48s02
     title: "Database isolation — per-project SQLite files and Postgres schemas"
     status: planned
     bcps: 3
@@ -75,7 +75,7 @@ stories:
           When no project_id: use global DB (legacy mode).
           Cache open DB handles per project to avoid repeated file opens.
         verify: "go test ./components/db/ -run TestDBResolver -v"
-  - id: e57s03
+  - id: e48s03
     title: "Auth namespacing — project-scoped users, JWT keys, and sessions"
     status: planned
     bcps: 4
@@ -103,7 +103,7 @@ stories:
           Login flow: determine project from request context, use that project's OAuth config.
           Backward compat: global OAuth flags still work when no project context.
         verify: "go test ./components/auth/ -run TestProjectOAuthScoping -v"
-  - id: e57s04
+  - id: e48s04
     title: "Site → Project linkage — backfill, migration, and resource transfer"
     status: planned
     bcps: 3

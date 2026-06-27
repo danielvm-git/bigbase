@@ -1,12 +1,12 @@
 type: epic-shard
 context: domain
-id: e59
+id: e50
 title: "Native Feature Port — SQL-over-HTTP, Better Auth, MCP Migration Tools"
 wsjf: 6.0
 wsjf_rationale: "BV=9(high: makes BigBase self-sufficient — no Neon dependency for SQL SDK, auth, or migrations) TC=6(blocks big-news and any project wanting native SQL access) RR=7(foundational for developer DX) / JS=4(~3 days across 5 stories, 15 BCPs)"
 status: planned
 tier: 1
-depends_on: [e57']
+depends_on: [e48]
 covers:
   - components/db/
   - components/auth/
@@ -24,7 +24,7 @@ notes: |
     3. MCP database migration tools (Neon MCP server pattern)
     4. Astro SDK refactored to match @danielvm/neon-astro-auth reference
 stories:
-  - id: e59s01
+  - id: e50s01
     title: "@bigbase/sql — HTTP SQL transport with tagged template literals"
     status: planned
     bcps: 3
@@ -56,7 +56,7 @@ stories:
           Implemented in both backend endpoint and TypeScript client.
           Document the API with JSDoc examples matching Neon's docs style.
         verify: "go test ./components/db/ -run TestSQLArrayMode -v"
-  - id: e59s02
+  - id: e50s02
     title: "Database branching — CREATE DATABASE WITH TEMPLATE per project"
     status: planned
     bcps: 4
@@ -88,7 +88,7 @@ stories:
             - [Create branch] modal: name input, source branch dropdown
           Branch context hook: useBranchScope() → { branch, branches, setBranch, createBranch, deleteBranch }.
         verify: "cd ui && npm run build"
-  - id: e59s03
+  - id: e50s03
     title: "Better Auth backend engine — adapter for BigBase auth endpoints"
     status: planned
     bcps: 3
@@ -127,7 +127,7 @@ stories:
           Each plugin is opt-in per project (configured in project_settings).
           Email sending: uses BigBase's messaging component for SMTP delivery.
         verify: "go test ./components/auth/ -run TestAuthPlugins -v"
-  - id: e59s04
+  - id: e50s04
     title: "MCP database migration tools — prepare, apply, describe, diff"
     status: planned
     bcps: 3
@@ -167,7 +167,7 @@ stories:
           For SQLite: returns file path (pooled/direct distinction not applicable).
           Document the distinction: pooled for web traffic, direct for DDL/migrations.
         verify: "go test ./components/mcp/ -run TestConnectionStringTool -v"
-  - id: e59s05
+  - id: e50s05
     title: "Astro SDK refactor — middleware, route handler, client pattern"
     status: planned
     bcps: 2

@@ -1,17 +1,17 @@
 type: epic-shard
 context: domain
-id: e63
+id: e57
 title: "Admin — Collection Schema Designer"
 wsjf: 2.5
 wsjf_rationale: "BV=4(low-moderate: visual schema editing is convenient but SQL works fine for a solo dev) TC=1(no deadline) RR=2(slightly reduces friction for non-SQL tasks) / JS=4(~3 days across 2 stories)"
 status: planned
 tier: 8
-depends_on: [e56, e57]
+depends_on: [e47, e48]
 covers:
   - components/api/
   - ui/
 stories:
-  - id: e63s01
+  - id: e57s01
     title: "Schema definition CRUD and storage"
     status: planned
     bcps: 2
@@ -30,7 +30,7 @@ stories:
           Field validation: required fields reject empty values, unique fields reject duplicates, type validation on write.
           Auto-index: primary key (id), unique fields, explicitly marked indexed fields.
         verify: "go test ./components/api/ -run TestSchemaTypes -v"
-  - id: e63s02
+  - id: e57s02
     title: "Visual schema editor in admin UI"
     status: planned
     bcps: 2

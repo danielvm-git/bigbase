@@ -1,16 +1,16 @@
 type: epic-shard
 context: domain
-id: e58
+id: e49
 title: "Project Scoping — Admin UI"
 wsjf: 5.0
 wsjf_rationale: "BV=8(high: project-scoped UI is the user-facing deliverable of the entire project scoping initiative) TC=5(blocks all downstream UI work that needs project context) RR=7(transforms flat admin into navigable workspace) / JS=3(~2 days across 1 story, 3 BCPs)"
 status: planned
 tier: 1
-depends_on: [e56, e57]
+depends_on: [e47, e48]
 covers:
   - ui/
 stories:
-  - id: e58s01
+  - id: e49s01
     title: "Admin UI — project-scoped routing, selector, sidebar, dashboard, settings"
     status: planned
     bcps: 3

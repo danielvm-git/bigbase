@@ -1,17 +1,17 @@
 type: epic-shard
 context: domain
-id: e61
+id: e52
 title: "Proxy — Configurable CSP Headers"
 wsjf: 2.5
 wsjf_rationale: "BV=4(low-moderate: important security hardening but solo instance is lower attack surface) TC=1(no deadline) RR=3(reduces XSS risk) / JS=1(~1 day across 2 stories)"
 status: planned
 tier: 6
-depends_on: [e57']
+depends_on: [e48]
 covers:
   - components/proxy/
   - ui/
 stories:
-  - id: e61s01
+  - id: e52s01
     title: "CSP header generation with per-site configuration"
     status: planned
     bcps: 2
@@ -29,7 +29,7 @@ stories:
           If site has no CSP config, use the default. If bigbase.yaml specifies CSP, use that.
           Merge strategy: site config overrides default per-directive.
         verify: "go test ./components/proxy/ -run TestCSPApplication -v"
-  - id: e61s02
+  - id: e52s02
     title: "Admin UI — CSP policy builder"
     status: planned
     bcps: 1

@@ -1,17 +1,17 @@
 type: epic-shard
 context: domain
-id: e64
+id: e58
 title: "Deploy — Preview Environments"
 wsjf: 2.5
 wsjf_rationale: "BV=3(low: per-branch previews are great for teams — solo dev works one branch at a time) TC=1(no deadline) RR=2(nice-to-have for testing branches before merge) / JS=4(~3 days across 2 stories)"
 status: planned
 tier: 8
-depends_on: [e56, e57, e59]
+depends_on: [e47, e48, e50]
 covers:
   - components/deploy/
   - ui/
 stories:
-  - id: e64s01
+  - id: e58s01
     title: "Branch-based preview deployments"
     status: planned
     bcps: 2
@@ -30,7 +30,7 @@ stories:
           Update existing preview if one already exists for that branch.
           Skip if branch starts with 'dependabot/' or is a merge commit.
         verify: "go test ./components/deploy/ -run TestAutoPreview -v"
-  - id: e64s02
+  - id: e58s02
     title: "Preview lifecycle management"
     status: planned
     bcps: 2

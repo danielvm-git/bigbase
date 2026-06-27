@@ -1,13 +1,13 @@
 type: epic-shard
 context: domain
-id: e56
+id: e47
 title: "UI Refactor — Console Redesign & Component Library (Evolved v2)"
 wsjf: 6.5
 wsjf_rationale: "BV=9(high: comprehensive component library unblocks ALL downstream UI epics — e60-e65) TC=7(critical path blocker; enables parallel work on e39-e52, e56-e57 immediately after completion) RR=9(foundational — every UI in BigBase uses these components) / JS=7(~7 days across 7 stories, 26 BCPs)"
 status: planned
 tier: 1
 depends_on: []
-blocks: [e58', e59, e60, e61, e62, e63, e64, e65]
+blocks: [e49, e50, e51, e52, e56, e57, e58, e59]
 covers:
   - ui/
 notes: |
@@ -29,10 +29,10 @@ notes: |
 
   **Design Source:** BigBase Console - Evolved v2 (imported from claude.ai/design prototype project, includes component stubs and specs for tokens, accessibility, responsive behavior, and component states). React stubs already in prototype for quick reference.
 
-  **Blocking:** e56s05, e59s01-s04, e39s03, e60, e61, e62, e63, e64, e65 all depend on this epic's core stories (s02-s07).
+  **Blocking:** e47s05, e47s01-s04, e47s03, e60, e61, e62, e63, e64, e65 all depend on this epic's core stories (s02-s07).
 
 stories:
-  - id: e56s01
+  - id: e47s01
     title: "Design Tokens & Theme System"
     status: planned
     bcps: 3
@@ -70,7 +70,7 @@ stories:
           Storybook config: .storybook/main.ts includes theme addon.
         verify: "cd ui && npm run storybook:build"
 
-  - id: e56s02
+  - id: e47s02
     title: "Core Component Library — Button, Input, Card, Badge"
     status: planned
     bcps: 4
@@ -122,7 +122,7 @@ stories:
           Use in deployment status (success badge for live, warning for rollback, error for failed).
         verify: "cd ui && npm run build && npm run test -- Badge.test.tsx"
 
-  - id: e56s03
+  - id: e47s03
     title: "Layout Components — Header, Sidebar, Navigation"
     status: planned
     bcps: 4
@@ -133,7 +133,7 @@ stories:
             - Left: BigBase logo + text
             - Center: breadcrumb (e.g., "Project > SQL Editor > Active Branch")
             - Right: user avatar + dropdown menu (Settings, Sign Out)
-            - Project selector slot: (will be populated by e56s05 integration)
+            - Project selector slot: (will be populated by e47s05 integration)
             - Height: 56px, background: neutral-0, border-bottom: neutral-100
             - Mobile: hamburger icon (triggers sidebar drawer)
             - Sticky positioning at top of viewport
@@ -178,7 +178,7 @@ stories:
             - Accessibility: role="dialog", aria-modal="true", aria-labelledby
         verify: "cd ui && npm run build && npm run test -- Grid.test.tsx && npm run test -- Modal.test.tsx"
 
-  - id: e56s04
+  - id: e47s04
     title: "Console Page Templates & Integration"
     status: planned
     bcps: 3
@@ -235,7 +235,7 @@ stories:
           Uses: <Input>, <Button>, <Modal>, <PageLayout>
         verify: "cd ui && npm run build && npm run test -- ProjectSettings.test.tsx"
 
-  - id: e56s05
+  - id: e47s05
     title: "Accessibility & Responsive Design Audit"
     status: planned
     bcps: 2
@@ -273,7 +273,7 @@ stories:
           Use Chromatic for visual regression testing (Storybook integration).
         verify: "cd ui && npm run chromatic:build"
 
-  - id: e56s06
+  - id: e47s06
     title: "Extended Component Library — Table, Form Controls, Dialogs"
     status: planned
     bcps: 6
@@ -290,7 +290,7 @@ stories:
             - Row actions: right-side button menu (edit, delete, copy, view detail, etc.)
             - Responsive: on mobile, show a stacked card view or horizontal scroll
             - Accessibility: table role, header scope, aria-sort on sortable columns
-          Use case: SQL results (e59s01), env vars (e41), secrets (e47), users (e52), deployments (e39)
+          Use case: SQL results (e47s01), env vars (e41), secrets (e47), users (e52), deployments (e39)
           Styling: neutral-0 background, neutral-100 border rows, hover highlight
         verify: "cd ui && npm run build && npm run test -- Table.test.tsx"
       - desc: "Select, Textarea, Checkbox, Radio components"
@@ -361,7 +361,7 @@ stories:
             - Usage: "No projects yet", "No SQL results", "No deployments"
         verify: "cd ui && npm run build && npm run test -- (Skeleton|EmptyState).test.tsx"
 
-  - id: e56s07
+  - id: e47s07
     title: "Data Visualization & Editor Components — Charts, Code Editor, Terminal"
     status: planned
     bcps: 4
@@ -392,7 +392,7 @@ stories:
               * Read-only mode for viewing results
               * Keyboard shortcuts: Cmd/Ctrl+Enter = submit (custom callback prop)
             - Styling: inherit theme (light-mode ↔ dark-mode) from theme context
-            - Usage: e59s01 (SQL editor), function editor, config file editor
+            - Usage: e47s01 (SQL editor), function editor, config file editor
             - A11y: aria-label, tab trapping inside editor, Escape to blur
         verify: "cd ui && npm run build && npm run test -- CodeEditor.test.tsx"
       - desc: "Terminal/Log viewer component — real-time streaming logs"
@@ -405,7 +405,7 @@ stories:
             - Copy-to-clipboard: select text → Cmd+C
             - Search/filter: optional search box to filter logs by keyword
             - Performance: virtualization for large log sets (window 100 visible lines, render only visible rows)
-            - Usage: e39s03 (deploy logs, function logs), e54 (app logs from New Relic), build pipeline logs
+            - Usage: e47s03 (deploy logs, function logs), e54 (app logs from New Relic), build pipeline logs
             - A11y: screen reader announces new logs (live region), keyboard nav
         verify: "cd ui && npm run build && npm run test -- Terminal.test.tsx"
       - desc: "Tree/Outline component — hierarchical data (schema browser, file tree)"

@@ -1,17 +1,17 @@
 type: epic-shard
 context: domain
-id: e65
+id: e59
 title: "Multi-User Platform — Admin panel, role switching, friend invites"
 wsjf: 3.6
 wsjf_rationale: "BV=8(significant: unlocks multi-user platform usage; without this BigBase is effectively single-user despite multi-tenancy backend) TC=5(blocks sharing and adoption; defers milestone if skipped) RR=5(moderate: reduces adoption risk, prevents confusion between backend capability and user-facing availability) / JS=5(~1 week: admin UI + invite UX + role switching, wiring existing e23 backend)"
 status: planned
 tier: 8
-depends_on: [e56, e57]
+depends_on: [e47, e48]
 covers:
   - ui/
   - components/auth/
 stories:
-  - id: e65s01
+  - id: e59s01
     title: "Admin User Management Dashboard"
     status: planned
     bcps: 3
@@ -41,7 +41,7 @@ stories:
           Refresh on page load. Add to existing admin dashboard if e17 enhanced admin UI exists.
         verify: "cd ui && npm run build"
 
-  - id: e65s02
+  - id: e59s02
     title: "Friend Invitation Flow — email invite, accept, onboard"
     status: planned
     bcps: 3
@@ -55,7 +55,7 @@ stories:
           Backend: POST /api/invites {email, role, org_id, message}.
           If org_id not specified, uses inviter's org. Generates invite token (JWT with 7-day expiry).
           Sends email via messaging component with accept link: bigbase.click/accept?token=xxx.
-          Uses e23s02 invite-by-email foundation.
+          Uses e59s02 invite-by-email foundation.
         verify: "go test ./components/auth/ -run TestInviteFlow -v"
       - desc: "Accept invite page — token validation, register or login, auto-join org"
         notes: |
@@ -72,7 +72,7 @@ stories:
           Backend: GET /api/invites (admin-only), POST /api/invites/:id/resend, DELETE /api/invites/:id.
         verify: "go test ./components/auth/ -run TestInviteManagement -v"
 
-  - id: e65s03
+  - id: e59s03
     title: "Role Switching — enter as admin or user, per-user workspaces"
     status: planned
     bcps: 2
@@ -91,7 +91,7 @@ stories:
         notes: |
           When viewing as user: repo list shows only repos the user owns or org repos.
           Deployment list filtered by user's org. Create deployment scoped to user's org.
-          Backend: already done in e23s03 (resource isolation). Add UI filtering: pass org_id query param.
+          Backend: already done in e59s03 (resource isolation). Add UI filtering: pass org_id query param.
           User profile page: show username, email, org, deployment count, account age.
         verify: "go test ./components/auth/ -run TestUserWorkspace -v"
       - desc: "First-user bootstrap — first user auto-admin, subsequent users default to user role"
