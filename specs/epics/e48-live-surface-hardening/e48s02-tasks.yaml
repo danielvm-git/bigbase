@@ -2,40 +2,50 @@ story_id: e48s02
 title: "Add missing security headers and CI scanning"
 status: planned
 bcps: 2
+security: medium
 tasks:
   - id: 1
     description: "Add Permissions-Policy header to securityHeadersMiddleware with restrictive defaults"
+    security: medium
     verify: "go test ./components/proxy/ -run TestPermissionsPolicy -v"
     status: todo
   - id: 2
     description: "Add Cache-Control: no-store to /health and /api/* responses in middleware"
+    security: medium
     verify: "go test ./components/proxy/ -run TestCacheControl -v"
     status: todo
   - id: 3
     description: "Run full proxy test suite — confirm no header regressions"
+    security: low
     verify: "go test ./components/proxy/ -v"
     status: todo
   - id: 4
     description: "Install gosec, govulncheck, gitleaks tools"
+    security: none
     verify: "which gosec && which gitleaks && go run golang.org/x/vuln/cmd/govulncheck@latest -h > /dev/null 2>&1 && echo 'tools: OK'"
     status: todo
   - id: 5
     description: "Create npm run preflight:go script (vet + test + gosec + govulncheck)"
+    security: low
     verify: "npm run preflight:go"
     status: todo
   - id: 6
     description: "Create npm run preflight:secrets script (gitleaks)"
+    security: low
     verify: "npm run preflight:secrets"
     status: todo
   - id: 7
     description: "Create npm run preflight meta-script chaining go + ui + secrets"
+    security: low
     verify: "npm run preflight 2>&1 | tail -5"
     status: todo
   - id: 8
     description: "Triage gosec findings, add #nosec annotations for intentional patterns"
+    security: medium
     verify: "gosec -quiet ./... && echo 'gosec: OK'"
     status: todo
   - id: 9
     description: "Scan full git history with gitleaks, verify no secrets"
+    security: medium
     verify: "gitleaks detect --source . --verbose 2>&1 | grep -E 'no leaks found|leaks found: 0'"
     status: todo
