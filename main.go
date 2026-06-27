@@ -173,9 +173,9 @@ func startProxy() {
 	corsOrigins := serveFS.String("cors-allowed-origins", "", "Comma-separated list of allowed CORS origins (empty = CORS disabled)")
 	postLoginRedirect := serveFS.String("auth-post-login-redirect", "/admin/", "Post-login redirect URL for OAuth callbacks")
 	spaOriginAllowlist := serveFS.String("auth-spa-origin-allowlist", "", "Comma-separated list of allowed SPA origins for OAuth token delivery (empty = disabled)")
-	rateLimitEnabled := serveFS.Bool("rate-limit-enabled", true, "Enable rate limiting on auth endpoints (env: RATE_LIMIT_ENABLED)")
-	rateLimitIPMaxStr := serveFS.String("rate-limit-ip-max", "60", "Max requests per minute per IP (env: RATE_LIMIT_IP_MAX)")
-	rateLimitUserMaxStr := serveFS.String("rate-limit-user-max", "300", "Max requests per minute per authenticated user (env: RATE_LIMIT_USER_MAX)")
+	rateLimitEnabled := serveFS.Bool("rate-limit-enabled", true, "Enable rate limiting on auth endpoints (env: BIGBASE_RATE_LIMIT_ENABLED)")
+	rateLimitIPMaxStr := serveFS.String("rate-limit-ip-max", "60", "Max requests per minute per IP (env: BIGBASE_RATE_LIMIT_IP_MAX)")
+	rateLimitUserMaxStr := serveFS.String("rate-limit-user-max", "300", "Max requests per minute per authenticated user (env: BIGBASE_RATE_LIMIT_USER_MAX)")
 	mcpDisabled := serveFS.Bool("mcp-disabled", false, "Disable MCP server")
 	mcpPort := serveFS.Int("mcp-port", 3900, "MCP server HTTP port")
 	mcpTransport := serveFS.String("mcp-transport", "http", "MCP transport (stdio, http)")
@@ -194,21 +194,29 @@ func startProxy() {
 	dbDriverVal := config.FlagOrEnv(*dbDriver, "BIGBASE_DB_DRIVER")
 	dbDSNVal := config.FlagOrEnv(*dbDSN, "BIGBASE_DB_DSN")
 
-	// Rate limit config with env var fallbacks
-	rlIPMaxStr := config.FlagOrEnv(*rateLimitIPMaxStr, "RATE_LIMIT_IP_MAX")
-	rlUserMaxStr := config.FlagOrEnv(*rateLimitUserMaxStr, "RATE_LIMIT_USER_MAX")
-	rlIPMax, _ := strconv.Atoi(rlIPMaxStr)
-	rlUserMax, _ := strconv.Atoi(rlUserMaxStr)
+	// Rate limit config with env var fallbacks (BIGBASE_ prefix for consistency).
+	rlIPMaxStr := config.FlagOrEnv(*rateLimitIPMaxStr, "BIGBASE_RATE_LIMIT_IP_MAX")
+	rlUserMaxStr := config.FlagOrEnv(*rateLimitUserMaxStr, "BIGBASE_RATE_LIMIT_USER_MAX")
+
+	var rlIPMax, rlUserMax int
+	var err error
+	rlIPMax, err = strconv.Atoi(rlIPMaxStr)
+	if err != nil {
+		slog.Warn("invalid rate-limit-ip-max value, defaulting", "value", rlIPMaxStr, "error", err)
+		rlIPMax = 0
+	}
+	rlUserMax, err = strconv.Atoi(rlUserMaxStr)
+	if err != nil {
+		slog.Warn("invalid rate-limit-user-max value, defaulting", "value", rlUserMaxStr, "error", err)
+		rlUserMax = 0
+	}
 	if rlIPMax < 1 {
 		rlIPMax = 60
 	}
 	if rlUserMax < 1 {
 		rlUserMax = 300
 	}
-	rlEnabled := *rateLimitEnabled
-	if e := os.Getenv("RATE_LIMIT_ENABLED"); e != "" {
-		rlEnabled = e == "true" || e == "1"
-	}
+	rlEnabled := config.FlagOrEnvBool(*rateLimitEnabled, "BIGBASE_RATE_LIMIT_ENABLED")
 
 	newRelicLicenseKey := config.FlagOrEnv(*nrLicenseKey, "NEW_RELIC_LICENSE_KEY")
 	newRelicAppName := config.FlagOrEnv(*nrAppName, "NEW_RELIC_APP_NAME")

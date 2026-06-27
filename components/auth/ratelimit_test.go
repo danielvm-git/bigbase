@@ -8,8 +8,6 @@ import (
 	"time"
 
 	"github.com/danielvm/bigbase/components/auth"
-	"github.com/danielvm/bigbase/components/db"
-	"github.com/danielvm/bigbase/kernel"
 )
 
 func TestRateLimit(t *testing.T) {
@@ -92,10 +90,10 @@ func TestRateLimit(t *testing.T) {
 		}
 	})
 
-	t.Run("authenticated_user_higher_limit", func(t *testing.T) {
+	t.Run("auth_flow_integration", func(t *testing.T) {
 		_, handler, _ := setupAuth(t)
 
-		// Register and login to get a token
+		// Smoke test: register + login through the full auth handler stack.
 		regReq := httptest.NewRequest("POST", "/api/auth/register",
 			strings.NewReader(`{"email":"rl@test.com","password":"secret123"}`))
 		regReq.Header.Set("Content-Type", "application/json")
@@ -105,8 +103,6 @@ func TestRateLimit(t *testing.T) {
 			t.Fatalf("register: %d", regW.Code)
 		}
 
-		// Auth endpoint exists and is reachable (rate limit tests are at unit level above)
-		// This sub-test just ensures the auth flow still works under the rate limiter
 		loginReq := httptest.NewRequest("POST", "/api/auth/login",
 			strings.NewReader(`{"email":"rl@test.com","password":"secret123"}`))
 		loginReq.Header.Set("Content-Type", "application/json")
@@ -133,11 +129,10 @@ func TestRateLimit(t *testing.T) {
 
 		rlHandler := rl.Middleware(inner)
 
-		// Two requests from same IP but with user ID context — should use user bucket (limit=10)
+		// Authenticated requests use the user bucket (limit=10), not IP bucket (limit=1).
 		for i := 0; i < 5; i++ {
 			req := httptest.NewRequest("GET", "/", nil)
 			req.RemoteAddr = "10.1.2.3:9000"
-			// Inject user_id into context via header trick — actually use the UserIDKey func
 			ctx := auth.WithUserID(req.Context(), 42)
 			req = req.WithContext(ctx)
 			w := httptest.NewRecorder()
@@ -145,6 +140,24 @@ func TestRateLimit(t *testing.T) {
 			if w.Code != http.StatusOK {
 				t.Fatalf("request %d: expected 200 (user bucket), got %d", i+1, w.Code)
 			}
+		}
+
+		// Unauthenticated requests from the same IP use the IP bucket (limit=1).
+		// First anonymous request passes, second returns 429.
+		req := httptest.NewRequest("GET", "/", nil)
+		req.RemoteAddr = "10.1.2.3:9000"
+		w := httptest.NewRecorder()
+		rlHandler.ServeHTTP(w, req)
+		if w.Code != http.StatusOK {
+			t.Fatalf("anonymous request 1: expected 200, got %d", w.Code)
+		}
+
+		req = httptest.NewRequest("GET", "/", nil)
+		req.RemoteAddr = "10.1.2.3:9000"
+		w = httptest.NewRecorder()
+		rlHandler.ServeHTTP(w, req)
+		if w.Code != http.StatusTooManyRequests {
+			t.Fatalf("anonymous request 2: expected 429 (IP exhausted), got %d", w.Code)
 		}
 	})
 
@@ -220,18 +233,7 @@ func TestRateLimit(t *testing.T) {
 // result in a 429 response on the 61st request when the rate limiter is
 // configured for 60 req/min per IP.
 func TestRateLimitIntegration(t *testing.T) {
-	logger := testLogger{}
-	k := kernel.New(logger)
-
-	d := db.New(db.Options{Path: ":memory:", Logger: logger})
-	a := auth.New(auth.Options{DB: d, Logger: logger, Secret: "test-secret-32-chars!!!"})
-
-	k.Register(a)
-	k.Register(d)
-	if err := k.Start(); err != nil {
-		t.Fatalf("kernel start: %v", err)
-	}
-	defer func() { _ = k.Stop() }()
+	_, handler, _ := setupAuth(t)
 
 	// Register a user first
 	regReq := httptest.NewRequest("POST", "/api/auth/register",
@@ -239,7 +241,7 @@ func TestRateLimitIntegration(t *testing.T) {
 	regReq.Header.Set("Content-Type", "application/json")
 	regReq.RemoteAddr = "10.99.99.1:9999"
 	regW := httptest.NewRecorder()
-	a.Handler().ServeHTTP(regW, regReq)
+	handler.ServeHTTP(regW, regReq)
 	if regW.Code != http.StatusCreated {
 		t.Fatalf("register: expected 201, got %d body=%s", regW.Code, regW.Body.String())
 	}
@@ -252,7 +254,7 @@ func TestRateLimitIntegration(t *testing.T) {
 		UserWindow:   time.Minute,
 		CleanupEvery: time.Hour,
 	})
-	rlHandler := rl.Middleware(a.Handler())
+	rlHandler := rl.Middleware(handler)
 
 	// Send 60 login POSTs from same IP — all should pass (wrong password → 401, not 429)
 	loginBody := `{"email":"rl-int@test.com","password":"wrong"}`
@@ -326,55 +328,6 @@ func TestRateLimitHeaders(t *testing.T) {
 	}
 }
 
-// TestRateLimitUserBucket verifies that authenticated requests use the
-// per-user bucket (higher limit) instead of the per-IP bucket.
-func TestRateLimitUserBucket(t *testing.T) {
-	rl := auth.NewRateLimiter(auth.RateLimiterConfig{
-		IPLimit:      1,    // Very low IP limit — would block unauthenticated
-		IPWindow:     time.Minute,
-		UserLimit:    10,   // Higher user limit
-		UserWindow:   time.Minute,
-		CleanupEvery: time.Hour,
-	})
-
-	inner := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-	})
-	rlHandler := rl.Middleware(inner)
-
-	// Send 5 requests from same IP with user ID 42 in context
-	// IP limit is 1, but user limit is 10 — so all 5 should pass
-	for i := 0; i < 5; i++ {
-		req := httptest.NewRequest("GET", "/", nil)
-		req.RemoteAddr = "10.1.2.3:9000"
-		ctx := auth.WithUserID(req.Context(), 42)
-		req = req.WithContext(ctx)
-		w := httptest.NewRecorder()
-		rlHandler.ServeHTTP(w, req)
-		if w.Code != http.StatusOK {
-			t.Fatalf("request %d: expected 200 (user bucket), got %d", i+1, w.Code)
-		}
-	}
-
-	// Now send two unauthenticated requests from same IP.
-	// First should pass (IP bucket has 1 token), second should be blocked.
-	req := httptest.NewRequest("GET", "/", nil)
-	req.RemoteAddr = "10.1.2.3:9000"
-	w := httptest.NewRecorder()
-	rlHandler.ServeHTTP(w, req)
-	if w.Code != http.StatusOK {
-		t.Fatalf("unauthenticated request 1: expected 200 (IP token available), got %d", w.Code)
-	}
-
-	req = httptest.NewRequest("GET", "/", nil)
-	req.RemoteAddr = "10.1.2.3:9000"
-	w = httptest.NewRecorder()
-	rlHandler.ServeHTTP(w, req)
-	if w.Code != http.StatusTooManyRequests {
-		t.Fatalf("unauthenticated request 2: expected 429 (IP bucket exhausted), got %d", w.Code)
-	}
-}
-
 // TestRateLimitDisabled verifies that when the rate limiter middleware
 // is not applied (simulating --rate-limit-enabled=false), requests pass
 // unhindered even with a restrictive config.
@@ -420,5 +373,39 @@ func TestRateLimitDisabled(t *testing.T) {
 		if w.Code != http.StatusOK {
 			t.Fatalf("disabled mode request %d: expected 200, got %d", i+1, w.Code)
 		}
+	}
+}
+
+// TestRateLimiterStop verifies that calling Stop() exits the cleanup
+// goroutine and is safe to call multiple times.
+func TestRateLimiterStop(t *testing.T) {
+	rl := auth.NewRateLimiter(auth.RateLimiterConfig{
+		IPLimit:      60,
+		IPWindow:     time.Minute,
+		UserLimit:    300,
+		UserWindow:   time.Minute,
+		CleanupEvery: 50 * time.Millisecond,
+	})
+
+	// Stop once — cleanup goroutine should exit.
+	rl.Stop()
+
+	// Wait briefly for goroutine to drain.
+	time.Sleep(100 * time.Millisecond)
+
+	// Second Stop is a no-op (must not panic).
+	rl.Stop()
+
+	// The limiter still works after Stop — buckets just won't be pruned.
+	inner := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	})
+	rlHandler := rl.Middleware(inner)
+	req := httptest.NewRequest("GET", "/", nil)
+	req.RemoteAddr = "10.0.0.1:1234"
+	w := httptest.NewRecorder()
+	rlHandler.ServeHTTP(w, req)
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200 after Stop, got %d", w.Code)
 	}
 }

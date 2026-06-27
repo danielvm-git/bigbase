@@ -85,6 +85,7 @@ type RateLimiter struct {
 	ipMap   map[string]*bucket
 	userMu  sync.Mutex
 	userMap map[int64]*bucket
+	stopCh  chan struct{}
 }
 
 // Reconfigure updates the rate limiter configuration at runtime.
@@ -99,6 +100,18 @@ func (rl *RateLimiter) Reconfigure(cfg RateLimiterConfig) {
 	rl.ipMu.Unlock()
 }
 
+// Stop signals the background cleanup goroutine to exit. Safe to call
+// multiple times; subsequent calls are no-ops. After Stop returns the
+// RateLimiter can still serve requests (buckets won't be pruned).
+func (rl *RateLimiter) Stop() {
+	select {
+	case <-rl.stopCh:
+		// already closed
+	default:
+		close(rl.stopCh)
+	}
+}
+
 // NewRateLimiter creates a new RateLimiter with the given config and starts
 // the background cleanup goroutine.
 func NewRateLimiter(cfg RateLimiterConfig) *RateLimiter {
@@ -106,16 +119,27 @@ func NewRateLimiter(cfg RateLimiterConfig) *RateLimiter {
 		cfg:     cfg,
 		ipMap:   make(map[string]*bucket),
 		userMap: make(map[int64]*bucket),
+		stopCh:  make(chan struct{}),
 	}
-	go rl.cleanup()
+	go rl.cleanup(cfg.CleanupEvery)
 	return rl
 }
 
-func (rl *RateLimiter) cleanup() {
-	ticker := time.NewTicker(rl.cfg.CleanupEvery)
+func (rl *RateLimiter) cleanup(initialCleanupEvery time.Duration) {
+	ticker := time.NewTicker(initialCleanupEvery)
 	defer ticker.Stop()
-	for range ticker.C {
-		threshold := time.Now().Add(-rl.cfg.CleanupEvery)
+	for {
+		select {
+		case <-rl.stopCh:
+			return
+		case <-ticker.C:
+		}
+		// Snapshot the cleanup window under the lock (Reconfigure may swap cfg concurrently).
+		rl.ipMu.Lock()
+		cleanupWindow := rl.cfg.CleanupEvery
+		rl.ipMu.Unlock()
+
+		threshold := time.Now().Add(-cleanupWindow)
 
 		rl.ipMu.Lock()
 		for key, b := range rl.ipMap {

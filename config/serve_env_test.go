@@ -37,3 +37,33 @@ func TestFlagOrEnvGitHubKeys(t *testing.T) {
 	}
 	_ = os.Unsetenv(key)
 }
+
+func TestFlagOrEnvBool(t *testing.T) {
+	t.Setenv("BOOL_TRUE", "true")
+	t.Setenv("BOOL_ONE", "1")
+	t.Setenv("BOOL_FALSE", "false")
+	t.Setenv("BOOL_ZERO", "0")
+	t.Setenv("BOOL_GARBAGE", "garbage")
+
+	tests := []struct {
+		name    string
+		flagVal bool
+		envKey  string
+		want    bool
+	}{
+		{name: "env set to true overrides flag false", flagVal: false, envKey: "BOOL_TRUE", want: true},
+		{name: "env set to 1 overrides flag false", flagVal: false, envKey: "BOOL_ONE", want: true},
+		{name: "env set to false overrides flag true", flagVal: true, envKey: "BOOL_FALSE", want: false},
+		{name: "env set to 0 overrides flag true", flagVal: true, envKey: "BOOL_ZERO", want: false},
+		{name: "env absent falls back to flag true", flagVal: true, envKey: "BOOL_MISSING", want: true},
+		{name: "env absent falls back to flag false", flagVal: false, envKey: "BOOL_MISSING", want: false},
+		{name: "env garbage treated as false", flagVal: true, envKey: "BOOL_GARBAGE", want: false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := config.FlagOrEnvBool(tt.flagVal, tt.envKey); got != tt.want {
+				t.Fatalf("FlagOrEnvBool(%v, %q) = %v, want %v", tt.flagVal, tt.envKey, got, tt.want)
+			}
+		})
+	}
+}
