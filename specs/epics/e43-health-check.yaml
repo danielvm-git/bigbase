@@ -1,0 +1,12 @@
+type: epic-shard
+context: domain
+id: e43
+title: "Deploy — Semantic Health Check"
+wsjf: 4.0
+status: done
+tier: 4
+note: "Absorbed into e53-deploy-supervisor. No separate stories."
+depends_on: []
+covers:
+  - components/deploy/
+stories: []

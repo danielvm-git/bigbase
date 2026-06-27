@@ -279,21 +279,21 @@ epics:
     file: epics/e44-rollback.yaml
     mode: flat
     tier: 4
-    status: planned
+    status: done
   - id: e45
     title: Deploy — Zero-Downtime Drain
     wsjf: 3.5
     file: epics/e45-drain.yaml
     mode: flat
     tier: 4
-    status: planned
+    status: done
   - id: e46
     title: Infra — Custom Domains & Auto SSL
     wsjf: 4.5
     file: epics/e46-custom-domains.yaml
     mode: flat
     tier: 5
-    status: planned
+    status: done
   - id: e47
     title: Deploy — Secrets Management
     wsjf: 3.5
@@ -360,3 +360,21 @@ epics:
     mode: flat
     tier: 2
     status: done
+
+  # ─── Project Architecture (post-e46) ───
+  - id: e56
+    title: Architecture — Project Scoping (DB + Auth + Sites container)
+    wsjf: 7.0
+    file: epics/e56-project-scoping.yaml
+    mode: flat
+    tier: 0
+    status: planned
+    note: "HARD DEP for e57. Establishes project as parent container for DB, Auth, and Sites."
+  - id: e57
+    title: Native Feature Port — SQL-over-HTTP, Better Auth, MCP Migration Tools
+    wsjf: 6.0
+    file: epics/e57-neon-native-port.yaml
+    mode: flat
+    tier: 0
+    status: planned
+    note: "Depends on e56. Ports four Neon capabilities natively."

@@ -1,0 +1,201 @@
+type: epic-shard
+context: domain
+id: e56
+title: "Architecture — Project Scoping (DB + Auth + Sites container)"
+wsjf: 7.0
+wsjf_rationale: "BV=10(critical: flat architecture blocks all multi-project features — DB branching, auth isolation, MCP tools) TC=8(blocks e57 Neon port and any multi-tenant work) RR=10(affects every component) / JS=5(~4 days across 5 stories, 16 BCPs total)"
+status: planned
+tier: 5
+depends_on: []
+covers:
+  - kernel/
+  - components/db/
+  - components/auth/
+  - components/sites/
+  - components/deploy/
+  - ui/
+stories:
+  - id: e56s01
+    title: "Projects table — backend CRUD + context resolution"
+    status: planned
+    bcps: 3
+    tasks:
+      - desc: "Create projects table and migrate component at kernel level"
+        notes: |
+          Table: projects(id, org_id, name, slug, db_type, db_name, db_path, description, created_at, updated_at).
+          Slug is URL-safe, unique per org. `db_path` for SQLite is `data/projects/{id}/main.db`.
+          `db_name` for Postgres is the logical database name.
+          Registered as a kernel-scoped migration (all components can reference `project_id`).
+          Existing `sites` get a `project_id` column (nullable initially, backfilled later).
+        verify: "go test ./kernel/ -run TestProjectMigration -v"
+      - desc: "Project CRUD API — POST/GET/PUT/DELETE /api/projects"
+        notes: |
+          POST /api/projects — create (org-scoped, authenticated)
+          GET /api/projects — list projects for current org
+          GET /api/projects/:id — get project details + connection string
+          PATCH /api/projects/:id — update name, description
+          DELETE /api/projects/:id — soft-delete (mark deleted_at)
+          Context resolution: middleware reads X-Project-Id header or URL param, sets ctx.
+        verify: "go test ./kernel/ -run TestProjectAPI -v"
+      - desc: "Project context middleware — inject project_id into request context"
+        notes: |
+          Middleware chain: extract project_id from X-Project-Id header or /api/projects/:id prefix.
+          Store in `context.WithValue(r.Context(), ProjectIDKey, projectID)`.
+          All downstream handlers call `ProjectIDFromContext(ctx)` to get scope.
+          Backward compat: when no project_id, treat as "global" (legacy flat mode).
+        verify: "go test ./kernel/ -run TestProjectContextMiddleware -v"
+  - id: e56s02
+    title: "Database isolation — per-project SQLite files and Postgres schemas"
+    status: planned
+    bcps: 3
+    tasks:
+      - desc: "SQLite: segregate databases per project into data/projects/{projectId}/main.db"
+        notes: |
+          When a project is created:
+            - Create directory data/projects/{projectId}/
+            - Initialize main.db with core schema (sites, env_vars, domains, etc.)
+          DB component: open project-specific DB when project_id is in context.
+          Global DB (bigbase.db) remains for platform-level data (orgs, users, projects list).
+          Migration runner: applies schema to both global DB and a specific project DB.
+        verify: "go test ./components/db/ -run TestProjectDBIsolation -v"
+      - desc: "PostgreSQL: isolate per project via logical database names or schema namespaces"
+        notes: |
+          When db_type=postgres:
+            - CREATE DATABASE {project_db_name} if not exists
+            - Or use schema namespace: project_{id}.sites, project_{id}.site_env_vars, etc.
+          Connection pool: one pool per project DB or schema-qualified queries.
+          Backward compat: when no project selected, connect to default DB.
+        verify: "go test ./components/db/ -run TestPostgresProjectIsolation -v"
+      - desc: "DB component hooks — resolve database by project context"
+        notes: |
+          Add DBResolver interface: `ResolveDB(ctx context.Context) (*sql.DB, error)`.
+          When project_id is in context:
+            - SQLite: open data/projects/{projectId}/main.db
+            - Postgres: switch to project's database/schema
+          When no project_id: use global DB (legacy mode).
+          Cache open DB handles per project to avoid repeated file opens.
+        verify: "go test ./components/db/ -run TestDBResolver -v"
+  - id: e56s03
+    title: "Auth namespacing — project-scoped users, JWT keys, and sessions"
+    status: planned
+    bcps: 4
+    tasks:
+      - desc: "Users table — add project_id foreign key and unique constraint on (project_id, email)"
+        notes: |
+          ALTER TABLE users ADD COLUMN project_id TEXT.
+          Unique index: UNIQUE(project_id, email) — same email can register in different projects.
+          Global users (no project_id) remain for platform-level admin access.
+          Backfill: existing users assigned to their site's project (via site → project lookup).
+          Register/login endpoints: accept project_id via header or URL. Without it, treat as global.
+        verify: "go test ./components/auth/ -run TestProjectScopedUsers -v"
+      - desc: "Per-project JWT signing keys"
+        notes: |
+          JWT secret key per project, stored in projects.jwt_secret_hash.
+          On project creation: generate 32-byte HMAC key, store hash.
+          On login: resolve project from request context, use project-specific secret to sign token.
+          Token validation: extract project_id from token claims, verify against project secret.
+          Without project context: fall back to global JWT secret (backward compat).
+        verify: "go test ./components/auth/ -run TestProjectJWTKeys -v"
+      - desc: "Sessions and OAuth config — scoped to project"
+        notes: |
+          Sessions table: add project_id column. Sessions are scoped to project.
+          OAuth config (Google client ID/secret): stored in project_settings table, not global flags.
+          Login flow: determine project from request context, use that project's OAuth config.
+          Backward compat: global OAuth flags still work when no project context.
+        verify: "go test ./components/auth/ -run TestProjectOAuthScoping -v"
+  - id: e56s04
+    title: "Site → Project linkage — backfill, migration, and resource transfer"
+    status: planned
+    bcps: 3
+    tasks:
+      - desc: "Add project_id column to sites table, backfill existing sites"
+        notes: |
+          ALTER TABLE sites ADD COLUMN project_id TEXT.
+          Backfill: for each existing site, create a default project (name = site.name, slug = site slug).
+          Map all site-scoped resources (env_vars, domains, deployments, build_cache) to project.
+          site_env_vars: add project_id column, backfill from site.project_id.
+          site_domains: add project_id column, backfill from site.project_id.
+          deployments: already linked via site_id (no change needed — site → project lookup).
+        verify: "go test ./components/sites/ -run TestSiteProjectBackfill -v"
+      - desc: "Resource APIs — resolve project scope for env vars, domains, cache"
+        notes: |
+          Env vars API: GET/POST /api/projects/:projectId/env-vars (migrated from /api/sites/:id/env-vars).
+          Maintain backward compat: /api/sites/:id/env-vars still works (redirects/resolves via site.project_id).
+          Domains API: POST /api/projects/:projectId/domains.
+          Cache API: GET /api/projects/:projectId/cache (aggregate across all project sites).
+        verify: "go test ./components/sites/ -run TestProjectResourceAPIs -v"
+      - desc: "Deploy component — resolve project from site for host registration"
+        notes: |
+          Trigger already works with site_id. No change needed in deploy.go.
+          RegisterCustomDomainHosts: resolve domains from project (not just site).
+          Host registration: include project_id in metadata for observability.
+        verify: "go test ./components/deploy/ -run TestCustomDomainRouting -v"
+  - id: e56s05
+    title: "Admin UI — project-scoped routing, selector, and pages"
+    status: planned
+    bcps: 3
+    tasks:
+      - desc: "URL restructure — /project/:projectId/... with backward compat"
+        notes: |
+          New routes (project-scoped):
+            /project/:projectId → dashboard
+            /project/:projectId/sql/:branch? → SQL editor
+            /project/:projectId/site → site detail + deployments
+            /project/:projectId/site/domains → custom domains
+            /project/:projectId/site/env-vars → env vars
+            /project/:projectId/auth → auth settings
+            /project/:projectId/functions → functions
+            /project/:projectId/storage → storage
+            /project/:projectId/branches → DB branches
+            /project/:projectId/settings → project settings
+          Legacy flat routes (/data, /sql, /deploy) redirect to /project/:lastProjectId/... using localStorage.
+          When no project selected: show project picker + global-only pages (users, monitoring, system health).
+        verify: "cd ui && npm run build"
+      - desc: "Project selector — header dropdown + context hook"
+        notes: |
+          Header component: project selector dropdown (left of breadcrumb bar).
+          Lists all projects for current org. "Create new project" option at bottom.
+          Selecting a project updates URL to /project/:projectId/...
+          Branch selector: dropdown listing branches of current project (only visible on SQL/branches pages).
+          React hook: useProjectScope() → { project, projectId, branch, setProject, setBranch, projects, branches }.
+        verify: "cd ui && npm run build"
+      - desc: "Project-scoped sidebar — two-zone layout"
+        notes: |
+          Project Zone (visible when project selected):
+            - Dashboard
+            - SQL Editor
+            - Site (deployments, logs, env vars, domains)
+            - Functions
+            - Storage
+            - Auth
+            - Branches
+            - Settings
+          Global Zone (always visible):
+            - Users
+            - System Monitoring
+            - Platform Settings
+          Visual distinction: Project Zone has a light background tint or accent border.
+        verify: "cd ui && npm run build"
+      - desc: "Project pages — dashboard, settings, create/list"
+        notes: |
+          Project Dashboard (/project/:projectId):
+            - Connection string card (copyable, format toggle: psql / URI / env var)
+            - Quick stats: tables count, rows, storage used
+            - Recent deployments list
+            - Branch cards
+          Project Settings (/project/:projectId/settings):
+            - General: name, description, delete project
+            - Database: connection pool config
+            - Environment Variables (shared across project sites)
+            - Danger Zone: delete project + all resources
+          Project List (/projects or global dashboard):
+            - Card grid of all projects
+            - "Create Project" button → form: name, slug, db type
+        verify: "cd ui && npm run build"
+      - desc: "Backward compatibility — legacy routes still work"
+        notes: |
+          All existing routes (/deploy, /data, /sql, /functions, /storage, /users, /forge, /cici, /messaging, /monitoring, /realtime, /settings) remain functional.
+          When accessed without project context: redirect to project picker with a "Select a project to continue" banner.
+          API backward compat: all existing API endpoints accept project_id as optional query parameter.
+          When project_id is absent, operate in legacy global mode.
+        verify: "cd ui && npm run build && go test ./components/deploy/ -run TestDeploy -v"

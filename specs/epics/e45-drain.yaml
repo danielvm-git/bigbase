@@ -166,6 +166,7 @@ stories:
           TestDrainLifecycleStatic:
             - Same as TestDrainLifecycle but with AppStatic deployments
             - Static → use server.Shutdown which waits for connections
+        verify: "go test ./components/deploy/ -run TestDrainLifecycle -v"
   - id: e45s02
     title: "Proxy integration — smooth traffic migration"
     status: done
