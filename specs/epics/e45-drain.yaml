@@ -4,7 +4,7 @@ id: e45
 title: "Deploy — Zero-Downtime Drain"
 wsjf: 3.5
 wsjf_rationale: "BV=6(moderate: keeps live traffic flowing during deploys — essential for production, less critical for solo dev instance) TC=3(no deadline, but becomes urgent when users complain about brief outages) RR=5(reduces deploy anxiety: safe to deploy during business hours) / JS=4(~3 days across 2 stories)"
-status: planned
+status: done
 tier: 4
 depends_on: []
 covers:
@@ -168,7 +168,7 @@ stories:
             - Static → use server.Shutdown which waits for connections
   - id: e45s02
     title: "Proxy integration — smooth traffic migration"
-    status: in_progress
+    status: done
     bcps: 2
     tasks:
       - id: e45s02t1

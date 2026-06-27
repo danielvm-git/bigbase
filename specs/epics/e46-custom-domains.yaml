@@ -4,7 +4,7 @@ id: e46
 title: "Infra — Custom Domains & Auto SSL"
 wsjf: 4.5
 wsjf_rationale: "BV=8(high: production apps need myapp.com not myapp.bigbase.click — this is table stakes for a BaaS) TC=5(blocks making BigBase a primary hosting platform) RR=5(auto Let's Encrypt removes manual SSL management) / JS=4(~3 days across 3 stories)"
-status: planned
+status: in_progress
 tier: 5
 depends_on: []
 covers:
@@ -14,7 +14,7 @@ covers:
 stories:
   - id: e46s01
     title: "Custom domain mapping and verification"
-    status: planned
+    status: done
     bcps: 2
     tasks:
       - desc: "Create custom_domains table and CRUD API"
