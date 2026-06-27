@@ -1,3 +1,10 @@
+# [2.55.0](https://github.com/danielvm-git/bigbase/compare/v2.54.2...v2.55.0) (2026-06-27)
+
+
+### Features
+
+* **e47:** wire rate limiter with CLI flags and env fallbacks ([64a8888](https://github.com/danielvm-git/bigbase/commit/64a8888eeb99fe75cd0c2c4a5cae89436460d706))
+
 ## [2.54.2](https://github.com/danielvm-git/bigbase/compare/v2.54.1...v2.54.2) (2026-06-27)
 
 
