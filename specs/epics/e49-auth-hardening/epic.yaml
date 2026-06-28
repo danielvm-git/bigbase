@@ -17,7 +17,7 @@ stories:
   - id: e49s02
     title: "Fix OAuth redirect URI — use configured base URL"
     bcps: 2
-    status: planned
+    status: done
     spec: e49s02-oauth-redirect.md
     tasks: e49s02-tasks.yaml
   - id: e49s03
