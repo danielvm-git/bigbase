@@ -162,7 +162,7 @@ func (a *Auth) handleVerifyOTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, err := createJWT(userID, email, "user", orgID, a.secret)
+	token, err := createJWT(userID, email, "user", orgID, a.secret, a.accessExpiry)
 	if err != nil {
 		a.logger.Error("create JWT", "error", err)
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})

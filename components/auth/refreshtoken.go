@@ -11,8 +11,7 @@ import (
 )
 
 const (
-	refreshTokenLen    = 64              // hex chars (32 bytes of entropy)
-	refreshTokenExpiry = 30 * 24 * time.Hour // 30-day TTL
+	refreshTokenLen = 64 // hex chars (32 bytes of entropy)
 )
 
 // migrateRefreshTokens creates the refresh_tokens table.
@@ -57,7 +56,7 @@ func (a *Auth) issueRefreshToken(ctx context.Context, userID int64, family strin
 	}
 
 	now := time.Now().UTC()
-	expiresAt := now.Add(refreshTokenExpiry).Format(time.RFC3339)
+	expiresAt := now.Add(a.refreshExpiry).Format(time.RFC3339)
 	createdAt := now.Format(time.RFC3339)
 
 	_, err = a.db.ExecContext(ctx,
@@ -128,12 +127,25 @@ func (a *Auth) handleRefresh(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Mark old token as used (rotation — single use).
-	_, err = a.db.ExecContext(ctx,
-		"UPDATE refresh_tokens SET used = 1 WHERE id = ?", tokenID)
+	// Mark old token as used (rotation — single use) atomically to prevent race conditions.
+	res, err := a.db.ExecContext(ctx,
+		"UPDATE refresh_tokens SET used = 1 WHERE id = ? AND used = 0", tokenID)
 	if err != nil {
 		a.logger.Error("invalidate old refresh token", "id", tokenID, "error", err)
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		return
+	}
+	rows, err := res.RowsAffected()
+	if err != nil {
+		a.logger.Error("check rows affected on rotation", "id", tokenID, "error", err)
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		return
+	}
+	if rows == 0 {
+		// Concurrent rotation or logout-all occurred between SELECT and UPDATE.
+		// Trigger family invalidation for security.
+		_ = a.invalidateFamily(ctx, family)
+		writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "refresh token already used"})
 		return
 	}
 
@@ -149,7 +161,7 @@ func (a *Auth) handleRefresh(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Issue new access token.
-	accessToken, err := createJWT(userID, email, role, defaultOrgID, a.secret)
+	accessToken, err := createJWT(userID, email, role, defaultOrgID, a.secret, a.accessExpiry)
 	if err != nil {
 		a.logger.Error("create access token on refresh", "error", err)
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
@@ -164,6 +176,7 @@ func (a *Auth) handleRefresh(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	accessExpiresAt := time.Now().Add(a.accessExpiry)
 	http.SetCookie(w, &http.Cookie{
 		Name:     "token",
 		Value:    accessToken,
@@ -171,11 +184,25 @@ func (a *Auth) handleRefresh(w http.ResponseWriter, r *http.Request) {
 		Secure:   r.TLS != nil,
 		SameSite: http.SameSiteStrictMode,
 		Path:     "/",
-		MaxAge:   86400,
+		MaxAge:   int(a.accessExpiry.Seconds()),
 	})
 
 	writeJSON(w, http.StatusOK, map[string]any{
 		"token":         accessToken,
 		"refresh_token": newRefreshToken,
+		"expires_at":    accessExpiresAt.UTC().Format(time.RFC3339),
+		"expires_in":    int(a.accessExpiry.Seconds()),
 	})
+}
+
+// invalidateAllUserTokens marks all refresh tokens for the given user as used.
+func (a *Auth) invalidateAllUserTokens(ctx context.Context, userID int64) error {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	_, err := a.db.ExecContext(ctx,
+		"UPDATE refresh_tokens SET used = 1 WHERE user_id = ?", userID)
+	if err != nil {
+		return fmt.Errorf("invalidate all user tokens: %w", err)
+	}
+	return nil
 }

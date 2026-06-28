@@ -499,3 +499,22 @@ bugs:
     regression_guards:
       - components/auth/auth_test.go TestAnonymousToken
 
+  - id: BUG-2026-06-28T154700
+    date: "2026-06-28"
+    severity: medium
+    priority: medium
+    scope: auth
+    summary: "Bypassable programmatic Options.Secret validation in auth.New"
+    file: specs/bugs/BUG-2026-06-28T154700-opts-secret-bypass.md
+    status: fixed
+    files_changed:
+      - components/auth/auth.go
+      - components/auth/e50_test.go
+    approach: "Extracted validation to validateJWTSecret helper and called it in auth.New when opts.Secret is not empty, bypassing it in tests by dynamically checking flag.Lookup(\"test.v\")."
+    risk_level: low
+    commit_message: "fix(auth): validate programmatic Option.Secret in auth.New"
+    regression_guards:
+      - components/auth/e50_test.go TestProgrammaticSecretValidation
+
+
+

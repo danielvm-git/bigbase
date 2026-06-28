@@ -118,7 +118,7 @@ func (a *Auth) handleVerifyPhoneOTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	email := fmt.Sprintf("phone-%s@bigbase.local", phone)
-	token, err := createJWT(userID, email, "user", orgID, a.secret)
+	token, err := createJWT(userID, email, "user", orgID, a.secret, a.accessExpiry)
 	if err != nil {
 		a.logger.Error("create JWT", "error", err)
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})

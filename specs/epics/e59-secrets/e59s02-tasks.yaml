@@ -2,9 +2,24 @@ story_id: e59s02
 title: "Secrets UI in Admin Panel"
 status: planned
 bcps: 1
-note: "Full task breakdown deferred to plan-work. Run plan-work for detailed steps."
 tasks:
   - id: 1
-    description: "Plan detailed implementation steps"
-    verify: "echo 'plan-work needed for e59s02'"
+    description: "Create type definitions in ui/src/types/secrets.ts and API fetch client in ui/src/lib/secretsData.ts"
+    verify: "cd ui && npx vitest run src/lib/secretsData.test.ts"
     status: todo
+    security: low
+  - id: 2
+    description: "Create ProjectSecretsTab component under ui/src/components/ProjectSecretsTab.tsx for listing, adding, updating, and deleting project secrets"
+    verify: "cd ui && npx vitest run src/components/ProjectSecretsTab.test.tsx"
+    status: todo
+    security: low
+  - id: 3
+    description: "Integrate ProjectSecretsTab component as a tab inside ProjectDetailPage.tsx"
+    verify: "cd ui && npx vitest run src/pages/ProjectDetailPage.test.tsx"
+    status: todo
+    security: low
+  - id: 4
+    description: "Verify UI type safety and production build of the admin panel asset bundle"
+    verify: "cd ui && npx tsc --noEmit && npm run build"
+    status: todo
+    security: low

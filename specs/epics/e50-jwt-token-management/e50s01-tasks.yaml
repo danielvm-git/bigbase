@@ -1,25 +1,25 @@
 story_id: e50s01
 title: Persist JWT secret — env var with fallback
-status: todo
+status: done
 bcps: 2
 tasks:
   - id: 1
     description: "Add function `resolveJWTSecret(logger Logger) []byte` that reads BIGBASE_JWT_SECRET env var; validates min 32 bytes; rejects known defaults (test-secret-32-chars!!! etc); falls back to auto-generated secret with warning log"
     verify: "go test -run 'TestJWTSecret' ./components/auth/ -v -count=1"
-    status: todo
+    status: done
   - id: 2
     description: "Wire resolveJWTSecret into auth.New instead of inline auto-generation; add structured log messages for both paths"
     verify: "go test -run 'TestNew.*Secret' ./components/auth/ -v -count=1"
-    status: todo
+    status: done
   - id: 3
     description: "Add unit tests for env var resolution, min-length validation, known-default rejection, auto-generation fallback, and empty-env behaviour"
     verify: "go test -run 'TestJWTSecret' ./components/auth/ -v -count=1"
-    status: todo
+    status: done
   - id: 4
     description: "Add BIGBASE_JWT_SECRET doc to CLI reference in tech-stack.md; ensure serve command help reflects the env var"
     verify: "rg 'BIGBASE_JWT_SECRET' specs/tech-architecture/tech-stack.md"
-    status: todo
+    status: done
   - id: 5
     description: "Run full test suite to confirm no regressions"
     verify: "go test ./components/auth/... -count=1 && go vet ./components/auth/..."
-    status: todo
+    status: done

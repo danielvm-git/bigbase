@@ -25,7 +25,7 @@ func TestLogout(t *testing.T) {
 	if err := k.Start(); err != nil {
 		t.Fatalf("kernel start: %v", err)
 	}
-	defer k.Stop()
+	defer func() { _ = k.Stop() }()
 
 	h := a.Handler()
 
@@ -72,7 +72,7 @@ func TestLogoutWithoutCookie(t *testing.T) {
 	if err := k.Start(); err != nil {
 		t.Fatalf("kernel start: %v", err)
 	}
-	defer k.Stop()
+	defer func() { _ = k.Stop() }()
 
 	h := a.Handler()
 

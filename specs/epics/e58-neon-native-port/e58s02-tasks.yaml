@@ -2,9 +2,44 @@ story_id: e58s02
 title: "Database Branching"
 status: planned
 bcps: 4
-note: "Full task breakdown deferred to plan-work. Run plan-work for detailed steps."
+security: low
 tasks:
   - id: 1
-    description: "Plan detailed implementation steps"
-    verify: "echo 'plan-work needed for e58s02'"
+    description: "Add db_branches migration in auth.Start(): CREATE TABLE IF NOT EXISTS db_branches(id, project_id, name, description, sqlite_path, created_at) with UNIQUE(project_id, name)"
+    verify: "go build ./components/auth/ && go test ./components/auth/ -run TestBranchesTable -v -count=1"
+    status: todo
+
+  - id: 2
+    description: "Implement Branch struct and CreateBranch in components/auth/branches.go: os.MkdirAll data/branches/, VACUUM INTO snapshot, INSERT record, return Branch"
+    verify: "go build ./components/auth/"
+    status: todo
+
+  - id: 3
+    description: "Implement ListBranches, GetBranch, and DeleteBranch in branches.go: standard SQL CRUD; DeleteBranch also calls os.Remove on sqlite_path"
+    verify: "go build ./components/auth/"
+    status: todo
+
+  - id: 4
+    description: "Add OpenBranch(path string) (*DB, error) to components/db/db.go: opens a new sqlite-driver DB at the given path, errors on postgres driver or missing file"
+    verify: "go build ./components/db/"
+    status: todo
+
+  - id: 5
+    description: "Add HTTP handlers in components/auth/branches_handler.go for POST/GET/DELETE /api/projects/{projectID}/branches and GET/DELETE /{branchID}; register all routes in ProtectedHandler()"
+    verify: "go build ./components/auth/"
+    status: todo
+
+  - id: 6
+    description: "Write unit tests: CreateBranch creates file and DB record; DeleteBranch removes both; ListBranches returns descending order; duplicate name returns UNIQUE constraint error"
+    verify: "go test ./components/auth/ -run TestBranch -v -count=1"
+    status: todo
+
+  - id: 7
+    description: "Write integration tests (httptest): POST creates branch+file; GET lists branches; DELETE removes branch+file; duplicate name → 409; invalid name → 400"
+    verify: "go test ./components/auth/ -run TestBranchEndpoint -v -count=1"
+    status: todo
+
+  - id: 8
+    description: "Run full test suite to confirm no regressions"
+    verify: "go test ./... -count=1"
     status: todo

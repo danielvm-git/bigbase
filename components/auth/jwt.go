@@ -16,15 +16,16 @@ type Claims struct {
 	jwt.RegisteredClaims
 }
 
-func createJWT(userID int64, email, role string, orgID int64, secret []byte) (string, error) {
+func createJWT(userID int64, email, role string, orgID int64, secret []byte, ttl time.Duration) (string, error) {
+	now := time.Now()
 	claims := Claims{
 		UserID: userID,
 		Email:  email,
 		Role:   role,
 		OrgID:  orgID,
 		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
-			IssuedAt:  jwt.NewNumericDate(time.Now()),
+			ExpiresAt: jwt.NewNumericDate(now.Add(ttl)),
+			IssuedAt:  jwt.NewNumericDate(now),
 		},
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
