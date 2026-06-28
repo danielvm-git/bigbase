@@ -1,3 +1,15 @@
+# [2.61.0](https://github.com/danielvm-git/bigbase/compare/v2.60.1...v2.61.0) (2026-06-28)
+
+
+### Bug Fixes
+
+* **auth:** validate programmatic Options.Secret and fix refresh rotation race ([ab09c96](https://github.com/danielvm-git/bigbase/commit/ab09c961b573174ae1efde0f8aaea913c56399df))
+
+
+### Features
+
+* **auth:** e50 JWT secret persistence, configurable lifetimes, refresh token revocation ([cd72c6a](https://github.com/danielvm-git/bigbase/commit/cd72c6a2b3fa3f9bcc5c4c967f06cb8b6c817abd))
+
 ## [2.60.1](https://github.com/danielvm-git/bigbase/compare/v2.60.0...v2.60.1) (2026-06-28)
 
 
