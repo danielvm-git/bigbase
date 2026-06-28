@@ -193,8 +193,14 @@ go run . serve [--port PORT] [--db PATH] [--db-driver DRIVER] [--db-dsn DSN]
                [--sites-domain DOMAIN] [--log-level LEVEL]
                [--cors-allowed-origins ORIGINS]
                [--auth-post-login-redirect URL] [--auth-spa-origin-allowlist ORIGINS]
+               [--jwt-access-expiry DURATION] [--jwt-refresh-expiry DURATION]
                [--mcp-disabled] [--mcp-port PORT] [--mcp-transport TRANSPORT]
                [--newrelic-license-key KEY] [--newrelic-app-name NAME] [--newrelic-enabled]
+
+# JWT configuration environment variables:
+#   BIGBASE_JWT_SECRET         — shared secret for HS256 signing (min 32 chars, required in production)
+#   BIGBASE_JWT_ACCESS_EXPIRY  — access token TTL, e.g. "24h", "30m" (default: 24h)
+#   BIGBASE_JWT_REFRESH_EXPIRY — refresh token TTL, e.g. "720h" (default: 720h / 30 days)
 
 # Info
 go run . version

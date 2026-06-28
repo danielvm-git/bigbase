@@ -64,7 +64,7 @@ func TestOTPEndToEnd(t *testing.T) {
 	}
 	// Extract code from email body (format: "Your code is: 123456").
 	code := ""
-	fmt.Sscanf(sender.lastBody, "Your code is: %s", &code)
+	_, _ = fmt.Sscanf(sender.lastBody, "Your code is: %s", &code)
 	if len(code) != 6 {
 		t.Fatalf("could not extract 6-digit code from email body: %q", sender.lastBody)
 	}
@@ -80,7 +80,7 @@ func TestOTPEndToEnd(t *testing.T) {
 		t.Fatalf("expected 200, got %d: %s", rec2.Code, rec2.Body.String())
 	}
 	var resp map[string]any
-	json.NewDecoder(rec2.Body).Decode(&resp)
+	_ = json.NewDecoder(rec2.Body).Decode(&resp)
 	if resp["token"] == nil {
 		t.Error("expected JWT token in response")
 	}

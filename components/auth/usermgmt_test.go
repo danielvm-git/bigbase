@@ -24,7 +24,7 @@ func TestUpdateMe(t *testing.T) {
 		t.Fatalf("expected 200, got %d: %s", rec.Code, rec.Body.String())
 	}
 	var resp map[string]any
-	json.NewDecoder(rec.Body).Decode(&resp)
+	_ = json.NewDecoder(rec.Body).Decode(&resp)
 	if resp["name"] != "Alice" {
 		t.Errorf("expected name Alice, got %v", resp["name"])
 	}
@@ -57,7 +57,7 @@ func TestListIdentities(t *testing.T) {
 	var resp struct {
 		Identities []map[string]any `json:"identities"`
 	}
-	json.NewDecoder(rec.Body).Decode(&resp)
+	_ = json.NewDecoder(rec.Body).Decode(&resp)
 	if len(resp.Identities) != 0 {
 		t.Errorf("expected 0 identities for email-only user, got %d", len(resp.Identities))
 	}

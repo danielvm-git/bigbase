@@ -1,9 +1,9 @@
 type: session-state
 context: infra
-active_flow: null
-active_epic_id: e57
-active_story_id: e57s01
-active_story_status: planned
+active_flow: build_epic
+active_epic_id: e50
+active_story_id: e50s01
+active_story_status: in_progress
 release:
   target_version: 2.58.0
   codename: "Project Scoping — Admin UI"
@@ -20,12 +20,12 @@ metrics:
   stories_completed: 146
   bcps_per_hour: 0.4
 epic_cycle:
-  step: 0
-  story_bcps: 3
-  story: e57s01
+  step: 4
+  story_bcps: 5
+  story: e50s01
   audit_result: null
-  completed_steps: []
-  note: "e57: Project Scoping — Admin UI. 1 story, 3 BCPs. Full 20-section spec written. Project CRUD UI with list/detail pages, sidebar nav, and data hooks."
+  completed_steps: [0, 1, 2, 3]
+  note: "e50: JWT Secret & Token Lifecycle. 3 stories, 5 BCPs. Yolo mode — all stories."
   fast_mode: false
   story_complete: false
 bug_cycle:
@@ -33,13 +33,13 @@ bug_cycle:
   completed_steps: []
   bug_file: null
 git:
-  branch: main
+  branch: feat/e50-jwt-token-management
   hash: HEAD
   worktree: null
 handoff:
   last_step_completed: "plan-work"
   open_decisions: []
   next_skill: kickoff-branch
-  summary: "e57 plan-work complete. 1 story, 3 BCPs, full 20-section spec + tasks. Project CRUD admin UI: Go API endpoints, React pages (list + detail), hooks, sidebar nav. Ready for kickoff-branch."
-  context: "Epic e57: Project Scoping — Admin UI. WSJF 5.0, depends on e51, e52. e57s01 (3 BCPs): Backend project CRUD API endpoints, React ProjectsPage and ProjectDetailPage, useProjects hooks, sidebar navigation. Next: kickoff-branch -> develop-tdd START WITH e57s01."
+  summary: "e58 plan-work complete. 5 stories, 15 BCPs. All specs and tasks written. e58 depends on e52 (planned, fully spec'd — build e52 first)."
+  context: "Epic e58: Native Feature Port — Neon SQL-over-HTTP, DB Branching, Better Auth, MCP Migration Tools, Astro SDK. e58s01 (3 BCPs): /api/sql/neon endpoint, Neon wire format. e58s02 (4 BCPs): SQLite snapshot branching via VACUUM INTO, db_branches table, HTTP endpoints. e58s03 (3 BCPs): better-auth compat handlers in Go auth component. e58s04 (3 BCPs): list_migrations/run_migrations/rollback_migration MCP tools. e58s05 (2 BCPs): Fix setToken bug in @bigbase/auth-astro. Next: kickoff-branch for e52 (Tier-0 blocker) then e58."
   fast_mode: false

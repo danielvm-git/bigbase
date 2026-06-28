@@ -1,29 +1,29 @@
 story_id: e50s02
 title: Configurable token lifetimes
-status: todo
+status: done
 bcps: 2
 tasks:
   - id: 1
     description: "Add AccessExpiry and RefreshExpiry fields to auth.Options with 24h/30d defaults; thread through to createJWT signature (replace hardcoded 24h)"
     verify: "go test -run 'TestTokenLifetimes' ./components/auth/ -v -count=1"
-    status: todo
+    status: done
   - id: 2
     description: "Update createJWT to accept a TTL parameter; update refresh token expiry to use auth.Options.RefreshExpiry; update all callers (handleRegister, handleLogin, handleGoogleCallback, handleRefresh, passwordless, phone, anonymous, magiclink)"
     verify: "go test ./components/auth/... -count=1"
-    status: todo
+    status: done
   - id: 3
     description: "Add --jwt-access-expiry and --jwt-refresh-expiry CLI flags in main.go with env fallback (BIGBASE_JWT_ACCESS_EXPIRY, BIGBASE_JWT_REFRESH_EXPIRY); wire into auth.Options"
     verify: "go run . serve --help 2>&1 | rg 'jwt-access-expiry'"
-    status: todo
+    status: done
   - id: 4
     description: "Add expires_at (RFC3339) and expires_in (seconds) fields to writeAuthResponse and handleRefresh response JSON"
     verify: "go test -run 'TestTokenExpiryResponse' ./components/auth/ -v -count=1"
-    status: todo
+    status: done
   - id: 5
     description: "Add unit tests for custom lifetimes, default lifetimes, response expiry fields"
     verify: "go test -run 'TestToken' ./components/auth/ -v -count=1"
-    status: todo
+    status: done
   - id: 6
     description: "Update tech-stack.md CLI Reference with new flags; run full auth test suite"
     verify: "go test ./components/auth/... -count=1 && go vet ./components/auth/..."
-    status: todo
+    status: done

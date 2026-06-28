@@ -38,7 +38,7 @@ func CORS(allowedOrigins []string) func(http.Handler) http.Handler {
 			if !isAllowed(origin) {
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(http.StatusForbidden)
-				w.Write([]byte(`{"error":"origin not allowed"}`))
+				_, _ = w.Write([]byte(`{"error":"origin not allowed"}`))
 				return
 			}
 

@@ -174,6 +174,8 @@ func startProxy() {
 	corsOrigins := serveFS.String("cors-allowed-origins", "", "Comma-separated list of allowed CORS origins (empty = CORS disabled)")
 	postLoginRedirect := serveFS.String("auth-post-login-redirect", "/admin/", "Post-login redirect URL for OAuth callbacks")
 	spaOriginAllowlist := serveFS.String("auth-spa-origin-allowlist", "", "Comma-separated list of allowed SPA origins for OAuth token delivery (empty = disabled)")
+	jwtAccessExpiry := serveFS.String("jwt-access-expiry", "", "JWT access token lifetime (e.g. 24h, 30m). Default: 24h (env: BIGBASE_JWT_ACCESS_EXPIRY)")
+	jwtRefreshExpiry := serveFS.String("jwt-refresh-expiry", "", "JWT refresh token lifetime (e.g. 720h, 30d). Default: 720h (env: BIGBASE_JWT_REFRESH_EXPIRY)")
 	rateLimitEnabled := serveFS.Bool("rate-limit-enabled", true, "Enable rate limiting on auth endpoints (env: BIGBASE_RATE_LIMIT_ENABLED)")
 	rateLimitIPMaxStr := serveFS.String("rate-limit-ip-max", "60", "Max requests per minute per IP (env: BIGBASE_RATE_LIMIT_IP_MAX)")
 	rateLimitUserMaxStr := serveFS.String("rate-limit-user-max", "300", "Max requests per minute per authenticated user (env: BIGBASE_RATE_LIMIT_USER_MAX)")
@@ -194,6 +196,25 @@ func startProxy() {
 	sitesDomainVal := config.FlagOrEnv(*sitesDomain, "BIGBASE_SITES_DOMAIN")
 	dbDriverVal := config.FlagOrEnv(*dbDriver, "BIGBASE_DB_DRIVER")
 	dbDSNVal := config.FlagOrEnv(*dbDSN, "BIGBASE_DB_DSN")
+
+	// JWT expiry config with env var fallbacks.
+	accessExpiryStr := config.FlagOrEnv(*jwtAccessExpiry, "BIGBASE_JWT_ACCESS_EXPIRY")
+	refreshExpiryStr := config.FlagOrEnv(*jwtRefreshExpiry, "BIGBASE_JWT_REFRESH_EXPIRY")
+	var accessExpiry, refreshExpiry time.Duration
+	if accessExpiryStr != "" {
+		if d, parseErr := time.ParseDuration(accessExpiryStr); parseErr != nil || d <= 0 {
+			slog.Warn("invalid jwt-access-expiry, using default 24h", "value", accessExpiryStr)
+		} else {
+			accessExpiry = d
+		}
+	}
+	if refreshExpiryStr != "" {
+		if d, parseErr := time.ParseDuration(refreshExpiryStr); parseErr != nil || d <= 0 {
+			slog.Warn("invalid jwt-refresh-expiry, using default 720h", "value", refreshExpiryStr)
+		} else {
+			refreshExpiry = d
+		}
+	}
 
 	// Rate limit config with env var fallbacks (BIGBASE_ prefix for consistency).
 	// Boolean flags use config.FlagOrEnvBool; string/integer flags use config.FlagOrEnv.
@@ -286,6 +307,8 @@ func startProxy() {
 		CORSAllowedOrigins: corsAllowedOrigins,
 		PostLoginRedirect:  *postLoginRedirect,
 		SPAOriginAllowlist: parseCORSOrigins(*spaOriginAllowlist),
+		AccessExpiry:       accessExpiry,
+		RefreshExpiry:      refreshExpiry,
 	})
 
 	// Rate limiter for auth public endpoints

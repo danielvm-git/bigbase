@@ -99,7 +99,7 @@ func (a *Auth) handlePopupCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	jwtToken, err := createJWT(userID, googleUser.Email, "user", orgID, a.secret)
+	jwtToken, err := createJWT(userID, googleUser.Email, "user", orgID, a.secret, a.accessExpiry)
 	if err != nil {
 		a.logger.Error("popup jwt", "error", err)
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
@@ -123,5 +123,5 @@ window.close();
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(html))
+	_, _ = w.Write([]byte(html))
 }

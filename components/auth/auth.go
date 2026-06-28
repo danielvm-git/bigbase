@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"os"
 	"strings"
 	"time"
 
@@ -70,6 +71,8 @@ type Options struct {
 	DB                  DBer
 	Logger              Logger
 	Secret              string
+	AccessExpiry        time.Duration // Default: 24h
+	RefreshExpiry       time.Duration // Default: 30 days
 	GoogleClientID      string
 	GoogleClientSecret  string
 	EmailSender         EmailSender
@@ -84,6 +87,8 @@ type Auth struct {
 	db                  DBer
 	logger              Logger
 	secret              []byte
+	accessExpiry        time.Duration
+	refreshExpiry       time.Duration
 	googleClientID      string
 	googleClientSecret  string
 	googleVerifier      GoogleVerifier
@@ -142,14 +147,22 @@ func New(opts Options) *Auth {
 		panic("auth: DB is required")
 	}
 
-	secret := []byte(opts.Secret)
-	if len(secret) == 0 {
-		raw := make([]byte, 32)
-		if _, err := rand.Read(raw); err != nil {
-			panic("auth: failed to generate random secret: " + err.Error())
-		}
-		secret = []byte(hex.EncodeToString(raw))
+	var secret []byte
+	if opts.Secret != "" {
+		secret = []byte(opts.Secret)
+	} else {
+		secret = resolveJWTSecret(logger)
 	}
+
+	accessExpiry := opts.AccessExpiry
+	if accessExpiry <= 0 {
+		accessExpiry = 24 * time.Hour
+	}
+	refreshExpiry := opts.RefreshExpiry
+	if refreshExpiry <= 0 {
+		refreshExpiry = 30 * 24 * time.Hour
+	}
+
 	postLoginRedirect := opts.PostLoginRedirect
 	if postLoginRedirect == "" {
 		postLoginRedirect = "/admin/"
@@ -160,6 +173,8 @@ func New(opts Options) *Auth {
 		db:                  opts.DB,
 		logger:              logger,
 		secret:              secret,
+		accessExpiry:        accessExpiry,
+		refreshExpiry:       refreshExpiry,
 		googleClientID:      opts.GoogleClientID,
 		googleClientSecret:  opts.GoogleClientSecret,
 		emailSender:         opts.EmailSender,
@@ -173,6 +188,39 @@ func New(opts Options) *Auth {
 		a.logger.Warn("public_url not configured; OAuth redirect URIs will use the Host header (vulnerable to Host header poisoning)")
 	}
 	return a
+}
+
+// knownDefaultSecrets lists secrets that must never be used in production.
+var knownDefaultSecrets = []string{
+	"test-secret-32-chars!!!",
+	"secret",
+	"changeme",
+	"your-secret-here",
+}
+
+// resolveJWTSecret reads BIGBASE_JWT_SECRET from the environment, validates it,
+// and falls back to a random secret with a warning if unset.
+func resolveJWTSecret(logger Logger) []byte {
+	val := os.Getenv("BIGBASE_JWT_SECRET")
+	if val == "" {
+		raw := make([]byte, 32)
+		if _, err := rand.Read(raw); err != nil {
+			panic("auth: failed to generate random secret: " + err.Error())
+		}
+		secret := []byte(hex.EncodeToString(raw))
+		logger.Warn("JWT secret not configured, using auto-generated secret. Set BIGBASE_JWT_SECRET for persistent tokens across restarts.")
+		return secret
+	}
+	if len(val) < 32 {
+		panic("auth: BIGBASE_JWT_SECRET must be at least 32 bytes")
+	}
+	for _, known := range knownDefaultSecrets {
+		if val == known {
+			panic("auth: BIGBASE_JWT_SECRET is a known default and must not be used in production")
+		}
+	}
+	logger.Info("JWT secret loaded from configuration")
+	return []byte(val)
 }
 
 func (a *Auth) Name() string                    { return "auth" }
@@ -342,6 +390,7 @@ func (a *Auth) ProtectedHandler() http.Handler {
 	mux.HandleFunc("POST /api/orgs/{id}/api-keys", a.handleCreateAPIKey)
 	mux.HandleFunc("GET /api/orgs/{id}/api-keys", a.handleListAPIKeys)
 	mux.HandleFunc("DELETE /api/orgs/{id}/api-keys/{keyID}", a.handleDeleteAPIKey)
+	mux.HandleFunc("POST /api/auth/logout-all", a.handleLogoutAll)
 	return a.Middleware(mux)
 }
 
@@ -467,6 +516,7 @@ func (a *Auth) decodeBody(w http.ResponseWriter, r *http.Request) (*authRequest,
 }
 
 func (a *Auth) writeAuthResponse(w http.ResponseWriter, r *http.Request, status int, userID int64, email, token string) {
+	expiresAt := time.Now().Add(a.accessExpiry)
 	http.SetCookie(w, &http.Cookie{
 		Name:     "token",
 		Value:    token,
@@ -474,7 +524,7 @@ func (a *Auth) writeAuthResponse(w http.ResponseWriter, r *http.Request, status 
 		Secure:   r.TLS != nil,
 		SameSite: http.SameSiteStrictMode,
 		Path:     "/",
-		MaxAge:   86400,
+		MaxAge:   int(a.accessExpiry.Seconds()),
 	})
 
 	// Issue a refresh token for every successful auth response.
@@ -494,6 +544,8 @@ func (a *Auth) writeAuthResponse(w http.ResponseWriter, r *http.Request, status 
 	writeJSON(w, status, map[string]any{
 		"token":         token,
 		"refresh_token": refreshToken,
+		"expires_at":    expiresAt.UTC().Format(time.RFC3339),
+		"expires_in":    int(a.accessExpiry.Seconds()),
 		"user": map[string]any{
 			"id":    userID,
 			"email": email,
@@ -592,7 +644,7 @@ func (a *Auth) handleRegister(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	token, err := createJWT(userID, email, role, orgID, a.secret)
+	token, err := createJWT(userID, email, role, orgID, a.secret, a.accessExpiry)
 	if err != nil {
 		a.logger.Error("create jwt", "error", err)
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
@@ -632,7 +684,7 @@ func (a *Auth) handleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, err := createJWT(userID, email, role, defaultOrgID, a.secret)
+	token, err := createJWT(userID, email, role, defaultOrgID, a.secret, a.accessExpiry)
 	if err != nil {
 		a.logger.Error("create jwt", "error", err)
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
@@ -767,7 +819,6 @@ func (a *Auth) handleGoogleOAuth(w http.ResponseWriter, r *http.Request) {
 			googleState = rawState // Google sees only the raw state.
 		} else {
 			// Redirect not allowed — fall back to standard flow.
-			spaRedirect = ""
 			cookieValue = SignState(rawState, a.secret)
 			googleState = rawState
 		}
@@ -851,7 +902,7 @@ func (a *Auth) handleGoogleCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, err := createJWT(userID, googleUser.Email, "user", orgID, a.secret)
+	token, err := createJWT(userID, googleUser.Email, "user", orgID, a.secret, a.accessExpiry)
 	if err != nil {
 		a.clearOAuthStateCookie(w, r)
 		a.logger.Error("create jwt", "error", err)
@@ -896,6 +947,25 @@ func (a *Auth) handleLogout(w http.ResponseWriter, r *http.Request) {
 		Path:     "/",
 		MaxAge:   -1,
 	})
+	writeJSON(w, http.StatusOK, map[string]bool{"ok": true})
+}
+
+// handleLogoutAll invalidates all refresh tokens for the authenticated user.
+func (a *Auth) handleLogoutAll(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
+		return
+	}
+	userID, ok := UserIDFromContext(r.Context())
+	if !ok {
+		writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "authorization required"})
+		return
+	}
+	if err := a.invalidateAllUserTokens(r.Context(), userID); err != nil {
+		a.logger.Error("logout-all", "user_id", userID, "error", err)
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		return
+	}
 	writeJSON(w, http.StatusOK, map[string]bool{"ok": true})
 }
 

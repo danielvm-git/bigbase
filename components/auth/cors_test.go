@@ -88,7 +88,7 @@ func TestCORSDefaultClosed(t *testing.T) {
 
 	handler := cors(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"ok":true}`))
+		_, _ = w.Write([]byte(`{"ok":true}`))
 	}))
 
 	req := httptest.NewRequest("GET", "/api/auth/me", nil)
