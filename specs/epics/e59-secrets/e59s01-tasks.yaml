@@ -2,9 +2,29 @@ story_id: e59s01
 title: "Encrypted Secrets Storage & API"
 status: planned
 bcps: 2
-note: "Full task breakdown deferred to plan-work. Run plan-work for detailed steps."
 tasks:
   - id: 1
-    description: "Plan detailed implementation steps"
-    verify: "echo 'plan-work needed for e59s01'"
+    description: "Create project_secrets table and index migration inside deploy.go Start() method"
+    verify: "go test -run 'TestProjectSecretsMigration' ./components/deploy/ -v"
     status: todo
+    security: low
+  - id: 2
+    description: "Implement ProjectSecret struct and CRUD DB operations (Insert, List, Update, Delete) and API route handlers in components/deploy/secrets.go"
+    verify: "go test -run 'TestProjectSecretsCRUD' ./components/deploy/ -v"
+    status: todo
+    security: medium
+  - id: 3
+    description: "Register /api/projects/ route prefix in deploy.go and main.go to point to Deploy handler; ensure proper cross-org checks"
+    verify: "go test -run 'TestProjectSecretsAPI' ./components/deploy/ -v"
+    status: todo
+    security: medium
+  - id: 4
+    description: "Implement FetchProjectSecrets() and integrate it into buildApp() and startApp() process environments in deploy.go, ensuring site env vars take precedence"
+    verify: "go test -run 'TestDeploySecretsInjection' ./components/deploy/ -v"
+    status: todo
+    security: medium
+  - id: 5
+    description: "Run the full test suite and golangci-lint check to ensure no regressions"
+    verify: "go test ./... && go vet ./..."
+    status: todo
+    security: low
