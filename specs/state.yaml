@@ -37,9 +37,9 @@ git:
   hash: HEAD
   worktree: ../feat-e49s02-oauth-publicurl
 handoff:
-  last_step_completed: "kickoff-branch"
+  last_step_completed: "release-branch"
   open_decisions: []
-  next_skill: "develop-tdd"
-  summary: "e49s02 kicked off. Branch: feat/e49s02-oauth-publicurl."
-  context: "e49s02: OAuth redirect URI fix — 7 tasks in e49s02-tasks.yaml."
+  next_skill: "survey-context"
+  summary: "Epic e49 fully complete. All 3 stories (5 BCPs) done, merged, ephemeral branches deleted, epic capsule archived."
+  context: "e49: 3/3 stories done."
   fast_mode: false

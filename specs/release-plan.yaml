@@ -317,11 +317,11 @@ epics:
   wsjf: 3.2
   mode: capsule
   tier: 1
-  status: planned
+  status: done
   depends_on: []
-  note: 3 stories, 5 BCPs. Fix anonymous tokens, OAuth host header, path traversal.
-  capsule_dir: epics/e49-auth-hardening
-  file: epics/e49-auth-hardening/epic.yaml
+  note: 3 stories, 5 BCPs. ALL DONE: anonymous tokens, OAuth Host header, path traversal.
+  capsule_dir: epics/archive/e49-auth-hardening
+  file: epics/archive/e49-auth-hardening/epic.yaml
 - id: e50
   title: "Security \u2014 JWT Secret & Token Lifecycle Management"
   wsjf: 3.0

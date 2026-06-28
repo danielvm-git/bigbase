@@ -4,9 +4,9 @@ id: e49
 title: "Security — Auth Hardening (Anonymous, OAuth, Path Traversal)"
 wsjf: 3.2
 total_bcps: 5
-status: planned
+status: done
 tier: 1
-note: "3 stories, 5 BCPs. Fix anonymous tokens (Claims struct + middleware bypass), OAuth Host header poisoning (PublicURL), storage path traversal (Clean+Abs+prefix check)."
+note: "3 stories, 5 BCPs. Fix anonymous tokens (Claims struct + middleware bypass), OAuth Host header poisoning (PublicURL), storage path traversal (Clean+Abs+prefix check). ALL DONE."
 stories:
   - id: e49s01
     title: "Fix anonymous tokens — add org_id context"
@@ -23,6 +23,6 @@ stories:
   - id: e49s03
     title: "Add path traversal defense to file downloads"
     bcps: 1
-    status: planned
+    status: done
     spec: e49s03-path-traversal.md
     tasks: e49s03-tasks.yaml
