@@ -40,6 +40,10 @@ node_modules/
 test-results/
 playwright-report/
 
+# Frontend build artifacts (rebuildable)
+/ui/dist/
+/packages/*/dist/
+
 # Allure — generated artifacts, never committed
 allure-results/
 allure-report/
