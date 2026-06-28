@@ -20,23 +20,14 @@ metrics:
   stories_completed: 146
   bcps_per_hour: 0.1
 epic_cycle:
-  step: 8
+  step: 0
   story_bcps: 1
-  story: e49s02
-  audit_result: pass
-  completed_steps:
-    - 0
-    - 1
-    - 2
-    - 3
-    - 4
-    - 5
-    - 6
-    - 7
-    - 8
-  note: "e49s02 complete. Merged to main."
+  story: e49s03
+  audit_result: null
+  completed_steps: []
+  note: "Starting e49s03: Path traversal defense. 3 tasks."
   fast_mode: false
-  story_complete: true
+  story_complete: false
 bug_cycle:
   current_step: 0
   completed_steps: []
