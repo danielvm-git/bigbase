@@ -73,19 +73,32 @@ docker pull --quiet "$ZAP_IMAGE" 2>/dev/null || true
 # --auto: run spider + passive scan
 # -I: do not generate GUI
 # -r: generate HTML report
+set +e
 docker run --rm \
   -v "$(pwd):/zap/wrk" \
   -e "HOME=/zap" \
   "$ZAP_IMAGE" \
-  zap-full-scan.py \
+  zap-baseline.py \
     -t "$TARGET_URL" \
     -r zap-report.html \
     -I \
     -j \
-    -m 2 || true
+    -m 2
+ZAP_EXIT=$?
+set -e
+
+if [[ $ZAP_EXIT -ne 0 && $ZAP_EXIT -ne 1 ]]; then
+  echo "ERROR: ZAP baseline scan failed to execute (exit code: $ZAP_EXIT)."
+  exit 1
+fi
 
 # Check if report was generated
-if [[ -f "$REPORT_DIR/zap-report.html" ]]; then
+if [[ -f "zap-report.html" ]]; then
+  if [[ "$REPORT_DIR" != "." ]]; then
+    mkdir -p "$REPORT_DIR"
+    mv zap-report.html "$REPORT_DIR/zap-report.html"
+  fi
+
   echo ""
   echo "✅ ZAP baseline scan complete."
   echo "   Report: $REPORT_DIR/zap-report.html"
@@ -101,5 +114,5 @@ else
   echo ""
   echo "⚠️  ZAP scan completed but no report was generated."
   echo "   Check Docker logs for details."
-  exit 0
+  exit 1
 fi

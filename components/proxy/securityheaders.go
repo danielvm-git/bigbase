@@ -20,7 +20,7 @@ const (
 func (p *Proxy) securityHeadersMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		csp := strictCSP
-		if r.URL.Path == "/" || r.URL.Path == "/docs" {
+		if r.URL.Path == "/" || r.URL.Path == "/docs" || r.URL.Path == "/admin" || strings.HasPrefix(r.URL.Path, "/admin/") {
 			csp = permissiveCSP
 		}
 

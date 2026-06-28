@@ -3,6 +3,7 @@ package proxy
 import (
 	"context"
 	"crypto/rand"
+	"crypto/sha256"
 	"crypto/subtle"
 	"crypto/x509"
 	"encoding/hex"
@@ -286,7 +287,8 @@ func (p *Proxy) requestIDMiddleware(next http.Handler) http.Handler {
 // exposure of repository metadata.
 func (p *Proxy) gitPathBlockMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if strings.Contains(r.URL.Path, "/.git") {
+		lowerPath := strings.ToLower(r.URL.Path)
+		if strings.Contains(lowerPath, "/.git") || strings.Contains(lowerPath, "\\.git") {
 			http.NotFound(w, r)
 			return
 		}
@@ -484,7 +486,15 @@ func (p *Proxy) handleHealth(w http.ResponseWriter, r *http.Request) {
 	// When healthToken is configured, require Authorization: Bearer <token>.
 	if p.healthToken != "" {
 		auth := r.Header.Get("Authorization")
-		if !strings.HasPrefix(auth, "Bearer ") || subtle.ConstantTimeCompare([]byte(auth[7:]), []byte(p.healthToken)) != 1 {
+		if len(auth) < 7 || !strings.EqualFold(auth[:7], "bearer ") {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusUnauthorized)
+			_, _ = fmt.Fprintf(w, `{"error":"unauthorized"}`+"\n")
+			return
+		}
+		tokenHash := sha256.Sum256([]byte(p.healthToken))
+		authHash := sha256.Sum256([]byte(auth[7:]))
+		if subtle.ConstantTimeCompare(tokenHash[:], authHash[:]) != 1 {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusUnauthorized)
 			_, _ = fmt.Fprintf(w, `{"error":"unauthorized"}`+"\n")

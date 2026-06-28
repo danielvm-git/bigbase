@@ -43,7 +43,7 @@ echo "Target: $TARGET_URL"
 echo ""
 
 # Fetch response headers
-HEADERS=$(curl -sI --max-time 10 "$TARGET_URL" 2>&1) || {
+HEADERS=$(curl -sIL --max-time 10 "$TARGET_URL" 2>&1) || {
   echo "ERROR: Failed to fetch headers from $TARGET_URL"
   exit 1
 }

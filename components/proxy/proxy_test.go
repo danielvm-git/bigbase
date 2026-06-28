@@ -587,6 +587,9 @@ func TestGitPathBlocked(t *testing.T) {
 		{".git/config returns 404", "/.git/config", http.StatusNotFound},
 		{".git/HEAD returns 404", "/.git/HEAD", http.StatusNotFound},
 		{".git//objects returns 404", "/.git//objects", http.StatusNotFound},
+		{".GIT/config case variation", "/.GIT/config", http.StatusNotFound},
+		{".Git/HEAD case variation", "/.Git/HEAD", http.StatusNotFound},
+		{"backslash separator", "/\\.git/config", http.StatusNotFound},
 		{"/not-git unaffected", "/not-git", http.StatusOK}, // catch-all handler serves home
 		{"/api/version unaffected", "/api/version", http.StatusOK},
 		{"root unaffected", "/", http.StatusOK},
@@ -734,6 +737,38 @@ func TestHealthAuth(t *testing.T) {
 
 		if resp.StatusCode != http.StatusOK {
 			t.Fatalf("expected 200 with correct token, got %d", resp.StatusCode)
+		}
+	})
+
+	t.Run("token set, lowercase bearer token — returns 200", func(t *testing.T) {
+		logger := testLogger{}
+		k := kernel.New(logger)
+
+		port := freePort(t)
+		p := proxy.New(proxy.Options{
+			Port:        port,
+			Kernel:      k,
+			Logger:      logger,
+			HealthToken: "secret123",
+		})
+
+		if err := p.Start(&kernel.Context{}); err != nil {
+			t.Fatalf("failed to start proxy: %v", err)
+		}
+		defer func() { _ = p.Stop(&kernel.Context{}) }()
+
+		waitForServer(t, port, "/")
+
+		req, _ := http.NewRequest("GET", "http://localhost:"+port+"/health", nil)
+		req.Header.Set("Authorization", "bearer secret123")
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			t.Fatalf("GET /health: %v", err)
+		}
+		defer func() { _ = resp.Body.Close() }()
+
+		if resp.StatusCode != http.StatusOK {
+			t.Fatalf("expected 200 with lowercase bearer token, got %d", resp.StatusCode)
 		}
 	})
 
