@@ -78,12 +78,10 @@ func (a *Auth) handlePopupCallback(w http.ResponseWriter, r *http.Request) {
 
 	verifier := a.googleVerifier
 	if verifier == nil {
-		scheme := "http"
-		if r.TLS != nil { scheme = "https" }
 		verifier = &realGoogleVerifier{
 			clientID:     a.googleClientID,
 			clientSecret: a.googleClientSecret,
-			redirectURI:  fmt.Sprintf("%s://%s/api/auth/oauth/google/callback", scheme, r.Host),
+			redirectURI:  a.PublicURLOrDefault(r) + "/api/auth/oauth/google/callback",
 		}
 	}
 

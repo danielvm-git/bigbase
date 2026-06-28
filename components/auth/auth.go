@@ -77,6 +77,7 @@ type Options struct {
 	CORSAllowedOrigins  []string
 	PostLoginRedirect   string   // Default: "/admin/"
 	SPAOriginAllowlist  []string // Allowed origins for SPA redirect with #token=
+	PublicURL           string   // Public base URL for OAuth redirects (takes precedence over Host header)
 }
 
 type Auth struct {
@@ -91,6 +92,7 @@ type Auth struct {
 	corsAllowedOrigins  []string
 	postLoginRedirect   string
 	spaOriginAllowlist  []string
+	publicURL           string
 }
 
 func (a *Auth) SetGoogleVerifier(v GoogleVerifier) {
@@ -113,6 +115,22 @@ func (a *Auth) isSPAOriginAllowed(redirectURL string) bool {
 		}
 	}
 	return false
+}
+
+// PublicURLOrDefault returns the configured public URL, or constructs one
+// from the request's Host header if PublicURL is not set.
+func (a *Auth) PublicURLOrDefault(r *http.Request) string {
+	if a.publicURL != "" {
+		return a.publicURL
+	}
+	scheme := "http"
+	if r.TLS != nil {
+		scheme = "https"
+	}
+	if a.logger != nil {
+		a.logger.Info("public_url not configured, using request Host header", "host", r.Host)
+	}
+	return scheme + "://" + r.Host
 }
 
 func New(opts Options) *Auth {
@@ -147,6 +165,7 @@ func New(opts Options) *Auth {
 		corsAllowedOrigins:  opts.CORSAllowedOrigins,
 		postLoginRedirect:   postLoginRedirect,
 		spaOriginAllowlist:  opts.SPAOriginAllowlist,
+		publicURL:           opts.PublicURL,
 	}
 }
 
@@ -757,11 +776,7 @@ func (a *Auth) handleGoogleOAuth(w http.ResponseWriter, r *http.Request) {
 		MaxAge:   600,
 	})
 
-	scheme := "http"
-	if r.TLS != nil {
-		scheme = "https"
-	}
-	redirectURI := fmt.Sprintf("%s://%s/api/auth/oauth/google/callback", scheme, r.Host)
+	redirectURI := a.PublicURLOrDefault(r) + "/api/auth/oauth/google/callback"
 	url := fmt.Sprintf("https://accounts.google.com/o/oauth2/v2/auth?client_id=%s&redirect_uri=%s&response_type=code&scope=openid+email+profile&state=%s",
 		a.googleClientID, url.QueryEscape(redirectURI), googleState)
 	http.Redirect(w, r, url, http.StatusFound)
@@ -802,14 +817,10 @@ func (a *Auth) handleGoogleCallback(w http.ResponseWriter, r *http.Request) {
 
 	verifier := a.googleVerifier
 	if verifier == nil {
-		scheme := "http"
-		if r.TLS != nil {
-			scheme = "https"
-		}
 		verifier = &realGoogleVerifier{
 			clientID:     a.googleClientID,
 			clientSecret: a.googleClientSecret,
-			redirectURI:  fmt.Sprintf("%s://%s/api/auth/oauth/google/callback", scheme, r.Host),
+			redirectURI:  a.PublicURLOrDefault(r) + "/api/auth/oauth/google/callback",
 		}
 	}
 

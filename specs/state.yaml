@@ -20,13 +20,16 @@ metrics:
   stories_completed: 146
   bcps_per_hour: 0.1
 epic_cycle:
-  step: 1
+  step: 4
   story_bcps: 2
   story: e49s02
   audit_result: null
   completed_steps:
     - 0
-  note: "e49s02: OAuth redirect URI fix. Threat model already covers epic scope (step 0 done). Starting survey-context."
+    - 1
+    - 2
+    - 3
+  note: "Kickoff done. Branch: feat/e49s02-oauth-publicurl. Auth baseline clean. Proceeding to develop-tdd."
   fast_mode: false
   story_complete: false
 bug_cycle:
@@ -34,13 +37,13 @@ bug_cycle:
   completed_steps: []
   bug_file: null
 git:
-  branch: main
+  branch: feat/e49s02-oauth-publicurl
   hash: HEAD
-  worktree: null
+  worktree: ../feat-e49s02-oauth-publicurl
 handoff:
-  last_step_completed: "release-branch"
+  last_step_completed: "kickoff-branch"
   open_decisions: []
-  next_skill: "survey-context"
-  summary: "Starting e49s02 build-epic cycle."
-  context: "e49: 1/3 stories done. e49s02: Fix OAuth redirect URI with PublicURL config."
+  next_skill: "develop-tdd"
+  summary: "e49s02 kicked off. Branch: feat/e49s02-oauth-publicurl."
+  context: "e49s02: OAuth redirect URI fix — 7 tasks in e49s02-tasks.yaml."
   fast_mode: false
