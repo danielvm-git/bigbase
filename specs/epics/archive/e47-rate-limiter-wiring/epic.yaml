@@ -4,11 +4,11 @@ id: e47
 title: "Security — Rate Limiter Wiring"
 wsjf: 1.5
 total_bcps: 2
-status: planned
+status: done
 stories:
   - id: e47s01
     title: "Wire rate limiter to auth public endpoints"
     bcps: 2
-    status: planned
+    status: done
     spec: e47s01-rate-limiter-wiring.md
     tasks: e47s01-tasks.yaml

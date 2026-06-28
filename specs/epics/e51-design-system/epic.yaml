@@ -9,44 +9,44 @@ depends_on: []
 blocks: [e57, e59, e61, e62, e63, e64]
 stories:
   - id: e51s01
-     title: "Design Tokens & Theme System"
-     bcps: 4
-     status: done
-     spec: e51s01-spec.md
-     tasks: e51s01-tasks.yaml
+    title: "Design Tokens & Theme System"
+    bcps: 4
+    status: done
+    spec: e51s01-spec.md
+    tasks: e51s01-tasks.yaml
   - id: e51s02
-     title: "Core Component Library"
-     bcps: 4
-     status: done
-     spec: e51s02-spec.md
-     tasks: e51s02-tasks.yaml
+    title: "Core Component Library"
+    bcps: 4
+    status: done
+    spec: e51s02-spec.md
+    tasks: e51s02-tasks.yaml
   - id: e51s03
-     title: "Layout Components"
-     bcps: 4
-     status: done
-     spec: e51s03-spec.md
-     tasks: e51s03-tasks.yaml
+    title: "Layout Components"
+    bcps: 4
+    status: done
+    spec: e51s03-spec.md
+    tasks: e51s03-tasks.yaml
   - id: e51s04
-     title: "Console Page Templates"
-     bcps: 3
-     status: done
-     spec: e51s04-spec.md
-     tasks: e51s04-tasks.yaml
+    title: "Console Page Templates"
+    bcps: 3
+    status: done
+    spec: e51s04-spec.md
+    tasks: e51s04-tasks.yaml
   - id: e51s05
-     title: "Accessibility & Responsive Audit"
-     bcps: 2
-     status: done
-     spec: e51s05-spec.md
-     tasks: e51s05-tasks.yaml
+    title: "Accessibility & Responsive Audit"
+    bcps: 2
+    status: done
+    spec: e51s05-spec.md
+    tasks: e51s05-tasks.yaml
   - id: e51s06
-     title: "Extended Component Library"
-     bcps: 5
-     status: done
-     spec: e51s06-spec.md
-     tasks: e51s06-tasks.yaml
+    title: "Extended Component Library"
+    bcps: 5
+    status: done
+    spec: e51s06-spec.md
+    tasks: e51s06-tasks.yaml
   - id: e51s07
-     title: "Data Visualization & Editor Components"
-     bcps: 4
-     status: done
-     spec: e51s07-spec.md
-     tasks: e51s07-tasks.yaml
+    title: "Data Visualization & Editor Components"
+    bcps: 4
+    status: done
+    spec: e51s07-spec.md
+    tasks: e51s07-tasks.yaml
