@@ -20,11 +20,11 @@ metrics:
   stories_completed: 146
   bcps_per_hour: 0.4
 epic_cycle:
-  step: 7
+  step: 8
   story_bcps: 5
   story: e50s01
   audit_result: pass
-  completed_steps: [0, 1, 2, 3, 4, 5, 6]
+  completed_steps: [0, 1, 2, 3, 4, 5, 6, 7]
   note: "e50: JWT Secret & Token Lifecycle. 3 stories, 5 BCPs. Yolo mode — all stories."
   fast_mode: false
   story_complete: false
@@ -37,9 +37,9 @@ git:
   hash: HEAD
   worktree: null
 handoff:
-  last_step_completed: "audit-code"
+  last_step_completed: "commit-message"
   open_decisions: []
-  next_skill: commit-message
+  next_skill: release-branch
   summary: "e58 plan-work complete. 5 stories, 15 BCPs. All specs and tasks written. e58 depends on e52 (planned, fully spec'd — build e52 first)."
   context: "Epic e58: Native Feature Port — Neon SQL-over-HTTP, DB Branching, Better Auth, MCP Migration Tools, Astro SDK. e58s01 (3 BCPs): /api/sql/neon endpoint, Neon wire format. e58s02 (4 BCPs): SQLite snapshot branching via VACUUM INTO, db_branches table, HTTP endpoints. e58s03 (3 BCPs): better-auth compat handlers in Go auth component. e58s04 (3 BCPs): list_migrations/run_migrations/rollback_migration MCP tools. e58s05 (2 BCPs): Fix setToken bug in @bigbase/auth-astro. Next: kickoff-branch for e52 (Tier-0 blocker) then e58."
   fast_mode: false
