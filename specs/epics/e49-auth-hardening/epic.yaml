@@ -11,7 +11,7 @@ stories:
   - id: e49s01
     title: "Fix anonymous tokens — add org_id context"
     bcps: 2
-    status: planned
+    status: done
     spec: e49s01-anonymous-fix.md
     tasks: e49s01-tasks.yaml
   - id: e49s02

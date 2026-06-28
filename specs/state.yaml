@@ -17,33 +17,38 @@ metrics:
   session_end: '2026-06-28T03:48:00Z'
   cycle_minutes: 858
   epics_completed: 47
-  stories_completed: 145
+  stories_completed: 146
   bcps_per_hour: 0.1
 epic_cycle:
-  step: 4
+  step: 8
   story_bcps: 2
   story: e49s01
-  audit_result: null
+  audit_result: pass
   completed_steps:
     - 0
     - 1
     - 2
     - 3
-  note: "Kickoff done. Worktree: ../feat-e49-auth-hardening, branch: feat/e49-auth-hardening. Auth + storage baseline clean. Proceeding to develop-tdd for e49s01."
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+  note: "e49s01 complete. All 8 steps passed. Merged to main. Ready for e49s02."
   fast_mode: false
-  story_complete: false
+  story_complete: true
 bug_cycle:
   current_step: 0
   completed_steps: []
   bug_file: null
 git:
-  branch: feat/e49-auth-hardening
+  branch: main
   hash: HEAD
-  worktree: ../feat-e49-auth-hardening
+  worktree: null
 handoff:
-  last_step_completed: "kickoff-branch"
+  last_step_completed: "release-branch"
   open_decisions: []
-  next_skill: "develop-tdd"
-  summary: "Build-epic e49 — steps 0-3 complete. Ready for TDD on e49s01."
-  context: "Worktree: ../feat-e49-auth-hardening, branch: feat/e49-auth-hardening. e49s01: Fix anonymous tokens (2 BCPs). 4 tasks in e49s01-tasks.yaml."
+  next_skill: "build-epic"
+  summary: "e49s01 complete and merged. Anonymous tokens fixed with Claims struct + middleware bypass."
+  context: "e49: 1/3 stories done (e49s01). Next: e49s02 (OAuth redirect URI fix). Worktree cleaned up."
   fast_mode: false
