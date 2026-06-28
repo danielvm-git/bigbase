@@ -19,4 +19,23 @@ entries:
     end: "2026-06-28T03:48:00Z"
     cycle_minutes: 858
     bcp_per_hour: 0.1
+  - id: e49s01
+    bcps: 2
+    start: "2026-06-27T13:30:00Z"
+    end: "2026-06-28T04:24:00Z"
+    cycle_minutes: 894
+    bcp_per_hour: 0.1
+  - id: e49s02
+    bcps: 2
+    start: "2026-06-28T04:24:00Z"
+    end: "2026-06-28T13:21:00Z"
+    cycle_minutes: 537
+    bcp_per_hour: 0.2
+  - id: e49s03
+    bcps: 1
+    start: "2026-06-28T13:21:00Z"
+    end: "2026-06-28T14:04:00Z"
+    cycle_minutes: 43
+    bcp_per_hour: 1.4
+
 
