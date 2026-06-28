@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"strings"
 	"testing"
 	"time"
@@ -946,6 +947,36 @@ func setupAuthWithGoogle(t *testing.T) (*auth.Auth, http.Handler, http.Handler) 
 	return a, a.Handler(), a.ProtectedHandler()
 }
 
+func setupAuthWithPublicURL(t *testing.T, publicURL string) (*auth.Auth, http.Handler, http.Handler) {
+	t.Helper()
+	logger := testLogger{}
+	k := kernel.New(logger)
+
+	d := db.New(db.Options{Path: ":memory:", Logger: logger})
+	a := auth.New(auth.Options{
+		DB:                 d,
+		Logger:             logger,
+		Secret:             "test-secret-32-chars!!!",
+		GoogleClientID:     "test-client-id",
+		GoogleClientSecret: "test-client-secret",
+		PublicURL:          publicURL,
+	})
+
+	k.Register(a)
+	k.Register(d)
+
+	if err := k.Start(); err != nil {
+		t.Fatalf("kernel start: %v", err)
+	}
+	t.Cleanup(func() { _ = k.Stop() })
+
+	a.SetGoogleVerifier(&mockGoogleVerifier{
+		user: &auth.GoogleUser{GoogleID: "google-123", Email: "oauth@test.com", Name: "OAuth User", Avatar: ""},
+	})
+
+	return a, a.Handler(), a.ProtectedHandler()
+}
+
 // makeValidOAuthCallback creates a callback request with a valid oauth_state cookie.
 func makeValidOAuthCallback(t *testing.T, code, state string) *http.Request {
 	t.Helper()
@@ -1181,6 +1212,63 @@ func TestGoogleOAuthDisabledWhenNoConfig(t *testing.T) {
 
 	if w.Code != http.StatusNotFound {
 		t.Fatalf("expected 404 when google auth not configured, got %d", w.Code)
+	}
+}
+
+func TestOAuthPublicURL(t *testing.T) {
+	// Setup with PublicURL configured
+	a, h, _ := setupAuthWithPublicURL(t, "https://bigbase.click")
+
+	req := httptest.NewRequest("GET", "/api/auth/oauth/google", nil)
+	req.Host = "evil.com"
+	w := httptest.NewRecorder()
+	h.ServeHTTP(w, req)
+
+	if w.Code != http.StatusFound {
+		t.Fatalf("expected 302 redirect, got %d", w.Code)
+	}
+	location := w.Header().Get("Location")
+	if location == "" {
+		t.Fatal("expected Location header")
+	}
+	// Parse and decode the redirect_uri query parameter
+	parsed, _ := url.Parse(location)
+	redirectURI := parsed.Query().Get("redirect_uri")
+	if !strings.Contains(redirectURI, "https://bigbase.click") {
+		t.Fatalf("expected redirect_uri to use PublicURL (bigbase.click), got: %s", redirectURI)
+	}
+	if strings.Contains(redirectURI, "evil.com") {
+		t.Fatal("redirect_uri must not use Host header when PublicURL is set")
+	}
+
+	got := a.PublicURLOrDefault(req)
+	if got != "https://bigbase.click" {
+		t.Fatalf("expected PublicURLOrDefault to return PublicURL, got %q", got)
+	}
+}
+
+func TestOAuthPublicURLFallback(t *testing.T) {
+	// Setup without PublicURL — should fall back to Host header
+	a, h, _ := setupAuthWithGoogle(t)
+
+	req := httptest.NewRequest("GET", "/api/auth/oauth/google", nil)
+	req.Host = "localhost:9999"
+	w := httptest.NewRecorder()
+	h.ServeHTTP(w, req)
+
+	if w.Code != http.StatusFound {
+		t.Fatalf("expected 302 redirect, got %d", w.Code)
+	}
+	location := w.Header().Get("Location")
+	parsed, _ := url.Parse(location)
+	redirectURI := parsed.Query().Get("redirect_uri")
+	if !strings.Contains(redirectURI, "http://localhost:9999") {
+		t.Fatalf("expected redirect_uri to use Host header (localhost:9999), got: %s", redirectURI)
+	}
+
+	got := a.PublicURLOrDefault(req)
+	if got != "http://localhost:9999" {
+		t.Fatalf("expected fallback to Host, got %q", got)
 	}
 }
 

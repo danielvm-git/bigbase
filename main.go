@@ -164,6 +164,7 @@ func startProxy() {
 	dbDSN := serveFS.String("db-dsn", "", "Database DSN (file path for sqlite, connection URL for postgres)")
 	googleClientID := serveFS.String("google-client-id", "", "Google OAuth client ID")
 	googleClientSecret := serveFS.String("google-client-secret", "", "Google OAuth client secret")
+	publicURL := serveFS.String("public-url", "", "Public base URL for OAuth redirects (env: BIGBASE_PUBLIC_URL)")
 	githubAppID := serveFS.String("github-app-id", "", "GitHub App ID")
 	githubAppSlug := serveFS.String("github-app-slug", "", "GitHub App slug")
 	githubPrivateKeyPath := serveFS.String("github-app-private-key-path", "", "GitHub App private key path")
@@ -281,6 +282,7 @@ func startProxy() {
 		Logger:             logger,
 		GoogleClientID:     googleID,
 		GoogleClientSecret: googleSecret,
+		PublicURL:          config.FlagOrEnv(*publicURL, "BIGBASE_PUBLIC_URL"),
 		CORSAllowedOrigins: corsAllowedOrigins,
 		PostLoginRedirect:  *postLoginRedirect,
 		SPAOriginAllowlist: parseCORSOrigins(*spaOriginAllowlist),
