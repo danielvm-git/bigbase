@@ -20,7 +20,7 @@ metrics:
   stories_completed: 145
   bcps_per_hour: 0.1
 epic_cycle:
-  step: 3
+  step: 4
   story_bcps: 2
   story: e49s01
   audit_result: null
@@ -28,7 +28,8 @@ epic_cycle:
     - 0
     - 1
     - 2
-  note: "Plan-work confirmed. Tasks complete with verify commands in e49s01-tasks.yaml. Impact score 2/10. Proceeding to kickoff-branch."
+    - 3
+  note: "Kickoff done. Worktree: ../feat-e49-auth-hardening, branch: feat/e49-auth-hardening. Auth + storage baseline clean. Proceeding to develop-tdd for e49s01."
   fast_mode: false
   story_complete: false
 bug_cycle:
@@ -36,13 +37,13 @@ bug_cycle:
   completed_steps: []
   bug_file: null
 git:
-  branch: main
+  branch: feat/e49-auth-hardening
   hash: HEAD
-  worktree: null
+  worktree: ../feat-e49-auth-hardening
 handoff:
-  last_step_completed: "state setup"
+  last_step_completed: "kickoff-branch"
   open_decisions: []
-  next_skill: "security-review"
-  summary: "Starting e49 build-epic cycle."
-  context: "e49: Auth Hardening — Fix anonymous tokens, OAuth host header, path traversal. 3 stories, 5 BCPs."
+  next_skill: "develop-tdd"
+  summary: "Build-epic e49 — steps 0-3 complete. Ready for TDD on e49s01."
+  context: "Worktree: ../feat-e49-auth-hardening, branch: feat/e49-auth-hardening. e49s01: Fix anonymous tokens (2 BCPs). 4 tasks in e49s01-tasks.yaml."
   fast_mode: false

@@ -528,6 +528,110 @@ func TestMiddlewareRejectsNoOrg(t *testing.T) {
 	}
 }
 
+func TestAnonymousToken(t *testing.T) {
+	a, h, _ := setupAuthWithGoogle(t)
+
+	// Mint an anonymous token.
+	anonReq := httptest.NewRequest("POST", "/api/auth/anonymous", nil)
+	anonW := httptest.NewRecorder()
+	h.ServeHTTP(anonW, anonReq)
+	if anonW.Code != http.StatusOK {
+		t.Fatalf("mint anonymous token: expected 200, got %d: %s", anonW.Code, anonW.Body.String())
+	}
+	resp := parseResponse(t, anonW.Body.Bytes())
+	token, _ := resp["token"].(string)
+	if token == "" {
+		t.Fatal("expected non-empty token")
+	}
+	if _, hasRefresh := resp["refresh_token"]; hasRefresh {
+		t.Fatal("anonymous token must not include refresh_token")
+	}
+
+	// Build a protected handler that reports the context values set by Middleware.
+	protected := a.Middleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		role, _ := auth.UserRoleFromContext(r.Context())
+		userID, _ := auth.UserIDFromContext(r.Context())
+		orgID, _ := auth.OrgIDFromContext(r.Context())
+		email, _ := auth.UserEmailFromContext(r.Context())
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = fmt.Fprintf(w, `{"role":%q,"user_id":%d,"org_id":%d,"email":%q}`, role, userID, orgID, email)
+	}))
+
+	tests := []struct {
+		name       string
+		method     string
+		token      string
+		wantStatus int
+		wantBody   string
+	}{
+		{
+			name:       "read endpoint accepts anonymous token",
+			method:     "GET",
+			token:      token,
+			wantStatus: http.StatusOK,
+			wantBody:   `"anonymous"`,
+		},
+		{
+			name:       "no token rejected",
+			method:     "GET",
+			token:      "",
+			wantStatus: http.StatusUnauthorized,
+		},
+		{
+			name:       "expired token rejected",
+			method:     "GET",
+			token:      makeExpiredAnonymousToken(t, a),
+			wantStatus: http.StatusUnauthorized,
+		},
+		{
+			name:       "tampered token rejected",
+			method:     "GET",
+			token:      token + "x",
+			wantStatus: http.StatusUnauthorized,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			req := httptest.NewRequest(tt.method, "/api/protected", nil)
+			if tt.token != "" {
+				req.Header.Set("Authorization", "Bearer "+tt.token)
+			}
+			w := httptest.NewRecorder()
+			protected.ServeHTTP(w, req)
+
+			if w.Code != tt.wantStatus {
+				t.Fatalf("expected %d, got %d: %s", tt.wantStatus, w.Code, w.Body.String())
+			}
+			if tt.wantBody != "" && !strings.Contains(w.Body.String(), tt.wantBody) {
+				t.Fatalf("expected body to contain %q, got %q", tt.wantBody, w.Body.String())
+			}
+		})
+	}
+}
+
+// makeExpiredAnonymousToken returns an anonymous token that has already expired.
+func makeExpiredAnonymousToken(t *testing.T, a *auth.Auth) string {
+	t.Helper()
+	claims := auth.Claims{
+		UserID: 0,
+		Email:  "",
+		Role:   "anonymous",
+		OrgID:  0,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(-1 * time.Hour)),
+			IssuedAt:  jwt.NewNumericDate(time.Now().Add(-2 * time.Hour)),
+		},
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	signed, err := token.SignedString([]byte("test-secret-32-chars!!!"))
+	if err != nil {
+		t.Fatalf("sign expired token: %v", err)
+	}
+	return signed
+}
+
+
 func TestListUsers(t *testing.T) {
 	_, handler, protected := setupAuth(t)
 
