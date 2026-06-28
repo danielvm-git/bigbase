@@ -2,8 +2,8 @@ type: session-state
 context: infra
 active_flow: build_epic
 active_epic_id: e49
-active_story_id: e49s01
-active_story_status: done
+active_story_id: e49s02
+active_story_status: planned
 release:
   target_version: 2.55.0
   codename: "Live Surface Hardening"
@@ -20,23 +20,15 @@ metrics:
   stories_completed: 146
   bcps_per_hour: 0.1
 epic_cycle:
-  step: 8
+  step: 1
   story_bcps: 2
-  story: e49s01
-  audit_result: pass
+  story: e49s02
+  audit_result: null
   completed_steps:
     - 0
-    - 1
-    - 2
-    - 3
-    - 4
-    - 5
-    - 6
-    - 7
-    - 8
-  note: "e49s01 complete. All 8 steps passed. Merged to main. Ready for e49s02."
+  note: "e49s02: OAuth redirect URI fix. Threat model already covers epic scope (step 0 done). Starting survey-context."
   fast_mode: false
-  story_complete: true
+  story_complete: false
 bug_cycle:
   current_step: 0
   completed_steps: []
@@ -48,7 +40,7 @@ git:
 handoff:
   last_step_completed: "release-branch"
   open_decisions: []
-  next_skill: "build-epic"
-  summary: "e49s01 complete and merged. Anonymous tokens fixed with Claims struct + middleware bypass."
-  context: "e49: 1/3 stories done (e49s01). Next: e49s02 (OAuth redirect URI fix). Worktree cleaned up."
+  next_skill: "survey-context"
+  summary: "Starting e49s02 build-epic cycle."
+  context: "e49: 1/3 stories done. e49s02: Fix OAuth redirect URI with PublicURL config."
   fast_mode: false
