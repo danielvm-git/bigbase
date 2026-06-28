@@ -1,3 +1,10 @@
+## [2.60.1](https://github.com/danielvm-git/bigbase/compare/v2.60.0...v2.60.1) (2026-06-28)
+
+
+### Bug Fixes
+
+* **specs:** escape colon in release-plan YAML note field ([c6eca05](https://github.com/danielvm-git/bigbase/commit/c6eca05c2f0f747ba4e1e965dab7e984212b50b8))
+
 # [2.60.0](https://github.com/danielvm-git/bigbase/compare/v2.59.1...v2.60.0) (2026-06-28)
 
 
