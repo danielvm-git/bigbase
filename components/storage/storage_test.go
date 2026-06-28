@@ -2,6 +2,7 @@ package storage_test
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"mime/multipart"
 	"net/http"
@@ -163,6 +164,53 @@ func uploadAndGetID(t *testing.T, handler http.Handler) string {
 	_ = json.NewDecoder(resp.Body).Decode(&body)
 	id, _ := body["id"].(string)
 	return id
+}
+
+func TestFileDownloadPathTraversal(t *testing.T) {
+	s, handler := setupStorage(t)
+
+	// Upload a normal file to confirm handler is working.
+	id := uploadAndGetID(t, handler)
+	req := httptest.NewRequest("GET", "/api/storage/files/"+id, nil)
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+	if w.Code != http.StatusOK {
+		t.Fatalf("normal download: expected 200, got %d", w.Code)
+	}
+
+	tests := []struct {
+		name    string
+		path    string
+		want403 bool
+	}{
+		{"normal path works", "hello.txt", false},
+		{"dotdot blocked", "../../../etc/passwd", true},
+		{"dotprefix normalized", "./hello.txt", false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			db := s.DBer()
+			_, err := db.ExecContext(context.Background(),
+				"INSERT INTO storage_files (id, name, size, mime_type, path) VALUES (?, ?, ?, ?, ?)",
+				"trav-"+tt.name[:4], tt.name[:8]+".txt", 0, "text/plain", tt.path)
+			if err != nil {
+				t.Fatalf("insert: %v", err)
+			}
+
+			req := httptest.NewRequest("GET", "/api/storage/files/trav-"+tt.name[:4], nil)
+			w := httptest.NewRecorder()
+			handler.ServeHTTP(w, req)
+
+			if tt.want403 && w.Code != http.StatusForbidden {
+				t.Fatalf("expected 403 for %q, got %d", tt.path, w.Code)
+			}
+			// Normal path should not return 403.
+			if !tt.want403 && w.Code == http.StatusForbidden {
+				t.Fatalf("unexpected 403 for normal path %q", tt.path)
+			}
+		})
+	}
 }
 
 func TestDownloadSuccess(t *testing.T) {

@@ -116,6 +116,8 @@ func generateID() (string, error) {
 
 func (s *Storage) Dir() string { return s.dir }
 
+func (s *Storage) DBer() DBer { return s.db }
+
 func (s *Storage) Handler() http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/api/storage/upload", s.handleUpload)
@@ -340,7 +342,15 @@ func (s *Storage) handleFileDownload(w http.ResponseWriter, r *http.Request, id 
 		return
 	}
 
-	fullPath := filepath.Join(s.dir, filePath)
+	// Path traversal defense: Clean → Abs → prefix check (same pattern as handleThumbnail).
+	fullPath := filepath.Join(s.dir, filepath.Clean(filePath))
+	absDir, _ := filepath.Abs(s.dir)
+	absPath, _ := filepath.Abs(fullPath)
+	if !strings.HasPrefix(absPath, absDir+string(filepath.Separator)) {
+		writeJSON(w, http.StatusForbidden, map[string]string{"error": "access denied"})
+		return
+	}
+
 	if _, err := os.Stat(fullPath); os.IsNotExist(err) {
 		s.logger.Error("file missing from disk", "id", id, "path", fullPath)
 		writeJSON(w, http.StatusNotFound, map[string]string{"error": "file not found"})
