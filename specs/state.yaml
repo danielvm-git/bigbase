@@ -3,7 +3,7 @@ context: infra
 active_flow: build_epic
 active_epic_id: e49
 active_story_id: e49s01
-active_story_status: planned
+active_story_status: done
 release:
   target_version: 2.55.0
   codename: "Live Surface Hardening"
