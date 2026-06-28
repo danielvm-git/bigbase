@@ -1,3 +1,15 @@
+# [2.62.0](https://github.com/danielvm-git/bigbase/compare/v2.61.0...v2.62.0) (2026-06-28)
+
+
+### Bug Fixes
+
+* **ui:** resolve TS compilation errors in Tooltip & test, mark e51 as done in epic.yaml ([9ec1af5](https://github.com/danielvm-git/bigbase/commit/9ec1af52610f4812b224c9dd46925a494b437019))
+
+
+### Features
+
+* **ui:** add design system foundation — tokens, 22 components, a11y audit ([6fb588e](https://github.com/danielvm-git/bigbase/commit/6fb588e63f79ce75dad9a27c5cd8dc0bf796f27c))
+
 # [2.61.0](https://github.com/danielvm-git/bigbase/compare/v2.60.1...v2.61.0) (2026-06-28)
 
 
