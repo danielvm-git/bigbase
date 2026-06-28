@@ -21,11 +21,17 @@ func (a *Auth) handleAnonymousToken(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Generate anonymous JWT with role=anonymous, 1 hour TTL.
-	claims := jwt.MapClaims{
-		"sub":  "anon-" + generateAnonymousID(),
-		"role": "anonymous",
-		"iat":  time.Now().Unix(),
-		"exp":  time.Now().Add(1 * time.Hour).Unix(),
+	now := time.Now()
+	claims := Claims{
+		UserID: 0,
+		Email:  "",
+		Role:   "anonymous",
+		OrgID:  0,
+		RegisteredClaims: jwt.RegisteredClaims{
+			Subject:   "anon-" + generateAnonymousID(),
+			IssuedAt:  jwt.NewNumericDate(now),
+			ExpiresAt: jwt.NewNumericDate(now.Add(1 * time.Hour)),
+		},
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	signed, err := token.SignedString(a.secret)

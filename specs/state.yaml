@@ -20,7 +20,7 @@ metrics:
   stories_completed: 145
   bcps_per_hour: 0.1
 epic_cycle:
-  step: 3
+  step: 4
   story_bcps: 2
   story: e49s01
   audit_result: null
@@ -28,7 +28,8 @@ epic_cycle:
     - 0
     - 1
     - 2
-  note: "Plan-work confirmed. Tasks complete with verify commands in e49s01-tasks.yaml. Impact score 2/10. Proceeding to kickoff-branch."
+    - 3
+  note: "Kickoff done. Worktree: ../feat-e49-auth-hardening, branch: feat/e49-auth-hardening. Auth + storage baseline clean. Proceeding to develop-tdd for e49s01."
   fast_mode: false
   story_complete: false
 bug_cycle:

@@ -357,6 +357,13 @@ func (a *Auth) Middleware(next http.Handler) http.Handler {
 		ctx = context.WithValue(ctx, ctxUserRole, claims.Role)
 		ctx = context.WithValue(ctx, ctxOrgID, claims.OrgID)
 
+		// Anonymous tokens bypass org isolation and email verification.
+		// Downstream handlers enforce read-only access via UserRoleFromContext.
+		if claims.Role == "anonymous" {
+			next.ServeHTTP(w, r.WithContext(ctx))
+			return
+		}
+
 		// Block unverified users when email verification is enabled.
 		verified, vErr := a.isEmailVerified(ctx, claims.UserID)
 		if vErr != nil {
