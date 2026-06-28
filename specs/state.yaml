@@ -1,31 +1,31 @@
 type: session-state
 context: infra
-active_flow: build_epic
-active_epic_id: e50
-active_story_id: e50s01
-active_story_status: in_progress
+active_flow: null
+active_epic_id: e57
+active_story_id: e57s01
+active_story_status: planned
 release:
   target_version: 2.58.0
   codename: "Project Scoping — Admin UI"
   last_tag: v2.58.0
-  last_publish: '2026-06-27'
-  ci_verified: true
-  ci_verified_at: '2026-06-27T16:35:00Z'
+  last_publish: '2026-06-28'
+  ci_verified: false
+  ci_verified_at: '2026-06-28T19:19:14Z'
 metrics:
   session_start: '2026-06-21T16:00:00Z'
   story_start: '2026-06-28T12:30:00Z'
-  session_end: null
-  cycle_minutes: 0
-  epics_completed: 49
-  stories_completed: 146
-  bcps_per_hour: 0.4
+  session_end: '2026-06-28T19:21:00Z'
+  cycle_minutes: 511
+  epics_completed: 50
+  stories_completed: 149
+  bcps_per_hour: 0.6
 epic_cycle:
-  step: 8
-  story_bcps: 5
-  story: e50s01
-  audit_result: pass
-  completed_steps: [0, 1, 2, 3, 4, 5, 6, 7]
-  note: "e50: JWT Secret & Token Lifecycle. 3 stories, 5 BCPs. Yolo mode — all stories."
+  step: 0
+  story_bcps: 3
+  story: e57s01
+  audit_result: null
+  completed_steps: []
+  note: "e57: Project Scoping — Admin UI. 1 story, 3 BCPs. Full 20-section spec written. Project CRUD UI with list/detail pages, sidebar nav, and data hooks."
   fast_mode: false
   story_complete: false
 bug_cycle:
@@ -33,13 +33,14 @@ bug_cycle:
   completed_steps: []
   bug_file: null
 git:
-  branch: feat/e50-jwt-token-management
-  hash: HEAD
+  branch: main
+  hash: 4d66c04d
   worktree: null
+  ci_status: "in_progress (2026-06-28T19:19:14Z)"
 handoff:
-  last_step_completed: "commit-message"
+  last_step_completed: "release-branch"
   open_decisions: []
-  next_skill: release-branch
-  summary: "e58 plan-work complete. 5 stories, 15 BCPs. All specs and tasks written. e58 depends on e52 (planned, fully spec'd — build e52 first)."
-  context: "Epic e58: Native Feature Port — Neon SQL-over-HTTP, DB Branching, Better Auth, MCP Migration Tools, Astro SDK. e58s01 (3 BCPs): /api/sql/neon endpoint, Neon wire format. e58s02 (4 BCPs): SQLite snapshot branching via VACUUM INTO, db_branches table, HTTP endpoints. e58s03 (3 BCPs): better-auth compat handlers in Go auth component. e58s04 (3 BCPs): list_migrations/run_migrations/rollback_migration MCP tools. e58s05 (2 BCPs): Fix setToken bug in @bigbase/auth-astro. Next: kickoff-branch for e52 (Tier-0 blocker) then e58."
+  next_skill: build-epic
+  summary: "e50 released to main (3 stories, 5 BCPs complete). CI/Release workflows running. e57 next: Project Scoping Admin UI (1 story, 3 BCPs, full spec + tasks written)."
+  context: "Epic e57: Project Scoping — Admin UI. WSJF 5.0, depends on e51, e52. e57s01 (3 BCPs): Backend project CRUD API endpoints, React ProjectsPage and ProjectDetailPage, useProjects hooks, sidebar navigation. Ready for kickoff-branch -> develop-tdd."
   fast_mode: false
