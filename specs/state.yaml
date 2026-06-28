@@ -1,9 +1,9 @@
 type: session-state
 context: infra
 active_flow: build_epic
-active_epic_id: e48
-active_story_id: e48s03
-active_story_status: done
+active_epic_id: e49
+active_story_id: e49s01
+active_story_status: planned
 release:
   target_version: 2.55.0
   codename: "Live Surface Hardening"
@@ -20,22 +20,17 @@ metrics:
   stories_completed: 145
   bcps_per_hour: 0.1
 epic_cycle:
-  step: 7
+  step: 3
   story_bcps: 2
-  story: e48s03
+  story: e49s01
   audit_result: null
   completed_steps:
     - 0
     - 1
     - 2
-    - 3
-    - 4
-    - 5
-    - 6
-    - 7
-  note: "Epic e48 complete: Live Surface Hardening (3 stories, 6 BCPs). All stories released to main."
-  fast_mode: true
-  story_complete: true
+  note: "Plan-work confirmed. Tasks complete with verify commands in e49s01-tasks.yaml. Impact score 2/10. Proceeding to kickoff-branch."
+  fast_mode: false
+  story_complete: false
 bug_cycle:
   current_step: 0
   completed_steps: []
@@ -45,9 +40,9 @@ git:
   hash: HEAD
   worktree: null
 handoff:
-  last_step_completed: "release-branch"
+  last_step_completed: "state setup"
   open_decisions: []
-  next_skill: "survey-context"
-  summary: "Epic e48 fully complete, verified, and archived. Gaps resolved (timing leak, case-insensitive git bypass, admin CSP, zap scripts)."
-  context: "Epic e48 fully done and archived. Next up: e47 or next epic in release plan."
-  fast_mode: true
+  next_skill: "security-review"
+  summary: "Starting e49 build-epic cycle."
+  context: "e49: Auth Hardening — Fix anonymous tokens, OAuth host header, path traversal. 3 stories, 5 BCPs."
+  fast_mode: false
