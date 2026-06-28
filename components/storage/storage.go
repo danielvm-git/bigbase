@@ -318,9 +318,19 @@ func (s *Storage) handleThumbnail(w http.ResponseWriter, r *http.Request, id str
 		return
 	}
 
-	fullPath := filepath.Join(s.dir, filepath.Clean(filePath))
-	absDir, _ := filepath.Abs(s.dir)
-	absPath, _ := filepath.Abs(fullPath)
+	fullPath := filepath.Join(s.dir, filePath)
+	absDir, err := filepath.Abs(s.dir)
+	if err != nil {
+		s.logger.Error("resolve storage dir", "error", err)
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		return
+	}
+	absPath, err := filepath.Abs(fullPath)
+	if err != nil {
+		s.logger.Error("resolve thumbnail path", "path", fullPath, "error", err)
+		writeJSON(w, http.StatusForbidden, map[string]string{"error": "access denied"})
+		return
+	}
 	if !strings.HasPrefix(absPath, absDir+string(filepath.Separator)) {
 		writeJSON(w, http.StatusForbidden, map[string]string{"error": "access denied"})
 		return
@@ -342,10 +352,20 @@ func (s *Storage) handleFileDownload(w http.ResponseWriter, r *http.Request, id 
 		return
 	}
 
-	// Path traversal defense: Clean → Abs → prefix check (same pattern as handleThumbnail).
-	fullPath := filepath.Join(s.dir, filepath.Clean(filePath))
-	absDir, _ := filepath.Abs(s.dir)
-	absPath, _ := filepath.Abs(fullPath)
+	// Path traversal defense: Abs → prefix check.
+	fullPath := filepath.Join(s.dir, filePath)
+	absDir, err := filepath.Abs(s.dir)
+	if err != nil {
+		s.logger.Error("resolve storage dir", "error", err)
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		return
+	}
+	absPath, err := filepath.Abs(fullPath)
+	if err != nil {
+		s.logger.Error("resolve file path", "path", fullPath, "error", err)
+		writeJSON(w, http.StatusForbidden, map[string]string{"error": "access denied"})
+		return
+	}
 	if !strings.HasPrefix(absPath, absDir+string(filepath.Separator)) {
 		writeJSON(w, http.StatusForbidden, map[string]string{"error": "access denied"})
 		return
@@ -379,7 +399,21 @@ func (s *Storage) handleFileDelete(w http.ResponseWriter, r *http.Request, id st
 		return
 	}
 
-	_ = os.RemoveAll(filepath.Join(s.dir, id))
+	// Defense-in-depth: validate the delete path is within the storage directory.
+	deletePath := filepath.Join(s.dir, filepath.Clean(id))
+	absDir, err := filepath.Abs(s.dir)
+	if err != nil {
+		s.logger.Error("resolve storage dir for delete", "error", err)
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		return
+	}
+	absDelete, err := filepath.Abs(deletePath)
+	if err != nil || !strings.HasPrefix(absDelete, absDir+string(filepath.Separator)) {
+		s.logger.Error("path traversal attempt in delete", "id", id)
+		writeJSON(w, http.StatusForbidden, map[string]string{"error": "access denied"})
+		return
+	}
+	_ = os.RemoveAll(deletePath)
 	writeJSON(w, http.StatusOK, map[string]string{"status": "deleted"})
 }
 

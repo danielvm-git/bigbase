@@ -154,7 +154,9 @@ func New(opts Options) *Auth {
 	if postLoginRedirect == "" {
 		postLoginRedirect = "/admin/"
 	}
-	return &Auth{
+
+	// Warn if Google OAuth is configured but no PublicURL is set.
+	a := &Auth{
 		db:                  opts.DB,
 		logger:              logger,
 		secret:              secret,
@@ -165,8 +167,12 @@ func New(opts Options) *Auth {
 		corsAllowedOrigins:  opts.CORSAllowedOrigins,
 		postLoginRedirect:   postLoginRedirect,
 		spaOriginAllowlist:  opts.SPAOriginAllowlist,
-		publicURL:           opts.PublicURL,
+		publicURL:           strings.TrimRight(opts.PublicURL, "/"),
 	}
+	if a.googleClientID != "" && a.publicURL == "" {
+		a.logger.Warn("public_url not configured; OAuth redirect URIs will use the Host header (vulnerable to Host header poisoning)")
+	}
+	return a
 }
 
 func (a *Auth) Name() string                    { return "auth" }
@@ -376,10 +382,15 @@ func (a *Auth) Middleware(next http.Handler) http.Handler {
 		ctx = context.WithValue(ctx, ctxUserRole, claims.Role)
 		ctx = context.WithValue(ctx, ctxOrgID, claims.OrgID)
 
-		// Anonymous tokens bypass org isolation and email verification.
-		// Downstream handlers enforce read-only access via UserRoleFromContext.
+		// Anonymous tokens bypass org isolation and email verification
+		// but are restricted to read-only methods.
 		if claims.Role == "anonymous" {
-			next.ServeHTTP(w, r.WithContext(ctx))
+			switch r.Method {
+			case http.MethodGet, http.MethodHead, http.MethodOptions:
+				next.ServeHTTP(w, r.WithContext(ctx))
+			default:
+				writeJSON(w, http.StatusForbidden, map[string]string{"error": "write access not allowed for anonymous users"})
+			}
 			return
 		}
 

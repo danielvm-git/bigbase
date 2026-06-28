@@ -573,6 +573,25 @@ func TestAnonymousToken(t *testing.T) {
 			wantBody:   `"anonymous"`,
 		},
 		{
+			name:       "POST rejected for anonymous",
+			method:     "POST",
+			token:      token,
+			wantStatus: http.StatusForbidden,
+			wantBody:   "write access not allowed",
+		},
+		{
+			name:       "PATCH rejected for anonymous",
+			method:     "PATCH",
+			token:      token,
+			wantStatus: http.StatusForbidden,
+		},
+		{
+			name:       "DELETE rejected for anonymous",
+			method:     "DELETE",
+			token:      token,
+			wantStatus: http.StatusForbidden,
+		},
+		{
 			name:       "no token rejected",
 			method:     "GET",
 			token:      "",
