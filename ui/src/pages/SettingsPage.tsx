@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import { PageHeader, Tabs, Card, CardHeader, Input, Button, Badge } from '../components'
+import { Tabs, Card, CardHeader, Input, Button, Badge, SettingsPage as SettingsPageTemplate } from '../components'
 import { useCurrentUser } from '../hooks/useAuth'
 import { useWorkspace, useMembers } from '../hooks/useWorkspace'
 import { useBilling, useUsage } from '../hooks/useBilling'
@@ -7,25 +7,28 @@ import { useBilling, useUsage } from '../hooks/useBilling'
 export default function SettingsPage() {
   const [tab, setTab] = useState('account')
 
+  const tabs = (
+    <Tabs
+      tabs={[
+        { id: 'account', label: 'Account' },
+        { id: 'workspace', label: 'Workspace' },
+        { id: 'billing', label: 'Billing' },
+      ]}
+      active={tab}
+      onChange={setTab}
+    />
+  )
+
   return (
-    <div>
-      <PageHeader
-        title="Settings"
-        subtitle="Manage your account, workspace, and billing"
-      />
-      <Tabs
-        tabs={[
-          { id: 'account', label: 'Account' },
-          { id: 'workspace', label: 'Workspace' },
-          { id: 'billing', label: 'Billing' },
-        ]}
-        active={tab}
-        onChange={setTab}
-      />
+    <SettingsPageTemplate
+      title="Settings"
+      subtitle="Manage your account, workspace, and billing"
+      tabs={tabs}
+    >
       {tab === 'account' && <AccountSection />}
       {tab === 'workspace' && <WorkspaceSection />}
       {tab === 'billing' && <BillingSection />}
-    </div>
+    </SettingsPageTemplate>
   )
 }
 
@@ -47,7 +50,7 @@ function AccountSection() {
         <Badge variant="info">Not configured</Badge>
       </div>
       <hr className="settings-divider" />
-      <h3 className="settings-subhead">Change password</h3>
+      <h2 className="settings-subhead">Change password</h2>
       <ChangePasswordForm />
     </Card>
   )
@@ -166,7 +169,7 @@ function BillingSection() {
         <span>{billing?.renews}</span>
       </div>
       <hr className="settings-divider" />
-      <h3 className="settings-subhead">Usage this month</h3>
+      <h2 className="settings-subhead">Usage this month</h2>
       <div className="settings-usage">
         <div className="settings-usage-cell" data-testid="usage-functions">
           <span className="dim">Functions</span>

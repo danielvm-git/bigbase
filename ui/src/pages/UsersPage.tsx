@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { PageHeader, Button } from '../components'
+import { Button, ListPage } from '../components'
 
 interface User {
   id: number
@@ -50,41 +50,40 @@ export default function UsersPage() {
     }
   }
 
-  if (loading) return <div className="loading">Loading users...</div>
-
   return (
-    <div>
-      <PageHeader title="Users">
-        <Button variant="secondary" size="sm" onClick={fetchUsers}>Refresh</Button>
-      </PageHeader>
-      {error && <p className="input-error-text">{error}</p>}
-      {users.length === 0 && !error && <p className="dim">No users found.</p>}
-      {users.length > 0 && (
-        <div className="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Email</th>
-                <th>Created</th>
-                <th>Actions</th>
+    <ListPage
+      title="Users"
+      loading={loading}
+      loadingMessage="Loading users..."
+      error={error || undefined}
+      empty={!loading && !error && users.length === 0}
+      emptyMessage="No users found."
+      actions={<Button variant="secondary" size="sm" onClick={fetchUsers}>Refresh</Button>}
+    >
+      <div className="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Email</th>
+              <th>Created</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {users.map(u => (
+              <tr key={u.id}>
+                <td>{u.id}</td>
+                <td>{u.email}</td>
+                <td>{new Date(u.created_at).toLocaleString()}</td>
+                <td>
+                  <Button variant="danger" size="sm" onClick={() => handleDelete(u.id)}>Delete</Button>
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {users.map(u => (
-                <tr key={u.id}>
-                  <td>{u.id}</td>
-                  <td>{u.email}</td>
-                  <td>{new Date(u.created_at).toLocaleString()}</td>
-                  <td>
-                    <Button variant="danger" size="sm" onClick={() => handleDelete(u.id)}>Delete</Button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-    </div>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </ListPage>
   )
 }

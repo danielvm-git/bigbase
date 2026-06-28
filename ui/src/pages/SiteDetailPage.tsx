@@ -15,6 +15,7 @@ import {
   SiteEnvVarsTab,
   SiteCacheTab,
   SiteDomainsTab,
+  Page,
 } from '../components'
 import { getSite, getSiteDeployments, deleteSite, getSiteManifest, saveSiteManifest, rollbackDeployment, getRollbackEvents } from '../lib/sitesData'
 import { isPreviewForced, previewQuerySuffix } from '../lib/previewMode'
@@ -443,7 +444,7 @@ export default function SiteDetailPage() {
   const latest = deployments[0] ?? site.latest_deployment
 
   return (
-    <div>
+    <Page className="site-detail-page">
       <PageHeader title={site.name}>
         <Button variant="secondary" size="sm" onClick={() => load()}>Refresh</Button>
         <Button variant="primary" size="sm" onClick={handleRedeploy}>Redeploy</Button>
@@ -689,6 +690,6 @@ export default function SiteDetailPage() {
       <p style={{ marginTop: 'var(--space-12)' }}>
         <Link to={`/deploy${pq}`}>← All sites</Link>
       </p>
-    </div>
+    </Page>
   )
 }

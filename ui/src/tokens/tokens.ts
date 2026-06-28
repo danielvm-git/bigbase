@@ -1,0 +1,130 @@
+import type { DesignTokens } from './types'
+
+export const TOKENS: DesignTokens = {
+  colors: {
+    neutral: {
+      0: 'rgba(255, 255, 255, 1)',
+      25: 'rgba(250, 250, 251, 1)',
+      40: 'rgba(244, 244, 247, 1)',
+      50: 'rgba(237, 237, 240, 1)',
+      100: 'rgba(228, 228, 231, 1)',
+      200: 'rgba(216, 216, 219, 1)',
+      250: 'rgba(195, 195, 198, 1)',
+      300: 'rgba(173, 173, 176, 1)',
+      400: 'rgba(151, 151, 155, 1)',
+      500: 'rgba(129, 129, 134, 1)',
+      600: 'rgba(108, 108, 113, 1)',
+      700: 'rgba(86, 86, 92, 1)',
+      750: 'rgba(65, 65, 70, 1)',
+      800: 'rgba(45, 45, 49, 1)',
+      850: 'rgba(29, 29, 33, 1)',
+      900: 'rgba(25, 25, 28, 1)',
+    },
+    brand: {
+      50: 'rgba(238, 236, 252, 1)',
+      100: 'rgba(224, 221, 250, 1)',
+      500: 'rgba(79, 70, 229, 1)',
+      600: 'rgba(67, 56, 202, 1)',
+      700: 'rgba(55, 48, 163, 1)',
+      tint: 'rgba(79, 70, 229, 0.10)',
+    },
+    success: 'rgba(16, 185, 129, 1)',
+    successBg: 'rgba(16, 185, 129, 0.12)',
+    successFg: 'rgba(6, 95, 70, 1)',
+    warning: 'rgba(245, 158, 11, 1)',
+    warningBg: 'rgba(245, 158, 11, 0.12)',
+    warningFg: 'rgba(146, 64, 14, 1)',
+    error: 'rgba(239, 68, 68, 1)',
+    errorBg: 'rgba(239, 68, 68, 0.08)',
+    errorFg: 'rgba(153, 27, 27, 1)',
+    info: 'rgba(59, 130, 246, 1)',
+    infoBg: 'rgba(59, 130, 246, 0.10)',
+    infoFg: 'rgba(30, 64, 175, 1)',
+  },
+  bg: {
+    default: 'var(--neutral-25)',
+    surface: 'var(--neutral-0)',
+    surfaceHover: 'var(--neutral-25)',
+    surfaceSecondary: 'var(--neutral-40)',
+    accent: 'var(--brand-500)',
+    accentHover: 'var(--brand-600)',
+    accentActive: 'var(--brand-700)',
+    subtle: 'var(--neutral-40)',
+  },
+  fg: {
+    primary: 'var(--neutral-800)',
+    secondary: 'var(--neutral-600)',
+    tertiary: 'var(--neutral-400)',
+    accent: 'var(--brand-500)',
+    onAccent: 'var(--neutral-0)',
+  },
+  border: {
+    default: 'var(--neutral-100)',
+    strong: 'var(--neutral-200)',
+    focus: 'var(--neutral-300)',
+    accent: 'var(--brand-500)',
+    error: 'var(--error)',
+  },
+  spacing: {
+    0: '0',
+    1: '2px',
+    2: '4px',
+    3: '6px',
+    4: '8px',
+    5: '10px',
+    6: '12px',
+    8: '16px',
+    10: '20px',
+    12: '24px',
+    16: '32px',
+    20: '40px',
+    24: '48px',
+  },
+  radius: {
+    xs: '4px',
+    s: '8px',
+    m: '12px',
+    l: '16px',
+    full: '9999px',
+  },
+  typography: {
+    fontSans: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+    fontMono: "'Fira Code', 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, monospace",
+    textXs: '12px',
+    textS: '14px',
+    textM: '16px',
+    textL: '20px',
+    textXl: '24px',
+    text2xl: '32px',
+    text3xl: '40px',
+  },
+  shadow: {
+    xs: '0 1px 2px rgba(0, 0, 0, 0.04)',
+    s: '0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04)',
+    m: '0 4px 6px rgba(0, 0, 0, 0.04), 0 2px 4px rgba(0, 0, 0, 0.04)',
+    l: '0 10px 15px rgba(0, 0, 0, 0.06), 0 4px 8px rgba(0, 0, 0, 0.04)',
+    xl: '0 20px 40px rgba(0, 0, 0, 0.10)',
+  },
+  motion: {
+    durationFast: '150ms',
+    durationShort: '160ms',
+    durationMedium: '200ms',
+    durationExtended: '250ms',
+    durationSlow: '300ms',
+    easeStandard: 'ease',
+    easeEmphasized: 'cubic-bezier(0.32, 0.72, 0, 1)',
+    easeInOut: 'ease-in-out',
+    easeOut: 'ease-out',
+  },
+  focusRing: '0 0 0 3px rgba(79, 70, 229, 0.18)',
+}
+
+/** Returns a CSS var reference: token('--bg-accent') → 'var(--bg-accent)' */
+export function cssVar(name: string): string {
+  return `var(${name.startsWith('--') ? name : `--${name}`})`
+}
+
+/** Type-safe accessor for a nested token path. */
+export function token<T>(getter: (t: DesignTokens) => T): T {
+  return getter(TOKENS)
+}
