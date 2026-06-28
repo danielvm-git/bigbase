@@ -1,3 +1,11 @@
+## [2.59.1](https://github.com/danielvm-git/bigbase/compare/v2.59.0...v2.59.1) (2026-06-28)
+
+
+### Bug Fixes
+
+* **security:** resolve case-insensitive git path bypass, health timing leak, and admin CSP headers ([4b11c70](https://github.com/danielvm-git/bigbase/commit/4b11c703d7177e5e9bb001298c12a1e308a319f5))
+* **specs:** prevent validate-specs-yaml crash on capsule task paths ([9efd8cd](https://github.com/danielvm-git/bigbase/commit/9efd8cdc96308eb082daf7488b6e33b46c8447a7))
+
 # [2.59.0](https://github.com/danielvm-git/bigbase/compare/v2.58.0...v2.59.0) (2026-06-27)
 
 
