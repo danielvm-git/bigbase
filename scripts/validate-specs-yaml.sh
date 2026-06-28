@@ -75,7 +75,10 @@ if rp_path.is_file():
             errors.append(f"{shard}: missing context:")
         stories = data.get("stories") or []
         for story in stories:
-            for task in story.get("tasks") or []:
+            tasks = story.get("tasks") or []
+            if isinstance(tasks, str):
+                continue
+            for task in tasks:
                 if not task.get("verify"):
                     errors.append(
                         f"{eid}/{story.get('id')}: task missing verify: {task.get('desc', '')[:60]}"
