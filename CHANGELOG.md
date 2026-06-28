@@ -1,3 +1,17 @@
+# [2.60.0](https://github.com/danielvm-git/bigbase/compare/v2.59.1...v2.60.0) (2026-06-28)
+
+
+### Bug Fixes
+
+* **auth:** use configured PublicURL for OAuth redirect URIs ([3a86390](https://github.com/danielvm-git/bigbase/commit/3a86390d0459d17210d2c86e3184c807ed320ce9))
+* **security:** address e49 code review findings ([0aac517](https://github.com/danielvm-git/bigbase/commit/0aac517a5e0aafa56630a264ae44d084e491d167)), closes [#1](https://github.com/danielvm-git/bigbase/issues/1) [#2](https://github.com/danielvm-git/bigbase/issues/2) [#3](https://github.com/danielvm-git/bigbase/issues/3) [#4](https://github.com/danielvm-git/bigbase/issues/4) [#5](https://github.com/danielvm-git/bigbase/issues/5) [#6](https://github.com/danielvm-git/bigbase/issues/6) [#7](https://github.com/danielvm-git/bigbase/issues/7)
+* **storage:** add path traversal defense to file downloads ([41dd50b](https://github.com/danielvm-git/bigbase/commit/41dd50b430e6abbf1740c58c794911155965526d))
+
+
+### Features
+
+* **auth:** fix anonymous tokens with Claims struct and middleware bypass ([9d587c8](https://github.com/danielvm-git/bigbase/commit/9d587c8f8bcd8ec5d4d49de6eb8c82cc439fe917))
+
 ## [2.59.1](https://github.com/danielvm-git/bigbase/compare/v2.59.0...v2.59.1) (2026-06-28)
 
 
