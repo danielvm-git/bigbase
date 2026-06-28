@@ -259,6 +259,27 @@ rtk init --global       # Add RTK to ~/.claude/CLAUDE.md
 Overall average: **60-90% token reduction** on common development operations.
 <!-- /rtk-instructions -->
 
+## Model Routing Matrix (Anthropic)
+
+### 1. Model Matrix & Allocation
+
+| Task Category | Optimal Model | Selection Reason |
+| :--- | :--- | :--- |
+| **Global Planning & ADRs** | `Claude Opus 4.6 (Thinking)` | Deep reasoning, complex design trade-offs, and architectural planning. |
+| **Codebase Context Search** | `Claude Sonnet 4.6 (Thinking)` | Best for reading file trees and cross-component structures. |
+| **Feature Coding & TDD Loops** | `Claude Sonnet 4.6 (Thinking)` | Precision coding, exact syntax execution, and deep test writing. |
+| **Verification & Utility Tasks** | `Claude Haiku 4.5` | Ultra-low latency, cheap tokens. Best for running linters, tests, and compiling. |
+| **Browser UI Testing** | `Claude Sonnet 4.6` | Visual processing for browser subagents. |
+| **Structured Docs & Summaries** | `Claude Sonnet 4.6` or `Claude Haiku 4.5` | Strong at structured prose, reports, and YAML/JSON synthesis. |
+
+### 2. Dynamic Delegation Protocol
+
+When spawning sub-agents (via `delegate-task`, `dispatch-agents`, or `browser_subagent`):
+- **For file system audits, logs inspection, and linting**: Use `Claude Haiku 4.5` to keep token costs minimal.
+- **For code generation/refactoring sub-tasks**: Use `Claude Sonnet 4.6 (Thinking)`.
+- **Context Shaving**: Never pass entire files to sub-agents unless they are targets for modification. Pass only specific function signatures or YAML spec blocks to keep input tokens low.
+
+
 ## bts toolchain
 
 `bts` is installed. Prefer its verbs over ad-hoc shell commands.

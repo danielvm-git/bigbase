@@ -123,6 +123,26 @@ Read the opensrc cache path before changing integration code.
 Logging is structured JSON via `slog.JSONHandler` in serve mode.
 CLI output uses plain text.
 
+## Model Routing Matrix (DeepSeek)
+
+### 1. Model Matrix & Allocation
+
+| Task Category | Optimal Model | Selection Reason |
+| :--- | :--- | :--- |
+| **Global Planning & ADRs** | `DeepSeek-V4-Pro` | Deep reasoning, complex design trade-offs, and architectural planning. |
+| **Codebase Context Search** | `DeepSeek-V4-Flash` | Large context processing. Best for reading file trees and cross-component structures. |
+| **Feature Coding & TDD Loops** | `DeepSeek-V4-Pro` | Precision coding, exact syntax execution, and deep test writing. |
+| **Verification & Utility Tasks** | `DeepSeek-V4-Flash` | Ultra-low latency, cheap tokens. Best for running linters, tests, and compiling. |
+| **Browser UI Testing** | `DeepSeek-V4-Flash` | Fast image/visual processing for browser subagents. |
+| **Structured Docs & Summaries** | `DeepSeek-V4-Flash` | Strong at structured prose, reports, and YAML/JSON synthesis. |
+
+### 2. Dynamic Delegation Protocol
+
+When spawning sub-agents (via `delegate-task`, `dispatch-agents`, or `browser_subagent`):
+- **For file system audits, logs inspection, and linting**: Use `DeepSeek-V4-Flash` to keep token costs minimal.
+- **For code generation/refactoring sub-tasks**: Use `DeepSeek-V4-Pro` or `DeepSeek-V4-Flash` depending on context size.
+- **Context Shaving**: Never pass entire files to sub-agents unless they are targets for modification. Pass only specific function signatures or YAML spec blocks to keep input tokens low.
+
 
 ## bts toolchain
 
