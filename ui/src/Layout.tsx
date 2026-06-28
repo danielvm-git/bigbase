@@ -1,8 +1,11 @@
-import { useEffect, useState, type ReactNode } from 'react'
-import { Outlet, NavLink, useNavigate } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { Outlet, useNavigate } from 'react-router-dom'
 import { Icon, type IconName } from './components/Icon'
 import { ThemePicker } from './components/ThemePicker'
 import { TutorialOverlay, useTutorialTrigger } from './components/TutorialOverlay'
+import { AppShell } from './components/AppShell'
+import { Sidebar, SidebarSection } from './components/Sidebar'
+import { AppFooter } from './components/AppFooter'
 import { useTheme } from './hooks/useTheme'
 
 interface UserInfo { id: number; email: string }
@@ -12,24 +15,6 @@ interface NavItem {
   label: string
   icon: IconName
   end?: boolean
-}
-
-function NavSection({ title, items }: { title: string; items: NavItem[] }) {
-  return (
-    <div className="sidebar-section">
-      <div className="sidebar-section-title">{title}</div>
-      <ul className="sidebar-nav">
-        {items.map(item => (
-          <li key={item.to}>
-            <NavLink to={item.to} end={item.end}>
-              <Icon name={item.icon} size={18} />
-              <span>{item.label}</span>
-            </NavLink>
-          </li>
-        ))}
-      </ul>
-    </div>
-  )
 }
 
 export default function Layout() {
@@ -80,124 +65,73 @@ export default function Layout() {
     { to: '/realtime', label: 'Realtime', icon: 'radio' },
   ]
 
-  let footerBlock: ReactNode = null
-  if (user) {
-    footerBlock = (
-      <div className="sidebar-footer">
-        <div className="sidebar-section-title sidebar-appearance-label">Appearance</div>
-        <div className="sidebar-appearance">
-          <button
-            type="button"
-            onClick={toggleTheme}
-            className="btn btn-secondary btn-sm sidebar-appearance-btn"
-            title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
-            aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
-          >
-            <Icon name={theme === 'light' ? 'moon' : 'sun'} size={16} />
-            <span>{theme === 'light' ? 'Dark mode' : 'Light mode'}</span>
-          </button>
-          <label className="sidebar-accent-label">
-            <span className="dim">Accent</span>
-            <ThemePicker value={accent} onChange={setAccent} />
-          </label>
-        </div>
-        <ul className="sidebar-nav sidebar-footer-nav">
-          <li>
-            <NavLink to="/settings">
-              <Icon name="settings" size={18} />
-              <span>Settings</span>
-            </NavLink>
-          </li>
-        </ul>
-        <div className="sidebar-user">
-          <div className="sidebar-avatar">{initial}</div>
-          <span className="sidebar-email">{user.email}</span>
-        </div>
-        <button type="button" className="btn btn-secondary btn-sm" onClick={handleLogout} style={{ width: '100%' }}>
-          Logout
+  const sidebarFooter = user ? (
+    <div className="sidebar-footer">
+      <div className="sidebar-section-title sidebar-appearance-label">Appearance</div>
+      <div className="sidebar-appearance">
+        <button
+          type="button"
+          onClick={toggleTheme}
+          className="btn btn-secondary btn-sm sidebar-appearance-btn"
+          title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
+          aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
+        >
+          <Icon name={theme === 'light' ? 'moon' : 'sun'} size={16} />
+          <span>{theme === 'light' ? 'Dark mode' : 'Light mode'}</span>
         </button>
+        <label className="sidebar-accent-label">
+          <span className="dim">Accent</span>
+          <ThemePicker value={accent} onChange={setAccent} />
+        </label>
       </div>
-    )
-  }
+      <ul className="sidebar-nav sidebar-footer-nav">
+        <li>
+          <a href="/settings">
+            <Icon name="settings" size={18} />
+            <span>Settings</span>
+          </a>
+        </li>
+      </ul>
+      <div className="sidebar-user">
+        <div className="sidebar-avatar">{initial}</div>
+        <span className="sidebar-email">{user.email}</span>
+      </div>
+      <button type="button" className="btn btn-secondary btn-sm" onClick={handleLogout} style={{ width: '100%' }}>
+        Logout
+      </button>
+    </div>
+  ) : null
+
+  const sidebar = (
+    <Sidebar id="sidebar-nav" open={sidebarOpen} footer={sidebarFooter}>
+      <div className="sidebar-logo">
+        <div className="sidebar-logo-icon">B</div>
+        <span>BigBase</span>
+      </div>
+      <SidebarSection title="Overview" items={[{ to: '/', label: 'Dashboard', icon: 'layout-dashboard', end: true }]} />
+      <SidebarSection title="Build" items={buildNav} />
+      <SidebarSection title="Data" items={dataNav} />
+      <SidebarSection title="Auth" items={authNav} />
+      <SidebarSection title="Engage" items={engageNav} />
+      <SidebarSection title="DevOps" items={devOpsNav} />
+    </Sidebar>
+  )
 
   return (
-    <div className="layout">
-      <button
-        type="button"
-        className="sidebar-toggle"
-        onClick={() => setSidebarOpen(o => !o)}
-        aria-label={sidebarOpen ? 'Close sidebar' : 'Open sidebar'}
-        aria-expanded={sidebarOpen}
-        aria-controls="sidebar-nav"
-      >
-        {sidebarOpen ? '✕' : '☰'}
-      </button>
-      <nav id="sidebar-nav" className={`sidebar${sidebarOpen ? ' sidebar-open' : ''}`}>
-        <div className="sidebar-logo">
-          <div className="sidebar-logo-icon">B</div>
-          <span>BigBase</span>
-        </div>
-
-        <NavSection title="Overview" items={[{ to: '/', label: 'Dashboard', icon: 'layout-dashboard', end: true }]} />
-        <NavSection title="Build" items={buildNav} />
-        <NavSection title="Data" items={dataNav} />
-        <NavSection title="Auth" items={authNav} />
-        <NavSection title="Engage" items={engageNav} />
-        <NavSection title="DevOps" items={devOpsNav} />
-
-        <div className="sidebar-spacer" />
-        {footerBlock}
-      </nav>
-
+    <AppShell
+      sidebar={sidebar}
+      sidebarOpen={sidebarOpen}
+      onToggleSidebar={() => setSidebarOpen(o => !o)}
+    >
       {tutorial.visible && <TutorialOverlay onClose={tutorial.close} />}
-
-      <div className="layout-body">
-        <main className="content">
-          <Outlet />
-        </main>
-
-        <footer className="app-footer" data-testid="app-footer">
-          <div className="app-footer-brand">
-            <span className="app-footer-logo" aria-hidden>B</span>
-            <span>© 2026 BigBase · MIT License</span>
-          </div>
-          <div className="app-footer-meta">
-            {!tutorial.isDone && (
-              <button
-                type="button"
-                className="btn btn-secondary btn-sm"
-                onClick={tutorial.open}
-                data-testid="tutorial-btn"
-              >
-                Help
-              </button>
-            )}
-            {appVersion && <span className="mono">v{appVersion}</span>}
-            <span className="app-footer-sep" aria-hidden />
-            <span>
-              Built with{' '}
-              <a href="https://github.com/danielvm-git/bigpowers" target="_blank" rel="noopener noreferrer">
-                BigPowers
-              </a>
-              {' '}by{' '}
-              <a href="https://github.com/danielvm-git" target="_blank" rel="noopener noreferrer">
-                danielvm-git
-              </a>
-            </span>
-            <span className="app-footer-sep" aria-hidden />
-            <a href="https://github.com/danielvm-git/bigbase" target="_blank" rel="noopener noreferrer">
-              GitHub
-            </a>
-            <a
-              href="https://github.com/danielvm-git/bigbase/blob/main/CHANGELOG.md"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Changelog
-            </a>
-          </div>
-        </footer>
-      </div>
-    </div>
+      <main className="content">
+        <Outlet />
+      </main>
+      <AppFooter
+        appVersion={appVersion}
+        showTutorial={!tutorial.isDone}
+        onOpenTutorial={tutorial.open}
+      />
+    </AppShell>
   )
 }
