@@ -1,31 +1,31 @@
 type: session-state
 context: infra
-active_flow: build_epic
-active_epic_id: e49
-active_story_id: e49s03
+active_flow: null
+active_epic_id: e57
+active_story_id: e57s01
 active_story_status: planned
 release:
-  target_version: 2.55.0
-  codename: "Live Surface Hardening"
-  last_tag: v2.55.0
+  target_version: 2.58.0
+  codename: "Project Scoping — Admin UI"
+  last_tag: v2.58.0
   last_publish: '2026-06-27'
   ci_verified: true
   ci_verified_at: '2026-06-27T16:35:00Z'
 metrics:
   session_start: '2026-06-21T16:00:00Z'
-  story_start: '2026-06-27T13:30:00Z'
-  session_end: '2026-06-28T03:48:00Z'
-  cycle_minutes: 858
-  epics_completed: 47
+  story_start: '2026-06-28T12:30:00Z'
+  session_end: null
+  cycle_minutes: 0
+  epics_completed: 49
   stories_completed: 146
-  bcps_per_hour: 0.1
+  bcps_per_hour: 0.4
 epic_cycle:
   step: 0
-  story_bcps: 1
-  story: e49s03
+  story_bcps: 3
+  story: e57s01
   audit_result: null
   completed_steps: []
-  note: "Starting e49s03: Path traversal defense. 3 tasks."
+  note: "e57: Project Scoping — Admin UI. 1 story, 3 BCPs. Full 20-section spec written. Project CRUD UI with list/detail pages, sidebar nav, and data hooks."
   fast_mode: false
   story_complete: false
 bug_cycle:
@@ -33,13 +33,13 @@ bug_cycle:
   completed_steps: []
   bug_file: null
 git:
-  branch: feat/e49s02-oauth-publicurl
+  branch: main
   hash: HEAD
-  worktree: ../feat-e49s02-oauth-publicurl
+  worktree: null
 handoff:
-  last_step_completed: "release-branch"
+  last_step_completed: "plan-work"
   open_decisions: []
-  next_skill: "survey-context"
-  summary: "Epic e49 fully complete. All 3 stories (5 BCPs) done, merged, ephemeral branches deleted, epic capsule archived."
-  context: "e49: 3/3 stories done."
+  next_skill: kickoff-branch
+  summary: "e57 plan-work complete. 1 story, 3 BCPs, full 20-section spec + tasks. Project CRUD admin UI: Go API endpoints, React pages (list + detail), hooks, sidebar nav. Ready for kickoff-branch."
+  context: "Epic e57: Project Scoping — Admin UI. WSJF 5.0, depends on e51, e52. e57s01 (3 BCPs): Backend project CRUD API endpoints, React ProjectsPage and ProjectDetailPage, useProjects hooks, sidebar navigation. Next: kickoff-branch -> develop-tdd START WITH e57s01."
   fast_mode: false

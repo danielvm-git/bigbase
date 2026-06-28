@@ -4,22 +4,34 @@ status: planned
 bcps: 2
 tasks:
   - id: 1
-    description: "Create audit_events table migration in auth.Start()"
+    description: "Add audit_events table migration in auth.Start()"
     verify: "go test ./components/auth/ -run TestAuditEventsTable -v"
     status: todo
   - id: 2
-    description: "Add recordAudit(ctx, eventType, userID, email, ip, metadata) helper on Auth"
+    description: "Add recordAudit(ctx, eventType, userID, email, ip, metadata) helper on Auth with fire-and-forget INSERT"
     verify: "go test ./components/auth/ -run TestRecordAudit -v"
     status: todo
   - id: 3
-    description: "Wire audit recording into handleRegister, handleLogin (success/fail), handleLogout"
+    description: "Wire audit into core handlers: handleRegister, handleLogin (success + fail), handleLogout, handleRefresh"
     verify: "go test ./components/auth/ -run TestAuditLoginEvents -v"
     status: todo
   - id: 4
-    description: "Wire audit recording into handleRefresh, handleGoogleCallback, handleSendOTP, handleVerifyOTP"
-    verify: "go test ./components/auth/ -run TestAuditIntegration -v"
+    description: "Wire audit into OTP/phone handlers: handleSendOTP, handleVerifyOTP, handleSendPhoneOTP, handleVerifyPhoneOTP"
+    verify: "go test ./components/auth/ -run TestAuditOTPEvents -v"
     status: todo
   - id: 5
-    description: "Wire audit recording into handleCreateAPIKey, handleDeleteAPIKey, handleForgotPassword, handleResetPassword, handleAnonymousToken, handleUserByID"
-    verify: "go test ./components/auth/ -run TestAuditAllEvents -v"
+    description: "Wire audit into API key handlers: handleCreateAPIKey, handleDeleteAPIKey"
+    verify: "go test ./components/auth/ -run TestAuditAPIKeyEvents -v"
+    status: todo
+  - id: 6
+    description: "Wire audit into password reset, OAuth callback, anonymous token, and user deletion handlers"
+    verify: "go test ./components/auth/ -run TestAuditPasswordResetEvents -v"
+    status: todo
+  - id: 7
+    description: "Add integration test for fire-and-forget: auth succeeds when audit_events table is unavailable"
+    verify: "go test ./components/auth/ -run TestAuditFireAndForget -v"
+    status: todo
+  - id: 8
+    description: "Run full auth test suite and vet"
+    verify: "go test ./components/auth/ -count=1 -v 2>&1 | tail -30 && go vet ./components/auth/"
     status: todo
