@@ -1,4 +1,4 @@
-import { useState, useId, type ReactNode } from 'react'
+import { useState, useId, cloneElement, isValidElement, type ReactNode } from 'react'
 
 type TooltipPlacement = 'top' | 'bottom' | 'left' | 'right'
 
@@ -14,19 +14,15 @@ export function Tooltip({ content, children, placement = 'top', className = '' }
   const id = useId()
 
   function cloneWithAriaDescribedBy(child: ReactNode) {
-    if (typeof child !== 'object' || child === null) return child
-    const el = child as React.ReactElement
-    return {
-      ...el,
-      props: {
-        ...el.props,
-        'aria-describedby': id,
-        onMouseEnter: (e: React.MouseEvent) => { setVisible(true); el.props.onMouseEnter?.(e) },
-        onMouseLeave: (e: React.MouseEvent) => { setVisible(false); el.props.onMouseLeave?.(e) },
-        onFocus: (e: React.FocusEvent) => { setVisible(true); el.props.onFocus?.(e) },
-        onBlur: (e: React.FocusEvent) => { setVisible(false); el.props.onBlur?.(e) },
-      },
-    }
+    if (!isValidElement(child)) return child
+    const el = child as React.ReactElement<any>
+    return cloneElement(el, {
+      'aria-describedby': id,
+      onMouseEnter: (e: React.MouseEvent) => { setVisible(true); el.props.onMouseEnter?.(e) },
+      onMouseLeave: (e: React.MouseEvent) => { setVisible(false); el.props.onMouseLeave?.(e) },
+      onFocus: (e: React.FocusEvent) => { setVisible(true); el.props.onFocus?.(e) },
+      onBlur: (e: React.FocusEvent) => { setVisible(false); el.props.onBlur?.(e) },
+    })
   }
 
   return (
