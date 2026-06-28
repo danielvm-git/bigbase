@@ -307,11 +307,11 @@ epics:
   wsjf: 4.0
   mode: capsule
   tier: 1
-  status: planned
+  status: done
   depends_on: []
   note: 3 stories, 6 BCPs. Block .git, gate /health, security headers, CI scanning.
-  capsule_dir: epics/e48-live-surface-hardening
-  file: epics/e48-live-surface-hardening/epic.yaml
+  capsule_dir: epics/archive/e48-live-surface-hardening
+  file: epics/archive/e48-live-surface-hardening/epic.yaml
 - id: e49
   title: "Security \u2014 Auth Hardening (Anonymous, OAuth, Path Traversal)"
   wsjf: 3.2
