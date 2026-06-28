@@ -319,7 +319,7 @@ epics:
   tier: 1
   status: done
   depends_on: []
-  note: 3 stories, 5 BCPs. ALL DONE: anonymous tokens, OAuth Host header, path traversal.
+  note: "3 stories, 5 BCPs. ALL DONE - anonymous tokens, OAuth Host header, path traversal."
   capsule_dir: epics/archive/e49-auth-hardening
   file: epics/archive/e49-auth-hardening/epic.yaml
 - id: e50
