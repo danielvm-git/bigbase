@@ -127,12 +127,25 @@ func (a *Auth) handleRefresh(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Mark old token as used (rotation — single use).
-	_, err = a.db.ExecContext(ctx,
-		"UPDATE refresh_tokens SET used = 1 WHERE id = ?", tokenID)
+	// Mark old token as used (rotation — single use) atomically to prevent race conditions.
+	res, err := a.db.ExecContext(ctx,
+		"UPDATE refresh_tokens SET used = 1 WHERE id = ? AND used = 0", tokenID)
 	if err != nil {
 		a.logger.Error("invalidate old refresh token", "id", tokenID, "error", err)
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		return
+	}
+	rows, err := res.RowsAffected()
+	if err != nil {
+		a.logger.Error("check rows affected on rotation", "id", tokenID, "error", err)
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		return
+	}
+	if rows == 0 {
+		// Concurrent rotation or logout-all occurred between SELECT and UPDATE.
+		// Trigger family invalidation for security.
+		_ = a.invalidateFamily(ctx, family)
+		writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "refresh token already used"})
 		return
 	}
 
@@ -188,5 +201,8 @@ func (a *Auth) invalidateAllUserTokens(ctx context.Context, userID int64) error 
 	defer cancel()
 	_, err := a.db.ExecContext(ctx,
 		"UPDATE refresh_tokens SET used = 1 WHERE user_id = ?", userID)
-	return err
+	if err != nil {
+		return fmt.Errorf("invalidate all user tokens: %w", err)
+	}
+	return nil
 }

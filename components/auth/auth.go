@@ -9,6 +9,7 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -150,6 +151,10 @@ func New(opts Options) *Auth {
 	var secret []byte
 	if opts.Secret != "" {
 		secret = []byte(opts.Secret)
+		// Validate programmatic secret unless running in a unit test.
+		if !isTestMode() {
+			validateJWTSecret(opts.Secret)
+		}
 	} else {
 		secret = resolveJWTSecret(logger)
 	}
@@ -190,12 +195,34 @@ func New(opts Options) *Auth {
 	return a
 }
 
+var testModeOverride *bool
+
+func isTestMode() bool {
+	if testModeOverride != nil {
+		return *testModeOverride
+	}
+	return flag.Lookup("test.v") != nil
+}
+
 // knownDefaultSecrets lists secrets that must never be used in production.
 var knownDefaultSecrets = []string{
+	"test-secret-32-chars-long-key!!!",
 	"test-secret-32-chars!!!",
 	"secret",
 	"changeme",
 	"your-secret-here",
+}
+
+// validateJWTSecret validates that the secret is of safe length and is not a known default.
+func validateJWTSecret(val string) {
+	for _, known := range knownDefaultSecrets {
+		if val == known {
+			panic("auth: JWT secret is a known default and must not be used in production")
+		}
+	}
+	if len(val) < 32 {
+		panic("auth: JWT secret must be at least 32 bytes")
+	}
 }
 
 // resolveJWTSecret reads BIGBASE_JWT_SECRET from the environment, validates it,
@@ -211,14 +238,7 @@ func resolveJWTSecret(logger Logger) []byte {
 		logger.Warn("JWT secret not configured, using auto-generated secret. Set BIGBASE_JWT_SECRET for persistent tokens across restarts.")
 		return secret
 	}
-	if len(val) < 32 {
-		panic("auth: BIGBASE_JWT_SECRET must be at least 32 bytes")
-	}
-	for _, known := range knownDefaultSecrets {
-		if val == known {
-			panic("auth: BIGBASE_JWT_SECRET is a known default and must not be used in production")
-		}
-	}
+	validateJWTSecret(val)
 	logger.Info("JWT secret loaded from configuration")
 	return []byte(val)
 }

@@ -175,7 +175,7 @@ func startProxy() {
 	postLoginRedirect := serveFS.String("auth-post-login-redirect", "/admin/", "Post-login redirect URL for OAuth callbacks")
 	spaOriginAllowlist := serveFS.String("auth-spa-origin-allowlist", "", "Comma-separated list of allowed SPA origins for OAuth token delivery (empty = disabled)")
 	jwtAccessExpiry := serveFS.String("jwt-access-expiry", "", "JWT access token lifetime (e.g. 24h, 30m). Default: 24h (env: BIGBASE_JWT_ACCESS_EXPIRY)")
-	jwtRefreshExpiry := serveFS.String("jwt-refresh-expiry", "", "JWT refresh token lifetime (e.g. 720h, 30d). Default: 720h (env: BIGBASE_JWT_REFRESH_EXPIRY)")
+	jwtRefreshExpiry := serveFS.String("jwt-refresh-expiry", "", "JWT refresh token lifetime (e.g. 720h). Default: 720h (env: BIGBASE_JWT_REFRESH_EXPIRY)")
 	rateLimitEnabled := serveFS.Bool("rate-limit-enabled", true, "Enable rate limiting on auth endpoints (env: BIGBASE_RATE_LIMIT_ENABLED)")
 	rateLimitIPMaxStr := serveFS.String("rate-limit-ip-max", "60", "Max requests per minute per IP (env: BIGBASE_RATE_LIMIT_IP_MAX)")
 	rateLimitUserMaxStr := serveFS.String("rate-limit-user-max", "300", "Max requests per minute per authenticated user (env: BIGBASE_RATE_LIMIT_USER_MAX)")
