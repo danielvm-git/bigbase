@@ -1,31 +1,31 @@
 type: session-state
 context: infra
-active_flow: null
-active_epic_id: e57
-active_story_id: e57s01
+active_flow: build_epic
+active_epic_id: e51
+active_story_id: e51s01
 active_story_status: planned
 release:
-  target_version: 2.58.0
-  codename: "Project Scoping — Admin UI"
-  last_tag: v2.58.0
+  target_version: 2.62.0
+  codename: "UI Design System & Component Library (Evolved v2)"
+  last_tag: v2.61.0
   last_publish: '2026-06-28'
   ci_verified: false
   ci_verified_at: '2026-06-28T19:19:14Z'
 metrics:
-  session_start: '2026-06-21T16:00:00Z'
-  story_start: '2026-06-28T12:30:00Z'
-  session_end: '2026-06-28T19:21:00Z'
-  cycle_minutes: 511
+  session_start: '2026-06-28T00:00:00Z'
+  story_start: '2026-06-28T20:00:00Z'
+  session_end: null
+  cycle_minutes: 0
   epics_completed: 50
   stories_completed: 149
   bcps_per_hour: 0.6
 epic_cycle:
   step: 0
-  story_bcps: 3
-  story: e57s01
+  story_bcps: 4
+  story: e51s01
   audit_result: null
   completed_steps: []
-  note: "e57: Project Scoping — Admin UI. 1 story, 3 BCPs. Full 20-section spec written. Project CRUD UI with list/detail pages, sidebar nav, and data hooks."
+  note: "e51: UI Design System & Component Library (Evolved v2). 7 stories, 26 BCPs. Design tokens, core/extended components, layout, templates, a11y, data viz."
   fast_mode: false
   story_complete: false
 bug_cycle:
@@ -34,13 +34,13 @@ bug_cycle:
   bug_file: null
 git:
   branch: main
-  hash: 4d66c04d
+  hash: c3527d3d
   worktree: null
-  ci_status: "in_progress (2026-06-28T19:19:14Z)"
+  ci_status: "idle"
 handoff:
-  last_step_completed: "release-branch"
+  last_step_completed: "status-fix"
   open_decisions: []
   next_skill: build-epic
-  summary: "e50 released to main (3 stories, 5 BCPs complete). CI/Release workflows running. e57 next: Project Scoping Admin UI (1 story, 3 BCPs, full spec + tasks written)."
-  context: "Epic e57: Project Scoping — Admin UI. WSJF 5.0, depends on e51, e52. e57s01 (3 BCPs): Backend project CRUD API endpoints, React ProjectsPage and ProjectDetailPage, useProjects hooks, sidebar navigation. Ready for kickoff-branch -> develop-tdd."
+  summary: "e50 status corrected in execution-status.yaml. e51 (UI Design System) is now active. 7 stories, 26 BCPs. Starting from e51s01 (Design Tokens & Theme System)."
+  context: "Epic e51: UI Design System & Component Library (Evolved v2). WSJF 6.5, blocks e57/e59/e61/e62/e63/e64. e51s01 (4 BCPs): Design tokens & theme system. Full spec+tasks already written."
   fast_mode: false
