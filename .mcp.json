@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "ctxo": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@ctxo/cli"
+      ]
+    }
+  }
+}
