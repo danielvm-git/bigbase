@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "sqz": {
+      "command": "sqz-mcp",
+      "args": []
+    },
+    "ctxo": {
+      "command": "npx",
+      "args": ["-y", "@ctxo/cli"]
+    },
+    "context7": {
+      "command": "npx",
+      "args": ["-y", "@upstash/context7-mcp"]
+    }
+  }
+}

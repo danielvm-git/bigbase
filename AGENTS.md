@@ -1,166 +1,33 @@
-# BigBase — OpenCode
+## ctxo MCP Tool Usage (MANDATORY)
 
-Read CONVENTIONS.md before any GitHub or git operation.
+**ALWAYS use ctxo MCP tools before reading source files or making code changes.** The ctxo index contains dependency graphs, git intent, anti-patterns, and change health that cannot be derived from reading files alone. Skipping these tools leads to blind edits and broken dependencies.
 
-## Project
-Single-binary, component-based BaaS platform using Entity-Component-Construct (ECC)
-architecture. Stack: Go 1.22+ / ECC Kernel + Plugins / SQLite + PostgreSQL.
+### Before ANY Code Modification
+1. Call `get_blast_radius` for the symbol you are about to change — understand what breaks
+2. Call `get_why_context` for the same symbol — check for revert history or anti-patterns
+3. Only then read and edit source files
 
-## Commands
-| Action | Command |
-|--------|---------|
-| Run (serve) | `go run . serve [--port PORT] [--db PATH] [--sites-domain DOMAIN] [--google-client-id ID] [--google-client-secret SECRET]` |
-| Run (CLI)   | `go run . status` / `go run . version` / `go run . components list` |
-| Test   | `go test ./...` |
-| Build  | `go build -o bigbase .` |
-| Lint   | `golangci-lint run ./...` |
-| Test coverage | `go test -coverprofile=coverage.out ./... && go tool cover -func=coverage.out` |
-| Setup  | `bash scripts/setup.sh` (idempotent) + `bash scripts/setup-newrelic.sh` (monitoring) |
+### Before Starting a Task
+| Task Type | REQUIRED First Call |
+|---|---|
+| Fixing a bug | `get_context_for_task(taskType: "fix")` |
+| Adding/extending a feature | `get_context_for_task(taskType: "extend")` |
+| Refactoring | `get_context_for_task(taskType: "refactor")` |
+| Understanding code | `get_context_for_task(taskType: "understand")` |
 
-## Architecture
-ECC pattern: Kernel (discovery, lifecycle, event bus, config merge) + pluggable
-components (proxy, auth, db, api, storage, git, forge, cici, functions, realtime,
-messaging, deploy, admin, monitoring). Components communicate via event hooks,
-not direct imports.
+### Before Reviewing a PR or Diff
+- Call `get_pr_impact` — single call gives full risk assessment with co-change analysis
 
-All 14 slices implemented. 7 admin UI pages built. Google OAuth social login
-via embedded relay (no user-owned Google app required).
+### When Exploring or Searching Code
+- Use `search_symbols` for name/regex lookup — DO NOT grep source files for symbol discovery
+- Use `get_ranked_context` for natural language queries — DO NOT manually browse directories
 
-## Conventions
-- Go standard layout: `kernel/`, `components/<name>/`, `config/`
-- Component interface: `Init(ctx, config) → Start(ctx) → Stop(ctx)`
-- Event bus for cross-component communication (no direct imports)
-- TDD workflow: write test first, see it fail, implement, verify green
-- All planning output in `specs/`
+### Orientation in Unfamiliar Areas
+- Call `get_architectural_overlay` to understand layer boundaries
+- Call `get_symbol_importance` to identify critical symbols
 
-## Never
-- Hardcode secrets, API keys, or tokens
-- Mutate state directly — use spread/immutable patterns
-- Commit to main without PR
-- Expose internal errors or stack traces to API clients
-- Use `any` in Go — prefer concrete types or interfaces
-
-## Observability
-
-| What | Command |
-|------|---------|
-| View logs | `go run . serve --port 9999` then curl `/health` (JSON to stdout) |
-| Health check | `bash scripts/health-check.sh` or `curl http://localhost:9999/health` |
-| Component status | `go run . status` |
-| List components | `go run . components list` |
-| Monitoring | `curl http://localhost:9999/api/monitoring/logs` (auth required) |
-| Metrics (Prometheus) | `curl http://localhost:9999/api/monitoring/metrics/prometheus` |
-| New Relic (host metrics) | `bash scripts/setup-newrelic.sh` (requires API key + account ID) |
-| New Relic dashboard | https://one.newrelic.com > Infrastructure > Hosts |
-
-Logging is structured JSON via `slog.JSONHandler` in serve mode.
-CLI output uses plain text. All components log with `key=value` pairs.
-
-## Specs (bigpowers YAML)
-
-| File | Purpose |
-|------|---------|
-| `specs/state.yaml` | Session flow, git, handoff, active epic |
-| `specs/release-plan.yaml` | Epic index (WSJF); no story status |
-| `specs/execution-status.yaml` | Story/epic status (sync via `scripts/sync-status-from-epics.sh`) |
-| `specs/epics/eNN-*.yaml` | Tasks with `verify:` commands |
-| `specs/plans/TECH_STACK_LATEST.md` | Architecture and stack |
-
-Legacy markdown: `specs/archive/` only — not source of truth when YAML exists.
-
-## Agent Rules
-- Read `specs/state.yaml` and the active epic shard before writing code.
-- All planning output goes under `specs/` (YAML + `plans/`); run `bash scripts/validate-specs-yaml.sh` after spec edits.
-- Write minimum code that solves the stated problem.
-- Run tests after every change. Show evidence before declaring done.
-
-## Agentic Stack (OpenCode)
-
-### Commands
-| Command | Purpose | Agent |
-|---------|---------|-------|
-| `/check-stack` | Verify agentic stack health (Go + UI + MCP/LSP wiring) | build-error-resolver |
-| `/ship` | Push, PR, merge when preflight + CI pass | build |
-| `/plan` | Create implementation plan | planner |
-| `/tdd` | TDD workflow | tdd-guide |
-| `/code-review` | Code quality review | code-reviewer |
-| `/security` | Security review | security-reviewer |
-| `/build-fix` | Fix build errors | build-error-resolver |
-| `/e2e` | Generate and run E2E tests | e2e-runner |
-
-### Preflight (build gate)
-```bash
-npm run preflight       # Go vet + tests + ui/dist check
-npm run preflight:go    # Go-only checks
-npm run preflight:ui    # UI build
-npm run preflight:build # Go binary build
-```
-
-### opensrc learn-before-build
-Before implementing against an unfamiliar dependency, run:
-```bash
-npx opensrc list
-npx opensrc fetch github:org/repo  # if not cached
-```
-Read the opensrc cache path before changing integration code.
-
-### Build and Release Loop
-```text
-/check-stack → npm run preflight → /ship
-```
-- Every push/PR runs CI (Go vet + tests + UI build)
-- Merge to `main` triggers semantic-release via `release.yml`
-
-### Observability
-| What | Command |
-|------|---------|
-| View logs | `go run . serve --port 9999` then curl `/health` (JSON to stdout) |
-| Health check | `curl http://localhost:9999/health` |
-| Component status | `go run . status` |
-| List components | `go run . components list` |
-| Monitoring | `curl http://localhost:9999/api/monitoring/logs` (auth required) |
-
-Logging is structured JSON via `slog.JSONHandler` in serve mode.
-CLI output uses plain text.
-
-## Model Routing Matrix (DeepSeek)
-
-### 1. Model Matrix & Allocation
-
-| Task Category | Optimal Model | Selection Reason |
-| :--- | :--- | :--- |
-| **Global Planning & ADRs** | `DeepSeek-V4-Pro` | Deep reasoning, complex design trade-offs, and architectural planning. |
-| **Codebase Context Search** | `DeepSeek-V4-Flash` | Large context processing. Best for reading file trees and cross-component structures. |
-| **Feature Coding & TDD Loops** | `DeepSeek-V4-Pro` | Precision coding, exact syntax execution, and deep test writing. |
-| **Verification & Utility Tasks** | `DeepSeek-V4-Flash` | Ultra-low latency, cheap tokens. Best for running linters, tests, and compiling. |
-| **Browser UI Testing** | `DeepSeek-V4-Flash` | Fast image/visual processing for browser subagents. |
-| **Structured Docs & Summaries** | `DeepSeek-V4-Flash` | Strong at structured prose, reports, and YAML/JSON synthesis. |
-
-### 2. Dynamic Delegation Protocol
-
-When spawning sub-agents (via `delegate-task`, `dispatch-agents`, or `browser_subagent`):
-- **For file system audits, logs inspection, and linting**: Use `DeepSeek-V4-Flash` to keep token costs minimal.
-- **For code generation/refactoring sub-tasks**: Use `DeepSeek-V4-Pro` or `DeepSeek-V4-Flash` depending on context size.
-- **Context Shaving**: Never pass entire files to sub-agents unless they are targets for modification. Pass only specific function signatures or YAML spec blocks to keep input tokens low.
-
-
-## bts toolchain
-
-`bts` is installed. Prefer its verbs over ad-hoc shell commands.
-
-| Task | Command | Avoid |
-|------|---------|-------|
-| Search code | `bts find --print <pattern>` | grep / find / cat |
-| Interactive search | `bts find <pattern>` | manual grep pipes |
-| Compress for context | `bts compress <file>` or `cmd \| bts compress` | summarising by hand |
-| Repo map | `bts map` | listing files by hand |
-| Library docs | `bts docs <lib>` | guessing from training data |
-| Package source | `bts src <pkg>` | git clone |
-| Toolchain health | `bts doctor` | which / command -v |
-
-**Rules**
-- Search with `bts find` before opening files to locate a symbol or pattern.
-- Pipe anything > 200 lines through `bts compress` before adding to context.
-- Run `bts map` when asked for a repo overview.
-- Use `bts docs <lib>` before answering questions about library APIs.
-- If a tool is missing, say so and run `bts doctor` — do not silently substitute.
+### NEVER Do These
+- NEVER edit a function without first calling `get_blast_radius` on it
+- NEVER skip `get_why_context` — reverted code and anti-patterns are invisible without it
+- NEVER grep source files to find symbols when `search_symbols` exists
+- NEVER manually trace imports when `find_importers` gives the full reverse dependency graph
