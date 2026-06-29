@@ -5,7 +5,19 @@ title: "Deploy — Secrets Management"
 wsjf: 3.5
 total_bcps: 3
 status: planned
+tier: 2
 depends_on: [e51, e57]
+note: "2 stories, 3 BCPs. Project-level encrypted secret store (AES-GCM via envcrypto) with backend CRUD API and admin UI tab inside ProjectDetailPage. Site env vars override project secrets on collision."
 stories:
   - id: e61s01
+    title: "Encrypted project secrets store & CRUD API"
+    bcps: 2
+    status: pending
+    spec: e61s01-spec.md
+    tasks: e61s01-tasks.yaml
   - id: e61s02
+    title: "Project Secrets admin UI tab"
+    bcps: 1
+    status: pending
+    spec: e61s02-spec.md
+    tasks: e61s02-tasks.yaml

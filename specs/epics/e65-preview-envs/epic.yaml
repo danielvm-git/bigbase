@@ -5,7 +5,7 @@ title: "Deploy — Preview Environments"
 wsjf: 2.5
 total_bcps: 2
 status: planned
-depends_on: [e51, e57, e59]
+depends_on: [e51, e57, e59s02]
 stories:
   - id: e65s01
   - id: e65s02
