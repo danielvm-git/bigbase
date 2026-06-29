@@ -2,7 +2,7 @@
 
 **type:** tech-stack
 **context:** infra
-**version:** 2.13.0
+**version:** 2.14.0
 **supersedes:** `specs/plans/TECH_STACK_LATEST.md`, `specs/tech-architecture/TECH_STACK_ARCHIVE.md`
 **verify:** `go test ./... && go build ./...`
 
@@ -125,15 +125,62 @@ db.onBackup ──► monitoring logs
 mcp.onToolCall ──► deploy deploys, db queries, api routes
 ```
 
-## Deploy Supervisor (vocabulary)
+## Deploy Architecture (vocabulary)
 
 BigBase replicates the supervision Docker gives Appwrite — restart-on-crash, health
 checks, resource isolation — in a lightweight, in-process Go module rather than
-containers (see ADR 0004). Canonical terms:
+containers (see ADR 0004). The deploy component is decomposed into three modules
+separated by *when code runs* (see ADR 0005), following the pattern used by Appwrite
+(Controllers vs Workers vs Tasks), Supabase (Gateway vs Services), and Neon (Proxy vs
+Control Plane vs Compute).
 
+### Module split (ADR 0005)
+
+```
+┌───────────────────────────────────────────────────────────────────┐
+│                    Deploy (composition root)                       │
+│  kernel.Component · ~150 lines · ECC lifecycle + wiring only      │
+│  delegates to: Gateway (HTTP) · Engine (per-deploy) · Orchestrator│
+└───────────────┬──────────────────────┬────────────────────────────┘
+                │                      │
+    ┌───────────▼──────────┐  ┌────────▼──────────────────────┐
+    │       Gateway         │  │        Orchestrator           │
+    │  request-time         │  │  startup-time                │
+    │  HTTP handlers only   │  │  fleet management            │
+    │  → engine.Run(spec)   │  │  Resume · Drain · Rollback   │
+    │  httptest testable    │  │  DeleteSiteDeployments       │
+    └───────────┬───────────┘  └──────────────────────────────┘
+                │ calls
+    ┌───────────▼──────────────────────────────────┐
+    │               Engine                          │
+    │  background — per-deployment lifecycle       │
+    │  Run(spec) → Result                           │
+    │  Hides: clone → build → start → supervise     │
+    │         → health → host register → cache      │
+    │  Go optional-interface: Runner · LogStreamer   │
+    │  Test: FakeRunner + temp dirs, no exec.Cmd     │
+    └──────────────────────────────────────────────┘
+```
+
+### Canonical terms
+
+- **Engine** — runs one deployment end-to-end behind a single `Run(spec) → Result` seam.
+  Hides clone, build (npm/go/pip), node_modules cache, start app/serve static, health
+  probe, host registration, and supervisor lifecycle. Every caller (HTTP, webhook, MCP,
+  sites, resume-on-boot) crosses the same interface. Uses the Go optional-interface
+  pattern: `Runner` (required), `LogStreamer` (live log streaming), `Builder` (staged
+  build). Depth 4.
+- **Gateway** — HTTP handlers for deploy CRUD, logs, and stats. Delegates all deployment
+  work to `engine.Run(spec)`. Zero process management, zero git commands. Testable with
+  `httptest.NewRecorder` + `FakeEngine` per CONVENTIONS T8 (assert on HTTP status codes
+  and JSON bodies, never internal state). Depth 3.
+- **Orchestrator** — fleet management: resume-on-boot, drain, rollback,
+  delete-site-deployments. Queries DB for candidates, delegates execution to Engine.
+  Testable with `FakeEngine` + `FakeDB`. Depth 3.
 - **Supervisor** — owns the fleet of running deployments: restart policy (backoff +
   crash-loop detection), health probing, resume-on-boot, and guaranteed proxy host
   (re)registration. The Go equivalent of Docker `restart: unless-stopped` + healthchecks.
+  Wrapped by Engine, not replaced.
 - **Instance** — one *single-use* live run of a deployment (a subprocess app or an
   in-process static server), unified behind the `Runner` seam. Exposes `Wait` /
   `Stop(grace)` / `Health`. Spawning belongs to the `Runner`, not the Instance: `Wait`
@@ -142,18 +189,23 @@ containers (see ADR 0004). Canonical terms:
   `exec.Cmd`'s real one-shot lifecycle honest at the interface rather than hidden
   behind a re-callable `Start`.
 - **Spec** — the immutable description of *what* to run (deploy ID, host, port, dir,
-  app type, env, start command). Built once by Deploy from the deployment row + manifest
-  and handed to `Runner.Spawn(ctx, spec)`. The only state that survives a restart;
-  restart history lives in the Supervisor, not the Instance.
-- **Runner** — the seam that spawns Instances (`Spawn(ctx, spec) → Instance`); a
-  `FakeRunner` returns scripted Instances (e.g. `[crash, crash, ok]`) so supervision
-  logic is testable without real processes.
+  app type, env, start command, repo path, branch, manifest, passthrough paths). Built
+  once by the Gateway or Orchestrator from the deployment row + manifest and handed to
+  `Engine.Run(ctx, spec)`. The only state that survives a restart; restart history lives
+  in the Supervisor, not the Instance.
+- **Runner** — the seam that runs deployments (`Run(ctx, spec) → Result` for Engine;
+  `Spawn(ctx, spec) → Instance` for Supervisor); a `FakeRunner` returns scripted
+  Instances so supervision logic is testable without real processes.
 - **Isolator** — the seam that applies per-app resource caps. Production adapter spawns
   through a **systemd transient scope** (`MemoryMax` / `CPUQuota` / `TasksMax`); a no-op
   adapter is used on macOS dev. BigBase never reimplements cgroups.
 - **DeploymentHostRegistry** — the existing proxy seam that maps host → port; extended to
   own connection counting and **drain** (the proxy is the only layer that sees in-flight
   connections, since all deployment traffic is reverse-proxied).
+- **LogStore** — shared adapter for build log capture. Engine writes (`Append(id, line)`),
+  Gateway reads (`Get(id)`), WebSocket subscribers listen (`Subscribe(id) → chan`).
+  Production adapter is the current in-memory ring buffer. Tests use a trivial
+  in-memory store.
 
 ## External Services
 
@@ -176,6 +228,7 @@ containers (see ADR 0004). Canonical terms:
 | 0002 | JWT + bcrypt Auth | Accepted |
 | 0003 | GitHub App for Sites | Accepted |
 | 0004 | No containers (Docker/K8s) ever — in-process Go Supervisor + systemd isolation | Accepted |
+| 0005 | Deploy decomposition: Engine (Run) + Gateway (HTTP) + Orchestrator (fleet) | Accepted |
 | — | ECC pattern (no direct component imports) | Accepted |
 | — | PostgreSQL dual-driver (modernc.org/sqlite + lib/pq) | Accepted (e18) |
 | — | Multi-tenant org isolation at API/DB layer | Accepted (e23) |

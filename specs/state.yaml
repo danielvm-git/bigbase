@@ -38,9 +38,11 @@ git:
   worktree: null
   ci_status: "success"
 handoff:
-  last_step_completed: "release-branch"
-  open_decisions: []
+  last_step_completed: "deepen-architecture"
+  open_decisions:
+    - "ADR 0005 accepted — deploy decomposition into Engine + Gateway + Orchestrator"
+    - "Quick wins (Logger/DBer hoisting, migration extraction, stateMachine surfacing) queued before Engine extraction"
   next_skill: build-epic
-  summary: "e51 released (7 stories, 26 BCPs). CI green. Capsule archived. Stale worktrees pruned. Workspace cleaned (85MB reclaimed). e52 active."
-  context: "Landed e51 UI Design System. CI: https://github.com/danielvm-git/bigbase/actions/runs/28335999191. e52 active with e52s01 (Kernel Interface Hardening) next."
+  summary: "e51 released (7 stories, 26 BCPs). CI green. Architecture deep-dive complete: ADR 0005 accepted for deploy component decomposition (Engine + Gateway + Orchestrator), informed by Appwrite/Supabase/Neon/PocketBase patterns and bigpowers CONVENTIONS. tech-stack.md updated with new deploy architecture vocabulary."
+  context: "Landed e51 UI Design System. ADR 0005 defines the refactor plan for 1819-line deploy.go. Phase 1 (Logger/DBer hoisting) is 15-minute mechanical cleanup. e52 active with e52s01 next. Architecture doc: specs/adr/0005-deploy-component-decomposition.md"
   fast_mode: false
