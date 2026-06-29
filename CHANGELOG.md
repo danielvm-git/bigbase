@@ -1,3 +1,10 @@
+## [2.62.1](https://github.com/danielvm-git/bigbase/compare/v2.62.0...v2.62.1) (2026-06-29)
+
+
+### Bug Fixes
+
+* **status:** mark e46 (custom domains + ACME) as done — all stories complete, code verified ([69a2a9e](https://github.com/danielvm-git/bigbase/commit/69a2a9e5ff6320ef6e273932c371476da10165c9))
+
 # [2.62.0](https://github.com/danielvm-git/bigbase/compare/v2.61.0...v2.62.0) (2026-06-28)
 
 
