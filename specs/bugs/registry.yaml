@@ -506,12 +506,16 @@ bugs:
     scope: sdk,auth
     summary: "auth-astro middleware never sets storedToken — getSession() always returns null for authenticated SSR requests"
     file: specs/bugs/bug-astro-sdk-stored-token-null.yaml
-    status: open
-    risk_level: low
+    status: fixed
+    files_changed:
+      - packages/auth/src/index.ts
+      - packages/auth/src/index.test.ts
+      - packages/auth-astro/src/index.ts
     approach: |
-      Add setToken(token: string): void to AuthClient in @bigbase/auth.
-      Fix createBigBaseAuth in @bigbase/auth-astro to call client.setToken(token) before getSession().
-      Fix AstroAuth.session type; fix requireAuth return type; export AstroAuthLocals.
+      1. Added JSDoc-documented `setToken` to `@bigbase/auth` Client to set closure-local token.
+      2. Updated `createBigBaseAuth` middleware to call `setToken` before retrieving session.
+      3. Typed AstroAuth session properties and requireAuth responses, and exported AstroAuthLocals.
+    risk_level: low
     notes: "No e57 dependency — shippable immediately. Previously tracked as epic story e58s05."
   - id: BUG-2026-06-28T154700
     date: "2026-06-28"

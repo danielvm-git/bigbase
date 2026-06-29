@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { createAuthClient } from './index';
+import { createBigBaseAuth } from '../../auth-astro/src/index';
 
 // Mock fetch globally
 const mockFetch = vi.fn();
@@ -106,5 +107,74 @@ describe('createAuthClient', () => {
     await client.signOut();
     expect(calls).toHaveLength(2);
     expect(calls[1]).toBeNull();
+  });
+
+  it('sets token manually using setToken', async () => {
+    const client = createAuthClient({ baseURL: 'http://localhost:8080' });
+    client.setToken('manual-jwt-123');
+    const token = await client.getJWT();
+    expect(token).toBe('manual-jwt-123');
+    expect(mockFetch).not.toHaveBeenCalled();
+  });
+});
+
+describe('createBigBaseAuth middleware', () => {
+  it('extracts token from cookie, sets it on client, and populates locals.auth', async () => {
+    mockFetch.mockResolvedValueOnce(jsonResponse({ id: 1, email: 'user@test.com', role: 'user' }));
+
+    const middleware = createBigBaseAuth({ baseURL: 'http://localhost:8080' });
+    const context = {
+      request: {
+        headers: {
+          get(name: string) {
+            if (name === 'cookie') return 'token=jwt123';
+            return null;
+          }
+        }
+      },
+      locals: {} as any
+    };
+    const next = vi.fn().mockResolvedValue(new Response());
+
+    await middleware(context, next);
+
+    expect(mockFetch).toHaveBeenCalledWith(
+      'http://localhost:8080/api/auth/me',
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          'Authorization': 'Bearer jwt123'
+        })
+      })
+    );
+    expect(context.locals.auth).toEqual({
+      user: { id: 1, email: 'user@test.com', role: 'user' },
+      session: {
+        user: { id: 1, email: 'user@test.com', role: 'user' },
+        token: 'jwt123'
+      },
+      token: 'jwt123'
+    });
+    expect(next).toHaveBeenCalled();
+  });
+
+  it('sets locals.auth to null when cookie is missing', async () => {
+    const middleware = createBigBaseAuth({ baseURL: 'http://localhost:8080' });
+    const context = {
+      request: {
+        headers: {
+          get() {
+            return null;
+          }
+        }
+      },
+      locals: {} as any
+    };
+    const next = vi.fn().mockResolvedValue(new Response());
+
+    await middleware(context, next);
+
+    expect(mockFetch).not.toHaveBeenCalled();
+    expect(context.locals.auth).toBeNull();
+    expect(next).toHaveBeenCalled();
   });
 });

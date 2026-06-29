@@ -1,7 +1,7 @@
 type: bug
 id: BUG-001
 title: "Astro SDK — storedToken null causes silent auth failure in SSR middleware"
-status: open
+status: fixed
 severity: high
 affects:
   - package: "@bigbase/auth-astro"
@@ -39,37 +39,37 @@ tasks:
   - id: 1
     description: "Add setToken(token: string): void to AuthClient interface and createAuthClient implementation in packages/auth/src/index.ts"
     verify: "cd packages/auth && npm run typecheck"
-    status: todo
+    status: done
 
   - id: 2
     description: "Build @bigbase/auth to emit updated types"
     verify: "cd packages/auth && npm run build"
-    status: todo
+    status: done
 
   - id: 3
     description: "Fix createBigBaseAuth: call client.setToken(token) before client.getSession() when token extracted from cookie"
     verify: "cd packages/auth-astro && npm run build"
-    status: todo
+    status: done
 
   - id: 4
     description: "Fix AstroAuth.session type from 'any' to 'AuthSession | null'; fix requireAuth return type to 'AstroAuth | Response'; export AstroAuthLocals"
     verify: "cd packages/auth-astro && npm run build"
-    status: todo
+    status: done
 
   - id: 5
     description: "Unit test for setToken: call setToken('abc'), verify getJWT() returns 'abc' without fetch"
     verify: "cd packages/auth && npm test"
-    status: todo
+    status: done
 
   - id: 6
     description: "Unit test for createBigBaseAuth: mock fetch; with cookie 'token=jwt123' verify Authorization header sent; without cookie verify locals.auth is null"
     verify: "cd packages/auth && npm test"
-    status: todo
+    status: done
 
   - id: 7
     description: "Final build and test pass for both packages"
     verify: "cd packages/auth && npm run build && npm test && cd ../auth-astro && npm run build"
-    status: todo
+    status: done
 
 verify: |
   cd packages/auth && npm run build && npm test && cd ../auth-astro && npm run build

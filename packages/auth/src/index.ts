@@ -48,6 +48,14 @@ export interface AuthClient {
   signOut(): Promise<void>;
   getSession(): Promise<AuthSession | null>;
   getJWT(): Promise<string | null>;
+  /**
+   * Sets the JWT token for the client.
+   * NOTE: storedToken is closure-local. If the client instance is shared across
+   * concurrent requests, setToken could race. This is intended for environment
+   * setups (like single-threaded SSR middlewares) where the client is initialized
+   * per request or used in a way that avoids concurrent requests mutating the state.
+   */
+  setToken(token: string): void;
   onAuthStateChange(callback: AuthStateCallback): () => void;
 }
 
@@ -157,6 +165,9 @@ function createAuthClient(options: AuthClientOptions): AuthClient {
     getSession,
     async getJWT() {
       return storedToken || (await getSession())?.token || null;
+    },
+    setToken(token: string) {
+      storedToken = token;
     },
     onAuthStateChange(callback) {
       listeners.add(callback);
