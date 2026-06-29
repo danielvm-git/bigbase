@@ -6,8 +6,8 @@ wsjf: 2.8
 total_bcps: 4
 status: planned
 tier: 3
-depends_on: [e52]
-note: "2 stories, 4 BCPs. DB-backed OTP store and rate limits (survives restart). Audit event log for 15+ auth handlers (INSERT-only, fire-and-forget)."
+depends_on: []
+note: "2 stories, 4 BCPs. DB-backed OTP store and rate limits (survives restart). Audit event log for 15+ auth handlers (INSERT-only, fire-and-forget). OTP is user-scoped (email key), not project-scoped — no e52 dependency."
 stories:
   - id: e56s01
     title: "Move OTP store from in-memory to database"

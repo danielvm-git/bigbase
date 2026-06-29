@@ -393,9 +393,8 @@ epics:
   mode: capsule
   tier: 3
   status: planned
-  depends_on:
-  - e52
-  note: 2 stories, 4 BCPs. DB-backed OTP, audit events. Needs e52 kernel scope.
+  depends_on: []
+  note: "2 stories, 4 BCPs. DB-backed OTP (survives restart) + audit log. OTP is user-scoped (email key), NOT project-scoped \u2014 decoupled from e52. Ship in Wave 0.5 alongside e58s05."
   capsule_dir: epics/e56-otp-session-hardening
   file: epics/e56-otp-session-hardening/epic.yaml
 - id: e57
@@ -411,14 +410,18 @@ epics:
   capsule_dir: epics/e57-project-scoping-ui
   file: epics/e57-project-scoping-ui/epic.yaml
 - id: e58
-  title: "Native Feature Port \u2014 SQL-over-HTTP, Better Auth, MCP Tools"
+  title: "Native Feature Port \u2014 SQL-over-HTTP, Better Auth, MCP Tools, DB Branching"
   wsjf: 6.0
   mode: capsule
   tier: 1
   status: planned
   depends_on:
   - e52
-  note: 5 stories, 15 BCPs.
+  note: |
+    5 stories, 15 BCPs. Stories ship independently \u2014 NOT an atomic block.
+    Wave 0.5: e58s05 (Astro bug, no deps, ship now).
+    Wave 2: e58s01 (SQL-over-HTTP), e58s03 (Better Auth), e58s04 (MCP tools) \u2014 all after e52 only.
+    Wave 3: e58s02 (DB Branching, complex, only prereq for e63).
   capsule_dir: epics/e58-neon-native-port
   file: epics/e58-neon-native-port/epic.yaml
 - id: e59
@@ -477,8 +480,8 @@ epics:
   depends_on:
   - e51
   - e52
-  - e58
-  note: 2 stories, 2 BCPs.
+  - e58s02
+  note: "2 stories, 2 BCPs. Depends on e58s02 (DB Branching) only \u2014 NOT all of e58. Unblocks as soon as branching ships."
   capsule_dir: epics/e63-preview-envs
   file: epics/e63-preview-envs/epic.yaml
 - id: e64
@@ -493,3 +496,17 @@ epics:
   note: 3 stories, 8 BCPs.
   capsule_dir: epics/e64-multi-user-platform
   file: epics/e64-multi-user-platform/epic.yaml
+- id: e65
+  title: "DX \u2014 Route Rename /deploy \u2192 /sites"
+  wsjf: 4.0
+  mode: capsule
+  tier: 2
+  status: planned
+  depends_on:
+  - e52
+  note: |
+    1 story, ~1 BCP. Mechanical rename: App.tsx (16 refs) + main.go (24 Go routes) + 11 test files.
+    Ships in Wave 2 alongside e57. Aligns codebase with all prototype and IA spec routes.
+    No functional change \u2014 pure routing alias with 301 redirect from /deploy/* for backward compat.
+  capsule_dir: epics/e65-route-rename
+  file: epics/e65-route-rename/epic.yaml
