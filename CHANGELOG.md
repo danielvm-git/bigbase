@@ -1,3 +1,10 @@
+## [2.62.2](https://github.com/danielvm-git/bigbase/compare/v2.62.1...v2.62.2) (2026-06-29)
+
+
+### Bug Fixes
+
+* **sdk:** pass token to AuthClient in Astro middleware ([1674400](https://github.com/danielvm-git/bigbase/commit/1674400089b303d53317963ac95924b6a58f7758))
+
 ## [2.62.1](https://github.com/danielvm-git/bigbase/compare/v2.62.0...v2.62.1) (2026-06-29)
 
 
