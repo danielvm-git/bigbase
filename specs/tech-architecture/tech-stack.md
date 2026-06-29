@@ -2,9 +2,10 @@
 
 **type:** tech-stack
 **context:** infra
-**version:** 2.14.0
+**version:** 2.62.0
 **supersedes:** `specs/plans/TECH_STACK_LATEST.md`, `specs/tech-architecture/TECH_STACK_ARCHIVE.md`
 **verify:** `go test ./... && go build ./...`
+**last-scan:** 2026-06-29 (cold read, no assumption carry-over)
 
 ## Overview
 
@@ -16,17 +17,20 @@ kernel discovers, starts, and connects independent components via an event bus.
 
 | Layer | Technology |
 |-------|-----------|
-| Language | Go 1.22+ |
-| Database | SQLite (`modernc.org/sqlite`, zero-CGO) · PostgreSQL (`lib/pq`) |
-| Auth | bcrypt + HS256 JWT · Google OAuth 2.0 relay · API keys (X-API-Key) |
-| Functions runtime | goja (pure Go JavaScript) with fetch, db binding, request context, env, cron schedule |
+| Language | Go 1.26.3 (go.mod) |
+| Database | SQLite (`modernc.org/sqlite` v1.50, zero-CGO) · PostgreSQL (`pgx/v5 stdlib`) |
+| Auth | bcrypt + HS256 JWT (`golang-jwt/jwt/v5`) · Google OAuth 2.0 · API keys (X-API-Key) · OTP · magic-link · phone |
+| Functions runtime | goja (pure Go JS) with fetch, db, request context, env, cron bindings |
 | Admin UI | React 19 + Vite + TypeScript, embedded via `//go:embed` |
-| Deployment | Child processes on host, port-allocation, custom domains with TLS |
+| Design system | Custom token-based system in `ui/src/tokens/` + CSS custom properties |
+| SDK | `packages/auth` + adapters (react/vue/svelte/astro/next) + `auth-ui-svelte` |
+| Deployment | Child processes (no containers), ACME auto-SSL, custom domains via autocert |
 | CI/CD | GitHub Actions + semantic-release |
-| Hosting | Contabo Cloud VPS (current), Terraform-defined |
-| Messaging | Email (SMTP) · SMS · Push · Webhook/Telegram providers |
+| Hosting | Contabo VPS, Terraform-defined infra |
+| Messaging | Email (SMTP) · SMS · Push · Webhook · Telegram |
 | Real-time | WebSocket subscriptions, mutation event broadcasting |
-| Scheduling | robfig/cron v3 for Functions trigger=schedule |
+| Scheduling | robfig/cron v3 for Functions `trigger=schedule` |
+| Observability | `slog` (structured JSON logs) · New Relic APM (`go-agent/v3`) · SSE health events |
 
 ## Architecture
 
@@ -34,9 +38,9 @@ kernel discovers, starts, and connects independent components via an event bus.
 ┌──────────────────────────────────────────────────────────────────┐
 │                           Kernel                                  │
 │  • Component discovery & registration                             │
-│  • Lifecycle: Init → Start → Stop (topo-sorted)                  │
+│  • Lifecycle: Init → Start → Stop (topo-sorted DFS)              │
 │  • Event bus: hook-based pub/sub, priority-ordered dispatch      │
-│  • Config merge: CLI flags → defaults → user overrides           │
+│  • Config: CLI flags → env vars (BIGBASE_*) → defaults.jsonc     │
 └────────────────────────┬─────────────────────────────────────────┘
                          │ dispatches events
     ┌────────────────────┼────────────────────┐
@@ -46,17 +50,13 @@ kernel discovers, starts, and connects independent components via an event bus.
 │ HTTP    │◄─────►│ JWT      │◄──────►│ CRUD + SQL   │
 │ router  │       │ bcrypt   │        │ filter/sort  │
 │ landing │       │ OAuth    │        │ org scoping  │
-└─────────┘       │ API keys │        └──────┬───────┘
-                  │ orgs     │               │
-                  │ multi-   │               ▼
-                  │ tenant   │   ┌──────────────────────┐
+│ ACME    │       │ API keys │        └──────┬───────┘
+│ custom  │       │ OTP/link │               │
+│ domains │       │ orgs     │               ▼
+└─────────┘       │ members  │   ┌──────────────────────┐
                   └──────────┘   │   storage · git       │
                                  │   forge · cici        │
                                  │   functions (goja JS) │
-                                 │   · fetch (allowlist) │
-                                 │   · db.collection()   │
-                                 │   · request context   │
-                                 │   · env · cron        │
                                  └──────────────────────┘
 
 ┌──────────┐  ┌──────────┐  ┌────────┐  ┌──────────┐
@@ -71,7 +71,7 @@ kernel discovers, starts, and connects independent components via an event bus.
 ┌──────────┐  ┌──────────┐  ┌────────┐  ┌──────────┐
 │  admin   │  │  sites   │  │github  │  │ webhooks │
 │ UI (SPA) │  │deploy GH │  │App auth│  │retry     │
-│ 8 pages  │  │logs UI   │  │repo    │  │backoff   │
+│ 20 pages │  │logs UI   │  │repo    │  │backoff   │
 │ dark mode│  │domains   │  │listing │  │delivery  │
 └──────────┘  └──────────┘  └────────┘  └──────────┘
 ```
@@ -81,11 +81,11 @@ kernel discovers, starts, and connects independent components via an event bus.
 | # | Component | Path | Runtime | Purpose |
 |---|-----------|------|---------|---------|
 | — | Kernel | `kernel/` | Core | Discovery, lifecycle, event bus, config merge |
-| 1 | Proxy | `components/proxy/` | HTTP | HTTP server, routing, landing page |
-| 2 | DB | `components/db/` | SQLite/PG | Database access, migrations, dual-driver |
+| 1 | Proxy | `components/proxy/` | HTTP | HTTP server, routing, landing, ACME TLS, custom domains |
+| 2 | DB | `components/db/` | SQLite/PG | Database access, migrations, dual-driver (sqlite/postgres) |
 | 3 | API | `components/api/` | HTTP | Auto CRUD, SQL endpoint, filter/sort, org scoping |
-| 4 | Auth | `components/auth/` | HTTP | Register, login, JWT, Google OAuth, API keys, orgs, invites |
-| 5 | Admin | `components/admin/` | HTTP | Embedded SPA server (8 pages, dark mode, responsive) |
+| 4 | Auth | `components/auth/` | HTTP | Register, login, JWT, Google OAuth, API keys, OTP, magic-link, phone, orgs, invites, rate-limit |
+| 5 | Admin | `components/admin/` | HTTP | Embedded SPA server (React 19, dark mode, responsive) |
 | 6 | Storage | `components/storage/` | HTTP | File upload/download/delete, MIME detection |
 | 7 | Git | `components/git/` | HTTP | Bare repo management, SSH clone |
 | 8 | Forge | `components/forge/` | HTTP | Issues, labels, kanban, wiki |
@@ -93,24 +93,114 @@ kernel discovers, starts, and connects independent components via an event bus.
 | 10 | Functions | `components/functions/` | HTTP | JS runtime (goja), fetch+db+env+request+cron injections |
 | 11 | Realtime | `components/realtime/` | WS | WebSocket subscriptions, mutation event broadcast |
 | 12 | Messaging | `components/messaging/` | HTTP | Email/SMS/Push/Webhook/Telegram providers |
-| 13 | Deploy | `components/deploy/` | Process | Build/run/delete web apps, custom domains, TLS |
-| 14 | Monitoring | `components/monitoring/` | HTTP | Metrics, logs, alerts, health, SSE events, processes |
-| 15 | Sites | `components/sites/` | HTTP | Deploy from GitHub, build/request logs UI |
+| 13 | Deploy | `components/deploy/` | Process | Build/run web apps, state machine, ACME domains, cache, health, supervisor |
+| 14 | Monitoring | `components/monitoring/` | HTTP | Metrics, logs, alerts, health, SSE events, hardware |
+| 15 | Sites | `components/sites/` | HTTP | Deploy from GitHub, custom domains CRUD, build/request logs |
 | 16 | GitHub | `components/github/` | HTTP | GitHub App auth, repo listing |
 | 17 | Webhooks | `components/webhooks/` | HTTP | Outbound webhook delivery, retry, exponential backoff |
 | 18 | Backup | `components/backup/` | CLI | Backup/restore, migration tooling |
 | 19 | MCP | `components/mcp/` | HTTP | Model Context Protocol server (SSE + stdio transport) |
+
+**Internal packages:** `components/internal/envcrypto` — AES-256-GCM for site env vars (optional key; no-op when key absent).
+
+## Conventions (Observed from Code)
+
+### Error handling
+- All API errors returned as `{"error": "message"}` JSON via a local `writeJSON` helper
+- Internal errors are never leaked to API clients (opaque "internal error" strings)
+- `fmt.Errorf("context: %w", err)` wrapping throughout — consistent sentinel propagation
+- DB errors treated as transient unless they are schema-level (no-such-table → graceful skip)
+
+### API shapes
+- REST, snake_case JSON, standard HTTP status codes
+- Responses: data directly or `{"error":"..."}` — no envelope wrapper
+- Org isolation: `org_id` in every user-data table, injected via middleware context key
+
+### Type safety
+- `any` appears in event bus (`Event.Data`) and `writeJSON` — two deliberate seams, not sprawl
+- Every component defines its own `DBer = kernel.DBer` type alias locally — keeps components decoupled
+- Concrete structs with json tags throughout; no generic containers in business logic
+
+### Migrations
+- Inline SQL strings inside `Init()` — no migration framework, no versioned files
+- Pattern: `CREATE TABLE IF NOT EXISTS` (idempotent) + `ALTER TABLE ... ADD COLUMN` (ignored on error)
+- Drawback: no rollback, no ordering guarantee across components, schema state not queryable
+
+### Logging
+- `slog.Logger` wired at startup → injected via `kernel.Context.Logger` (interface-typed)
+- JSON mode in production, text mode in CLI sub-commands
+- New Relic nrslog integration wraps the base handler when `--newrelic-enabled`
+
+### Testing
+- 98 test files, 533 test functions
+- No mocking frameworks — custom lightweight interfaces + `httptest.NewRecorder`
+- In-memory SQLite (`:memory:`) for all component tests — no mocks, real DB
+- Contract tests in `tests/contract/`, benchmarks in `tests/bench/`
+- Each component's tests live alongside source files
+
+### UI
+- React 19 + React Router v7, Vite, TypeScript
+- All custom components — no third-party UI library
+- Design token system: `ui/src/tokens/tokens.ts` (TS constants) + `ui/src/styles/tokens.css` (CSS vars)
+- Dark mode via `data-theme="dark"` on `<html>` + CSS custom properties
+- `ui/src/styles/theme.css` overrides semantic tokens for dark mode
+- Built artifact embedded into Go binary via `//go:embed dist`
+
+## Signals / Active Debt
+
+| Signal | Location | Risk |
+|--------|----------|------|
+| `writeJSON` duplicated 14× | `components/*/...go` | DRY violation; shared helper blocked by no cross-component imports rule |
+| `deploy.go` — 1819 lines | `components/deploy/deploy.go` | ADR 0005 decomposition (Engine/Gateway/Orchestrator) **designed but not yet implemented** — spec vocabulary exists, code split does not |
+| `auth.go` — 1647 lines | `components/auth/auth.go` | Split started (separate files: otp.go, ratelimit.go, jwt.go, etc.) — manageable but watch for more growth |
+| Inline migrations scattered | All component `Init()` | Schema state not observable; migrations run on every boot; ALTER failures silently ignored |
+| Event bus barely wired | `components/api/api.go`, `deploy/`, `github/` | Only 3 components emit events; cross-component communication mostly happens via direct DB reads, not events |
+| No project-level isolation | entire codebase | `org_id` is the only multi-tenant boundary — e52 (Project Scoping) is the next planned step |
+| `DBer` aliased in every component | 13 component files | Working pattern, but means kernel interface changes require touching every file |
+
+## Deploy Architecture (vocabulary — ADR 0005, designed, not yet implemented)
+
+BigBase replicates Docker supervision — restart-on-crash, health checks — in a lightweight
+in-process Go module (ADR 0004). ADR 0005 defines the decomposition:
+
+```
+Deploy (composition root)
+  ├── Gateway (HTTP handlers only, delegates to Engine)
+  ├── Engine  (per-deployment lifecycle: clone→build→start→health→register)
+  └── Orchestrator (fleet: resume-on-boot, drain, rollback, delete)
+```
+
+**Current code reality:** `deploy.go` is still monolithic at 1819 lines. The state machine,
+supervisor, health, cache, and domain routing have been extracted into separate files
+(`state_machine.go`, `supervisor.go`, `health.go`, `cache.go`, `domain_routing.go`)
+but the main `Deploy` struct and its HTTP handlers still coexist in `deploy.go`.
+ADR 0005 vocabulary is the spec; the full split is e52+ work.
+
+### Canonical terms (for planning)
+
+- **Engine** — `Run(spec) → Result` behind a single seam; hides clone/build/start/health/cache
+- **Gateway** — HTTP handlers only; `FakeEngine` makes tests zero-exec
+- **Orchestrator** — fleet management (resume, drain, rollback, delete-site)
+- **Supervisor** — crash-loop detect + exponential backoff restart (`supervisor.go` — implemented)
+- **Instance** — one-shot live run (subprocess or static server), unified behind `Runner`
+- **Spec** — immutable deploy descriptor; only state that survives restarts
+- **DeploymentHostRegistry** — proxy seam mapping host→port (owns drain + connection count)
+- **LogStore** — build log adapter: `Append` (engine), `Get` (gateway), `Subscribe` (WS)
 
 ## Release History
 
 | Version | Epics | Highlights |
 |---------|-------|------------|
 | v1.0 | e01—e16 | Foundation: CLI, proxy, DB, auth, admin UI, all 16 components |
-| v2.7.0 | e17—e30 | Multi-tenancy, orgs, API keys, webhooks, backup, observability, functions runtime 2.0, webhook/telegram, collections filter/sort |
+| v2.7.0 | e17—e30 | Multi-tenancy, orgs, API keys, webhooks, backup, observability, functions runtime 2.0 |
+| v2.30–v2.45 | e31—e45 | SPA auth, passwordless, phone, SDK adapters, auth UI, delete site, SvelteKit, MCP, streaming logs, manifest, env vars, build cache, health, rollback, drain |
+| v2.46–v2.55 | e46—e55 | Custom domains + ACME (e46), JWT lifecycle (e50), design system (e51), project scoping backend (e52), deploy supervisor (e53), New Relic (e54), PR-Agent (e55) |
+| v2.62.0 | e56+ | OTP hardening, project scoping UI, native port (SQL-over-HTTP, Better Auth, MCP Tools), secrets, CSP headers, usage dashboard planned |
 
 ## Event Flow
 
-Components communicate exclusively through the kernel event bus. No direct imports between components.
+Components communicate through the kernel event bus. Most cross-component wiring
+uses direct DB reads; event bus is used for async side-effects:
 
 ```
 proxy.onRequest ──► auth validates token/API key ──► api routes (org-scoped)
@@ -119,104 +209,23 @@ api.onMutation ──► realtime broadcasts ──► webhooks deliver
                 ──► functions triggers (schedule or event)
 
 git.onPush ──► cici runs workflow ──► deploy builds & serves
+                                   ──► github.scaffold_repo
 
 db.onBackup ──► monitoring logs
 
 mcp.onToolCall ──► deploy deploys, db queries, api routes
 ```
 
-## Deploy Architecture (vocabulary)
-
-BigBase replicates the supervision Docker gives Appwrite — restart-on-crash, health
-checks, resource isolation — in a lightweight, in-process Go module rather than
-containers (see ADR 0004). The deploy component is decomposed into three modules
-separated by *when code runs* (see ADR 0005), following the pattern used by Appwrite
-(Controllers vs Workers vs Tasks), Supabase (Gateway vs Services), and Neon (Proxy vs
-Control Plane vs Compute).
-
-### Module split (ADR 0005)
-
-```
-┌───────────────────────────────────────────────────────────────────┐
-│                    Deploy (composition root)                       │
-│  kernel.Component · ~150 lines · ECC lifecycle + wiring only      │
-│  delegates to: Gateway (HTTP) · Engine (per-deploy) · Orchestrator│
-└───────────────┬──────────────────────┬────────────────────────────┘
-                │                      │
-    ┌───────────▼──────────┐  ┌────────▼──────────────────────┐
-    │       Gateway         │  │        Orchestrator           │
-    │  request-time         │  │  startup-time                │
-    │  HTTP handlers only   │  │  fleet management            │
-    │  → engine.Run(spec)   │  │  Resume · Drain · Rollback   │
-    │  httptest testable    │  │  DeleteSiteDeployments       │
-    └───────────┬───────────┘  └──────────────────────────────┘
-                │ calls
-    ┌───────────▼──────────────────────────────────┐
-    │               Engine                          │
-    │  background — per-deployment lifecycle       │
-    │  Run(spec) → Result                           │
-    │  Hides: clone → build → start → supervise     │
-    │         → health → host register → cache      │
-    │  Go optional-interface: Runner · LogStreamer   │
-    │  Test: FakeRunner + temp dirs, no exec.Cmd     │
-    └──────────────────────────────────────────────┘
-```
-
-### Canonical terms
-
-- **Engine** — runs one deployment end-to-end behind a single `Run(spec) → Result` seam.
-  Hides clone, build (npm/go/pip), node_modules cache, start app/serve static, health
-  probe, host registration, and supervisor lifecycle. Every caller (HTTP, webhook, MCP,
-  sites, resume-on-boot) crosses the same interface. Uses the Go optional-interface
-  pattern: `Runner` (required), `LogStreamer` (live log streaming), `Builder` (staged
-  build). Depth 4.
-- **Gateway** — HTTP handlers for deploy CRUD, logs, and stats. Delegates all deployment
-  work to `engine.Run(spec)`. Zero process management, zero git commands. Testable with
-  `httptest.NewRecorder` + `FakeEngine` per CONVENTIONS T8 (assert on HTTP status codes
-  and JSON bodies, never internal state). Depth 3.
-- **Orchestrator** — fleet management: resume-on-boot, drain, rollback,
-  delete-site-deployments. Queries DB for candidates, delegates execution to Engine.
-  Testable with `FakeEngine` + `FakeDB`. Depth 3.
-- **Supervisor** — owns the fleet of running deployments: restart policy (backoff +
-  crash-loop detection), health probing, resume-on-boot, and guaranteed proxy host
-  (re)registration. The Go equivalent of Docker `restart: unless-stopped` + healthchecks.
-  Wrapped by Engine, not replaced.
-- **Instance** — one *single-use* live run of a deployment (a subprocess app or an
-  in-process static server), unified behind the `Runner` seam. Exposes `Wait` /
-  `Stop(grace)` / `Health`. Spawning belongs to the `Runner`, not the Instance: `Wait`
-  returns once, then the Instance is spent. The Supervisor restarts by re-spawning a
-  fresh Instance from the `Spec`, never by re-starting a dead one — this keeps
-  `exec.Cmd`'s real one-shot lifecycle honest at the interface rather than hidden
-  behind a re-callable `Start`.
-- **Spec** — the immutable description of *what* to run (deploy ID, host, port, dir,
-  app type, env, start command, repo path, branch, manifest, passthrough paths). Built
-  once by the Gateway or Orchestrator from the deployment row + manifest and handed to
-  `Engine.Run(ctx, spec)`. The only state that survives a restart; restart history lives
-  in the Supervisor, not the Instance.
-- **Runner** — the seam that runs deployments (`Run(ctx, spec) → Result` for Engine;
-  `Spawn(ctx, spec) → Instance` for Supervisor); a `FakeRunner` returns scripted
-  Instances so supervision logic is testable without real processes.
-- **Isolator** — the seam that applies per-app resource caps. Production adapter spawns
-  through a **systemd transient scope** (`MemoryMax` / `CPUQuota` / `TasksMax`); a no-op
-  adapter is used on macOS dev. BigBase never reimplements cgroups.
-- **DeploymentHostRegistry** — the existing proxy seam that maps host → port; extended to
-  own connection counting and **drain** (the proxy is the only layer that sees in-flight
-  connections, since all deployment traffic is reverse-proxied).
-- **LogStore** — shared adapter for build log capture. Engine writes (`Append(id, line)`),
-  Gateway reads (`Get(id)`), WebSocket subscribers listen (`Subscribe(id) → chan`).
-  Production adapter is the current in-memory ring buffer. Tests use a trivial
-  in-memory store.
-
 ## External Services
 
 | Service | Integration | Config |
 |---------|------------|--------|
 | Google OAuth | OAuth 2.0 relay | `--google-client-id`, `--google-client-secret` |
-| GitHub | GitHub App (optional) | `--github-app-id`, `--github-app-private-key-path` |
-| SMTP | Email sending | Messaging API, `--messaging-webhook-url` |
+| GitHub | GitHub App (optional) | `--github-app-id`, `--github-app-slug`, `--github-app-private-key-path` |
+| SMTP | Email sending | Messaging API, `--messaging-smtp-*` |
+| Let's Encrypt | ACME TLS (autocert) | `--acme-email`; DirCache in `certs/` |
 | PostgreSQL | Dual-driver DB | `--db-driver postgres`, `--db-dsn` |
-| Telegram | Bot messaging | Messenger WebhookProvider, `--messaging-webhook-token` |
-| Cron | Function scheduling | `--functions-schedule` flag, robfig/cron v3 |
+| Telegram | Bot messaging | `--messaging-webhook-token` |
 | New Relic | APM monitoring | `--newrelic-license-key`, `NEW_RELIC_LICENSE_KEY` |
 | MCP | AI tool integration (SSE/stdio) | `--mcp-port`, `--mcp-transport` |
 
@@ -227,13 +236,14 @@ Control Plane vs Compute).
 | 0001 | SQLite + JSON Blob API | Accepted |
 | 0002 | JWT + bcrypt Auth | Accepted |
 | 0003 | GitHub App for Sites | Accepted |
-| 0004 | No containers (Docker/K8s) ever — in-process Go Supervisor + systemd isolation | Accepted |
-| 0005 | Deploy decomposition: Engine (Run) + Gateway (HTTP) + Orchestrator (fleet) | Accepted |
-| — | ECC pattern (no direct component imports) | Accepted |
-| — | PostgreSQL dual-driver (modernc.org/sqlite + lib/pq) | Accepted (e18) |
+| 0004 | No containers (Docker/K8s) — in-process Go Supervisor + systemd isolation | Accepted |
+| 0005 | Deploy decomposition: Engine + Gateway + Orchestrator | Accepted (spec); **code split pending** |
+| — | ECC pattern (no direct cross-component imports) | Accepted |
+| — | PostgreSQL dual-driver (modernc.org/sqlite + pgx/v5) | Accepted (e18) |
 | — | Multi-tenant org isolation at API/DB layer | Accepted (e23) |
 | — | Functions runtime injections: fetch+db+env+request+cron | Accepted (e30) |
 | — | Provider interface for pluggable messaging backends | Accepted (e12, e30) |
+| — | AES-256-GCM for site env vars (optional, no-op without key) | Accepted (e41) |
 
 ## CLI Reference
 
@@ -247,13 +257,18 @@ go run . serve [--port PORT] [--db PATH] [--db-driver DRIVER] [--db-dsn DSN]
                [--cors-allowed-origins ORIGINS]
                [--auth-post-login-redirect URL] [--auth-spa-origin-allowlist ORIGINS]
                [--jwt-access-expiry DURATION] [--jwt-refresh-expiry DURATION]
+               [--rate-limit-enabled] [--rate-limit-ip-max N] [--rate-limit-user-max N]
                [--mcp-disabled] [--mcp-port PORT] [--mcp-transport TRANSPORT]
                [--newrelic-license-key KEY] [--newrelic-app-name NAME] [--newrelic-enabled]
+               [--acme-email EMAIL]
 
-# JWT configuration environment variables:
-#   BIGBASE_JWT_SECRET         — shared secret for HS256 signing (min 32 chars, required in production)
+# Key env vars (BIGBASE_* prefix):
+#   BIGBASE_JWT_SECRET         — shared secret for HS256 signing (min 32 chars)
 #   BIGBASE_JWT_ACCESS_EXPIRY  — access token TTL, e.g. "24h", "30m" (default: 24h)
-#   BIGBASE_JWT_REFRESH_EXPIRY — refresh token TTL, e.g. "720h" (default: 720h / 30 days)
+#   BIGBASE_JWT_REFRESH_EXPIRY — refresh token TTL (default: 720h / 30 days)
+#   BIGBASE_DB_DRIVER, BIGBASE_DB_DSN
+#   BIGBASE_RATE_LIMIT_ENABLED, BIGBASE_RATE_LIMIT_IP_MAX, BIGBASE_RATE_LIMIT_USER_MAX
+#   BIGBASE_PUBLIC_URL, BIGBASE_SITES_DOMAIN
 
 # Info
 go run . version
@@ -275,10 +290,10 @@ go run . migrate up|down|status [--db PATH]
 grep -r "components/" kernel/ | grep -v "_test.go" | grep -v '//' || echo "No cross-component imports"
 
 # All 19 components implement kernel.Component
-grep -l "kernel.Component" components/*/**.go | wc -l
+grep -l "kernel.Component" components/*/*.go | wc -l
 
-# Event bus is sole communication channel
-grep -c "EventBus" components/*/**.go
+# Event bus wiring
+grep -rn "Emit\|Subscribe" components/*/*.go | grep -v "_test.go"
 
 # Test suite
 go test ./... && go vet ./...
