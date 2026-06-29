@@ -499,6 +499,20 @@ bugs:
     regression_guards:
       - components/auth/auth_test.go TestAnonymousToken
 
+  - id: BUG-2026-06-29T000000
+    date: "2026-06-29"
+    severity: high
+    priority: high
+    scope: sdk,auth
+    summary: "auth-astro middleware never sets storedToken — getSession() always returns null for authenticated SSR requests"
+    file: specs/bugs/bug-astro-sdk-stored-token-null.yaml
+    status: open
+    risk_level: low
+    approach: |
+      Add setToken(token: string): void to AuthClient in @bigbase/auth.
+      Fix createBigBaseAuth in @bigbase/auth-astro to call client.setToken(token) before getSession().
+      Fix AstroAuth.session type; fix requireAuth return type; export AstroAuthLocals.
+    notes: "No e57 dependency — shippable immediately. Previously tracked as epic story e58s05."
   - id: BUG-2026-06-28T154700
     date: "2026-06-28"
     severity: medium

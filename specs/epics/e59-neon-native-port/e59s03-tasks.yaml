@@ -1,0 +1,45 @@
+story_id: e59s03
+title: "Better Auth Backend Engine"
+status: planned
+bcps: 3
+security: low
+tasks:
+  - id: 1
+    description: "Create components/auth/betterauth.go with BetterAuthSession/BetterAuthUser structs and betterAuthResponse(token, claims) helper (sessionID = SHA256(token)[:16], userId as string, expiresAt from claims)"
+    verify: "go build ./components/auth/"
+    status: todo
+
+  - id: 2
+    description: "Implement handleBetterAuthSignIn: POST-only, decode {email, password}, call credential verification (reuse existing DB query pattern from handleLogin), build and write betterAuthResponse JSON 200"
+    verify: "go build ./components/auth/"
+    status: todo
+
+  - id: 3
+    description: "Implement handleBetterAuthGetSession: GET-only, extract token from Authorization Bearer header or better-auth.session_token cookie, call verifyJWT, return betterAuthResponse on valid token or null on invalid/missing"
+    verify: "go build ./components/auth/"
+    status: todo
+
+  - id: 4
+    description: "Implement handleBetterAuthSignOut: POST-only, clear better-auth.session_token cookie (MaxAge=-1, HttpOnly true), write {} JSON 200"
+    verify: "go build ./components/auth/"
+    status: todo
+
+  - id: 5
+    description: "Register three routes in Handler(): /api/auth/sign-in/email, /api/auth/get-session, /api/auth/sign-out"
+    verify: "go build . && go build ./components/auth/"
+    status: todo
+
+  - id: 6
+    description: "Write unit tests for betterAuthResponse: correct sessionID derivation, userId as string, expiresAt matches claims, user.email correct"
+    verify: "go test ./components/auth/ -run TestBetterAuthResponse -v -count=1"
+    status: todo
+
+  - id: 7
+    description: "Write integration tests (httptest): sign-in valid→200 session+user shape; wrong password→401; get-session valid Bearer→200; no token→200 null; cookie token→200; sign-out clears cookie"
+    verify: "go test ./components/auth/ -run TestBetterAuth -v -count=1"
+    status: todo
+
+  - id: 8
+    description: "Run full test suite to confirm no regressions from new routes"
+    verify: "go test ./... -count=1"
+    status: todo

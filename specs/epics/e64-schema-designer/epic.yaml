@@ -1,0 +1,11 @@
+type: epic-shard
+context: domain
+id: e64
+title: "Admin — Schema Designer"
+wsjf: 2.5
+total_bcps: 2
+status: planned
+depends_on: [e51, e57]
+stories:
+  - id: e64s01
+  - id: e64s02

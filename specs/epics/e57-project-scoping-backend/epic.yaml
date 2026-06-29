@@ -1,0 +1,34 @@
+type: epic-shard
+context: domain
+id: e57
+title: "Project Scoping — Backend (DB + Auth + Sites)"
+wsjf: 7.0
+total_bcps: 17
+status: planned
+depends_on: []
+blocks: [e58, e59, e61, e62, e63, e64, e65, e66]
+stories:
+  - id: e57s01
+    title: "Kernel Interface Hardening"
+    bcps: 4
+    status: planned
+    spec: e57s01-spec.md
+    tasks: e57s01-tasks.yaml
+  - id: e57s02
+    title: "Projects table — backend CRUD"
+    bcps: 3
+    status: planned
+    spec: e57s02-spec.md
+    tasks: e57s02-tasks.yaml
+  - id: e57s03
+    title: "Database isolation per project"
+    bcps: 3
+    status: planned
+    spec: e57s03-spec.md
+    tasks: e57s03-tasks.yaml
+  - id: e57s04
+    title: "Auth namespacing and Site→Project backfill"
+    bcps: 7
+    status: planned
+    spec: e57s04-spec.md
+    tasks: e57s04-tasks.yaml

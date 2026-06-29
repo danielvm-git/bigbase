@@ -1,0 +1,40 @@
+story_id: e59s04
+title: "MCP Database Migration Tools"
+status: planned
+bcps: 3
+security: none
+tasks:
+  - id: 1
+    description: "Add MigratorI interface (Status, Up, Down methods) and migrator field to mcp.Component; extend Options with Migrator MigratorI field; populate in New()"
+    verify: "go build ./components/mcp/"
+    status: todo
+
+  - id: 2
+    description: "Register list_migrations MCP tool in NewMCPServer(): call c.migrator.Status(), format as markdown table (version, ✓/✗, applied_at); return 'not configured' text when migrator is nil"
+    verify: "go build ./components/mcp/"
+    status: todo
+
+  - id: 3
+    description: "Register run_migrations MCP tool: call c.migrator.Up(); report count applied or 'all up to date'; return error text on failure or nil migrator"
+    verify: "go build ./components/mcp/"
+    status: todo
+
+  - id: 4
+    description: "Register rollback_migration MCP tool: parse optional n arg (default 1, validate >0), call c.migrator.Down(n), confirm rollback; return error text on failure"
+    verify: "go build ./components/mcp/"
+    status: todo
+
+  - id: 5
+    description: "In main.go: assemble allMigrations []db.Migration from all component inline SQL, create db.NewMigrator(dbComp.DB(), allMigrations), wire as mcp.Options.Migrator"
+    verify: "go build ."
+    status: todo
+
+  - id: 6
+    description: "Write unit tests using a mock MigratorI: list_migrations formats table correctly; run_migrations returns applied count; rollback_migration calls Down(n); nil migrator returns 'not configured'"
+    verify: "go test ./components/mcp/ -run TestMigrationTool -v -count=1"
+    status: todo
+
+  - id: 7
+    description: "Run full test suite to confirm no regressions"
+    verify: "go test ./... -count=1"
+    status: todo

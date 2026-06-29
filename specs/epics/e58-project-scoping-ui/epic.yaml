@@ -1,0 +1,17 @@
+type: epic-shard
+context: domain
+id: e58
+title: "Project Scoping — Admin UI"
+wsjf: 5.0
+total_bcps: 3
+status: planned
+tier: 1
+depends_on: [e51, e57]
+note: "1 story, 3 BCPs. Admin UI for project CRUD with list/detail pages, sidebar nav, and data hooks."
+stories:
+  - id: e58s01
+    title: "Project Scoping Admin UI"
+    bcps: 3
+    status: planned
+    spec: e58s01-spec.md
+    tasks: e58s01-tasks.yaml

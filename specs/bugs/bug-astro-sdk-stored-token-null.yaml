@@ -1,0 +1,81 @@
+type: bug
+id: BUG-001
+title: "Astro SDK — storedToken null causes silent auth failure in SSR middleware"
+status: open
+severity: high
+affects:
+  - package: "@bigbase/auth-astro"
+    file: "packages/auth-astro/src/index.ts"
+  - package: "@bigbase/auth"
+    file: "packages/auth/src/index.ts"
+reported: "2026-06-29"
+depends_on: []
+note: |
+  Live production bug. Ship immediately — no e57 dependency.
+  The createBigBaseAuth middleware extracts a token from the request cookie but never
+  passes it to the auth client before calling client.getSession(). Internal storedToken
+  remains null, so getSession() sends GET /api/auth/me without Authorization header —
+  returning null for every authenticated SSR request.
+
+root_cause: |
+  packages/auth-astro/src/index.ts:
+    const token = cookieHeader.match(/token=([^;]+)/)?.[1] ?? null;
+    if (token) {
+      const session = await client.getSession(); // BUG: storedToken is null, token never set
+
+fix:
+  summary: |
+    1. Add setToken(token: string): void to AuthClient interface and createAuthClient
+       implementation in packages/auth/src/index.ts (sets closure-local storedToken).
+    2. Fix createBigBaseAuth in packages/auth-astro/src/index.ts: call client.setToken(token)
+       before client.getSession() when token is extracted from cookie.
+    3. Fix AstroAuth.session type from 'any' to 'AuthSession | null'.
+    4. Fix requireAuth return type to 'AstroAuth | Response'.
+    5. Export AstroAuthLocals type.
+  breaking_changes: false
+  migration: none
+
+tasks:
+  - id: 1
+    description: "Add setToken(token: string): void to AuthClient interface and createAuthClient implementation in packages/auth/src/index.ts"
+    verify: "cd packages/auth && npm run typecheck"
+    status: todo
+
+  - id: 2
+    description: "Build @bigbase/auth to emit updated types"
+    verify: "cd packages/auth && npm run build"
+    status: todo
+
+  - id: 3
+    description: "Fix createBigBaseAuth: call client.setToken(token) before client.getSession() when token extracted from cookie"
+    verify: "cd packages/auth-astro && npm run build"
+    status: todo
+
+  - id: 4
+    description: "Fix AstroAuth.session type from 'any' to 'AuthSession | null'; fix requireAuth return type to 'AstroAuth | Response'; export AstroAuthLocals"
+    verify: "cd packages/auth-astro && npm run build"
+    status: todo
+
+  - id: 5
+    description: "Unit test for setToken: call setToken('abc'), verify getJWT() returns 'abc' without fetch"
+    verify: "cd packages/auth && npm test"
+    status: todo
+
+  - id: 6
+    description: "Unit test for createBigBaseAuth: mock fetch; with cookie 'token=jwt123' verify Authorization header sent; without cookie verify locals.auth is null"
+    verify: "cd packages/auth && npm test"
+    status: todo
+
+  - id: 7
+    description: "Final build and test pass for both packages"
+    verify: "cd packages/auth && npm run build && npm test && cd ../auth-astro && npm run build"
+    status: todo
+
+verify: |
+  cd packages/auth && npm run build && npm test && cd ../auth-astro && npm run build
+
+risk: |
+  storedToken in createAuthClient is closure-local. If client instance is shared across
+  concurrent requests, setToken could race. Mitigated: createBigBaseAuth calls createAuthClient
+  once at setup; Node.js SSR is single-threaded — no concurrent mutation in one process.
+  Document this assumption in JSDoc.

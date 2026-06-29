@@ -1,0 +1,29 @@
+story_id: e57s02
+title: "Projects table — backend CRUD"
+status: planned
+bcps: 3
+tasks:
+  - id: 1
+    description: "Add projects table migration to auth.Start() with UNIQUE(org_id, slug)"
+    verify: "go build ./components/auth/ && go test ./components/auth/ -run TestAuthStart -v -count=1"
+    status: todo
+  - id: 2
+    description: "Implement Project struct and CRUD methods (CreateProject, GetProjectByID, ListProjectsByOrg, UpdateProject, DeleteProject) in components/auth/projects.go"
+    verify: "go build ./components/auth/"
+    status: todo
+  - id: 3
+    description: "Add HTTP handlers for /api/orgs/{orgID}/projects CRUD in ProtectedHandler()"
+    verify: "go build ./components/auth/"
+    status: todo
+  - id: 4
+    description: "Write unit tests for all CRUD operations and edge cases (duplicate slug, not found, cross-org isolation)"
+    verify: "go test ./components/auth/ -run TestProject -v -count=1"
+    status: todo
+  - id: 5
+    description: "Write integration tests for project endpoints with real HTTP requests"
+    verify: "go test ./components/auth/ -run TestCreateProjectEndpoint -v -count=1"
+    status: todo
+  - id: 6
+    description: "Run full test suite to verify no regressions"
+    verify: "go test ./... -count=1"
+    status: todo

@@ -1,0 +1,33 @@
+story_id: e58s01
+title: "Project Scoping Admin UI"
+status: planned
+bcps: 3
+tasks:
+  - id: 1
+    description: "Add project CRUD + sites/deployments listing endpoints in components/auth/projects_api.go (skip if e57s02 already provides them)"
+    verify: "go test ./components/auth/ -run TestProjectCRUD -v"
+    status: todo
+  - id: 2
+    description: "Register new project API routes in auth.Start() (if projects_api.go is new)"
+    verify: "go build ./components/auth/ && curl -s http://localhost:9999/api/auth/projects | jq ."
+    status: todo
+  - id: 3
+    description: "Add ui/src/hooks/useProjects.ts with useProjects, useProject, useCreateProject, useUpdateProject, useDeleteProject hooks"
+    verify: "cd ui && npx vitest run useProjects.test.ts"
+    status: todo
+  - id: 4
+    description: "Add ui/src/pages/ProjectsPage.tsx with project list table, create button, and delete with confirmation"
+    verify: "cd ui && npx vitest run ProjectsPage.test.tsx"
+    status: todo
+  - id: 5
+    description: "Add ui/src/pages/ProjectDetailPage.tsx with project details, sites list, and deployments list"
+    verify: "cd ui && npx vitest run ProjectDetailPage.test.tsx"
+    status: todo
+  - id: 6
+    description: "Add 'Projects' navigation link to Layout.tsx sidebar and /projects, /projects/:id routes to App.tsx"
+    verify: "cd ui && npm run build && echo 'Build succeeds'"
+    status: todo
+  - id: 7
+    description: "Run full Go auth tests and UI build to verify no regressions"
+    verify: "go test ./components/auth/ -count=1 && cd ui && npm run build"
+    status: todo

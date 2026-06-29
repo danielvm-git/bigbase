@@ -1,0 +1,41 @@
+type: epic-shard
+context: domain
+id: e59
+title: "Native Feature Port — SQL-over-HTTP, Better Auth, MCP Tools, DB Branching"
+wsjf: 6.0
+total_bcps: 13
+status: planned
+note: |
+  4 stories (e59s05 extracted as BUG-001 — ships independently via bugs/).
+  e59s01/s03/s04 ship in Wave 2 after e57. e59s02 (DB branching) ships last
+  as it is complex and its only consumer is e65 (Preview Environments).
+  Do NOT treat e59 as an atomic block — each story gates independently.
+stories:
+  - id: e59s01
+    title: "SQL-over-HTTP Transport (Neon wire format)"
+    bcps: 3
+    depends_on: [e57]
+    status: planned
+    spec: e59s01-spec.md
+    tasks: e59s01-tasks.yaml
+  - id: e59s02
+    title: "Database Branching (SQLite snapshot, blocks e65)"
+    bcps: 4
+    depends_on: [e57]
+    status: planned
+    spec: e59s02-spec.md
+    tasks: e59s02-tasks.yaml
+  - id: e59s03
+    title: "Better Auth Backend Engine (wire-compat endpoints)"
+    bcps: 3
+    depends_on: [e57]
+    status: planned
+    spec: e59s03-spec.md
+    tasks: e59s03-tasks.yaml
+  - id: e59s04
+    title: "MCP Database Migration Tools"
+    bcps: 3
+    depends_on: [e57]
+    status: planned
+    spec: e59s04-spec.md
+    tasks: e59s04-tasks.yaml

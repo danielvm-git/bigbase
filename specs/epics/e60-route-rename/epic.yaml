@@ -1,0 +1,20 @@
+type: epic-shard
+context: ui
+id: e60
+title: "DX — Route Rename /deploy → /sites"
+wsjf: 4.0
+total_bcps: 1
+status: planned
+tier: 2
+depends_on: [e57]
+note: |
+  1 story, ~1 BCP. Mechanical rename to align codebase with all prototype and IA spec routes.
+  Ships in Wave 2 alongside e58. No functional change — pure routing update with backward-compat
+  301 redirect from /deploy/* so any bookmarked or external links continue to work.
+stories:
+  - id: e60s01
+    title: "Rename /deploy/* → /sites/* routes with 301 redirect shim"
+    bcps: 1
+    status: planned
+    spec: e60s01-spec.md
+    tasks: e60s01-tasks.yaml

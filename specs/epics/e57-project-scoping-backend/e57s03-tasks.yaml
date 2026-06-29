@@ -1,0 +1,33 @@
+story_id: e57s03
+title: "Database isolation per project"
+status: planned
+bcps: 3
+tasks:
+  - id: 1
+    description: "Add project_id column to sites table via idempotent ALTER TABLE + index"
+    verify: "go test ./components/sites/ -run TestSitesSchema -v -count=1"
+    status: todo
+  - id: 2
+    description: "Add project_id column to deployments table via idempotent ALTER TABLE + index"
+    verify: "go test ./components/deploy/ -run TestDeploymentsSchema -v -count=1"
+    status: todo
+  - id: 3
+    description: "Add DefaultProjectForOrg helper to auth component (creates 'Default' project if not exists)"
+    verify: "go test ./components/auth/ -run TestDefaultProject -v -count=1"
+    status: todo
+  - id: 4
+    description: "Implement backfill: assign all existing sites and deployments to org default projects"
+    verify: "go test ./components/sites/ -run TestBackfillProjectIDs -v -count=1"
+    status: todo
+  - id: 5
+    description: "Scope sites queries by project_id from context (list, get, create)"
+    verify: "go test ./components/sites/ -run TestSitesScopedByProject -v -count=1"
+    status: todo
+  - id: 6
+    description: "Scope deploy queries by project_id from context"
+    verify: "go test ./components/deploy/ -run TestDeploymentsScopedByProject -v -count=1"
+    status: todo
+  - id: 7
+    description: "Full test suite — verify no regressions"
+    verify: "go test ./... -count=1"
+    status: todo

@@ -1,0 +1,11 @@
+type: epic-shard
+context: domain
+id: e62
+title: "Proxy — Configurable CSP Headers"
+wsjf: 3.0
+total_bcps: 3
+status: planned
+depends_on: [e57]
+stories:
+  - id: e62s01
+  - id: e62s02
