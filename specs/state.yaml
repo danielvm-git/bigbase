@@ -10,7 +10,7 @@ release:
   last_tag: v2.61.0
   last_publish: '2026-06-28'
   ci_verified: true
-  ci_verified_at: '2026-06-28T21:05:00Z'
+  ci_verified_at: '2026-06-29T11:13:30Z'
 metrics:
   session_start: '2026-06-28T00:00:00Z'
   story_start: '2026-06-28T20:00:00Z'
