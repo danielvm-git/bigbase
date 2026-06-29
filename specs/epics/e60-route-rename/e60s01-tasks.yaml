@@ -1,0 +1,29 @@
+story_id: e60s01
+title: "Rename /deploy/* → /sites/* routes with 301 redirect shim"
+status: planned
+bcps: 1
+tasks:
+  - id: 1
+    description: "Update routes in ui/src/App.tsx: map /deploy -> /sites, /deploy/new -> /sites/new, and /deploy/:siteId -> /sites/:siteId"
+    verify: "cd ui && npm run build"
+    status: todo
+  - id: 2
+    description: "Update navigation links in ui/src/Layout.tsx: change '/deploy' path references to '/sites'"
+    verify: "cd ui && npm run build"
+    status: todo
+  - id: 3
+    description: "Update page components to replace all navigate('/deploy') and useNavigate calls to point to /sites"
+    verify: "cd ui && npm run build"
+    status: todo
+  - id: 4
+    description: "Add 301 HTTP redirect shim in main.go: map GET /deploy and GET /deploy/* to /sites and /sites/*"
+    verify: "go build ./..."
+    status: todo
+  - id: 5
+    description: "Update all Go and TypeScript tests referencing /deploy paths to reference /sites"
+    verify: "go test ./... && cd ui && npm run test"
+    status: todo
+  - id: 6
+    description: "Run full workspace builds and tests to verify backward compatibility and no regressions"
+    verify: "go test ./... && cd ui && npm run build && npm run test"
+    status: todo
