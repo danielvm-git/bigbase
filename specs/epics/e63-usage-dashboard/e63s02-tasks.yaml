@@ -1,10 +1,17 @@
 story_id: e63s02
 title: "Usage Dashboard UI"
-status: planned
+status: todo
 bcps: 1
-note: "Full task breakdown deferred to plan-work. Run plan-work for detailed steps."
 tasks:
   - id: 1
-    description: "Plan detailed implementation steps"
-    verify: "echo 'plan-work needed for e63s02'"
+    description: "Create UsageDashboard page component and route in Admin UI"
+    verify: "cd ui && npm run build"
+    status: todo
+  - id: 2
+    description: "Implement API hooks for usage and resources endpoints"
+    verify: "cd ui && npm run tsc"
+    status: todo
+  - id: 3
+    description: "Render stat cards and usage charts using design system components"
+    verify: "cd ui && npm run build"
     status: todo

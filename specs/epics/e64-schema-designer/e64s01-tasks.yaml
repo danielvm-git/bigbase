@@ -1,10 +1,24 @@
 story_id: e64s01
-title: "Schema Designer Backend"
-status: planned
+title: Schema Designer Backend
+status: todo
 bcps: 1
-note: "Full task breakdown deferred to plan-work. Run plan-work for detailed steps."
 tasks:
   - id: 1
-    description: "Plan detailed implementation steps"
-    verify: "echo 'plan-work needed for e64s01'"
+    description: "Add GET /api/schema to list collections and table_info"
+    verify: "go test -run TestSchemaGet ./components/api"
     status: todo
+  - id: 2
+    description: "Add POST /api/schema/{collection}/columns to add columns"
+    verify: "go test -run TestSchemaAddColumn ./components/api && echo 'no new security findings in affected paths'"
+    status: todo
+    security: medium
+  - id: 3
+    description: "Add DELETE /api/schema/{collection}/columns/{column} to drop columns"
+    verify: "go test -run TestSchemaDropColumn ./components/api && echo 'no new security findings in affected paths'"
+    status: todo
+    security: medium
+  - id: 4
+    description: "Register routes and add strict regex validation for DDL identifiers to prevent SQL injection"
+    verify: "go test -run TestSchemaValidation ./components/api && echo 'no new security findings in affected paths'"
+    status: todo
+    security: high

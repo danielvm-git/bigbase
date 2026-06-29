@@ -3,6 +3,10 @@ title: "Kernel Interface Hardening"
 status: planned
 bcps: 4
 tasks:
+  - id: 0
+    description: "Hoist Logger/DBer interfaces per ADR-0005 Phase 1 quick wins."
+    verify: "go build ./kernel/..."
+    status: todo
   - id: 1
     description: "Add kernel/scope.go with typed context key, WithProjectID, and ProjectIDFromContext helpers"
     verify: "go build ./kernel/"

@@ -33,14 +33,14 @@ The existing pattern for CRUD admin pages follows:
 Add three new UI surfaces, a new API file, a new hook, and sidebar navigation:
 
 **Backend API (Go) — `components/auth/projects_api.go`:**
-- `GET /api/auth/projects` — list projects (org-scoped)  
+- `GET /api/orgs/{orgId}/projects` — list projects (org-scoped)  
   _Note: If e57s02 is done, this endpoint already exists. If not, this file provides it._
-- `POST /api/auth/projects` — create project
-- `GET /api/auth/projects/{id}` — get project details
-- `PUT /api/auth/projects/{id}` — update project name/slug
-- `DELETE /api/auth/projects/{id}` — delete project (only if no sites/deployments)
-- `GET /api/auth/projects/{id}/sites` — list sites in a project
-- `GET /api/auth/projects/{id}/deployments` — list deployments in a project
+- `POST /api/orgs/{orgId}/projects` — create project
+- `GET /api/orgs/{orgId}/projects/{id}` — get project details
+- `PUT /api/orgs/{orgId}/projects/{id}` — update project name/slug
+- `DELETE /api/orgs/{orgId}/projects/{id}` — delete project (only if no sites/deployments)
+- `GET /api/orgs/{orgId}/projects/{id}/sites` — list sites in a project
+- `GET /api/orgs/{orgId}/projects/{id}/deployments` — list deployments in a project
 
 **UI — `ui/src/pages/ProjectsPage.tsx`:**
 - Table listing all projects: name, slug, site count, created date
@@ -59,7 +59,7 @@ Add three new UI surfaces, a new API file, a new hook, and sidebar navigation:
 - `useProjects()` — fetches project list
 - `useProject(id)` — fetches single project with sites/deployments
 - `useCreateProject()`, `useUpdateProject()`, `useDeleteProject()` — mutations
-- Pattern: `useState` + `useEffect` with `fetch()` calls to `/api/auth/projects/*`, matching `useWorkspace.ts` style
+- Pattern: `useState` + `useEffect` with `fetch()` calls to `/api/orgs/*/projects/*`, matching `useWorkspace.ts` style
 
 **UI — Navigation:**
 - Add "Projects" link to the sidebar in `Layout.tsx`, under the "Data" section (before "Users")
@@ -85,7 +85,7 @@ Add three new UI surfaces, a new API file, a new hook, and sidebar navigation:
 - **e57s02 (Projects Table CRUD)** — backend `projects` CRUD endpoints. If e57s02 is not done,
   this story provides the API endpoints in `components/auth/projects_api.go`.
 - **e57s03 (DB Isolation)** — `project_id` column on sites/deployments. The project detail
-  page queries these via `/api/auth/projects/{id}/sites` and `/api/auth/projects/{id}/deployments`.
+  page queries these via `/api/orgs/{orgId}/projects/{id}/sites` and `/api/orgs/{orgId}/projects/{id}/deployments`.
 
 ## 8. Assumptions
 - The Go API endpoints follow the same auth middleware pattern as existing `orgs` CRUD
@@ -104,6 +104,7 @@ Add three new UI surfaces, a new API file, a new hook, and sidebar navigation:
   extensively by existing pages. Verify availability before implementation.
 - **UI test gap**: Only 1 UI test file exists. Mitigation: this story adds `.test.tsx`
   alongside the new pages, following the `SettingsPage.test.tsx` pattern.
+- **Route scoping technical debt**: (Issue #43) These routes follow the newer `/api/orgs/...` convention. When resolving Issue #43, this API boundary might be rationalized further.
 
 ## 10. Non-goals
 - This story does NOT add project-scoped data filtering on existing pages (e.g., showing
@@ -160,13 +161,13 @@ Project detail view:
 
 **New endpoints (if e57s02 not yet deployed):**
 ```
-GET    /api/auth/projects               → {data: [{id, name, slug, org_id, sites_count, deployments_count, created_at}]}
-POST   /api/auth/projects               → {data: {id, name, slug, org_id, created_at}}
-GET    /api/auth/projects/{id}          → {data: {id, name, slug, org_id, created_at}}
-PUT    /api/auth/projects/{id}          → {data: {id, name, slug}}
-DELETE /api/auth/projects/{id}          → {ok: true}  (409 if has sites/deployments)
-GET    /api/auth/projects/{id}/sites    → {data: [{id, name, domain, status, created_at}]}
-GET    /api/auth/projects/{id}/deployments → {data: [{id, version, status, created_at}]}
+GET    /api/orgs/{orgId}/projects               → {data: [{id, name, slug, org_id, sites_count, deployments_count, created_at}]}
+POST   /api/orgs/{orgId}/projects               → {data: {id, name, slug, org_id, created_at}}
+GET    /api/orgs/{orgId}/projects/{id}          → {data: {id, name, slug, org_id, created_at}}
+PUT    /api/orgs/{orgId}/projects/{id}          → {data: {id, name, slug}}
+DELETE /api/orgs/{orgId}/projects/{id}          → {ok: true}  (409 if has sites/deployments)
+GET    /api/orgs/{orgId}/projects/{id}/sites    → {data: [{id, name, domain, status, created_at}]}
+GET    /api/orgs/{orgId}/projects/{id}/deployments → {data: [{id, version, status, created_at}]}
 ```
 
 **All endpoints** use existing auth middleware (`Authorization: Bearer <JWT>`)
@@ -208,13 +209,13 @@ and org scoping (`OrgIDFromContext`).
 ## 17. Acceptance Criteria
 
 - [ ] Go backend exposes project CRUD endpoints (either from e57s02 or new in this story):
-  - [ ] `GET /api/auth/projects` returns list (org-scoped)
-  - [ ] `POST /api/auth/projects` creates a project
-  - [ ] `GET /api/auth/projects/{id}` returns project details
-  - [ ] `PUT /api/auth/projects/{id}` updates name/slug
-  - [ ] `DELETE /api/auth/projects/{id}` deletes (409 if has sites/deployments)
-  - [ ] `GET /api/auth/projects/{id}/sites` returns sites list
-  - [ ] `GET /api/auth/projects/{id}/deployments` returns deployments list
+  - [ ] `GET /api/orgs/{orgId}/projects` returns list (org-scoped)
+  - [ ] `POST /api/orgs/{orgId}/projects` creates a project
+  - [ ] `GET /api/orgs/{orgId}/projects/{id}` returns project details
+  - [ ] `PUT /api/orgs/{orgId}/projects/{id}` updates name/slug
+  - [ ] `DELETE /api/orgs/{orgId}/projects/{id}` deletes (409 if has sites/deployments)
+  - [ ] `GET /api/orgs/{orgId}/projects/{id}/sites` returns sites list
+  - [ ] `GET /api/orgs/{orgId}/projects/{id}/deployments` returns deployments list
 - [ ] UI hook `useProjects.ts` with `useProjects`, `useProject`, `useCreateProject`, `useUpdateProject`, `useDeleteProject`
 - [ ] `ProjectsPage.tsx` renders in `/projects` route with:
   - [ ] Project list table (name, slug, sites count, deployments count, created date)
@@ -249,12 +250,12 @@ TOKEN=$(curl -s -X POST http://localhost:9999/api/auth/register \
 
 # 3. Create a project
 curl -s -H "Authorization: Bearer $TOKEN" \
-  -X POST http://localhost:9999/api/auth/projects \
+  -X POST http://localhost:9999/api/orgs/1/projects \
   -d '{"name":"My App","slug":"my-app"}' | jq .
 
 # 4. List projects
 curl -s -H "Authorization: Bearer $TOKEN" \
-  http://localhost:9999/api/auth/projects | jq .
+  http://localhost:9999/api/orgs/1/projects | jq .
 
 # 5. Open browser to http://localhost:9999
 #    - Navigate to Projects page from sidebar

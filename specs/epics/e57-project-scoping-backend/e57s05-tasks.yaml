@@ -1,0 +1,17 @@
+story_id: e57s05
+title: "Deepen: EnvResolver seam for projects"
+status: todo
+bcps: 3
+tasks:
+  - id: 1
+    description: "Define EnvResolver interface and DefaultEnvResolver in env.go with RedactedView"
+    verify: "go build ./components/deploy/..."
+    status: todo
+  - id: 2
+    description: "Inject EnvResolver into Deploy component via Options and use it in buildCmdEnv"
+    verify: "go build -o bigbase ."
+    status: todo
+  - id: 3
+    description: "Write tests for DefaultEnvResolver layering and redaction in env_test.go"
+    verify: "go test -v -run TestEnvResolver ./components/deploy"
+    status: todo

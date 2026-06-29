@@ -327,7 +327,7 @@ epics:
   wsjf: 3.0
   mode: capsule
   tier: 2
-  status: planned
+  status: done
   depends_on: []
   note: 3 stories, 5 BCPs. Persistent JWT secret, configurable lifetimes, logout-all.
   capsule_dir: epics/e50-jwt-token-management
@@ -337,7 +337,7 @@ epics:
   wsjf: 6.5
   mode: capsule
   tier: 1
-  status: planned
+  status: done
   blocks:
   - e58
   - e61

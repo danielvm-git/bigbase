@@ -1,10 +1,13 @@
 story_id: e63s01
 title: "Usage Metrics Aggregation Backend"
-status: planned
+status: todo
 bcps: 2
-note: "Full task breakdown deferred to plan-work. Run plan-work for detailed steps."
 tasks:
   - id: 1
-    description: "Plan detailed implementation steps"
-    verify: "echo 'plan-work needed for e63s01'"
+    description: "Add ResourceUsage struct and GetOrgResourceUsage DB query method"
+    verify: "go test ./components/monitoring -run TestGetOrgResourceUsage"
+    status: todo
+  - id: 2
+    description: "Expose GET /api/orgs/{id}/resources endpoint in monitoring component"
+    verify: "go test ./components/monitoring -run TestHandleOrgResources"
     status: todo

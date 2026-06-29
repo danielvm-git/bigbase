@@ -6,6 +6,10 @@ wsjf: 7.0
 total_bcps: 17
 status: planned
 depends_on: []
+hard_gate: e57s04
+open_decisions: |
+  Issue #41 (EnvResolver seam) must be addressed before e61 and e65 start.
+  Create a deepen story EnvResolver covering components/deploy/env.go between e57 and e61.
 blocks: [e58, e59, e61, e62, e63, e64, e65, e66]
 stories:
   - id: e57s01
@@ -32,3 +36,9 @@ stories:
     status: planned
     spec: e57s04-spec.md
     tasks: e57s04-tasks.yaml
+  - id: e57s05
+    title: "Deepen: EnvResolver seam for projects"
+    bcps: 3
+    status: planned
+    spec: e57s05-spec.md
+    tasks: e57s05-tasks.yaml

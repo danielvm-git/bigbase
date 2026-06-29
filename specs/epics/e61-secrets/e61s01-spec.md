@@ -16,11 +16,11 @@ BigBase supports site-scoped environment variables (`site_env_vars`), which are 
 1. **Database Schema**:
    Add a `project_secrets` table to store encrypted project-level environment variables.
 2. **REST API**:
-   Add endpoints in the `Deploy` component to perform CRUD on project secrets, scoped by `{projectId}`:
-   - `GET /api/projects/{projectId}/secrets` — List secrets (values masked).
-   - `POST /api/projects/{projectId}/secrets` — Create a secret.
-   - `PUT /api/projects/{projectId}/secrets/{key}` — Update secret value.
-   - `DELETE /api/projects/{projectId}/secrets/{key}` — Delete a secret.
+   Add endpoints in the `Deploy` component to perform CRUD on project secrets, scoped by `{projectId}`. Rate-limit mutating endpoints to prevent abuse:
+   - `GET /api/orgs/{orgId}/projects/{projectId}/secrets` — List secrets (values masked).
+   - `POST /api/orgs/{orgId}/projects/{projectId}/secrets` — Create a secret.
+   - `PUT /api/orgs/{orgId}/projects/{projectId}/secrets/{key}` — Update secret value.
+   - `DELETE /api/orgs/{orgId}/projects/{projectId}/secrets/{key}` — Delete a secret.
 3. **Authorization**:
    Ensure requests are authenticated via JWT or API Key. Check that the project's `org_id` matches the user's `org_id` from context.
 4. **Build & Runtime Injection**:
@@ -48,6 +48,7 @@ BigBase supports site-scoped environment variables (`site_env_vars`), which are 
 | Key collision | Low | Medium | Define merge precedence: site env vars override project secrets. |
 | DB schema lock | Low | High | Use idempotent `CREATE TABLE IF NOT EXISTS` migration during startup. |
 | Secret leakage in logs | Medium | High | Mask values in list API responses. Ensure values are never written to server or build logs. |
+| Route scoping technical debt | High | Medium | (Issue #43) These routes use `/api/orgs/...` while older routes use `/api/auth/...`. Document this as debt to be resolved later. |
 
 ## 10. Non-goals
 - Multi-environment secret overrides (e.g. staging vs prod secrets).
@@ -105,19 +106,19 @@ CREATE INDEX IF NOT EXISTS idx_project_secrets_project_id ON project_secrets(pro
   ```
 
 ### API Endpoints
-- `GET /api/projects/{projectId}/secrets` -> returns `{"data": [ProjectSecret, ...]}` (Values masked in previews)
-- `POST /api/projects/{projectId}/secrets` -> accepts `{"key": "K", "value": "V", "is_build_time": false, "is_runtime": true}` -> returns `ProjectSecret` with plaintext value
-- `PUT /api/projects/{projectId}/secrets/{key}` -> accepts `{"value": "V2", "is_build_time": false, "is_runtime": true}` -> returns updated `ProjectSecret`
-- `DELETE /api/projects/{projectId}/secrets/{key}` -> returns `204 No Content`
+- `GET /api/orgs/{orgId}/projects/{projectId}/secrets` -> returns `{"data": [ProjectSecret, ...]}` (Values masked in previews)
+- `POST /api/orgs/{orgId}/projects/{projectId}/secrets` -> accepts `{"key": "K", "value": "V", "is_build_time": false, "is_runtime": true}` -> returns `ProjectSecret` with plaintext value
+- `PUT /api/orgs/{orgId}/projects/{projectId}/secrets/{key}` -> accepts `{"value": "V2", "is_build_time": false, "is_runtime": true}` -> returns updated `ProjectSecret`
+- `DELETE /api/orgs/{orgId}/projects/{projectId}/secrets/{key}` -> returns `204 No Content`
 
 ## 14. Affected Code
 | File | Change |
 |------|--------|
-| `components/deploy/deploy.go` | Run table migration in `Start()`. Register `/api/projects/` routes. |
+| `components/deploy/deploy.go` | Run table migration in `Start()`. Register `/api/orgs/{orgId}/projects/` routes. |
 | `components/deploy/secrets.go` | **NEW** file containing Project Secrets CRUD logic, HTTP route handlers, and DB querying helpers. |
 | `components/deploy/deploy.go` | Retrieve and merge project secrets into site build and start cmd environments. |
 | `components/deploy/deploy_test.go` | Add integration tests verifying secret injection and precedence. |
-| `main.go` | Route `/api/projects/` traffic to `depComp.Handler()`. |
+| `main.go` | Route `/api/orgs/` traffic to appropriate handlers or manage middleware routing correctly. |
 
 ## 15. Testing Strategy
 - **Unit/Integration Tests**:
@@ -133,12 +134,12 @@ CREATE INDEX IF NOT EXISTS idx_project_secrets_project_id ON project_secrets(pro
 ```gherkin
 Scenario: Create project secret
   Given an authenticated user who owns org 1 with project 10
-  When POST /api/projects/10/secrets with {"key": "API_KEY", "value": "secret-123"}
+  When POST /api/orgs/1/projects/10/secrets with {"key": "API_KEY", "value": "secret-123"}
   Then response is 201 with secret metadata and masked preview "••••-123"
 
 Scenario: Block cross-org access to secrets
   Given a user authenticated to org 2
-  When GET /api/projects/10/secrets
+  When GET /api/orgs/1/projects/10/secrets
   Then response is 403 Forbidden
 
 Scenario: Project secrets injected to site deployments
@@ -157,7 +158,7 @@ Scenario: Site env var overrides project secret
 ## 18. Implementation Steps
 1. Create `project_secrets` migration in `deploy.go` `Start()`.
 2. Create `components/deploy/secrets.go` and implement `ProjectSecret` CRUD handlers.
-3. Wire `/api/projects/` route in `deploy.go` `Handler()` and `main.go`.
+3. Wire `/api/orgs/{orgId}/projects/` route in `deploy.go` `Handler()` and `main.go`.
 4. Implement `FetchProjectSecrets()` and integrate it into `buildApp` and `startApp` process execution in `deploy.go`.
 5. Add unit and integration tests under `components/deploy/`.
 

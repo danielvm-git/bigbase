@@ -1,10 +1,25 @@
 story_id: e62s01
 title: "CSP Header Generation Per-Site"
-status: planned
+status: todo
 bcps: 2
-note: "Full task breakdown deferred to plan-work. Run plan-work for detailed steps."
 tasks:
   - id: 1
-    description: "Plan detailed implementation steps"
-    verify: "echo 'plan-work needed for e62s01'"
+    description: "Update Site model and DB schema for CSPTemplate"
+    verify: "go test ./components/sites/..."
+    status: todo
+  - id: 2
+    description: "Update proxy hostInfo and RegisterDeploymentHost signature"
+    verify: "go build ./... && go test ./components/proxy/... ./components/deploy/..."
+    status: todo
+  - id: 3
+    description: "Update securityHeadersMiddleware to apply template and generate nonce"
+    verify: "go test ./components/proxy/... -run TestSecurityHeaders"
+    status: todo
+  - id: 4
+    description: "Inject nonce into __BIGBASE_METADATA__ script tag"
+    verify: "go test ./components/proxy/... -run TestMetadataInjection"
+    status: todo
+  - id: 5
+    description: "Pass CSPTemplate from deploy component to proxy"
+    verify: "go test ./components/deploy/..."
     status: todo

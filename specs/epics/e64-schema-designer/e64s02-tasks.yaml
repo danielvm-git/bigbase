@@ -1,10 +1,25 @@
 story_id: e64s02
-title: "Schema Designer UI"
-status: planned
+title: Schema Designer UI
+status: todo
 bcps: 1
-note: "Full task breakdown deferred to plan-work. Run plan-work for detailed steps."
 tasks:
   - id: 1
-    description: "Plan detailed implementation steps"
-    verify: "echo 'plan-work needed for e64s02'"
+    description: "Create SchemaDesigner page to list collections from GET /api/schema"
+    verify: "npm run test -- SchemaDesigner.test.tsx"
+    status: todo
+  - id: 2
+    description: "Create Collection View panel to display table columns"
+    verify: "npm run test -- SchemaDesigner.test.tsx"
+    status: todo
+  - id: 3
+    description: "Add New Column modal and POST integration"
+    verify: "npm run test -- SchemaDesigner.test.tsx"
+    status: todo
+  - id: 4
+    description: "Add Drop Column action with confirmation dialog"
+    verify: "npm run test -- SchemaDesigner.test.tsx"
+    status: todo
+  - id: 5
+    description: "Wire Schema Designer to Admin Dashboard sidebar"
+    verify: "npm run test -- Layout.test.tsx"
     status: todo

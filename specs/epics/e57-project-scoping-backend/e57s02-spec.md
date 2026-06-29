@@ -69,6 +69,11 @@ API endpoints (added to `ProtectedHandler()`):
 - `PATCH /api/orgs/{orgID}/projects/{id}` — update project
 - `DELETE /api/orgs/{orgID}/projects/{id}` — delete project
 
+**Security & Validation:**
+- The handler explicitly asserts `orgIDFromURL == claims.OrgID`; returns 403 on mismatch (IDOR prevention).
+- `slug` must match `^[a-z0-9][a-z0-9-]{0,49}$`. The slug `"default"` is explicitly reserved for auto-creation.
+- All new routes must be wired through the existing auth rate-limiter middleware.
+
 ## 6. Implementation Strategy
 
 Follow the exact pattern established in `components/auth/orgs.go`:
@@ -140,8 +145,8 @@ Update `tech-stack.md` Component Catalog — Auth row: `orgs, projects, invites,
 
 ## 14. Security
 
-- Authorization: only org owner (user with `OwnerID == claims.UserID`) can create/update/delete projects
-- Slug validation: alphanumeric + hyphens only, 1-64 characters
+- Authorization: only org owner (user with `OwnerID == claims.UserID`) can create/update/delete projects. Handlers must assert `orgIDFromURL == claims.OrgID`.
+- Slug validation: match `^[a-z0-9][a-z0-9-]{0,49}$`, `"default"` is reserved.
 - No cross-org project access — all queries scoped by `org_id`
 
 ## 15. Performance
@@ -181,6 +186,11 @@ Scenario: Non-owner cannot create
   When POST /api/orgs/1/projects with {"name": "X", "slug": "x"}
   Then response is 403 Forbidden
 
+Scenario: IDOR prevention on project access
+  Given an authenticated user who is a member of org 1 but NOT org 2
+  When GET /api/orgs/2/projects
+  Then response is 403 Forbidden
+
 Scenario: List projects returns org-only projects
   Given org 1 has 2 projects and org 2 has 1 project
   When GET /api/orgs/1/projects as org 1 owner
@@ -204,6 +214,7 @@ Scenario: Delete project
 
 - **Risk:** Migration `UNIQUE(org_id, slug)` constraint could fail if projects table already has duplicates (not possible on first run, but migration re-runs could be tricky).
 - **Mitigation:** `CREATE TABLE IF NOT EXISTS` is idempotent. Migration only runs once. Manual cleanup would be needed if schema changes.
+- **Risk (Issue #43 Debt):** Routes use manual org-scoping; will be migrated to the Policy Gate (issue #43) before e66.
 
 ## 20. Verification Script
 

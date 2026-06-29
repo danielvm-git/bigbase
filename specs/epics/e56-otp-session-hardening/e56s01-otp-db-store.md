@@ -42,7 +42,7 @@ Replace both global maps with database-backed stores using the existing `DBer` i
 ```go
 type OTPStore interface {
     Store(ctx context.Context, email string, codeHash string, expiresAt time.Time) error
-    Verify(ctx context.Context, email string, codeHash string) (bool, error)
+    Verify(ctx context.Context, email string, codeHash string) (bool, error) // Implementation must use subtle.ConstantTimeCompare
     RecordAttempt(ctx context.Context, email string) error
     Delete(ctx context.Context, email string) error
 }
@@ -77,7 +77,7 @@ use the existing `a.db` connection. An in-memory fallback (`mapOTPStore`) is kep
 - **Platform operators** deploying multiple BigBase instances behind a load balancer
 
 ## 7. Dependencies
-- e52 (Project Scoping — `kernel/scope.go`) — if multi-tenant OTP scoping is needed, but
+- e57 (Project Scoping — `kernel/scope.go`) — if multi-tenant OTP scoping is needed, but
   OTP is currently user-level (email-scoped), not org-scoped, so no hard block.
 - `components/auth/` — all OTP and magic link handlers use the global maps
 - `kernel/dber.go` — `DBer` interface for querying the DB

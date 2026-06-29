@@ -1,10 +1,21 @@
 story_id: e62s02
 title: "Admin UI — CSP Policy Builder"
-status: planned
+status: todo
 bcps: 1
-note: "Full task breakdown deferred to plan-work. Run plan-work for detailed steps."
 tasks:
   - id: 1
-    description: "Plan detailed implementation steps"
-    verify: "echo 'plan-work needed for e62s02'"
+    description: "Update Site interface in UI types for csp_template"
+    verify: "npm run typecheck"
+    status: todo
+  - id: 2
+    description: "Create CSPPolicyBuilder component"
+    verify: "npm run lint"
+    status: todo
+  - id: 3
+    description: "Add Security Headers section to SiteDetailPage Settings"
+    verify: "npm test -- SiteDetailPage"
+    status: todo
+  - id: 4
+    description: "Add tests for CSP builder in SiteDetailPage"
+    verify: "npm test -- SiteDetailPage"
     status: todo

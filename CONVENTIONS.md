@@ -128,3 +128,17 @@ All planning and specifications live in `specs/`. Before writing any code, read 
 - Parameterized queries only (no SQL concatenation)
 - Validate all input with schemas
 - Generic error messages to clients, full details in logs
+
+## Git & Workflow
+
+### Solo-git Mode
+- The project follows a solo-git workflow pattern.
+- Work is done in short-lived feature branches or worktrees.
+- Direct pushes or fast-forward merges to `main` when CI passes. No complex PR reviews.
+
+### Conventional Commits
+- All commits must follow the Conventional Commits format:
+  - `feat:`, `fix:`, `chore:`, `refactor:`, `docs:`, `test:`, etc.
+  - Ex: `feat(auth): add project scoping to JWT`
+- Breaking changes must include a `BREAKING CHANGE:` footer.
+- The system uses `semantic-release` to automate versioning based on these commit prefixes.

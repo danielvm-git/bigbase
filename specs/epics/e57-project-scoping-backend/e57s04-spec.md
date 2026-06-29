@@ -310,6 +310,12 @@ Scenario: Cross-org member rejection
 - **Mitigation:** Best-effort, logged, non-blocking. Manual backfill script available.
 - **Risk:** Old tokens (no project_id) become invalid
 - **Mitigation:** `ProjectID` defaults to `0` (zero value) in Claims. Middleware handles `projectID == 0` by resolving default project. Backward compatible.
+- **Risk:** Legacy zero-value could leak unbackfilled data.
+- **Mitigation:** Callers receiving `(0, false)` from `ProjectIDFromContext` must run queries **unscoped** — no `WHERE project_id` clause — not `WHERE project_id = 0`.
+- **Risk:** Backfill could be interrupted, causing duplicate attempts on restart.
+- **Mitigation:** `BackfillSitesToProjects` is idempotent — it calls `GetProjectBySlug(orgID, "default")` before `CreateProject`; a UNIQUE conflict is treated as success.
+- **Risk:** This story adds ~120 lines to `auth.go` (project_members, 5 token-issuing paths, middleware).
+- **Mitigation:** Accepted debt per issue #44 — no forcing function. Reverts cleanly if a Verifier interface is extracted later.
 
 ## 20. Verification Script
 
