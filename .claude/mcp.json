@@ -11,6 +11,14 @@
     "context7": {
       "command": "npx",
       "args": ["-y", "@upstash/context7-mcp"]
+    },
+    "claude_design": {
+      "type": "http",
+      "url": "https://api.anthropic.com/v1/design/mcp",
+      "headers": {
+        "x-api-key": "${ANTHROPIC_API_KEY}",
+        "anthropic-version": "2023-06-01"
+      }
     }
   }
 }
