@@ -63,6 +63,7 @@ export default function Layout() {
     { to: '/monitoring', label: 'Monitoring', icon: 'activity' },
     { to: '/forge', label: 'Forge', icon: 'hammer' },
     { to: '/realtime', label: 'Realtime', icon: 'radio' },
+    { to: '/events', label: 'Events', icon: 'zap' },
   ]
 
   const sidebarFooter = user ? (
