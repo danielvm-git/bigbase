@@ -3,9 +3,11 @@
 Living map of every screen: its route, owning epic, and prototype status.
 Updated before each epic implementation starts.
 
-**Last updated:** 2026-06-29  
-**Prototype project:** claude.ai/design (BigBase Console — Evolved v2 / Design C)  
-**Design System project:** `502492b2-4dcc-4024-9e7a-26baa7943ca7`
+**Last updated:** 2026-06-30  
+**Prototype project:** BigBase Prototype (`ec1480a1`) — CLEAN SLATE. `PROTOTYPE-SPEC-v1.md` uploaded. Awaiting user to build `BigBase Console.html` in claude.ai/design using the spec.  
+**Design System project:** BigBase Design System (`502492b2`) — component previews + tokens in root  
+**Local source:** `specs/archive/bigbase-prototype-3/` — empty, awaiting export of new prototype  
+**Spec file:** `specs/design/PROTOTYPE-SPEC-v1.md` — from-scratch spec for all 20 screens, grounded in actual source code
 
 ---
 
@@ -42,12 +44,12 @@ Source: `specs/DESIGN_C_HANDOFF.md`
 
 | Screen | Route | Epic | Prototype | Notes |
 |--------|-------|------|-----------|-------|
-| Project Selector + Branch Selector | header overlay | e57s05 / e58 | ❌ needs brief | Dropdown in top bar. Prerequisite to all project-scoped screens |
-| Project Dashboard | `/project/:id` | e58 | ❌ needs brief | Stats, connection string, recent queries, branch cards |
-| Unified SQL + Data | `/project/:id/sql/:branch?` | e57/e58 | ❌ needs brief | 3-panel: schema tree / editor / results |
-| Project Settings | `/project/:id/settings` | e58 | ❌ needs brief | 5 tabs: General / DB / Env Vars / Branches / Danger Zone |
-| Branches | `/project/:id/branches` | e59s02 | ❌ future | Mark as "coming soon" in Design C prototype |
-| Projects List (global) | `/projects` (or global dashboard) | e58 | ❌ needs brief | Shown when no project selected |
+| Project Selector + Branch Selector | header overlay | e57s05 / e58 | ✅ Section 2 of prototype | Dropdown in top bar |
+| Project Dashboard | `/project/:id` | e58 | ✅ Section 2 of prototype | Stats, connection string, recent queries, branch cards |
+| Unified SQL + Data | `/project/:id/sql/:branch?` | e57/e58 | ✅ Section 2 of prototype | 3-panel: schema tree / editor / results |
+| Project Settings | `/project/:id/settings` | e58 | ✅ Section 2 of prototype | 4 tabs: General / DB / Env Vars / Danger Zone |
+| Branches | `/project/:id/branches` | e59s02 | ✅ Section 2 of prototype | "Coming soon" treatment |
+| Projects List (global) | `/projects` (or global dashboard) | e58 | ✅ Section 2 of prototype | Shown when no project selected |
 
 ---
 
@@ -107,14 +109,20 @@ Footer: Platform Settings (e66) | Account Settings
 Before each epic implementation:
 
 1. Claude Code generates a targeted update brief → saved to `specs/design/UPDATE-BRIEF-eXX.md`
-2. User posts brief to claude.ai/design prototype project
-3. Claude Design updates the affected screens
-4. User exports updated HTML → stored in `specs/archive/bigbase-prototype-3/`
+2. User posts brief to the **BigBase Prototype** project on claude.ai/design
+3. Claude Design updates the affected screens **within the single `BigBase Console.html` file** — never creates a new file
+4. User exports the updated HTML → replaces `specs/archive/bigbase-prototype-3/BigBase Console.html`
 5. Claude Code generates gap analysis → `specs/design-feedback/eXX-VS-PROTOTYPE.md`
 6. Implementation begins
 
-**Design System sync** (after Track B component previews change):
+**Rules:**
+- There is always exactly ONE prototype file: `BigBase Console.html`
+- New screens go into an existing section or a new labelled section — never a new file
+- Solo Component Spec explorations are temporary: merge into the prototype within the same work session and delete the solo file
+
+**Design System sync** (after any epic that ships new or changed components):
 ```
 DesignSync.finalize_plan → DesignSync.write_files
 ```
-Run after any epic that ships new or changed components.
+Target project: `BigBase Design System` (`502492b2-4dcc-4024-9e7a-26baa7943ca7`)  
+This project holds component previews, tokens, and brand assets only — no prototype screens.

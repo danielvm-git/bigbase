@@ -2,5 +2,5 @@
   "projectId": "ec1480a1-1a72-47b0-9270-d8f91fa49e74",
   "shape": "package",
   "storybookConfigDir": null,
-  "notes": "First sync: 34 components from ui/src/components/index.ts, no Storybook. Package-based build (tsc + vite). Target: BigBase Console design system project."
+  "notes": "Target: BigBase Prototype project (ec1480a1). Prototype lives at BigBase Console.html, source split across bb/*.jsx. Design System project (502492b2) is a separate target for component previews only."
 }
