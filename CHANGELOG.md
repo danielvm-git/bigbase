@@ -1,3 +1,10 @@
+# [2.64.0](https://github.com/danielvm-git/bigbase/compare/v2.63.0...v2.64.0) (2026-06-30)
+
+
+### Features
+
+* **ui:** add zap icon for Events nav item ([dc83320](https://github.com/danielvm-git/bigbase/commit/dc83320590b47f3a98fd7368bee0f5aa19ee9f63))
+
 # [2.63.0](https://github.com/danielvm-git/bigbase/compare/v2.62.2...v2.63.0) (2026-06-30)
 
 
