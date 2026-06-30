@@ -534,5 +534,25 @@ bugs:
     regression_guards:
       - components/auth/e50_test.go TestProgrammaticSecretValidation
 
+  - id: BUG-2026-06-30T223500
+    date: "2026-06-30"
+    severity: medium
+    priority: medium
+    scope: ui,navigation
+    summary: "EventsPage missing from sidebar navigation — route exists but no nav item in devOpsNav"
+    file: specs/bugs/BUG-2026-06-30T223500-events-sidebar-missing-nav.md
+    status: fixed
+    files_changed:
+      - ui/src/Layout.tsx
+      - ui/src/components/Icon.tsx
+    approach: "Added { to: '/events', label: 'Events', icon: 'zap' } to devOpsNav; registered 'zap' in IconName union and paths Record in Icon.tsx."
+    risk_level: low
+    commit_message: "fix(ui): add Events nav item to devOpsNav sidebar"
+    regression_guards:
+      - ui/src/components/Icon.tsx IconName union (compile-time type guard — invalid icon name fails tsc)
+    commits:
+      - 4fc4c753
+      - 08f98ecf
+
 
 
