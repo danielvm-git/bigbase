@@ -1,3 +1,10 @@
+# [2.63.0](https://github.com/danielvm-git/bigbase/compare/v2.62.2...v2.63.0) (2026-06-30)
+
+
+### Features
+
+* **ui:** add Events nav item to sidebar DevOps section ([4fc4c75](https://github.com/danielvm-git/bigbase/commit/4fc4c7531fdb9e506546c5ca895ac4ab7f7bdf6d))
+
 ## [2.62.2](https://github.com/danielvm-git/bigbase/compare/v2.62.1...v2.62.2) (2026-06-29)
 
 
