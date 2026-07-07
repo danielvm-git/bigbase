@@ -1,3 +1,15 @@
+# [2.67.0](https://github.com/danielvm-git/bigbase/compare/v2.66.1...v2.67.0) (2026-07-07)
+
+
+### Bug Fixes
+
+* **auth:** prevent accidental JSON serialization of site key raw token ([4aec994](https://github.com/danielvm-git/bigbase/commit/4aec994f5c305629f3aa7809695638628b541b3f))
+
+
+### Features
+
+* **deploy:** inject native DB connection string into app env ([6d31b46](https://github.com/danielvm-git/bigbase/commit/6d31b46384aecb7293b76655863ab1623bfa6c46))
+
 ## [2.66.1](https://github.com/danielvm-git/bigbase/compare/v2.66.0...v2.66.1) (2026-07-07)
 
 
