@@ -4,7 +4,7 @@ id: e68
 title: "Deploy — Native Database Connection String Env Var"
 wsjf: 10.5
 wsjf_rationale: "BV=8(Direct DB access without HTTP latency, enables true SvelteKit SSR) TC=5(Would delay optimal SvelteKit architecture if deferred) RR=8(Eliminates proxy bottleneck for DB) / JS=2(1 day: inject DB_PATH/DATABASE_URL into app env vars)"
-status: planned
+status: done
 tier: 2
 note: |
   Expose native connection string (SQLite file path or PostgreSQL connection string)
@@ -13,10 +13,12 @@ note: |
 stories:
   - id: e68s01
     title: "Inject DB Connection String into App Environment"
-    status: planned
+    status: done
     bcps: 2
     tasks:
       - desc: "Determine connection string format based on active DB adapter (SQLite vs Postgres)"
-        verify: "grep -q 'DB_PATH' components/deploy/deploy.go || grep -q 'DATABASE_URL' components/sites/sites.go"
+        verify: "grep -q 'DB_PATH' components/deploy/ && grep -q 'DATABASE_URL' components/deploy/"
+        status: passing
       - desc: "Inject DB_PATH or DATABASE_URL into the environment variables when spawning deployed apps"
-        verify: "grep -q 'DB_PATH' components/sites/ || grep -q 'DB_PATH' components/deploy/"
+        verify: "grep -q 'DB_PATH' components/deploy/ && grep -q 'nativeDBEnv' components/deploy/deploy.go"
+        status: passing

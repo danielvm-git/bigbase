@@ -336,12 +336,18 @@ func startProxy() {
 		DB:     d,
 		Logger: logger,
 	})
+	effectiveDSN := dbDSNVal
+	if effectiveDSN == "" {
+		effectiveDSN = *dbPath
+	}
 	depComp := deploy.New(deploy.Options{
 		DB:           d,
 		Logger:       logger,
 		BuildHome:    os.Getenv("BIGBASE_HOME"),
 		PublicDomain: sitesDomainVal,
 		HostRouter:   p,
+		DBDriver:     dbDriverVal,
+		DBDSN:        effectiveDSN,
 	})
 	p.SetRequestLogger(depComp)
 	mComp := monitoring.New(monitoring.Options{
@@ -506,10 +512,6 @@ func startProxy() {
 		os.Exit(1)
 	}
 
-	effectiveDSN := dbDSNVal
-	if effectiveDSN == "" {
-		effectiveDSN = *dbPath
-	}
 	logger.Info("bigbase running", "port", *port, "db-driver", dbDriverVal, "dsn", effectiveDSN)
 
 	sig := make(chan os.Signal, 1)
