@@ -1,3 +1,10 @@
+# [2.68.0](https://github.com/danielvm-git/bigbase/compare/v2.67.0...v2.68.0) (2026-07-07)
+
+
+### Features
+
+* **mcp:** add site discovery and deploy key lifecycle tools ([890a5e7](https://github.com/danielvm-git/bigbase/commit/890a5e7ab67398002355cbd51e727dd55bb2aef5)), closes [#57](https://github.com/danielvm-git/bigbase/issues/57)
+
 # [2.67.0](https://github.com/danielvm-git/bigbase/compare/v2.66.1...v2.67.0) (2026-07-07)
 
 
