@@ -53,24 +53,20 @@ type GoogleVerifier interface {
 	Verify(ctx context.Context, code string) (*GoogleUser, error)
 }
 
-type Logger interface {
-	Info(msg string, args ...any)
-	Error(msg string, args ...any)
-	Warn(msg string, args ...any)
-}
 
 type noopLogger struct{}
 
 func (noopLogger) Info(msg string, args ...any)  {}
 func (noopLogger) Warn(msg string, args ...any)  {}
 func (noopLogger) Error(msg string, args ...any) {}
+func (noopLogger) Debug(msg string, args ...any) {}
 
 // DBer is an alias for kernel.DBer — the shared database abstraction.
 type DBer = kernel.DBer
 
 type Options struct {
 	DB                  DBer
-	Logger              Logger
+	Logger kernel.Logger
 	Secret              string
 	AccessExpiry        time.Duration // Default: 24h
 	RefreshExpiry       time.Duration // Default: 30 days
@@ -86,7 +82,7 @@ type Options struct {
 
 type Auth struct {
 	db                  DBer
-	logger              Logger
+	logger kernel.Logger
 	secret              []byte
 	accessExpiry        time.Duration
 	refreshExpiry       time.Duration
@@ -227,7 +223,7 @@ func validateJWTSecret(val string) {
 
 // resolveJWTSecret reads BIGBASE_JWT_SECRET from the environment, validates it,
 // and falls back to a random secret with a warning if unset.
-func resolveJWTSecret(logger Logger) []byte {
+func resolveJWTSecret(logger kernel.Logger) []byte {
 	val := os.Getenv("BIGBASE_JWT_SECRET")
 	if val == "" {
 		raw := make([]byte, 32)

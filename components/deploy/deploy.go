@@ -23,12 +23,6 @@ import (
 
 const version = "0.1.0"
 
-type Logger interface {
-	Info(msg string, args ...any)
-	Warn(msg string, args ...any)
-	Error(msg string, args ...any)
-	Debug(msg string, args ...any)
-}
 
 type noopLogger struct{}
 
@@ -83,7 +77,7 @@ type DeploymentHostRegistry interface {
 
 type Deploy struct {
 	db           DBer
-	logger       Logger
+	logger kernel.Logger
 	buildsDir    string
 	gitDir       string
 	buildHome    string
@@ -111,7 +105,7 @@ type Deploy struct {
 
 type Options struct {
 	DB               DBer
-	Logger           Logger
+	Logger kernel.Logger
 	BuildsDir        string
 	GitDir           string
 	BuildHome        string

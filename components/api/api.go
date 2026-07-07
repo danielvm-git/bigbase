@@ -56,23 +56,18 @@ var internalTables = map[string]bool{
 	"deployments": true, "functions": true, "messages": true,
 }
 
-type Logger interface {
-	Info(msg string, args ...any)
-	Warn(msg string, args ...any)
-	Error(msg string, args ...any)
-}
 
 // DBer is an alias for kernel.DBer — the shared database abstraction.
 type DBer = kernel.DBer
 
 type Options struct {
 	DB     DBer
-	Logger Logger
+	Logger kernel.Logger
 }
 
 type API struct {
 	db     DBer
-	logger Logger
+	logger kernel.Logger
 	tables map[string]bool
 	bus    *kernel.EventBus
 }

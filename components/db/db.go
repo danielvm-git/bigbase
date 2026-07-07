@@ -29,12 +29,8 @@ type noopLogger struct{}
 func (noopLogger) Info(msg string, args ...any)  {}
 func (noopLogger) Error(msg string, args ...any) {}
 func (noopLogger) Debug(msg string, args ...any) {}
+func (noopLogger) Warn(msg string, args ...any)  {}
 
-type Logger interface {
-	Info(msg string, args ...any)
-	Error(msg string, args ...any)
-	Debug(msg string, args ...any)
-}
 
 // Options configures the DB component.
 // Driver selects "sqlite" (default) or "postgres".
@@ -45,13 +41,13 @@ type Options struct {
 	Driver string
 	DSN    string
 	Path   string // legacy SQLite path; superseded by DSN when Driver=="sqlite"
-	Logger Logger
+	Logger kernel.Logger
 }
 
 type DB struct {
 	driver string
 	dsn    string
-	logger Logger
+	logger kernel.Logger
 	db     *sql.DB
 }
 

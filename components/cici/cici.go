@@ -13,17 +13,13 @@ import (
 
 const version = "0.1.0"
 
-type Logger interface {
-	Info(msg string, args ...any)
-	Warn(msg string, args ...any)
-	Error(msg string, args ...any)
-}
 
 type noopLogger struct{}
 
 func (noopLogger) Info(msg string, args ...any)  {}
 func (noopLogger) Warn(msg string, args ...any)  {}
 func (noopLogger) Error(msg string, args ...any) {}
+func (noopLogger) Debug(msg string, args ...any) {}
 
 // DBer is an alias for kernel.DBer — the shared database abstraction.
 type DBer = kernel.DBer
@@ -70,12 +66,12 @@ type step struct {
 
 type Options struct {
 	DB     DBer
-	Logger Logger
+	Logger kernel.Logger
 }
 
 type CICI struct {
 	db     DBer
-	logger Logger
+	logger kernel.Logger
 }
 
 func New(opts Options) *CICI {

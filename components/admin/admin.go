@@ -10,17 +10,13 @@ import (
 
 const version = "0.1.0"
 
-type Logger interface {
-	Info(msg string, args ...any)
-	Error(msg string, args ...any)
-}
 
 type Admin struct {
-	logger Logger
+	logger kernel.Logger
 }
 
 type Options struct {
-	Logger Logger
+	Logger kernel.Logger
 }
 
 func New(opts Options) *Admin {

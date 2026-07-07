@@ -50,10 +50,6 @@ var templateFuncs = template.FuncMap{
 
 const version = "0.1.0"
 
-type Logger interface {
-	Info(msg string, args ...any)
-	Error(msg string, args ...any)
-}
 
 type RequestLogger interface {
 	RecordRequestLog(siteID, method, path string, status int, duration time.Duration)
@@ -63,7 +59,7 @@ type Options struct {
 	Port               string
 	HTTPSPort          string
 	Kernel             *kernel.Kernel
-	Logger             Logger
+	Logger kernel.Logger
 	RequestLogger      RequestLogger
 	CORSAllowedOrigins []string
 	NRApp              *newrelic.Application
@@ -76,7 +72,7 @@ type Proxy struct {
 	port               string
 	httpsPort          string
 	kernel             *kernel.Kernel
-	logger             Logger
+	logger kernel.Logger
 	requestLogger      RequestLogger
 	server             *http.Server
 	httpsServer        *http.Server
