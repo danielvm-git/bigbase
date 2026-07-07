@@ -1,6 +1,27 @@
 type: bug-registry
 context: infra
 bugs:
+  - id: BUG-2026-07-07T223200
+    date: "2026-07-07"
+    severity: medium
+    priority: high
+    scope: mcp,sites,auth
+    summary: MCP references list_sites but tool missing; no site key list/revoke (issue #57 / e69)
+    file: specs/bugs/BUG-2026-07-07T223200-mcp-list-sites-missing.md
+    status: fixed
+    github_issue: 57
+    files_changed:
+      - components/mcp/mcp.go
+      - components/mcp/provisioning_test.go
+      - components/sites/sites.go
+      - components/auth/apikeys.go
+      - components/auth/sitekeys_test.go
+      - main.go
+    approach: SiteLister + extended SiteKeyCreator interfaces; four new MCP tools wired to Sites and Auth
+    risk_level: low
+    regression_guards:
+      - components/mcp/provisioning_test.go TestListSites TestGetSite TestListSiteKeys TestRevokeSiteKey
+      - components/auth/sitekeys_test.go TestListSiteKeys TestRevokeSiteKey TestSiteKeyRevoked
   - id: BUG-2026-06-27T131500
     date: "2026-06-27"
     severity: low

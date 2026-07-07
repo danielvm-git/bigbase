@@ -246,6 +246,17 @@ func (s *Sites) listSites(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
 	defer cancel()
 
+	sites, err := s.ListSites(ctx)
+	if err != nil {
+		s.logger.Error("list sites", "error", err)
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"data": sites})
+}
+
+// ListSites returns all sites with latest deployment metadata when available.
+func (s *Sites) ListSites(ctx context.Context) ([]Site, error) {
 	rows, err := s.db.QueryContext(ctx, `
 		SELECT s.id, s.name, s.git_repo_id, s.production_branch, s.root_path,
 			COALESCE(NULLIF(s.github_full_name, ''), g.name, s.name)
@@ -253,9 +264,7 @@ func (s *Sites) listSites(w http.ResponseWriter, r *http.Request) {
 		LEFT JOIN git_repos g ON g.id = s.git_repo_id
 		ORDER BY s.name`)
 	if err != nil {
-		s.logger.Error("list sites", "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
-		return
+		return nil, fmt.Errorf("list sites: %w", err)
 	}
 	defer func() { _ = rows.Close() }()
 
@@ -271,6 +280,9 @@ func (s *Sites) listSites(w http.ResponseWriter, r *http.Request) {
 		}
 		sites = append(sites, site)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("list sites iteration: %w", err)
+	}
 
 	latestByRepo := s.latestDeploymentsByRepo(ctx)
 	for i := range sites {
@@ -280,8 +292,7 @@ func (s *Sites) listSites(w http.ResponseWriter, r *http.Request) {
 	if len(sites) == 0 {
 		sites = s.listSitesFromRepos(ctx)
 	}
-
-	writeJSON(w, http.StatusOK, map[string]any{"data": sites})
+	return sites, nil
 }
 
 func (s *Sites) listSitesFromRepos(ctx context.Context) []Site {
@@ -359,6 +370,16 @@ func (s *Sites) getSite(w http.ResponseWriter, r *http.Request, id string) {
 	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 	defer cancel()
 
+	site, err := s.GetSite(ctx, id)
+	if err != nil {
+		writeJSON(w, http.StatusNotFound, map[string]string{"error": "site not found"})
+		return
+	}
+	writeJSON(w, http.StatusOK, site)
+}
+
+// GetSite returns a single site by site id or git repo id.
+func (s *Sites) GetSite(ctx context.Context, id string) (*Site, error) {
 	var site Site
 	var repoName string
 	err := s.db.QueryRowContext(ctx, `
@@ -372,8 +393,7 @@ func (s *Sites) getSite(w http.ResponseWriter, r *http.Request, id string) {
 			"SELECT id, name, default_branch FROM git_repos WHERE id = ?", id).
 			Scan(&site.GitRepoID, &site.Name, &site.ProductionBranch)
 		if err != nil {
-			writeJSON(w, http.StatusNotFound, map[string]string{"error": "site not found"})
-			return
+			return nil, fmt.Errorf("site %q not found", id)
 		}
 		site.ID = site.GitRepoID
 		site.FullName = site.Name
@@ -386,7 +406,7 @@ func (s *Sites) getSite(w http.ResponseWriter, r *http.Request, id string) {
 	}
 
 	site.LatestDeployment, _ = s.latestDeployment(ctx, site.GitRepoID)
-	writeJSON(w, http.StatusOK, site)
+	return &site, nil
 }
 
 func (s *Sites) createSite(w http.ResponseWriter, r *http.Request) {

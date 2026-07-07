@@ -136,11 +136,58 @@ func TestSiteKeyRevoked(t *testing.T) {
 	if err != nil {
 		t.Fatalf("CreateSiteKey: %v", err)
 	}
-	_, err = d.Exec(`UPDATE org_api_keys SET revoked = 1 WHERE id = ?`, keyID)
-	if err != nil {
-		t.Fatalf("revoke: %v", err)
+	if err := a.RevokeSiteKey(ctx, keyID); err != nil {
+		t.Fatalf("RevokeSiteKey: %v", err)
 	}
 	if _, err := a.ResolveSiteKey(token); err == nil {
 		t.Fatal("expected error for revoked key")
+	}
+	var revoked int
+	if err := d.QueryRow(`SELECT revoked FROM org_api_keys WHERE id = ?`, keyID).Scan(&revoked); err != nil {
+		t.Fatalf("query revoked: %v", err)
+	}
+	if revoked != 1 {
+		t.Fatalf("expected revoked=1, got %d", revoked)
+	}
+}
+
+func TestListSiteKeys(t *testing.T) {
+	a, _ := setupSiteKeys(t)
+	ctx := context.Background()
+
+	_, keyID1, err := a.CreateSiteKey(ctx, "site-1", "ci-a", []string{"deploy"})
+	if err != nil {
+		t.Fatalf("CreateSiteKey: %v", err)
+	}
+	_, _, err = a.CreateSiteKey(ctx, "site-1", "ci-b", []string{"deploy"})
+	if err != nil {
+		t.Fatalf("CreateSiteKey: %v", err)
+	}
+
+	keys, err := a.ListSiteKeys(ctx, "site-1")
+	if err != nil {
+		t.Fatalf("ListSiteKeys: %v", err)
+	}
+	if len(keys) != 2 {
+		t.Fatalf("expected 2 keys, got %d", len(keys))
+	}
+	if keys[0].KeyID != keyID1 && keys[1].KeyID != keyID1 {
+		t.Fatalf("expected key_id %s in list, got %+v", keyID1, keys)
+	}
+}
+
+func TestListSiteKeysMissingSite(t *testing.T) {
+	a, _ := setupSiteKeys(t)
+	_, err := a.ListSiteKeys(context.Background(), "missing")
+	if err == nil || !strings.Contains(err.Error(), "not found") {
+		t.Fatalf("expected not found error, got %v", err)
+	}
+}
+
+func TestRevokeSiteKeyNotFound(t *testing.T) {
+	a, _ := setupSiteKeys(t)
+	err := a.RevokeSiteKey(context.Background(), "99999")
+	if err == nil || !strings.Contains(err.Error(), "not found") {
+		t.Fatalf("expected not found error, got %v", err)
 	}
 }
