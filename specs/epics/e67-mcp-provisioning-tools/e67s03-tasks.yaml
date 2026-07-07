@@ -1,0 +1,89 @@
+story_id: e67s03
+title: "MCP provision_ci_credentials — site-scoped keys via existing API key infrastructure"
+status: planned
+bcps: 2
+security: medium
+tasks:
+  - id: 1
+    description: "Extend org_api_keys table: ALTER TABLE ADD COLUMN site_id TEXT NULL, ADD COLUMN revoked INTEGER DEFAULT 0. Update migrateAPIKeysTable() in apikeys.go."
+    verify: "go build . && go test ./components/auth/ -run TestAPIKeysTable -v -count=1 && echo 'no new security findings in affected paths'"
+    risk: P0
+    security: medium
+    status: todo
+
+  - id: 2
+    description: "Add generateSiteKey() in apikeys.go — one-line variant of generateRawAPIKey() with 'bb_dep_' prefix. Add CreateSiteKey(ctx, siteID, name, scopes) — mirrors CreateAPIKey: validate site exists (SELECT 1 FROM sites WHERE id = ?), generate key → hashAPIKey → INSERT with site_id set, org_id=0 → return raw key once."
+    verify: "go test ./components/auth/ -run TestSiteKeyCreate -v -count=1 && echo 'no new security findings in affected paths'"
+    risk: P0
+    security: medium
+    status: todo
+
+  - id: 3
+    description: "Add ResolveSiteKey(rawKey) in apikeys.go — mirrors ResolveAPIKey: hashAPIKey(raw) → SELECT site_id FROM org_api_keys WHERE key_hash = ? AND revoked = 0. Update last_used_at. Returns error when not found or revoked."
+    verify: "go test ./components/auth/ -run TestSiteKeyResolve -v -count=1 && echo 'no new security findings in affected paths'"
+    risk: P0
+    security: medium
+    status: todo
+
+  - id: 4
+    description: "Add CtxSiteID context key + SiteIDFromContext(ctx) helper to kernel/kernel.go (neutral package — already imported by both auth and deploy; no ECC violation). Auth middleware sets kernel.CtxSiteID; deploy handler reads kernel.SiteIDFromContext(ctx)."
+    verify: "go test ./kernel/... ./components/auth/ -run TestSiteKeyMiddleware -v -count=1 && echo 'no new security findings in affected paths'"
+    risk: P0
+    security: medium
+    status: todo
+
+  - id: 5
+    description: "Extend auth.Middleware (auth.go ~line 431): add inner fast-path — if strings.HasPrefix(token, 'bb_dep_') → ResolveSiteKey → set kernel.CtxSiteID. Existing bb_ org-scoped path unchanged. Check bb_dep_ BEFORE bb_ to prevent misrouting."
+    verify: "go test ./components/auth/ -run TestSiteKeyMiddleware -v -count=1 && echo 'no new security findings in affected paths'"
+    risk: P0
+    security: medium
+    status: todo
+
+  - id: 6
+    description: "Extend deploy.HandleCreate: when kernel.SiteIDFromContext(ctx) is set, reject req.SiteID mismatches with 403 and default empty req.SiteID to the context site_id."
+    verify: "go test ./components/deploy/ -run TestSiteKeyAuth -v -count=1 && echo 'no new security findings in affected paths'"
+    risk: P0
+    security: medium
+    status: todo
+
+  - id: 7
+    description: "Define SiteKeyCreator interface in mcp.go (CreateSiteKey only — no crypto, no validation); add siteKeyCreator field + Options entry; populate in New()"
+    verify: "go build ./components/mcp/ && echo 'no new security findings in affected paths'"
+    risk: P1
+    security: medium
+    status: todo
+
+  - id: 8
+    description: "Register provision_ci_credentials tool in NewMCPServer(): validates site_id non-empty, calls c.siteKeyCreator.CreateSiteKey(ctx, siteID, name, ['deploy']), returns token + key_id"
+    verify: "go build ./components/mcp/ && echo 'no new security findings in affected paths'"
+    risk: P1
+    security: medium
+    status: todo
+
+  - id: 9
+    description: "Wire auth component as SiteKeyCreator in main.go: mcp.Options{SiteKeyCreator: authComp, ...}"
+    verify: "go build . && echo 'no new security findings in affected paths'"
+    risk: P1
+    security: medium
+    status: todo
+
+  - id: 10
+    description: "Write unit tests: mock SiteKeyCreator returns token+id; nil returns 'not configured'; empty site_id returns validation error. Write integration tests: create site key → resolve returns correct site_id; site existence validation; revoked key → resolve returns error; raw key not in DB (hash only)."
+    verify: "go test ./components/mcp/ -run TestProvisionCICredentials -v -count=1 && go test ./components/auth/ -run TestSiteKey -v -count=1 && echo 'no new security findings in affected paths'"
+    risk: P0
+    security: medium
+    status: todo
+
+  - id: 11
+    description: "Write deploy authorization test: site key for site A → deploy to site A succeeds; site key for site A → deploy to site B → 403 Forbidden; JWT auth deploys normally (no site scope enforcement)"
+    verify: "go test ./components/deploy/ -run TestSiteKeyCrossSite -v -count=1 && echo 'no new security findings in affected paths'"
+    risk: P0
+    security: medium
+    status: todo
+
+  - id: 12
+    description: "Run full test suite to confirm no regressions — especially existing bb_ API key path + JWT auth path"
+    verify: "go test ./... -count=1 && echo 'no new security findings in affected paths'"
+    risk: P0
+    security: medium
+    status: todo

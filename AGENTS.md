@@ -31,3 +31,23 @@
 - NEVER skip `get_why_context` — reverted code and anti-patterns are invisible without it
 - NEVER grep source files to find symbols when `search_symbols` exists
 - NEVER manually trace imports when `find_importers` gives the full reverse dependency graph
+
+## Orca Terminal Commands (from orca-cli skill)
+
+When interacting with Orca-managed terminals:
+
+```bash
+orca terminal list --worktree active --json       # list live terminals
+orca terminal show --terminal <handle> --json      # inspect metadata + preview
+orca terminal read --terminal <handle> --json      # read current output (tail)
+orca terminal read --terminal <handle> --cursor <cursor> --limit 1000 --json
+orca terminal send --terminal <handle> --text "..." --enter --json
+orca terminal wait --terminal <handle> --for exit --timeout-ms 5000 --json
+orca terminal wait --terminal <handle> --for tui-idle --timeout-ms 300000 --json
+```
+
+### Key Rules
+- `--terminal` is optional for most commands — omitted means the active terminal in the current worktree.
+- **Run `terminal read` before `terminal send`** unless the next input is obvious.
+- **Cursor-based paging for long output:** after the initial tail preview, page from `oldestCursor`, then keep advancing with `nextCursor` while `limited` is true and `nextCursor !== latestCursor`.
+- Terminal handles are runtime-scoped — if Orca restarts or returns `terminal_handle_stale`, reacquire with `terminal list`.

@@ -509,3 +509,18 @@ epics:
   note: 3 stories, 8 BCPs.
   capsule_dir: epics/e66-multi-user-platform
   file: epics/e66-multi-user-platform/epic.yaml
+
+- id: e67
+  title: "MCP Provisioning Tools — Zero-to-Production from AI Agents"
+  wsjf: 8.0
+  mode: capsule
+  tier: 1
+  status: planned
+  depends_on:
+  - e57
+  note: |
+    4 stories, 7 BCPs. AI agents can bootstrap a new project end-to-end:
+    create_repo → create_site → provision_ci_credentials → get_ci_template.
+    Ships in Wave 2 alongside e59. All stories independently useful.
+  capsule_dir: epics/e67-mcp-provisioning-tools
+  file: epics/e67-mcp-provisioning-tools/epic.yaml

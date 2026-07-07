@@ -1,0 +1,40 @@
+story_id: e67s04
+title: "MCP get_ci_template — return canonical CI/CD workflow YAML"
+status: planned
+bcps: 1
+security: none
+tasks:
+  - id: 1
+    description: "Create components/mcp/knowledge/ci-templates.json with canonical GitHub Actions deploy workflow YAML (one entry per app_type: node, go, python, static). Use ${{ secrets.BIGBASE_SITE_ID }}, ${{ secrets.BIGBASE_DEPLOY_TOKEN }}, ${{ secrets.BIGBASE_SERVER }} as placeholders"
+    verify: "python3 -c 'import json; json.load(open(\"components/mcp/knowledge/ci-templates.json\"))'"
+    risk: P3
+    security: none
+    status: todo
+
+  - id: 2
+    description: "Add //go:embed knowledge/ci-templates.json to knowledge.go; define ciTemplateEntry struct and ciTemplatesData; add loadCITemplates() loader following existing pattern"
+    verify: "go build ./components/mcp/"
+    risk: P3
+    security: none
+    status: todo
+
+  - id: 3
+    description: "Register get_ci_template tool in NewMCPServer(): no args = list catalog; app_type arg = return matching template YAML; unknown type = 'no template for ...'"
+    verify: "go build ./components/mcp/"
+    risk: P2
+    security: none
+    status: todo
+
+  - id: 4
+    description: "Write unit tests: get_ci_template('static') returns YAML with placeholders; no args lists types; unknown type returns helpful message"
+    verify: "go test ./components/mcp/ -run TestGetCITemplate -v -count=1"
+    risk: P2
+    security: none
+    status: todo
+
+  - id: 5
+    description: "Run full test suite to confirm no regressions"
+    verify: "go test ./... -count=1"
+    risk: P2
+    security: none
+    status: todo

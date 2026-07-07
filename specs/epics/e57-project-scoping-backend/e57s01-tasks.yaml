@@ -4,22 +4,32 @@ status: planned
 bcps: 4
 tasks:
   - id: 0
-    description: "Hoist Logger/DBer interfaces per ADR-0005 Phase 1 quick wins."
-    verify: "go build ./kernel/..."
+    description: "Hoist Logger/DBer interfaces per ADR-0005 Phase 1 quick wins. Remove 18 duplicate `type Logger interface` definitions and convert 3 standalone `type DBer interface` definitions to `type DBer = kernel.DBer` aliases."
+    verify: "go build ./..."
+    risk: P2
+    security: none
     status: todo
   - id: 1
-    description: "Add kernel/scope.go with typed context key, WithProjectID, and ProjectIDFromContext helpers"
+    description: "Add kernel/scope.go with typed unexported context key, WithProjectID, and ProjectIDFromContext helpers. Follow existing org_id pattern from auth/api but place in kernel as canonical source."
     verify: "go build ./kernel/"
+    risk: P3
+    security: none
     status: todo
   - id: 2
-    description: "Write kernel tests: TestProjectIDContextRoundTrip, TestProjectIDContextMissing, TestProjectIDContextTypeIsolation"
+    description: "Write kernel tests: TestProjectIDContextRoundTrip, TestProjectIDContextMissing, TestProjectIDContextTypeIsolation. Verify key isolation — untyped string key must NOT satisfy typed key lookup."
     verify: "go test ./kernel/ -run TestProjectID -v -count=1"
+    risk: P3
+    security: none
     status: todo
   - id: 3
-    description: "Run full test suite to confirm no regressions from kernel changes"
+    description: "Run full test suite to confirm no regressions from Logger/DBer hoisting across all 18 components"
     verify: "go test ./... -count=1"
+    risk: P2
+    security: none
     status: todo
   - id: 4
-    description: "Update tech-stack.md: add project_id to context flow diagram and component catalog"
+    description: "Update tech-stack.md: add project_id to context flow diagram and component catalog. Document the canonical kernel context key system."
     verify: "grep -q 'project_id' specs/tech-architecture/tech-stack.md"
+    risk: P3
+    security: none
     status: todo

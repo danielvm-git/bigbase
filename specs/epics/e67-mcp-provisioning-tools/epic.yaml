@@ -1,0 +1,63 @@
+type: epic-shard
+context: domain
+id: e67
+title: "MCP Provisioning Tools — Zero-to-Production from AI Agents"
+wsjf: 8.0
+total_bcps: 7
+status: planned
+hard_gate: e67s03
+note: |
+  4 stories, 7 BCPs. Adds provisioning MCP tools so AI agents can bootstrap
+  a new project end-to-end without touching the BigBase UI:
+
+    e67s01: create_repo    — register a GitHub repo with BigBase Git component
+    e67s02: create_site    — provision a site, get site_id back
+    e67s03: provision_ci_credentials — site-scoped deploy keys via existing org_api_keys
+    e67s04: get_ci_template — return canonical .github/workflows/deploy.yml
+
+  All stories share the same wiring pattern (add Go interface to mcp.Options,
+  register tool in NewMCPServer(), wire in main.go). They can ship in any order
+  and each independently unblocks part of the zero-to-production flow.
+
+  e67s03 extends org_api_keys (site_id column) instead of a new table — DRY.
+  Reuses existing hashAPIKey(), generateRawAPIKey(), and bb_ middleware fast-path.
+
+  Dependencies:
+  - e57 (Project Scoping — Backend) must be done first since provisioning
+    touches DB, auth, and sites tables that e57 reworks for multi-tenancy.
+  - No dependency on e59 (Native Feature Port) or any other planned epic.
+
+  WSJF scoring:
+  - e67s01 (create_repo):        BV=8 TC=8 RR=5 / JS=2 = 10.5
+  - e67s02 (create_site):        BV=8 TC=8 RR=5 / JS=2 = 10.5
+  - e67s03 (provision_ci_creds): BV=8 TC=8 RR=3 / JS=2 = 9.5
+  - e67s04 (get_ci_template):    BV=5 TC=3 RR=3 / JS=1 = 11.0
+stories:
+  - id: e67s01
+    title: "MCP create_repo tool — register a GitHub repo with BigBase"
+    bcps: 2
+    depends_on: [e57]
+    status: planned
+    spec: e67s01-spec.md
+    tasks: e67s01-tasks.yaml
+  - id: e67s02
+    title: "MCP create_site tool — provision a site and get site_id back"
+    bcps: 2
+    depends_on: [e57]
+    status: planned
+    spec: e67s02-spec.md
+    tasks: e67s02-tasks.yaml
+  - id: e67s03
+    title: "MCP provision_ci_credentials — site-scoped keys via existing API key infrastructure"
+    bcps: 2
+    depends_on: [e57]
+    status: planned
+    spec: e67s03-spec.md
+    tasks: e67s03-tasks.yaml
+  - id: e67s04
+    title: "MCP get_ci_template — return canonical CI/CD workflow YAML"
+    bcps: 1
+    depends_on: [e57]
+    status: planned
+    spec: e67s04-spec.md
+    tasks: e67s04-tasks.yaml

@@ -1,0 +1,47 @@
+story_id: e67s02
+title: "MCP create_site tool — provision a site and get site_id back"
+status: planned
+bcps: 2
+security: none
+tasks:
+  - id: 1
+    description: "Define SiteCreator interface (CreateSite method returning id, name, error) and siteCreator field in mcp.Component; extend mcp.Options with SiteCreator SiteCreator field; populate in New()"
+    verify: "go build ./components/mcp/"
+    risk: P2
+    security: none
+    status: todo
+
+  - id: 2
+    description: "Implement CreateSite on *sites.Sites — calls internal createSite logic; validates git_repo_id exists; defaults name from repo name when omitted (single owner of name defaulting); returns site_id and name"
+    verify: "go build ./components/sites/"
+    risk: P1
+    security: none
+    status: todo
+
+  - id: 3
+    description: "Register create_site tool in NewMCPServer(): validates git_repo_id, passes through to c.siteCreator.CreateSite(), returns site_id + name (MCP layer does NOT default name — Sites is the single owner); optionally triggers auto-deploy when auto_deploy=true and Deployer is wired, including deploy ID + URL in response"
+    verify: "go build ./components/mcp/"
+    risk: P2
+    security: none
+    status: todo
+
+  - id: 4
+    description: "Wire sites.Component as SiteCreator in main.go mcp.Options"
+    verify: "go build ."
+    risk: P2
+    security: none
+    status: todo
+
+  - id: 5
+    description: "Write unit tests with mock SiteCreator: success returns site_id+name; nil creator returns 'not configured'; missing git_repo_id returns validation; name defaulted when omitted from input; auto_deploy calls Deployer and includes URL"
+    verify: "go test ./components/mcp/ -run TestCreateSite -v -count=1"
+    risk: P2
+    security: none
+    status: todo
+
+  - id: 6
+    description: "Run full test suite to confirm no regressions"
+    verify: "go test ./... -count=1"
+    risk: P2
+    security: none
+    status: todo

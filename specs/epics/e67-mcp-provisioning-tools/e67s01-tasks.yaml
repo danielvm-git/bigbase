@@ -1,0 +1,47 @@
+story_id: e67s01
+title: "MCP create_repo tool — register a GitHub repo with BigBase"
+status: planned
+bcps: 2
+security: none
+tasks:
+  - id: 1
+    description: "Define GitCreator interface (CreateRepo method returning id, name, error) and gitCreator field in mcp.Component; extend mcp.Options with GitCreator GitCreator field; populate in New()"
+    verify: "go build ./components/mcp/"
+    risk: P2
+    security: none
+    status: todo
+
+  - id: 2
+    description: "Implement CreateRepo on *git.Git — calls internal createRepo logic; returns id, name, error"
+    verify: "go build ./components/git/"
+    risk: P1
+    security: none
+    status: todo
+
+  - id: 3
+    description: "Register create_repo tool in NewMCPServer(): validates name non-empty, calls c.gitCreator.CreateRepo(), returns repo_id + name; returns 'not configured' when gitCreator is nil"
+    verify: "go build ./components/mcp/"
+    risk: P2
+    security: none
+    status: todo
+
+  - id: 4
+    description: "Wire git.Component as GitCreator in main.go mcp.Options"
+    verify: "go build ."
+    risk: P2
+    security: none
+    status: todo
+
+  - id: 5
+    description: "Write unit tests with mock GitCreator: success returns id+name; nil creator returns 'not configured'; empty name returns validation error; duplicate returns 'already exists'"
+    verify: "go test ./components/mcp/ -run TestCreateRepo -v -count=1"
+    risk: P2
+    security: none
+    status: todo
+
+  - id: 6
+    description: "Run full test suite to confirm no regressions"
+    verify: "go test ./... -count=1"
+    risk: P2
+    security: none
+    status: todo
