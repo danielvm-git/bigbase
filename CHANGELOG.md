@@ -1,3 +1,10 @@
+## [2.64.1](https://github.com/danielvm-git/bigbase/compare/v2.64.0...v2.64.1) (2026-07-07)
+
+
+### Bug Fixes
+
+* **sites:** batch latest deployment lookup to fix slow incomplete list ([34d6c51](https://github.com/danielvm-git/bigbase/commit/34d6c51d46680c3abe813b7ff1346d8bc8037a12))
+
 # [2.64.0](https://github.com/danielvm-git/bigbase/compare/v2.63.0...v2.64.0) (2026-06-30)
 
 
