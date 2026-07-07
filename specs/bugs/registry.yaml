@@ -554,5 +554,22 @@ bugs:
       - 4fc4c753
       - 08f98ecf
 
+  - id: BUG-2026-07-06T213500
+    date: "2026-07-06"
+    severity: high
+    priority: high
+    scope: sites,ui
+    summary: "Sites list slow and incomplete — N+1 latestDeployment queries hit 10s timeout"
+    file: specs/bugs/BUG-2026-07-06T213500-sites-list-slow-incomplete.md
+    status: fixed
+    files_changed:
+      - components/sites/sites.go
+      - components/sites/sites_test.go
+      - components/deploy/deploy.go
+    approach: "Batch-fetch latest deployments in one query; add idx_deployments_repo_created index"
+    risk_level: high
+    commit_message: "fix(sites): batch latest deployment lookup to fix slow incomplete list"
+    regression_guards:
+      - components/sites/sites_test.go TestSitesListReturnsAllSitesWithDeployments
 
 

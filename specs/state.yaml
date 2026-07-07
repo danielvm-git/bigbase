@@ -1,6 +1,6 @@
 type: session-state
 context: infra
-active_flow: build_epic
+active_flow: fix_bug
 active_epic_id: e57
 active_story_id: e57s01
 active_story_status: planned
@@ -29,9 +29,9 @@ epic_cycle:
   fast_mode: false
   story_complete: false
 bug_cycle:
-  current_step: 0
-  completed_steps: []
-  bug_file: null
+  current_step: 4
+  completed_steps: [1, 2, 3]
+  bug_file: specs/bugs/BUG-2026-07-06T213500-sites-list-slow-incomplete.md
 git:
   branch: main
   hash: 3aaa2e97
@@ -42,7 +42,7 @@ handoff:
   open_decisions:
     - "ADR 0005 accepted — deploy decomposition into Engine + Gateway + Orchestrator"
     - "Quick wins (Logger/DBer hoisting, migration extraction, stateMachine surfacing) queued before Engine extraction"
-  next_skill: survey-context
+  next_skill: develop-tdd
   summary: "e51 released (7 stories, 26 BCPs). CI green. Architecture deep-dive complete: ADR 0005 accepted for deploy component decomposition (Engine + Gateway + Orchestrator), informed by Appwrite/Supabase/Neon/PocketBase patterns and bigpowers CONVENTIONS. tech-stack.md updated with new deploy architecture vocabulary."
   context: "Landed e51 UI Design System. ADR 0005 defines the refactor plan for 1819-line deploy.go. Phase 1 (Logger/DBer hoisting) is 15-minute mechanical cleanup. e57 (was e52) active with e57s01 next. All planned epics renumbered to execution order (commit 68a832b1). BUG-001 (Astro SDK storedToken null) registered as open — shippable now. Architecture doc: specs/adr/0005-deploy-component-decomposition.md"
   fast_mode: false

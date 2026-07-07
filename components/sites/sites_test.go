@@ -202,6 +202,98 @@ func TestSitesListEmpty(t *testing.T) {
 	}
 }
 
+func seedDeploymentsTable(t *testing.T, d *db.DB) {
+	t.Helper()
+	_, err := d.ExecContext(context.Background(), `CREATE TABLE IF NOT EXISTS deployments (
+		id TEXT PRIMARY KEY,
+		repo_id TEXT NOT NULL,
+		branch TEXT NOT NULL DEFAULT 'main',
+		commit_sha TEXT DEFAULT '',
+		status TEXT NOT NULL DEFAULT 'pending',
+		url TEXT DEFAULT '',
+		port INTEGER DEFAULT 0,
+		app_type TEXT DEFAULT '',
+		created_at TEXT NOT NULL DEFAULT (datetime('now'))
+	)`)
+	if err != nil {
+		t.Fatalf("create deployments table: %v", err)
+	}
+}
+
+func TestSitesListReturnsAllSitesWithDeployments(t *testing.T) {
+	logger := testLogger{}
+	k := kernel.New(logger)
+	d := db.New(db.Options{Path: ":memory:", Logger: logger})
+	g := git.New(git.Options{DB: d, Logger: logger, Dir: t.TempDir()})
+	s := sites.New(sites.Options{DB: d, Logger: logger})
+	k.Register(d)
+	k.Register(g)
+	k.Register(s)
+	if err := k.Start(); err != nil {
+		t.Fatalf("kernel start: %v", err)
+	}
+	t.Cleanup(func() { _ = k.Stop() })
+	seedDeploymentsTable(t, d)
+
+	const siteCount = 35
+	for i := 0; i < siteCount; i++ {
+		repoID := fmt.Sprintf("repo-%d", i)
+		siteID := fmt.Sprintf("site-%d", i)
+		_, _ = d.ExecContext(context.Background(),
+			`INSERT INTO git_repos (id, name, owner_id, private, default_branch, description, created_at)
+			 VALUES (?, ?, 0, 1, 'main', '', datetime('now'))`, repoID, fmt.Sprintf("site-%d", i))
+		_, _ = d.ExecContext(context.Background(),
+			`INSERT INTO sites (id, name, git_repo_id, production_branch, root_path, github_full_name, created_at)
+			 VALUES (?, ?, ?, 'main', './', ?, datetime('now'))`,
+			siteID, fmt.Sprintf("site-%d", i), repoID, fmt.Sprintf("owner/site-%d", i))
+		// Older deployment
+		_, _ = d.ExecContext(context.Background(),
+			`INSERT INTO deployments (id, repo_id, branch, commit_sha, status, url, port, app_type, created_at)
+			 VALUES (?, ?, 'main', 'old0000', 'replaced', 'http://localhost:1', 1, 'static', '2026-01-01T00:00:00Z')`,
+			fmt.Sprintf("dep-old-%d", i), repoID)
+		// Latest deployment — must be attached to the site card
+		_, _ = d.ExecContext(context.Background(),
+			`INSERT INTO deployments (id, repo_id, branch, commit_sha, status, url, port, app_type, created_at)
+			 VALUES (?, ?, 'main', 'new1234', 'running', 'http://localhost:8080', 8080, 'static', '2026-06-01T00:00:00Z')`,
+			fmt.Sprintf("dep-new-%d", i), repoID)
+	}
+
+	req := httptest.NewRequest(http.MethodGet, "/api/sites", nil)
+	w := httptest.NewRecorder()
+	s.Handler().ServeHTTP(w, req)
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", w.Code, w.Body.String())
+	}
+
+	var resp struct {
+		Data []struct {
+			ID               string `json:"id"`
+			GitRepoID        string `json:"git_repo_id"`
+			LatestDeployment *struct {
+				CommitSHA string `json:"commit_sha"`
+				Status    string `json:"status"`
+			} `json:"latest_deployment"`
+		} `json:"data"`
+	}
+	if err := json.NewDecoder(w.Body).Decode(&resp); err != nil {
+		t.Fatalf("decode response: %v", err)
+	}
+	if len(resp.Data) != siteCount {
+		t.Fatalf("expected %d sites, got %d", siteCount, len(resp.Data))
+	}
+	for _, site := range resp.Data {
+		if site.LatestDeployment == nil {
+			t.Fatalf("site %s missing latest_deployment", site.ID)
+		}
+		if site.LatestDeployment.CommitSHA != "new1234" {
+			t.Fatalf("site %s: expected latest commit new1234, got %s", site.ID, site.LatestDeployment.CommitSHA)
+		}
+		if site.LatestDeployment.Status != "running" {
+			t.Fatalf("site %s: expected status running, got %s", site.ID, site.LatestDeployment.Status)
+		}
+	}
+}
+
 // --- e36 delete-site tests ---
 
 func setupSitesDeleteTest(t *testing.T) (*db.DB, http.Handler) {

@@ -271,6 +271,9 @@ func (d *Deploy) Start(ctx *kernel.Context) error {
 	if err := d.ensureHealthSummaryColumn(); err != nil {
 		return err
 	}
+	if err := d.ensureDeploymentsRepoCreatedIndex(); err != nil {
+		return err
+	}
 	if err := d.ensureRollbackEventsTable(); err != nil {
 		return fmt.Errorf("migrate rollback_events table: %w", err)
 	}
@@ -1471,6 +1474,15 @@ func (d *Deploy) ensureHealthSummaryColumn() error {
 		return nil
 	}
 	return fmt.Errorf("add health_summary column: %w", err)
+}
+
+func (d *Deploy) ensureDeploymentsRepoCreatedIndex() error {
+	_, err := d.db.ExecContext(context.Background(),
+		`CREATE INDEX IF NOT EXISTS idx_deployments_repo_created ON deployments(repo_id, created_at DESC)`)
+	if err != nil {
+		return fmt.Errorf("create deployments repo_created index: %w", err)
+	}
+	return nil
 }
 
 func (d *Deploy) finalizeDeploymentURL(deploy *Deployment, repoName string) {
