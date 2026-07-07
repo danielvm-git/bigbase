@@ -1,3 +1,10 @@
+# [2.65.0](https://github.com/danielvm-git/bigbase/compare/v2.64.1...v2.65.0) (2026-07-07)
+
+
+### Features
+
+* **kernel:** add WithProjectID and ProjectIDFromContext helpers ([e2802f7](https://github.com/danielvm-git/bigbase/commit/e2802f7ead53a8e7da858909eccbcfcb6ec9ed2f))
+
 ## [2.64.1](https://github.com/danielvm-git/bigbase/compare/v2.64.0...v2.64.1) (2026-07-07)
 
 
