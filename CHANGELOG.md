@@ -1,3 +1,10 @@
+# [2.66.0](https://github.com/danielvm-git/bigbase/compare/v2.65.0...v2.66.0) (2026-07-07)
+
+
+### Features
+
+* **mcp:** add provisioning toolchain — create_repo, create_site, provision_ci_credentials, get_ci_template ([6ba8ea4](https://github.com/danielvm-git/bigbase/commit/6ba8ea4a275faa75c9a55c1fdfaf6dc2494cadac))
+
 # [2.65.0](https://github.com/danielvm-git/bigbase/compare/v2.64.1...v2.65.0) (2026-07-07)
 
 
