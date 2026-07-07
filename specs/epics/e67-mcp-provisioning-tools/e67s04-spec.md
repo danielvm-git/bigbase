@@ -164,3 +164,22 @@ Scenario: get_ci_template returns helpful message for unknown type
 - Per-framework template variants (SvelteKit build step vs. Go build step). Each app_type gets one canonical template; framework-specific build logic is documented elsewhere.
 - Dynamic template generation with actual site_id/token substitution (agent handles placeholder replacement).
 - Multi-platform templates (GitLab CI, CircleCI, etc.) — GitHub Actions only for v1.
+
+## 17. Requirements
+
+#### ADDED: MCP `get_ci_template` knowledge tool
+No args → catalog of available templates. `app_type` arg → YAML string with `${{ secrets.BIGBASE_SITE_ID }}`, `${{ secrets.BIGBASE_DEPLOY_TOKEN }}`, `${{ secrets.BIGBASE_SERVER }}` placeholders targeting `POST /api/deploy`.
+
+#### ADDED: Embedded `knowledge/ci-templates.json`
+Follows existing `//go:embed` pattern in `knowledge.go` (same as `services.json`, `frameworks.json`). One template per app_type: `node`, `go`, `python`, `static`.
+
+## 18. Risks
+
+- **Placeholder drift:** If deploy API shape changes, templates must be updated in JSON — no runtime generation.
+- **No auth required:** Templates are public knowledge; secrets are GitHub Actions `${{ secrets.* }}` references only.
+
+## 19. Verification Script
+
+1. `python3 -c 'import json; json.load(open("components/mcp/knowledge/ci-templates.json"))'` — valid JSON
+2. `go test ./components/mcp/ -run TestGetCITemplate -v -count=1` — catalog, lookup, unknown type
+3. `go test ./... -count=1` — full suite green

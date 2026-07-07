@@ -114,10 +114,10 @@ func (a *Auth) CreateSiteKey(ctx context.Context, siteID, name string, scopes []
 func (a *Auth) ResolveSiteKey(rawKey string) (string, error)
 ```
 
-### New context key in `kernel/context.go` (or `kernel/kernel.go`)
+### New context key in `kernel/scope.go` (alongside e57 `ProjectID` helpers)
 
 ```go
-// In kernel/ — neutral package imported by both auth and deploy (no ECC violation).
+// In kernel/scope.go — neutral package imported by both auth and deploy (no ECC violation).
 // Add alongside existing shared kernel types (DBer, Logger, etc.).
 
 type contextKey string
@@ -198,7 +198,7 @@ provision_ci_credentials(site_id, name?)
 ## 6. Implementation Strategy
 
 1. **Migration** — `ALTER TABLE org_api_keys ADD COLUMN site_id TEXT NULL` + `ADD COLUMN revoked INTEGER DEFAULT 0` in `apikeys.go:migrateAPIKeysTable()`.
-2. **Context key** — Add `CtxSiteID` + `SiteIDFromContext()` to `kernel/` (neutral package, imported by both auth and deploy — no ECC violation). Auth sets it; deploy reads it.
+2. **Context key** — Add `CtxSiteID` + `SiteIDFromContext()` to `kernel/scope.go` (same file as e57 project scoping helpers).
 3. **`generateSiteKey()`** — one-line variant of `generateRawAPIKey()` with `"bb_dep_"` prefix.
 4. **`CreateSiteKey()`** — mirrors `CreateAPIKey()`: validate site exists (`SELECT 1 FROM sites WHERE id = ?`), call `generateSiteKey()`, `hashAPIKey()`, INSERT with `site_id` set and `org_id = 0`, return raw key once.
 5. **`ResolveSiteKey()`** — mirrors `ResolveAPIKey()`: `hashAPIKey(raw)` → `SELECT site_id FROM org_api_keys WHERE key_hash = ? AND revoked = 0`. Note: the hash comparison is performed by SQLite's `WHERE key_hash = ?` — no additional constant-time comparison in Go is needed (single-row lookup by primary unique key; no timing channel exists).
@@ -368,10 +368,44 @@ Scenario: existing org-scoped API keys still work
 - Scoped permissions beyond `["deploy"]` (e.g., `["deploy", "read:logs"]`). The `scopes` column supports this — deferred to a future story.
 - Email/password bot account provisioning (Option B from alternatives — more complex, not needed given this approach).
 
-## Alternatives Considered
+## 17. Requirements
+
+#### ADDED: MCP `provision_ci_credentials` tool
+Agents call `provision_ci_credentials(site_id, name?)` and receive `{ token, key_id, site_id }` where token matches `^bb_dep_[0-9a-f]{64}$`.
+
+#### ADDED: Site-scoped deployment keys (`bb_dep_` prefix)
+New `generateSiteKey()`, `CreateSiteKey()`, `ResolveSiteKey()` in `components/auth/apikeys.go`. Keys stored in extended `org_api_keys` with `org_id=0` sentinel and `site_id` set.
+
+#### MODIFIED: `org_api_keys` table schema
+**Before:** Columns `id, org_id, key_hash, name, scopes, last_used_at, created_at` only.
+**After:** Adds nullable `site_id TEXT` and `revoked INTEGER NOT NULL DEFAULT 0`. Org-scoped keys unchanged (`site_id NULL`, `org_id > 0`).
+
+#### MODIFIED: Auth middleware `bb_` fast-path
+**Before:** All `bb_`-prefixed tokens route to `ResolveAPIKey()` (org-scoped).
+**After:** Check `bb_dep_` prefix first → `ResolveSiteKey()` → set `kernel.CtxSiteID`. Existing `bb_` org path unchanged.
+
+#### MODIFIED: Deploy `HandleCreate` site authorization
+**Before:** Any authenticated caller (JWT or org API key) may deploy to any `site_id` in the request body.
+**After:** When `kernel.SiteIDFromContext` is set, reject mismatched `req.SiteID` with 403; default empty `req.SiteID` to context site.
+
+## 18. Alternatives Considered
 
 **Option A (chosen) — Extend `org_api_keys`:** Reuse existing SHA-256 hashing, prefix-based middleware fast-path, and `org_api_keys` table. Add `site_id` + `revoked` columns. Two key types, one infrastructure. Matches Appwrite's proven model (one key concept, type prefix, resource-specific scoping).
 
 **Option B — Separate `deployment_tokens` table:** New table with its own hashing, its own validation path, its own middleware branch. Duplicates 80% of `org_api_keys` infrastructure. Rejected — violates DRY, creates maintenance divergence risk, and would have missed the deploy authorization enforcement (GAP-4) that the unified middleware pattern naturally catches.
 
 **Option C — Bot user account:** Register a headless user via `auth.Register()`, generate JWT. More complex (email uniqueness, password hashing, login flow), and JWT expiry means the CI pipeline needs token refresh logic. Rejected — site-scoped keys are stateless (hash lookup, no expiry).
+
+## 19. Risks
+
+- **Prefix routing order:** `bb_dep_` must be checked before generic `bb_` in middleware — otherwise `ResolveAPIKey` misroutes deployment keys (currently all `bb_` tokens hit org path at `auth.go:427`).
+- **Cross-site deploy:** Without deploy handler enforcement, site keys would authenticate but could deploy to any site — GAP closed by task 6.
+- **e57 interaction:** Project-scoped sites after e57 must still validate site existence in `CreateSiteKey` — no project_id column on keys in v1.
+
+## 20. Verification Script
+
+1. `go test ./components/auth/ -run TestSiteKey -v -count=1` — key create/resolve/revoke
+2. `go test ./components/deploy/ -run TestSiteKey -v -count=1` — cross-site 403 + matching site 200
+3. `go test ./components/mcp/ -run TestProvisionCICredentials -v -count=1` — MCP tool layer
+4. `go test ./... -count=1` — full suite; confirm existing `bb_` org keys still work
+5. Manual: `curl -H "Authorization: Bearer bb_dep_..." POST /api/deploy` with matching vs mismatched `site_id`

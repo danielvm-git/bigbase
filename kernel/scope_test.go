@@ -80,3 +80,11 @@ func TestProjectIDContextMultiple(t *testing.T) {
 		t.Errorf("ProjectIDFromContext() = %d, want 3 (last value wins)", got)
 	}
 }
+
+func TestSiteIDContextRoundTrip(t *testing.T) {
+	ctx := WithSiteID(context.Background(), "site-abc")
+	got, ok := SiteIDFromContext(ctx)
+	if !ok || got != "site-abc" {
+		t.Fatalf("SiteIDFromContext() = %q, %v; want site-abc, true", got, ok)
+	}
+}

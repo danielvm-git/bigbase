@@ -425,6 +425,17 @@ func (a *Auth) Middleware(next http.Handler) http.Handler {
 
 		// API key authentication — resolve org_id and skip JWT checks.
 		if strings.HasPrefix(token, "bb_") {
+			if strings.HasPrefix(token, "bb_dep_") {
+				siteID, err := a.ResolveSiteKey(token)
+				if err != nil {
+					a.logger.Error("site key resolution failed", "error", err)
+					writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "invalid site key"})
+					return
+				}
+				ctx := kernel.WithSiteID(r.Context(), siteID)
+				next.ServeHTTP(w, r.WithContext(ctx))
+				return
+			}
 			orgID, err := a.ResolveAPIKey(token)
 			if err != nil {
 				a.logger.Error("api key resolution failed", "error", err)

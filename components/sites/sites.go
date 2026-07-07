@@ -416,27 +416,20 @@ func (s *Sites) createSite(w http.ResponseWriter, r *http.Request) {
 		req.RootPath = "./"
 	}
 
-	id, err := generateID()
+	id, name, err := s.insertSite(r.Context(), req.GitRepoID, req.Name, req.ProductionBranch, req.RootPath, req.GitHubFullName)
 	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
-		return
-	}
-
-	now := time.Now().UTC().Format(time.RFC3339)
-	_, err = s.db.ExecContext(r.Context(),
-		`INSERT INTO sites (id, name, git_repo_id, production_branch, root_path, github_full_name, created_at)
-		 VALUES (?, ?, ?, ?, ?, ?, ?)
-		 ON CONFLICT(id) DO NOTHING`,
-		id, req.Name, req.GitRepoID, req.ProductionBranch, req.RootPath, req.GitHubFullName, now)
-	if err != nil {
-		s.logger.Error("insert site", "error", err)
+		if strings.Contains(err.Error(), "not found") {
+			writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+			return
+		}
+		s.logger.Error("create site", "error", err)
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 
 	site := Site{
 		ID:               id,
-		Name:             req.Name,
+		Name:             name,
 		FullName:         req.GitHubFullName,
 		GitRepoID:        req.GitRepoID,
 		ProductionBranch: req.ProductionBranch,
@@ -450,7 +443,7 @@ func (s *Sites) createSite(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if s.triggerDeploy != nil {
-		dep, err := s.triggerDeploy(r.Context(), req.GitRepoID, req.ProductionBranch, req.Name, id, nil, "")
+		dep, err := s.triggerDeploy(r.Context(), req.GitRepoID, req.ProductionBranch, name, id, nil, "")
 		if err != nil {
 			writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
 			return
@@ -459,6 +452,50 @@ func (s *Sites) createSite(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSON(w, http.StatusCreated, site)
+}
+
+// CreateSite provisions a site for a git repository (MCP SiteCreator).
+// When name is empty it defaults from the git_repos name.
+func (s *Sites) CreateSite(ctx context.Context, gitRepoID, name, branch string) (id, siteName string, err error) {
+	return s.insertSite(ctx, gitRepoID, name, branch, "", "")
+}
+
+// insertSite writes a site row; rootPath defaults to "./" when empty.
+func (s *Sites) insertSite(ctx context.Context, gitRepoID, name, branch, rootPath, githubFullName string) (id, siteName string, err error) {
+	if gitRepoID == "" {
+		return "", "", fmt.Errorf("git_repo_id is required")
+	}
+	if branch == "" {
+		branch = "main"
+	}
+	if rootPath == "" {
+		rootPath = "./"
+	}
+
+	var repoName string
+	if err := s.db.QueryRowContext(ctx, "SELECT name FROM git_repos WHERE id = ?", gitRepoID).Scan(&repoName); err != nil {
+		return "", "", fmt.Errorf("repository %q not found", gitRepoID)
+	}
+	if name == "" {
+		name = repoName
+	}
+
+	id, err = generateID()
+	if err != nil {
+		return "", "", fmt.Errorf("generate id: %w", err)
+	}
+
+	now := time.Now().UTC().Format(time.RFC3339)
+	_, err = s.db.ExecContext(ctx,
+		`INSERT INTO sites (id, name, git_repo_id, production_branch, root_path, github_full_name, created_at)
+		 VALUES (?, ?, ?, ?, ?, ?, ?)
+		 ON CONFLICT(id) DO NOTHING`,
+		id, name, gitRepoID, branch, rootPath, githubFullName, now)
+	if err != nil {
+		return "", "", fmt.Errorf("insert site: %w", err)
+	}
+
+	return id, name, nil
 }
 
 type siteDeleteTarget struct {

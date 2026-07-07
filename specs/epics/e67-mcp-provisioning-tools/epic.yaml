@@ -4,7 +4,7 @@ id: e67
 title: "MCP Provisioning Tools — Zero-to-Production from AI Agents"
 wsjf: 8.0
 total_bcps: 7
-status: planned
+status: done
 hard_gate: e67s03
 note: |
   4 stories, 7 BCPs. Adds provisioning MCP tools so AI agents can bootstrap
@@ -37,27 +37,27 @@ stories:
     title: "MCP create_repo tool — register a GitHub repo with BigBase"
     bcps: 2
     depends_on: [e57]
-    status: planned
+    status: done
     spec: e67s01-spec.md
     tasks: e67s01-tasks.yaml
   - id: e67s02
     title: "MCP create_site tool — provision a site and get site_id back"
     bcps: 2
     depends_on: [e57]
-    status: planned
+    status: done
     spec: e67s02-spec.md
     tasks: e67s02-tasks.yaml
   - id: e67s03
     title: "MCP provision_ci_credentials — site-scoped keys via existing API key infrastructure"
     bcps: 2
     depends_on: [e57]
-    status: planned
+    status: done
     spec: e67s03-spec.md
     tasks: e67s03-tasks.yaml
   - id: e67s04
     title: "MCP get_ci_template — return canonical CI/CD workflow YAML"
     bcps: 1
     depends_on: [e57]
-    status: planned
+    status: done
     spec: e67s04-spec.md
     tasks: e67s04-tasks.yaml

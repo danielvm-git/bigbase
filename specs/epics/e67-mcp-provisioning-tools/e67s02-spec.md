@@ -172,3 +172,27 @@ Scenario: create_site triggers auto-deploy when requested
 - Domain computation (lives in deploy, not sites).
 - Environment variable provisioning during site creation.
 - Site deletion (existing `delete_site` tool from a future story).
+- Changing REST API to allow empty `name` on `POST /api/sites` (MCP-only defaulting via `CreateSite`).
+
+## 17. Requirements
+
+#### ADDED: MCP `create_site` tool provisions a site and returns `site_id`
+Agents call `create_site(git_repo_id, name?, branch?, auto_deploy?)` and receive `{ site_id, name }`. Domain URL is intentionally omitted — agents use `deploy_site` / `get_deploy_status` after first deploy.
+
+#### ADDED: `Sites.CreateSite` exported method with name defaulting
+`CreateSite(ctx, gitRepoID, name, branch string) (id, name string, err error)` validates repo exists, defaults `name` from `git_repos.name` when empty, inserts into `sites`. Single owner of name defaulting — MCP layer is passthrough.
+
+#### ADDED: Optional auto-deploy on site creation
+When `auto_deploy=true` and `Deployer` is wired, tool triggers deployment and includes deploy ID + URL in response.
+
+## 18. Risks
+
+- **Current HTTP gap:** `createSite` HTTP handler today requires non-empty `name` (line 408). `CreateSite` adds defaulting for MCP; HTTP behavior unchanged unless explicitly MODIFIED later.
+- **e57 blocker:** Sites table may gain `project_id` after e57 — provisioning tools need project context post-e57.
+
+## 19. Verification Script
+
+1. `go test ./components/mcp/ -run TestCreateSite -v -count=1` — MCP tool tests pass
+2. `go test ./components/sites/ -v -count=1` — sites component tests pass
+3. `go test ./... -count=1` — full suite green
+4. Confirm `main.go` wires `SiteCreator: st` in `mcp.Options`

@@ -411,12 +411,15 @@ func startProxy() {
 	k.Register(mComp)
 
 	mcpComp := mcp.New(mcp.Options{
-		Logger:    logger,
-		Enabled:   !*mcpDisabled,
-		Port:      *mcpPort,
-		Transport: *mcpTransport,
-		DB:        d,
-		Deployer:  depComp,
+		Logger:         logger,
+		Enabled:        !*mcpDisabled,
+		Port:           *mcpPort,
+		Transport:      *mcpTransport,
+		DB:             d,
+		Deployer:       depComp,
+		GitCreator:     g,
+		SiteCreator:    st,
+		SiteKeyCreator: authComp,
 	})
 	k.Register(mcpComp)
 
