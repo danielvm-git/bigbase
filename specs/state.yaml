@@ -1,9 +1,9 @@
 type: session-state
 context: infra
-active_flow: build_epic
-active_epic_id: e67
-active_story_id: e67s04
-active_story_status: done
+active_flow: null
+active_epic_id: null
+active_story_id: null
+active_story_status: null
 release:
   target_version: 3.0.0
   codename: "Project Scoping + Neon Native Port"
@@ -16,8 +16,8 @@ metrics:
   story_start: '2026-07-07T19:49:00Z'
   session_end: null
   cycle_minutes: 0
-  epics_completed: 52
-  stories_completed: 161
+  epics_completed: 53
+  stories_completed: 165
   bcps_per_hour: 0
 epic_cycle:
   step: 8
@@ -33,15 +33,15 @@ bug_cycle:
   completed_steps: []
   bug_file: null
 git:
-  branch: e67-mcp-provisioning-tools
-  hash: null
+  branch: main
+  hash: 612db4080768eb103241a2b336eb3219ebbd614b
   worktree: null
-  ci_status: pending
+  ci_status: success
 handoff:
-  last_step_completed: "build-epic-complete"
+  last_step_completed: "release-branch"
   open_decisions:
     - "e57 dependency waived for yolo build — revisit project_id scoping when e57 lands"
-  next_skill: release-branch
-  summary: "e67 MCP Provisioning Tools implemented on branch e67-mcp-provisioning-tools. All 953 tests pass."
+  next_skill: survey-context
+  summary: "e67 MCP Provisioning Tools released. Epic capsule archived."
   context: "Added GitCreator/SiteCreator/SiteKeyCreator MCP tools, bb_dep_ site keys, CI template knowledge file, deploy cross-site enforcement."
   fast_mode: true
