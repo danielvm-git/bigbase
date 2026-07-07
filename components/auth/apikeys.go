@@ -172,7 +172,7 @@ type SiteKeyCreated struct {
 	ID     int64  `json:"id"`
 	SiteID string `json:"site_id"`
 	Name   string `json:"name"`
-	Key    string `json:"key"`
+	Key    string `json:"-"`
 }
 
 // CreateSiteKey implements mcp.SiteKeyCreator — returns raw token once.
