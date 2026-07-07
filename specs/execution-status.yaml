@@ -67,7 +67,7 @@ epics:
   e65: planned
   e66: planned
   e67: done
-  e68: planned
+  e68: done
 stories:
   e01s01: done
   e02s01: done
@@ -254,4 +254,4 @@ stories:
   e67s02: done
   e67s03: done
   e67s04: done
-  e68s01: planned
+  e68s01: done

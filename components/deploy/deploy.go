@@ -101,6 +101,8 @@ type Deploy struct {
 	DrainTimeout     time.Duration
 	oldDeploymentsMu sync.RWMutex
 	oldDeployments   map[string][]string
+	dbDriver         string
+	dbDSN            string
 }
 
 type Options struct {
@@ -123,6 +125,10 @@ type Options struct {
 	// DrainTimeout is how long to wait for existing connections to complete
 	// during zero-downtime deployment drain. Default: 30s.
 	DrainTimeout time.Duration
+	// DBDriver is the active database driver (sqlite or postgres).
+	DBDriver string
+	// DBDSN is the platform database connection string passed to deployed apps.
+	DBDSN string
 }
 
 func New(opts Options) *Deploy {
@@ -174,6 +180,8 @@ func New(opts Options) *Deploy {
 		sm:               newStateMachine(),
 		DrainTimeout:     drainTimeout,
 		oldDeployments:   make(map[string][]string),
+		dbDriver:         opts.DBDriver,
+		dbDSN:            opts.DBDSN,
 	}
 	envKey, envKeyErr := parseEnvEncryptionKey(opts.EnvEncryptionKey)
 	d.envKey = envKey
@@ -1146,6 +1154,11 @@ func (d *Deploy) startApp(ctx context.Context, buildDir string, deploy *Deployme
 	}
 
 	cmd.Env = append(os.Environ(), fmt.Sprintf("PORT=%d", deploy.Port))
+
+	// Inject native DB connection (DB_PATH for SQLite, DATABASE_URL for Postgres).
+	if native := d.nativeDBEnv(); len(native) > 0 {
+		cmd.Env = append(cmd.Env, native...)
+	}
 
 	// Inject site env vars (runtime) into the running process. A fetch failure
 	// must not be silent: the app would boot without its secrets (F09).
