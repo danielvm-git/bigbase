@@ -1,6 +1,6 @@
 type: session-state
 context: infra
-active_flow: build_epic
+active_flow: null
 active_epic_id: e57
 active_story_id: e57s01
 active_story_status: planned
@@ -17,7 +17,7 @@ metrics:
   session_end: null
   cycle_minutes: 0
   epics_completed: 51
-  stories_completed: 156
+  stories_completed: 157
   bcps_per_hour: 0.6
 epic_cycle:
   step: 8
@@ -27,22 +27,22 @@ epic_cycle:
   completed_steps: [0, 1, 2, 3, 4, 5, 6, 7]
   note: "e57: Project Scoping — Backend (DB + Auth + Sites). 4 stories, 21 BCPs. Starting from e57s01 (Kernel Interface Hardening). Renamed from e52 in commit 68a832b1."
   fast_mode: false
-  story_complete: false
+  story_complete: true
 bug_cycle:
   current_step: 0
   completed_steps: []
   bug_file: null
 git:
   branch: e57s01-kernel-hardening
-  hash: 5dc200d5
-  worktree: /Users/danielvm/Developer/e57s01-kernel-hardening
+  hash: 0f756aeb
+  worktree: null
   ci_status: "success"
 handoff:
   last_step_completed: "release-branch"
   open_decisions:
     - "ADR 0005 accepted — deploy decomposition into Engine + Gateway + Orchestrator"
     - "Quick wins (Logger/DBer hoisting, migration extraction, stateMachine surfacing) queued before Engine extraction"
-  next_skill: release-branch
+  next_skill: survey-context
   summary: "e51 released (7 stories, 26 BCPs). CI green. Architecture deep-dive complete: ADR 0005 accepted for deploy component decomposition (Engine + Gateway + Orchestrator), informed by Appwrite/Supabase/Neon/PocketBase patterns and bigpowers CONVENTIONS. tech-stack.md updated with new deploy architecture vocabulary."
   context: "Landed e51 UI Design System. ADR 0005 defines the refactor plan for 1819-line deploy.go. Phase 1 (Logger/DBer hoisting) is 15-minute mechanical cleanup. e57 (was e52) active with e57s01 next. All planned epics renumbered to execution order (commit 68a832b1). BUG-001 (Astro SDK storedToken null) registered as open — shippable now. Architecture doc: specs/adr/0005-deploy-component-decomposition.md"
   fast_mode: false
