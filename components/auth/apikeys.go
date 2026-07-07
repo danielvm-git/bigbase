@@ -7,6 +7,7 @@ import (
 	"database/sql"
 	"encoding/hex"
 	"fmt"
+	"strings"
 	"time"
 )
 
@@ -29,7 +30,7 @@ type OrgAPIKeyCreated struct {
 
 // migrateAPIKeysTable ensures the org_api_keys table exists.
 func (a *Auth) migrateAPIKeysTable() error {
-	return a.db.Migrate(`CREATE TABLE IF NOT EXISTS org_api_keys (
+	if err := a.db.Migrate(`CREATE TABLE IF NOT EXISTS org_api_keys (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		org_id INTEGER NOT NULL,
 		key_hash TEXT NOT NULL UNIQUE,
@@ -37,7 +38,25 @@ func (a *Auth) migrateAPIKeysTable() error {
 		scopes TEXT NOT NULL DEFAULT '',
 		last_used_at TEXT,
 		created_at TEXT NOT NULL
-	)`)
+	)`); err != nil {
+		return err
+	}
+	return a.ensureSiteKeyColumns()
+}
+
+func (a *Auth) ensureSiteKeyColumns() error {
+	for _, stmt := range []string{
+		`ALTER TABLE org_api_keys ADD COLUMN site_id TEXT NULL`,
+		`ALTER TABLE org_api_keys ADD COLUMN revoked INTEGER NOT NULL DEFAULT 0`,
+	} {
+		if err := a.db.Migrate(stmt); err != nil {
+			if strings.Contains(strings.ToLower(err.Error()), "duplicate column") {
+				continue
+			}
+			return err
+		}
+	}
+	return nil
 }
 
 // CreateAPIKey generates a new API key for the org, stores its hash, and returns the raw key once.
@@ -146,6 +165,117 @@ func (a *Auth) ResolveAPIKey(rawKey string) (int64, error) {
 		`UPDATE org_api_keys SET last_used_at = ? WHERE id = ?`, now, keyID)
 
 	return orgID, nil
+}
+
+// SiteKeyCreated is the response for a new site-scoped deployment key.
+type SiteKeyCreated struct {
+	ID     int64  `json:"id"`
+	SiteID string `json:"site_id"`
+	Name   string `json:"name"`
+	Key    string `json:"key"`
+}
+
+// CreateSiteKey implements mcp.SiteKeyCreator — returns raw token once.
+func (a *Auth) CreateSiteKey(ctx context.Context, siteID, name string, scopes []string) (rawToken, keyID string, err error) {
+	created, err := a.createSiteKeyRecord(ctx, siteID, name, scopes)
+	if err != nil {
+		return "", "", err
+	}
+	return created.Key, fmt.Sprintf("%d", created.ID), nil
+}
+
+// createSiteKeyRecord generates a site-scoped deployment key (bb_dep_ prefix).
+func (a *Auth) createSiteKeyRecord(ctx context.Context, siteID, name string, scopes []string) (*SiteKeyCreated, error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	if siteID == "" {
+		return nil, fmt.Errorf("site_id is required")
+	}
+	if name == "" {
+		name = "ci-bot"
+	}
+
+	var exists int
+	if err := a.db.QueryRowContext(ctx, "SELECT 1 FROM sites WHERE id = ?", siteID).Scan(&exists); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, fmt.Errorf("site %q not found", siteID)
+		}
+		return nil, fmt.Errorf("validate site: %w", err)
+	}
+
+	raw, err := generateSiteKey()
+	if err != nil {
+		return nil, fmt.Errorf("generate site key: %w", err)
+	}
+
+	keyHash := hashAPIKey(raw)
+	scopesStr := joinScopes(scopes)
+	if scopesStr == "" {
+		scopesStr = "deploy"
+	}
+	now := time.Now().UTC().Format(time.RFC3339)
+
+	res, err := a.db.ExecContext(ctx,
+		`INSERT INTO org_api_keys (org_id, site_id, key_hash, name, scopes, created_at, revoked)
+		 VALUES (?, ?, ?, ?, ?, ?, 0)`,
+		0, siteID, keyHash, name, scopesStr, now)
+	if err != nil {
+		return nil, fmt.Errorf("insert site key: %w", err)
+	}
+
+	id, err := res.LastInsertId()
+	if err != nil {
+		return nil, fmt.Errorf("site key last insert id: %w", err)
+	}
+
+	a.logger.Info("site key created", "key_id", id, "site_id", siteID)
+
+	return &SiteKeyCreated{
+		ID:     id,
+		SiteID: siteID,
+		Name:   name,
+		Key:    raw,
+	}, nil
+}
+
+// ResolveSiteKey looks up the site_id for a bb_dep_ prefixed key.
+func (a *Auth) ResolveSiteKey(rawKey string) (string, error) {
+	keyHash := hashAPIKey(rawKey)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	var siteID sql.NullString
+	var keyID int64
+	err := a.db.QueryRowContext(ctx,
+		`SELECT id, site_id FROM org_api_keys WHERE key_hash = ? AND revoked = 0 AND site_id IS NOT NULL`,
+		keyHash,
+	).Scan(&keyID, &siteID)
+	if err == sql.ErrNoRows {
+		return "", fmt.Errorf("site key not found")
+	}
+	if err != nil {
+		return "", fmt.Errorf("resolve site key: %w", err)
+	}
+	if !siteID.Valid || siteID.String == "" {
+		return "", fmt.Errorf("site key not found")
+	}
+
+	now := time.Now().UTC().Format(time.RFC3339)
+	_, _ = a.db.ExecContext(context.Background(),
+		`UPDATE org_api_keys SET last_used_at = ? WHERE id = ?`, now, keyID)
+
+	return siteID.String, nil
+}
+
+// generateSiteKey creates a site-scoped key with bb_dep_ prefix.
+func generateSiteKey() (string, error) {
+	b := make([]byte, 32)
+	if _, err := rand.Read(b); err != nil {
+		return "", err
+	}
+	return "bb_dep_" + hex.EncodeToString(b), nil
 }
 
 // generateRawAPIKey creates a 32-byte hex-encoded random key prefixed with "bb_".

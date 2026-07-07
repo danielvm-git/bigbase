@@ -14,7 +14,7 @@ import (
 	"github.com/danielvm/bigbase/kernel"
 )
 
-func setupSitesWithHandler(t *testing.T) (*sites.Sites, http.Handler) {
+func setupSitesWithHandler(t *testing.T) (*sites.Sites, http.Handler, *db.DB) {
 	t.Helper()
 	logger := testLogger{}
 	k := kernel.New(logger)
@@ -31,11 +31,16 @@ func setupSitesWithHandler(t *testing.T) (*sites.Sites, http.Handler) {
 		t.Fatalf("kernel start: %v", err)
 	}
 	t.Cleanup(func() { _ = k.Stop() })
-	return s, s.Handler()
+	return s, s.Handler(), d
 }
 
-func createTestSite(t *testing.T, h http.Handler) string {
+func createTestSite(t *testing.T, h http.Handler, d *db.DB) string {
 	t.Helper()
+	_, err := d.Exec(`INSERT INTO git_repos (id, name, owner_id, private, default_branch, description, created_at)
+		VALUES ('repo-001', 'testrepo', 0, 1, 'main', '', datetime('now'))`)
+	if err != nil {
+		t.Fatalf("seed git repo: %v", err)
+	}
 	body := `{"name":"testsite","git_repo_id":"repo-001"}`
 	req := httptest.NewRequest(http.MethodPost, "/api/sites", strings.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
@@ -51,8 +56,8 @@ func createTestSite(t *testing.T, h http.Handler) string {
 
 func TestCustomDomain(t *testing.T) {
 	t.Run("register domain", func(t *testing.T) {
-		_, h := setupSitesWithHandler(t)
-		siteID := createTestSite(t, h)
+		_, h, d := setupSitesWithHandler(t)
+		siteID := createTestSite(t, h, d)
 
 		body := `{"domain":"example.com"}`
 		req := httptest.NewRequest(http.MethodPost,
@@ -78,8 +83,8 @@ func TestCustomDomain(t *testing.T) {
 	})
 
 	t.Run("list domains for site", func(t *testing.T) {
-		_, h := setupSitesWithHandler(t)
-		siteID := createTestSite(t, h)
+		_, h, d := setupSitesWithHandler(t)
+		siteID := createTestSite(t, h, d)
 
 		// Register two domains
 		for _, domain := range []string{"alpha.com", "beta.com"} {
@@ -110,8 +115,8 @@ func TestCustomDomain(t *testing.T) {
 	})
 
 	t.Run("verify endpoint returns unverified status for unknown dns", func(t *testing.T) {
-		_, h := setupSitesWithHandler(t)
-		siteID := createTestSite(t, h)
+		_, h, d := setupSitesWithHandler(t)
+		siteID := createTestSite(t, h, d)
 
 		// Register
 		body := `{"domain":"notexist.invalid"}`
@@ -142,8 +147,8 @@ func TestCustomDomain(t *testing.T) {
 	})
 
 	t.Run("register duplicate domain returns 409", func(t *testing.T) {
-		_, h := setupSitesWithHandler(t)
-		siteID := createTestSite(t, h)
+		_, h, d := setupSitesWithHandler(t)
+		siteID := createTestSite(t, h, d)
 
 		body := `{"domain":"dup.com"}`
 		for i := 0; i < 2; i++ {
@@ -162,8 +167,8 @@ func TestCustomDomain(t *testing.T) {
 	})
 
 	t.Run("register domain with missing domain field returns 400", func(t *testing.T) {
-		_, h := setupSitesWithHandler(t)
-		siteID := createTestSite(t, h)
+		_, h, d := setupSitesWithHandler(t)
+		siteID := createTestSite(t, h, d)
 
 		body := `{}`
 		req := httptest.NewRequest(http.MethodPost,
@@ -178,8 +183,8 @@ func TestCustomDomain(t *testing.T) {
 	})
 
 	t.Run("register malformed domain returns 400", func(t *testing.T) {
-		_, h := setupSitesWithHandler(t)
-		siteID := createTestSite(t, h)
+		_, h, d := setupSitesWithHandler(t)
+		siteID := createTestSite(t, h, d)
 
 		for _, bad := range []string{"not a domain", "no-tld", "http://example.com", "exa_mple.com"} {
 			body := `{"domain":"` + bad + `"}`
@@ -195,7 +200,7 @@ func TestCustomDomain(t *testing.T) {
 	})
 
 	t.Run("register domain for unknown site returns 404", func(t *testing.T) {
-		_, h := setupSitesWithHandler(t)
+		_, h, _ := setupSitesWithHandler(t)
 
 		body := `{"domain":"orphan.com"}`
 		req := httptest.NewRequest(http.MethodPost,
@@ -210,8 +215,8 @@ func TestCustomDomain(t *testing.T) {
 	})
 
 	t.Run("delete domain removes it", func(t *testing.T) {
-		_, h := setupSitesWithHandler(t)
-		siteID := createTestSite(t, h)
+		_, h, d := setupSitesWithHandler(t)
+		siteID := createTestSite(t, h, d)
 
 		body := `{"domain":"gone.com"}`
 		req := httptest.NewRequest(http.MethodPost,
@@ -251,8 +256,8 @@ func TestCustomDomain(t *testing.T) {
 	})
 
 	t.Run("GET on verify is rejected (POST only)", func(t *testing.T) {
-		_, h := setupSitesWithHandler(t)
-		siteID := createTestSite(t, h)
+		_, h, d := setupSitesWithHandler(t)
+		siteID := createTestSite(t, h, d)
 
 		body := `{"domain":"getverify.com"}`
 		req := httptest.NewRequest(http.MethodPost,

@@ -515,7 +515,7 @@ epics:
   wsjf: 8.0
   mode: capsule
   tier: 1
-  status: planned
+  status: done
   depends_on:
   - e57
   note: |
@@ -524,3 +524,10 @@ epics:
     Ships in Wave 2 alongside e59. All stories independently useful.
   capsule_dir: epics/e67-mcp-provisioning-tools
   file: epics/e67-mcp-provisioning-tools/epic.yaml
+- id: e68
+  title: "Deploy — Native Database Connection String Env Var"
+  wsjf: 10.5
+  file: epics/e68-native-db-connection.yaml
+  mode: flat
+  tier: 2
+  status: planned

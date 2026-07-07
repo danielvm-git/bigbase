@@ -24,6 +24,21 @@ type DeployTrigger interface {
 	Trigger(ctx context.Context, repoID, branch, siteName, siteID string, passthroughPaths []string, appType string, manifestPath string) (*deploy.Deployment, error)
 }
 
+// GitCreator registers a git repository with BigBase.
+type GitCreator interface {
+	CreateRepo(ctx context.Context, name, description string, private bool) (id, nameOut string, err error)
+}
+
+// SiteCreator provisions a new site on BigBase.
+type SiteCreator interface {
+	CreateSite(ctx context.Context, gitRepoID, name, branch string) (id, nameOut string, err error)
+}
+
+// SiteKeyCreator provisions site-scoped deployment credentials.
+type SiteKeyCreator interface {
+	CreateSiteKey(ctx context.Context, siteID, name string, scopes []string) (rawToken, keyID string, err error)
+}
+
 // Options configure the MCP component.
 type Options struct {
 	// Logger is the structured logger. If nil, a no-op logger is used.
@@ -39,6 +54,12 @@ type Options struct {
 	// Deployer triggers deployments. Set to the deploy component for the
 	// deploy_site tool to work as a real trigger instead of a doc-only tool.
 	Deployer DeployTrigger
+	// GitCreator registers repos for the create_repo tool.
+	GitCreator GitCreator
+	// SiteCreator provisions sites for the create_site tool.
+	SiteCreator SiteCreator
+	// SiteKeyCreator provisions CI credentials for provision_ci_credentials.
+	SiteKeyCreator SiteKeyCreator
 }
 
 // DBer is the database interface for deploy tools.
@@ -50,12 +71,15 @@ type DBer interface {
 
 // Component is the ECC component for the MCP server.
 type Component struct {
-	logger    kernel.Logger
-	port      int
-	transport string
+	logger            kernel.Logger
+	port              int
+	transport         string
 	enabled           bool
 	db                DBer
 	deployer          DeployTrigger
+	gitCreator        GitCreator
+	siteCreator       SiteCreator
+	siteKeyCreator    SiteKeyCreator
 	streamableHandler http.Handler // created once, reused across requests for session persistence
 }
 
@@ -74,12 +98,15 @@ func New(opts Options) *Component {
 		transport = "http"
 	}
 	return &Component{
-		logger:    logger,
-		port:      port,
-		transport: transport,
-		enabled:   opts.Enabled,
-		db:        opts.DB,
-		deployer:  opts.Deployer,
+		logger:         logger,
+		port:           port,
+		transport:      transport,
+		enabled:        opts.Enabled,
+		db:             opts.DB,
+		deployer:       opts.Deployer,
+		gitCreator:     opts.GitCreator,
+		siteCreator:    opts.SiteCreator,
+		siteKeyCreator: opts.SiteKeyCreator,
 	}
 }
 
@@ -437,7 +464,186 @@ Port is set via ` + "`PORT`" + ` env var. Database is SQLite by default.
 		return textResult(guide), nil, nil
 	})
 
+	ciTemplates, err := loadCITemplates()
+	if err != nil {
+		return nil, fmt.Errorf("load ci templates: %w", err)
+	}
+
+	// registerGetCITemplate
+	mcpsdk.AddTool(srv, &mcpsdk.Tool{
+		Name:        "get_ci_template",
+		Description: "Return canonical GitHub Actions deploy workflow YAML for BigBase. Omit app_type to list available templates.",
+	}, func(ctx context.Context, req *mcpsdk.CallToolRequest, _ any) (*mcpsdk.CallToolResult, any, error) {
+		var args map[string]any
+		if req.Params.Arguments != nil {
+			_ = json.Unmarshal(req.Params.Arguments, &args)
+		}
+		appType, _ := args["app_type"].(string)
+		if appType == "" {
+			return textResult(formatCITemplateCatalog(ciTemplates)), nil, nil
+		}
+		for _, t := range ciTemplates {
+			for _, at := range t.AppTypes {
+				if at == appType {
+					c.logger.Info("mcp tool", "tool", "get_ci_template", "app_type", appType)
+					return textResult(t.Content), nil, nil
+				}
+			}
+		}
+		types := collectAppTypes(ciTemplates)
+		return textResult(fmt.Sprintf("No template for %q. Available types: %s", appType, strings.Join(types, ", "))), nil, nil
+	})
+
+	// registerCreateRepo
+	mcpsdk.AddTool(srv, &mcpsdk.Tool{
+		Name:        "create_repo",
+		Description: "Register a git repository with BigBase. Returns repo_id and name for subsequent site creation.",
+	}, func(ctx context.Context, req *mcpsdk.CallToolRequest, _ any) (*mcpsdk.CallToolResult, any, error) {
+		if c.gitCreator == nil {
+			return textResult("Git tools require a Git component. Start BigBase with the Git component enabled."), nil, nil
+		}
+		var args map[string]any
+		if req.Params.Arguments != nil {
+			_ = json.Unmarshal(req.Params.Arguments, &args)
+		}
+		name, _ := args["name"].(string)
+		if name == "" {
+			return textResult("name is required"), nil, nil
+		}
+		description, _ := args["description"].(string)
+		private := true
+		if v, ok := args["private"].(bool); ok {
+			private = v
+		}
+		id, repoName, err := c.gitCreator.CreateRepo(ctx, name, description, private)
+		if err != nil {
+			if strings.Contains(err.Error(), "already exists") {
+				return textResult(fmt.Sprintf("A repo named %q already exists", name)), nil, nil
+			}
+			return textResult(fmt.Sprintf("Failed to create repo: %v", err)), nil, nil
+		}
+		c.logger.Info("mcp tool", "tool", "create_repo", "name", name, "repo_id", id)
+		return textResult(formatJSON(map[string]string{"repo_id": id, "name": repoName})), nil, nil
+	})
+
+	// registerCreateSite
+	mcpsdk.AddTool(srv, &mcpsdk.Tool{
+		Name:        "create_site",
+		Description: "Provision a site for a git repo. Returns site_id and name. Use deploy_site after provisioning to get the live URL.",
+	}, func(ctx context.Context, req *mcpsdk.CallToolRequest, _ any) (*mcpsdk.CallToolResult, any, error) {
+		if c.siteCreator == nil {
+			return textResult("Site tools require a Sites component."), nil, nil
+		}
+		var args map[string]any
+		if req.Params.Arguments != nil {
+			_ = json.Unmarshal(req.Params.Arguments, &args)
+		}
+		gitRepoID, _ := args["git_repo_id"].(string)
+		if gitRepoID == "" {
+			return textResult("git_repo_id is required. Use list_repos to find available repositories."), nil, nil
+		}
+		name, _ := args["name"].(string)
+		branch, _ := args["branch"].(string)
+		if branch == "" {
+			branch = "main"
+		}
+		autoDeploy := boolArg(args, "auto_deploy")
+
+		siteID, siteName, err := c.siteCreator.CreateSite(ctx, gitRepoID, name, branch)
+		if err != nil {
+			if strings.Contains(err.Error(), "not found") {
+				return textResult(fmt.Sprintf("Repository %q not found. Use list_repos to see available repositories.", gitRepoID)), nil, nil
+			}
+			return textResult(fmt.Sprintf("Failed to create site: %v", err)), nil, nil
+		}
+		c.logger.Info("mcp tool", "tool", "create_site", "name", siteName, "repo_id", gitRepoID, "site_id", siteID)
+
+		result := map[string]string{"site_id": siteID, "name": siteName}
+		if autoDeploy && c.deployer != nil {
+			dep, err := c.deployer.Trigger(ctx, gitRepoID, branch, siteName, siteID, nil, "", "")
+			if err != nil {
+				return textResult(fmt.Sprintf("Site created (site_id=%s) but auto_deploy failed: %v", siteID, err)), nil, nil
+			}
+			result["deployment_id"] = dep.ID
+			result["url"] = dep.URL
+		}
+		return textResult(formatJSON(result)), nil, nil
+	})
+
+	// registerProvisionCICredentials
+	mcpsdk.AddTool(srv, &mcpsdk.Tool{
+		Name:        "provision_ci_credentials",
+		Description: "Generate a site-scoped deployment token (bb_dep_*) for CI/CD. Store via gh secret set as BIGBASE_DEPLOY_TOKEN.",
+	}, func(ctx context.Context, req *mcpsdk.CallToolRequest, _ any) (*mcpsdk.CallToolResult, any, error) {
+		if c.siteKeyCreator == nil {
+			return textResult("Credential provisioning requires an Auth component."), nil, nil
+		}
+		var args map[string]any
+		if req.Params.Arguments != nil {
+			_ = json.Unmarshal(req.Params.Arguments, &args)
+		}
+		siteID, _ := args["site_id"].(string)
+		if siteID == "" {
+			return textResult("site_id is required. Use list_sites or create_site to get one."), nil, nil
+		}
+		name, _ := args["name"].(string)
+		token, keyID, err := c.siteKeyCreator.CreateSiteKey(ctx, siteID, name, []string{"deploy"})
+		if err != nil {
+			if strings.Contains(err.Error(), "not found") {
+				return textResult(fmt.Sprintf("Site %q not found.", siteID)), nil, nil
+			}
+			return textResult(fmt.Sprintf("Failed to generate key: %v", err)), nil, nil
+		}
+		c.logger.Info("mcp tool", "tool", "provision_ci_credentials", "site_id", siteID)
+		return textResult(formatJSON(map[string]string{
+			"token":   token,
+			"key_id":  keyID,
+			"site_id": siteID,
+		})), nil, nil
+	})
+
 	return srv, nil
+}
+
+func formatJSON(v any) string {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return fmt.Sprintf("%v", v)
+	}
+	return string(b)
+}
+
+func boolArg(args map[string]any, key string) bool {
+	if args == nil {
+		return false
+	}
+	v, ok := args[key]
+	if !ok {
+		return false
+	}
+	switch t := v.(type) {
+	case bool:
+		return t
+	case string:
+		return t == "true" || t == "1"
+	default:
+		return false
+	}
+}
+
+func collectAppTypes(templates []ciTemplateEntry) []string {
+	seen := make(map[string]struct{})
+	var types []string
+	for _, t := range templates {
+		for _, at := range t.AppTypes {
+			if _, ok := seen[at]; ok {
+				continue
+			}
+			seen[at] = struct{}{}
+			types = append(types, at)
+		}
+	}
+	return types
 }
 
 func textResult(text string) *mcpsdk.CallToolResult {

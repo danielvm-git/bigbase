@@ -47,12 +47,11 @@ epics:
   e43: done
   e44: done
   e45: done
-  e46: done
+  e46: in_progress
   e47: done
   e48: done
   e49: done
   e50: done
-  e51: done
   e53: done
   e54: done
   e55: done
@@ -67,6 +66,8 @@ epics:
   e64: planned
   e65: planned
   e66: planned
+  e67: done
+  e68: planned
 stories:
   e01s01: done
   e02s01: done
@@ -211,17 +212,6 @@ stories:
   e50s01: done
   e50s02: done
   e50s03: done
-  e51s01: done
-  e51s02: done
-  e51s03: done
-  e51s04: done
-  e51s05: done
-  e51s06: done
-  e51s07: done
-  e57s01: done
-  e57s02: planned
-  e57s03: planned
-  e57s04: planned
   e53s01: done
   e53s02: done
   e53s03: done
@@ -236,6 +226,11 @@ stories:
   e55s04: done
   e56s01: planned
   e56s02: planned
+  e57s01: planned
+  e57s02: planned
+  e57s03: planned
+  e57s04: planned
+  e57s05: planned
   e58s01: planned
   e59s01: planned
   e59s02: planned
@@ -255,3 +250,8 @@ stories:
   e66s01: pending
   e66s02: pending
   e66s03: pending
+  e67s01: done
+  e67s02: done
+  e67s03: done
+  e67s04: done
+  e68s01: planned

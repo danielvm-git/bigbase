@@ -169,4 +169,24 @@ Scenario: create_repo returns "not configured" without Git component
 
 - Importing from a remote GitHub URL (currently only creates an empty bare repo). That's a separate `git_import` tool for a future story.
 - Setting SSH deploy keys.
-- Multi-tenant owner_id mapping (e57 concern).
+- Multi-tenant owner_id mapping (e57 concern — wire project_id after e57s04 lands).
+
+## 17. Requirements
+
+#### ADDED: MCP `create_repo` tool registers a git repository
+Agents call `create_repo(name, description?, private?)` and receive `{ repo_id, name }`. Uses a new `GitCreator` interface wired from `*git.Git` in `main.go`. Nil `GitCreator` returns a clear "not configured" message.
+
+#### ADDED: `Git.CreateRepo` exported method
+Extract bare-repo creation + `git_repos` INSERT from the HTTP handler into `CreateRepo(ctx, name, description string, private bool) (id, name string, err error)` so MCP and HTTP share one code path.
+
+## 18. Risks
+
+- **e57 blocker:** Project scoping (e57) must land before implementation — `git_repos` and auth context may gain `project_id` columns; revisit wiring after e57s04.
+- **Duplicate repo names:** UNIQUE constraint on `git_repos.name` — tool must surface "already exists" clearly (matches HTTP 409 today).
+
+## 19. Verification Script
+
+1. `go test ./components/mcp/ -run TestCreateRepo -v -count=1` — MCP tool unit tests pass
+2. `go test ./components/git/ -run TestGitCreateRepo -v -count=1` — HTTP path still works after refactor
+3. `go test ./... -count=1` — full suite green
+4. Confirm `main.go` wires `GitCreator: g` in `mcp.Options`

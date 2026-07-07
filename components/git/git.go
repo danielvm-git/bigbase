@@ -147,54 +147,65 @@ func (g *Git) createRepo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	id, err := generateID()
+	id, name, err := g.CreateRepo(r.Context(), req.Name, req.Description, req.Private)
 	if err != nil {
-		g.logger.Error("generate id", "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
-		return
-	}
-
-	repoDir := filepath.Join(g.dir, id+".git")
-	if err := os.MkdirAll(repoDir, 0755); err != nil {
-		g.logger.Error("create repo dir", "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
-		return
-	}
-
-	if _, err := gogit.PlainInit(repoDir, true); err != nil {
-		_ = os.RemoveAll(repoDir)
-		g.logger.Error("init bare repo", "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
-		return
-	}
-
-	now := time.Now().UTC().Format(time.RFC3339)
-	private := 0
-	if req.Private {
-		private = 1
-	}
-	if _, err := g.db.ExecContext(r.Context(),
-		"INSERT INTO git_repos (id, name, owner_id, private, default_branch, description, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
-		id, req.Name, 0, private, "main", req.Description, now); err != nil {
-		_ = os.RemoveAll(repoDir)
-		if strings.Contains(err.Error(), "UNIQUE constraint") {
+		if strings.Contains(err.Error(), "already exists") {
 			writeJSON(w, http.StatusConflict, map[string]string{"error": "repo name already exists"})
 			return
 		}
-		g.logger.Error("insert repo", "error", err)
+		g.logger.Error("create repo", "error", err)
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 
 	writeJSON(w, http.StatusCreated, Repo{
 		ID:            id,
-		Name:          req.Name,
+		Name:          name,
 		OwnerID:       0,
 		Private:       req.Private,
 		DefaultBranch: "main",
 		Description:   req.Description,
-		CreatedAt:     now,
+		CreatedAt:     time.Now().UTC().Format(time.RFC3339),
 	})
+}
+
+// CreateRepo registers a bare git repository and inserts a git_repos row.
+func (g *Git) CreateRepo(ctx context.Context, name, description string, private bool) (id, repoName string, err error) {
+	if name == "" {
+		return "", "", fmt.Errorf("name is required")
+	}
+
+	id, err = generateID()
+	if err != nil {
+		return "", "", fmt.Errorf("generate id: %w", err)
+	}
+
+	repoDir := filepath.Join(g.dir, id+".git")
+	if err := os.MkdirAll(repoDir, 0755); err != nil {
+		return "", "", fmt.Errorf("create repo dir: %w", err)
+	}
+
+	if _, err := gogit.PlainInit(repoDir, true); err != nil {
+		_ = os.RemoveAll(repoDir)
+		return "", "", fmt.Errorf("init bare repo: %w", err)
+	}
+
+	now := time.Now().UTC().Format(time.RFC3339)
+	privateInt := 0
+	if private {
+		privateInt = 1
+	}
+	if _, err := g.db.ExecContext(ctx,
+		"INSERT INTO git_repos (id, name, owner_id, private, default_branch, description, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
+		id, name, 0, privateInt, "main", description, now); err != nil {
+		_ = os.RemoveAll(repoDir)
+		if strings.Contains(err.Error(), "UNIQUE constraint") {
+			return "", "", fmt.Errorf("repo name already exists")
+		}
+		return "", "", fmt.Errorf("insert repo: %w", err)
+	}
+
+	return id, name, nil
 }
 
 func (g *Git) listRepos(w http.ResponseWriter, r *http.Request) {

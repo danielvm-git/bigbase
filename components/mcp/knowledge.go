@@ -16,6 +16,9 @@ var frameworksJSON []byte
 //go:embed knowledge/examples/code-examples.json
 var codeExamplesJSON []byte
 
+//go:embed knowledge/ci-templates.json
+var ciTemplatesJSON []byte
+
 // servicesData mirrors knowledge/services.json structure.
 type servicesData struct {
 	Services []serviceEntry `json:"services"`
@@ -54,6 +57,18 @@ type exampleEntry struct {
 	Code      string `json:"code"`
 }
 
+type ciTemplatesData struct {
+	Templates []ciTemplateEntry `json:"templates"`
+}
+
+type ciTemplateEntry struct {
+	ID          string   `json:"id"`
+	Name        string   `json:"name"`
+	AppTypes    []string `json:"app_types"`
+	Description string   `json:"description"`
+	Content     string   `json:"content"`
+}
+
 func loadServices() ([]serviceEntry, error) {
 	var data servicesData
 	if err := json.Unmarshal(servicesJSON, &data); err != nil {
@@ -76,6 +91,31 @@ func loadCodeExamples() ([]exampleEntry, error) {
 		return nil, err
 	}
 	return data.Examples, nil
+}
+
+func loadCITemplates() ([]ciTemplateEntry, error) {
+	var data ciTemplatesData
+	if err := json.Unmarshal(ciTemplatesJSON, &data); err != nil {
+		return nil, err
+	}
+	return data.Templates, nil
+}
+
+func formatCITemplateCatalog(templates []ciTemplateEntry) string {
+	var b strings.Builder
+	b.WriteString("# CI/CD Templates\n\n")
+	seen := make(map[string]struct{})
+	for _, t := range templates {
+		for _, appType := range t.AppTypes {
+			if _, ok := seen[appType]; ok {
+				continue
+			}
+			seen[appType] = struct{}{}
+			fmt.Fprintf(&b, "- **%s** — %s\n", appType, t.Description)
+		}
+	}
+	b.WriteString("\n→ Use get_ci_template with `app_type` to retrieve YAML.\n")
+	return b.String()
 }
 
 func formatServicesList(services []serviceEntry) string {

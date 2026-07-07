@@ -536,6 +536,15 @@ func (d *Deploy) HandleCreate(w http.ResponseWriter, r *http.Request) {
 		req.Branch = "main"
 	}
 
+	if siteID, ok := kernel.SiteIDFromContext(r.Context()); ok && siteID != "" {
+		if req.SiteID != "" && req.SiteID != siteID {
+			d.logger.Warn("deploy rejected: site key mismatch", "ctx_site_id", siteID, "req_site_id", req.SiteID)
+			writeJSON(w, http.StatusForbidden, map[string]string{"error": "site key not authorized for this site"})
+			return
+		}
+		req.SiteID = siteID
+	}
+
 	deploy, err := d.Trigger(r.Context(), req.RepoID, req.Branch, req.SiteName, req.SiteID, req.PassthroughPaths, req.AppType, req.ManifestPath)
 	if err != nil {
 		switch err.Error() {

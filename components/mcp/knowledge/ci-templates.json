@@ -1,0 +1,32 @@
+{
+  "templates": [
+    {
+      "id": "github-actions-deploy-static",
+      "name": "GitHub Actions Deploy (static)",
+      "app_types": ["static"],
+      "description": "Deploy a static site to BigBase on every push to main",
+      "content": "name: Deploy to BigBase\non:\n  push:\n    branches: [main]\n\njobs:\n  deploy:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4\n\n      - name: Deploy to BigBase\n        run: |\n          curl -sfX POST ${{ secrets.BIGBASE_SERVER }}/api/deploy \\\n            -H \"Authorization: Bearer ${{ secrets.BIGBASE_DEPLOY_TOKEN }}\" \\\n            -H \"Content-Type: application/json\" \\\n            -d '{\n              \"site_id\": \"${{ secrets.BIGBASE_SITE_ID }}\",\n              \"branch\": \"main\",\n              \"app_type\": \"static\"\n            }'\n"
+    },
+    {
+      "id": "github-actions-deploy-node",
+      "name": "GitHub Actions Deploy (node)",
+      "app_types": ["node"],
+      "description": "Deploy a Node.js app to BigBase on every push to main",
+      "content": "name: Deploy to BigBase\non:\n  push:\n    branches: [main]\n\njobs:\n  deploy:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4\n\n      - name: Deploy to BigBase\n        run: |\n          curl -sfX POST ${{ secrets.BIGBASE_SERVER }}/api/deploy \\\n            -H \"Authorization: Bearer ${{ secrets.BIGBASE_DEPLOY_TOKEN }}\" \\\n            -H \"Content-Type: application/json\" \\\n            -d '{\n              \"site_id\": \"${{ secrets.BIGBASE_SITE_ID }}\",\n              \"branch\": \"main\",\n              \"app_type\": \"node\"\n            }'\n"
+    },
+    {
+      "id": "github-actions-deploy-go",
+      "name": "GitHub Actions Deploy (go)",
+      "app_types": ["go"],
+      "description": "Deploy a Go app to BigBase on every push to main",
+      "content": "name: Deploy to BigBase\non:\n  push:\n    branches: [main]\n\njobs:\n  deploy:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4\n\n      - name: Deploy to BigBase\n        run: |\n          curl -sfX POST ${{ secrets.BIGBASE_SERVER }}/api/deploy \\\n            -H \"Authorization: Bearer ${{ secrets.BIGBASE_DEPLOY_TOKEN }}\" \\\n            -H \"Content-Type: application/json\" \\\n            -d '{\n              \"site_id\": \"${{ secrets.BIGBASE_SITE_ID }}\",\n              \"branch\": \"main\",\n              \"app_type\": \"go\"\n            }'\n"
+    },
+    {
+      "id": "github-actions-deploy-python",
+      "name": "GitHub Actions Deploy (python)",
+      "app_types": ["python"],
+      "description": "Deploy a Python app to BigBase on every push to main",
+      "content": "name: Deploy to BigBase\non:\n  push:\n    branches: [main]\n\njobs:\n  deploy:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4\n\n      - name: Deploy to BigBase\n        run: |\n          curl -sfX POST ${{ secrets.BIGBASE_SERVER }}/api/deploy \\\n            -H \"Authorization: Bearer ${{ secrets.BIGBASE_DEPLOY_TOKEN }}\" \\\n            -H \"Content-Type: application/json\" \\\n            -d '{\n              \"site_id\": \"${{ secrets.BIGBASE_SITE_ID }}\",\n              \"branch\": \"main\",\n              \"app_type\": \"python\"\n            }'\n"
+    }
+  ]
+}
