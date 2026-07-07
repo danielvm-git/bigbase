@@ -275,9 +275,12 @@ func (s *Sites) listSites(w http.ResponseWriter, r *http.Request) {
 		if site.FullName != "" {
 			site.GitHubConnected = strings.Contains(site.FullName, "/")
 		}
-		dep, _ := s.latestDeployment(ctx, site.GitRepoID)
-		site.LatestDeployment = dep
 		sites = append(sites, site)
+	}
+
+	latestByRepo := s.latestDeploymentsByRepo(ctx)
+	for i := range sites {
+		sites[i].LatestDeployment = latestByRepo[sites[i].GitRepoID]
 	}
 
 	if len(sites) == 0 {
@@ -301,16 +304,45 @@ func (s *Sites) listSitesFromRepos(ctx context.Context) []Site {
 		if err := rows.Scan(&id, &name, &branch); err != nil {
 			continue
 		}
-		site := Site{
+		out = append(out, Site{
 			ID:               id,
 			Name:             name,
 			FullName:         name,
 			GitRepoID:        id,
 			ProductionBranch: branch,
 			RootPath:         "./",
+		})
+	}
+	latestByRepo := s.latestDeploymentsByRepo(ctx)
+	for i := range out {
+		out[i].LatestDeployment = latestByRepo[out[i].GitRepoID]
+	}
+	return out
+}
+
+func (s *Sites) latestDeploymentsByRepo(ctx context.Context) map[string]*Deployment {
+	rows, err := s.db.QueryContext(ctx, `
+		SELECT d.id, d.repo_id, d.branch, d.commit_sha, d.status, d.url, d.port, d.app_type, d.created_at
+		FROM deployments d
+		INNER JOIN (
+			SELECT repo_id, MAX(created_at) AS latest_at
+			FROM deployments
+			GROUP BY repo_id
+		) latest ON d.repo_id = latest.repo_id AND d.created_at = latest.latest_at`)
+	if err != nil {
+		return map[string]*Deployment{}
+	}
+	defer func() { _ = rows.Close() }()
+
+	out := make(map[string]*Deployment)
+	for rows.Next() {
+		var d Deployment
+		var appType string
+		if err := rows.Scan(&d.ID, &d.RepoID, &d.Branch, &d.CommitSHA, &d.Status, &d.URL, &d.Port, &appType, &d.CreatedAt); err != nil {
+			continue
 		}
-		site.LatestDeployment, _ = s.latestDeployment(ctx, id)
-		out = append(out, site)
+		d.AppType = appType
+		out[d.RepoID] = &d
 	}
 	return out
 }
