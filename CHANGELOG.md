@@ -1,3 +1,10 @@
+## [2.66.1](https://github.com/danielvm-git/bigbase/compare/v2.66.0...v2.66.1) (2026-07-07)
+
+
+### Bug Fixes
+
+* **auth:** prevent accidental JSON serialization of site key raw token ([25b4b29](https://github.com/danielvm-git/bigbase/commit/25b4b2950d8d4c84437e4491036d2505a550fb1c))
+
 # [2.66.0](https://github.com/danielvm-git/bigbase/compare/v2.65.0...v2.66.0) (2026-07-07)
 
 
