@@ -14,7 +14,7 @@ import (
 // PostgresOptions configures the PostgresDB driver.
 type PostgresOptions struct {
 	DSN    string
-	Logger Logger
+	Logger kernel.Logger
 }
 
 // PostgresDB is a PostgreSQL driver that implements kernel.DBer using
@@ -23,7 +23,7 @@ type PostgresOptions struct {
 // sql.Result) is preserved across the codebase.
 type PostgresDB struct {
 	dsn    string
-	logger Logger
+	logger kernel.Logger
 	pool   *pgxpool.Pool
 	sqlDB  *sql.DB
 }

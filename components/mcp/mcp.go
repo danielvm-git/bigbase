@@ -4,8 +4,8 @@
 package mcp
 
 import (
-	"context"
 	"database/sql"
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -27,7 +27,7 @@ type DeployTrigger interface {
 // Options configure the MCP component.
 type Options struct {
 	// Logger is the structured logger. If nil, a no-op logger is used.
-	Logger Logger
+	Logger kernel.Logger
 	// Port is the HTTP port for the MCP server (default: 3900).
 	Port int
 	// Transport is "stdio" or "http" (default: "http").
@@ -45,11 +45,12 @@ type Options struct {
 type DBer interface {
 	QueryRowContext(ctx context.Context, query string, args ...any) *sql.Row
 	QueryContext(ctx context.Context, query string, args ...any) (*sql.Rows, error)
+	ExecContext(ctx context.Context, query string, args ...any) (sql.Result, error)
 }
 
 // Component is the ECC component for the MCP server.
 type Component struct {
-	logger    Logger
+	logger    kernel.Logger
 	port      int
 	transport string
 	enabled           bool
@@ -489,13 +490,6 @@ func (c *Component) Handler() http.Handler {
 	return mux
 }
 
-// Logger is the subset of slog used by this component.
-type Logger interface {
-	Info(msg string, args ...any)
-	Warn(msg string, args ...any)
-	Error(msg string, args ...any)
-	Debug(msg string, args ...any)
-}
 
 type noopLogger struct{}
 

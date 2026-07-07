@@ -9,7 +9,6 @@ import (
 	"crypto/hmac"
 	"crypto/rand"
 	"crypto/sha256"
-	"database/sql"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -26,13 +25,6 @@ const (
 	deliveryTimeout  = 10 * time.Second
 )
 
-// Logger is the subset of slog used by this component.
-type Logger interface {
-	Info(msg string, args ...any)
-	Warn(msg string, args ...any)
-	Error(msg string, args ...any)
-	Debug(msg string, args ...any)
-}
 
 type noopLogger struct{}
 
@@ -42,23 +34,18 @@ func (noopLogger) Error(msg string, args ...any) {}
 func (noopLogger) Debug(msg string, args ...any) {}
 
 // DBer is the database interface required by this component.
-type DBer interface {
-	ExecContext(ctx context.Context, query string, args ...any) (sql.Result, error)
-	QueryContext(ctx context.Context, query string, args ...any) (*sql.Rows, error)
-	QueryRowContext(ctx context.Context, query string, args ...any) *sql.Row
-	Migrate(migration string) error
-}
+type DBer = kernel.DBer
 
 // Options configure the webhooks component.
 type Options struct {
 	DB     DBer
-	Logger Logger
+	Logger kernel.Logger
 }
 
 // Component is the ECC component for outbound webhooks.
 type Component struct {
 	db     DBer
-	logger Logger
+	logger kernel.Logger
 	client *http.Client
 }
 

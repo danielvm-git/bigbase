@@ -22,12 +22,6 @@ import (
 
 const version = "0.1.0"
 
-type Logger interface {
-	Info(msg string, args ...any)
-	Warn(msg string, args ...any)
-	Error(msg string, args ...any)
-	Debug(msg string, args ...any)
-}
 
 type noopLogger struct{}
 
@@ -41,7 +35,7 @@ type DBer = kernel.DBer
 
 type GitHub struct {
 	db             DBer
-	logger         Logger
+	logger kernel.Logger
 	gitDir         string
 	appID          string
 	appSlug        string
@@ -53,7 +47,7 @@ type GitHub struct {
 
 type Options struct {
 	DB             DBer
-	Logger         Logger
+	Logger kernel.Logger
 	GitDir         string
 	AppID          string
 	AppSlug        string

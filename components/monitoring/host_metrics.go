@@ -1,6 +1,7 @@
 package monitoring
 
 import (
+	"github.com/danielvm/bigbase/kernel"
 	"time"
 
 	gocpu "github.com/shirou/gopsutil/v3/cpu"
@@ -24,11 +25,11 @@ type HostMetrics struct {
 // collectHostMetrics gathers a single snapshot of host metrics.
 // cpuInterval controls how long to block for CPU sampling; pass 0 for a
 // non-blocking estimate (compares to the previous call stored internally by gopsutil).
-func collectHostMetrics(logger Logger) HostMetrics {
+func collectHostMetrics(logger kernel.Logger) HostMetrics {
 	return collectHostMetricsWithInterval(logger, time.Second)
 }
 
-func collectHostMetricsWithInterval(logger Logger, cpuInterval time.Duration) HostMetrics {
+func collectHostMetricsWithInterval(logger kernel.Logger, cpuInterval time.Duration) HostMetrics {
 	h := HostMetrics{CollectedAt: time.Now().UTC().Format(time.RFC3339)}
 
 	// CPU — blocking sample for cpuInterval, aggregate across all cores.
@@ -67,6 +68,6 @@ func collectHostMetricsWithInterval(logger Logger, cpuInterval time.Duration) Ho
 
 // collectHostMetricsNonBlocking gathers host metrics without a CPU blocking interval.
 // It returns quickly but CPU% may be 0 on the first call.
-func collectHostMetricsNonBlocking(logger Logger) HostMetrics {
+func collectHostMetricsNonBlocking(logger kernel.Logger) HostMetrics {
 	return collectHostMetricsWithInterval(logger, 0)
 }

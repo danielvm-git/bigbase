@@ -22,12 +22,6 @@ import (
 
 const version = "0.1.0"
 
-type Logger interface {
-	Info(msg string, args ...any)
-	Warn(msg string, args ...any)
-	Error(msg string, args ...any)
-	Debug(msg string, args ...any)
-}
 
 type noopLogger struct{}
 
@@ -75,7 +69,7 @@ type ActivateDomainFunc func(ctx context.Context, siteID, domain string) error
 
 type Sites struct {
 	db                DBer
-	logger            Logger
+	logger            kernel.Logger
 	gitDir            string
 	triggerDeploy     DeployTrigger
 	deleteSiteCleanup DeleteSiteCleanupFunc
@@ -88,7 +82,7 @@ type Sites struct {
 
 type Options struct {
 	DB                DBer
-	Logger            Logger
+	Logger kernel.Logger
 	GitDir            string
 	TriggerDeploy     DeployTrigger
 	DeleteSiteCleanup DeleteSiteCleanupFunc

@@ -1,0 +1,43 @@
+story_id: e57s01
+verified_at: "2026-07-06"
+verifier: verify-work
+phases:
+  smoke:
+    passed: true
+    note: "No server process — kernel-level library change only. Smoke skipped per P2 depth."
+  build:
+    passed: true
+    command: "npm run preflight:build"
+  typecheck:
+    passed: true
+    command: "go vet ./..."
+  lint:
+    passed: true
+    command: "gosec (npm run preflight:go includes gosec)"
+  tests:
+    passed: true
+    command: "go test $(go list ./... | grep -v /deploy)"
+    coverage: "N/A (no coverage profile generated)"
+    note: "24/24 packages pass, deploy excluded (requires infrastructure)"
+  terminal_verdict:
+    command: "npm run preflight:go"
+    exit_code: 0
+    captured_at: "2026-07-06"
+    note: "Single run — go vet + go test + gosec all pass. Gitleaks skipped (not installed)."
+  manual:
+    steps:
+      - step: "Verify kernel/scope.go exists with WithProjectID and ProjectIDFromContext"
+        expected: "File compiles with exported functions"
+        actual: "kernel/scope.go compiled; all 4 tests pass (RoundTrip, Missing, TypeIsolation, Multiple)"
+        passed: true
+      - step: "Verify no duplicate Logger/DBer definitions remain"
+        expected: "No type Logger interface in component files"
+        actual: "All 18 duplicate definitions removed; go build ./... passes"
+        passed: true
+      - step: "Verify tech-stack.md updated"
+        expected: "project_id referenced in context flow"
+        actual: "grep -q 'project_id' specs/tech-architecture/tech-stack.md → found"
+        passed: true
+  gaps:
+    closed: true
+    note: "No gaps — all 5 tasks completed with verified outputs"

@@ -26,25 +26,21 @@ var upgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool { return true },
 }
 
-type Logger interface {
-	Info(msg string, args ...any)
-	Warn(msg string, args ...any)
-	Error(msg string, args ...any)
-}
 
 type noopLogger struct{}
 
 func (noopLogger) Info(msg string, args ...any)  {}
 func (noopLogger) Warn(msg string, args ...any)  {}
 func (noopLogger) Error(msg string, args ...any) {}
+func (noopLogger) Debug(msg string, args ...any) {}
 
 type Options struct {
-	Logger   Logger
+	Logger kernel.Logger
 	Validate func(token string) (int64, error)
 }
 
 type Realtime struct {
-	logger     Logger
+	logger kernel.Logger
 	hub        *Hub
 	validate   func(token string) (int64, error)
 	unsubscribe func()
