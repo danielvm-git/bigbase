@@ -13,6 +13,7 @@ import (
 	"strings"
 
 	"github.com/danielvm/bigbase/components/deploy"
+	"github.com/danielvm/bigbase/components/sites"
 	"github.com/danielvm/bigbase/kernel"
 	mcpsdk "github.com/modelcontextprotocol/go-sdk/mcp"
 )
@@ -34,9 +35,26 @@ type SiteCreator interface {
 	CreateSite(ctx context.Context, gitRepoID, name, branch string) (id, nameOut string, err error)
 }
 
-// SiteKeyCreator provisions site-scoped deployment credentials.
+// SiteLister returns site catalog entries for MCP discovery tools.
+type SiteLister interface {
+	ListSites(ctx context.Context) ([]sites.Site, error)
+	GetSite(ctx context.Context, siteID string) (*sites.Site, error)
+}
+
+// SiteKeyEntry is metadata for a site-scoped deploy key (no raw secret).
+type SiteKeyEntry struct {
+	KeyID      string  `json:"key_id"`
+	Name       string  `json:"name"`
+	CreatedAt  string  `json:"created_at"`
+	Revoked    bool    `json:"revoked"`
+	LastUsedAt *string `json:"last_used_at,omitempty"`
+}
+
+// SiteKeyCreator provisions and manages site-scoped deployment credentials.
 type SiteKeyCreator interface {
 	CreateSiteKey(ctx context.Context, siteID, name string, scopes []string) (rawToken, keyID string, err error)
+	ListSiteKeys(ctx context.Context, siteID string) ([]SiteKeyEntry, error)
+	RevokeSiteKey(ctx context.Context, keyID string) error
 }
 
 // Options configure the MCP component.
@@ -58,6 +76,8 @@ type Options struct {
 	GitCreator GitCreator
 	// SiteCreator provisions sites for the create_site tool.
 	SiteCreator SiteCreator
+	// SiteLister lists sites for list_sites and get_site tools.
+	SiteLister SiteLister
 	// SiteKeyCreator provisions CI credentials for provision_ci_credentials.
 	SiteKeyCreator SiteKeyCreator
 }
@@ -79,6 +99,7 @@ type Component struct {
 	deployer          DeployTrigger
 	gitCreator        GitCreator
 	siteCreator       SiteCreator
+	siteLister        SiteLister
 	siteKeyCreator    SiteKeyCreator
 	streamableHandler http.Handler // created once, reused across requests for session persistence
 }
@@ -106,6 +127,7 @@ func New(opts Options) *Component {
 		deployer:       opts.Deployer,
 		gitCreator:     opts.GitCreator,
 		siteCreator:    opts.SiteCreator,
+		siteLister:     opts.SiteLister,
 		siteKeyCreator: opts.SiteKeyCreator,
 	}
 }
@@ -570,6 +592,78 @@ Port is set via ` + "`PORT`" + ` env var. Database is SQLite by default.
 		return textResult(formatJSON(result)), nil, nil
 	})
 
+	// registerListSites
+	mcpsdk.AddTool(srv, &mcpsdk.Tool{
+		Name:        "list_sites",
+		Description: "List provisioned sites on this BigBase instance. Returns site_id, name, url, and git_repo_id for each site.",
+	}, func(ctx context.Context, req *mcpsdk.CallToolRequest, _ any) (*mcpsdk.CallToolResult, any, error) {
+		if c.siteLister == nil {
+			return textResult("Site discovery requires a Sites component."), nil, nil
+		}
+		siteList, err := c.siteLister.ListSites(ctx)
+		if err != nil {
+			return textResult(fmt.Sprintf("Failed to list sites: %v", err)), nil, nil
+		}
+		type siteRow struct {
+			SiteID    string `json:"site_id"`
+			Name      string `json:"name"`
+			URL       string `json:"url,omitempty"`
+			GitRepoID string `json:"git_repo_id"`
+		}
+		rows := make([]siteRow, 0, len(siteList))
+		for _, s := range siteList {
+			row := siteRow{
+				SiteID:    s.ID,
+				Name:      s.Name,
+				GitRepoID: s.GitRepoID,
+			}
+			if s.LatestDeployment != nil {
+				row.URL = s.LatestDeployment.URL
+			}
+			rows = append(rows, row)
+		}
+		c.logger.Info("mcp tool", "tool", "list_sites", "count", len(rows))
+		return textResult(formatJSON(map[string]any{"sites": rows})), nil, nil
+	})
+
+	// registerGetSite
+	mcpsdk.AddTool(srv, &mcpsdk.Tool{
+		Name:        "get_site",
+		Description: "Get metadata for a single site: url, production branch, and last deployment status.",
+	}, func(ctx context.Context, req *mcpsdk.CallToolRequest, _ any) (*mcpsdk.CallToolResult, any, error) {
+		if c.siteLister == nil {
+			return textResult("Site discovery requires a Sites component."), nil, nil
+		}
+		var args map[string]any
+		if req.Params.Arguments != nil {
+			_ = json.Unmarshal(req.Params.Arguments, &args)
+		}
+		siteID, _ := args["site_id"].(string)
+		if siteID == "" {
+			return textResult("site_id is required. Use list_sites to find available sites."), nil, nil
+		}
+		site, err := c.siteLister.GetSite(ctx, siteID)
+		if err != nil {
+			if strings.Contains(err.Error(), "not found") {
+				return textResult(fmt.Sprintf("Site %q not found.", siteID)), nil, nil
+			}
+			return textResult(fmt.Sprintf("Failed to get site: %v", err)), nil, nil
+		}
+		out := map[string]any{
+			"site_id":            site.ID,
+			"name":               site.Name,
+			"git_repo_id":        site.GitRepoID,
+			"production_branch":  site.ProductionBranch,
+		}
+		if site.LatestDeployment != nil {
+			out["url"] = site.LatestDeployment.URL
+			out["last_deploy_status"] = site.LatestDeployment.Status
+			out["last_deploy_id"] = site.LatestDeployment.ID
+		}
+		c.logger.Info("mcp tool", "tool", "get_site", "site_id", siteID)
+		return textResult(formatJSON(out)), nil, nil
+	})
+
 	// registerProvisionCICredentials
 	mcpsdk.AddTool(srv, &mcpsdk.Tool{
 		Name:        "provision_ci_credentials",
@@ -600,6 +694,59 @@ Port is set via ` + "`PORT`" + ` env var. Database is SQLite by default.
 			"key_id":  keyID,
 			"site_id": siteID,
 		})), nil, nil
+	})
+
+	// registerListSiteKeys
+	mcpsdk.AddTool(srv, &mcpsdk.Tool{
+		Name:        "list_site_keys",
+		Description: "List site-scoped deploy keys (bb_dep_*) for a site. Raw tokens are never returned.",
+	}, func(ctx context.Context, req *mcpsdk.CallToolRequest, _ any) (*mcpsdk.CallToolResult, any, error) {
+		if c.siteKeyCreator == nil {
+			return textResult("Key management requires an Auth component."), nil, nil
+		}
+		var args map[string]any
+		if req.Params.Arguments != nil {
+			_ = json.Unmarshal(req.Params.Arguments, &args)
+		}
+		siteID, _ := args["site_id"].(string)
+		if siteID == "" {
+			return textResult("site_id is required. Use list_sites to find available sites."), nil, nil
+		}
+		keys, err := c.siteKeyCreator.ListSiteKeys(ctx, siteID)
+		if err != nil {
+			if strings.Contains(err.Error(), "not found") {
+				return textResult(fmt.Sprintf("Site %q not found.", siteID)), nil, nil
+			}
+			return textResult(fmt.Sprintf("Failed to list keys: %v", err)), nil, nil
+		}
+		c.logger.Info("mcp tool", "tool", "list_site_keys", "site_id", siteID, "count", len(keys))
+		return textResult(formatJSON(map[string]any{"keys": keys})), nil, nil
+	})
+
+	// registerRevokeSiteKey
+	mcpsdk.AddTool(srv, &mcpsdk.Tool{
+		Name:        "revoke_site_key",
+		Description: "Revoke a site-scoped deploy key by key_id. The token stops working immediately; provision a new key with provision_ci_credentials.",
+	}, func(ctx context.Context, req *mcpsdk.CallToolRequest, _ any) (*mcpsdk.CallToolResult, any, error) {
+		if c.siteKeyCreator == nil {
+			return textResult("Key management requires an Auth component."), nil, nil
+		}
+		var args map[string]any
+		if req.Params.Arguments != nil {
+			_ = json.Unmarshal(req.Params.Arguments, &args)
+		}
+		keyID, _ := args["key_id"].(string)
+		if keyID == "" {
+			return textResult("key_id is required. Use list_site_keys to find key IDs."), nil, nil
+		}
+		if err := c.siteKeyCreator.RevokeSiteKey(ctx, keyID); err != nil {
+			if strings.Contains(err.Error(), "not found") {
+				return textResult(fmt.Sprintf("Key %q not found.", keyID)), nil, nil
+			}
+			return textResult(fmt.Sprintf("Failed to revoke key: %v", err)), nil, nil
+		}
+		c.logger.Info("mcp tool", "tool", "revoke_site_key", "key_id", keyID)
+		return textResult(formatJSON(map[string]string{"key_id": keyID, "revoked": "true"})), nil, nil
 	})
 
 	return srv, nil

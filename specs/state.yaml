@@ -30,17 +30,17 @@ epic_cycle:
   story_complete: true
 bug_cycle:
   current_step: 0
-  completed_steps: []
-  bug_file: null
+  completed_steps: [1, 2, 3, 4]
+  bug_file: specs/bugs/BUG-2026-07-07T223200-mcp-list-sites-missing.md
 git:
   branch: main
   hash: f008bbee45f10791a0f30e4566b59a70180ce2d6
   worktree: null
   ci_status: success
 handoff:
-  last_step_completed: "release-branch"
+  last_step_completed: "validate-fix"
   open_decisions: []
-  next_skill: survey-context
-  summary: "e68 Native DB Connection String released."
-  context: "Deploy injects DB_PATH (SQLite) or DATABASE_URL (Postgres) into spawned app processes."
+  next_skill: release-branch
+  summary: "e69 MCP site discovery + key lifecycle implemented on fix/e69-mcp-site-discovery."
+  context: "list_sites, get_site, list_site_keys, revoke_site_key MCP tools; closes issue #57."
   fast_mode: false

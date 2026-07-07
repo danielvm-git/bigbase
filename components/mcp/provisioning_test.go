@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/danielvm/bigbase/components/mcp"
+	"github.com/danielvm/bigbase/components/sites"
 	mcpsdk "github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
@@ -46,6 +47,7 @@ type mockSiteKeyCreator struct {
 	token string
 	keyID string
 	err   error
+	keys  []mcp.SiteKeyEntry
 }
 
 func (m *mockSiteKeyCreator) CreateSiteKey(_ context.Context, _, _ string, _ []string) (string, string, error) {
@@ -56,6 +58,72 @@ func (m *mockSiteKeyCreator) CreateSiteKey(_ context.Context, _, _ string, _ []s
 		return "bb_dep_" + strings.Repeat("a", 64), "42", nil
 	}
 	return m.token, m.keyID, nil
+}
+
+func (m *mockSiteKeyCreator) ListSiteKeys(_ context.Context, siteID string) ([]mcp.SiteKeyEntry, error) {
+	if m.err != nil {
+		return nil, m.err
+	}
+	if m.keys != nil {
+		return m.keys, nil
+	}
+	return []mcp.SiteKeyEntry{
+		{KeyID: "42", Name: "ci-bot", CreatedAt: "2026-01-01T00:00:00Z", Revoked: false},
+	}, nil
+}
+
+func (m *mockSiteKeyCreator) RevokeSiteKey(_ context.Context, keyID string) error {
+	if m.err != nil {
+		return m.err
+	}
+	if keyID == "" {
+		return errors.New("key_id is required")
+	}
+	return nil
+}
+
+type mockSiteLister struct {
+	sites []sites.Site
+	err   error
+}
+
+func (m *mockSiteLister) ListSites(_ context.Context) ([]sites.Site, error) {
+	if m.err != nil {
+		return nil, m.err
+	}
+	if m.sites != nil {
+		return m.sites, nil
+	}
+	return []sites.Site{
+		{
+			ID:               "site-1",
+			Name:             "my-app",
+			GitRepoID:        "repo-1",
+			ProductionBranch: "main",
+			LatestDeployment: &sites.Deployment{URL: "https://my-app.bigbase.click", Status: "running"},
+		},
+	}, nil
+}
+
+func (m *mockSiteLister) GetSite(_ context.Context, siteID string) (*sites.Site, error) {
+	if m.err != nil {
+		return nil, m.err
+	}
+	for _, s := range m.sites {
+		if s.ID == siteID {
+			return &s, nil
+		}
+	}
+	if siteID == "site-1" {
+		return &sites.Site{
+			ID:               "site-1",
+			Name:             "my-app",
+			GitRepoID:        "repo-1",
+			ProductionBranch: "main",
+			LatestDeployment: &sites.Deployment{URL: "https://my-app.bigbase.click", Status: "running", ID: "dep-1"},
+		}, nil
+	}
+	return nil, errors.New(`site "` + siteID + `" not found`)
 }
 
 func callToolText(t *testing.T, c *mcp.Component, name string, args map[string]any) string {
@@ -184,6 +252,84 @@ func TestGetCITemplate(t *testing.T) {
 	t.Run("unknown type", func(t *testing.T) {
 		text := callToolText(t, c, "get_ci_template", map[string]any{"app_type": "unknown"})
 		if !strings.Contains(text, "No template for") {
+			t.Fatalf("unexpected: %s", text)
+		}
+	})
+}
+
+func TestListSites(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		c := mcp.New(mcp.Options{Enabled: true, SiteLister: &mockSiteLister{}})
+		text := callToolText(t, c, "list_sites", nil)
+		if !strings.Contains(text, `"site_id":"site-1"`) || !strings.Contains(text, `"git_repo_id":"repo-1"`) {
+			t.Fatalf("unexpected: %s", text)
+		}
+		if !strings.Contains(text, "my-app.bigbase.click") {
+			t.Fatalf("expected deploy url: %s", text)
+		}
+	})
+	t.Run("nil lister", func(t *testing.T) {
+		c := mcp.New(mcp.Options{Enabled: true})
+		text := callToolText(t, c, "list_sites", nil)
+		if !strings.Contains(text, "Site discovery requires a Sites component") {
+			t.Fatalf("unexpected: %s", text)
+		}
+	})
+}
+
+func TestGetSite(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		c := mcp.New(mcp.Options{Enabled: true, SiteLister: &mockSiteLister{}})
+		text := callToolText(t, c, "get_site", map[string]any{"site_id": "site-1"})
+		if !strings.Contains(text, `"production_branch":"main"`) || !strings.Contains(text, `"last_deploy_status":"running"`) {
+			t.Fatalf("unexpected: %s", text)
+		}
+	})
+	t.Run("missing site_id", func(t *testing.T) {
+		c := mcp.New(mcp.Options{Enabled: true, SiteLister: &mockSiteLister{}})
+		text := callToolText(t, c, "get_site", nil)
+		if !strings.Contains(text, "site_id is required") {
+			t.Fatalf("unexpected: %s", text)
+		}
+	})
+	t.Run("not found", func(t *testing.T) {
+		c := mcp.New(mcp.Options{Enabled: true, SiteLister: &mockSiteLister{}})
+		text := callToolText(t, c, "get_site", map[string]any{"site_id": "missing"})
+		if !strings.Contains(text, "not found") {
+			t.Fatalf("unexpected: %s", text)
+		}
+	})
+}
+
+func TestListSiteKeys(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		c := mcp.New(mcp.Options{Enabled: true, SiteKeyCreator: &mockSiteKeyCreator{}})
+		text := callToolText(t, c, "list_site_keys", map[string]any{"site_id": "site-1"})
+		if !strings.Contains(text, `"key_id":"42"`) || !strings.Contains(text, `"revoked":false`) {
+			t.Fatalf("unexpected: %s", text)
+		}
+	})
+	t.Run("missing site_id", func(t *testing.T) {
+		c := mcp.New(mcp.Options{Enabled: true, SiteKeyCreator: &mockSiteKeyCreator{}})
+		text := callToolText(t, c, "list_site_keys", nil)
+		if !strings.Contains(text, "site_id is required") {
+			t.Fatalf("unexpected: %s", text)
+		}
+	})
+}
+
+func TestRevokeSiteKey(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		c := mcp.New(mcp.Options{Enabled: true, SiteKeyCreator: &mockSiteKeyCreator{}})
+		text := callToolText(t, c, "revoke_site_key", map[string]any{"key_id": "42"})
+		if !strings.Contains(text, `"revoked":"true"`) {
+			t.Fatalf("unexpected: %s", text)
+		}
+	})
+	t.Run("missing key_id", func(t *testing.T) {
+		c := mcp.New(mcp.Options{Enabled: true, SiteKeyCreator: &mockSiteKeyCreator{}})
+		text := callToolText(t, c, "revoke_site_key", nil)
+		if !strings.Contains(text, "key_id is required") {
 			t.Fatalf("unexpected: %s", text)
 		}
 	})

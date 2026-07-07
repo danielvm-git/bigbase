@@ -7,8 +7,11 @@ import (
 	"database/sql"
 	"encoding/hex"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
+
+	"github.com/danielvm/bigbase/components/mcp"
 )
 
 // OrgAPIKey holds metadata about an org-scoped API key.
@@ -237,6 +240,84 @@ func (a *Auth) createSiteKeyRecord(ctx context.Context, siteID, name string, sco
 		Name:   name,
 		Key:    raw,
 	}, nil
+}
+
+// ListSiteKeys returns metadata for site-scoped keys (no raw secrets).
+func (a *Auth) ListSiteKeys(ctx context.Context, siteID string) ([]mcp.SiteKeyEntry, error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	if siteID == "" {
+		return nil, fmt.Errorf("site_id is required")
+	}
+	var exists int
+	if err := a.db.QueryRowContext(ctx, "SELECT 1 FROM sites WHERE id = ?", siteID).Scan(&exists); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, fmt.Errorf("site %q not found", siteID)
+		}
+		return nil, fmt.Errorf("validate site: %w", err)
+	}
+
+	rows, err := a.db.QueryContext(ctx,
+		`SELECT id, name, created_at, revoked, last_used_at
+		 FROM org_api_keys WHERE site_id = ? ORDER BY id`,
+		siteID)
+	if err != nil {
+		return nil, fmt.Errorf("list site keys: %w", err)
+	}
+	defer func() { _ = rows.Close() }()
+
+	keys := make([]mcp.SiteKeyEntry, 0)
+	for rows.Next() {
+		var id int64
+		var name, createdAt string
+		var revoked int
+		var lastUsed sql.NullString
+		if err := rows.Scan(&id, &name, &createdAt, &revoked, &lastUsed); err != nil {
+			return nil, fmt.Errorf("scan site key: %w", err)
+		}
+		entry := mcp.SiteKeyEntry{
+			KeyID:     fmt.Sprintf("%d", id),
+			Name:      name,
+			CreatedAt: createdAt,
+			Revoked:   revoked != 0,
+		}
+		if lastUsed.Valid {
+			entry.LastUsedAt = &lastUsed.String
+		}
+		keys = append(keys, entry)
+	}
+	return keys, rows.Err()
+}
+
+// RevokeSiteKey marks a site-scoped deploy key as revoked.
+func (a *Auth) RevokeSiteKey(ctx context.Context, keyID string) error {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	if keyID == "" {
+		return fmt.Errorf("key_id is required")
+	}
+	id, err := strconv.ParseInt(keyID, 10, 64)
+	if err != nil {
+		return fmt.Errorf("key %q not found", keyID)
+	}
+
+	res, err := a.db.ExecContext(ctx,
+		`UPDATE org_api_keys SET revoked = 1 WHERE id = ? AND site_id IS NOT NULL`,
+		id)
+	if err != nil {
+		return fmt.Errorf("revoke site key: %w", err)
+	}
+	n, err := res.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("revoke site key rows affected: %w", err)
+	}
+	if n == 0 {
+		return fmt.Errorf("key %q not found", keyID)
+	}
+	a.logger.Info("site key revoked", "key_id", id)
+	return nil
 }
 
 // ResolveSiteKey looks up the site_id for a bb_dep_ prefixed key.
