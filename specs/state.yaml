@@ -7,10 +7,10 @@ active_story_status: null
 release:
   target_version: 3.0.0
   codename: "Project Scoping + Neon Native Port"
-  last_tag: v2.61.0
-  last_publish: '2026-06-28'
+  last_tag: v2.68.0
+  last_publish: '2026-07-07'
   ci_verified: true
-  ci_verified_at: '2026-07-07T22:15:00Z'
+  ci_verified_at: '2026-07-07T22:42:00Z'
 metrics:
   session_start: '2026-07-07T00:00:00Z'
   story_start: '2026-07-07T19:49:00Z'
@@ -30,17 +30,17 @@ epic_cycle:
   story_complete: true
 bug_cycle:
   current_step: 0
-  completed_steps: [1, 2, 3, 4]
-  bug_file: specs/bugs/BUG-2026-07-07T223200-mcp-list-sites-missing.md
+  completed_steps: []
+  bug_file: null
 git:
   branch: main
-  hash: f008bbee45f10791a0f30e4566b59a70180ce2d6
+  hash: 0a4208ede10e3a1297a2dbcd8f91e7eff15dfffd
   worktree: null
   ci_status: success
 handoff:
-  last_step_completed: "validate-fix"
+  last_step_completed: "release-branch"
   open_decisions: []
-  next_skill: release-branch
-  summary: "e69 MCP site discovery + key lifecycle implemented on fix/e69-mcp-site-discovery."
-  context: "list_sites, get_site, list_site_keys, revoke_site_key MCP tools; closes issue #57."
+  next_skill: survey-context
+  summary: "e69 released — MCP site discovery + deploy key lifecycle on main."
+  context: "feat(mcp): list_sites, get_site, list_site_keys, revoke_site_key. Issue #57 closed."
   fast_mode: false
