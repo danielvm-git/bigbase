@@ -4,7 +4,7 @@ id: e56
 title: "Security — OTP Persistence & Session Audit"
 wsjf: 2.8
 total_bcps: 4
-status: planned
+status: done
 tier: 3
 depends_on: []
 note: "2 stories, 4 BCPs. DB-backed OTP store and rate limits (survives restart). Audit event log for 15+ auth handlers (INSERT-only, fire-and-forget). OTP is user-scoped (email key), not project-scoped — no e52 dependency."
@@ -12,12 +12,12 @@ stories:
   - id: e56s01
     title: "Move OTP store from in-memory to database"
     bcps: 2
-    status: planned
+    status: done
     spec: e56s01-otp-db-store.md
     tasks: e56s01-tasks.yaml
   - id: e56s02
     title: "Audit log for security-sensitive operations"
     bcps: 2
-    status: planned
+    status: done
     spec: e56s02-audit-log.md
     tasks: e56s02-tasks.yaml

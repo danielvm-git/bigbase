@@ -95,6 +95,8 @@ type Auth struct {
 	postLoginRedirect   string
 	spaOriginAllowlist  []string
 	publicURL           string
+	otpStore            OTPStore
+	rateLimitStore      RateLimitStore
 }
 
 func (a *Auth) SetGoogleVerifier(v GoogleVerifier) {
@@ -185,6 +187,8 @@ func New(opts Options) *Auth {
 		spaOriginAllowlist:  opts.SPAOriginAllowlist,
 		publicURL:           strings.TrimRight(opts.PublicURL, "/"),
 	}
+	a.otpStore = NewDBOTPStore(opts.DB)
+	a.rateLimitStore = NewDBRateLimitStore(opts.DB)
 	if a.googleClientID != "" && a.publicURL == "" {
 		a.logger.Warn("public_url not configured; OAuth redirect URIs will use the Host header (vulnerable to Host header poisoning)")
 	}
@@ -286,6 +290,35 @@ func (a *Auth) Start(ctx *kernel.Context) error {
 	}
 	if err := a.migrateAPIKeysTable(); err != nil {
 		return fmt.Errorf("migrate api keys table: %w", err)
+	}
+
+	if err := a.db.Migrate(`CREATE TABLE IF NOT EXISTS otp_codes (
+		key TEXT PRIMARY KEY,
+		code_hash TEXT NOT NULL,
+		expires_at TEXT NOT NULL,
+		attempts INTEGER NOT NULL DEFAULT 0
+	)`); err != nil {
+		return fmt.Errorf("migrate otp_codes table: %w", err)
+	}
+
+	if err := a.db.Migrate(`CREATE TABLE IF NOT EXISTS otp_rate_limits (
+		key TEXT PRIMARY KEY,
+		count INTEGER NOT NULL DEFAULT 0,
+		window_start TEXT NOT NULL
+	)`); err != nil {
+		return fmt.Errorf("migrate otp_rate_limits table: %w", err)
+	}
+
+	if err := a.db.Migrate(`CREATE TABLE IF NOT EXISTS audit_events (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		event_type TEXT NOT NULL,
+		user_id INTEGER,
+		email TEXT,
+		ip_address TEXT,
+		metadata TEXT,
+		created_at TEXT NOT NULL DEFAULT (datetime('now'))
+	)`); err != nil {
+		return fmt.Errorf("migrate audit_events table: %w", err)
 	}
 
 	// Backfill: create personal orgs for existing users with NULL default_org_id
@@ -679,6 +712,7 @@ func (a *Auth) handleRegister(w http.ResponseWriter, r *http.Request) {
 	}
 
 	a.writeAuthResponse(w, r, http.StatusCreated, userID, email, token)
+	a.recordAudit(r.Context(), "auth.register", userID, email, getIP(r), nil)
 }
 
 func (a *Auth) handleLogin(w http.ResponseWriter, r *http.Request) {
@@ -702,11 +736,13 @@ func (a *Auth) handleLogin(w http.ResponseWriter, r *http.Request) {
 	err := a.db.QueryRowContext(ctx,
 		"SELECT id, password_hash, role, COALESCE(default_org_id, 0) FROM users WHERE email = ?", email).Scan(&userID, &passwordHash, &role, &defaultOrgID)
 	if err != nil {
+		a.recordAudit(r.Context(), "auth.login_failed", 0, email, getIP(r), nil)
 		writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "invalid email or password"})
 		return
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(passwordHash), []byte(req.Password)); err != nil {
+		a.recordAudit(r.Context(), "auth.login_failed", 0, email, getIP(r), nil)
 		writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "invalid email or password"})
 		return
 	}
@@ -719,6 +755,7 @@ func (a *Auth) handleLogin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	a.writeAuthResponse(w, r, http.StatusOK, userID, email, token)
+	a.recordAudit(r.Context(), "auth.login", userID, email, getIP(r), nil)
 }
 
 type userRow struct {
@@ -816,6 +853,9 @@ func (a *Auth) handleUserByID(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSON(w, http.StatusOK, map[string]string{"status": "deleted"})
+	var targetUserID int64
+	_, _ = fmt.Sscan(id, &targetUserID)
+	a.recordAudit(r.Context(), "auth.user_deleted", targetUserID, "", getIP(r), nil)
 }
 
 func (a *Auth) handleMe(w http.ResponseWriter, r *http.Request) {
@@ -941,6 +981,7 @@ func (a *Auth) handleGoogleCallback(w http.ResponseWriter, r *http.Request) {
 	if spaRedirect != "" && a.isSPAOriginAllowed(spaRedirect) {
 		a.clearOAuthStateCookie(w, r)
 		spaURL := spaRedirect + "#token=" + url.QueryEscape(token)
+		a.recordAudit(r.Context(), "auth.oauth_callback", userID, googleUser.Email, getIP(r), nil)
 		http.Redirect(w, r, spaURL, http.StatusFound)
 		return
 	}
@@ -956,6 +997,7 @@ func (a *Auth) handleGoogleCallback(w http.ResponseWriter, r *http.Request) {
 		Path:     "/",
 		MaxAge:   86400,
 	})
+	a.recordAudit(r.Context(), "auth.oauth_callback", userID, googleUser.Email, getIP(r), nil)
 	http.Redirect(w, r, a.postLoginRedirect, http.StatusFound)
 }
 
@@ -974,6 +1016,9 @@ func (a *Auth) handleLogout(w http.ResponseWriter, r *http.Request) {
 		Path:     "/",
 		MaxAge:   -1,
 	})
+	userID, _ := UserIDFromContext(r.Context())
+	email, _ := UserEmailFromContext(r.Context())
+	a.recordAudit(r.Context(), "auth.logout", userID, email, getIP(r), nil)
 	writeJSON(w, http.StatusOK, map[string]bool{"ok": true})
 }
 
@@ -1591,6 +1636,11 @@ func (a *Auth) handleCreateAPIKey(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSON(w, http.StatusCreated, map[string]any{"data": created})
+	email, _ := UserEmailFromContext(r.Context())
+	a.recordAudit(r.Context(), "auth.api_key_created", userID, email, getIP(r), map[string]any{
+		"org_id": orgID,
+		"name":   req.Name,
+	})
 }
 
 func (a *Auth) handleListAPIKeys(w http.ResponseWriter, r *http.Request) {
@@ -1645,10 +1695,56 @@ func (a *Auth) handleDeleteAPIKey(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSON(w, http.StatusOK, map[string]string{"status": "deleted"})
+	email, _ := UserEmailFromContext(r.Context())
+	a.recordAudit(r.Context(), "auth.api_key_deleted", userID, email, getIP(r), map[string]any{
+		"org_id": orgID,
+		"key_id": keyID,
+	})
 }
 
 func writeJSON(w http.ResponseWriter, status int, data any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	_ = json.NewEncoder(w).Encode(data)
+}
+
+// SetOTPStore sets the OTP store. Used for testing.
+func (a *Auth) SetOTPStore(s OTPStore) {
+	a.otpStore = s
+}
+
+// SetRateLimitStore sets the rate limit store. Used for testing.
+func (a *Auth) SetRateLimitStore(s RateLimitStore) {
+	a.rateLimitStore = s
+}
+
+// getIP extracts the IP address from request, stripping the port.
+func getIP(r *http.Request) string {
+	if r == nil {
+		return ""
+	}
+	ip := r.RemoteAddr
+	if idx := strings.LastIndex(ip, ":"); idx != -1 {
+		ip = ip[:idx]
+	}
+	ip = strings.Trim(ip, "[]")
+	return ip
+}
+
+// recordAudit logs a security-sensitive event to the audit_events table.
+func (a *Auth) recordAudit(ctx context.Context, eventType string, userID int64, email, ip string, metadata map[string]any) {
+	metaJSON := "{}"
+	if metadata != nil {
+		b, err := json.Marshal(metadata)
+		if err == nil {
+			metaJSON = string(b)
+		}
+	}
+	_, err := a.db.ExecContext(ctx,
+		`INSERT INTO audit_events (event_type, user_id, email, ip_address, metadata, created_at) VALUES (?, ?, ?, ?, ?, datetime('now'))`,
+		eventType, userID, email, ip, metaJSON,
+	)
+	if err != nil {
+		a.logger.Error("audit write failed", "event_type", eventType, "error", err)
+	}
 }

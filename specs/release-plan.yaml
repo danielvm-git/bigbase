@@ -374,7 +374,7 @@ epics:
   wsjf: 2.8
   mode: capsule
   tier: 3
-  status: planned
+  status: done
   depends_on: []
   note: "2 stories, 4 BCPs. DB-backed OTP (survives restart) + audit log. OTP is user-scoped (email key), NOT project-scoped \u2014 decoupled from e57. Ship in Wave 0.5 alongside BUG-001."
   capsule_dir: epics/e56-otp-session-hardening

@@ -1,9 +1,9 @@
 type: session-state
 context: infra
-active_flow: null
-active_epic_id: null
-active_story_id: null
-active_story_status: null
+active_flow: build_epic
+active_epic_id: e56
+active_story_id: e56s01
+active_story_status: planned
 release:
   target_version: 2.69.0
   codename: "Security Hardening"
@@ -12,22 +12,22 @@ release:
   ci_verified: true
   ci_verified_at: '2026-07-07T22:42:00Z'
 metrics:
-  session_start: '2026-07-07T00:00:00Z'
-  story_start: '2026-07-07T19:49:00Z'
+  session_start: '2026-07-08T15:56:00Z'
+  story_start: '2026-07-08T15:56:00Z'
   session_end: null
   cycle_minutes: 0
   epics_completed: 55
   stories_completed: 169
   bcps_per_hour: 0
 epic_cycle:
-  step: 8
-  story_bcps: 5
-  story: e72s03
-  audit_result: pass
-  completed_steps: [0, 1, 2, 3, 4, 5, 6, 7, 8]
-  note: "e72 complete (s01-s03) — MCP Bearer auth + scope gate + public tier; s04 deferred per ADR 0006"
+  step: 1
+  story_bcps: 2
+  story: e56s01
+  audit_result: null
+  completed_steps: [0]
+  note: "Threat model completed for e56"
   fast_mode: false
-  story_complete: true
+  story_complete: false
 bug_cycle:
   current_step: 0
   completed_steps: []

@@ -124,6 +124,7 @@ func (a *Auth) handleForgotPassword(w http.ResponseWriter, r *http.Request) {
 
 	a.sendResetEmail(email, token)
 
+	a.recordAudit(r.Context(), "auth.password_reset_requested", userID, email, getIP(r), nil)
 	writeJSON(w, http.StatusOK, map[string]string{"status": "if that email exists, a reset link has been sent"})
 }
 
@@ -205,6 +206,10 @@ func (a *Auth) handleResetPassword(w http.ResponseWriter, r *http.Request) {
 		// Non-fatal: password already updated.
 	}
 
+	var email string
+	_ = a.db.QueryRowContext(ctx, "SELECT email FROM users WHERE id = ?", userID).Scan(&email)
+
+	a.recordAudit(r.Context(), "auth.password_reset_completed", userID, email, getIP(r), nil)
 	writeJSON(w, http.StatusOK, map[string]string{"status": "password updated"})
 }
 

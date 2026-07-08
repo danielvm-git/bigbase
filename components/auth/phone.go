@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"crypto/subtle"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -30,34 +31,30 @@ func (a *Auth) handleSendPhoneOTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	phone := strings.TrimSpace(req.Phone)
+	key := "phone:" + phone
 
 	// Rate limit: reuse OTP rate limiter with phone as key.
-	otpRateMu.Lock()
-	rate, ok := otpRates["phone:"+phone]
 	now := time.Now()
-	if ok && now.Sub(rate.windowStart) < time.Hour {
-		if rate.count >= maxOTPsPerHour {
-			otpRateMu.Unlock()
-			writeJSON(w, http.StatusTooManyRequests, map[string]string{"error": "too many requests"})
-			return
-		}
-		rate.count++
-	} else {
-		otpRates["phone:"+phone] = &otpRate{count: 1, windowStart: now}
+	allowed, err := a.rateLimitStore.Increment(r.Context(), key, now, maxOTPsPerHour)
+	if err != nil {
+		a.logger.Error("phone OTP rate limit check failed", "error", err)
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal server error"})
+		return
 	}
-	otpRateMu.Unlock()
+	if !allowed {
+		writeJSON(w, http.StatusTooManyRequests, map[string]string{"error": "too many requests"})
+		return
+	}
 
 	code := generateOTP()
 	codeHash := hashCode(code)
 
-	otpStoreMu.Lock()
-	otpStore["phone:"+phone] = &otpRecord{
-		email:     phone,
-		codeHash:  codeHash,
-		expiresAt: now.Add(otpTTL),
-		attempts:  0,
+	err = a.otpStore.Store(r.Context(), key, codeHash, now.Add(otpTTL))
+	if err != nil {
+		a.logger.Error("phone OTP store failed", "error", err)
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal server error"})
+		return
 	}
-	otpStoreMu.Unlock()
 
 	// Send SMS via configured phone sender or log it (dev mode).
 	if a.phoneSender != nil {
@@ -68,6 +65,7 @@ func (a *Auth) handleSendPhoneOTP(w http.ResponseWriter, r *http.Request) {
 		a.logger.Info("phone OTP (dev mode — no phone sender configured)", "phone", phone, "code", code)
 	}
 
+	a.recordAudit(r.Context(), "auth.phone_otp_sent", 0, phone, getIP(r), nil)
 	writeJSON(w, http.StatusOK, map[string]bool{"ok": true})
 }
 
@@ -86,28 +84,31 @@ func (a *Auth) handleVerifyPhoneOTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	phone := strings.TrimSpace(req.Phone)
+	key := "phone:" + phone
 
-	otpStoreMu.Lock()
-	rec, ok := otpStore["phone:"+phone]
-	if !ok {
-		otpStoreMu.Unlock()
+	rec, err := a.otpStore.Get(r.Context(), key)
+	if err != nil {
+		a.logger.Error("phone OTP retrieve failed", "error", err)
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal server error"})
+		return
+	}
+	if rec == nil {
 		writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "invalid code"})
 		return
 	}
 	if rec.attempts >= maxOTPAttempts || time.Now().After(rec.expiresAt) {
-		delete(otpStore, "phone:"+phone)
-		otpStoreMu.Unlock()
+		_ = a.otpStore.Delete(r.Context(), key)
 		writeJSON(w, http.StatusGone, map[string]string{"error": "code expired"})
 		return
 	}
-	if rec.codeHash != hashCode(req.Code) {
-		rec.attempts++
-		otpStoreMu.Unlock()
+	inputHash := hashCode(req.Code)
+	if subtle.ConstantTimeCompare([]byte(rec.codeHash), []byte(inputHash)) != 1 {
+		_ = a.otpStore.RecordAttempt(r.Context(), key)
+		a.recordAudit(r.Context(), "auth.phone_otp_failed", 0, phone, getIP(r), nil)
 		writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "invalid code"})
 		return
 	}
-	delete(otpStore, "phone:"+phone)
-	otpStoreMu.Unlock()
+	_ = a.otpStore.Delete(r.Context(), key)
 
 	// Find or create user by phone.
 	userID, orgID, err := a.findOrCreatePhoneUser(r.Context(), phone)
@@ -126,4 +127,5 @@ func (a *Auth) handleVerifyPhoneOTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	a.writeAuthResponse(w, r, http.StatusOK, userID, email, token)
+	a.recordAudit(r.Context(), "auth.phone_otp_verified", userID, phone, getIP(r), nil)
 }

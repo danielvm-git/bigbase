@@ -56,20 +56,17 @@ func (a *Auth) handleSendMagicLink(w http.ResponseWriter, r *http.Request) {
 	email := strings.ToLower(req.Email)
 
 	// Rate limit: reuse OTP rate limit (3 per email per hour).
-	otpRateMu.Lock()
-	rate, ok := otpRates[email]
 	now := time.Now()
-	if ok && now.Sub(rate.windowStart) < time.Hour {
-		if rate.count >= maxOTPsPerHour {
-			otpRateMu.Unlock()
-			writeJSON(w, http.StatusTooManyRequests, map[string]string{"error": "too many requests"})
-			return
-		}
-		rate.count++
-	} else {
-		otpRates[email] = &otpRate{count: 1, windowStart: now}
+	allowed, err := a.rateLimitStore.Increment(r.Context(), email, now, maxOTPsPerHour)
+	if err != nil {
+		a.logger.Error("magic link rate limit check failed", "error", err)
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal server error"})
+		return
 	}
-	otpRateMu.Unlock()
+	if !allowed {
+		writeJSON(w, http.StatusTooManyRequests, map[string]string{"error": "too many requests"})
+		return
+	}
 
 	token, err := generateMagicToken()
 	if err != nil {

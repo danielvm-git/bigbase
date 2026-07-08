@@ -42,6 +42,9 @@ func (a *Auth) handleAnonymousToken(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSON(w, http.StatusOK, map[string]string{"token": signed})
+	a.recordAudit(r.Context(), "auth.anonymous_token", 0, "", getIP(r), map[string]any{
+		"subject": claims.Subject,
+	})
 }
 
 func generateAnonymousID() string {

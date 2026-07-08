@@ -55,7 +55,7 @@ epics:
   e53: done
   e54: done
   e55: done
-  e56: planned
+  e56: done
   e57: planned
   e58: planned
   e59: planned
@@ -222,8 +222,8 @@ stories:
   e55s02: done
   e55s03: done
   e55s04: done
-  e56s01: planned
-  e56s02: planned
+  e56s01: done
+  e56s02: done
   e57s01: planned
   e57s02: planned
   e57s03: planned

@@ -3,34 +3,27 @@ package auth
 import (
 	"crypto/rand"
 	"crypto/sha256"
+	"crypto/subtle"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"strings"
-	"sync"
 	"time"
 )
 
 const (
-	otpCodeLen  = 6
-	otpTTL      = 5 * time.Minute
+	otpCodeLen     = 6
+	otpTTL         = 5 * time.Minute
 	maxOTPAttempts = 3
 	maxOTPsPerHour = 3
 )
 
-// otpRate tracks OTP sends per email for rate limiting.
+// otpRate tracks OTP sends per email for rate limiting (in-memory test helper compatibility).
 type otpRate struct {
-	count     int
+	count       int
 	windowStart time.Time
 }
-
-// otpCodeStore is an in-memory store for OTP codes (used when no DB table yet).
-// In production this should be a database table, but for testing we use in-memory.
-var (
-	otpStoreMu sync.Mutex
-	otpStore   = map[string]*otpRecord{}
-)
 
 type otpRecord struct {
 	email     string
@@ -38,12 +31,6 @@ type otpRecord struct {
 	expiresAt time.Time
 	attempts  int
 }
-
-// otpRateStore tracks rate limits.
-var (
-	otpRateMu   sync.Mutex
-	otpRates    = map[string]*otpRate{}
-)
 
 // generateOTP generates a 6-digit numeric OTP code.
 func generateOTP() string {
@@ -85,34 +72,30 @@ func (a *Auth) handleSendOTP(w http.ResponseWriter, r *http.Request) {
 	email := strings.ToLower(req.Email)
 
 	// Rate limit: max 3 codes per email per hour.
-	otpRateMu.Lock()
-	rate, ok := otpRates[email]
 	now := time.Now()
-	if ok && now.Sub(rate.windowStart) < time.Hour {
-		if rate.count >= maxOTPsPerHour {
-			otpRateMu.Unlock()
-			writeJSON(w, http.StatusTooManyRequests, map[string]string{"error": "too many requests"})
-			return
-		}
-		rate.count++
-	} else {
-		otpRates[email] = &otpRate{count: 1, windowStart: now}
+	allowed, err := a.rateLimitStore.Increment(r.Context(), email, now, maxOTPsPerHour)
+	if err != nil {
+		a.logger.Error("OTP rate limit check failed", "error", err)
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal server error"})
+		return
 	}
-	otpRateMu.Unlock()
+	if !allowed {
+		writeJSON(w, http.StatusTooManyRequests, map[string]string{"error": "too many requests"})
+		return
+	}
 
 	code := generateOTP()
 	codeHash := hashCode(code)
 
-	otpStoreMu.Lock()
-	otpStore[email] = &otpRecord{
-		email:     email,
-		codeHash:  codeHash,
-		expiresAt: now.Add(otpTTL),
-		attempts:  0,
+	err = a.otpStore.Store(r.Context(), email, codeHash, now.Add(otpTTL))
+	if err != nil {
+		a.logger.Error("OTP store failed", "error", err)
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal server error"})
+		return
 	}
-	otpStoreMu.Unlock()
 
 	a.emailSender.SendEmail(email, "Your verification code", fmt.Sprintf("Your code is: %s", code))
+	a.recordAudit(r.Context(), "auth.otp_sent", 0, email, getIP(r), nil)
 	writeJSON(w, http.StatusOK, map[string]bool{"ok": true})
 }
 
@@ -132,27 +115,29 @@ func (a *Auth) handleVerifyOTP(w http.ResponseWriter, r *http.Request) {
 	}
 	email := strings.ToLower(req.Email)
 
-	otpStoreMu.Lock()
-	rec, ok := otpStore[email]
-	if !ok {
-		otpStoreMu.Unlock()
+	rec, err := a.otpStore.Get(r.Context(), email)
+	if err != nil {
+		a.logger.Error("OTP retrieve failed", "error", err)
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal server error"})
+		return
+	}
+	if rec == nil {
 		writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "invalid code"})
 		return
 	}
 	if rec.attempts >= maxOTPAttempts || time.Now().After(rec.expiresAt) {
-		delete(otpStore, email)
-		otpStoreMu.Unlock()
+		_ = a.otpStore.Delete(r.Context(), email)
 		writeJSON(w, http.StatusGone, map[string]string{"error": "code expired"})
 		return
 	}
-	if rec.codeHash != hashCode(req.Code) {
-		rec.attempts++
-		otpStoreMu.Unlock()
+	inputHash := hashCode(req.Code)
+	if subtle.ConstantTimeCompare([]byte(rec.codeHash), []byte(inputHash)) != 1 {
+		_ = a.otpStore.RecordAttempt(r.Context(), email)
+		a.recordAudit(r.Context(), "auth.otp_failed", 0, email, getIP(r), nil)
 		writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "invalid code"})
 		return
 	}
-	delete(otpStore, email)
-	otpStoreMu.Unlock()
+	_ = a.otpStore.Delete(r.Context(), email)
 
 	// Find or create user, return JWT.
 	userID, orgID, err := a.findOrCreateEmailUser(r.Context(), email)
@@ -170,4 +155,5 @@ func (a *Auth) handleVerifyOTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	a.writeAuthResponse(w, r, http.StatusOK, userID, email, token)
+	a.recordAudit(r.Context(), "auth.otp_verified", userID, email, getIP(r), nil)
 }

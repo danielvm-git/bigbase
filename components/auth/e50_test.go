@@ -162,6 +162,8 @@ func setupAuthWithExpiry(t *testing.T, access, refresh time.Duration) (*auth.Aut
 		AccessExpiry:  access,
 		RefreshExpiry: refresh,
 	})
+	a.SetOTPStore(auth.NewMapOTPStore())
+	a.SetRateLimitStore(auth.NewMapRateLimitStore())
 	k := kernel.New(logger)
 	k.Register(d)
 	k.Register(a)

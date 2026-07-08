@@ -1,37 +1,37 @@
 story_id: e56s01
 title: "Move OTP store from in-memory to database"
-status: planned
+status: done
 bcps: 2
 tasks:
   - id: 1
     description: "Add otp_codes and otp_rate_limits table migrations in auth.Start()"
     verify: "go test ./components/auth/ -run TestOTPStore -v"
-    status: todo
+    status: done
   - id: 2
     description: "Create components/auth/store.go with OTPStore and RateLimitStore interfaces; add dbOTPStore and dbRateLimitStore implementations"
     verify: "go test ./components/auth/ -run TestOTPStore -v"
-    status: todo
+    status: done
   - id: 3
     description: "Add otpStore and rateLimitStore fields to Auth struct; inject in New() with DB-backed defaults"
     verify: "go build ./components/auth/"
-    status: todo
+    status: done
   - id: 4
     description: "Update handleSendOTP and handleVerifyOTP in otp.go to use a.otpStore and a.rateLimitStore instead of globals"
     verify: "go test ./components/auth/ -run TestOTPHandlerIntegration -v"
-    status: todo
+    status: done
   - id: 5
     description: "Update handleSendPhoneOTP and handleVerifyPhoneOTP in phone.go to use injected stores (preserve 'phone:' key prefix)"
     verify: "go test ./components/auth/ -run TestPhoneOTPHandlerIntegration -v"
-    status: todo
+    status: done
   - id: 6
     description: "Update magiclink.go rate limit check to use a.rateLimitStore instead of global otpRates map"
     verify: "go test ./components/auth/ -run TestMagicLinkRateLimit -v"
-    status: todo
+    status: done
   - id: 7
     description: "Remove global otpStore, otpRates, otpStoreMu, otpRateMu variables from production code; keep in-memory store implementations in test file"
     verify: "grep -n 'var.*otpStore\|var.*otpRates\|otpStoreMu\|otpRateMu' components/auth/otp.go components/auth/phone.go components/auth/magiclink.go | grep -v _test.go && echo '❌ globals remain' || echo '✅ no global OTP maps remain in production code'"
-    status: todo
+    status: done
   - id: 8
     description: "Update setupAuth() in auth_test.go to wire in-memory store implementations for tests"
     verify: "go test ./components/auth/ -count=1 -v 2>&1 | tail -20"
-    status: todo
+    status: done
