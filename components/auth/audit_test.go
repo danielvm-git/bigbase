@@ -10,6 +10,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/danielvm/bigbase/components/db"
 	"github.com/danielvm/bigbase/kernel"
@@ -57,8 +58,10 @@ func TestAuditEventsTable(t *testing.T) {
 	}
 	defer func() { _ = k.Stop() }()
 
-	ctx := context.Background()
-	a.recordAudit(ctx, "test.event", 42, "user@test.com", "127.0.0.1", map[string]any{"foo": "bar"})
+	a.recordAudit("test.event", 42, "user@test.com", "127.0.0.1", map[string]any{"foo": "bar"})
+
+	// Wait for fire-and-forget goroutine to complete.
+	time.Sleep(100 * time.Millisecond)
 
 	events := queryAuditEvents(t, d)
 	if len(events) != 1 {
@@ -100,8 +103,7 @@ func TestAuditFireAndForget(t *testing.T) {
 		t.Fatalf("failed to drop table: %v", err)
 	}
 
-	ctx := context.Background()
-	a.recordAudit(ctx, "test.failing.event", 1, "test@test.com", "1.1.1.1", nil)
+	a.recordAudit("test.failing.event", 1, "test@test.com", "1.1.1.1", nil)
 }
 
 type mockEmailSender struct{}
@@ -222,6 +224,15 @@ func TestAuditIntegration(t *testing.T) {
 		t.Fatalf("delete user failed: %d, %s", w.Code, w.Body.String())
 	}
 
+	// Fire-and-forget audit writes run in background goroutines; wait for them.
+	expectedCount := 9
+	for i := 0; i < 20; i++ {
+		time.Sleep(50 * time.Millisecond)
+		if events := queryAuditEvents(t, d); len(events) >= expectedCount {
+			break
+		}
+	}
+
 	// Query events and verify
 	events := queryAuditEvents(t, d)
 	expectedEvents := []struct {
@@ -243,12 +254,15 @@ func TestAuditIntegration(t *testing.T) {
 		t.Fatalf("Expected %d events, got %d", len(expectedEvents), len(events))
 	}
 
-	for i, exp := range expectedEvents {
-		if events[i].eventType != exp.eventType {
-			t.Errorf("Event %d: expected event_type=%q, got %q", i, exp.eventType, events[i].eventType)
-		}
-		if !events[i].ipAddress.Valid || events[i].ipAddress.String != exp.ipAddress {
-			t.Errorf("Event %d (%s): expected ip=%q, got %v", i, exp.eventType, exp.ipAddress, events[i].ipAddress)
+	// Fire-and-forget goroutines may insert in any order — verify by set, not position.
+	seen := make(map[string]int)
+	for _, e := range events {
+		seen[e.eventType+"|"+e.ipAddress.String]++
+	}
+	for _, exp := range expectedEvents {
+		key := exp.eventType + "|" + exp.ipAddress
+		if seen[key] != 1 {
+			t.Errorf("Expected event %q, got %d occurrences", key, seen[key])
 		}
 	}
 }

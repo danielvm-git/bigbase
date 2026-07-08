@@ -1,47 +1,46 @@
-# Security Review — Epic e72: MCP Platform Authentication
+# Security Review — Epic e56: OTP Persistence & Session Audit
 
 **Date:** 2026-07-08
-**Branch/Diff:** `feat/e72-mcp-platform-auth`
-**Threat Model:** `specs/security/epics/e72/THREAT_MODEL.md`
+**Branch/Diff:** `main` (direct commit)
+**Threat Model:** `specs/security/epics/e56/THREAT_MODEL.md`
 
 ## Scope Resolution
-This review covers all changes introduced in Epic e72, including:
-- Bearer token middleware (`bearerAuthMiddleware`) and authentication helper (`authenticatePost`) in `components/mcp/auth.go`.
-- Scoped tool permissions and public tier mapping.
-- Dependency injection of `OrgKeyAuthenticator` into `components/mcp/mcp.go`.
-- API key validation enforcing `revoked = 0` in `components/auth/apikeys.go`.
-- Main startup composition hook in `main.go`.
+This review covers all changes introduced in Epic e56, including:
+- SQLite-backed `dbOTPStore` and `dbRateLimitStore` implementations in `components/auth/store.go`.
+- Audit event logging engine (`recordAudit`) in `components/auth/auth.go`.
+- OTP verification handlers (`handleVerifyOTP` and `handleVerifyPhoneOTP`) in `otp.go` and `phone.go`.
+- Auth handler integration across all 18 security-sensitive event types.
 
 ## Vulnerability Assessment
 
-### 1. SQL Injection
-- All database operations in `components/auth/apikeys.go` use parameterized query placeholders (`?` or `$1`).
-- The update to `ResolveAPIKey` correctly appends `AND revoked = 0` to a parameterized query:
-  `SELECT id, hash, org_id, scopes, revoked FROM org_api_keys WHERE id = ? AND revoked = 0`
+### 1. Timing Attacks (CWE-208 / CWE-385)
+- All OTP verification operations compare the SHA-256 hashes of the user-supplied code against the stored hash.
+- Verification uses Go's cryptographic constant-time comparison library function `subtle.ConstantTimeCompare([]byte(rec.codeHash), []byte(inputHash))`.
+- This ensures that execution time does not leak information about code prefixes, preventing brute-force timing extraction.
 
 **Verdict:** PASS. Confidence: 10/10.
 
-### 2. Auth Bypass / Privilege Escalation
-- `bearerAuthMiddleware` intercepts all POST requests to `/mcp` and checks for tool invocation.
-- Write tools (e.g. `create_repo`, `create_site`, `deploy_site`, `provision_ci_credentials`, `list_site_keys`, `revoke_site_key`) are gated at both the middleware and handler-enforcement layers, requiring the `mcp:provision` scope.
-- Read-only public tools (e.g. `ping`, `list_services`, `get_service_docs`, `get_code_example`, `list_frameworks`, `get_ci_template`, `deploy_guide`) are mapped explicitly and bypass the auth requirement safely.
-- Generic HTTP errors (`StatusUnauthorized` and `StatusForbidden`) are returned, preventing implementation-specific leaks.
+### 2. Race Conditions / TOCTOU Rate Limiting (CWE-307 / CWE-362)
+- Incrementing rate limits could theoretically be raced if the check (SELECT count) and update (UPDATE count = count + 1) are split.
+- `dbRateLimitStore.Increment` has been hardened to use an atomic SQL query:
+  `UPDATE otp_rate_limits SET count = count + 1 WHERE key = ? AND count < ?`
+- RowsAffected is then checked. If RowsAffected is 0, it indicates that the limit has already been reached or the row does not exist, completely resolving the Time-of-Check to Time-of-Use (TOCTOU) race.
 
 **Verdict:** PASS. Confidence: 10/10.
 
-### 3. Case Insensitivity & Tokens Handling
-- Authorization header parsing via `bearerToken` uses `strings.EqualFold` for the `"bearer "` prefix, ensuring compatibility with standard clients while preventing auth bypasses.
-- Key authentication results (`orgID`, `scopes`) are securely propagated down using contextual typing.
+### 3. SQL Injection (CWE-89)
+- All queries, updates, and inserts in `components/auth/store.go` and `components/auth/auth.go` use parameterized query placeholders (`?`).
+- There is no custom string formatting or string interpolation of user-controlled variables.
 
 **Verdict:** PASS. Confidence: 10/10.
 
-### 4. Secrets Exposure & Logging
-- Log statements via `c.logger.Warn` print only the resolved `tool`, `scopes`, or `err` metrics and the truncated prefix of public fields, never the raw Bearer token values.
-- Raw keys are safely validated and never persisted in log output.
+### 4. Audit Log Failure Resiliency & Request Lifecycle (CWE-755)
+- `recordAudit` runs in a separate background goroutine with its own context `context.Background()` and a 5-second execution timeout.
+- This ensures that if a database table lock occurs, if the table is dropped, or if the client terminates the connection early (canceling the request context), the audit log write fails gracefully in the background and does not block or fail the primary authentication flow.
 
 **Verdict:** PASS. Confidence: 10/10.
 
 ## Conclusion
-All security threats identified in `specs/security/epics/e72/THREAT_MODEL.md` (specifically F1, F2, and F3) have been fully addressed and verified by the implementation and its unit tests.
+All security threats identified in `specs/security/epics/e56/THREAT_MODEL.md` have been resolved. The code is secure and conforms to security best practices.
 
 **Verdict:** PASS

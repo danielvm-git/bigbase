@@ -22,7 +22,7 @@ func (s *MapOTPStore) Store(ctx context.Context, key, codeHash string, expiresAt
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.records[key] = &otpRecord{
-		email:     key,
+		key:       key,
 		codeHash:  codeHash,
 		expiresAt: expiresAt,
 		attempts:  0,
@@ -39,7 +39,7 @@ func (s *MapOTPStore) Get(ctx context.Context, key string) (*otpRecord, error) {
 	}
 	// Return a copy to prevent race conditions on mutable data
 	return &otpRecord{
-		email:     rec.email,
+		key:       rec.key,
 		codeHash:  rec.codeHash,
 		expiresAt: rec.expiresAt,
 		attempts:  rec.attempts,

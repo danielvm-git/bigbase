@@ -52,7 +52,7 @@ func (s *dbOTPStore) Get(ctx context.Context, key string) (*otpRecord, error) {
 		return nil, err
 	}
 	return &otpRecord{
-		email:     key,
+		key:       key,
 		codeHash:  codeHash,
 		expiresAt: expiresAt,
 		attempts:  attempts,
@@ -78,10 +78,9 @@ func NewDBRateLimitStore(db DBer) RateLimitStore {
 }
 
 func (s *dbRateLimitStore) Increment(ctx context.Context, key string, windowStart time.Time, max int) (bool, error) {
-	var count int
 	var windowStartStr string
-	err := s.db.QueryRowContext(ctx, "SELECT count, window_start FROM otp_rate_limits WHERE key = ?", key).
-		Scan(&count, &windowStartStr)
+	err := s.db.QueryRowContext(ctx, "SELECT window_start FROM otp_rate_limits WHERE key = ?", key).
+		Scan(&windowStartStr)
 
 	if err == sql.ErrNoRows {
 		windowStr := windowStart.Format(time.RFC3339)
@@ -101,14 +100,14 @@ func (s *dbRateLimitStore) Increment(ctx context.Context, key string, windowStar
 
 	now := time.Now()
 	if now.Sub(storedWindow) < time.Hour {
-		if count >= max {
-			return false, nil
-		}
-		_, err = s.db.ExecContext(ctx, "UPDATE otp_rate_limits SET count = count + 1 WHERE key = ?", key)
+		// Within window: atomically increment only if still under limit.
+		result, err := s.db.ExecContext(ctx,
+			"UPDATE otp_rate_limits SET count = count + 1 WHERE key = ? AND count < ?", key, max)
 		if err != nil {
 			return false, err
 		}
-		return true, nil
+		rows, _ := result.RowsAffected()
+		return rows > 0, nil
 	} else {
 		windowStr := windowStart.Format(time.RFC3339)
 		_, err = s.db.ExecContext(ctx, "UPDATE otp_rate_limits SET count = 1, window_start = ? WHERE key = ?", windowStr, key)

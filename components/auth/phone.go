@@ -65,7 +65,7 @@ func (a *Auth) handleSendPhoneOTP(w http.ResponseWriter, r *http.Request) {
 		a.logger.Info("phone OTP (dev mode — no phone sender configured)", "phone", phone, "code", code)
 	}
 
-	a.recordAudit(r.Context(), "auth.phone_otp_sent", 0, phone, getIP(r), nil)
+	a.recordAudit("auth.phone_otp_sent", 0, phone, getIP(r), nil)
 	writeJSON(w, http.StatusOK, map[string]bool{"ok": true})
 }
 
@@ -104,7 +104,7 @@ func (a *Auth) handleVerifyPhoneOTP(w http.ResponseWriter, r *http.Request) {
 	inputHash := hashCode(req.Code)
 	if subtle.ConstantTimeCompare([]byte(rec.codeHash), []byte(inputHash)) != 1 {
 		_ = a.otpStore.RecordAttempt(r.Context(), key)
-		a.recordAudit(r.Context(), "auth.phone_otp_failed", 0, phone, getIP(r), nil)
+		a.recordAudit("auth.phone_otp_failed", 0, phone, getIP(r), nil)
 		writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "invalid code"})
 		return
 	}
@@ -127,5 +127,5 @@ func (a *Auth) handleVerifyPhoneOTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	a.writeAuthResponse(w, r, http.StatusOK, userID, email, token)
-	a.recordAudit(r.Context(), "auth.phone_otp_verified", userID, phone, getIP(r), nil)
+	a.recordAudit("auth.phone_otp_verified", userID, phone, getIP(r), nil)
 }

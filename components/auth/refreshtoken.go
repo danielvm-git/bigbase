@@ -193,7 +193,7 @@ func (a *Auth) handleRefresh(w http.ResponseWriter, r *http.Request) {
 		"expires_at":    accessExpiresAt.UTC().Format(time.RFC3339),
 		"expires_in":    int(a.accessExpiry.Seconds()),
 	})
-	a.recordAudit(r.Context(), "auth.token_refresh", userID, email, getIP(r), nil)
+	a.recordAudit("auth.token_refresh", userID, email, getIP(r), nil)
 }
 
 // invalidateAllUserTokens marks all refresh tokens for the given user as used.

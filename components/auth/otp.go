@@ -26,7 +26,7 @@ type otpRate struct {
 }
 
 type otpRecord struct {
-	email     string
+	key       string
 	codeHash  string
 	expiresAt time.Time
 	attempts  int
@@ -95,7 +95,7 @@ func (a *Auth) handleSendOTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	a.emailSender.SendEmail(email, "Your verification code", fmt.Sprintf("Your code is: %s", code))
-	a.recordAudit(r.Context(), "auth.otp_sent", 0, email, getIP(r), nil)
+	a.recordAudit("auth.otp_sent", 0, email, getIP(r), nil)
 	writeJSON(w, http.StatusOK, map[string]bool{"ok": true})
 }
 
@@ -133,7 +133,7 @@ func (a *Auth) handleVerifyOTP(w http.ResponseWriter, r *http.Request) {
 	inputHash := hashCode(req.Code)
 	if subtle.ConstantTimeCompare([]byte(rec.codeHash), []byte(inputHash)) != 1 {
 		_ = a.otpStore.RecordAttempt(r.Context(), email)
-		a.recordAudit(r.Context(), "auth.otp_failed", 0, email, getIP(r), nil)
+		a.recordAudit("auth.otp_failed", 0, email, getIP(r), nil)
 		writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "invalid code"})
 		return
 	}
@@ -155,5 +155,5 @@ func (a *Auth) handleVerifyOTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	a.writeAuthResponse(w, r, http.StatusOK, userID, email, token)
-	a.recordAudit(r.Context(), "auth.otp_verified", userID, email, getIP(r), nil)
+	a.recordAudit("auth.otp_verified", userID, email, getIP(r), nil)
 }
