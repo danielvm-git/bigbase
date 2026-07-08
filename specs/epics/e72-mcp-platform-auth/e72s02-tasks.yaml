@@ -1,0 +1,17 @@
+story_id: e72s02
+title: "Scope-gated provisioning — mcp:provision scope required for write tools"
+status: planned
+bcps: 2
+tasks:
+  - id: 1
+    description: "Add TestRequireScope + TestProvisionScopeGate (403 without scope, pass with scope)"
+    verify: "go test ./components/mcp/ -run 'TestRequireScope|TestProvisionScopeGate' -v"
+    status: todo
+  - id: 2
+    description: "Implement requireScope guard and tag create_repo/create_site/provision_ci_credentials as write-scoped"
+    verify: "go test ./components/mcp/ -run TestProvisionScopeGate -v"
+    status: todo
+  - id: 3
+    description: "Confirm read tools remain reachable without mcp:provision"
+    verify: "go test ./components/mcp/ -run TestReadToolsNoScope -v"
+    status: todo

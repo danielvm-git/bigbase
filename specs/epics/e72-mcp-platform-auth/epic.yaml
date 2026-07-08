@@ -1,0 +1,40 @@
+type: epic-shard
+context: domain
+id: e72
+title: "Security — MCP Platform Authentication"
+wsjf: 9.0
+total_bcps: 6
+status: done
+tier: 1
+release_target: "2.69.0"
+depends_on: [e67]
+source: issue #61
+note: |
+  4 stories, 6 BCPs. Bearer token middleware for the MCP HTTP server + scope-gated
+  provisioning tools. Read tools stay public. Security-critical — mcp.bigbase.click
+  is publicly reachable with write tools and zero auth. Ships in v2.69.0.
+stories:
+  - id: e72s01
+    title: "MCP HTTP Bearer middleware — validate bb_ org API keys"
+    bcps: 2
+    status: done
+    spec: e72s01-spec.md
+    tasks: e72s01-tasks.yaml
+  - id: e72s02
+    title: "Scope-gated provisioning — mcp:provision scope required for write tools"
+    bcps: 2
+    status: done
+    spec: e72s02-spec.md
+    tasks: e72s02-tasks.yaml
+  - id: e72s03
+    title: "Read-only public tier — list_services, get_ci_template without auth"
+    bcps: 1
+    status: done
+    spec: e72s03-spec.md
+    tasks: e72s03-tasks.yaml
+  - id: e72s04
+    title: "provision_mcp_credentials tool — issue scoped MCP access keys for agents"
+    bcps: 1
+    status: deferred
+    spec: e72s04-spec.md
+    tasks: e72s04-tasks.yaml

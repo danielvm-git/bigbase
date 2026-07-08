@@ -1,0 +1,13 @@
+story_id: e72s03
+title: "Read-only public tier — list_services, get_ci_template without auth"
+status: planned
+bcps: 1
+tasks:
+  - id: 1
+    description: "Add TestPublicReadTier + TestDenyByDefault"
+    verify: "go test ./components/mcp/ -run 'TestPublicReadTier|TestDenyByDefault' -v"
+    status: todo
+  - id: 2
+    description: "Define publicReadTools allow-list; skip Bearer requirement for listed read tools, deny-by-default otherwise"
+    verify: "go build ./... && go test ./components/mcp/ -v"
+    status: todo

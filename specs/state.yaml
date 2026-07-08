@@ -1,12 +1,12 @@
 type: session-state
 context: infra
-active_flow: null
-active_epic_id: null
-active_story_id: null
-active_story_status: null
+active_flow: build_epic
+active_epic_id: e72
+active_story_id: e72s03
+active_story_status: done
 release:
-  target_version: 3.0.0
-  codename: "Project Scoping + Neon Native Port"
+  target_version: 2.69.0
+  codename: "Security Hardening"
   last_tag: v2.68.0
   last_publish: '2026-07-07'
   ci_verified: true
@@ -16,16 +16,16 @@ metrics:
   story_start: '2026-07-07T19:49:00Z'
   session_end: null
   cycle_minutes: 0
-  epics_completed: 54
-  stories_completed: 166
+  epics_completed: 55
+  stories_completed: 169
   bcps_per_hour: 0
 epic_cycle:
   step: 8
-  story_bcps: 2
-  story: e68s01
+  story_bcps: 5
+  story: e72s03
   audit_result: pass
   completed_steps: [0, 1, 2, 3, 4, 5, 6, 7, 8]
-  note: "e68 complete — inject DB_PATH/DATABASE_URL into deployed app env"
+  note: "e72 complete (s01-s03) — MCP Bearer auth + scope gate + public tier; s04 deferred per ADR 0006"
   fast_mode: false
   story_complete: true
 bug_cycle:
@@ -33,14 +33,15 @@ bug_cycle:
   completed_steps: []
   bug_file: null
 git:
-  branch: main
+  branch: feat/e72-mcp-platform-auth
   hash: 0a4208ede10e3a1297a2dbcd8f91e7eff15dfffd
   worktree: null
   ci_status: success
 handoff:
-  last_step_completed: "release-branch"
-  open_decisions: []
-  next_skill: survey-context
-  summary: "e69 released — MCP site discovery + deploy key lifecycle on main."
-  context: "feat(mcp): list_sites, get_site, list_site_keys, revoke_site_key. Issue #57 closed."
-  fast_mode: false
+  last_step_completed: "build-epic yolo — e72s01-e72s03 shipped on feat/e72-mcp-platform-auth"
+  open_decisions:
+    - "e71 + e56 remain for v2.69.0 Security Hardening release"
+    - "Bootstrap mcp:provision keys via admin CreateAPIKey before MCP write tools work"
+  next_skill: release-branch
+  summary: "MCP HTTP auth closes F1+F2 — deny-by-default three-tier model per ADR 0006."
+  context: "993 tests pass. Stash@{0} holds pre-kickoff WIP (httpx refactor)."
