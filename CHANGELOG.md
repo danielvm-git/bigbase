@@ -1,3 +1,10 @@
+# [2.69.0](https://github.com/danielvm-git/bigbase/compare/v2.68.0...v2.69.0) (2026-07-08)
+
+
+### Features
+
+* **mcp:** implement MCP bearer authentication and scope verification ([642e3db](https://github.com/danielvm-git/bigbase/commit/642e3db2070618b0007af46d84f5bda541db92e6))
+
 # [2.68.0](https://github.com/danielvm-git/bigbase/compare/v2.67.0...v2.68.0) (2026-07-07)
 
 
