@@ -1,3 +1,10 @@
+# [2.70.0](https://github.com/danielvm-git/bigbase/compare/v2.69.0...v2.70.0) (2026-07-08)
+
+
+### Features
+
+* **auth:** DB-backed OTP store & rate limiting with audit logging ([b0c3e43](https://github.com/danielvm-git/bigbase/commit/b0c3e43108d3183b177f1206c67572b5076d4696))
+
 # [2.69.0](https://github.com/danielvm-git/bigbase/compare/v2.68.0...v2.69.0) (2026-07-08)
 
 
