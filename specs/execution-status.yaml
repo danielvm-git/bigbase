@@ -66,8 +66,6 @@ epics:
   e64: planned
   e65: planned
   e66: planned
-  e67: done
-  e68: done
 stories:
   e01s01: done
   e02s01: done
@@ -250,8 +248,3 @@ stories:
   e66s01: pending
   e66s02: pending
   e66s03: pending
-  e67s01: done
-  e67s02: done
-  e67s03: done
-  e67s04: done
-  e68s01: done

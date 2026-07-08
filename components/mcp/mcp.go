@@ -80,6 +80,8 @@ type Options struct {
 	SiteLister SiteLister
 	// SiteKeyCreator provisions CI credentials for provision_ci_credentials.
 	SiteKeyCreator SiteKeyCreator
+	// OrgKeyAuthenticator validates bb_ org keys for HTTP MCP auth. Nil disables auth (stdio/tests).
+	OrgKeyAuthenticator OrgKeyAuthenticator
 }
 
 // DBer is the database interface for deploy tools.
@@ -101,6 +103,7 @@ type Component struct {
 	siteCreator       SiteCreator
 	siteLister        SiteLister
 	siteKeyCreator    SiteKeyCreator
+	orgKeyAuth        OrgKeyAuthenticator
 	streamableHandler http.Handler // created once, reused across requests for session persistence
 }
 
@@ -129,6 +132,7 @@ func New(opts Options) *Component {
 		siteCreator:    opts.SiteCreator,
 		siteLister:     opts.SiteLister,
 		siteKeyCreator: opts.SiteKeyCreator,
+		orgKeyAuth:     opts.OrgKeyAuthenticator,
 	}
 }
 
@@ -194,7 +198,7 @@ Use list_services to see the full catalog, get_service_docs for details on a spe
 	})
 
 	// registerPingTool
-	mcpsdk.AddTool(srv, &mcpsdk.Tool{
+	c.registerTool(srv, tierPublic, &mcpsdk.Tool{
 		Name:        "ping",
 		Description: "Simple ping to verify the MCP server is alive.",
 	}, func(ctx context.Context, req *mcpsdk.CallToolRequest, _ any) (*mcpsdk.CallToolResult, any, error) {
@@ -208,7 +212,7 @@ Use list_services to see the full catalog, get_service_docs for details on a spe
 	if err != nil {
 		return nil, fmt.Errorf("load services: %w", err)
 	}
-	mcpsdk.AddTool(srv, &mcpsdk.Tool{
+	c.registerTool(srv, tierPublic, &mcpsdk.Tool{
 		Name:        "list_services",
 		Description: "List all BigBase services with capabilities and status. Use this to discover what the platform offers before diving into a specific service.",
 	}, func(ctx context.Context, req *mcpsdk.CallToolRequest, _ any) (*mcpsdk.CallToolResult, any, error) {
@@ -218,7 +222,7 @@ Use list_services to see the full catalog, get_service_docs for details on a spe
 	})
 
 	// registerGetServiceDocs
-	mcpsdk.AddTool(srv, &mcpsdk.Tool{
+	c.registerTool(srv, tierPublic, &mcpsdk.Tool{
 		Name:        "get_service_docs",
 		Description: "Get detailed documentation for a specific BigBase service, including API endpoints and capabilities. Use after list_services to dive deeper into a service.",
 	}, func(ctx context.Context, req *mcpsdk.CallToolRequest, _ any) (*mcpsdk.CallToolResult, any, error) {
@@ -244,7 +248,7 @@ Use list_services to see the full catalog, get_service_docs for details on a spe
 	if err != nil {
 		return nil, fmt.Errorf("load examples: %w", err)
 	}
-	mcpsdk.AddTool(srv, &mcpsdk.Tool{
+	c.registerTool(srv, tierPublic, &mcpsdk.Tool{
 		Name:        "get_code_example",
 		Description: "Get ready-to-paste code snippets for a BigBase service in a specific framework (sveltekit, react, nextjs, vue, etc.). Use this to quickly integrate auth, db, storage, or realtime.",
 	}, func(ctx context.Context, req *mcpsdk.CallToolRequest, _ any) (*mcpsdk.CallToolResult, any, error) {
@@ -271,7 +275,7 @@ Use list_services to see the full catalog, get_service_docs for details on a spe
 	if err != nil {
 		return nil, fmt.Errorf("load frameworks: %w", err)
 	}
-	mcpsdk.AddTool(srv, &mcpsdk.Tool{
+	c.registerTool(srv, tierPublic, &mcpsdk.Tool{
 		Name:        "list_frameworks",
 		Description: "List frameworks BigBase supports with maturity level (full, partial, planned). Use this to choose the right framework for your project.",
 	}, func(ctx context.Context, req *mcpsdk.CallToolRequest, _ any) (*mcpsdk.CallToolResult, any, error) {
@@ -283,7 +287,7 @@ Use list_services to see the full catalog, get_service_docs for details on a spe
 	// --- Deploy workflow tools ---
 
 	// registerListRepos
-	mcpsdk.AddTool(srv, &mcpsdk.Tool{
+	c.registerTool(srv, tierRead, &mcpsdk.Tool{
 		Name:        "list_repos",
 		Description: "List git repositories available for deployment on this BigBase instance.",
 	}, func(ctx context.Context, req *mcpsdk.CallToolRequest, _ any) (*mcpsdk.CallToolResult, any, error) {
@@ -314,7 +318,7 @@ Use list_services to see the full catalog, get_service_docs for details on a spe
 	})
 
 	// registerDeploySite
-	mcpsdk.AddTool(srv, &mcpsdk.Tool{
+	c.registerTool(srv, tierWrite, &mcpsdk.Tool{
 		Name:        "deploy_site",
 		Description: "Trigger a deployment for a git repository. Provide repo_id and optionally branch (default: main), site_name, site_id, and app_type (python, node, go, static — overrides auto-detection).",
 	}, func(ctx context.Context, req *mcpsdk.CallToolRequest, _ any) (*mcpsdk.CallToolResult, any, error) {
@@ -372,7 +376,7 @@ Use list_services to see the full catalog, get_service_docs for details on a spe
 	})
 
 	// registerGetDeployStatus
-	mcpsdk.AddTool(srv, &mcpsdk.Tool{
+	c.registerTool(srv, tierRead, &mcpsdk.Tool{
 		Name:        "get_deploy_status",
 		Description: "Check the status of a deployment by its ID. Returns status, URL, and build info.",
 	}, func(ctx context.Context, req *mcpsdk.CallToolRequest, _ any) (*mcpsdk.CallToolResult, any, error) {
@@ -396,7 +400,7 @@ Use list_services to see the full catalog, get_service_docs for details on a spe
 			for rows.Next() {
 				var id, status, url, appType, created string
 				_ = rows.Scan(&id, &status, &url, &appType, &created)
-				fmt.Fprintf(&b, "- `%s` — **%s** %s (%s)\n", id[:8], status, url, appType)
+				fmt.Fprintf(&b, "- `%s` — **%s** %s (%s)\n", truncPrefix(id, 8), status, url, appType)
 			}
 			b.WriteString("\n→ Use `get_deploy_status` with a `deployment_id` for details.\n")
 			return textResult(b.String()), nil, nil
@@ -407,9 +411,9 @@ Use list_services to see the full catalog, get_service_docs for details on a spe
 		).Scan(&status, &url, &appType, &commitSHA, &errMsg)
 
 		var b strings.Builder
-		fmt.Fprintf(&b, "# Deployment %s\n\n- **Status:** %s\n- **URL:** %s\n- **Type:** %s\n", deployID[:8], status, url, appType)
+		fmt.Fprintf(&b, "# Deployment %s\n\n- **Status:** %s\n- **URL:** %s\n- **Type:** %s\n", truncPrefix(deployID, 8), status, url, appType)
 		if commitSHA != "" {
-			fmt.Fprintf(&b, "- **Commit:** %s\n", commitSHA[:7])
+			fmt.Fprintf(&b, "- **Commit:** %s\n", truncPrefix(commitSHA, 7))
 		}
 		if errMsg != "" {
 			fmt.Fprintf(&b, "- **Error:** %s\n", errMsg)
@@ -424,7 +428,7 @@ Use list_services to see the full catalog, get_service_docs for details on a spe
 	})
 
 	// registerGetDeployLogs
-	mcpsdk.AddTool(srv, &mcpsdk.Tool{
+	c.registerTool(srv, tierRead, &mcpsdk.Tool{
 		Name:        "get_deploy_logs",
 		Description: "Fetch build logs for a deployment. Use this to debug failed deployments.",
 	}, func(ctx context.Context, req *mcpsdk.CallToolRequest, _ any) (*mcpsdk.CallToolResult, any, error) {
@@ -447,11 +451,11 @@ Use list_services to see the full catalog, get_service_docs for details on a spe
 		if buildLog == "" {
 			return textResult("No build logs yet. The deployment may still be in progress."), nil, nil
 		}
-		return textResult(fmt.Sprintf("# Build Logs for %s\n\n```\n%s\n```", deployID[:8], buildLog)), nil, nil
+		return textResult(fmt.Sprintf("# Build Logs for %s\n\n```\n%s\n```", truncPrefix(deployID, 8), buildLog)), nil, nil
 	})
 
 	// registerDeployGuide
-	mcpsdk.AddTool(srv, &mcpsdk.Tool{
+	c.registerTool(srv, tierPublic, &mcpsdk.Tool{
 		Name:        "deploy_guide",
 		Description: "Step-by-step guide for deploying an application to bigbase.click. Use this when you need to understand the full deploy workflow.",
 	}, func(ctx context.Context, req *mcpsdk.CallToolRequest, _ any) (*mcpsdk.CallToolResult, any, error) {
@@ -492,7 +496,7 @@ Port is set via ` + "`PORT`" + ` env var. Database is SQLite by default.
 	}
 
 	// registerGetCITemplate
-	mcpsdk.AddTool(srv, &mcpsdk.Tool{
+	c.registerTool(srv, tierPublic, &mcpsdk.Tool{
 		Name:        "get_ci_template",
 		Description: "Return canonical GitHub Actions deploy workflow YAML for BigBase. Omit app_type to list available templates.",
 	}, func(ctx context.Context, req *mcpsdk.CallToolRequest, _ any) (*mcpsdk.CallToolResult, any, error) {
@@ -517,7 +521,7 @@ Port is set via ` + "`PORT`" + ` env var. Database is SQLite by default.
 	})
 
 	// registerCreateRepo
-	mcpsdk.AddTool(srv, &mcpsdk.Tool{
+	c.registerTool(srv, tierWrite, &mcpsdk.Tool{
 		Name:        "create_repo",
 		Description: "Register a git repository with BigBase. Returns repo_id and name for subsequent site creation.",
 	}, func(ctx context.Context, req *mcpsdk.CallToolRequest, _ any) (*mcpsdk.CallToolResult, any, error) {
@@ -549,7 +553,7 @@ Port is set via ` + "`PORT`" + ` env var. Database is SQLite by default.
 	})
 
 	// registerCreateSite
-	mcpsdk.AddTool(srv, &mcpsdk.Tool{
+	c.registerTool(srv, tierWrite, &mcpsdk.Tool{
 		Name:        "create_site",
 		Description: "Provision a site for a git repo. Returns site_id and name. Use deploy_site after provisioning to get the live URL.",
 	}, func(ctx context.Context, req *mcpsdk.CallToolRequest, _ any) (*mcpsdk.CallToolResult, any, error) {
@@ -593,7 +597,7 @@ Port is set via ` + "`PORT`" + ` env var. Database is SQLite by default.
 	})
 
 	// registerListSites
-	mcpsdk.AddTool(srv, &mcpsdk.Tool{
+	c.registerTool(srv, tierRead, &mcpsdk.Tool{
 		Name:        "list_sites",
 		Description: "List provisioned sites on this BigBase instance. Returns site_id, name, url, and git_repo_id for each site.",
 	}, func(ctx context.Context, req *mcpsdk.CallToolRequest, _ any) (*mcpsdk.CallToolResult, any, error) {
@@ -627,7 +631,7 @@ Port is set via ` + "`PORT`" + ` env var. Database is SQLite by default.
 	})
 
 	// registerGetSite
-	mcpsdk.AddTool(srv, &mcpsdk.Tool{
+	c.registerTool(srv, tierRead, &mcpsdk.Tool{
 		Name:        "get_site",
 		Description: "Get metadata for a single site: url, production branch, and last deployment status.",
 	}, func(ctx context.Context, req *mcpsdk.CallToolRequest, _ any) (*mcpsdk.CallToolResult, any, error) {
@@ -665,7 +669,7 @@ Port is set via ` + "`PORT`" + ` env var. Database is SQLite by default.
 	})
 
 	// registerProvisionCICredentials
-	mcpsdk.AddTool(srv, &mcpsdk.Tool{
+	c.registerTool(srv, tierWrite, &mcpsdk.Tool{
 		Name:        "provision_ci_credentials",
 		Description: "Generate a site-scoped deployment token (bb_dep_*) for CI/CD. Store via gh secret set as BIGBASE_DEPLOY_TOKEN.",
 	}, func(ctx context.Context, req *mcpsdk.CallToolRequest, _ any) (*mcpsdk.CallToolResult, any, error) {
@@ -697,7 +701,7 @@ Port is set via ` + "`PORT`" + ` env var. Database is SQLite by default.
 	})
 
 	// registerListSiteKeys
-	mcpsdk.AddTool(srv, &mcpsdk.Tool{
+	c.registerTool(srv, tierWrite, &mcpsdk.Tool{
 		Name:        "list_site_keys",
 		Description: "List site-scoped deploy keys (bb_dep_*) for a site. Raw tokens are never returned.",
 	}, func(ctx context.Context, req *mcpsdk.CallToolRequest, _ any) (*mcpsdk.CallToolResult, any, error) {
@@ -724,7 +728,7 @@ Port is set via ` + "`PORT`" + ` env var. Database is SQLite by default.
 	})
 
 	// registerRevokeSiteKey
-	mcpsdk.AddTool(srv, &mcpsdk.Tool{
+	c.registerTool(srv, tierWrite, &mcpsdk.Tool{
 		Name:        "revoke_site_key",
 		Description: "Revoke a site-scoped deploy key by key_id. The token stops working immediately; provision a new key with provision_ci_credentials.",
 	}, func(ctx context.Context, req *mcpsdk.CallToolRequest, _ any) (*mcpsdk.CallToolResult, any, error) {
@@ -832,7 +836,7 @@ func (c *Component) Handler() http.Handler {
 	}
 
 	mux := http.NewServeMux()
-	mux.Handle("/mcp", c.streamableHandler)
+	mux.Handle("/mcp", c.bearerAuthMiddleware(c.streamableHandler))
 
 	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")

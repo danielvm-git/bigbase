@@ -1,0 +1,17 @@
+story_id: e72s01
+title: "MCP HTTP Bearer middleware — validate bb_ org API keys"
+status: planned
+bcps: 2
+tasks:
+  - id: 1
+    description: "Add TestBearerAuthMiddleware (401 on missing/invalid, pass on valid bb_ key)"
+    verify: "go test ./components/mcp/ -run TestBearerAuthMiddleware -v"
+    status: todo
+  - id: 2
+    description: "Implement bearerAuthMiddleware validating bb_ keys against org key store; attach org_id to context"
+    verify: "go test ./components/mcp/ -run TestBearerAuth -v"
+    status: todo
+  - id: 3
+    description: "Wire middleware into MCP HTTP handler chain before tool dispatch"
+    verify: "go build ./... && go test ./components/mcp/ -v"
+    status: todo

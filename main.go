@@ -426,7 +426,8 @@ func startProxy() {
 		GitCreator:     g,
 		SiteCreator:    st,
 		SiteLister:     st,
-		SiteKeyCreator: authComp,
+		SiteKeyCreator:      authComp,
+		OrgKeyAuthenticator: authComp,
 	})
 	k.Register(mcpComp)
 

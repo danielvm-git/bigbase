@@ -143,6 +143,39 @@ func (a *Auth) DeleteAPIKey(ctx context.Context, orgID, keyID int64) error {
 	return err
 }
 
+// ResolveOrgKey resolves a bb_ organization API key to org_id and scopes.
+// Site deploy keys (bb_dep_) and revoked keys are rejected.
+func (a *Auth) ResolveOrgKey(rawKey string) (int64, []string, error) {
+	if !strings.HasPrefix(rawKey, "bb_") || strings.HasPrefix(rawKey, "bb_dep_") {
+		return 0, nil, fmt.Errorf("invalid org api key")
+	}
+
+	keyHash := hashAPIKey(rawKey)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	var orgID int64
+	var keyID int64
+	var scopesStr string
+	err := a.db.QueryRowContext(ctx,
+		`SELECT id, org_id, scopes FROM org_api_keys
+		 WHERE key_hash = ? AND site_id IS NULL AND revoked = 0`,
+		keyHash,
+	).Scan(&keyID, &orgID, &scopesStr)
+	if err == sql.ErrNoRows {
+		return 0, nil, fmt.Errorf("api key not found")
+	}
+	if err != nil {
+		return 0, nil, fmt.Errorf("resolve org key: %w", err)
+	}
+
+	now := time.Now().UTC().Format(time.RFC3339)
+	_, _ = a.db.ExecContext(context.Background(),
+		`UPDATE org_api_keys SET last_used_at = ? WHERE id = ?`, now, keyID)
+
+	return orgID, splitScopes(scopesStr), nil
+}
+
 // ResolveAPIKey looks up the org_id for a raw API key. Returns an error when not found.
 func (a *Auth) ResolveAPIKey(rawKey string) (int64, error) {
 	keyHash := hashAPIKey(rawKey)
@@ -153,7 +186,7 @@ func (a *Auth) ResolveAPIKey(rawKey string) (int64, error) {
 	var orgID int64
 	var keyID int64
 	err := a.db.QueryRowContext(ctx,
-		`SELECT id, org_id FROM org_api_keys WHERE key_hash = ?`, keyHash,
+		`SELECT id, org_id FROM org_api_keys WHERE key_hash = ? AND revoked = 0`, keyHash,
 	).Scan(&keyID, &orgID)
 	if err == sql.ErrNoRows {
 		return 0, fmt.Errorf("api key not found")
