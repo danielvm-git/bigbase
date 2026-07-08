@@ -1,9 +1,9 @@
 type: session-state
 context: infra
-active_flow: build_epic
-active_epic_id: e72
-active_story_id: e72s03
-active_story_status: done
+active_flow: null
+active_epic_id: null
+active_story_id: null
+active_story_status: null
 release:
   target_version: 2.69.0
   codename: "Security Hardening"
@@ -33,15 +33,15 @@ bug_cycle:
   completed_steps: []
   bug_file: null
 git:
-  branch: feat/e72-mcp-platform-auth
+  branch: main
   hash: 0a4208ede10e3a1297a2dbcd8f91e7eff15dfffd
   worktree: null
   ci_status: success
 handoff:
-  last_step_completed: "build-epic yolo — e72s01-e72s03 shipped on feat/e72-mcp-platform-auth"
+  last_step_completed: "release-branch"
   open_decisions:
     - "e71 + e56 remain for v2.69.0 Security Hardening release"
     - "Bootstrap mcp:provision keys via admin CreateAPIKey before MCP write tools work"
-  next_skill: release-branch
-  summary: "MCP HTTP auth closes F1+F2 — deny-by-default three-tier model per ADR 0006."
-  context: "993 tests pass. Stash@{0} holds pre-kickoff WIP (httpx refactor)."
+  next_skill: survey-context
+  summary: "e72 released — MCP Platform Authentication (Bearer token + scope gates) on main."
+  context: "All tests passing. Epic e72 capsule archived."
