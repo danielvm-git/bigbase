@@ -57,8 +57,9 @@ type Deployment struct {
 	PassthroughPaths []string `json:"passthrough_paths,omitempty"`
 	ManifestPath     string   `json:"manifest_path,omitempty"`
 	CreatedAt        string   `json:"created_at"`
-	StatusHistory    []StatusTransition `json:"status_history,omitempty"`
-	HealthSummary    string   `json:"health_summary,omitempty"`
+	StatusHistory     []StatusTransition  `json:"status_history,omitempty"`
+	HealthSummary     string              `json:"health_summary,omitempty"`
+	PipelineTimeline  *PipelineTimeline   `json:"pipeline_timeline,omitempty"`
 }
 
 type runningApp struct {
@@ -103,6 +104,8 @@ type Deploy struct {
 	oldDeployments   map[string][]string
 	dbDriver         string
 	dbDSN            string
+	diagnosisReader       DeployDiagnosisReader
+	relatedEventsReader   DeployRelatedEventsReader
 }
 
 type Options struct {
@@ -209,6 +212,16 @@ func New(opts Options) *Deploy {
 	return d
 }
 
+// SetDiagnosisReader wires an optional diagnosis provider (monitoring).
+func (d *Deploy) SetDiagnosisReader(r DeployDiagnosisReader) {
+	d.diagnosisReader = r
+}
+
+// SetRelatedEventsReader wires an optional related-events provider (monitoring).
+func (d *Deploy) SetRelatedEventsReader(r DeployRelatedEventsReader) {
+	d.relatedEventsReader = r
+}
+
 func (d *Deploy) Name() string                  { return "deploy" }
 func (d *Deploy) Version() string               { return version }
 func (d *Deploy) Dependencies() []string        { return []string{"db", "git"} }
@@ -271,6 +284,12 @@ func (d *Deploy) Start(ctx *kernel.Context) error {
 		return err
 	}
 	if err := d.ensureHealthSummaryColumn(); err != nil {
+		return err
+	}
+	if err := d.ensurePipelineTimelineColumn(); err != nil {
+		return err
+	}
+	if err := d.ensureRelatedEventsSnapshotColumn(); err != nil {
 		return err
 	}
 	if err := d.ensureDeploymentsRepoCreatedIndex(); err != nil {
@@ -832,6 +851,8 @@ func (d *Deploy) runDeployment(deploy *Deployment, buildDir, repoName string) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 
+	timeline := &PipelineTimeline{}
+
 	// Eagerly create the logHub so all log lines from the very start are captured.
 	d.getOrCreateHub(deploy.ID)
 
@@ -854,12 +875,17 @@ func (d *Deploy) runDeployment(deploy *Deployment, buildDir, repoName string) {
 	}
 
 	d.appendDeployLog(deploy.ID, fmt.Sprintf("→ Cloning repository (branch: %s)", deploy.Branch))
+	timeline.CloneStart = timelineNow()
 	if err := d.cloneAndCheckout(ctx, deploy.ID, repoPath, buildDir, deploy.Branch); err != nil {
 		d.logger.Error("clone repo", "error", err)
 		d.appendDeployLog(deploy.ID, fmt.Sprintf("✗ Clone failed: %v", err))
+		timeline.CloneEnd = timelineNow()
+		d.persistPipelineTimeline(deploy.ID, timeline)
 		d.updateStatus(deploy.ID, "failed")
 		return
 	}
+	timeline.CloneEnd = timelineNow()
+	d.persistPipelineTimeline(deploy.ID, timeline)
 	d.appendDeployLog(deploy.ID, "→ Clone complete")
 
 	commitSHA, _ := d.getCommitSHA(buildDir)
@@ -901,6 +927,7 @@ func (d *Deploy) runDeployment(deploy *Deployment, buildDir, repoName string) {
 		d.appendDeployLog(deploy.ID, "→ Serving static files")
 		d.updateStatus(deploy.ID, "running")
 		d.finalizeDeploymentURL(deploy, repoName)
+		d.persistPipelineTimeline(deploy.ID, timeline)
 		d.appendDeployLog(deploy.ID, fmt.Sprintf("→ Deployed at %s", deploy.URL))
 		_ = d.RegisterCustomDomainHosts(context.Background(), deploy.SiteID, deploy.Port)
 		// Drain old deployments now that new host is registered
@@ -909,11 +936,16 @@ func (d *Deploy) runDeployment(deploy *Deployment, buildDir, repoName string) {
 		return
 	}
 
+	timeline.BuildStart = timelineNow()
+	d.persistPipelineTimeline(deploy.ID, timeline)
 	if err := d.buildApp(ctx, deploy.ID, deploy.SiteID, deploy.RepoID, deploy.Branch, buildDir, appType, manifest); err != nil {
 		d.logger.Error("build app", "type", appType, "error", err)
+		d.persistPipelineTimeline(deploy.ID, timeline)
 		d.failDeployment(deploy.ID, err)
 		return
 	}
+	timeline.BuildEnd = timelineNow()
+	d.persistPipelineTimeline(deploy.ID, timeline)
 
 	serveDir := buildDir
 	if manifest != nil && manifest.Build.Output != "" {
@@ -946,6 +978,7 @@ func (d *Deploy) runDeployment(deploy *Deployment, buildDir, repoName string) {
 	if appType == AppStatic {
 		d.updateStatus(deploy.ID, "running")
 		d.finalizeDeploymentURL(deploy, repoName)
+		d.persistPipelineTimeline(deploy.ID, timeline)
 		d.appendDeployLog(deploy.ID, fmt.Sprintf("→ Deployed at %s", deploy.URL))
 		d.appendDeployLog(deploy.ID, "→ Serving static files")
 		_ = d.RegisterCustomDomainHosts(context.Background(), deploy.SiteID, deploy.Port)
@@ -956,11 +989,19 @@ func (d *Deploy) runDeployment(deploy *Deployment, buildDir, repoName string) {
 
 	// Process app: transition to deploying, start the app, then health-probe
 	// before marking running and registering the proxy host.
+	timeline.StartStart = timelineNow()
+	d.persistPipelineTimeline(deploy.ID, timeline)
 	_ = d.TransitionState(ctx, deploy.ID, "deploying")
 	d.appendDeployLog(deploy.ID, "→ Status: deploying — starting application")
 	go d.startApp(context.Background(), serveDir, deploy, appType, repoName, manifest)
+	timeline.StartEnd = timelineNow()
+	d.persistPipelineTimeline(deploy.ID, timeline)
 
+	timeline.HealthStart = timelineNow()
+	d.persistPipelineTimeline(deploy.ID, timeline)
 	result := d.runHealthCheck(ctx, deploy, manifest)
+	timeline.HealthEnd = timelineNow()
+	d.persistPipelineTimeline(deploy.ID, timeline)
 	if result.OK {
 		_ = d.TransitionState(ctx, deploy.ID, "running")
 		d.finalizeDeploymentURL(deploy, repoName)
@@ -1291,6 +1332,9 @@ func (d *Deploy) TransitionState(ctx context.Context, id, newStatus string) erro
 				"timestamp":     transition.Timestamp,
 			},
 		}, &kernel.Context{})
+		if newStatus == string(StateFailed) && current != string(StateFailed) {
+			d.emitDeployFailed(ctx, id)
+		}
 	}
 
 	// Persist build_log on terminal states
@@ -1603,7 +1647,7 @@ func (d *Deploy) HandleList(w http.ResponseWriter, r *http.Request) {
 	}
 
 	rows, err := d.db.QueryContext(r.Context(),
-		"SELECT id, repo_id, site_id, COALESCE(branch,'main'), COALESCE(commit_sha,''), COALESCE(status,'pending'), COALESCE(url,''), COALESCE(port,0), COALESCE(app_type,''), COALESCE(error_message,''), COALESCE(passthrough_paths,''), COALESCE(manifest_path,''), COALESCE(health_summary,''), created_at FROM deployments ORDER BY created_at DESC")
+		"SELECT id, repo_id, site_id, COALESCE(branch,'main'), COALESCE(commit_sha,''), COALESCE(status,'pending'), COALESCE(url,''), COALESCE(port,0), COALESCE(app_type,''), COALESCE(error_message,''), COALESCE(passthrough_paths,''), COALESCE(manifest_path,''), COALESCE(health_summary,''), COALESCE(pipeline_timeline,''), created_at FROM deployments ORDER BY created_at DESC")
 	if err != nil {
 		d.logger.Error("list deployments", "error", err)
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
@@ -1614,12 +1658,13 @@ func (d *Deploy) HandleList(w http.ResponseWriter, r *http.Request) {
 	deployments := make([]Deployment, 0)
 	for rows.Next() {
 		var dep Deployment
-		var passthroughJSON string
-		if err := rows.Scan(&dep.ID, &dep.RepoID, &dep.SiteID, &dep.Branch, &dep.CommitSHA, &dep.Status, &dep.URL, &dep.Port, &dep.AppType, &dep.ErrorMessage, &passthroughJSON, &dep.ManifestPath, &dep.HealthSummary, &dep.CreatedAt); err != nil {
+		var passthroughJSON, timelineJSON string
+		if err := rows.Scan(&dep.ID, &dep.RepoID, &dep.SiteID, &dep.Branch, &dep.CommitSHA, &dep.Status, &dep.URL, &dep.Port, &dep.AppType, &dep.ErrorMessage, &passthroughJSON, &dep.ManifestPath, &dep.HealthSummary, &timelineJSON, &dep.CreatedAt); err != nil {
 			d.logger.Error("scan deployment", "error", err)
 			continue
 		}
 		dep.PassthroughPaths = parsePassthroughPaths(passthroughJSON)
+		dep.PipelineTimeline = parsePipelineTimeline(timelineJSON)
 		deployments = append(deployments, dep)
 	}
 	writeJSON(w, http.StatusOK, map[string]any{"data": deployments})
@@ -1664,6 +1709,16 @@ func (d *Deploy) handleDeployByID(w http.ResponseWriter, r *http.Request) {
 		d.handleRollback(w, r, id)
 		return
 	}
+	if strings.HasSuffix(path, "/diagnosis") {
+		id := strings.TrimSuffix(path, "/diagnosis")
+		d.handleDeployDiagnosis(w, r, id)
+		return
+	}
+	if strings.HasSuffix(path, "/related-events") {
+		id := strings.TrimSuffix(path, "/related-events")
+		d.handleDeployRelatedEvents(w, r, id)
+		return
+	}
 
 	id := path
 	switch r.Method {
@@ -1671,16 +1726,17 @@ func (d *Deploy) handleDeployByID(w http.ResponseWriter, r *http.Request) {
 		d.handleDeleteDeployment(w, r, id)
 	case http.MethodGet:
 		var dep Deployment
-		var appType, passthroughJSON string
+		var appType, passthroughJSON, timelineJSON string
 		err := d.db.QueryRowContext(r.Context(),
-			"SELECT id, repo_id, site_id, branch, commit_sha, status, url, port, app_type, COALESCE(error_message,''), COALESCE(passthrough_paths,''), COALESCE(manifest_path,''), COALESCE(health_summary,''), created_at FROM deployments WHERE id = ?", id).
-			Scan(&dep.ID, &dep.RepoID, &dep.SiteID, &dep.Branch, &dep.CommitSHA, &dep.Status, &dep.URL, &dep.Port, &appType, &dep.ErrorMessage, &passthroughJSON, &dep.ManifestPath, &dep.HealthSummary, &dep.CreatedAt)
+			"SELECT id, repo_id, site_id, branch, commit_sha, status, url, port, app_type, COALESCE(error_message,''), COALESCE(passthrough_paths,''), COALESCE(manifest_path,''), COALESCE(health_summary,''), COALESCE(pipeline_timeline,''), created_at FROM deployments WHERE id = ?", id).
+			Scan(&dep.ID, &dep.RepoID, &dep.SiteID, &dep.Branch, &dep.CommitSHA, &dep.Status, &dep.URL, &dep.Port, &appType, &dep.ErrorMessage, &passthroughJSON, &dep.ManifestPath, &dep.HealthSummary, &timelineJSON, &dep.CreatedAt)
 		if err != nil {
 			writeJSON(w, http.StatusNotFound, map[string]string{"error": "deployment not found"})
 			return
 		}
 		dep.AppType = AppType(appType)
 		dep.PassthroughPaths = parsePassthroughPaths(passthroughJSON)
+		dep.PipelineTimeline = parsePipelineTimeline(timelineJSON)
 		writeJSON(w, http.StatusOK, dep)
 	default:
 		writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})

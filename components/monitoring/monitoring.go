@@ -12,6 +12,8 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/danielvm/bigbase/components/internal/eventrecorder"
+	"github.com/danielvm/bigbase/components/internal/llm"
 	"github.com/danielvm/bigbase/kernel"
 )
 
@@ -87,11 +89,15 @@ type Monitoring struct {
 	stopHost   chan struct{}
 	stopAlerts chan struct{}
 	kctx       *kernel.Context // set in Start; used by alert checker to emit events
+	recorder   *eventrecorder.Recorder
+	llm        *llm.Client
+	llmModelName string
 }
 
 type Options struct {
 	DB     DBer
 	Logger kernel.Logger
+	LLM    llm.Config
 }
 
 func New(opts Options) *Monitoring {
@@ -99,6 +105,7 @@ func New(opts Options) *Monitoring {
 	if logger == nil {
 		logger = noopLogger{}
 	}
+	llmCfg, modelName := llmConfigFromOptions(opts)
 	return &Monitoring{
 		db:     opts.DB,
 		logger: logger,
@@ -106,7 +113,21 @@ func New(opts Options) *Monitoring {
 			startedAt: time.Now(),
 			requests:  make(map[string]*EndpointMetrics),
 		},
+		llm:          llm.New(llmCfg),
+		llmModelName: modelName,
 	}
+}
+
+func llmConfigFromOptions(opts Options) (llm.Config, string) {
+	cfg := opts.LLM
+	if cfg.APIKey == "" && cfg.BaseURL == "" && cfg.Model == "" {
+		cfg = llm.ConfigFromEnv()
+	}
+	model := cfg.Model
+	if model == "" {
+		model = "deepseek-chat"
+	}
+	return cfg, model
 }
 
 const hostCollectInterval = 15 * time.Second
@@ -119,9 +140,13 @@ func (m *Monitoring) Hooks() []kernel.HookDef                                { r
 func (m *Monitoring) Init(ctx *kernel.Context, config json.RawMessage) error { return nil }
 func (m *Monitoring) Start(ctx *kernel.Context) error {
 	m.stream = newEventStream()
+	if m.db != nil {
+		if err := m.initObservability(); err != nil {
+			return err
+		}
+	}
 	if ctx != nil && ctx.Kernel != nil {
-		knownHooks := []string{"mutation", "request", "deploy", "scaffold_db", "scaffold_repo", "scaffold_function"}
-		m.WithEventBus(ctx.Kernel.EventBus(), knownHooks)
+		m.wireObservabilityHooks(ctx.Kernel.EventBus())
 	}
 	if m.db != nil {
 		if err := m.db.Migrate(`CREATE TABLE IF NOT EXISTS monitoring_logs (
@@ -318,6 +343,8 @@ func (m *Monitoring) Handler() http.Handler {
 	mux.HandleFunc("/api/monitoring/alerts", m.handleAlerts)
 	mux.HandleFunc("GET /api/orgs/{id}/usage", m.handleOrgUsage)
 	mux.HandleFunc("/api/monitoring/events", m.handleSSEEvents)
+	mux.HandleFunc("/api/monitoring/incidents", m.handleIncidents)
+	mux.HandleFunc("/api/monitoring/incidents/", m.handleIncidentInvestigation)
 	mux.HandleFunc("/api/monitoring/alerts/", m.handleAlertByID)
 	mux.HandleFunc("/api/monitoring/processes", m.handleProcesses)
 	return mux

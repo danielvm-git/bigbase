@@ -375,6 +375,8 @@ func startProxy() {
 		DB:     d,
 		Logger: logger,
 	})
+	depComp.SetDiagnosisReader(mComp)
+	depComp.SetRelatedEventsReader(mComp)
 	gh := github.New(github.Options{
 		DB:             d,
 		Logger:         logger,
@@ -522,6 +524,9 @@ func startProxy() {
 	p.Handle("/api/monitoring/logs", authComp.Middleware(mComp.Handler()).ServeHTTP)
 	p.Handle("/api/monitoring/logs/", authComp.Middleware(mComp.Handler()).ServeHTTP)
 	p.Handle("/api/monitoring/alerts", authComp.Middleware(mComp.Handler()).ServeHTTP)
+	p.Handle("/api/monitoring/events", authComp.Middleware(mComp.Handler()).ServeHTTP)
+	p.Handle("/api/monitoring/incidents", authComp.Middleware(mComp.Handler()).ServeHTTP)
+	p.Handle("/api/monitoring/incidents/", authComp.Middleware(mComp.Handler()).ServeHTTP)
 	p.Handle("/admin/", http.StripPrefix("/admin/", ad.Handler()).ServeHTTP)
 
 	spaPaths := []string{"/repos", "/deploy", "/deploy/new", "/messaging", "/storage", "/functions", "/forge", "/cici", "/monitoring", "/data", "/sql", "/users", "/login"}

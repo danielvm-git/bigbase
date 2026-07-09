@@ -69,7 +69,7 @@ func (a *API) handleScaffoldDB(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	a.emitMutation("scaffold_db", name, nil)
+	a.emitMutation("scaffold_db", name, nil, siteIDFromRequest(r))
 
 	_ = ctx
 	writeJSON(w, http.StatusCreated, map[string]string{"name": name, "status": "created"})
@@ -150,6 +150,6 @@ func (a *API) handleScaffoldFunction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	a.emitMutation("scaffold_function", "functions", id)
+	a.emitMutation("scaffold_function", "functions", id, siteIDFromRequest(r))
 	writeJSON(w, http.StatusCreated, map[string]any{"id": id, "name": name, "status": "created"})
 }

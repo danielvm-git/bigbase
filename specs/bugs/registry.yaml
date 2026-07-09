@@ -1,6 +1,14 @@
 type: bug-registry
 context: infra
 bugs:
+  - id: BUG-2026-07-09T001200
+    date: "2026-07-09"
+    severity: high
+    priority: high
+    scope: proxy,ci
+    summary: CI fails on flaky TestProxyAuthPolicy — missing waitForServer after proxy Start
+    file: specs/bugs/BUG-2026-07-09T001200-ci-proxy-auth-policy-flaky.md
+    status: fixed
   - id: BUG-2026-07-07T223200
     date: "2026-07-07"
     severity: medium

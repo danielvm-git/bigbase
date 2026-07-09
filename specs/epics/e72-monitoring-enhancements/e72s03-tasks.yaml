@@ -1,0 +1,36 @@
+story_id: e72s03
+title: Correlated Deployment Event Timeline
+status: done
+bcps: 2
+architecture_ref: specs/adr/0007-e72-observability-seams.md
+tasks:
+  - id: 0
+    description: "Prerequisite: proxy emits request bus events with site_id when host maps to a site; api mutation events include site_id when derivable from context."
+    verify: "go test -run 'TestRequestEventEmitted|TestMutationEventSiteID' ./components/... -v -count=1"
+    status: done
+    risk: P1
+    security: none
+  - id: 1
+    description: "Create components/internal/eventrecorder/ — Record(ctx, RecordedEvent) and Query(ctx, Filter). monitoring_events table with FIFO cap 5000 (delete oldest in same transaction as insert)."
+    verify: "go test -run 'TestEventRecorder' ./components/internal/eventrecorder/ -v -count=1"
+    status: done
+    risk: P2
+    security: none
+  - id: 2
+    description: "Monitoring bus handlers call eventrecorder.Record then eventStream.broadcast (SSE fan-out adapter). Subscribe to deploy.state_changed, deploy.failed, mutation, request, scaffold_* per ADR 0007."
+    verify: "go test -run 'TestEventPersistence' ./components/monitoring/ -v -count=1"
+    status: done
+    risk: P2
+    security: none
+  - id: 3
+    description: "On deploy.failed, snapshot related events (30-min pre-deploy window, site_id filter, 20 per category) into deployments.related_events_snapshot JSON. DeployRelatedEventsReader in monitoring; GET /api/deploy/:id/related-events on deploy Gateway."
+    verify: "curl -s http://localhost:9999/api/deploy/test-id/related-events | jq '.events.db_schema_changes'"
+    status: done
+    risk: P2
+    security: none
+  - id: 4
+    description: "Full monitoring regression with -race on event recorder path"
+    verify: "go test ./components/monitoring/... ./components/internal/eventrecorder/... -count=1 -race"
+    status: done
+    risk: P0
+    security: none

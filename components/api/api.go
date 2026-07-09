@@ -293,16 +293,24 @@ func (a *API) getRecord(w http.ResponseWriter, r *http.Request, collection, id s
 	writeJSON(w, http.StatusOK, record)
 }
 
-func (a *API) emitMutation(mutType, collection string, id any) {
+func (a *API) emitMutation(mutType, collection string, id any, siteID string) {
 	if a.bus != nil {
-		if err := a.bus.Emit(kernel.Event{Name: "mutation", Data: map[string]any{
+		data := map[string]any{
 			"collection": collection,
 			"type":       mutType,
 			"id":         id,
-		}}, nil); err != nil {
+		}
+		if siteID != "" {
+			data["site_id"] = siteID
+		}
+		if err := a.bus.Emit(kernel.Event{Name: "mutation", Data: data}, nil); err != nil {
 			a.logger.Error("emit mutation event", "collection", collection, "type", mutType, "id", id, "error", err)
 		}
 	}
+}
+
+func siteIDFromRequest(r *http.Request) string {
+	return strings.TrimSpace(r.Header.Get("X-Bigbase-Site-ID"))
 }
 
 func (a *API) createRecord(w http.ResponseWriter, r *http.Request, collection string) {
@@ -336,7 +344,7 @@ func (a *API) createRecord(w http.ResponseWriter, r *http.Request, collection st
 	}
 
 	id, _ := res.LastInsertId()
-	a.emitMutation("create", collection, id)
+	a.emitMutation("create", collection, id, siteIDFromRequest(r))
 	writeJSON(w, http.StatusCreated, map[string]any{"id": id})
 }
 
@@ -384,7 +392,7 @@ func (a *API) updateRecord(w http.ResponseWriter, r *http.Request, collection, i
 		return
 	}
 
-	a.emitMutation("update", collection, id)
+	a.emitMutation("update", collection, id, siteIDFromRequest(r))
 	writeJSON(w, http.StatusOK, map[string]string{"status": "updated"})
 }
 
@@ -425,7 +433,7 @@ func (a *API) deleteRecord(w http.ResponseWriter, r *http.Request, collection, i
 		return
 	}
 
-	a.emitMutation("delete", collection, id)
+	a.emitMutation("delete", collection, id, siteIDFromRequest(r))
 	writeJSON(w, http.StatusOK, map[string]string{"status": "deleted"})
 }
 

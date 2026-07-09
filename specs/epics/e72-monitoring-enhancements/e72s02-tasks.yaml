@@ -1,0 +1,30 @@
+story_id: e72s02
+title: Deploy Pipeline Timeline
+status: done
+bcps: 2
+architecture_ref: specs/adr/0007-e72-observability-seams.md
+tasks:
+  - id: 1
+    description: "Add PipelineTimeline struct (CloneStart/CloneEnd/BuildStart/BuildEnd/StartStart/StartEnd/HealthStart/HealthEnd). Migration: pipeline_timeline TEXT column on deployments (not stage_timeline — avoids state-machine collision per ADR 0007)."
+    verify: "go test -run 'TestPipelineTimelineSchema' ./components/deploy/ -v -count=1"
+    status: done
+    risk: P2
+    security: none
+  - id: 2
+    description: "Instrument runDeployment: record timestamps at clone/build/start/health boundaries. persistPipelineTimeline helper marshals JSON after each stage. Partial timeline on mid-pipeline failure."
+    verify: "go test -run 'TestPipelineTimelineInstrumentation' ./components/deploy/ -v -count=1"
+    status: done
+    risk: P2
+    security: none
+  - id: 3
+    description: "Include pipeline_timeline in handleDeployByID and list responses; null for legacy rows."
+    verify: "curl -s http://localhost:9999/api/deploy/test-id | jq '.pipeline_timeline.clone_start'"
+    status: done
+    risk: P2
+    security: none
+  - id: 4
+    description: "Full deploy package regression"
+    verify: "go test ./components/deploy/... -count=1 && go vet ./components/deploy/..."
+    status: done
+    risk: P0
+    security: none

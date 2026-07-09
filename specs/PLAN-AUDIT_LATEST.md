@@ -1,7 +1,9 @@
-# Plan Audit — BigBase e67 (MCP Provisioning Tools)
-**Date:** 2026-07-07 · **Verdict:** NOT READY
+# Plan Audit — Epic e72: Monitoring Enhancements
 
-Audited: `specs/epics/e67-mcp-provisioning-tools/` capsule (4 stories, 7 BCPs), `specs/release-plan.yaml` v3.0.0, and build-epic pre-flight gates.
+**Date:** 2026-07-08 · **Verdict:** READY
+
+**Subject:** `specs/epics/e72-monitoring-enhancements/` + ADR 0007  
+**Operator constraint:** DeepSeek API as default LLM provider ([api-docs.deepseek.com](https://api-docs.deepseek.com))
 
 ---
 
@@ -9,11 +11,11 @@ Audited: `specs/epics/e67-mcp-provisioning-tools/` capsule (4 stories, 7 BCPs), 
 
 | Check | Status | Note |
 |-------|--------|------|
-| Vertical slices | ✅ | 4 independent stories (create_repo → create_site → provision_ci_credentials → get_ci_template); each shippable alone |
-| Scope bounded | ⚠️ | Per-story §16/§18 Out of Scope present; **e67 not listed in `specs/product/SCOPE_LATEST.yaml`** (still v2.0 scope) |
-| Success criteria | ✅ | Gherkin AC in all four story specs; every task has runnable `verify:` command |
-| HARD GATE candidates | ✅ | `hard_gate: e67s03` in epic.yaml — site-scoped deploy keys + cross-site enforcement |
-| Domain language | ⚠️ | Terminology consistent in specs (`site_id`, `bb_dep_`, `GitCreator`); **`specs/product/GLOSSARY_LATEST.yaml` absent** |
+| Vertical slices | ✅ | 4 stories (e72s01–s04), each shippable with own acceptance criteria and verify commands |
+| Scope bounded | ⚠️ | Per-story `Non-goals` / `Out of scope` present; no epic-level `in_scope`/`out_of_scope` block in `epic.yaml`. Waived — indexed in `release-plan.yaml` with WSJF + depends_on |
+| Success criteria | ✅ | Gherkin AC in each story `.md`; per-task `verify:` in all four `*-tasks.yaml` |
+| HARD GATE candidates | ✅ | ADR 0007 accepted — bus contracts, AlertIncident, composition-root seams resolved before build |
+| Domain language | ✅ | Observability vocabulary in `tech-stack.md`; ADR 0007 canonical terms |
 
 ---
 
@@ -21,13 +23,11 @@ Audited: `specs/epics/e67-mcp-provisioning-tools/` capsule (4 stories, 7 BCPs), 
 
 | Check | Status | Note |
 |-------|--------|------|
-| `CLAUDE.md` / `AGENTS.md` | ✅ | Present with Go commands, ECC rules, ctxo |
-| `CONVENTIONS.md` | ✅ | Solo-git, Conventional Commits, semantic-release |
-| `specs/` layout | ✅ | Epic capsule with `epic.yaml`, `*-spec.md`, `*-tasks.yaml` |
-| Conventional Commits | ✅ | Documented; CI uses semantic-release |
-| Git workflow mode | ✅ | Solo-git (`CONVENTIONS.md` §Git & Workflow) |
-| Tech-stack doc | ✅ | `specs/tech-architecture/tech-stack.md` exists |
-| release-plan.yaml | ✅ | e67 registered, WSJF 8.0, `depends_on: [e57]` |
+| `CLAUDE.md` / `AGENTS.md` | ✅ | Present; ECC, TDD, specs-first documented |
+| `CONVENTIONS.md` | ✅ | Go conventions, solo-git, Conventional Commits |
+| `specs/` layout | ✅ | Epic capsule, story specs, task YAMLs, ADR 0007 |
+| Commit conventions | ✅ | Conventional Commits + semantic-release in CONVENTIONS |
+| Git workflow mode | ✅ | **solo-git** (CONVENTIONS § Git & Workflow) |
 
 ---
 
@@ -35,80 +35,84 @@ Audited: `specs/epics/e67-mcp-provisioning-tools/` capsule (4 stories, 7 BCPs), 
 
 | Question | Value |
 |----------|-------|
-| Test command | `go test ./components/mcp/ -run Test<Story> -v -count=1` (per story) + `go test ./... -count=1` (full suite) |
-| Build command | `go build .` |
-| Lint command | `golangci-lint run ./...` |
-| Typecheck command | `go vet ./...` |
-| CI platform | GitHub Actions (`.github/workflows/ci.yml` — SQLite + PostgreSQL matrix) |
-| Solo or team | Solo-git |
-| Language + framework | Go 1.26 / ECC kernel + `modelcontextprotocol/go-sdk` |
-| Greenfield or existing | Existing codebase (19+ components) |
+| **test** | `go test ./...` (per-task: `go test -run 'Test…' ./components/... -count=1`) |
+| **build** | `go build -o bigbase .` |
+| **lint** | `golangci-lint run ./...` |
+| **typecheck** | `go vet ./...` (Go — no separate tsc) |
+| **CI platform** | GitHub Actions (`.github/workflows/ci.yml` — SQLite + Postgres matrix) |
+| **Solo or team** | solo-git |
+| **Language + framework** | Go 1.26 · ECC kernel · SQLite/PostgreSQL |
+| **Greenfield or existing** | Existing codebase — monitoring + deploy components |
 
 ---
 
-## Plan Artifact Quality (e67)
+## Epic Summary
 
-| Artifact | Status | Detail |
-|----------|--------|--------|
-| `epic.yaml` | ✅ | 4 stories, BCPs, hard_gate, depends_on documented |
-| Story specs | ✅ | 17–20 sections incl. Requirements delta tags (ADDED/MODIFIED on s03) |
-| Task YAML | ✅ | All 29 tasks `status: failing`; risk + security fields on s03 |
-| Verify commands | ✅ | Every task ends with runnable `go test` / `go build` |
-| Security spec (s03) | ✅ | Cross-site 403, `bb_dep_` prefix order, `kernel.CtxSiteID` in scope.go |
-| Test plan artifact | ⚠️ | No `specs/tech-architecture/e67-TEST_PLAN_LATEST.md` — heuristics used instead |
-| plan-consistency-check | ❌ | `scripts/lib/plan-consistency-check.sh` not in repo — plan-work gate cannot run mechanically |
+| Story | BCPs | Build order | Key deliverable |
+|-------|------|-------------|-----------------|
+| e72s02 | 2 | 1st | `pipeline_timeline` on deployments |
+| e72s03 | 2 | 2nd | `eventrecorder` + related-events snapshot |
+| e72s01 | 3 | 3rd | `deploy.failed` + DeepSeek diagnosis |
+| e72s04 | 3 | 4th | AlertIncident + investigation |
 
----
+**Prerequisites (cross-cutting):** deploy emits `deploy.failed`; fix dead `"deploy"` bus hook; proxy/api emit enriched events with `site_id`.
 
-## Story Readiness
-
-| Story | BCPs | Plan ready? | Blockers |
-|-------|------|-------------|----------|
-| e67s04 get_ci_template | 1 | ✅ | e57 declared dependency; no code deps in practice |
-| e67s01 create_repo | 2 | ✅ | e57 declared dependency |
-| e67s02 create_site | 2 | ✅ | e57 declared dependency; HTTP still requires `name` (MCP-only defaulting) |
-| e67s03 provision_ci_credentials | 2 | ✅ | Hard gate — auth middleware + deploy handler changes |
-
-Recommended build order (lowest risk first): **e67s04 → e67s01 → e67s02 → e67s03**
+**Architecture anchor:** `specs/adr/0007-e72-observability-seams.md`
 
 ---
 
-## Open Gaps (Blocking)
+## LLM Provider — DeepSeek (operator decision, spec-updated)
 
-- [ ] **`specs/security/epics/e67/THREAT_MODEL.md` missing** — build-epic step 0 requires threat model before coding. e57/e51/e49/e48 have models; e67 does not.
-- [ ] **e57 dependency unsatisfied** — all e67 stories declare `depends_on: [e57]`; `execution-status.yaml` shows e57 + all e57 stories `planned`. Building e67 now risks rework when project scoping lands (sites/auth/git tables, `kernel.ProjectIDFromContext`).
+| Setting | Value | Source |
+|---------|-------|--------|
+| API style | OpenAI-compatible `POST /chat/completions` | [DeepSeek API docs](https://api-docs.deepseek.com) |
+| Default base URL | `https://api.deepseek.com` | ADR 0007 §7, e72s01 spec |
+| Default model | `deepseek-chat` | Cost-effective one-shot diagnosis |
+| API key | `BIGBASE_LLM_API_KEY` (primary) or `DEEPSEEK_API_KEY` (fallback) | e72s01-tasks.yaml task 1 |
+| Override model | `BIGBASE_LLM_MODEL=deepseek-v4-pro` | Harder investigations (optional) |
+| Disable AI | Unset API key — graceful 404 on diagnosis/investigation summary | e72s01 AC |
 
-## Open Gaps (Non-Blocking)
-
-- [ ] Add e67 to `specs/product/SCOPE_LATEST.yaml` under v3.0 release scope
-- [ ] Create `specs/product/GLOSSARY_LATEST.yaml` or refresh from archive
-- [ ] Add `scripts/lib/plan-consistency-check.sh` (plan-work HARD GATE from skill v1.18+)
-- [ ] Record e57 waiver in `specs/state.yaml` `open_decisions` if proceeding in yolo mode without e57
+**Implementation note:** `internal/llm` must **not** append `/v1` (DeepSeek base is `https://api.deepseek.com`, not OpenAI's `/v1` path). Tests use `httptest` mock.
 
 ---
 
-## Yolo Mode Assessment
+## Risk Register (audit findings)
 
-User intent: run `build-epic` s01→s04 without checkpoints.
+| Risk | Severity | Mitigation in plan |
+|------|----------|-------------------|
+| Bus hook mismatch (`"deploy"` vs `deploy.state_changed`) | P1 | ADR 0007 + e72s01 task 4 |
+| Alert re-fire every 30s | P1 | AlertIncident dedup in e72s04 task 1 |
+| `request`/`mutation` events lack `site_id` | P1 | e72s03 task 0 prerequisites |
+| LLM secrets in build logs | P1 | Strip before `Complete()` — e72s01 task 1 |
+| Cross-component import violation | P2 | Composition-root reader interfaces — ADR 0007 §4 |
+| e72s04 before e72s03 | P2 | `implementation_order` in epic.yaml |
 
-| build-epic gate | Current state | Yolo impact |
-|-----------------|---------------|-------------|
-| Step 0 threat model | ❌ Missing | **Block** — run `security-review` first (~10 min) |
-| Step 3 kickoff-branch | On `main` with dirty tree | **Block** — need feature branch before first commit |
-| e57 depends_on | All planned | **Risk** — e67s03 touches auth/deploy/sites; may conflict with in-flight e57 branch |
-| Plan artifacts | ✅ Complete | Safe to code once gates above cleared |
+---
 
-**Yolo-safe subset:** e67s04 only (embedded JSON, no component wiring, no e57 table changes). s01–s03 should wait for e57 or explicit waiver.
+## Open Gaps
+
+- [x] Architecture decisions unresolved → **closed** via ADR 0007 (prior session)
+- [x] LLM provider unspecified → **closed** — DeepSeek defaults applied to ADR 0007, e72s01, tech-stack
+- [ ] Epic-level `out_of_scope` block in `epic.yaml` — **waived** (per-story non-goals sufficient for 10 BCP epic)
+- [ ] `SCOPE_LATEST.yaml` does not list e72 — **waived** (e72 indexed in `release-plan.yaml` tier 2)
 
 ---
 
 ## Verdict
 
-**NOT READY** — 2 blocking gaps before `build-epic`:
+**READY** — proceed with `kickoff-branch` → `build-epic` (story order: e72s02 → e72s03 → e72s01 → e72s04).
 
-1. Create `specs/security/epics/e67/THREAT_MODEL.md` (run `security-review`)
-2. Resolve e57 dependency — **either** complete e57 first **or** record explicit waiver + accept rework risk
+Do **not** skip e72s03 before e72s04. Wire DeepSeek at implementation time:
 
-After closing blockers → **READY** → `survey-context` → `kickoff-branch` → `develop-tdd` (e67s04 first).
+```bash
+export BIGBASE_LLM_API_KEY="<your-deepseek-key>"
+# optional overrides:
+# export BIGBASE_LLM_MODEL=deepseek-v4-pro
+# export BIGBASE_LLM_BASE_URL=https://api.deepseek.com
+```
 
-→ verify: `test -f specs/PLAN-AUDIT_LATEST.md && grep -q 'Verdict' specs/PLAN-AUDIT_LATEST.md && echo OK || echo FAIL`
+---
+
+## Recommended Next Skill
+
+`kickoff-branch` (feature branch + clean test baseline) → `build-epic` starting **e72s02**.
