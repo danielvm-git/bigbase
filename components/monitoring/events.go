@@ -1,6 +1,7 @@
 package monitoring
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -75,14 +76,18 @@ func (m *Monitoring) WithEventBus(bus *kernel.EventBus, hookNames []string) {
 		bus.Subscribe(kernel.HookDef{
 			Name:     hookName,
 			Priority: 1000,
-			Handler: func(_ *kernel.Context, ev kernel.Event) error {
-				m.stream.broadcast(BusEvent{
-					Hook:      hookName,
-					Data:      ev.Data,
-					Timestamp: time.Now().UTC().Format(time.RFC3339Nano),
-				})
-				return nil
-			},
+		Handler: func(_ *kernel.Context, ev kernel.Event) error {
+			siteID := eventSiteID(ev.Data)
+			if m.recorder != nil {
+				_ = m.recorder.Record(context.Background(), hookName, siteID, ev.Data)
+			}
+			m.stream.broadcast(BusEvent{
+				Hook:      hookName,
+				Data:      ev.Data,
+				Timestamp: time.Now().UTC().Format(time.RFC3339Nano),
+			})
+			return nil
+		},
 		})
 	}
 }

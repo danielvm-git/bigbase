@@ -2,10 +2,10 @@
 
 **type:** tech-stack
 **context:** infra
-**version:** 2.63.0
-**supersedes:** `specs/plans/TECH_STACK_LATEST.md`, `specs/tech-architecture/TECH_STACK_ARCHIVE.md`
-**verify:** `go test ./... && go build ./...`
-**last-scan:** 2026-06-29 (cold read, no assumption carry-over)
+**version:** 2.71.0
+**supersedes:** v2.63.0 snapshot
+**verify:** `go test ./... && go build ./... && go vet ./...`
+**last-scan:** 2026-07-08 (cold read, 12-commit delta since v2.63.0)
 
 ## Overview
 
@@ -13,13 +13,16 @@ BigBase is a single-binary, open-source Backend-as-a-Service (BaaS) platform bui
 with Go. It uses the **Entity-Component-Construct (ECC)** pattern: a lightweight
 kernel discovers, starts, and connects independent components via an event bus.
 
+**192 Go source files · 101 test files · 584 test functions · 20 component directories**
+
 ## Stack
 
 | Layer | Technology |
 |-------|-----------|
-| Language | Go 1.26.3 (go.mod) |
+| Language | Go 1.26.3 (`go.mod`) |
 | Database | SQLite (`modernc.org/sqlite` v1.50, zero-CGO) · PostgreSQL (`pgx/v5 stdlib`) |
-| Auth | bcrypt + HS256 JWT (`golang-jwt/jwt/v5`) · Google OAuth 2.0 · API keys (X-API-Key) · OTP · magic-link · phone |
+| Auth | bcrypt + HS256 JWT (`golang-jwt/jwt/v5`) · Google OAuth 2.0 · API keys (`X-API-Key`) · OTP · magic-link · phone · **site deploy keys (`bb_dep_*`)** · **MCP org keys with scoped `mcp:provision`** |
+| Auth hardening | DB-backed OTP store · rate limiting · audit logging (`components/auth/store.go`, `otp.go`) |
 | Functions runtime | goja (pure Go JS) with fetch, db, request context, env, cron bindings |
 | Admin UI | React 19 + Vite + TypeScript, embedded via `//go:embed` |
 | Design system | Custom token-based system in `ui/src/tokens/` + CSS custom properties |
@@ -30,7 +33,7 @@ kernel discovers, starts, and connects independent components via an event bus.
 | Messaging | Email (SMTP) · SMS · Push · Webhook · Telegram |
 | Real-time | WebSocket subscriptions, mutation event broadcasting |
 | Scheduling | robfig/cron v3 for Functions `trigger=schedule` |
-| Observability | `slog` (structured JSON logs) · New Relic APM (`go-agent/v3`) · SSE health events |
+| Observability | `slog` · New Relic APM · SSE event stream · alert checker · **`eventrecorder` (FIFO 5000)** · **`deploy_diagnoses` + LLM diagnosis (`internal/llm`)** · **`pipeline_timeline`** · **alert incidents + investigations** |
 
 ## Architecture
 
@@ -41,6 +44,7 @@ kernel discovers, starts, and connects independent components via an event bus.
 │  • Lifecycle: Init → Start → Stop (topo-sorted DFS)              │
 │  • Event bus: hook-based pub/sub, priority-ordered dispatch      │
 │  • Config: CLI flags → env vars (BIGBASE_*) → defaults.jsonc     │
+│  • Scope context: WithProjectID/WithSiteID (typed, unexported)   │
 └────────────────────────┬─────────────────────────────────────────┘
                          │ dispatches events
     ┌────────────────────┼────────────────────┐
@@ -50,41 +54,46 @@ kernel discovers, starts, and connects independent components via an event bus.
 │ HTTP    │◄─────►│ JWT      │◄──────►│ CRUD + SQL   │
 │ router  │       │ bcrypt   │        │ filter/sort  │
 │ landing │       │ OAuth    │        │ org scoping  │
-│ ACME    │       │ API keys │        └──────┬───────┘
-│ custom  │       │ OTP/link │               │
-│ domains │       │ orgs     │               ▼
-└─────────┘       │ members  │   ┌──────────────────────┐
-                  └──────────┘   │   storage · git       │
-                                 │   forge · cici        │
-                                 │   functions (goja JS) │
-                                 └──────────────────────┘
+│ ACME    │       │ API keys │        │ env vars API │
+│ custom  │       │ OTP/link │        └──────┬───────┘
+│ domains │       │ site keys│               │
+│ auth    │       │ org keys │               ▼
+│ policy  │       │ audit log│   ┌──────────────────────┐
+│ enforce │       │ orgs     │   │   storage · git       │
+│ passtr◄─┤       │ members  │   │   forge · cici        │
+│ headers │       └──────────┘   │   functions (goja JS) │
+└─────────┘                      └──────────────────────┘
 
 ┌──────────┐  ┌──────────┐  ┌────────┐  ┌──────────┐
 │realtime  │  │messaging │  │ deploy │  │monitoring│
 │WebSocket │  │email/SMS │  │process │  │metrics   │
 │mutation  │  │push      │  │mgmt    │  │logs      │
 │events    │  │webhook   │  │domains │  │alerts    │
-└──────────┘  │telegram  │  │delete  │  │hardware  │
-              └──────────┘  └────────┘  │SSE events│
-                                        └──────────┘
+└──────────┘  │telegram  │  │delete  │  │SSE stream│
+              └──────────┘  │native  │  │hardware  │
+                            │DB env  │  │alert     │
+                            │pipeline│  │checker   │
+                            │timeline│  └──────────┘
+                            └────────┘
 
 ┌──────────┐  ┌──────────┐  ┌────────┐  ┌──────────┐
 │  admin   │  │  sites   │  │github  │  │ webhooks │
 │ UI (SPA) │  │deploy GH │  │App auth│  │retry     │
 │ 20 pages │  │logs UI   │  │repo    │  │backoff   │
 │ dark mode│  │domains   │  │listing │  │delivery  │
-└──────────┘  └──────────┘  └────────┘  └──────────┘
+└──────────┘  │auth pol. │  └────────┘  └──────────┘
+              └──────────┘
 ```
 
 ## Component Catalog
 
 | # | Component | Path | Runtime | Purpose |
 |---|-----------|------|---------|---------|
-| — | Kernel | `kernel/` | Core | Discovery, lifecycle, event bus, config merge |
-| 1 | Proxy | `components/proxy/` | HTTP | HTTP server, routing, landing, ACME TLS, custom domains |
+| — | Kernel | `kernel/` | Core | Discovery, lifecycle, event bus, config merge, scope context |
+| 1 | Proxy | `components/proxy/` | HTTP | HTTP server, routing, landing, ACME TLS, custom domains, **route auth policy enforcement** |
 | 2 | DB | `components/db/` | SQLite/PG | Database access, migrations, dual-driver (sqlite/postgres) |
-| 3 | API | `components/api/` | HTTP | Auto CRUD, SQL endpoint, filter/sort, org scoping |
-| 4 | Auth | `components/auth/` | HTTP | Register, login, JWT, Google OAuth, API keys, OTP, magic-link, phone, orgs, invites, rate-limit |
+| 3 | API | `components/api/` | HTTP | Auto CRUD, SQL endpoint, filter/sort, org scoping, env vars |
+| 4 | Auth | `components/auth/` | HTTP | Register, login, JWT, Google OAuth, API keys, OTP, magic-link, phone, orgs, invites, rate-limit, **site deploy keys, org API keys, audit logging** |
 | 5 | Admin | `components/admin/` | HTTP | Embedded SPA server (React 19, dark mode, responsive) |
 | 6 | Storage | `components/storage/` | HTTP | File upload/download/delete, MIME detection |
 | 7 | Git | `components/git/` | HTTP | Bare repo management, SSH clone |
@@ -93,13 +102,13 @@ kernel discovers, starts, and connects independent components via an event bus.
 | 10 | Functions | `components/functions/` | HTTP | JS runtime (goja), fetch+db+env+request+cron injections |
 | 11 | Realtime | `components/realtime/` | WS | WebSocket subscriptions, mutation event broadcast |
 | 12 | Messaging | `components/messaging/` | HTTP | Email/SMS/Push/Webhook/Telegram providers |
-| 13 | Deploy | `components/deploy/` | Process | Build/run web apps, state machine, ACME domains, cache, health, supervisor |
-| 14 | Monitoring | `components/monitoring/` | HTTP | Metrics, logs, alerts, health, SSE events, hardware |
-| 15 | Sites | `components/sites/` | HTTP | Deploy from GitHub, custom domains CRUD, build/request logs |
+| 13 | Deploy | `components/deploy/` | Process | Build/run web apps, state machine, ACME domains, cache, health, supervisor, **native DB env injection, pipeline timeline** |
+| 14 | Monitoring | `components/monitoring/` | HTTP | Metrics, logs, alerts, health, SSE events, hardware, **alert checker (breach tracking)** |
+| 15 | Sites | `components/sites/` | HTTP | Deploy from GitHub, custom domains CRUD, build/request logs, **auth policy CRUD** |
 | 16 | GitHub | `components/github/` | HTTP | GitHub App auth, repo listing |
 | 17 | Webhooks | `components/webhooks/` | HTTP | Outbound webhook delivery, retry, exponential backoff |
 | 18 | Backup | `components/backup/` | CLI | Backup/restore, migration tooling |
-| 19 | MCP | `components/mcp/` | HTTP | Model Context Protocol server (SSE + stdio transport) |
+| 19 | MCP | `components/mcp/` | HTTP | Model Context Protocol server (SSE + stdio transport), **Bearer auth with tiered scopes, site discovery, deploy key lifecycle, CI templates** |
 
 **Internal packages:** `components/internal/envcrypto` — AES-256-GCM for site env vars (optional key; no-op when key absent).
 
@@ -115,25 +124,28 @@ kernel discovers, starts, and connects independent components via an event bus.
 - REST, snake_case JSON, standard HTTP status codes
 - Responses: data directly or `{"error":"..."}` — no envelope wrapper
 - Org isolation: `org_id` in every user-data table, injected via middleware context key
-- Project scoping foundation: `kernel.WithProjectID(ctx, project_id)` / `kernel.ProjectIDFromContext(ctx)` — typed, unexported context key provides type-safe project ID injection at the kernel level. Standardizes the pattern currently duplicated across `auth` and `api` packages.
+- Project scoping: `kernel.WithProjectID(ctx, projectID)` / `kernel.ProjectIDFromContext(ctx)` — typed context keys, **still no callers** (foundation laid, adoption pending)
+- Site scoping: `kernel.WithSiteID(ctx, siteID)` / `kernel.SiteIDFromContext(ctx)` — used by proxy and deploy site-key validation flows
 
 ### Type safety
 - `any` appears in event bus (`Event.Data`) and `writeJSON` — two deliberate seams, not sprawl
-- Every component defines its own `DBer = kernel.DBer` type alias locally — keeps components decoupled
+- Every component defines its own DB access interface (`type DBer = kernel.DBer` alias or local interface)
 - Concrete structs with json tags throughout; no generic containers in business logic
+- Context keys use unexported types to prevent external spoofing (`projectIDKeyType`, `siteIDKeyType`)
 
 ### Migrations
 - Inline SQL strings inside `Init()` — no migration framework, no versioned files
-- Pattern: `CREATE TABLE IF NOT EXISTS` (idempotent) + `ALTER TABLE ... ADD COLUMN` (ignored on error)
+- Pattern: `CREATE TABLE IF NOT EXISTS` (idempotent) + `ALTER TABLE ... ADD COLUMN` (ignored on duplicate)
 - Drawback: no rollback, no ordering guarantee across components, schema state not queryable
 
 ### Logging
 - `slog.Logger` wired at startup → injected via `kernel.Context.Logger` (interface-typed)
 - JSON mode in production, text mode in CLI sub-commands
 - New Relic nrslog integration wraps the base handler when `--newrelic-enabled`
+- Auth audit: structured logs for OTP rate-limit hits, key resolution failures
 
 ### Testing
-- 98 test files, 533 test functions
+- 101 test files, 584 test functions
 - No mocking frameworks — custom lightweight interfaces + `httptest.NewRecorder`
 - In-memory SQLite (`:memory:`) for all component tests — no mocks, real DB
 - Contract tests in `tests/contract/`, benchmarks in `tests/bench/`
@@ -144,118 +156,113 @@ kernel discovers, starts, and connects independent components via an event bus.
 - All custom components — no third-party UI library
 - Design token system: `ui/src/tokens/tokens.ts` (TS constants) + `ui/src/styles/tokens.css` (CSS vars)
 - Dark mode via `data-theme="dark"` on `<html>` + CSS custom properties
-- `ui/src/styles/theme.css` overrides semantic tokens for dark mode
 - Built artifact embedded into Go binary via `//go:embed dist`
 
 ## Signals / Active Debt
 
 | Signal | Location | Risk |
 |--------|----------|------|
-| `writeJSON` duplicated 14× | `components/*/...go` | DRY violation; shared helper blocked by no cross-component imports rule |
-| `deploy.go` — 1819 lines | `components/deploy/deploy.go` | ADR 0005 decomposition (Engine/Gateway/Orchestrator) **designed but not yet implemented** — spec vocabulary exists, code split does not |
-| `auth.go` — 1647 lines | `components/auth/auth.go` | Split started (separate files: otp.go, ratelimit.go, jwt.go, etc.) — manageable but watch for more growth |
-| Inline migrations scattered | All component `Init()` | Schema state not observable; migrations run on every boot; ALTER failures silently ignored |
-| Event bus barely wired | `components/api/api.go`, `deploy/`, `github/` | Only 3 components emit events; monitoring subscribed to dead hook `"deploy"` (deploy emits `deploy.state_changed`); e72 fixes contracts per ADR 0007 |
-| Project scoping — foundation laid, callers pending | `kernel/scope.go` | `WithProjectID`/`ProjectIDFromContext` added in e57s01. No callers yet — auth injection (e57s04) and query scoping (e57s03) are follow-up stories. |
-| `DBer` aliased in every component | ~14 component files | Working pattern; most use `type DBer = kernel.DBer` alias. Three components (mcp, webhooks, backup) keep local interfaces for test compatibility. Logger standardized to `kernel.Logger` in all components (e57s01). |
+| `writeJSON` duplicated 14× | 41 call sites across 16 components | DRY violation; shared helper blocked by no cross-component imports rule |
+| `deploy.go` — 1875 lines | `components/deploy/deploy.go` | ADR 0005 decomposition (Engine/Gateway/Orchestrator) **designed but not yet implemented** — spec vocabulary exists, code split does not |
+| `auth.go` — 1756 lines | `components/auth/auth.go` | Split started (separate files: otp.go, store.go, apikeys.go, etc.) — manageable but watch for continued growth |
+| `proxy/hosts.go` — 488 lines | `components/proxy/hosts.go` | Auth policy enforcement + metadata injection + deployment routing in one middleware; e71 added significant logic here |
+| Inline migrations scattered | All component `Init()` | Schema state not observable; migrations run on every boot; ALTER failures silently ignored. 3 new columns added since v2.63: `auth_policy`, `pipeline_timeline`, `status_history` |
+| Event bus covers 15 files | `deploy/`, `monitoring/`, `api/`, `github/`, `realtime/`, `proxy/` | Growing adoption; monitoring fix (e72) will align hook names with actual emissions (`deploy.state_changed` vs `"deploy"`) |
+| Project scoping — foundation only | `kernel/scope.go` (40 lines) | `WithProjectID`/`ProjectIDFromContext` defined; **zero callers** after 2 release cycles. Auth injection and query scoping stories pending. |
+| `DBer` aliased in 13 components | 3 keep local interfaces (backup, mcp, webhooks) | Pattern is stable and understood |
+| Scope keys: `SiteID` adopted, `ProjectID` stalled | `kernel/scope.go` | `WithSiteID` called by proxy+deploy flows; `WithProjectID` has no consumers since e57s01 |
+| ADR 0007 (e72) landed | `deploy/pipeline_timeline.go`, `internal/eventrecorder/`, `internal/llm/`, `monitoring/observability.go`, `deploy/observability.go` | Pipeline timeline, persistent event recorder (FIFO 5000), `deploy.failed` + `deploy_diagnoses`, related-events snapshot, alert incidents + investigations |
 
-## Deploy Architecture (vocabulary — ADR 0005, designed, not yet implemented)
+## Recent Features Landed (v2.67 → v2.71)
+
+| Version | Epic | Feature |
+|---------|------|---------|
+| v2.71.0 | e71 | **Host-Level Route Auth Policy** — `AuthPolicy` on site records, proxy JWT + site-key validation, passthrough identity headers (`X-BigBase-User-ID`, `X-BigBase-Site-ID`), `set_site_auth_policy` MCP tool |
+| v2.70.0 | e56 | **OTP Hardening** — DB-backed OTP store (`store.go`), rate limiting, audit logging |
+| v2.69.0 | e72 | **MCP Platform Authentication** — Bearer token auth (`auth.go`, 245 lines), tiered access (public/read/write), `mcp:provision` scope enforcement, `OrgKeyAuthenticator` interface |
+| v2.68.0 | e69 | **MCP Site Discovery** — site discovery and deploy key lifecycle tools |
+| v2.67.0 | e68 | **Native DB Connection String** — `NativeDBEnv()` injects `DATABASE_URL`/`DB_PATH` into deployed app environment |
+
+## Route Auth Policy (e71 — v2.71.0)
+
+Sites can declare authentication rules at the host/proxy layer, eliminating per-app JWT middleware:
+
+```yaml
+auth:
+  default: public            # or "protected"
+  protected_paths:
+    - "/books/*"
+    - "/pagefind/*"
+    - "/mcp"
+  public_paths:
+    - "/login"
+    - "/assets/*"
+  accept:
+    - jwt                    # BigBase session tokens
+    - site_key               # bb_dep_* for CI/service accounts
+```
+
+**Flow:**
+1. Site record stores `AuthPolicy` as JSON in `sites.auth_policy` column
+2. Proxy caches policy in-memory on `RegisterDeploymentHost` (reads DB at registration)
+3. `deploymentHostMiddleware` evaluates every request: check `protected_paths` → validate Bearer/Cookie → enforce (401 if unauthorized)
+4. For passthrough backends, injects `X-BigBase-User-ID` and `X-BigBase-Site-ID` headers (strips any spoofed incoming headers first)
+5. MCP `set_site_auth_policy` tool allows agent-driven configuration; Sites HTTP API (`GET/PUT /api/sites/:id/auth-policy`) mirrors it
+
+## MCP Authentication (e38 / e67 — v2.69.0)
+
+The MCP server supports Bearer token authentication with three tiers:
+
+| Tier | Example tools | Auth required? |
+|------|--------------|----------------|
+| Public | `ping`, `list_services`, `get_ci_template` | No |
+| Read | `get_site`, `list_sites` | Bearer token (any org key) |
+| Write | `create_site`, `deploy_site`, `provision_ci_credentials` | Bearer token + `mcp:provision` scope |
+
+**Architecture:**
+- `OrgKeyAuthenticator` interface — defined in MCP, implemented by auth at the composition root (no MCP→auth import)
+- `bearerAuthMiddleware` — HTTP middleware that reads+parses body for `tools/call`, resolves tool tier, and validates Bearer
+- `enforceToolAuth` — SDK-level enforcement with context fallback for test harnesses
+- `authenticatePost` — validates Bearer for non-public POST tool calls, writes HTTP errors directly
+
+## Event Bus (expanded usage)
+
+15 source files now emit or subscribe to events (up from ~9 at v2.63):
+
+```
+deploy → deploy.state_changed     (state machine transitions)
+deploy → deploy.failed            (ADR 0007 — exactly once per deployment ID)
+monitoring → alert.triggered      (breach threshold met + duration exceeded)
+monitoring ← subscribes to all     (SSE fan-out to connected clients)
+api → api.mutation                (realtime broadcast + webhook delivery)
+github → github.scaffold_repo     (CI pipeline trigger)
+realtime → mutation events         (WebSocket fan-out)
+```
+
+## Deploy Architecture (ADR 0005 — vocabulary only)
 
 BigBase replicates Docker supervision — restart-on-crash, health checks — in a lightweight
 in-process Go module (ADR 0004). ADR 0005 defines the decomposition:
 
 ```
-Deploy (composition root)
+Deploy (composition root — deploy.go, 1875 lines)
   ├── Gateway (HTTP handlers only, delegates to Engine)
   ├── Engine  (per-deployment lifecycle: clone→build→start→health→register)
   └── Orchestrator (fleet: resume-on-boot, drain, rollback, delete)
 ```
 
-**Current code reality:** `deploy.go` is still monolithic at 1819 lines. The state machine,
-supervisor, health, cache, and domain routing have been extracted into separate files
-(`state_machine.go`, `supervisor.go`, `health.go`, `cache.go`, `domain_routing.go`)
-but the main `Deploy` struct and its HTTP handlers still coexist in `deploy.go`.
-ADR 0005 vocabulary is the spec; the full split is e52+ work.
+**Current code reality:** `deploy.go` is still monolithic. The state machine (`state_machine.go`),
+supervisor (`supervisor.go`), health (`health.go`), cache (`cache.go`), domain routing (`domain_routing.go`),
+and pipeline timeline (`pipeline_timeline.go`) have been extracted — but the main `Deploy` struct
+and HTTP handlers still coexist in `deploy.go`. ADR 0005 vocabulary is the spec; the full split is e52+ work.
 
 ### Canonical terms (for planning)
-
 - **Engine** — `Run(spec) → Result` behind a single seam; hides clone/build/start/health/cache
 - **Gateway** — HTTP handlers only; `FakeEngine` makes tests zero-exec
 - **Orchestrator** — fleet management (resume, drain, rollback, delete-site)
-- **Supervisor** — crash-loop detect + exponential backoff restart (`supervisor.go` — implemented)
-- **Instance** — one-shot live run (subprocess or static server), unified behind `Runner`
-- **Spec** — immutable deploy descriptor; only state that survives restarts
-- **DeploymentHostRegistry** — proxy seam mapping host→port (owns drain + connection count)
-- **LogStore** — build log adapter: `Append` (engine), `Get` (gateway), `Subscribe` (WS)
-
-## Observability (vocabulary — ADR 0007, epic e72)
-
-Deploy debugging and alert response use explicit domain entities and deep internal modules:
-
-```
-Composition root (main.go)
-  ├── Deploy Gateway — owns /api/deploy/:id/* routes
-  │     └── injects DeployDiagnosisReader, DeployRelatedEventsReader (optional)
-  ├── Monitoring — AlertRule checker, EvidenceGatherer, SSE fan-out
-  └── internal/eventrecorder — Record + Query (FIFO-capped SQLite)
-  └── internal/llm — OpenAI-compatible Complete (optional, no-op without key)
-```
-
-### Canonical terms
-
-- **DeploymentState** — coarse lifecycle status on the `deployments` row (`pending` → `building` → `deploying` → `running` / `failed`). Distinct from pipeline timing.
-- **PipelineTimeline** — per-stage timestamps (`clone`, `build`, `start`, `health`) stored as `pipeline_timeline` JSON on `deployments`. Orthogonal to DeploymentState.
-- **DeployFailure** — derived domain moment: `TransitionState` reaches `failed` **and** `deploy.failed` bus event fires exactly once with diagnostic payload.
-- **RecordedEvent** — persisted bus emission in `monitoring_events` (hook, data, timestamp, site_id). FIFO cap 5,000 rows.
-- **AlertRule** — threshold configuration in `monitoring_alerts`. Not an incident.
-- **AlertIncident** — one open breach episode per rule; deduplicated until resolved. Investigations attach here.
-- **InvestigationReport** — evidence bundle (metrics, deployments, events, logs) plus optional LLM summary for an AlertIncident.
-- **DeployDiagnosis** — one-shot LLM interpretation of a DeployFailure build log; stored in `deploy_diagnoses`.
-
-### Invariants
-
-- `deploy.failed` emits at most once per deployment ID.
-- `alert.triggered` emits at most once per open AlertIncident (not every 30s ticker tick).
-- Event bus hook names must match `Event.Name` exactly (`deploy.state_changed`, not `"deploy"`).
-- Deploy Gateway never imports monitoring; cross-component behavior uses injected reader interfaces at the composition root.
-
-### Concurrency (e72)
-
-| Shared state | Readers | Writers | Sync |
-|--------------|---------|---------|------|
-| `eventrecorder` FIFO table | EvidenceGatherer, related-events query | bus subscriber handlers (goroutine + timeout) | SQLite single-writer; insert + trim in one transaction |
-| `breachStart` map (alert checker) | alert checker ticker | same goroutine | single goroutine — no lock needed |
-| `monitoring_alert_incidents` open row | investigation API | emitAlertTriggered | UNIQUE(rule_id) WHERE resolved_at IS NULL |
-| LLM HTTP client | diagnosis + investigation goroutines | concurrent goroutines | stateless; 30s ctx timeout per call |
-
-## Release History
-
-| Version | Epics | Highlights |
-|---------|-------|------------|
-| v1.0 | e01—e16 | Foundation: CLI, proxy, DB, auth, admin UI, all 16 components |
-| v2.7.0 | e17—e30 | Multi-tenancy, orgs, API keys, webhooks, backup, observability, functions runtime 2.0 |
-| v2.30–v2.45 | e31—e45 | SPA auth, passwordless, phone, SDK adapters, auth UI, delete site, SvelteKit, MCP, streaming logs, manifest, env vars, build cache, health, rollback, drain |
-| v2.46–v2.55 | e46—e55 | Custom domains + ACME (e46), JWT lifecycle (e50), design system (e51), project scoping backend (e52), deploy supervisor (e53), New Relic (e54), PR-Agent (e55) |
-| v2.62.0 | e56+ | OTP hardening, project scoping UI, native port (SQL-over-HTTP, Better Auth, MCP Tools), secrets, CSP headers, usage dashboard planned |
-
-## Event Flow
-
-Components communicate through the kernel event bus. Most cross-component wiring
-uses direct DB reads; event bus is used for async side-effects:
-
-```
-proxy.onRequest ──► auth validates token/API key ──► api routes (org-scoped)
-
-api.onMutation ──► realtime broadcasts ──► webhooks deliver
-                ──► functions triggers (schedule or event)
-
-git.onPush ──► cici runs workflow ──► deploy builds & serves
-                                   ──► github.scaffold_repo
-
-db.onBackup ──► monitoring logs
-
-mcp.onToolCall ──► deploy deploys, db queries, api routes
-```
+- **Supervisor** — crash-loop detect + exponential backoff restart (implemented)
+- **PipelineTimeline** — per-stage timestamps (clone, build, start, health) stored as JSON on `deployments` row
+- **NativeDBEnv** — injects `DATABASE_URL` (Postgres) or `DB_PATH` (SQLite) into deployed app env
 
 ## External Services
 
@@ -268,7 +275,7 @@ mcp.onToolCall ──► deploy deploys, db queries, api routes
 | PostgreSQL | Dual-driver DB | `--db-driver postgres`, `--db-dsn` |
 | Telegram | Bot messaging | `--messaging-webhook-token` |
 | New Relic | APM monitoring | `--newrelic-license-key`, `NEW_RELIC_LICENSE_KEY` |
-| DeepSeek LLM (optional) | OpenAI-compatible chat completions | `BIGBASE_LLM_API_KEY` or `DEEPSEEK_API_KEY`; default base `https://api.deepseek.com`, model `deepseek-chat` (e72) |
+| DeepSeek LLM | OpenAI-compatible chat | `BIGBASE_LLM_API_KEY` or `DEEPSEEK_API_KEY`; `components/internal/llm` (e72 deploy diagnosis + alert investigation) |
 
 ## Key Design Decisions
 
@@ -284,45 +291,23 @@ mcp.onToolCall ──► deploy deploys, db queries, api routes
 | — | Multi-tenant org isolation at API/DB layer | Accepted (e23) |
 | — | Functions runtime injections: fetch+db+env+request+cron | Accepted (e30) |
 | — | Provider interface for pluggable messaging backends | Accepted (e12, e30) |
-| 0007 | E72 observability seams: deploy.failed, EventRecorder, AlertIncident, composition-root readers | Accepted (e72) |
+| 0006 | Site route auth policy at proxy layer (e71) | **Implemented** (v2.71.0) |
+| 0007 | E72 observability seams: PipelineTimeline, alert.triggered, EventRecorder, LLM | **Implemented** (e72) — pipeline timeline, eventrecorder, deploy diagnosis, alert incidents + investigations |
 
-## CLI Reference
+## Release History
 
-```bash
-# Serve
-go run . serve [--port PORT] [--db PATH] [--db-driver DRIVER] [--db-dsn DSN]
-               [--google-client-id ID] [--google-client-secret SECRET]
-               [--github-app-id ID] [--github-app-slug SLUG]
-               [--github-app-private-key-path PATH] [--github-webhook-secret SECRET]
-               [--sites-domain DOMAIN] [--log-level LEVEL]
-               [--cors-allowed-origins ORIGINS]
-               [--auth-post-login-redirect URL] [--auth-spa-origin-allowlist ORIGINS]
-               [--jwt-access-expiry DURATION] [--jwt-refresh-expiry DURATION]
-               [--rate-limit-enabled] [--rate-limit-ip-max N] [--rate-limit-user-max N]
-               [--mcp-disabled] [--mcp-port PORT] [--mcp-transport TRANSPORT]
-               [--newrelic-license-key KEY] [--newrelic-app-name NAME] [--newrelic-enabled]
-               [--acme-email EMAIL]
-
-# Key env vars (BIGBASE_* prefix):
-#   BIGBASE_JWT_SECRET         — shared secret for HS256 signing (min 32 chars)
-#   BIGBASE_JWT_ACCESS_EXPIRY  — access token TTL, e.g. "24h", "30m" (default: 24h)
-#   BIGBASE_JWT_REFRESH_EXPIRY — refresh token TTL (default: 720h / 30 days)
-#   BIGBASE_DB_DRIVER, BIGBASE_DB_DSN
-#   BIGBASE_RATE_LIMIT_ENABLED, BIGBASE_RATE_LIMIT_IP_MAX, BIGBASE_RATE_LIMIT_USER_MAX
-#   BIGBASE_PUBLIC_URL, BIGBASE_SITES_DOMAIN
-
-# Info
-go run . version
-go run . status
-go run . components list
-
-# Data
-go run . init [--repo PATH]
-go run . deploy --repo ID [--branch main] [--server URL] [--api-key KEY] [--wait]
-go run . backup --db FILE --output FILE
-go run . restore --input FILE --db FILE
-go run . migrate up|down|status [--db PATH]
-```
+| Version | Epics | Highlights |
+|---------|-------|------------|
+| v1.0 | e01—e16 | Foundation: CLI, proxy, DB, auth, admin UI, all 16 components |
+| v2.7.0 | e17—e30 | Multi-tenancy, orgs, API keys, webhooks, backup, observability, functions runtime 2.0 |
+| v2.30–v2.45 | e31—e45 | SPA auth, passwordless, phone, SDK adapters, auth UI, delete site, SvelteKit, MCP, streaming logs, manifest, env vars, build cache, health, rollback, drain |
+| v2.46–v2.55 | e46—e55 | Custom domains + ACME, JWT lifecycle, design system, project scoping backend, deploy supervisor, New Relic, PR-Agent |
+| v2.67.0 | e68 | Native DB connection string injection |
+| v2.68.0 | e69 | MCP site discovery + deploy key lifecycle |
+| v2.69.0 | e38/e67 | MCP Bearer auth, tiered scopes, org key resolution |
+| v2.70.0 | e56 | DB-backed OTP store, rate limiting, audit logging |
+| v2.71.0 | e71 | Host-level route auth policy, JWT + site-key enforcement, passthrough identity headers |
+| v2.72.0 | e72 | Pipeline timeline, correlated event recorder, AI deploy diagnosis, alert investigations |
 
 ## Verification
 
@@ -330,14 +315,14 @@ go run . migrate up|down|status [--db PATH]
 # Architecture integrity: no direct component imports
 grep -r "components/" kernel/ | grep -v "_test.go" | grep -v '//' || echo "No cross-component imports"
 
-# All 19 components implement kernel.Component
+# All components implement kernel.Component
 grep -l "kernel.Component" components/*/*.go | wc -l
 
 # Event bus wiring
-grep -rn "Emit\|Subscribe" components/*/*.go | grep -v "_test.go"
+grep -rn "Emit\|Subscribe" components/*/*.go kernel/*.go | grep -v "_test.go"
 
 # Test suite
-go test ./... && go vet ./...
+go test -count=1 ./... && go vet ./...
 ```
 
 → **verify:** `go test -count=1 ./... && go build ./... && go vet ./...`

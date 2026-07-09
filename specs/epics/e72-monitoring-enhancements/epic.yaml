@@ -5,7 +5,7 @@ title: "Monitoring — AI-Assisted Incident Response & Deploy Observability"
 wsjf: 6.0
 wsjf_rationale: "BV=8 (directly helps users debug failed deploys) TC=4 (builds on existing monitoring+MCP+deploy) RR=5 (production readiness) / JS=3 (4 stories, 10 BCPs)"
 total_bcps: 10
-status: planned
+status: done
 depends_on:
   - e14
   - e38
@@ -33,24 +33,24 @@ stories:
   - id: e72s01
     title: "AI Deploy Failure Diagnosis"
     bcps: 3
-    status: planned
+    status: done
     spec: e72s01-ai-deploy-diagnosis.md
     tasks: e72s01-tasks.yaml
   - id: e72s02
     title: "Deploy Pipeline Timeline"
     bcps: 2
-    status: planned
+    status: done
     spec: e72s02-pipeline-timeline.md
     tasks: e72s02-tasks.yaml
   - id: e72s03
     title: "Correlated Deployment Event Timeline"
     bcps: 2
-    status: planned
+    status: done
     spec: e72s03-correlated-timeline.md
     tasks: e72s03-tasks.yaml
   - id: e72s04
     title: "Alert → Automated Investigation Trigger"
     bcps: 3
-    status: planned
+    status: done
     spec: e72s04-alert-investigation.md
     tasks: e72s04-tasks.yaml

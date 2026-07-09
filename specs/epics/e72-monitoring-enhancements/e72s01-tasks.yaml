@@ -1,42 +1,42 @@
 story_id: e72s01
 title: AI Deploy Failure Diagnosis
-status: failing
+status: done
 bcps: 3
 architecture_ref: specs/adr/0007-e72-observability-seams.md
 tasks:
   - id: 0
     description: "Deploy prerequisite (ADR 0007): in TransitionState when to_state=failed, emit deploy.failed exactly once with deployment_id, site_id, repo_id, app_type, error_message, build_log. Guard with failed_event_emitted flag or check prior state != failed."
     verify: "go test -run 'TestDeployFailedEvent' ./components/deploy/ -v -count=1"
-    status: failing
+    status: done
     risk: P1
     security: low
   - id: 1
     description: "Create components/internal/llm/ with Complete(ctx, prompt string) (string, error) — OpenAI-compatible POST to {BIGBASE_LLM_BASE_URL}/chat/completions, 30s timeout, 1 retry on 429, strip secret lines. Defaults: base=https://api.deepseek.com model=deepseek-chat. Reads BIGBASE_LLM_API_KEY or DEEPSEEK_API_KEY fallback."
     verify: "go test -run 'TestComplete' ./components/internal/llm/ -v -count=1"
-    status: failing
+    status: done
     risk: P1
     security: medium
   - id: 2
     description: "Add deploy_diagnoses table (deploy_id PK, diagnosis, model, created_at). Add BuildDiagnosisPrompt in monitoring. handleDeployFailed subscribes to deploy.failed hook, goroutine → prompt → llm.Complete → INSERT deploy_diagnoses, emit deploy.diagnosed."
     verify: "go test -run 'TestDeployFailedDiagnosis' ./components/monitoring/ -v -count=1"
-    status: failing
+    status: done
     risk: P1
     security: medium
   - id: 3
     description: "Define DeployDiagnosisReader interface in deploy package. Monitoring implements GetDiagnosis. Wire in main.go. Deploy handleDeployByID routes GET .../diagnosis to injected reader (404 if nil or missing)."
     verify: "curl -s http://localhost:9999/api/deploy/test-id/diagnosis | jq ."
-    status: failing
+    status: done
     risk: P2
     security: none
   - id: 4
     description: "Wire BIGBASE_LLM_* in main.go → monitoring.Options. Fix monitoring bus subscriptions per ADR 0007 (deploy.failed, deploy.state_changed — remove dead deploy hook)."
     verify: "go test -run 'TestDeployDiagnosis' ./... -count=1"
-    status: failing
+    status: done
     risk: P1
     security: medium
   - id: 5
     description: "Full regression + tech-stack.md Observability section cites deploy_diagnoses"
     verify: "go test ./... -count=1 && go vet ./... && rg 'deploy_diagnoses|DeployDiagnosis' specs/tech-architecture/tech-stack.md"
-    status: failing
+    status: done
     risk: P0
     security: none

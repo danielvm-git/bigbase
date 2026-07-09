@@ -14,6 +14,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/danielvm/bigbase/kernel"
 )
 
 type hostInfo struct {
@@ -351,6 +353,20 @@ func (p *Proxy) deploymentHostMiddleware(next http.Handler) http.Handler {
 
 		if p.requestLogger != nil {
 			p.requestLogger.RecordRequestLog(info.SiteID, r.Method, r.URL.Path, rw.status, time.Since(start))
+		}
+		if p.kernel != nil && info.SiteID != "" {
+			if bus := p.kernel.EventBus(); bus != nil {
+				_ = bus.Emit(kernel.Event{
+					Name: "request",
+					Data: map[string]any{
+						"site_id":     info.SiteID,
+						"method":      r.Method,
+						"path":        r.URL.Path,
+						"status":      rw.status,
+						"duration_ms": time.Since(start).Milliseconds(),
+					},
+				}, nil)
+			}
 		}
 	})
 }

@@ -70,6 +70,7 @@ epics:
   e67: done
   e68: done
   e71: done
+  e72: done
 stories:
   e01s01: done
   e02s01: done
@@ -268,3 +269,7 @@ stories:
   e71s02: done
   e71s03: done
   e71s04: done
+  e72s01: done
+  e72s02: done
+  e72s03: done
+  e72s04: done

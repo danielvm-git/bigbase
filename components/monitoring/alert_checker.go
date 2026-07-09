@@ -71,6 +71,7 @@ func (m *Monitoring) checkAlertRules(breachStart map[breachKey]time.Time) {
 
 		if !breached {
 			delete(breachStart, key)
+			m.resolveIncidents(ctx, id)
 			continue
 		}
 
@@ -83,7 +84,11 @@ func (m *Monitoring) checkAlertRules(breachStart map[breachKey]time.Time) {
 
 		elapsed := now.Sub(start)
 		if elapsed >= time.Duration(durationSec)*time.Second {
-			m.emitAlertTriggered(id, name, metric, value, threshold, operator)
+			incidentID, alreadyTriggered := m.openOrGetIncident(ctx, id, metric, value, threshold, operator)
+			if incidentID != "" && !alreadyTriggered {
+				m.emitAlertTriggered(id, name, metric, value, threshold, operator, incidentID)
+				m.markIncidentTriggered(ctx, incidentID)
+			}
 		}
 	}
 
@@ -148,9 +153,10 @@ func evalOperator(value float64, operator string, threshold float64) bool {
 }
 
 // emitAlertTriggered fires the "alert.triggered" event on the kernel event bus.
-func (m *Monitoring) emitAlertTriggered(id, name, metric string, value, threshold float64, operator string) {
+func (m *Monitoring) emitAlertTriggered(id, name, metric string, value, threshold float64, operator, incidentID string) {
 	m.logger.Warn("alert triggered",
 		"alert_id", id,
+		"incident_id", incidentID,
 		"name", name,
 		"metric", metric,
 		"value", value,
@@ -165,12 +171,13 @@ func (m *Monitoring) emitAlertTriggered(id, name, metric string, value, threshol
 	evt := kernel.Event{
 		Name: "alert.triggered",
 		Data: map[string]any{
-			"alert_id":  id,
-			"name":      name,
-			"metric":    metric,
-			"value":     value,
-			"threshold": threshold,
-			"operator":  operator,
+			"alert_id":    id,
+			"incident_id": incidentID,
+			"name":        name,
+			"metric":      metric,
+			"value":       value,
+			"threshold":   threshold,
+			"operator":    operator,
 		},
 	}
 	if err := m.kctx.Kernel.EventBus().Emit(evt, m.kctx); err != nil {

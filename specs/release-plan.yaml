@@ -551,7 +551,7 @@ epics:
   wsjf: 6.0
   mode: capsule
   tier: 2
-  status: planned
+  status: done
   depends_on:
   - e14
   - e38
