@@ -1,3 +1,10 @@
+# [2.72.0](https://github.com/danielvm-git/bigbase/compare/v2.71.1...v2.72.0) (2026-07-09)
+
+
+### Features
+
+* **monitoring:** AI-assisted deploy observability and incident response (e72) ([#64](https://github.com/danielvm-git/bigbase/issues/64)) ([82dc498](https://github.com/danielvm-git/bigbase/commit/82dc49874349b328be8cbd34da05d4ee4b430169))
+
 ## [2.71.1](https://github.com/danielvm-git/bigbase/compare/v2.71.0...v2.71.1) (2026-07-09)
 
 
