@@ -3,6 +3,7 @@ package mcp_test
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -642,5 +643,118 @@ func TestMCPNonLocalhostHostHeader(t *testing.T) {
 	t.Logf("Host: mcp.bigbase.click → %d, body: %s", w.Code, preview)
 	if w.Code != http.StatusOK && w.Code != http.StatusBadRequest {
 		t.Fatalf("unexpected status %d", w.Code)
+	}
+}
+
+func TestMCPSetSiteAuthPolicy(t *testing.T) {
+	dbConn, err := sql.Open("sqlite", ":memory:")
+	if err != nil {
+		t.Fatalf("sqlite open: %v", err)
+	}
+	defer func() { _ = dbConn.Close() }()
+
+	_, err = dbConn.Exec(`CREATE TABLE IF NOT EXISTS sites (
+		id TEXT PRIMARY KEY,
+		name TEXT NOT NULL,
+		git_repo_id TEXT NOT NULL,
+		production_branch TEXT NOT NULL DEFAULT 'main',
+		root_path TEXT NOT NULL DEFAULT './',
+		github_full_name TEXT DEFAULT '',
+		created_at TEXT NOT NULL DEFAULT (datetime('now')),
+		auth_policy TEXT NOT NULL DEFAULT '{}'
+	)`)
+	if err != nil {
+		t.Fatalf("create sites: %v", err)
+	}
+
+	siteID := "site-auth-mcp-test"
+	_, err = dbConn.Exec(`INSERT INTO sites (id, name, git_repo_id) VALUES (?, 'Test Site', 'repo-1')`, siteID)
+	if err != nil {
+		t.Fatalf("insert site: %v", err)
+	}
+
+	var callbackCalled bool
+	var callbackSiteID string
+	var callbackPolicyJSON string
+
+	c := mcp.New(mcp.Options{
+		Enabled:   true,
+		Transport: "stdio",
+		DB:        dbConn,
+		UpdateAuthPolicy: func(siteID string, policyJSON string) {
+			callbackCalled = true
+			callbackSiteID = siteID
+			callbackPolicyJSON = policyJSON
+		},
+	})
+
+	srv, err := c.NewMCPServer()
+	if err != nil {
+		t.Fatalf("NewMCPServer: %v", err)
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	t1, t2 := mcpsdk.NewInMemoryTransports()
+	if _, err := srv.Connect(ctx, t1, nil); err != nil {
+		t.Fatalf("server connect: %v", err)
+	}
+
+	client := mcpsdk.NewClient(&mcpsdk.Implementation{Name: "test-client", Version: "1.0"}, nil)
+	session, err := client.Connect(ctx, t2, nil)
+	if err != nil {
+		t.Fatalf("client connect: %v", err)
+	}
+	defer func() { _ = session.Close() }()
+
+	argsStr := `{
+		"site_id": "site-auth-mcp-test",
+		"policy": {
+			"default": "protected",
+			"protected_paths": ["/mcp/*"],
+			"public_paths": ["/mcp/login"],
+			"accept": ["jwt"]
+		}
+	}`
+	var args json.RawMessage = []byte(argsStr)
+
+	result, err := session.CallTool(ctx, &mcpsdk.CallToolParams{
+		Name:      "set_site_auth_policy",
+		Arguments: args,
+	})
+	if err != nil {
+		t.Fatalf("CallTool set_site_auth_policy: %v", err)
+	}
+
+	if len(result.Content) == 0 {
+		t.Fatal("expected content in response")
+	}
+	text, ok := result.Content[0].(*mcpsdk.TextContent)
+	if !ok {
+		t.Fatalf("expected TextContent, got %T", result.Content[0])
+	}
+
+	if !strings.Contains(text.Text, `"status":"ok"`) {
+		t.Errorf("expected status ok in tool response, got %s", text.Text)
+	}
+
+	var dbPolicy string
+	err = dbConn.QueryRow("SELECT auth_policy FROM sites WHERE id = ?", siteID).Scan(&dbPolicy)
+	if err != nil {
+		t.Fatalf("query DB policy: %v", err)
+	}
+	if !strings.Contains(dbPolicy, `"/mcp/*"`) || !strings.Contains(dbPolicy, `"protected"`) {
+		t.Errorf("DB policy was not updated correctly: %s", dbPolicy)
+	}
+
+	if !callbackCalled {
+		t.Errorf("expected UpdateAuthPolicy callback to be called")
+	}
+	if callbackSiteID != siteID {
+		t.Errorf("expected siteID %s in callback, got %s", siteID, callbackSiteID)
+	}
+	if !strings.Contains(callbackPolicyJSON, `"/mcp/*"`) {
+		t.Errorf("expected policy in callback, got %s", callbackPolicyJSON)
 	}
 }

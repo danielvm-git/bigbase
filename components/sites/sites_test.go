@@ -704,3 +704,151 @@ start:
 	}
 }
 
+func TestSiteAuthPolicyStruct(t *testing.T) {
+	s := setupSites(t)
+	ctx := context.Background()
+
+	// Insert a site directly with auth policy
+	siteID := "site-auth-struct-test"
+	now := "2026-07-08T20:00:00Z"
+	policyJSON := `{"default":"protected","protected_paths":["/secret/*"],"public_paths":["/public"],"accept":["jwt"]}`
+	
+	_, err := s.DB().ExecContext(ctx,
+		`INSERT INTO sites (id, name, git_repo_id, production_branch, root_path, github_full_name, created_at, auth_policy)
+		 VALUES (?, 'test-site', 'repo-1', 'main', './', '', ?, ?)`,
+		siteID, now, policyJSON)
+	if err != nil {
+		t.Fatalf("insert site: %v", err)
+	}
+
+	// Retrieve site via GetSite
+	site, err := s.GetSite(ctx, siteID)
+	if err != nil {
+		t.Fatalf("GetSite: %v", err)
+	}
+	if site.AuthPolicy == nil {
+		t.Fatalf("expected AuthPolicy not to be nil")
+	}
+	if site.AuthPolicy.Default != "protected" {
+		t.Errorf("expected default to be protected, got %s", site.AuthPolicy.Default)
+	}
+	if len(site.AuthPolicy.ProtectedPaths) != 1 || site.AuthPolicy.ProtectedPaths[0] != "/secret/*" {
+		t.Errorf("unexpected protected paths: %v", site.AuthPolicy.ProtectedPaths)
+	}
+
+	// Retrieve sites via ListSites
+	allSites, err := s.ListSites(ctx)
+	if err != nil {
+		t.Fatalf("ListSites: %v", err)
+	}
+	found := false
+	for _, st := range allSites {
+		if st.ID == siteID {
+			found = true
+			if st.AuthPolicy == nil {
+				t.Fatalf("expected AuthPolicy not to be nil in list")
+			}
+			if st.AuthPolicy.Default != "protected" {
+				t.Errorf("expected default in list to be protected, got %s", st.AuthPolicy.Default)
+			}
+		}
+	}
+	if !found {
+		t.Fatalf("site not found in ListSites")
+	}
+}
+
+func TestSiteAuthPolicyAPI(t *testing.T) {
+	logger := testLogger{}
+	k := kernel.New(logger)
+	d := db.New(db.Options{Path: ":memory:", Logger: logger})
+	g := git.New(git.Options{DB: d, Logger: logger, Dir: t.TempDir()})
+
+	var callbackCalled bool
+	var callbackSiteID string
+	var callbackPolicyJSON string
+
+	s := sites.New(sites.Options{
+		DB:     d,
+		Logger: logger,
+		UpdateAuthPolicy: func(siteID string, policyJSON string) {
+			callbackCalled = true
+			callbackSiteID = siteID
+			callbackPolicyJSON = policyJSON
+		},
+	})
+
+	k.Register(d)
+	k.Register(g)
+	k.Register(s)
+	if err := k.Start(); err != nil {
+		t.Fatalf("kernel start: %v", err)
+	}
+	t.Cleanup(func() { _ = k.Stop() })
+
+	ctx := context.Background()
+	siteID := "site-auth-api-test"
+	_, err := d.ExecContext(ctx,
+		`INSERT INTO sites (id, name, git_repo_id, production_branch, root_path, github_full_name, created_at)
+		 VALUES (?, 'test-site', 'repo-1', 'main', './', '', datetime('now'))`,
+		siteID)
+	if err != nil {
+		t.Fatalf("insert site: %v", err)
+	}
+
+	// 1. GET initial auth policy (should default to public)
+	req := httptest.NewRequest(http.MethodGet, fmt.Sprintf("/api/sites/%s/auth-policy", siteID), nil)
+	w := httptest.NewRecorder()
+	s.Handler().ServeHTTP(w, req)
+	if w.Code != http.StatusOK {
+		t.Fatalf("GET expected 200, got %d: %s", w.Code, w.Body.String())
+	}
+	var policy sites.AuthPolicy
+	if err := json.Unmarshal(w.Body.Bytes(), &policy); err != nil {
+		t.Fatalf("failed to unmarshal policy: %v", err)
+	}
+	if policy.Default != "public" {
+		t.Errorf("expected default policy 'public', got '%s'", policy.Default)
+	}
+
+	// 2. POST updated auth policy
+	updatedPolicyJSON := `{"default":"protected","protected_paths":["/books/*"],"public_paths":["/login"],"accept":["jwt"]}`
+	req = httptest.NewRequest(http.MethodPost, fmt.Sprintf("/api/sites/%s/auth-policy", siteID), bytes.NewBufferString(updatedPolicyJSON))
+	req.Header.Set("Content-Type", "application/json")
+	w = httptest.NewRecorder()
+	s.Handler().ServeHTTP(w, req)
+	if w.Code != http.StatusOK {
+		t.Fatalf("POST expected 200, got %d: %s", w.Code, w.Body.String())
+	}
+
+	// Verify callback was triggered
+	if !callbackCalled {
+		t.Errorf("expected UpdateAuthPolicy callback to be called")
+	}
+	if callbackSiteID != siteID {
+		t.Errorf("expected callback siteID to be %s, got %s", siteID, callbackSiteID)
+	}
+	if !strings.Contains(callbackPolicyJSON, `"default":"protected"`) {
+		t.Errorf("expected callback policy JSON to contain default:protected, got %s", callbackPolicyJSON)
+	}
+
+	// 3. GET again and verify updated values
+	req = httptest.NewRequest(http.MethodGet, fmt.Sprintf("/api/sites/%s/auth-policy", siteID), nil)
+	w = httptest.NewRecorder()
+	s.Handler().ServeHTTP(w, req)
+	if w.Code != http.StatusOK {
+		t.Fatalf("GET expected 200, got %d", w.Code)
+	}
+	var policy2 sites.AuthPolicy
+	if err := json.Unmarshal(w.Body.Bytes(), &policy2); err != nil {
+		t.Fatalf("failed to unmarshal policy2: %v", err)
+	}
+	if policy2.Default != "protected" {
+		t.Errorf("expected default policy 'protected', got '%s'", policy2.Default)
+	}
+	if len(policy2.ProtectedPaths) != 1 || policy2.ProtectedPaths[0] != "/books/*" {
+		t.Errorf("unexpected protected paths: %v", policy2.ProtectedPaths)
+	}
+}
+
+

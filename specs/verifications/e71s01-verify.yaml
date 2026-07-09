@@ -1,0 +1,29 @@
+story_id: e71s01
+verified_at: "2026-07-08T21:24:00Z"
+verifier: verify-work
+phases:
+  smoke:
+    passed: true
+  build:
+    passed: true
+    command: "go build -o bigbase ."
+  typecheck:
+    passed: true
+  lint:
+    passed: true
+  tests:
+    passed: true
+    coverage: "N/A"
+  terminal_verdict:
+    command: "go test -v -run TestSiteAuthPolicyStruct ./components/sites"
+    exit_code: 0
+    captured_at: "2026-07-08T21:22:28Z"
+    note: "Single run"
+  manual:
+    steps:
+      - step: "Verify site auth policy schema migration and struct parsing"
+        expected: "Successful migration and model serialization"
+        actual: "Struct parsed and validated successfully in tests"
+        passed: true
+  gaps:
+    closed: true

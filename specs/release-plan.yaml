@@ -346,8 +346,8 @@ epics:
   - e65
   - e66
   note: 7 stories, 26 BCPs. Foundation for all UI work.
-  capsule_dir: epics/e51-design-system
-  file: epics/e51-design-system/epic.yaml
+  capsule_dir: epics/archive/e51-design-system
+  file: epics/archive/e51-design-system/epic.yaml
 - id: e53
   title: "Deploy \u2014 Process Supervisor"
   wsjf: 6.0
@@ -522,12 +522,26 @@ epics:
     4 stories, 7 BCPs. AI agents can bootstrap a new project end-to-end:
     create_repo → create_site → provision_ci_credentials → get_ci_template.
     Ships in Wave 2 alongside e59. All stories independently useful.
-  capsule_dir: epics/e67-mcp-provisioning-tools
-  file: epics/e67-mcp-provisioning-tools/epic.yaml
+  capsule_dir: epics/archive/e67-mcp-provisioning-tools
+  file: epics/archive/e67-mcp-provisioning-tools/epic.yaml
 - id: e68
   title: "Deploy — Native Database Connection String Env Var"
   wsjf: 10.5
-  file: epics/e68-native-db-connection.yaml
+  file: epics/archive/e68-native-db-connection.yaml
   mode: flat
   tier: 2
   status: planned
+
+- id: e71
+  title: "Security — Host-Level Route Auth Policy"
+  wsjf: 6.0
+  mode: capsule
+  tier: 1
+  status: planned
+  depends_on:
+  - e04
+  - e51
+  note: "4 stories, 8 BCPs. Proxy-enforced routing security policy gating protected paths."
+  capsule_dir: epics/e71-site-route-auth-policy
+  file: epics/e71-site-route-auth-policy/epic.yaml
+

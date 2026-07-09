@@ -3,6 +3,7 @@ package proxy_test
 import (
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -570,3 +571,117 @@ func TestMetadataNotInjectedOnNonHTML(t *testing.T) {
 		t.Error("original JSON should be preserved")
 	}
 }
+
+func TestProxyAuthPolicy(t *testing.T) {
+	// Setup mock backend
+	backend := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siteID := r.Header.Get("X-BigBase-Site-ID")
+		userID := r.Header.Get("X-BigBase-User-ID")
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = fmt.Fprintf(w, `{"site_id":%q,"user_id":%q}`, siteID, userID)
+	}))
+	defer backend.Close()
+
+	u, _ := url.Parse(backend.URL)
+	_, backendPortStr, _ := net.SplitHostPort(u.Host)
+	var backendPort int
+	_, _ = fmt.Sscanf(backendPortStr, "%d", &backendPort)
+
+	logger := testLogger{}
+	port := freePort(t)
+	p := proxy.New(proxy.Options{
+		Port:   port,
+		Logger: logger,
+		ValidateToken: func(token string) (int64, string, error) {
+			if token == "valid-jwt" {
+				return 42, "user", nil
+			}
+			return 0, "", fmt.Errorf("invalid token")
+		},
+		ValidateSiteKey: func(siteID string, token string) error {
+			if token == "bb_dep_valid-site-key" && siteID == "site-1" {
+				return nil
+			}
+			return fmt.Errorf("invalid site key")
+		},
+	})
+
+	if err := p.Start(&kernel.Context{}); err != nil {
+		t.Fatalf("proxy start: %v", err)
+	}
+	defer func() { _ = p.Stop(&kernel.Context{}) }()
+
+	host := "secured.bigbase.click"
+	if err := p.RegisterDeploymentHost(host, backendPort, "site-1", nil, nil); err != nil {
+		t.Fatalf("register host: %v", err)
+	}
+
+	policyJSON := `{
+		"default": "public",
+		"protected_paths": ["/books/*", "/mcp"],
+		"public_paths": ["/login"],
+		"accept": ["jwt", "site_key"]
+	}`
+	p.SetSiteAuthPolicy("site-1", policyJSON)
+
+	doReq := func(path string, authHeader string, cookie *http.Cookie) (int, string) {
+		req, _ := http.NewRequest(http.MethodGet, fmt.Sprintf("http://127.0.0.1:%s%s", port, path), nil)
+		req.Host = host
+		if authHeader != "" {
+			req.Header.Set("Authorization", authHeader)
+		}
+		if cookie != nil {
+			req.AddCookie(cookie)
+		}
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			t.Fatalf("request failed: %v", err)
+		}
+		defer func() { _ = resp.Body.Close() }()
+		body, _ := io.ReadAll(resp.Body)
+		return resp.StatusCode, string(body)
+	}
+
+	code, body := doReq("/login", "", nil)
+	if code != http.StatusOK {
+		t.Errorf("expected 200 for public path, got %d", code)
+	}
+	if !strings.Contains(body, `"user_id":""`) || !strings.Contains(body, `"site_id":"site-1"`) {
+		t.Errorf("unexpected public path headers: %s", body)
+	}
+
+	code, _ = doReq("/books/scrum-guide", "", nil)
+	if code != http.StatusUnauthorized {
+		t.Errorf("expected 401 for protected path without auth, got %d", code)
+	}
+
+	code, body = doReq("/books/scrum-guide", "Bearer valid-jwt", nil)
+	if code != http.StatusOK {
+		t.Errorf("expected 200 for valid JWT, got %d", code)
+	}
+	if !strings.Contains(body, `"user_id":"42"`) {
+		t.Errorf("expected user_id 42, got: %s", body)
+	}
+
+	code, body = doReq("/books/scrum-guide", "", &http.Cookie{Name: "token", Value: "valid-jwt"})
+	if code != http.StatusOK {
+		t.Errorf("expected 200 for cookie JWT, got %d", code)
+	}
+	if !strings.Contains(body, `"user_id":"42"`) {
+		t.Errorf("expected user_id 42, got: %s", body)
+	}
+
+	code, body = doReq("/mcp", "Bearer bb_dep_valid-site-key", nil)
+	if code != http.StatusOK {
+		t.Errorf("expected 200 for valid site key, got %d", code)
+	}
+	if !strings.Contains(body, `"user_id":""`) || !strings.Contains(body, `"site_id":"site-1"`) {
+		t.Errorf("expected empty user_id but site_id site-1, got: %s", body)
+	}
+
+	code, _ = doReq("/mcp", "Bearer invalid-token", nil)
+	if code != http.StatusUnauthorized {
+		t.Errorf("expected 401 for invalid token, got %d", code)
+	}
+}
+

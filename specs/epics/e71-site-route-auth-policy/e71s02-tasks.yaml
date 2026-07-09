@@ -1,0 +1,20 @@
+story_id: e71s02
+title: "Proxy JWT validation for protected static paths"
+status: passing
+bcps: 3
+tasks:
+  - id: 1
+    description: "Extend hostInfo with AuthPolicy and load it from DB during RegisterDeploymentHost"
+    verify: "go test -v -run TestRegisterDeploymentHost ./components/proxy/..."
+    risk: P0
+    status: passing
+  - id: 2
+    description: "Add ValidateToken and ValidateSiteKey options to Proxy and implement path matching logic"
+    verify: "go test -v -run TestPathMatching ./components/proxy/..."
+    risk: P0
+    status: passing
+  - id: 3
+    description: "Update deploymentHostMiddleware to enforce policy authentication (Bearer/cookie JWT, site keys) and return 401 on failure"
+    verify: "go test -v -run TestProxyAuthPolicy ./components/proxy/..."
+    risk: P0
+    status: passing

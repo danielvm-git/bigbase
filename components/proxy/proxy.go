@@ -6,6 +6,7 @@ import (
 	"crypto/sha256"
 	"crypto/subtle"
 	"crypto/x509"
+	"database/sql"
 	"encoding/hex"
 	"encoding/json"
 	"encoding/pem"
@@ -55,24 +56,33 @@ type RequestLogger interface {
 	RecordRequestLog(siteID, method, path string, status int, duration time.Duration)
 }
 
+type DBer interface {
+	QueryRowContext(ctx context.Context, query string, args ...any) *sql.Row
+	QueryContext(ctx context.Context, query string, args ...any) (*sql.Rows, error)
+	ExecContext(ctx context.Context, query string, args ...any) (sql.Result, error)
+}
+
 type Options struct {
 	Port               string
 	HTTPSPort          string
 	Kernel             *kernel.Kernel
-	Logger kernel.Logger
+	Logger             kernel.Logger
 	RequestLogger      RequestLogger
 	CORSAllowedOrigins []string
 	NRApp              *newrelic.Application
 	CertDir            string
 	ACMEEmail          string
 	HealthToken        string
+	DB                 DBer
+	ValidateToken      func(token string) (userID int64, role string, err error)
+	ValidateSiteKey    func(siteID string, token string) error
 }
 
 type Proxy struct {
 	port               string
 	httpsPort          string
 	kernel             *kernel.Kernel
-	logger kernel.Logger
+	logger             kernel.Logger
 	requestLogger      RequestLogger
 	server             *http.Server
 	httpsServer        *http.Server
@@ -83,13 +93,18 @@ type Proxy struct {
 	certDir            string
 	acmeEmail          string
 	healthToken        string
+	db                 DBer
+	validateToken      func(token string) (userID int64, role string, err error)
+	validateSiteKey    func(siteID string, token string) error
 
-	starsMu       sync.Mutex
-	starsVal      string
-	starsTime     time.Time
-	deployHostsMu sync.RWMutex
-	deployHosts   map[string]hostInfo
-	serviceHosts  map[string]int
+	starsMu        sync.Mutex
+	starsVal       string
+	starsTime      time.Time
+	deployHostsMu  sync.RWMutex
+	deployHosts    map[string]hostInfo
+	serviceHosts   map[string]int
+	authPoliciesMu sync.RWMutex
+	authPolicies   map[string]*AuthPolicy
 }
 
 func (p *Proxy) GitHubStars() string {
@@ -146,6 +161,10 @@ func New(opts Options) *Proxy {
 		corsAllowedOrigins: opts.CORSAllowedOrigins,
 		nrApp:              opts.NRApp,
 		healthToken:        opts.HealthToken,
+		db:                 opts.DB,
+		validateToken:      opts.ValidateToken,
+		validateSiteKey:    opts.ValidateSiteKey,
+		authPolicies:       make(map[string]*AuthPolicy),
 	}
 }
 
@@ -153,6 +172,15 @@ func New(opts Options) *Proxy {
 
 func (p *Proxy) SetRequestLogger(rl RequestLogger) {
 	p.requestLogger = rl
+}
+
+func (p *Proxy) SetDB(db DBer) {
+	p.db = db
+}
+
+func (p *Proxy) SetValidators(validateToken func(token string) (int64, string, error), validateSiteKey func(siteID string, token string) error) {
+	p.validateToken = validateToken
+	p.validateSiteKey = validateSiteKey
 }
 
 // Port returns the HTTP listen port (resolved after Start if port was "0").
@@ -1362,4 +1390,58 @@ func (p *Proxy) corsMiddleware(next http.Handler) http.Handler {
 		w.Header().Set("Vary", "Origin")
 		next.ServeHTTP(w, r)
 	})
+}
+
+type AuthPolicy struct {
+	Default        string   `json:"default"`
+	ProtectedPaths []string `json:"protected_paths"`
+	PublicPaths    []string `json:"public_paths"`
+	Accept         []string `json:"accept"`
+}
+
+func (p *Proxy) SetSiteAuthPolicy(siteID string, policyJSON string) {
+	p.authPoliciesMu.Lock()
+	defer p.authPoliciesMu.Unlock()
+	if p.authPolicies == nil {
+		p.authPolicies = make(map[string]*AuthPolicy)
+	}
+	if policyJSON == "" || policyJSON == "{}" {
+		delete(p.authPolicies, siteID)
+		return
+	}
+	var policy AuthPolicy
+	if err := json.Unmarshal([]byte(policyJSON), &policy); err == nil {
+		p.authPolicies[siteID] = &policy
+	}
+}
+
+func (p *Proxy) getSiteAuthPolicy(siteID string) *AuthPolicy {
+	p.authPoliciesMu.RLock()
+	policy, ok := p.authPolicies[siteID]
+	p.authPoliciesMu.RUnlock()
+	if ok {
+		return policy
+	}
+
+	// Fallback: check database if DB is available
+	if p.db != nil {
+		var policyStr string
+		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+		defer cancel()
+		err := p.db.QueryRowContext(ctx, "SELECT auth_policy FROM sites WHERE id = ?", siteID).Scan(&policyStr)
+		if err == nil && policyStr != "" {
+			var dbPolicy AuthPolicy
+			if err := json.Unmarshal([]byte(policyStr), &dbPolicy); err == nil {
+				// Cache it
+				p.authPoliciesMu.Lock()
+				if p.authPolicies == nil {
+					p.authPolicies = make(map[string]*AuthPolicy)
+				}
+				p.authPolicies[siteID] = &dbPolicy
+				p.authPoliciesMu.Unlock()
+				return &dbPolicy
+			}
+		}
+	}
+	return nil
 }

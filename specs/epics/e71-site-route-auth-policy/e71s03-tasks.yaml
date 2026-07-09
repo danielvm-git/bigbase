@@ -1,0 +1,20 @@
+story_id: e71s03
+title: "Passthrough auth injection — X-BigBase-User-ID header"
+status: passing
+bcps: 2
+tasks:
+  - id: 1
+    description: "Inject X-BigBase-Site-ID in proxy director for forwarded requests"
+    verify: "go test -v -run TestProxySiteIDHeader ./components/proxy/..."
+    risk: P1
+    status: passing
+  - id: 2
+    description: "Inject X-BigBase-User-ID for JWT-authenticated requests and clear it from incoming untrusted client headers"
+    verify: "go test -v -run TestProxyUserIDHeader ./components/proxy/..."
+    risk: P1
+    status: passing
+  - id: 3
+    description: "Write integration tests confirming the backend receives correct headers for both public and protected routes"
+    verify: "go test -v -run TestProxyHeaderInjection ./components/proxy/..."
+    risk: P1
+    status: passing

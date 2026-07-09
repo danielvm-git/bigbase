@@ -82,6 +82,8 @@ type Options struct {
 	SiteKeyCreator SiteKeyCreator
 	// OrgKeyAuthenticator validates bb_ org keys for HTTP MCP auth. Nil disables auth (stdio/tests).
 	OrgKeyAuthenticator OrgKeyAuthenticator
+	// UpdateAuthPolicy notifies the proxy when a site's auth policy changes.
+	UpdateAuthPolicy func(siteID string, policyJSON string)
 }
 
 // DBer is the database interface for deploy tools.
@@ -104,6 +106,7 @@ type Component struct {
 	siteLister        SiteLister
 	siteKeyCreator    SiteKeyCreator
 	orgKeyAuth        OrgKeyAuthenticator
+	updateAuthPolicy  func(siteID string, policyJSON string)
 	streamableHandler http.Handler // created once, reused across requests for session persistence
 }
 
@@ -122,17 +125,18 @@ func New(opts Options) *Component {
 		transport = "http"
 	}
 	return &Component{
-		logger:         logger,
-		port:           port,
-		transport:      transport,
-		enabled:        opts.Enabled,
-		db:             opts.DB,
-		deployer:       opts.Deployer,
-		gitCreator:     opts.GitCreator,
-		siteCreator:    opts.SiteCreator,
-		siteLister:     opts.SiteLister,
-		siteKeyCreator: opts.SiteKeyCreator,
-		orgKeyAuth:     opts.OrgKeyAuthenticator,
+		logger:           logger,
+		port:             port,
+		transport:        transport,
+		enabled:          opts.Enabled,
+		db:               opts.DB,
+		deployer:         opts.Deployer,
+		gitCreator:       opts.GitCreator,
+		siteCreator:      opts.SiteCreator,
+		siteLister:       opts.SiteLister,
+		siteKeyCreator:   opts.SiteKeyCreator,
+		orgKeyAuth:       opts.OrgKeyAuthenticator,
+		updateAuthPolicy: opts.UpdateAuthPolicy,
 	}
 }
 
@@ -751,6 +755,67 @@ Port is set via ` + "`PORT`" + ` env var. Database is SQLite by default.
 		}
 		c.logger.Info("mcp tool", "tool", "revoke_site_key", "key_id", keyID)
 		return textResult(formatJSON(map[string]string{"key_id": keyID, "revoked": "true"})), nil, nil
+	})
+
+	// registerSetSiteAuthPolicy
+	c.registerTool(srv, tierWrite, &mcpsdk.Tool{
+		Name:        "set_site_auth_policy",
+		Description: "Set the authentication and routing policy for a deployed site. Arguments: site_id (string, required), policy (object, required: default (string: public or protected), protected_paths (array of strings), public_paths (array of strings), accept (array of strings: jwt, site_key)).",
+	}, func(ctx context.Context, req *mcpsdk.CallToolRequest, _ any) (*mcpsdk.CallToolResult, any, error) {
+		if c.db == nil {
+			return textResult("Auth policy configuration requires a database connection."), nil, nil
+		}
+		var reqArgs struct {
+			SiteID string `json:"site_id"`
+			Policy struct {
+				Default        string   `json:"default"`
+				ProtectedPaths []string `json:"protected_paths"`
+				PublicPaths    []string `json:"public_paths"`
+				Accept         []string `json:"accept"`
+			} `json:"policy"`
+		}
+		if req.Params.Arguments != nil {
+			if err := json.Unmarshal(req.Params.Arguments, &reqArgs); err != nil {
+				return textResult(fmt.Sprintf("Failed to parse arguments: %v", err)), nil, nil
+			}
+		}
+		if reqArgs.SiteID == "" {
+			return textResult("site_id is required."), nil, nil
+		}
+
+		// Verify site exists first
+		var exists int
+		err := c.db.QueryRowContext(ctx, "SELECT count(1) FROM sites WHERE id = ?", reqArgs.SiteID).Scan(&exists)
+		if err != nil || exists == 0 {
+			return textResult(fmt.Sprintf("Site %q not found.", reqArgs.SiteID)), nil, nil
+		}
+
+		// Validate policy default value
+		if reqArgs.Policy.Default == "" {
+			reqArgs.Policy.Default = "public"
+		}
+		if reqArgs.Policy.Default != "public" && reqArgs.Policy.Default != "protected" {
+			return textResult("invalid default policy value (must be 'public' or 'protected')"), nil, nil
+		}
+
+		policyBytes, err := json.Marshal(reqArgs.Policy)
+		if err != nil {
+			return textResult(fmt.Sprintf("Failed to marshal policy: %v", err)), nil, nil
+		}
+		policyStr := string(policyBytes)
+
+		_, err = c.db.ExecContext(ctx, "UPDATE sites SET auth_policy = ? WHERE id = ?", policyStr, reqArgs.SiteID)
+		if err != nil {
+			return textResult(fmt.Sprintf("Failed to update site auth policy: %v", err)), nil, nil
+		}
+
+		// Trigger callback to update proxy immediately
+		if c.updateAuthPolicy != nil {
+			c.updateAuthPolicy(reqArgs.SiteID, policyStr)
+		}
+
+		c.logger.Info("mcp tool", "tool", "set_site_auth_policy", "site_id", reqArgs.SiteID, "policy", policyStr)
+		return textResult(formatJSON(map[string]any{"site_id": reqArgs.SiteID, "status": "ok", "policy": reqArgs.Policy})), nil, nil
 	})
 
 	return srv, nil

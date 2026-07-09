@@ -45,6 +45,13 @@ type Deployment struct {
 	CreatedAt string `json:"created_at"`
 }
 
+type AuthPolicy struct {
+	Default        string   `json:"default"`
+	ProtectedPaths []string `json:"protected_paths"`
+	PublicPaths    []string `json:"public_paths"`
+	Accept         []string `json:"accept"`
+}
+
 type Site struct {
 	ID               string      `json:"id"`
 	Name             string      `json:"name"`
@@ -54,6 +61,7 @@ type Site struct {
 	RootPath         string      `json:"root_path"`
 	GitHubConnected  bool        `json:"github_connected,omitempty"`
 	LatestDeployment *Deployment `json:"latest_deployment,omitempty"`
+	AuthPolicy       *AuthPolicy `json:"auth_policy,omitempty"`
 }
 
 type DeployTrigger func(ctx context.Context, repoID, branch, siteName, siteID string, passthroughPaths []string, appType string) (*Deployment, error)
@@ -77,6 +85,7 @@ type Sites struct {
 	certInfo          CertInfoFunc
 	unregisterHost    func(domain string)
 	activateDomain    ActivateDomainFunc
+	updateAuthPolicy  func(siteID string, policyJSON string)
 	verifyLim         *verifyLimiter
 }
 
@@ -93,6 +102,8 @@ type Options struct {
 	UnregisterHost func(domain string)
 	// ActivateDomain registers a domain with the proxy on successful verification.
 	ActivateDomain ActivateDomainFunc
+	// UpdateAuthPolicy notifies the proxy when a site's auth policy changes.
+	UpdateAuthPolicy func(siteID string, policyJSON string)
 }
 
 func New(opts Options) *Sites {
@@ -115,6 +126,7 @@ func New(opts Options) *Sites {
 		certInfo:          opts.CertInfo,
 		unregisterHost:    opts.UnregisterHost,
 		activateDomain:    opts.ActivateDomain,
+		updateAuthPolicy:  opts.UpdateAuthPolicy,
 		verifyLim:         newVerifyLimiter(5 * time.Second),
 	}
 	if keyErr != nil {
@@ -125,6 +137,7 @@ func New(opts Options) *Sites {
 }
 
 func (s *Sites) Name() string                  { return "sites" }
+func (s *Sites) DB() DBer                      { return s.db }
 func (s *Sites) Version() string               { return version }
 func (s *Sites) Dependencies() []string        { return []string{"db"} }
 func (s *Sites) ConfigSchema() json.RawMessage { return nil }
@@ -146,6 +159,7 @@ func (s *Sites) Start(ctx *kernel.Context) error {
 	)`); err != nil {
 		return fmt.Errorf("migrate sites: %w", err)
 	}
+	_ = s.db.Migrate(`ALTER TABLE sites ADD COLUMN auth_policy TEXT NOT NULL DEFAULT '{}'`)
 	if err := s.migrateDomains(); err != nil {
 		return fmt.Errorf("migrate site_domains: %w", err)
 	}
@@ -219,6 +233,20 @@ func (s *Sites) handleSiteByID(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	if len(parts) == 2 && parts[1] == "auth-policy" {
+		switch r.Method {
+		case http.MethodGet:
+			s.getSiteAuthPolicy(w, r, id)
+			return
+		case http.MethodPost:
+			s.setSiteAuthPolicy(w, r, id)
+			return
+		default:
+			writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
+			return
+		}
+	}
+
 	// Route domain sub-paths: /api/sites/{id}/domains[/{domain}/verify]
 	if len(parts) >= 2 && parts[1] == "domains" {
 		s.handleDomains(w, r)
@@ -255,11 +283,11 @@ func (s *Sites) listSites(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]any{"data": sites})
 }
 
-// ListSites returns all sites with latest deployment metadata when available.
 func (s *Sites) ListSites(ctx context.Context) ([]Site, error) {
 	rows, err := s.db.QueryContext(ctx, `
 		SELECT s.id, s.name, s.git_repo_id, s.production_branch, s.root_path,
-			COALESCE(NULLIF(s.github_full_name, ''), g.name, s.name)
+			COALESCE(NULLIF(s.github_full_name, ''), g.name, s.name),
+			s.auth_policy
 		FROM sites s
 		LEFT JOIN git_repos g ON g.id = s.git_repo_id
 		ORDER BY s.name`)
@@ -271,12 +299,16 @@ func (s *Sites) ListSites(ctx context.Context) ([]Site, error) {
 	sites := make([]Site, 0)
 	for rows.Next() {
 		var site Site
+		var authPolicyStr string
 		if err := rows.Scan(&site.ID, &site.Name, &site.GitRepoID, &site.ProductionBranch,
-			&site.RootPath, &site.FullName); err != nil {
+			&site.RootPath, &site.FullName, &authPolicyStr); err != nil {
 			continue
 		}
 		if site.FullName != "" {
 			site.GitHubConnected = strings.Contains(site.FullName, "/")
+		}
+		if authPolicyStr != "" {
+			_ = json.Unmarshal([]byte(authPolicyStr), &site.AuthPolicy)
 		}
 		sites = append(sites, site)
 	}
@@ -378,16 +410,16 @@ func (s *Sites) getSite(w http.ResponseWriter, r *http.Request, id string) {
 	writeJSON(w, http.StatusOK, site)
 }
 
-// GetSite returns a single site by site id or git repo id.
 func (s *Sites) GetSite(ctx context.Context, id string) (*Site, error) {
 	var site Site
 	var repoName string
+	var authPolicyStr string
 	err := s.db.QueryRowContext(ctx, `
 		SELECT s.id, s.name, s.git_repo_id, s.production_branch, s.root_path, s.github_full_name,
-			COALESCE(g.name, '')
+			COALESCE(g.name, ''), s.auth_policy
 		FROM sites s LEFT JOIN git_repos g ON g.id = s.git_repo_id
 		WHERE s.id = ? OR s.git_repo_id = ?`, id, id).
-		Scan(&site.ID, &site.Name, &site.GitRepoID, &site.ProductionBranch, &site.RootPath, &site.FullName, &repoName)
+		Scan(&site.ID, &site.Name, &site.GitRepoID, &site.ProductionBranch, &site.RootPath, &site.FullName, &repoName, &authPolicyStr)
 	if err != nil {
 		err = s.db.QueryRowContext(ctx,
 			"SELECT id, name, default_branch FROM git_repos WHERE id = ?", id).
@@ -398,10 +430,15 @@ func (s *Sites) GetSite(ctx context.Context, id string) (*Site, error) {
 		site.ID = site.GitRepoID
 		site.FullName = site.Name
 		site.RootPath = "./"
-	} else if site.FullName == "" {
-		site.FullName = repoName
+	} else {
+		if authPolicyStr != "" {
+			_ = json.Unmarshal([]byte(authPolicyStr), &site.AuthPolicy)
+		}
 		if site.FullName == "" {
-			site.FullName = site.Name
+			site.FullName = repoName
+			if site.FullName == "" {
+				site.FullName = site.Name
+			}
 		}
 	}
 
@@ -882,6 +919,79 @@ func (s *Sites) resolveRepoBranch(ctx context.Context, id string) (repoID, branc
 		branch = "main"
 	}
 	return repoID, branch, nil
+}
+
+func (s *Sites) getSiteAuthPolicy(w http.ResponseWriter, r *http.Request, id string) {
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	var policyStr sql.NullString
+	err := s.db.QueryRowContext(ctx, "SELECT auth_policy FROM sites WHERE id = ?", id).Scan(&policyStr)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			writeJSON(w, http.StatusNotFound, map[string]string{"error": "site not found"})
+		} else {
+			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		}
+		return
+	}
+
+	var policy AuthPolicy
+	if policyStr.Valid && policyStr.String != "" {
+		_ = json.Unmarshal([]byte(policyStr.String), &policy)
+	}
+	if policy.Default == "" {
+		policy.Default = "public"
+	}
+	writeJSON(w, http.StatusOK, policy)
+}
+
+func (s *Sites) setSiteAuthPolicy(w http.ResponseWriter, r *http.Request, id string) {
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	// Verify site exists first
+	var exists int
+	err := s.db.QueryRowContext(ctx, "SELECT count(1) FROM sites WHERE id = ?", id).Scan(&exists)
+	if err != nil || exists == 0 {
+		writeJSON(w, http.StatusNotFound, map[string]string{"error": "site not found"})
+		return
+	}
+
+	var policy AuthPolicy
+	if err := json.NewDecoder(r.Body).Decode(&policy); err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json"})
+		return
+	}
+
+	// Basic validation / defaults
+	if policy.Default == "" {
+		policy.Default = "public"
+	}
+	if policy.Default != "public" && policy.Default != "protected" {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid default policy value"})
+		return
+	}
+
+	policyBytes, err := json.Marshal(policy)
+	if err != nil {
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "marshal policy failed"})
+		return
+	}
+	policyStr := string(policyBytes)
+
+	_, err = s.db.ExecContext(ctx, "UPDATE sites SET auth_policy = ? WHERE id = ?", policyStr, id)
+	if err != nil {
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		return
+	}
+
+	// Trigger callback to update proxy immediately
+	if s.updateAuthPolicy != nil {
+		s.updateAuthPolicy(id, policyStr)
+	}
+
+	writeJSON(w, http.StatusOK, map[string]any{"status": "ok", "policy": policy})
 }
 
 func writeJSON(w http.ResponseWriter, status int, data any) {

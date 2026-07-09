@@ -1,0 +1,20 @@
+story_id: e71s01
+title: "Site auth policy schema"
+status: passing
+bcps: 2
+tasks:
+  - id: 1
+    description: "Add auth_policy TEXT column to sites table schema and database migrations"
+    verify: "go test -v -run TestDomain ./components/sites/..."
+    risk: P2
+    status: passing
+  - id: 2
+    description: "Define AuthPolicy struct and update Site struct with DB serialization/deserialization"
+    verify: "go test -v -run TestSiteAuthPolicyStruct ./components/sites"
+    risk: P2
+    status: passing
+  - id: 3
+    description: "Implement GET and POST API endpoints for sites auth policy with UpdateAuthPolicy callback"
+    verify: "go test -v -run TestSiteAuthPolicyAPI ./components/sites"
+    risk: P2
+    status: passing

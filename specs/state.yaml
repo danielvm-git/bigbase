@@ -1,7 +1,7 @@
 type: session-state
 context: infra
-active_flow: null
-active_epic_id: null
+active_flow: build_epic
+active_epic_id: e71
 active_story_id: null
 active_story_status: null
 release:
@@ -20,14 +20,14 @@ metrics:
   stories_completed: 171
   bcps_per_hour: 0
 epic_cycle:
-  step: null
-  story_bcps: null
-  story: null
-  audit_result: null
-  completed_steps: []
-  note: null
+  step: 8
+  story_bcps: 8
+  story: "e71"
+  audit_result: pass
+  completed_steps: [1, 2, 3, 4, 5, 6, 7]
+  note: "Verified all e71 stories, run tests, and generated audit reports."
   fast_mode: false
-  story_complete: false
+  story_complete: true
 bug_cycle:
   current_step: 0
   completed_steps: []
@@ -38,10 +38,10 @@ git:
   worktree: null
   ci_status: success
 handoff:
-  last_step_completed: "release-branch"
+  last_step_completed: "audit-code"
   open_decisions:
-    - "e71 remains for v2.69.0 Security Hardening release"
     - "Bootstrap mcp:provision keys via admin CreateAPIKey before MCP write tools work"
-  next_skill: survey-context
-  summary: "Security — OTP Persistence & Session Audit (e56) implemented, verified, and completed on main."
-  context: "All tests passing, database schema updated, audit logging wired, 18 events verified."
+  next_skill: release-branch
+  summary: "Completed Epic e71 (Security — Host-Level Route Auth Policy): sites schema modified, proxy JWT/site-key route validation middleware enforced, passthrough identity headers injected, and set_site_auth_policy MCP tool registered."
+  context: "All new and existing unit, integration, and MCP tests pass cleanly. Database columns successfully migrated, verified via automated test loops."
+

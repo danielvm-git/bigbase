@@ -1,0 +1,29 @@
+story_id: e71s04
+verified_at: "2026-07-08T21:24:00Z"
+verifier: verify-work
+phases:
+  smoke:
+    passed: true
+  build:
+    passed: true
+    command: "go build -o bigbase ."
+  typecheck:
+    passed: true
+  lint:
+    passed: true
+  tests:
+    passed: true
+    coverage: "N/A"
+  terminal_verdict:
+    command: "go test -v -run TestMCPSetSiteAuthPolicy ./components/mcp"
+    exit_code: 0
+    captured_at: "2026-07-08T21:23:35Z"
+    note: "Single run"
+  manual:
+    steps:
+      - step: "Verify MCP set_site_auth_policy tool registration and updates"
+        expected: "MCP tool updates database successfully and triggers policy update callback"
+        actual: "MCP tool registration and database update verified in TestMCPSetSiteAuthPolicy"
+        passed: true
+  gaps:
+    closed: true

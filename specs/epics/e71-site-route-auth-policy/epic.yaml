@@ -1,0 +1,34 @@
+type: epic-shard
+context: domain
+id: e71
+title: "Security — Host-Level Route Auth Policy"
+wsjf: 6.0
+total_bcps: 8
+status: done
+depends_on: [e04, e51]
+blocks: []
+stories:
+  - id: e71s01
+    title: "Site auth policy schema"
+    bcps: 2
+    status: done
+    spec: e71s01-spec.md
+    tasks: e71s01-tasks.yaml
+  - id: e71s02
+    title: "Proxy JWT validation for protected static paths"
+    bcps: 3
+    status: done
+    spec: e71s02-spec.md
+    tasks: e71s02-tasks.yaml
+  - id: e71s03
+    title: "Passthrough auth injection — X-BigBase-User-ID header"
+    bcps: 2
+    status: done
+    spec: e71s03-spec.md
+    tasks: e71s03-tasks.yaml
+  - id: e71s04
+    title: "MCP set_site_auth_policy tool for agent config"
+    bcps: 1
+    status: done
+    spec: e71s04-spec.md
+    tasks: e71s04-tasks.yaml

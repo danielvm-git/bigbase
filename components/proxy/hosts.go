@@ -3,12 +3,15 @@ package proxy
 import (
 	"bytes"
 	"compress/gzip"
+	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -18,6 +21,7 @@ type hostInfo struct {
 	SiteID           string
 	PassthroughPaths []string
 	Metadata         map[string]string // injected into __BIGBASE_METADATA__
+	AuthPolicy       *AuthPolicy
 }
 
 // RegisterDeploymentHost maps a public hostname to a local deployment port.
@@ -31,6 +35,31 @@ func (p *Proxy) RegisterDeploymentHost(host string, port int, siteID string, pas
 	if loopbackHosts[host] || net.ParseIP(host) != nil {
 		return fmt.Errorf("cannot register loopback address %q as deployment host", host)
 	}
+
+	// Load auth policy if DB is available
+	var policy *AuthPolicy
+	if p.db != nil {
+		var policyStr string
+		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+		defer cancel()
+		_ = p.db.QueryRowContext(ctx, "SELECT auth_policy FROM sites WHERE id = ?", siteID).Scan(&policyStr)
+		if policyStr != "" {
+			var pObj AuthPolicy
+			if err := json.Unmarshal([]byte(policyStr), &pObj); err == nil {
+				policy = &pObj
+			}
+		}
+	}
+	// Cache policy in memory
+	if policy != nil {
+		p.authPoliciesMu.Lock()
+		if p.authPolicies == nil {
+			p.authPolicies = make(map[string]*AuthPolicy)
+		}
+		p.authPolicies[siteID] = policy
+		p.authPoliciesMu.Unlock()
+	}
+
 	p.deployHostsMu.Lock()
 	defer p.deployHostsMu.Unlock()
 	if p.deployHosts == nil {
@@ -38,7 +67,13 @@ func (p *Proxy) RegisterDeploymentHost(host string, port int, siteID string, pas
 	}
 	// Allow replacing an existing registration — subsequent deployments for the
 	// same host update the port in place, enabling zero-downtime redeployment.
-	p.deployHosts[host] = hostInfo{Port: port, SiteID: siteID, PassthroughPaths: passthroughPaths, Metadata: metadata}
+	p.deployHosts[host] = hostInfo{
+		Port:             port,
+		SiteID:           siteID,
+		PassthroughPaths: passthroughPaths,
+		Metadata:         metadata,
+		AuthPolicy:       policy,
+	}
 	return nil
 }
 
@@ -200,14 +235,109 @@ func (p *Proxy) deploymentHostMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
+		// Resolve auth policy and perform validation
+		policy := p.getSiteAuthPolicy(info.SiteID)
+		var userID int64
+		var authErr error
+		isAuthenticated := false
+
+		// Clear incoming identity headers early to prevent spoofing
+		r.Header.Del("X-BigBase-User-ID")
+		r.Header.Del("X-BigBase-Site-ID")
+
+		if policy != nil {
+			protected := isPathProtected(policy, r.URL.Path)
+			if protected {
+				var token string
+				authHeader := r.Header.Get("Authorization")
+				if strings.HasPrefix(strings.ToLower(authHeader), "bearer ") {
+					token = authHeader[7:]
+				} else if c, err := r.Cookie("token"); err == nil {
+					token = c.Value
+				}
+
+				if token != "" {
+					acceptJWT := true
+					acceptSiteKey := false
+					if len(policy.Accept) > 0 {
+						acceptJWT = false
+						for _, a := range policy.Accept {
+							if a == "jwt" {
+								acceptJWT = true
+							}
+							if a == "site_key" {
+								acceptSiteKey = true
+							}
+						}
+					}
+
+					if acceptSiteKey && strings.HasPrefix(token, "bb_dep_") {
+						if p.validateSiteKey != nil {
+							if err := p.validateSiteKey(info.SiteID, token); err == nil {
+								isAuthenticated = true
+							} else {
+								authErr = err
+							}
+						}
+					} else if acceptJWT && !strings.HasPrefix(token, "bb_dep_") {
+						if p.validateToken != nil {
+							if uID, _, err := p.validateToken(token); err == nil {
+								userID = uID
+								isAuthenticated = true
+							} else {
+								authErr = err
+							}
+						}
+					}
+				}
+
+				if !isAuthenticated {
+					w.Header().Set("Content-Type", "application/json")
+					w.WriteHeader(http.StatusUnauthorized)
+					errMessage := "unauthorized"
+					if authErr != nil {
+						errMessage = fmt.Sprintf("unauthorized: %v", authErr)
+					}
+					_, _ = fmt.Fprintf(w, `{"error":%q}`, errMessage)
+					return
+				}
+			} else {
+				// Public path: try to resolve token anyway if present, but do not reject
+				var token string
+				authHeader := r.Header.Get("Authorization")
+				if strings.HasPrefix(strings.ToLower(authHeader), "bearer ") {
+					token = authHeader[7:]
+				} else if c, err := r.Cookie("token"); err == nil {
+					token = c.Value
+				}
+				if token != "" && !strings.HasPrefix(token, "bb_dep_") {
+					if p.validateToken != nil {
+						if uID, _, err := p.validateToken(token); err == nil {
+							userID = uID
+						}
+					}
+				}
+			}
+		}
+
 		target, err := url.Parse(fmt.Sprintf("http://127.0.0.1:%d", info.Port))
 		if err != nil {
 			http.Error(w, "bad gateway", http.StatusBadGateway)
 			return
 		}
-		proxy := httputil.NewSingleHostReverseProxy(target)
-		proxy.ErrorHandler = func(rw http.ResponseWriter, _ *http.Request, _ error) {
-			http.Error(rw, "deployment unavailable", http.StatusBadGateway)
+		proxy := &httputil.ReverseProxy{
+			Rewrite: func(pr *httputil.ProxyRequest) {
+				pr.SetURL(target)
+				pr.Out.Header.Del("X-BigBase-User-ID")
+				pr.Out.Header.Del("X-BigBase-Site-ID")
+				pr.Out.Header.Set("X-BigBase-Site-ID", info.SiteID)
+				if userID > 0 {
+					pr.Out.Header.Set("X-BigBase-User-ID", strconv.FormatInt(userID, 10))
+				}
+			},
+			ErrorHandler: func(rw http.ResponseWriter, _ *http.Request, _ error) {
+				http.Error(rw, "deployment unavailable", http.StatusBadGateway)
+			},
 		}
 		// Inject __BIGBASE_METADATA__ script into HTML responses.
 		proxy.ModifyResponse = func(resp *http.Response) error {
@@ -330,4 +460,29 @@ func escapeJSON(s string) string {
 		}
 	}
 	return buf.String()
+}
+
+func matchPath(pattern, path string) bool {
+	if strings.HasSuffix(pattern, "/*") {
+		prefix := strings.TrimSuffix(pattern, "/*")
+		return strings.HasPrefix(path, prefix)
+	}
+	return pattern == path
+}
+
+func isPathProtected(policy *AuthPolicy, path string) bool {
+	if policy == nil {
+		return false
+	}
+	for _, p := range policy.PublicPaths {
+		if matchPath(p, path) {
+			return false
+		}
+	}
+	for _, p := range policy.ProtectedPaths {
+		if matchPath(p, path) {
+			return true
+		}
+	}
+	return policy.Default == "protected"
 }

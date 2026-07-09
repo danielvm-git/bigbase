@@ -311,6 +311,27 @@ func startProxy() {
 		RefreshExpiry:      refreshExpiry,
 	})
 
+	p.SetDB(d)
+	p.SetValidators(
+		func(token string) (int64, string, error) {
+			claims, err := authComp.ValidateToken(token)
+			if err != nil {
+				return 0, "", err
+			}
+			return claims.UserID, claims.Role, nil
+		},
+		func(siteID string, token string) error {
+			resolvedSiteID, err := authComp.ResolveSiteKey(token)
+			if err != nil {
+				return err
+			}
+			if resolvedSiteID != siteID {
+				return fmt.Errorf("site key unauthorized for this site")
+			}
+			return nil
+		},
+	)
+
 	// Rate limiter for auth public endpoints
 	rlCfg := auth.RateLimiterConfig{
 		IPLimit:      rlIPMax,
@@ -385,9 +406,10 @@ func startProxy() {
 		DeleteSiteCleanup: func(ctx context.Context, siteID, repoID string) error {
 			return depComp.DeleteSiteDeployments(ctx, siteID, repoID)
 		},
-		CertInfo:       p.CertInfo,
-		UnregisterHost: p.UnregisterDeploymentHost,
-		ActivateDomain: depComp.ActivateCustomDomain,
+		CertInfo:         p.CertInfo,
+		UnregisterHost:   p.UnregisterDeploymentHost,
+		ActivateDomain:   depComp.ActivateCustomDomain,
+		UpdateAuthPolicy: p.SetSiteAuthPolicy,
 	})
 	rt := realtime.New(realtime.Options{
 		Logger: logger,
@@ -428,6 +450,7 @@ func startProxy() {
 		SiteLister:     st,
 		SiteKeyCreator:      authComp,
 		OrgKeyAuthenticator: authComp,
+		UpdateAuthPolicy:    p.SetSiteAuthPolicy,
 	})
 	k.Register(mcpComp)
 
