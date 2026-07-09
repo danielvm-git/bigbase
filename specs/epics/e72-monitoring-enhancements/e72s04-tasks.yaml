@@ -1,0 +1,39 @@
+story_id: e72s04
+title: Alert → Automated Investigation Trigger
+status: failing
+bcps: 3
+architecture_ref: specs/adr/0007-e72-observability-seams.md
+depends_on:
+  - e72s03
+  - e72s01  # internal/llm package
+tasks:
+  - id: 1
+    description: "Add monitoring_alert_incidents table (id, rule_id, metric, value, threshold, opened_at, resolved_at). UNIQUE open incident per rule_id. Refactor emitAlertTriggered to open/refresh incident and emit alert.triggered with incident_id at most once per open incident."
+    verify: "go test -run 'TestAlertIncidentDedup' ./components/monitoring/ -v -count=1"
+    status: failing
+    risk: P1
+    security: none
+  - id: 2
+    description: "Add monitoring_investigations table (id, incident_id FK, report_json, ai_summary, created_at) FIFO cap 1000. evidence.go Gather(ctx, EvidenceScope) bundles metrics, deployments SQL, eventrecorder.Query, log tail."
+    verify: "go test -run 'TestGatherEvidence' ./components/monitoring/ -v -count=1"
+    status: failing
+    risk: P1
+    security: low
+  - id: 3
+    description: "Subscribe to alert.triggered → goroutine Gather → optional llm.Complete for ai_summary → store → emit alert.investigation_complete. 10s query timeout."
+    verify: "go test -run 'TestAlertInvestigationTrigger' ./components/monitoring/ -v -count=1"
+    status: failing
+    risk: P1
+    security: medium
+  - id: 4
+    description: "GET /api/monitoring/incidents/:id/investigation (supersedes alerts/:id path). List open incidents: GET /api/monitoring/incidents?status=open."
+    verify: "curl -s http://localhost:9999/api/monitoring/incidents/test-id/investigation | jq '.snapshot.system.cpu_percent'"
+    status: failing
+    risk: P2
+    security: none
+  - id: 5
+    description: "Full regression — alert checker ticker not blocked; -race clean"
+    verify: "go test ./components/monitoring/... -count=1 -race && go vet ./components/monitoring/..."
+    status: failing
+    risk: P0
+    security: none

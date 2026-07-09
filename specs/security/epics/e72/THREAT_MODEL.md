@@ -1,78 +1,66 @@
-# Threat Model — e72: MCP Platform Authentication
+# Threat Model — e72: Monitoring — AI-Assisted Incident Response & Deploy Observability
 
 **Generated:** 2026-07-08  
-**Epic:** e72 — Security — MCP Platform Authentication  
-**Stories:** e72s01–e72s03 (5 BCPs active; e72s04 deferred to 3.1.0 per ADR 0006)  
-**Risk Level:** **CRITICAL** (closes live CWE-306 / CWE-862 on `mcp.bigbase.click`)  
-**ADR:** `specs/adr/0006-mcp-platform-auth.md`  
-**Prior review:** `specs/security/SECURITY_REVIEW_2026-07-08.md` (F1, F2, F3)
+**Epic:** e72 — Monitoring — AI-Assisted Incident Response & Deploy Observability  
+**Stories:** e72s01–e72s04 (10 BCPs)  
+**Risk Level:** **MEDIUM** (LLM data exposure + cross-tenant read paths; no new public write surface)  
+**ADR:** `specs/adr/0007-e72-observability-seams.md`
 
 ---
 
 ## Executive Summary
 
-The MCP HTTP server at `mcp.bigbase.click/mcp` exposes write and credential-issuing tools with **zero authentication**. Epic e72 implements a deny-by-default three-tier model (public / authenticated read / provision-scoped write) using existing `bb_` org API keys via `Authorization: Bearer`. This threat model covers the full epic; e72s01 is the first story in the build cycle.
+Epic e72 adds deploy pipeline timing, correlated event timelines, AI-assisted deploy failure diagnosis, and automated alert investigation. Most stories extend existing authenticated API surfaces (`GET /api/deploy/:id`, monitoring incident endpoints). Primary risks: **LLM prompt leakage** (build logs, metrics), **IDOR on deploy/incident reads**, and **bus event enrichment exposing tenant data to wrong subscribers**.
 
-**Verdict:** Proceed with implementation immediately. No HIGH+ unmitigated threats remain once all three active stories ship. e72s04 is out of the security-critical path.
+**Verdict:** Proceed with implementation. Deny-by-default auth on all new endpoints; scope queries by org/site; never send secrets to LLM; redact tokens in logs.
 
 ---
 
 ## Surface Area
 
-| Story | Component | Endpoints / Tools | Attack Vectors |
+| Story | Component | Endpoints / Events | Attack Vectors |
 |-------|-----------|-------------------|----------------|
-| e72s01 | `components/mcp`, `main.go` | HTTP `/mcp` (all tools) | Missing auth (CWE-306), token forgery, wrong credential type accepted |
-| e72s02 | `components/mcp` | Write tools: `create_repo`, `create_site`, `deploy_site`, `provision_ci_credentials`, `list_site_keys`, `revoke_site_key` | Privilege escalation via scope-less keys (CWE-862), horizontal privilege across orgs |
-| e72s03 | `components/mcp` | Public tier: `ping`, `list_services`, `get_service_docs`, `get_code_example`, `list_frameworks`, `get_ci_template` | Allow-list misconfiguration exposing mutating tools publicly |
-| e72s04 (deferred) | `components/mcp`, `components/auth` | `provision_mcp_credentials` | Bootstrap paradox, scope inflation — deferred; bootstrap uses admin/CLI per ADR 0006 §5 |
+| e72s02 | `components/deploy` | `GET /api/deploy/:id` (+ `pipeline_timeline`) | Info disclosure via IDOR on deploy ID |
+| e72s03 | `components/internal/eventrecorder`, monitoring | Event bus `Record`/`Query`, SSE fan-out | Cross-tenant event leakage if `site_id` filter bypassed |
+| e72s01 | `components/monitoring`, `internal/llm` | `GET /api/deploy/:id/diagnosis`, `deploy.failed` hook | LLM exfiltration of build logs/secrets; prompt injection |
+| e72s04 | `components/monitoring` | `GET /api/monitoring/incidents/:id/investigation`, `alert.triggered` | IDOR on incidents; unbounded evidence gather SSRF/log scrape |
 
-**Exposure:** Proxy forwards `mcp.bigbase.click` → MCP backend `:3900` (`components/proxy/hosts_test.go`). `DisableLocalhostProtection: true` in streamable handler — intentional; Bearer auth replaces localhost guard.
-
-**Non-exposed:** Stdio MCP transport (`ServeStdio`) — trusted local operator; no HTTP auth layer.
-
----
-
-## Known Vulnerabilities (Pre-e72 Baseline)
-
-| ID | CWE | Severity | Location | e72 Mitigation |
-|----|-----|----------|----------|----------------|
-| F1 | CWE-306 Missing Authentication | **CRITICAL** | `mcp.go:820-844` — no auth on `/mcp` | e72s01 Bearer middleware; e72s03 public allow-list |
-| F2 | CWE-862 Missing Authorization | **CRITICAL** | `provision_ci_credentials` → `bb_dep_*` issuance | e72s01 auth + e72s02 `mcp:provision` scope gate |
-| F3 | CWE-129 Improper Array Index | LOW | `get_deploy_status` — `deployID[:8]` panic | Fix in e72s01 pass or quick-fix; length guard |
+**Non-exposed:** Pipeline timeline JSON is read-only metadata; no new mutating routes in e72s02.
 
 ---
 
 ## Threat Analysis by Story
 
-### e72s01 — Bearer Middleware (CRITICAL surface)
+### e72s02 — Deploy Pipeline Timeline (current story)
 
 | Threat | Severity | Mitigation |
 |--------|----------|------------|
-| **Anonymous write tool invocation** | **CRITICAL** | Reject missing/invalid Bearer with `401` before tool dispatch |
-| **bb_dep_ site key accepted as org key** | **HIGH** | Reject non-`bb_` org keys at MCP layer; `ResolveSiteKey` path is deploy-only (ADR 0006 §4) |
-| **Revoked key reuse** | **HIGH** | Key store lookup must honor `revoked = 0` (extend `ResolveAPIKey` or new `KeyAuthenticator` seam) |
-| **Timing side-channel on key lookup** | LOW | Use constant-time compare on hash (existing `hashAPIKey` + DB lookup pattern) |
-| **Token logged in access/error paths** | MEDIUM | Log `org_id` / key id only; never raw Bearer token |
-| **Stdio transport accidentally gated** | MEDIUM | Middleware wraps HTTP handler only; `ServeStdio` unchanged |
-| **ECC import violation (MCP→auth)** | MEDIUM | `KeyAuthenticator` interface injected from `main.go`; MCP does not import `auth` (ADR 0006) |
-| **Cross-org resource access post-auth** | HIGH | Attach `org_id` to context (e57s01 helpers); downstream tools must scope queries by org |
+| **IDOR — read another org's deploy timeline** | **HIGH** | Reuse existing deploy auth gate on `handleDeployByID`; scope by org/site |
+| **Timeline JSON injection / oversized payload** | LOW | Marshal via `encoding/json`; column TEXT with reasonable size; no user-controlled keys |
+| **Timing oracle on internal stages** | LOW | Same access as deploy status today |
 
-### e72s02 — Scope Gate (CRITICAL for F2)
+### e72s01 — AI Deploy Failure Diagnosis
 
 | Threat | Severity | Mitigation |
 |--------|----------|------------|
-| **Scope-less key invokes write tools** | **CRITICAL** | `requireScope("mcp:provision")` on every write handler; `403` if absent |
-| **Grandfather empty-scope keys into write** | **HIGH** | Deny-by-default — empty scopes = read only (ADR 0006 §3) |
-| **Scope string mismatch** | MEDIUM | Align with `org_api_keys.scopes` vocabulary (comma-separated in DB, parsed to `[]string`) |
-| **Read tools blocked for valid keys** | LOW | Read tier requires valid key but not `mcp:provision` |
+| **Secrets in build logs sent to LLM** | **HIGH** | Strip `API_KEY`, `SECRET`, `TOKEN`, `PASSWORD` lines before prompt; document in llm package |
+| **Prompt injection via build output** | MEDIUM | System prompt treats build log as untrusted data; no tool execution from LLM |
+| **LLM API key exposure** | **HIGH** | Env-only (`BIGBASE_LLM_API_KEY`); never log request bodies |
+| **Unauthenticated diagnosis endpoint** | **HIGH** | Same auth as deploy GET; 404 when reader nil |
 
-### e72s03 — Public Read Tier
+### e72s03 — Correlated Event Timeline
 
 | Threat | Severity | Mitigation |
 |--------|----------|------------|
-| **Mutating tool on public allow-list** | **CRITICAL** | Explicit allow-list only; deny-by-default for all others |
-| **Data leak via misclassified "read" tool** | HIGH | Infra-read tools (`list_repos`, `list_sites`, `get_deploy_logs`, etc.) stay **authenticated**, not public |
-| **Public tier enumeration/abuse** | LOW | Static doc content only; rate limiting out of scope |
+| **Cross-site event correlation** | **HIGH** | Filter `Query` by `site_id`; reject empty site scope for tenant queries |
+| **Event store DoS (unbounded writes)** | MEDIUM | FIFO cap on recorder; bounded retention |
+
+### e72s04 — Alert Investigation
+
+| Threat | Severity | Mitigation |
+|--------|----------|------------|
+| **IDOR on incident investigation** | **HIGH** | Scope by org; incident FK integrity |
+| **Evidence gather over-breadth** | MEDIUM | Fixed time window + metric scope; no arbitrary URL fetch |
 
 ---
 
@@ -80,43 +68,40 @@ The MCP HTTP server at `mcp.bigbase.click/mcp` exposes write and credential-issu
 
 | Category | Applicable? | Notes |
 |----------|-------------|-------|
-| Auth bypass | **YES** | Primary epic goal |
-| IDOR / cross-tenant | **YES** | org_id must flow to all DB queries in authenticated tools |
-| SQL injection | Checked clean | Bound parameters throughout MCP DB access |
-| Secrets exposure | **YES** | Bearer tokens, `bb_dep_*` in responses — never log or persist raw |
-| SSRF / command injection | N/A | No exec/filesystem from MCP handlers |
-| Crypto flaws | LOW | Reuse existing SHA-256 key hashing from `auth/apikeys.go` |
-| Deserialization | N/A | JSON tool args only |
+| Auth bypass | **YES** | New GET routes must inherit deploy/monitoring auth |
+| IDOR / cross-tenant | **YES** | Primary concern for all read endpoints |
+| SQL injection | Checked | Bound parameters; JSON column marshaled in Go |
+| Secrets exposure | **YES** | Build logs → LLM (e72s01); Bearer tokens in event payloads |
+| SSRF | LOW | e72s04 evidence gather — SQL/log only, no arbitrary HTTP |
+| Prompt injection | **YES** | e72s01/e72s04 LLM paths |
 
 ---
 
 ## Mitigation Summary
 
-1. **Three-tier deny-by-default** (ADR 0006): public docs → authenticated read → `mcp:provision` write.
-2. **`KeyAuthenticator` injection** — MCP defines interface; `main.go` wires auth component.
-3. **Reject `bb_dep_` at MCP** — deploy keys cannot drive MCP tools.
-4. **Bootstrap outside MCP** — first `mcp:provision` key via admin/CLI `CreateAPIKey`.
-5. **Integration tests** — HTTP handler tests for 401/403/200 matrix per tier; proxy route smoke optional.
-6. **F3 quick-fix** — safe truncation before `[:8]` slice in `get_deploy_status`.
+1. **Auth inheritance** — new fields/endpoints behind existing deploy and monitoring auth middleware.
+2. **Tenant scoping** — all queries include org/site from authenticated context.
+3. **LLM hygiene** — secret-line stripping, env-only API keys, no logging of prompts/responses at info level.
+4. **Event bus contracts** — enrich with `site_id` where available; subscribers must not log raw payloads with secrets.
+5. **Integration tests** — 401/403 matrix for new routes; IDOR negative tests where feasible.
 
 ---
 
 ## Out of Scope (Accepted Risks)
 
-- Rate limiting on public or authenticated MCP tiers
-- e72s04 `provision_mcp_credentials` (deferred 3.1.0)
-- Per-org MCP audit log (e56 covers session audit elsewhere)
-- Disabling public HTTP MCP pending e72 (operational mitigation — see SECURITY_REVIEW §Recommended actions)
+- Rate limiting on diagnosis/investigation endpoints
+- OpenTelemetry distributed tracing
+- Per-org LLM budget caps
 
 ---
 
-## Implementation Guidance for Developers
+## Implementation Guidance
 
 | Step | Security requirement |
 |------|---------------------|
-| Middleware order | Bearer validation → scope check → tool handler |
-| Error responses | Generic `401`/`403` messages; details in server logs only |
-| Test matrix | No auth + write = 401; valid key no scope + write = 403; valid key + scope + write = 200; public tool no auth = 200 |
-| Regression | Existing stdio MCP tests must remain green |
+| e72s02 | No new route — extend existing GET; verify auth unchanged |
+| e72s01 | Redact secrets before `llm.Complete`; wire reader only when LLM configured |
+| e72s03 | `site_id` required on correlation queries |
+| e72s04 | Investigation keyed to `incident_id`, not rule ID |
 
-**Verdict:** ✅ Proceed — threat surface is well understood; mitigations map 1:1 to stories e72s01–e72s03.
+**Verdict:** ✅ Proceed — e72s02 is low-risk (read-only metadata on existing endpoint).

@@ -2,7 +2,7 @@
 
 **type:** tech-stack
 **context:** infra
-**version:** 2.62.0
+**version:** 2.63.0
 **supersedes:** `specs/plans/TECH_STACK_LATEST.md`, `specs/tech-architecture/TECH_STACK_ARCHIVE.md`
 **verify:** `go test ./... && go build ./...`
 **last-scan:** 2026-06-29 (cold read, no assumption carry-over)
@@ -155,7 +155,7 @@ kernel discovers, starts, and connects independent components via an event bus.
 | `deploy.go` — 1819 lines | `components/deploy/deploy.go` | ADR 0005 decomposition (Engine/Gateway/Orchestrator) **designed but not yet implemented** — spec vocabulary exists, code split does not |
 | `auth.go` — 1647 lines | `components/auth/auth.go` | Split started (separate files: otp.go, ratelimit.go, jwt.go, etc.) — manageable but watch for more growth |
 | Inline migrations scattered | All component `Init()` | Schema state not observable; migrations run on every boot; ALTER failures silently ignored |
-| Event bus barely wired | `components/api/api.go`, `deploy/`, `github/` | Only 3 components emit events; cross-component communication mostly happens via direct DB reads, not events |
+| Event bus barely wired | `components/api/api.go`, `deploy/`, `github/` | Only 3 components emit events; monitoring subscribed to dead hook `"deploy"` (deploy emits `deploy.state_changed`); e72 fixes contracts per ADR 0007 |
 | Project scoping — foundation laid, callers pending | `kernel/scope.go` | `WithProjectID`/`ProjectIDFromContext` added in e57s01. No callers yet — auth injection (e57s04) and query scoping (e57s03) are follow-up stories. |
 | `DBer` aliased in every component | ~14 component files | Working pattern; most use `type DBer = kernel.DBer` alias. Three components (mcp, webhooks, backup) keep local interfaces for test compatibility. Logger standardized to `kernel.Logger` in all components (e57s01). |
 
@@ -187,6 +187,46 @@ ADR 0005 vocabulary is the spec; the full split is e52+ work.
 - **Spec** — immutable deploy descriptor; only state that survives restarts
 - **DeploymentHostRegistry** — proxy seam mapping host→port (owns drain + connection count)
 - **LogStore** — build log adapter: `Append` (engine), `Get` (gateway), `Subscribe` (WS)
+
+## Observability (vocabulary — ADR 0007, epic e72)
+
+Deploy debugging and alert response use explicit domain entities and deep internal modules:
+
+```
+Composition root (main.go)
+  ├── Deploy Gateway — owns /api/deploy/:id/* routes
+  │     └── injects DeployDiagnosisReader, DeployRelatedEventsReader (optional)
+  ├── Monitoring — AlertRule checker, EvidenceGatherer, SSE fan-out
+  └── internal/eventrecorder — Record + Query (FIFO-capped SQLite)
+  └── internal/llm — OpenAI-compatible Complete (optional, no-op without key)
+```
+
+### Canonical terms
+
+- **DeploymentState** — coarse lifecycle status on the `deployments` row (`pending` → `building` → `deploying` → `running` / `failed`). Distinct from pipeline timing.
+- **PipelineTimeline** — per-stage timestamps (`clone`, `build`, `start`, `health`) stored as `pipeline_timeline` JSON on `deployments`. Orthogonal to DeploymentState.
+- **DeployFailure** — derived domain moment: `TransitionState` reaches `failed` **and** `deploy.failed` bus event fires exactly once with diagnostic payload.
+- **RecordedEvent** — persisted bus emission in `monitoring_events` (hook, data, timestamp, site_id). FIFO cap 5,000 rows.
+- **AlertRule** — threshold configuration in `monitoring_alerts`. Not an incident.
+- **AlertIncident** — one open breach episode per rule; deduplicated until resolved. Investigations attach here.
+- **InvestigationReport** — evidence bundle (metrics, deployments, events, logs) plus optional LLM summary for an AlertIncident.
+- **DeployDiagnosis** — one-shot LLM interpretation of a DeployFailure build log; stored in `deploy_diagnoses`.
+
+### Invariants
+
+- `deploy.failed` emits at most once per deployment ID.
+- `alert.triggered` emits at most once per open AlertIncident (not every 30s ticker tick).
+- Event bus hook names must match `Event.Name` exactly (`deploy.state_changed`, not `"deploy"`).
+- Deploy Gateway never imports monitoring; cross-component behavior uses injected reader interfaces at the composition root.
+
+### Concurrency (e72)
+
+| Shared state | Readers | Writers | Sync |
+|--------------|---------|---------|------|
+| `eventrecorder` FIFO table | EvidenceGatherer, related-events query | bus subscriber handlers (goroutine + timeout) | SQLite single-writer; insert + trim in one transaction |
+| `breachStart` map (alert checker) | alert checker ticker | same goroutine | single goroutine — no lock needed |
+| `monitoring_alert_incidents` open row | investigation API | emitAlertTriggered | UNIQUE(rule_id) WHERE resolved_at IS NULL |
+| LLM HTTP client | diagnosis + investigation goroutines | concurrent goroutines | stateless; 30s ctx timeout per call |
 
 ## Release History
 
@@ -228,7 +268,7 @@ mcp.onToolCall ──► deploy deploys, db queries, api routes
 | PostgreSQL | Dual-driver DB | `--db-driver postgres`, `--db-dsn` |
 | Telegram | Bot messaging | `--messaging-webhook-token` |
 | New Relic | APM monitoring | `--newrelic-license-key`, `NEW_RELIC_LICENSE_KEY` |
-| MCP | AI tool integration (SSE/stdio) | `--mcp-port`, `--mcp-transport` |
+| DeepSeek LLM (optional) | OpenAI-compatible chat completions | `BIGBASE_LLM_API_KEY` or `DEEPSEEK_API_KEY`; default base `https://api.deepseek.com`, model `deepseek-chat` (e72) |
 
 ## Key Design Decisions
 
@@ -244,7 +284,7 @@ mcp.onToolCall ──► deploy deploys, db queries, api routes
 | — | Multi-tenant org isolation at API/DB layer | Accepted (e23) |
 | — | Functions runtime injections: fetch+db+env+request+cron | Accepted (e30) |
 | — | Provider interface for pluggable messaging backends | Accepted (e12, e30) |
-| — | AES-256-GCM for site env vars (optional, no-op without key) | Accepted (e41) |
+| 0007 | E72 observability seams: deploy.failed, EventRecorder, AlertIncident, composition-root readers | Accepted (e72) |
 
 ## CLI Reference
 
