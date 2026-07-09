@@ -37,5 +37,29 @@ entries:
     end: "2026-06-28T14:04:00Z"
     cycle_minutes: 43
     bcp_per_hour: 1.4
+  - id: e71s01
+    bcps: 2
+    start: "2026-07-08T15:56:00Z"
+    end: "2026-07-08T17:00:00Z"
+    cycle_minutes: 64
+    bcp_per_hour: 1.9
+  - id: e71s02
+    bcps: 3
+    start: "2026-07-08T17:00:00Z"
+    end: "2026-07-08T19:30:00Z"
+    cycle_minutes: 150
+    bcp_per_hour: 1.2
+  - id: e71s03
+    bcps: 2
+    start: "2026-07-08T19:30:00Z"
+    end: "2026-07-08T20:45:00Z"
+    cycle_minutes: 75
+    bcp_per_hour: 1.6
+  - id: e71s04
+    bcps: 1
+    start: "2026-07-08T20:45:00Z"
+    end: "2026-07-08T21:28:00Z"
+    cycle_minutes: 43
+    bcp_per_hour: 1.4
 
 
