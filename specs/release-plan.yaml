@@ -537,11 +537,12 @@ epics:
   wsjf: 6.0
   mode: capsule
   tier: 1
-  status: planned
+  status: done
   depends_on:
   - e04
   - e51
+  - e67
   note: "4 stories, 8 BCPs. Proxy-enforced routing security policy gating protected paths."
-  capsule_dir: epics/e71-site-route-auth-policy
-  file: epics/e71-site-route-auth-policy/epic.yaml
+  capsule_dir: epics/archive/e71-site-route-auth-policy
+  file: epics/archive/e71-site-route-auth-policy/epic.yaml
 
