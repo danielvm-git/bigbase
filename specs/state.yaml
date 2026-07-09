@@ -1,7 +1,7 @@
 type: session-state
 context: infra
-active_flow: build_epic
-active_epic_id: e71
+active_flow: null
+active_epic_id: null
 active_story_id: null
 active_story_status: null
 release:
@@ -14,20 +14,20 @@ release:
 metrics:
   session_start: '2026-07-08T15:56:00Z'
   story_start: '2026-07-08T15:56:00Z'
-  session_end: '2026-07-08T16:15:00Z'
-  cycle_minutes: 19
-  epics_completed: 56
-  stories_completed: 171
+  session_end: '2026-07-08T21:28:00Z'
+  cycle_minutes: 332
+  epics_completed: 57
+  stories_completed: 175
   bcps_per_hour: 0
 epic_cycle:
-  step: 8
-  story_bcps: 8
-  story: "e71"
-  audit_result: pass
-  completed_steps: [1, 2, 3, 4, 5, 6, 7]
-  note: "Verified all e71 stories, run tests, and generated audit reports."
+  step: null
+  story_bcps: null
+  story: null
+  audit_result: null
+  completed_steps: []
+  note: null
   fast_mode: false
-  story_complete: true
+  story_complete: false
 bug_cycle:
   current_step: 0
   completed_steps: []
@@ -38,10 +38,10 @@ git:
   worktree: null
   ci_status: success
 handoff:
-  last_step_completed: "audit-code"
+  last_step_completed: "release-branch"
   open_decisions:
     - "Bootstrap mcp:provision keys via admin CreateAPIKey before MCP write tools work"
-  next_skill: release-branch
+  next_skill: survey-context
   summary: "Completed Epic e71 (Security — Host-Level Route Auth Policy): sites schema modified, proxy JWT/site-key route validation middleware enforced, passthrough identity headers injected, and set_site_auth_policy MCP tool registered."
-  context: "All new and existing unit, integration, and MCP tests pass cleanly. Database columns successfully migrated, verified via automated test loops."
+  context: "Landed on main. All verifications, tests, lints, and audits pass cleanly."
 
