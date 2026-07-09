@@ -588,9 +588,11 @@ func TestProxyAuthPolicy(t *testing.T) {
 	_, _ = fmt.Sscanf(backendPortStr, "%d", &backendPort)
 
 	logger := testLogger{}
+	k := kernel.New(logger)
 	port := freePort(t)
 	p := proxy.New(proxy.Options{
 		Port:   port,
+		Kernel: k,
 		Logger: logger,
 		ValidateToken: func(token string) (int64, string, error) {
 			if token == "valid-jwt" {
@@ -610,6 +612,7 @@ func TestProxyAuthPolicy(t *testing.T) {
 		t.Fatalf("proxy start: %v", err)
 	}
 	defer func() { _ = p.Stop(&kernel.Context{}) }()
+	waitForServer(t, port, "/health")
 
 	host := "secured.bigbase.click"
 	if err := p.RegisterDeploymentHost(host, backendPort, "site-1", nil, nil); err != nil {
