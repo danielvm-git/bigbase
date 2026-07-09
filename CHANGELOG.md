@@ -1,3 +1,10 @@
+# [2.71.0](https://github.com/danielvm-git/bigbase/compare/v2.70.0...v2.71.0) (2026-07-09)
+
+
+### Features
+
+* **proxy:** implement site route auth policy, path matching, and passthrough identity header injection ([e236031](https://github.com/danielvm-git/bigbase/commit/e23603145a3cd159a674133ae51f3c1ed8ddb4a6))
+
 # [2.70.0](https://github.com/danielvm-git/bigbase/compare/v2.69.0...v2.70.0) (2026-07-08)
 
 
