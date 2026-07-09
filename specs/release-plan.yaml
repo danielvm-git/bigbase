@@ -557,6 +557,6 @@ epics:
   - e38
   - e54
   note: "4 stories, 10 BCPs. AI deploy failure diagnosis, pipeline timeline, correlated events, and automated alert investigation. Go-native, inspired by Tracer-Cloud opensre architecture patterns."
-  capsule_dir: epics/e72-monitoring-enhancements
-  file: epics/e72-monitoring-enhancements/epic.yaml
+  capsule_dir: epics/archive/e72-monitoring-enhancements
+  file: epics/archive/e72-monitoring-enhancements/epic.yaml
 

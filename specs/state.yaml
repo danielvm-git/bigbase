@@ -7,41 +7,40 @@ active_story_status: null
 release:
   target_version: 2.72.0
   codename: "Monitoring Observability"
-  last_tag: v2.71.0
-  last_publish: '2026-07-08'
-  ci_verified: false
-  ci_verified_at: null
+  last_tag: v2.72.0
+  last_publish: '2026-07-09'
+  ci_verified: true
+  ci_verified_at: '2026-07-09T04:44:49Z'
 metrics:
   session_start: '2026-07-08T15:56:00Z'
   story_start: '2026-07-08T22:29:00-03:00'
-  session_end: '2026-07-09T01:20:00-03:00'
+  session_end: '2026-07-09T01:45:00-03:00'
   cycle_minutes: 332
   epics_completed: 59
   stories_completed: 179
   bcps_per_hour: 0
 epic_cycle:
-  step: 8
-  story_bcps: 10
-  story: e72s04
-  audit_result: pass
-  completed_steps: ["0", "1", "2", "3", "4", "5", "6", "7", "8"]
-  note: "Epic e72 complete — PR pending merge"
+  step: null
+  story_bcps: null
+  story: null
+  audit_result: null
+  completed_steps: []
+  note: "Epic e72 shipped — PR #64 merged to main (82dc4987)"
   fast_mode: false
-  story_complete: true
+  story_complete: false
 bug_cycle:
   current_step: null
-  completed_steps: ["1", "2", "3", "4", "5"]
-  bug_file: specs/bugs/BUG-2026-07-09T001200-ci-proxy-auth-policy-flaky.md
+  completed_steps: []
+  bug_file: null
 git:
-  branch: feat/e72s02-pipeline-timeline
-  hash: c79eaf8c
+  branch: main
+  hash: 82dc4987
   worktree: null
-  ci_status: pending
+  ci_status: success
 handoff:
   last_step_completed: "release-branch"
   open_decisions:
     - "Bootstrap mcp:provision keys via admin CreateAPIKey before MCP write tools work"
-    - "gh auth required to open PR — run: gh pr create from feat/e72s02-pipeline-timeline"
   next_skill: null
-  summary: "Epic e72 committed and pushed (c79eaf8c). PR creation blocked on gh auth."
-  context: "https://github.com/danielvm-git/bigbase/pull/new/feat/e72s02-pipeline-timeline"
+  summary: "Epic e72 released — squash-merged PR #64, capsule archived"
+  context: "main @ 82dc4987. 1022 tests green locally. semantic-release pending CI."
