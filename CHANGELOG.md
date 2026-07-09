@@ -1,3 +1,10 @@
+## [2.71.1](https://github.com/danielvm-git/bigbase/compare/v2.71.0...v2.71.1) (2026-07-09)
+
+
+### Bug Fixes
+
+* **proxy:** stabilize TestProxyAuthPolicy against startup race ([cf89868](https://github.com/danielvm-git/bigbase/commit/cf898685d8186910047f2c0e71e9dcf237402572))
+
 # [2.71.0](https://github.com/danielvm-git/bigbase/compare/v2.70.0...v2.71.0) (2026-07-09)
 
 
