@@ -34,13 +34,14 @@ bug_cycle:
   bug_file: specs/bugs/BUG-2026-07-09T001200-ci-proxy-auth-policy-flaky.md
 git:
   branch: feat/e72s02-pipeline-timeline
-  hash: null
+  hash: c79eaf8c
   worktree: null
   ci_status: pending
 handoff:
   last_step_completed: "release-branch"
   open_decisions:
     - "Bootstrap mcp:provision keys via admin CreateAPIKey before MCP write tools work"
+    - "gh auth required to open PR — run: gh pr create from feat/e72s02-pipeline-timeline"
   next_skill: null
-  summary: "Epic e72 ready for PR — monitoring observability + CI proxy test flake fix"
-  context: "Branch feat/e72s02-pipeline-timeline. 1022 tests green. Open PR and merge."
+  summary: "Epic e72 committed and pushed (c79eaf8c). PR creation blocked on gh auth."
+  context: "https://github.com/danielvm-git/bigbase/pull/new/feat/e72s02-pipeline-timeline"
