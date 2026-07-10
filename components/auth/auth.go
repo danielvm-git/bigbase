@@ -118,20 +118,22 @@ func (a *Auth) isSPAOriginAllowed(redirectURL string) bool {
 	return false
 }
 
-// PublicURLOrDefault returns the configured public URL, or constructs one
-// from the request's Host header if PublicURL is not set.
+// PublicURLOrDefault returns the configured public URL.
+// It never falls back to the request Host header (CWE-601 open redirect).
+// Callers that need an absolute URL for OAuth must configure PublicURL.
 func (a *Auth) PublicURLOrDefault(r *http.Request) string {
-	if a.publicURL != "" {
-		return a.publicURL
+	_ = r // request retained for API compatibility; Host must not influence the result
+	return a.publicURL
+}
+
+// oauthCallbackRedirectURI returns the absolute Google OAuth callback URL.
+// Returns false when PublicURL is unset so callers fail closed instead of
+// using an attacker-controlled Host header.
+func (a *Auth) oauthCallbackRedirectURI() (string, bool) {
+	if a.publicURL == "" {
+		return "", false
 	}
-	scheme := "http"
-	if r.TLS != nil {
-		scheme = "https"
-	}
-	if a.logger != nil {
-		a.logger.Info("public_url not configured, using request Host header", "host", r.Host)
-	}
-	return scheme + "://" + r.Host
+	return a.publicURL + "/api/auth/oauth/google/callback", true
 }
 
 func New(opts Options) *Auth {
@@ -931,7 +933,11 @@ func (a *Auth) handleGoogleOAuth(w http.ResponseWriter, r *http.Request) {
 		MaxAge:   600,
 	})
 
-	redirectURI := a.PublicURLOrDefault(r) + "/api/auth/oauth/google/callback"
+	redirectURI, ok := a.oauthCallbackRedirectURI()
+	if !ok {
+		kernel.WriteJSON(w, http.StatusServiceUnavailable, map[string]string{"error": "public URL not configured"})
+		return
+	}
 	url := fmt.Sprintf("https://accounts.google.com/o/oauth2/v2/auth?client_id=%s&redirect_uri=%s&response_type=code&scope=openid+email+profile&state=%s",
 		a.googleClientID, url.QueryEscape(redirectURI), googleState)
 	http.Redirect(w, r, url, http.StatusFound)
@@ -972,10 +978,16 @@ func (a *Auth) handleGoogleCallback(w http.ResponseWriter, r *http.Request) {
 
 	verifier := a.googleVerifier
 	if verifier == nil {
+		redirectURI, ok := a.oauthCallbackRedirectURI()
+		if !ok {
+			a.clearOAuthStateCookie(w, r)
+			kernel.WriteJSON(w, http.StatusServiceUnavailable, map[string]string{"error": "public URL not configured"})
+			return
+		}
 		verifier = &realGoogleVerifier{
 			clientID:     a.googleClientID,
 			clientSecret: a.googleClientSecret,
-			redirectURI:  a.PublicURLOrDefault(r) + "/api/auth/oauth/google/callback",
+			redirectURI:  redirectURI,
 		}
 	}
 

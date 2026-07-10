@@ -83,10 +83,15 @@ func (a *Auth) handlePopupCallback(w http.ResponseWriter, r *http.Request) {
 
 	verifier := a.googleVerifier
 	if verifier == nil {
+		redirectURI, ok := a.oauthCallbackRedirectURI()
+		if !ok {
+			kernel.WriteJSON(w, http.StatusServiceUnavailable, map[string]string{"error": "public URL not configured"})
+			return
+		}
 		verifier = &realGoogleVerifier{
 			clientID:     a.googleClientID,
 			clientSecret: a.googleClientSecret,
-			redirectURI:  a.PublicURLOrDefault(r) + "/api/auth/oauth/google/callback",
+			redirectURI:  redirectURI,
 		}
 	}
 

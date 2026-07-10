@@ -938,6 +938,7 @@ func setupAuthWithGoogle(t *testing.T) (*auth.Auth, http.Handler, http.Handler) 
 		Secret:             "test-secret-32-chars!!!",
 		GoogleClientID:     "test-client-id",
 		GoogleClientSecret: "test-client-secret",
+		PublicURL:          "https://test.example.com",
 	})
 	a.SetOTPStore(auth.NewMapOTPStore())
 	a.SetRateLimitStore(auth.NewMapRateLimitStore())
@@ -1289,6 +1290,52 @@ func TestOAuthPublicURLOrDefaultIgnoresHostHeader(t *testing.T) {
 	}
 }
 
+func TestOAuthPublicURLOrDefaultNeverUsesHost(t *testing.T) {
+	// BUG-160008 / CWE-601: empty PublicURL must not fall back to request Host.
+	a, _, _ := setupAuth(t)
+	req := httptest.NewRequest("GET", "/api/auth/oauth/google", nil)
+	req.Host = "evil.com"
+	got := a.PublicURLOrDefault(req)
+	if got != "" {
+		t.Fatalf("expected empty PublicURLOrDefault when unset, got %q", got)
+	}
+	if strings.Contains(got, "evil.com") {
+		t.Fatal("PublicURLOrDefault must never use request Host")
+	}
+}
+
+func TestOAuthStartRequiresPublicURL(t *testing.T) {
+	// OAuth start without PublicURL fails closed (503), never uses Host.
+	logger := testLogger{}
+	k := kernel.New(logger)
+	d := db.New(db.Options{Path: ":memory:", Logger: logger})
+	a := auth.New(auth.Options{
+		DB:                 d,
+		Logger:             logger,
+		Secret:             "test-secret-32-chars!!!",
+		GoogleClientID:     "test-client-id",
+		GoogleClientSecret: "test-client-secret",
+		// PublicURL intentionally empty (allowed in test mode)
+	})
+	k.Register(d)
+	k.Register(a)
+	if err := k.Start(); err != nil {
+		t.Fatalf("start: %v", err)
+	}
+	t.Cleanup(func() { _ = k.Stop() })
+
+	req := httptest.NewRequest("GET", "/api/auth/oauth/google", nil)
+	req.Host = "evil.com"
+	w := httptest.NewRecorder()
+	a.Handler().ServeHTTP(w, req)
+	if w.Code != http.StatusServiceUnavailable {
+		t.Fatalf("expected 503 when PublicURL unset, got %d body=%s", w.Code, w.Body.String())
+	}
+	if strings.Contains(w.Header().Get("Location"), "evil.com") {
+		t.Fatal("must not redirect using Host header")
+	}
+}
+
 func TestHandleMe(t *testing.T) {
 	_, handler, protected := setupAuth(t)
 
@@ -1492,6 +1539,7 @@ func TestOrganization(t *testing.T) {
 			Secret:             "test-secret-32-chars!!!",
 			GoogleClientID:     "test-client-id",
 			GoogleClientSecret: "test-client-secret",
+			PublicURL:          "https://test.example.com",
 		})
 
 		k.Register(a)
