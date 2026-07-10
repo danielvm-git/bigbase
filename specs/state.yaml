@@ -1,9 +1,9 @@
 type: session-state
 context: infra
-active_flow: null
-active_epic_id: null
-active_story_id: null
-active_story_status: null
+active_flow: build_epic
+active_epic_id: e74
+active_story_id: e74s01
+active_story_status: pending
 release:
   target_version: 2.73.0
   codename: "Python Runtime"
@@ -18,14 +18,14 @@ metrics:
   stories_completed: 183
   bcps_per_hour: 0
 epic_cycle:
-  step: 8
-  story_bcps: 2
-  story: e73s04
-  audit_result: pass
-  completed_steps: ["0", "1", "2", "3", "4", "5", "6", "7", "8"]
-  note: "e73 shipped — 4 stories, 8 BCP. Python runtime complete."
+  step: 3
+  story_bcps: 3
+  story: e74s01
+  audit_result: null
+  completed_steps: ["0", "1", "2"]
+  note: "e74s01 steps 0-2 complete (threat model, survey, plan). Moving to kickoff branch."
   fast_mode: false
-  story_complete: true
+  story_complete: false
 bug_cycle:
   current_step: null
   completed_steps: []
@@ -36,12 +36,9 @@ git:
   worktree: null
   ci_status: success
 handoff:
-  last_step_completed: "fix-bug queue complete — 8 standalone July-10 bugs fixed; 160006/160111 deferred to e57"
+  last_step_completed: "preflight-setup — state.yaml configured for e74"
   open_decisions:
-    - "Bootstrap mcp:provision keys via admin CreateAPIKey before MCP write tools work"
-    - "e70 capsule ready at specs/epics/e70-site-deploy-manifest/ -- depends on e57 schema"
-    - "e74 capsule ready at specs/epics/e74-self-service-deploy-tokens/ -- self-service deploy tokens via REST + UI (2 stories, 5 BCPs)"
-    - "Issues #41, #43 deferred to e61, e66. #44 closed. #45 open as someday-marker."
-  next_skill: "build-epic e57"
-  summary: "All 8 fix-bug queue items landed on main. Resume Band 3 with e57 project scoping (covers deferred WithProjectID + JWT project_id)."
-  context: "main @ 1da01dbb. fix_bug cleared. Next: build-epic e57."
+    - "e74 build cycle: step 0 next (security-review)"
+  next_skill: "security-review"
+  summary: "e74 preflight complete. Starting Step 0 threat model."
+  context: "main @ 1da01dbb. e74 (self-service deploy tokens) active. Story e74s01 (REST) first."

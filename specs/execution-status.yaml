@@ -71,6 +71,9 @@ epics:
   e68: done
   e71: done
   e72: done
+  e74: not_started
+  e74s01: not_started
+  e74s02: not_started
 stories:
   e01s01: done
   e02s01: done
