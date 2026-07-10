@@ -20,23 +20,19 @@ const (
 	channelPrefix  = "collection:"
 )
 
-var upgrader = websocket.Upgrader{
-	ReadBufferSize:  1024,
-	WriteBufferSize: 1024,
-	// TODO: restrict in production via config
-	CheckOrigin: func(r *http.Request) bool { return true },
-}
-
 type Options struct {
-	Logger   kernel.Logger
-	Validate func(token string) (int64, error)
+	Logger          kernel.Logger
+	Validate        func(token string) (int64, error)
+	AllowedOrigins  []string // CORS-aligned WebSocket origin allowlist
 }
 
 type Realtime struct {
-	logger      kernel.Logger
-	hub         *Hub
-	validate    func(token string) (int64, error)
-	unsubscribe func()
+	logger          kernel.Logger
+	hub             *Hub
+	validate        func(token string) (int64, error)
+	allowedOrigins  []string
+	upgrader        websocket.Upgrader
+	unsubscribe     func()
 }
 
 var _ kernel.Component = (*Realtime)(nil)
@@ -54,11 +50,37 @@ func New(opts Options) *Realtime {
 	}
 	hub := NewHub()
 	go hub.Run()
-	return &Realtime{
-		logger:   logger,
-		hub:      hub,
-		validate: validate,
+	rt := &Realtime{
+		logger:         logger,
+		hub:            hub,
+		validate:       validate,
+		allowedOrigins: append([]string(nil), opts.AllowedOrigins...),
 	}
+	rt.upgrader = websocket.Upgrader{
+		ReadBufferSize:  1024,
+		WriteBufferSize: 1024,
+		CheckOrigin:     rt.checkOrigin,
+	}
+	return rt
+}
+
+// checkOrigin allows empty Origin (non-browser), configured allowlist entries,
+// and same-origin. Cross-origin is denied when not explicitly allowed.
+func (r *Realtime) checkOrigin(req *http.Request) bool {
+	origin := req.Header.Get("Origin")
+	if origin == "" {
+		return true
+	}
+	for _, o := range r.allowedOrigins {
+		if o == origin {
+			return true
+		}
+	}
+	scheme := "http"
+	if req.TLS != nil {
+		scheme = "https"
+	}
+	return origin == scheme+"://"+req.Host
 }
 
 func (r *Realtime) Name() string                  { return "realtime" }
@@ -131,7 +153,7 @@ func (r *Realtime) serveWS(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	conn, err := upgrader.Upgrade(w, req, nil)
+	conn, err := r.upgrader.Upgrade(w, req, nil)
 	if err != nil {
 		r.logger.Error("websocket upgrade", "error", err)
 		return

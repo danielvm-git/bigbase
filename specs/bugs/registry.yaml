@@ -193,8 +193,16 @@ bugs:
     scope: realtime
     summary: WebSocket accepts all origins — TODO in production
     file: specs/bugs/BUG-2026-07-10T160206-websocket-origin-unrestricted.md
-    status: open
+    status: fixed
     audit_source: specs/audit-code-2026-07-10.md
+    files_changed:
+      - components/realtime/realtime.go
+      - components/realtime/realtime_test.go
+      - main.go
+    approach: "CheckOrigin allowlist + same-origin; wired from CORS origins in main."
+    risk_level: low
+    regression_guards:
+      - components/realtime/realtime_test.go TestRealtimeCheckOrigin
   - id: BUG-2026-07-10T160208
     date: "2026-07-10"
     severity: low
