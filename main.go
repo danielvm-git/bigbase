@@ -780,22 +780,22 @@ func printStatus(k *kernel.Kernel) {
 
 	components := k.ListComponents()
 	printTable(components,
-		"COMPONENT\tVERSION\tSTATUS\tHOOKS",
+		"COMPONENT\tVERSION\tSTATUS",
 		func(c kernel.ComponentStatus) string {
 			status := "stopped"
 			if c.Running {
 				status = "running"
 			}
-			return fmt.Sprintf("%s\t%s\t%s\t%s", c.Name, c.Version, status, joinOrNone(c.Hooks))
+			return fmt.Sprintf("%s\t%s\t%s", c.Name, c.Version, status)
 		},
 	)
 }
 
 func printComponents(k *kernel.Kernel) {
 	printTable(k.ListComponents(),
-		"NAME\tVERSION\tDEPENDENCIES\tHOOKS",
+		"NAME\tVERSION\tDEPENDENCIES",
 		func(c kernel.ComponentStatus) string {
-			return fmt.Sprintf("%s\t%s\t%s\t%s", c.Name, c.Version, joinOrNone(c.Dependencies), joinOrNone(c.Hooks))
+			return fmt.Sprintf("%s\t%s\t%s", c.Name, c.Version, joinOrNone(c.Dependencies))
 		},
 	)
 }

@@ -102,6 +102,8 @@ type Proxy struct {
 	authPolicies   map[string]*AuthPolicy
 }
 
+var _ kernel.Component = (*Proxy)(nil)
+
 func (p *Proxy) GitHubStars() string {
 	p.starsMu.Lock()
 	defer p.starsMu.Unlock()
@@ -197,8 +199,6 @@ func (p *Proxy) HTTPSAddr() string {
 func (p *Proxy) Name() string                  { return "proxy" }
 func (p *Proxy) Version() string               { return version }
 func (p *Proxy) Dependencies() []string        { return nil }
-func (p *Proxy) ConfigSchema() json.RawMessage { return nil }
-func (p *Proxy) Hooks() []kernel.HookDef       { return nil }
 
 func (p *Proxy) Init(ctx *kernel.Context, config json.RawMessage) error {
 	if p.port == "" {
@@ -531,16 +531,11 @@ func (p *Proxy) handleHealth(w http.ResponseWriter, r *http.Request) {
 		if deps == nil {
 			deps = []string{}
 		}
-		hooks := s.Hooks
-		if hooks == nil {
-			hooks = []string{}
-		}
 		compMap = append(compMap, map[string]any{
 			"name":         s.Name,
 			"version":      s.Version,
 			"running":      s.Running,
 			"dependencies": deps,
-			"hooks":        hooks,
 		})
 	}
 	status := "ok"
@@ -830,7 +825,7 @@ a:hover { opacity: 0.8; }
   <h2 class="section-title" style="margin-bottom:var(--space-24)">System Status</h2>
   {{if .Components}}
   <table class="comp-table">
-    <thead><tr><th>Name</th><th>Version</th><th>Status</th><th>Dependencies</th><th>Hooks</th></tr></thead>
+    <thead><tr><th>Name</th><th>Version</th><th>Status</th><th>Dependencies</th></tr></thead>
     <tbody>
     {{range .Components}}
       <tr>
@@ -838,7 +833,6 @@ a:hover { opacity: 0.8; }
         <td>{{.Version}}</td>
         <td>{{if .Running}}<span class="status-running">● running</span>{{else}}<span class="status-stopped">● stopped</span>{{end}}</td>
         <td>{{if .Dependencies}}{{join .Dependencies ", "}}{{else}}<span style="color:var(--fg-tertiary)">none</span>{{end}}</td>
-        <td>{{if .Hooks}}{{join .Hooks ", "}}{{else}}<span style="color:var(--fg-tertiary)">none</span>{{end}}</td>
       </tr>
     {{end}}
     </tbody>

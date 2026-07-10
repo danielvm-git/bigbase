@@ -6,11 +6,9 @@ type Component interface {
 	Name() string
 	Version() string
 	Dependencies() []string
-	ConfigSchema() json.RawMessage
 	Init(ctx *Context, config json.RawMessage) error
 	Start(ctx *Context) error
 	Stop(ctx *Context) error
-	Hooks() []HookDef
 }
 
 type HookDef struct {

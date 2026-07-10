@@ -43,6 +43,8 @@ type DB struct {
 	db     *sql.DB
 }
 
+var _ kernel.Component = (*DB)(nil)
+
 func New(opts Options) *DB {
 	if opts.Logger == nil {
 		opts.Logger = kernel.NoopLogger{}
@@ -66,8 +68,6 @@ func New(opts Options) *DB {
 func (d *DB) Name() string                  { return "db" }
 func (d *DB) Version() string               { return version }
 func (d *DB) Dependencies() []string        { return nil }
-func (d *DB) ConfigSchema() json.RawMessage { return nil }
-func (d *DB) Hooks() []kernel.HookDef       { return nil }
 
 func (d *DB) Init(_ *kernel.Context, _ json.RawMessage) error {
 	if d.driver == DriverSQLite && d.dsn == "" {

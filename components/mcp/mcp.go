@@ -106,6 +106,8 @@ type Component struct {
 	streamableHandler http.Handler // created once, reused across requests for session persistence
 }
 
+var _ kernel.Component = (*Component)(nil)
+
 // New creates a new MCP component with the given options.
 func New(opts Options) *Component {
 	logger := opts.Logger
@@ -144,8 +146,6 @@ func (c *Component) Dependencies() []string {
 	}
 	return nil
 }
-func (c *Component) ConfigSchema() json.RawMessage { return nil }
-func (c *Component) Hooks() []kernel.HookDef       { return nil }
 
 func (c *Component) Init(ctx *kernel.Context, config json.RawMessage) error {
 	return nil

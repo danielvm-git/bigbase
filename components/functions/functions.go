@@ -46,6 +46,8 @@ type Functions struct {
 	scheduleEntryIDs map[string]cron.EntryID // fnID → cron entry
 }
 
+var _ kernel.Component = (*Functions)(nil)
+
 type Options struct {
 	DB              DBer
 	Logger          kernel.Logger
@@ -75,8 +77,6 @@ func New(opts Options) *Functions {
 func (f *Functions) Name() string                  { return "functions" }
 func (f *Functions) Version() string               { return version }
 func (f *Functions) Dependencies() []string        { return []string{"db"} }
-func (f *Functions) ConfigSchema() json.RawMessage { return nil }
-func (f *Functions) Hooks() []kernel.HookDef       { return nil }
 
 func (f *Functions) Init(ctx *kernel.Context, config json.RawMessage) error {
 	return nil

@@ -363,13 +363,6 @@ func TestStorageDependencies(t *testing.T) {
 	}
 }
 
-func TestStorageHooks(t *testing.T) {
-	s := storage.New(storage.Options{})
-	if got := s.Hooks(); len(got) != 0 {
-		t.Fatalf("expected no hooks, got %v", got)
-	}
-}
-
 func TestThumbnail(t *testing.T) {
 	s, handler := setupStorage(t)
 	defer func() { _ = os.RemoveAll(s.Dir()) }()

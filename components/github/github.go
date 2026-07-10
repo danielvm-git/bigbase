@@ -54,6 +54,8 @@ type GitHub struct {
 	bus            *kernel.EventBus
 }
 
+var _ kernel.Component = (*GitHub)(nil)
+
 type Options struct {
 	DB             DBer
 	Logger         kernel.Logger
@@ -88,8 +90,6 @@ func New(opts Options) *GitHub {
 func (g *GitHub) Name() string                  { return "github" }
 func (g *GitHub) Version() string               { return version }
 func (g *GitHub) Dependencies() []string        { return []string{"db"} }
-func (g *GitHub) ConfigSchema() json.RawMessage { return nil }
-func (g *GitHub) Hooks() []kernel.HookDef       { return nil }
 
 func (g *GitHub) Init(ctx *kernel.Context, config json.RawMessage) error {
 	return nil
@@ -470,5 +470,3 @@ func (g *GitHub) latestInstallationID(ctx context.Context) (int64, error) {
 		"SELECT installation_id FROM github_installations ORDER BY created_at DESC LIMIT 1").Scan(&id)
 	return id, err
 }
-
-var _ kernel.Component = (*GitHub)(nil)

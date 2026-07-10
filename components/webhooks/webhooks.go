@@ -40,6 +40,8 @@ type Component struct {
 	client *http.Client
 }
 
+var _ kernel.Component = (*Component)(nil)
+
 // New creates a new Component.
 func New(opts Options) *Component {
 	logger := opts.Logger
@@ -56,8 +58,6 @@ func New(opts Options) *Component {
 func (c *Component) Name() string                  { return "webhooks" }
 func (c *Component) Version() string               { return componentVersion }
 func (c *Component) Dependencies() []string        { return []string{"db"} }
-func (c *Component) ConfigSchema() json.RawMessage { return nil }
-func (c *Component) Hooks() []kernel.HookDef       { return nil }
 
 func (c *Component) Init(ctx *kernel.Context, config json.RawMessage) error {
 	return nil
@@ -275,5 +275,3 @@ func computeHMAC(secret string, body []byte) string {
 	mac.Write(body)
 	return hex.EncodeToString(mac.Sum(nil))
 }
-
-var _ kernel.Component = (*Component)(nil)

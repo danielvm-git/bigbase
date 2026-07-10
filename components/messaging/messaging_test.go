@@ -105,13 +105,6 @@ func TestMessagingDependencies(t *testing.T) {
 	}
 }
 
-func TestMessagingHooks(t *testing.T) {
-	m := &messaging.Messaging{}
-	if got := m.Hooks(); len(got) != 0 {
-		t.Fatalf("expected no hooks, got %v", got)
-	}
-}
-
 func TestEmailSendSuccess(t *testing.T) {
 	_, handler := setupMessaging(t)
 

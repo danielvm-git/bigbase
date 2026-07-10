@@ -762,6 +762,34 @@ bugs:
     risk_level: low
     regression_guards:
       - All 34 manifest tests pass
+  - id: BUG-2026-07-10T160201
+    date: "2026-07-10"
+    severity: low
+    priority: low
+    scope: deploy
+    summary: "AppType enum OCP — hardcoded constants without validation or enumeration"
+    status: fixed
+    files_changed:
+      - components/deploy/deploy.go
+    approach: "Added AppType.IsValid() validator and AllAppTypes() enumerator for Open-Closed Principle compliance; new types can be added by updating const block and AllAppTypes()"
+    risk_level: low
+    regression_guards:
+      - All deploy tests pass
+  - id: BUG-2026-07-10T160204
+    date: "2026-07-10"
+    severity: low
+    priority: low
+    scope: deploy
+    summary: "Export state machine — stateMachine type and newStateMachine constructor are unexported"
+    status: fixed
+    files_changed:
+      - components/deploy/state_machine.go
+      - components/deploy/deploy.go
+      - components/deploy/state_machine_test.go
+    approach: "Renamed stateMachine → StateMachine (exported) and newStateMachine() → NewStateMachine() (exported)"
+    risk_level: low
+    regression_guards:
+      - All 18 state machine/transition tests pass
   - id: BUG-2026-07-10T160209
     date: "2026-07-10"
     severity: low
@@ -805,60 +833,105 @@ bugs:
     status: fixed
     files_changed:
       - kernel/utilities.go (created)
+      - components/* (56 duplicate definitions removed)
+    approach: "Moved centralized WriteJSON, GenerateID, NoopLogger into kernel/utilities.go; removed 56 local duplicate definitions across all components; updated all call sites to kernel. prefix"
+    risk_level: low
+    regression_guards:
+      - go test ./... (997/998 pass)
+
+  - id: BUG-2026-07-10T160104
+    date: "2026-07-10"
+    severity: low
+    priority: low
+    scope: kernel
+    summary: "ConfigSchema dead interface — 18 components implement ConfigSchema() returning nil, never called in production"
+    status: fixed
+    files_changed:
+      - kernel/component.go
       - components/admin/admin.go
-      - components/admin/admin_test.go
       - components/api/api.go
-      - components/api/envvars.go
-      - components/api/onboarding.go
-      - components/api/scaffold.go
-      - components/auth/audit_test.go
       - components/auth/auth.go
-      - components/auth/auth_test.go
-      - components/auth/cors.go
-      - components/auth/cors_test.go
-      - components/auth/store_test.go
-      - components/backup/handler.go
       - components/cici/cici.go
       - components/db/db.go
-      - components/db/postgres.go
-      - components/deploy/cache_api.go
-      - components/deploy/cache_api_test.go
       - components/deploy/deploy.go
-      - components/deploy/deploy_test.go
-      - components/deploy/engine.go
-      - components/deploy/gateway.go
-      - components/deploy/health.go
-      - components/deploy/log_stream.go
-      - components/deploy/manifest.go
-      - components/deploy/observability.go
-      - components/deploy/orchestrator.go
-      - components/deploy/rollback.go
-      - components/deploy/runner.go
-      - components/deploy/schema.go
-      - components/deploy/state_events_test.go
-      - components/deploy/state_machine.go
-      - components/deploy/supervisor.go
-      - components/deploy/supervisor_test.go
-      - components/deploy/supervisor_wire_test.go
-      - components/deploy/utils.go
       - components/forge/forge.go
-      - components/forge/forge_test.go
-      - components/forge/issues.go
-      - components/forge/labels.go
-      - components/forge/wiki.go
       - components/functions/functions.go
       - components/git/git.go
       - components/github/github.go
-      - components/messaging/messaging.go
       - components/mcp/mcp.go
-      - components/monitoring/alert_checker_test.go
+      - components/messaging/messaging.go
       - components/monitoring/monitoring.go
       - components/proxy/proxy.go
       - components/realtime/realtime.go
       - components/sites/sites.go
       - components/storage/storage.go
       - components/webhooks/webhooks.go
-    approach: "Moved centralized WriteJSON, GenerateID, NoopLogger into kernel/utilities.go; removed 56 local duplicate definitions across all components; updated all call sites to kernel. prefix"
+    approach: "Removed ConfigSchema() from kernel.Component interface; removed all 18 dead implementations; removed test assertions referencing ConfigSchema()"
     risk_level: low
     regression_guards:
-      - go test ./... (997/998 pass, 1 pre-existing flaky deploy test)
+      - go test ./... (999/1000 pass)
+
+  - id: BUG-2026-07-10T160113
+    date: "2026-07-10"
+    severity: low
+    priority: low
+    scope: kernel
+    summary: "Hooks dead interface — 18 components implement Hooks() returning nil, called once for display only"
+    status: fixed
+    files_changed:
+      - kernel/component.go
+      - kernel/kernel.go
+      - components/proxy/proxy.go
+      - main.go
+      - components/admin/admin.go
+      - components/api/api.go
+      - components/auth/auth.go
+      - components/cici/cici.go
+      - components/db/db.go
+      - components/deploy/deploy.go
+      - components/forge/forge.go
+      - components/functions/functions.go
+      - components/git/git.go
+      - components/github/github.go
+      - components/mcp/mcp.go
+      - components/messaging/messaging.go
+      - components/monitoring/monitoring.go
+      - components/realtime/realtime.go
+      - components/sites/sites.go
+      - components/storage/storage.go
+      - components/webhooks/webhooks.go
+    approach: "Removed Hooks() from kernel.Component interface; removed ComponentStatus.Hooks field; updated proxy template and main.go table rendering; removed all 18 dead implementations"
+    risk_level: low
+    regression_guards:
+      - go test ./... (999/1000 pass)
+
+  - id: BUG-2026-07-10T160205
+    date: "2026-07-10"
+    severity: low
+    priority: low
+    scope: kernel
+    summary: "Missing Component compile checks — no var _ kernel.Component = (*Type)(nil) assertions"
+    status: fixed
+    files_changed:
+      - components/admin/admin.go
+      - components/api/api.go
+      - components/auth/auth.go
+      - components/cici/cici.go
+      - components/db/db.go
+      - components/deploy/deploy.go
+      - components/forge/forge.go
+      - components/functions/functions.go
+      - components/git/git.go
+      - components/github/github.go
+      - components/mcp/mcp.go
+      - components/messaging/messaging.go
+      - components/monitoring/monitoring.go
+      - components/proxy/proxy.go
+      - components/realtime/realtime.go
+      - components/sites/sites.go
+      - components/storage/storage.go
+      - components/webhooks/webhooks.go
+    approach: "Added var _ kernel.Component = (*Type)(nil) compile-time interface assertion after each struct definition in all 18 component files"
+    risk_level: low
+    regression_guards:
+      - go build ./... (compiler verifies assertions)

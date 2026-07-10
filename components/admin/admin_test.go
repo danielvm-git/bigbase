@@ -42,13 +42,6 @@ func TestAdminDependencies(t *testing.T) {
 	}
 }
 
-func TestAdminHooks(t *testing.T) {
-	a := &admin.Admin{}
-	if got := a.Hooks(); got != nil {
-		t.Fatalf("expected no hooks, got %v", got)
-	}
-}
-
 func TestAdminServesIndexHTML(t *testing.T) {
 	a := admin.New(admin.Options{Logger: testLogger{}})
 	handler := a.Handler()

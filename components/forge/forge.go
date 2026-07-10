@@ -51,6 +51,8 @@ type Forge struct {
 	logger kernel.Logger
 }
 
+var _ kernel.Component = (*Forge)(nil)
+
 type Options struct {
 	DB     DBer
 	Logger kernel.Logger
@@ -67,8 +69,6 @@ func New(opts Options) *Forge {
 func (f *Forge) Name() string                  { return "forge" }
 func (f *Forge) Version() string               { return version }
 func (f *Forge) Dependencies() []string        { return []string{"db"} }
-func (f *Forge) ConfigSchema() json.RawMessage { return nil }
-func (f *Forge) Hooks() []kernel.HookDef       { return nil }
 
 func (f *Forge) Init(ctx *kernel.Context, config json.RawMessage) error {
 	return nil

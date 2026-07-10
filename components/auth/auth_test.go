@@ -67,20 +67,6 @@ func TestAuthName(t *testing.T) {
 	}
 }
 
-func TestAuthConfigSchema(t *testing.T) {
-	a := &auth.Auth{}
-	if got := a.ConfigSchema(); got != nil {
-		t.Fatalf("expected nil, got %v", got)
-	}
-}
-
-func TestAuthHooks(t *testing.T) {
-	a := &auth.Auth{}
-	if got := a.Hooks(); len(got) != 0 {
-		t.Fatalf("expected empty hooks, got %v", got)
-	}
-}
-
 func TestAuthVersion(t *testing.T) {
 	a := &auth.Auth{}
 	if got := a.Version(); got == "" {

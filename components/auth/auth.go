@@ -92,6 +92,8 @@ type Auth struct {
 	rateLimitStore     RateLimitStore
 }
 
+var _ kernel.Component = (*Auth)(nil)
+
 func (a *Auth) SetGoogleVerifier(v GoogleVerifier) {
 	a.googleVerifier = v
 }
@@ -239,8 +241,6 @@ func resolveJWTSecret(logger kernel.Logger) []byte {
 func (a *Auth) Name() string                  { return "auth" }
 func (a *Auth) Version() string               { return version }
 func (a *Auth) Dependencies() []string        { return []string{"db"} }
-func (a *Auth) ConfigSchema() json.RawMessage { return nil }
-func (a *Auth) Hooks() []kernel.HookDef       { return nil }
 
 func (a *Auth) ValidateToken(token string) (*Claims, error) {
 	return verifyJWT(token, a.secret)

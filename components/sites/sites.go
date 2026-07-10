@@ -79,6 +79,8 @@ type Sites struct {
 	verifyLim         *verifyLimiter
 }
 
+var _ kernel.Component = (*Sites)(nil)
+
 type Options struct {
 	DB                DBer
 	Logger            kernel.Logger
@@ -130,8 +132,6 @@ func (s *Sites) Name() string                  { return "sites" }
 func (s *Sites) DB() DBer                      { return s.db }
 func (s *Sites) Version() string               { return version }
 func (s *Sites) Dependencies() []string        { return []string{"db"} }
-func (s *Sites) ConfigSchema() json.RawMessage { return nil }
-func (s *Sites) Hooks() []kernel.HookDef       { return nil }
 
 func (s *Sites) Init(ctx *kernel.Context, config json.RawMessage) error {
 	return nil
@@ -975,5 +975,3 @@ func (s *Sites) setSiteAuthPolicy(w http.ResponseWriter, r *http.Request, id str
 
 	kernel.WriteJSON(w, http.StatusOK, map[string]any{"status": "ok", "policy": policy})
 }
-
-var _ kernel.Component = (*Sites)(nil)

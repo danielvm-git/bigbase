@@ -93,11 +93,10 @@ type testComponents struct{}
 func (t *testComponents) Name() string                                           { return "testcomp" }
 func (t *testComponents) Version() string                                        { return "0.0.1" }
 func (t *testComponents) Dependencies() []string                                 { return nil }
-func (t *testComponents) ConfigSchema() json.RawMessage                          { return nil }
+
 func (t *testComponents) Init(ctx *kernel.Context, config json.RawMessage) error { return nil }
 func (t *testComponents) Start(ctx *kernel.Context) error                        { return nil }
 func (t *testComponents) Stop(ctx *kernel.Context) error                         { return nil }
-func (t *testComponents) Hooks() []kernel.HookDef                                { return nil }
 
 func TestProxyImplementsComponent(t *testing.T) {
 	var _ kernel.Component = &proxy.Proxy{}

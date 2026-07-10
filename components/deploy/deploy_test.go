@@ -96,8 +96,7 @@ func newGitStub(dir string) *gitStub {
 func (g *gitStub) Name() string                                           { return "git" }
 func (g *gitStub) Version() string                                        { return "0.1.0" }
 func (g *gitStub) Dependencies() []string                                 { return []string{"db"} }
-func (g *gitStub) ConfigSchema() json.RawMessage                          { return nil }
-func (g *gitStub) Hooks() []kernel.HookDef                                { return nil }
+
 func (g *gitStub) Init(ctx *kernel.Context, config json.RawMessage) error { return nil }
 func (g *gitStub) Start(ctx *kernel.Context) error                        { return os.MkdirAll(g.dir, 0755) }
 func (g *gitStub) Stop(ctx *kernel.Context) error                         { return nil }
@@ -214,13 +213,6 @@ func TestDeployDependencies(t *testing.T) {
 	deps := d.Dependencies()
 	if len(deps) != 2 || deps[0] != "db" || deps[1] != "git" {
 		t.Fatalf("expected dependencies [db git], got %v", deps)
-	}
-}
-
-func TestDeployHooks(t *testing.T) {
-	d := &deploy.Deploy{}
-	if got := d.Hooks(); len(got) != 0 {
-		t.Fatalf("expected no hooks, got %v", got)
 	}
 }
 

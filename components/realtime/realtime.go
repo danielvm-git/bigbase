@@ -39,6 +39,8 @@ type Realtime struct {
 	unsubscribe func()
 }
 
+var _ kernel.Component = (*Realtime)(nil)
+
 func New(opts Options) *Realtime {
 	logger := opts.Logger
 	if logger == nil {
@@ -62,8 +64,6 @@ func New(opts Options) *Realtime {
 func (r *Realtime) Name() string                  { return "realtime" }
 func (r *Realtime) Version() string               { return version }
 func (r *Realtime) Dependencies() []string        { return []string{"auth", "api"} }
-func (r *Realtime) ConfigSchema() json.RawMessage { return nil }
-func (r *Realtime) Hooks() []kernel.HookDef       { return nil }
 
 func (r *Realtime) Init(ctx *kernel.Context, config json.RawMessage) error {
 	return nil

@@ -86,6 +86,8 @@ type Monitoring struct {
 	llmModelName string
 }
 
+var _ kernel.Component = (*Monitoring)(nil)
+
 type Options struct {
 	DB     DBer
 	Logger kernel.Logger
@@ -127,8 +129,7 @@ const hostCollectInterval = 15 * time.Second
 func (m *Monitoring) Name() string                                           { return "monitoring" }
 func (m *Monitoring) Version() string                                        { return version }
 func (m *Monitoring) Dependencies() []string                                 { return []string{"db"} }
-func (m *Monitoring) ConfigSchema() json.RawMessage                          { return nil }
-func (m *Monitoring) Hooks() []kernel.HookDef                                { return nil }
+
 func (m *Monitoring) Init(ctx *kernel.Context, config json.RawMessage) error { return nil }
 func (m *Monitoring) Start(ctx *kernel.Context) error {
 	m.stream = newEventStream()
@@ -681,5 +682,3 @@ func (m *Monitoring) handleAlertList(w http.ResponseWriter, r *http.Request) {
 }
 
 // handleMetricsStream, handleAlertByID, handleProcesses are implemented in separate files.
-
-var _ kernel.Component = (*Monitoring)(nil)

@@ -110,6 +110,8 @@ type Deploy struct {
 	relatedEventsReader DeployRelatedEventsReader
 }
 
+var _ kernel.Component = (*Deploy)(nil)
+
 type Options struct {
 	DB               DBer
 	Logger           kernel.Logger
@@ -222,8 +224,7 @@ func (d *Deploy) SetRelatedEventsReader(r DeployRelatedEventsReader) {
 func (d *Deploy) Name() string                  { return "deploy" }
 func (d *Deploy) Version() string               { return version }
 func (d *Deploy) Dependencies() []string        { return []string{"db", "git"} }
-func (d *Deploy) ConfigSchema() json.RawMessage { return nil }
-func (d *Deploy) Hooks() []kernel.HookDef       { return nil }
+
 func (d *Deploy) EventBus(bus *kernel.EventBus) {
 	d.eventBus = bus
 }
@@ -339,5 +340,3 @@ func (d *Deploy) Stop(ctx *kernel.Context) error {
 	}
 	return nil
 }
-
-var _ kernel.Component = (*Deploy)(nil)

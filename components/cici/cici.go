@@ -65,6 +65,8 @@ type CICI struct {
 	logger kernel.Logger
 }
 
+var _ kernel.Component = (*CICI)(nil)
+
 func New(opts Options) *CICI {
 	logger := opts.Logger
 	if logger == nil {
@@ -76,8 +78,6 @@ func New(opts Options) *CICI {
 func (c *CICI) Name() string                  { return "cici" }
 func (c *CICI) Version() string               { return version }
 func (c *CICI) Dependencies() []string        { return []string{"db"} }
-func (c *CICI) ConfigSchema() json.RawMessage { return nil }
-func (c *CICI) Hooks() []kernel.HookDef       { return nil }
 
 func (c *CICI) Init(ctx *kernel.Context, config json.RawMessage) error {
 	return nil

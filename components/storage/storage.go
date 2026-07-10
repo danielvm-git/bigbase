@@ -37,6 +37,8 @@ type Storage struct {
 	maxSize int64
 }
 
+var _ kernel.Component = (*Storage)(nil)
+
 type Options struct {
 	DB      DBer
 	Logger  kernel.Logger
@@ -63,8 +65,6 @@ func New(opts Options) *Storage {
 func (s *Storage) Name() string                  { return "storage" }
 func (s *Storage) Version() string               { return version }
 func (s *Storage) Dependencies() []string        { return []string{"db"} }
-func (s *Storage) ConfigSchema() json.RawMessage { return nil }
-func (s *Storage) Hooks() []kernel.HookDef       { return nil }
 
 func (s *Storage) Init(ctx *kernel.Context, config json.RawMessage) error {
 	return nil

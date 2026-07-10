@@ -14,6 +14,8 @@ type Admin struct {
 	logger kernel.Logger
 }
 
+var _ kernel.Component = (*Admin)(nil)
+
 type Options struct {
 	Logger kernel.Logger
 }
@@ -25,8 +27,6 @@ func New(opts Options) *Admin {
 func (ad *Admin) Name() string                  { return "admin" }
 func (ad *Admin) Version() string               { return version }
 func (ad *Admin) Dependencies() []string        { return nil }
-func (ad *Admin) ConfigSchema() json.RawMessage { return nil }
-func (ad *Admin) Hooks() []kernel.HookDef       { return nil }
 
 func (ad *Admin) Init(ctx *kernel.Context, config json.RawMessage) error {
 	return nil

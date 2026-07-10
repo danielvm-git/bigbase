@@ -13,7 +13,6 @@ type ComponentStatus struct {
 	Name         string
 	Version      string
 	Dependencies []string
-	Hooks        []string
 	Running      bool
 }
 
@@ -108,19 +107,10 @@ func (k *Kernel) ListComponents() []ComponentStatus {
 			Name:         name,
 			Version:      comp.Version(),
 			Dependencies: comp.Dependencies(),
-			Hooks:        hookNames(comp.Hooks()),
 			Running:      running[name],
 		})
 	}
 	return result
-}
-
-func hookNames(hooks []HookDef) []string {
-	names := make([]string, len(hooks))
-	for i, h := range hooks {
-		names[i] = h.Name
-	}
-	return names
 }
 
 func (k *Kernel) resolveOrder() ([]string, error) {

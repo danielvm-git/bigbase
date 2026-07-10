@@ -50,6 +50,8 @@ type Messaging struct {
 	providers map[string]Provider
 }
 
+var _ kernel.Component = (*Messaging)(nil)
+
 type Options struct {
 	DB       DBer
 	Logger   kernel.Logger
@@ -97,8 +99,6 @@ func (m *Messaging) Provider(channel string) Provider {
 func (m *Messaging) Name() string                  { return "messaging" }
 func (m *Messaging) Version() string               { return version }
 func (m *Messaging) Dependencies() []string        { return []string{"db"} }
-func (m *Messaging) ConfigSchema() json.RawMessage { return nil }
-func (m *Messaging) Hooks() []kernel.HookDef       { return nil }
 
 func (m *Messaging) Init(ctx *kernel.Context, config json.RawMessage) error {
 	return nil
@@ -233,5 +233,3 @@ func collectErrors(errs ...string) string {
 	}
 	return ""
 }
-
-var _ kernel.Component = (*Messaging)(nil)

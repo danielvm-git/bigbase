@@ -91,6 +91,8 @@ type API struct {
 	bus    *kernel.EventBus
 }
 
+var _ kernel.Component = (*API)(nil)
+
 func New(opts Options) *API {
 	return &API{
 		db:     opts.DB,
@@ -102,8 +104,6 @@ func New(opts Options) *API {
 func (a *API) Name() string                  { return "api" }
 func (a *API) Version() string               { return version }
 func (a *API) Dependencies() []string        { return []string{"db"} }
-func (a *API) ConfigSchema() json.RawMessage { return nil }
-func (a *API) Hooks() []kernel.HookDef       { return nil }
 
 func (a *API) Init(ctx *kernel.Context, config json.RawMessage) error {
 	return nil

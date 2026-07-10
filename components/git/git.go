@@ -56,6 +56,8 @@ type Git struct {
 	dir    string
 }
 
+var _ kernel.Component = (*Git)(nil)
+
 type Options struct {
 	DB     DBer
 	Logger kernel.Logger
@@ -77,8 +79,6 @@ func New(opts Options) *Git {
 func (g *Git) Name() string                  { return "git" }
 func (g *Git) Version() string               { return version }
 func (g *Git) Dependencies() []string        { return []string{"db"} }
-func (g *Git) ConfigSchema() json.RawMessage { return nil }
-func (g *Git) Hooks() []kernel.HookDef       { return nil }
 
 func (g *Git) Init(ctx *kernel.Context, config json.RawMessage) error {
 	return nil
