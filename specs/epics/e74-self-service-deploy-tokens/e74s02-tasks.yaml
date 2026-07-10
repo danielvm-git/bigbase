@@ -1,0 +1,19 @@
+tasks:
+  - id: tab-component
+    description: "Create SiteDeployKeysTab.tsx — list view, generate button, revoke button"
+    verify: "npx vitest run ui/src/components/SiteDeployKeysTab.test.tsx"
+  - id: generate-modal
+    description: "Generate modal with name field, raw token display, copy button, ephemeral state"
+    verify: "npx vitest run ui/src/components/SiteDeployKeysTab.test.tsx -t generate"
+  - id: revoke-dialog
+    description: "Confirmation dialog on revoke, DELETE call, remove from list"
+    verify: "npx vitest run ui/src/components/SiteDeployKeysTab.test.tsx -t revoke"
+  - id: tab-registration
+    description: "Add Deploy Keys tab to SiteDetailPage tab bar"
+    verify: "grep -c 'Deploy Keys' ui/src/pages/SiteDetailPage.tsx"
+  - id: states
+    description: "Loading skeleton, empty state, error toast, rate-limit message"
+    verify: "npx vitest run ui/src/components/SiteDeployKeysTab.test.tsx -t states"
+  - id: token-not-persisted
+    description: "Verify raw token is cleared from state on modal close and unmount"
+    verify: "npx vitest run ui/src/components/SiteDeployKeysTab.test.tsx -t tokenNotPersisted"

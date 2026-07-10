@@ -1,0 +1,25 @@
+type: epic-shard
+context: domain
+id: e74
+title: "Self-Service Deploy Tokens (UI + REST)"
+wsjf: 7.3
+total_bcps: 5
+status: planned
+tier: 2
+depends_on: []
+note: "2 stories, 5 BCPs. REST endpoints + admin UI for self-service bb_dep_ deploy token provisioning. Repo owners can generate site-scoped deploy tokens from the browser without involving an admin. Security: same auth level as existing sites API; rate-limited creation; token shown once then gone."
+stories:
+  - id: e74s01
+    title: "REST endpoints for site deploy keys"
+    bcps: 3
+    status: pending
+    depends_on: []
+    spec: e74s01-spec.md
+    tasks: e74s01-tasks.yaml
+  - id: e74s02
+    title: "Deploy Keys tab on Site Detail page"
+    bcps: 2
+    status: pending
+    depends_on: [e74s01]
+    spec: e74s02-spec.md
+    tasks: e74s02-tasks.yaml
