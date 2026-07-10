@@ -10,6 +10,7 @@ import type {
   RollbackEvent,
   Site,
   SiteCacheStatus,
+  SiteDeployKey,
   SiteDomain,
   SitesDataResult,
 } from '../types/sites'
@@ -585,6 +586,56 @@ export async function setCacheMaxSize(maxSizeBytes: number): Promise<{ ok: boole
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ max_size_bytes: maxSizeBytes }),
     })
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({ error: '' })) as { error?: string }
+      return { ok: false, error: body.error || `Failed (HTTP ${res.status})` }
+    }
+    return { ok: true }
+  } catch {
+    return { ok: false, error: 'Network error' }
+  }
+}
+
+// --- Site deploy keys (e74s02) ---
+
+export async function getDeployKeys(siteId: string): Promise<SiteDeployKey[]> {
+  const { ok, data } = await fetchJSON<{ data: SiteDeployKey[] }>(`/api/sites/${siteId}/deploy-keys`)
+  if (ok && data.data) return data.data
+  return []
+}
+
+export interface CreateDeployKeyResult {
+  key_id: string
+  name: string
+  key: string
+  prefix: string
+  created_at: string
+}
+
+export async function createDeployKey(
+  siteId: string,
+  name: string,
+): Promise<{ ok: boolean; data?: CreateDeployKeyResult; error?: string }> {
+  try {
+    const res = await fetch(`/api/sites/${siteId}/deploy-keys`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name }),
+    })
+    const body = await res.json().catch(() => ({ error: '' })) as { data?: CreateDeployKeyResult; error?: string }
+    if (!res.ok) return { ok: false, error: body.error || `Failed (HTTP ${res.status})` }
+    return { ok: true, data: body.data }
+  } catch {
+    return { ok: false, error: 'Network error' }
+  }
+}
+
+export async function revokeDeployKey(
+  siteId: string,
+  keyId: string,
+): Promise<{ ok: boolean; error?: string }> {
+  try {
+    const res = await fetch(`/api/sites/${siteId}/deploy-keys/${keyId}`, { method: 'DELETE' })
     if (!res.ok) {
       const body = await res.json().catch(() => ({ error: '' })) as { error?: string }
       return { ok: false, error: body.error || `Failed (HTTP ${res.status})` }
