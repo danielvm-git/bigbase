@@ -1,3 +1,10 @@
+## [2.76.2](https://github.com/danielvm-git/bigbase/compare/v2.76.1...v2.76.2) (2026-07-10)
+
+
+### Bug Fixes
+
+* **auth,ui:** register site deploy-key routes; stop modal focus theft ([78bd984](https://github.com/danielvm-git/bigbase/commit/78bd984f9b66daf341e182f2166eeb8699176337))
+
 ## [2.76.1](https://github.com/danielvm-git/bigbase/compare/v2.76.0...v2.76.1) (2026-07-10)
 
 
