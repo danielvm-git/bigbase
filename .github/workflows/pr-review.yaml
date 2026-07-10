@@ -11,10 +11,15 @@ on:
   issue_comment:
     types: [created]
 
+concurrency:
+  group: pr-review-${{ github.workflow }}-${{ github.event.pull_request.number || github.event.issue.number }}
+  cancel-in-progress: true
+
 jobs:
   pr_agent:
     if: ${{ github.event.sender.type != 'Bot' }}
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     permissions:
       issues: write
       pull-requests: write

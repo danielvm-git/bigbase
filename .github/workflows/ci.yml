@@ -15,6 +15,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 env:
   GO_VERSION: '1.26'
 
@@ -73,6 +77,7 @@ jobs:
   report:
     name: Generate Progress Dashboard
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     needs: test
     if: always()
     concurrency:
