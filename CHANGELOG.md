@@ -1,3 +1,10 @@
+## [2.76.3](https://github.com/danielvm-git/bigbase/compare/v2.76.2...v2.76.3) (2026-07-10)
+
+
+### Bug Fixes
+
+* **ui:** add error handling to CopyButton clipboard operations ([8a30d34](https://github.com/danielvm-git/bigbase/commit/8a30d34191b525aaedda9cd103d5d94b9d8c50f7))
+
 ## [2.76.2](https://github.com/danielvm-git/bigbase/compare/v2.76.1...v2.76.2) (2026-07-10)
 
 
