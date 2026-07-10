@@ -18,11 +18,14 @@ type PyProjectTOML struct {
 		Scripts      map[string]string `toml:"scripts"`
 	} `toml:"project"`
 	Tool struct {
-		UV         any `toml:"uv"`
-		SystemDeps struct {
-			Deps []string `toml:"system_deps"`
-		} `toml:"tools"`
+		UV any `toml:"uv"`
 	} `toml:"tool"`
+	// Tools holds the [tools] section (e.g. [tools.system_deps]).
+	Tools struct {
+		SystemDeps struct {
+			Deps []string `toml:"deps"`
+		} `toml:"system_deps"`
+	} `toml:"tools"`
 }
 
 // HasPyProjectTOML checks whether a pyproject.toml exists and is parseable
@@ -99,6 +102,38 @@ func splitEntryPoint(entry string) (module, appVar string) {
 		}
 	}
 	return entry, "app"
+}
+
+// SystemDeps returns the system dependencies declared in [tools.system_deps],
+// filtered to only allowlisted packages.
+func (pp *PyProjectTOML) SystemDeps() []string {
+	var filtered []string
+	for _, dep := range pp.Tools.SystemDeps.Deps {
+		if allowedSystemDep(dep) {
+			filtered = append(filtered, dep)
+		}
+	}
+	return filtered
+}
+
+// allowedSystemDeps is the allowlist of apt packages that can be installed
+// in the build sandbox. Expanding this list is a deliberate security decision.
+var allowedSystemDeps = map[string]bool{
+	"git":             true,
+	"curl":            true,
+	"ssh":             true,
+	"libpq-dev":       true,
+	"libssl-dev":      true,
+	"build-essential": true,
+	"ffmpeg":          true,
+	"imagemagick":     true,
+	"wget":            true,
+	"unzip":           true,
+	"ca-certificates": true,
+}
+
+func allowedSystemDep(name string) bool {
+	return allowedSystemDeps[name]
 }
 
 // pythonStartCommand returns the exec.Cmd for starting a Python deployment.

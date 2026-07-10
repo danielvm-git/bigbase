@@ -27,6 +27,9 @@ type Spec struct {
 	HealthPort int
 	// HealthPath is the HTTP path to poll (default: /health).
 	HealthPath string
+	// BackgroundProcesses is a list of shell commands to run as background
+	// subprocesses alongside the main deployment process.
+	BackgroundProcesses []string
 }
 
 // Instance is a single-use live run of one deployment — a subprocess or an
@@ -60,12 +63,18 @@ type Clock interface {
 // processInstance wraps exec.Cmd. Single-use: Wait calls cmd.Wait; Stop kills
 // the process. Production log streaming is driven by the deployRunner goroutines.
 type processInstance struct {
-	cmd *exec.Cmd
+	cmd    *exec.Cmd
+	bgCmds []*exec.Cmd
 }
 
 func (p *processInstance) Wait() error { return p.cmd.Wait() }
 
 func (p *processInstance) Stop(_ time.Duration) error {
+	for _, bg := range p.bgCmds {
+		if bg.Process != nil {
+			_ = bg.Process.Kill()
+		}
+	}
 	if p.cmd.Process == nil {
 		return nil
 	}

@@ -1079,6 +1079,19 @@ func (d *Deploy) buildApp(ctx context.Context, deployID, siteID, repoID, branch,
 		return d.runBuildCommand(ctx, deployID, buildDir, siteEnv, "go", "build", "-o", "app", ".")
 	case AppPython:
 		if HasPyProjectTOML(buildDir) {
+			pp := ParsePyProjectTOML(buildDir)
+			if pp != nil {
+				if deps := pp.SystemDeps(); len(deps) > 0 {
+					args := append([]string{"install", "-y"}, deps...)
+					if err := d.runBuildCommand(ctx, deployID, buildDir, siteEnv, "apt-get", "update"); err != nil {
+						d.appendDeployLog(deployID, "⚠ apt-get update failed — continuing without system deps")
+					} else {
+						if err := d.runBuildCommand(ctx, deployID, buildDir, siteEnv, "apt-get", args...); err != nil {
+							d.appendDeployLog(deployID, "⚠ apt-get install failed — continuing")
+						}
+					}
+				}
+			}
 			return d.runBuildCommand(ctx, deployID, buildDir, siteEnv, "uv", "sync", "--frozen")
 		}
 		return d.runBuildCommand(ctx, deployID, buildDir, siteEnv, "pip", "install", "--break-system-packages", "-r", "requirements.txt")

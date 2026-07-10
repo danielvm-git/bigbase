@@ -55,7 +55,24 @@ func (r *deployRunner) spawnProcess(ctx context.Context, spec Spec) (Instance, e
 		_, _ = r.db.ExecContext(ctx,
 			"UPDATE deployments SET pid = ? WHERE id = ?", pid, spec.DeployID)
 	}
-	return &processInstance{cmd: cmd}, nil
+
+	// Spawn background processes if configured.
+	var bgCmds []*exec.Cmd
+	for _, bgCmd := range spec.BackgroundProcesses {
+		parts := strings.Fields(bgCmd)
+		if len(parts) == 0 {
+			continue
+		}
+		bg := exec.CommandContext(ctx, parts[0], parts[1:]...)
+		bg.Dir = spec.Dir
+		bg.Env = spec.Env
+		if err := bg.Start(); err != nil {
+			continue // best-effort
+		}
+		bgCmds = append(bgCmds, bg)
+	}
+
+	return &processInstance{cmd: cmd, bgCmds: bgCmds}, nil
 }
 
 func (r *deployRunner) buildCmd(ctx context.Context, spec Spec) *exec.Cmd {
