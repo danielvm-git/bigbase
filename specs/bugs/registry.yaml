@@ -1136,3 +1136,15 @@ bugs:
     risk_level: low
     regression_guards:
       - go build ./... (compiler verifies assertions)
+
+  - id: BUG-2026-07-10T192800
+    date: "2026-07-10"
+    severity: low
+    priority: low
+    scope: deploy
+    summary: TestDeployCustomSiteName cleanup failure on CI — .git dir not empty during TempDir cleanup
+    file: specs/bugs/BUG-2026-07-10T192800-testdeploycustomsitename-cleanup.md
+    status: open
+    files_changed: []
+    approach: ""
+    risk_level: low
