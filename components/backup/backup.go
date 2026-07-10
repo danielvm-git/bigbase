@@ -10,17 +10,16 @@ import (
 	"time"
 
 	_ "modernc.org/sqlite"
+
+	"github.com/danielvm/bigbase/kernel"
 )
 
 // SQLiteDB is a *sql.DB opened against a SQLite file.
 // Exposed so main.go can hold the type without importing database/sql directly.
 type SQLiteDB = *sql.DB
 
-// DBer is the subset of *sql.DB used by Dump and Restore.
-type DBer interface {
-	QueryContext(ctx context.Context, query string, args ...any) (*sql.Rows, error)
-	ExecContext(ctx context.Context, query string, args ...any) (sql.Result, error)
-}
+// DBer is the database abstraction used by dump/restore.
+type DBer = kernel.QueryExecDBer
 
 // OpenSQLite opens a SQLite database at path and returns the raw *sql.DB.
 func OpenSQLite(path string) (*sql.DB, error) {
@@ -37,7 +36,7 @@ func OpenSQLite(path string) (*sql.DB, error) {
 // replayed against a SQLite database to restore the schema and data.
 func Dump(ctx context.Context, db DBer, w io.Writer) error {
 	tableRows, err := db.QueryContext(ctx,
-		`SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name`)
+		"SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name")
 	if err != nil {
 		return fmt.Errorf("list tables: %w", err)
 	}
@@ -77,7 +76,7 @@ func dumpTable(ctx context.Context, db DBer, table string, w io.Writer) error {
 	// Write CREATE TABLE statement.
 	var ddl string
 	ddlRows, err := db.QueryContext(ctx,
-		`SELECT sql FROM sqlite_master WHERE type='table' AND name=?`, table)
+		"SELECT sql FROM sqlite_master WHERE type='table' AND name=?", table)
 	if err != nil {
 		return fmt.Errorf("get DDL: %w", err)
 	}

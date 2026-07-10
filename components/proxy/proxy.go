@@ -6,7 +6,6 @@ import (
 	"crypto/sha256"
 	"crypto/subtle"
 	"crypto/x509"
-	"database/sql"
 	"encoding/hex"
 	"encoding/json"
 	"encoding/pem"
@@ -20,9 +19,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/danielvm/bigbase/kernel"
 	"github.com/newrelic/go-agent/v3/newrelic"
 	"golang.org/x/crypto/acme/autocert"
+
+	"github.com/danielvm/bigbase/kernel"
 )
 
 // requestIDKey is the context key for request-scoped request IDs.
@@ -51,16 +51,11 @@ var templateFuncs = template.FuncMap{
 
 const version = "0.1.0"
 
-
 type RequestLogger interface {
 	RecordRequestLog(siteID, method, path string, status int, duration time.Duration)
 }
 
-type DBer interface {
-	QueryRowContext(ctx context.Context, query string, args ...any) *sql.Row
-	QueryContext(ctx context.Context, query string, args ...any) (*sql.Rows, error)
-	ExecContext(ctx context.Context, query string, args ...any) (sql.Result, error)
-}
+type DBer = kernel.QueryExecDBer
 
 type Options struct {
 	Port               string
@@ -168,7 +163,7 @@ func New(opts Options) *Proxy {
 	}
 }
 
-// Port returns the HTTP listen port (resolved after Start if 
+// Port returns the HTTP listen port (resolved after Start if
 
 func (p *Proxy) SetRequestLogger(rl RequestLogger) {
 	p.requestLogger = rl
@@ -199,11 +194,11 @@ func (p *Proxy) HTTPSAddr() string {
 	return ""
 }
 
-func (p *Proxy) Name() string                     { return "proxy" }
-func (p *Proxy) Version() string                  { return version }
-func (p *Proxy) Dependencies() []string            { return nil }
-func (p *Proxy) ConfigSchema() json.RawMessage     { return nil }
-func (p *Proxy) Hooks() []kernel.HookDef           { return nil }
+func (p *Proxy) Name() string                  { return "proxy" }
+func (p *Proxy) Version() string               { return version }
+func (p *Proxy) Dependencies() []string        { return nil }
+func (p *Proxy) ConfigSchema() json.RawMessage { return nil }
+func (p *Proxy) Hooks() []kernel.HookDef       { return nil }
 
 func (p *Proxy) Init(ctx *kernel.Context, config json.RawMessage) error {
 	if p.port == "" {
@@ -441,8 +436,6 @@ func (p *Proxy) httpsRedirectMiddleware(next http.Handler) http.Handler {
 		next.ServeHTTP(w, r)
 	})
 }
-
-
 
 // portFromAddr extracts the port portion from an address string like ":8080".
 func portFromAddr(addr string) string {

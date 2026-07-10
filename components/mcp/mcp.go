@@ -4,7 +4,6 @@
 package mcp
 
 import (
-	"database/sql"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -12,10 +11,11 @@ import (
 	"os"
 	"strings"
 
+	mcpsdk "github.com/modelcontextprotocol/go-sdk/mcp"
+
 	"github.com/danielvm/bigbase/components/deploy"
 	"github.com/danielvm/bigbase/components/sites"
 	"github.com/danielvm/bigbase/kernel"
-	mcpsdk "github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
 const version = "0.1.0"
@@ -86,12 +86,8 @@ type Options struct {
 	UpdateAuthPolicy func(siteID string, policyJSON string)
 }
 
-// DBer is the database interface for deploy tools.
-type DBer interface {
-	QueryRowContext(ctx context.Context, query string, args ...any) *sql.Row
-	QueryContext(ctx context.Context, query string, args ...any) (*sql.Rows, error)
-	ExecContext(ctx context.Context, query string, args ...any) (sql.Result, error)
-}
+// DBer is the database abstraction used by MCP tools.
+type DBer = kernel.QueryExecDBer
 
 // Component is the ECC component for the MCP server.
 type Component struct {
@@ -658,10 +654,10 @@ Port is set via ` + "`PORT`" + ` env var. Database is SQLite by default.
 			return textResult(fmt.Sprintf("Failed to get site: %v", err)), nil, nil
 		}
 		out := map[string]any{
-			"site_id":            site.ID,
-			"name":               site.Name,
-			"git_repo_id":        site.GitRepoID,
-			"production_branch":  site.ProductionBranch,
+			"site_id":           site.ID,
+			"name":              site.Name,
+			"git_repo_id":       site.GitRepoID,
+			"production_branch": site.ProductionBranch,
 		}
 		if site.LatestDeployment != nil {
 			out["url"] = site.LatestDeployment.URL
@@ -911,7 +907,6 @@ func (c *Component) Handler() http.Handler {
 
 	return mux
 }
-
 
 type noopLogger struct{}
 
