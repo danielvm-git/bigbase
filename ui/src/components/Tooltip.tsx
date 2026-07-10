@@ -18,10 +18,10 @@ export function Tooltip({ content, children, placement = 'top', className = '' }
     const el = child as React.ReactElement<React.HTMLAttributes<HTMLElement>>
     return cloneElement(el, {
       'aria-describedby': id,
-      onMouseEnter: (e: React.MouseEvent) => { setVisible(true); el.props.onMouseEnter?.(e) },
-      onMouseLeave: (e: React.MouseEvent) => { setVisible(false); el.props.onMouseLeave?.(e) },
-      onFocus: (e: React.FocusEvent) => { setVisible(true); el.props.onFocus?.(e) },
-      onBlur: (e: React.FocusEvent) => { setVisible(false); el.props.onBlur?.(e) },
+      onMouseEnter: (e: React.MouseEvent<HTMLElement>) => { setVisible(true); el.props.onMouseEnter?.(e) },
+      onMouseLeave: (e: React.MouseEvent<HTMLElement>) => { setVisible(false); el.props.onMouseLeave?.(e) },
+      onFocus: (e: React.FocusEvent<HTMLElement>) => { setVisible(true); el.props.onFocus?.(e) },
+      onBlur: (e: React.FocusEvent<HTMLElement>) => { setVisible(false); el.props.onBlur?.(e) },
     })
   }
 
