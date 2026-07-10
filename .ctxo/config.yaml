@@ -13,7 +13,10 @@ index:
 
   # Workspace filter — matching workspaces are skipped entirely
   # (no plugin load, no file enumeration).
-  ignoreProjects: []
+  # Packages/* is listed so ctxo indexes the root Go tree (components/, kernel/,
+  # config/) instead of limiting to npm workspace-only discovery.
+  # See BUG-2026-07-10T160209.
+  ignoreProjects: ["packages/*"]
   # - "packages/experimental-*"
   # - "examples/*"
 
