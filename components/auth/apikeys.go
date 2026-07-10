@@ -10,8 +10,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
-	"github.com/danielvm/bigbase/components/mcp"
 )
 
 // OrgAPIKey holds metadata about an org-scoped API key.
@@ -211,7 +209,16 @@ type SiteKeyCreated struct {
 	Key    string `json:"-"`
 }
 
-// CreateSiteKey implements mcp.SiteKeyCreator — returns raw token once.
+// SiteKeyEntry is metadata for a site-scoped deploy key (no raw secret).
+type SiteKeyEntry struct {
+	KeyID      string  `json:"key_id"`
+	Name       string  `json:"name"`
+	CreatedAt  string  `json:"created_at"`
+	Revoked    bool    `json:"revoked"`
+	LastUsedAt *string `json:"last_used_at,omitempty"`
+}
+
+// CreateSiteKey creates a site-scoped deployment key — returns raw token once.
 func (a *Auth) CreateSiteKey(ctx context.Context, siteID, name string, scopes []string) (rawToken, keyID string, err error) {
 	created, err := a.createSiteKeyRecord(ctx, siteID, name, scopes)
 	if err != nil {
@@ -276,7 +283,7 @@ func (a *Auth) createSiteKeyRecord(ctx context.Context, siteID, name string, sco
 }
 
 // ListSiteKeys returns metadata for site-scoped keys (no raw secrets).
-func (a *Auth) ListSiteKeys(ctx context.Context, siteID string) ([]mcp.SiteKeyEntry, error) {
+func (a *Auth) ListSiteKeys(ctx context.Context, siteID string) ([]SiteKeyEntry, error) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
@@ -300,7 +307,7 @@ func (a *Auth) ListSiteKeys(ctx context.Context, siteID string) ([]mcp.SiteKeyEn
 	}
 	defer func() { _ = rows.Close() }()
 
-	keys := make([]mcp.SiteKeyEntry, 0)
+	keys := make([]SiteKeyEntry, 0)
 	for rows.Next() {
 		var id int64
 		var name, createdAt string
@@ -309,7 +316,7 @@ func (a *Auth) ListSiteKeys(ctx context.Context, siteID string) ([]mcp.SiteKeyEn
 		if err := rows.Scan(&id, &name, &createdAt, &revoked, &lastUsed); err != nil {
 			return nil, fmt.Errorf("scan site key: %w", err)
 		}
-		entry := mcp.SiteKeyEntry{
+		entry := SiteKeyEntry{
 			KeyID:     fmt.Sprintf("%d", id),
 			Name:      name,
 			CreatedAt: createdAt,

@@ -14,7 +14,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/danielvm/bigbase/components/deploy"
 	"github.com/danielvm/bigbase/kernel"
 )
 
@@ -77,6 +76,7 @@ type Sites struct {
 	activateDomain    ActivateDomainFunc
 	updateAuthPolicy  func(siteID string, policyJSON string)
 	verifyLim         *verifyLimiter
+	validateManifest  func([]byte) error
 }
 
 var _ kernel.Component = (*Sites)(nil)
@@ -96,6 +96,8 @@ type Options struct {
 	ActivateDomain ActivateDomainFunc
 	// UpdateAuthPolicy notifies the proxy when a site's auth policy changes.
 	UpdateAuthPolicy func(siteID string, policyJSON string)
+	// ValidateManifest validates bigbase.yaml content (injected from deploy; ECC seam).
+	ValidateManifest func([]byte) error
 }
 
 func New(opts Options) *Sites {
@@ -120,6 +122,7 @@ func New(opts Options) *Sites {
 		activateDomain:    opts.ActivateDomain,
 		updateAuthPolicy:  opts.UpdateAuthPolicy,
 		verifyLim:         newVerifyLimiter(5 * time.Second),
+		validateManifest:  opts.ValidateManifest,
 	}
 	if keyErr != nil {
 		// Log immediately — encryption is silently disabled when the key is malformed.
@@ -787,9 +790,11 @@ func (s *Sites) saveSiteManifest(w http.ResponseWriter, r *http.Request, id stri
 		return
 	}
 
-	if err := deploy.ValidateManifest([]byte(req.Content)); err != nil {
-		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": fmt.Sprintf("invalid manifest: %v", err)})
-		return
+	if s.validateManifest != nil {
+		if err := s.validateManifest([]byte(req.Content)); err != nil {
+			kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": fmt.Sprintf("invalid manifest: %v", err)})
+			return
+		}
 	}
 
 	ctx, cancel := context.WithTimeout(r.Context(), 30*time.Second)

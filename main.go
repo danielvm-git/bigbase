@@ -375,8 +375,8 @@ func startProxy() {
 		DB:     d,
 		Logger: logger,
 	})
-	depComp.SetDiagnosisReader(mComp)
-	depComp.SetRelatedEventsReader(mComp)
+	depComp.SetDiagnosisReader(deployDiagnosisAdapter{m: mComp})
+	depComp.SetRelatedEventsReader(deployRelatedEventsAdapter{m: mComp})
 	gh := github.New(github.Options{
 		DB:             d,
 		Logger:         logger,
@@ -412,6 +412,7 @@ func startProxy() {
 		UnregisterHost:   p.UnregisterDeploymentHost,
 		ActivateDomain:   depComp.ActivateCustomDomain,
 		UpdateAuthPolicy: p.SetSiteAuthPolicy,
+		ValidateManifest: deploy.ValidateManifest,
 	})
 	rt := realtime.New(realtime.Options{
 		Logger:         logger,
@@ -442,16 +443,16 @@ func startProxy() {
 	k.Register(mComp)
 
 	mcpComp := mcp.New(mcp.Options{
-		Logger:         logger,
-		Enabled:        !*mcpDisabled,
-		Port:           *mcpPort,
-		Transport:      *mcpTransport,
-		DB:             d,
-		Deployer:       depComp,
-		GitCreator:     g,
-		SiteCreator:    st,
-		SiteLister:     st,
-		SiteKeyCreator:      authComp,
+		Logger:              logger,
+		Enabled:             !*mcpDisabled,
+		Port:                *mcpPort,
+		Transport:           *mcpTransport,
+		DB:                  d,
+		Deployer:            mcpDeployAdapter{d: depComp},
+		GitCreator:          g,
+		SiteCreator:         st,
+		SiteLister:          mcpSiteListerAdapter{s: st},
+		SiteKeyCreator:      mcpSiteKeyAdapter{a: authComp},
 		OrgKeyAuthenticator: authComp,
 		UpdateAuthPolicy:    p.SetSiteAuthPolicy,
 	})

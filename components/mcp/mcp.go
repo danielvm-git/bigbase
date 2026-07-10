@@ -13,16 +13,21 @@ import (
 
 	mcpsdk "github.com/modelcontextprotocol/go-sdk/mcp"
 
-	"github.com/danielvm/bigbase/components/deploy"
-	"github.com/danielvm/bigbase/components/sites"
 	"github.com/danielvm/bigbase/kernel"
 )
 
 const version = "0.1.0"
 
+// DeploymentResult is the MCP-facing deploy trigger result (no deploy import).
+type DeploymentResult struct {
+	ID     string
+	URL    string
+	Status string
+}
+
 // DeployTrigger triggers a deployment from a git repo.
 type DeployTrigger interface {
-	Trigger(ctx context.Context, repoID, branch, siteName, siteID string, passthroughPaths []string, appType string, manifestPath string) (*deploy.Deployment, error)
+	Trigger(ctx context.Context, repoID, branch, siteName, siteID string, passthroughPaths []string, appType string, manifestPath string) (*DeploymentResult, error)
 }
 
 // GitCreator registers a git repository with BigBase.
@@ -35,10 +40,26 @@ type SiteCreator interface {
 	CreateSite(ctx context.Context, gitRepoID, name, branch string) (id, nameOut string, err error)
 }
 
+// SiteDeployment is optional latest-deploy metadata on a site listing.
+type SiteDeployment struct {
+	ID     string
+	URL    string
+	Status string
+}
+
+// SiteInfo is the MCP-facing site catalog entry (no sites import).
+type SiteInfo struct {
+	ID               string
+	Name             string
+	GitRepoID        string
+	ProductionBranch string
+	LatestDeployment *SiteDeployment
+}
+
 // SiteLister returns site catalog entries for MCP discovery tools.
 type SiteLister interface {
-	ListSites(ctx context.Context) ([]sites.Site, error)
-	GetSite(ctx context.Context, siteID string) (*sites.Site, error)
+	ListSites(ctx context.Context) ([]SiteInfo, error)
+	GetSite(ctx context.Context, siteID string) (*SiteInfo, error)
 }
 
 // SiteKeyEntry is metadata for a site-scoped deploy key (no raw secret).

@@ -9,7 +9,6 @@ import (
 	mcpsdk "github.com/modelcontextprotocol/go-sdk/mcp"
 
 	"github.com/danielvm/bigbase/components/mcp"
-	"github.com/danielvm/bigbase/components/sites"
 )
 
 type mockGitCreator struct {
@@ -84,29 +83,29 @@ func (m *mockSiteKeyCreator) RevokeSiteKey(_ context.Context, keyID string) erro
 }
 
 type mockSiteLister struct {
-	sites []sites.Site
+	sites []mcp.SiteInfo
 	err   error
 }
 
-func (m *mockSiteLister) ListSites(_ context.Context) ([]sites.Site, error) {
+func (m *mockSiteLister) ListSites(_ context.Context) ([]mcp.SiteInfo, error) {
 	if m.err != nil {
 		return nil, m.err
 	}
 	if m.sites != nil {
 		return m.sites, nil
 	}
-	return []sites.Site{
+	return []mcp.SiteInfo{
 		{
 			ID:               "site-1",
 			Name:             "my-app",
 			GitRepoID:        "repo-1",
 			ProductionBranch: "main",
-			LatestDeployment: &sites.Deployment{URL: "https://my-app.bigbase.click", Status: "running"},
+			LatestDeployment: &mcp.SiteDeployment{URL: "https://my-app.bigbase.click", Status: "running"},
 		},
 	}, nil
 }
 
-func (m *mockSiteLister) GetSite(_ context.Context, siteID string) (*sites.Site, error) {
+func (m *mockSiteLister) GetSite(_ context.Context, siteID string) (*mcp.SiteInfo, error) {
 	if m.err != nil {
 		return nil, m.err
 	}
@@ -116,12 +115,12 @@ func (m *mockSiteLister) GetSite(_ context.Context, siteID string) (*sites.Site,
 		}
 	}
 	if siteID == "site-1" {
-		return &sites.Site{
+		return &mcp.SiteInfo{
 			ID:               "site-1",
 			Name:             "my-app",
 			GitRepoID:        "repo-1",
 			ProductionBranch: "main",
-			LatestDeployment: &sites.Deployment{URL: "https://my-app.bigbase.click", Status: "running", ID: "dep-1"},
+			LatestDeployment: &mcp.SiteDeployment{URL: "https://my-app.bigbase.click", Status: "running", ID: "dep-1"},
 		}, nil
 	}
 	return nil, errors.New(`site "` + siteID + `" not found`)

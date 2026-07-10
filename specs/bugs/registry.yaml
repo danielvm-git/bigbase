@@ -63,8 +63,20 @@ bugs:
     scope: auth,mcp,monitoring,sites
     summary: Four production cross-component direct imports violate ECC
     file: specs/bugs/BUG-2026-07-10T160004-ecc-cross-component-imports.md
-    status: open
+    status: fixed
     audit_source: specs/audit-code-2026-07-10.md
+    files_changed:
+      - adapters.go
+      - components/auth/apikeys.go
+      - components/mcp/mcp.go
+      - components/monitoring/observability.go
+      - components/sites/sites.go
+      - main.go
+    approach: "Local DTOs + main adapters; ValidateManifest injected into sites."
+    risk_level: medium
+    regression_guards:
+      - go build .
+      - go test ./components/auth/ ./components/mcp/ ./components/sites/ ./components/monitoring/
   - id: BUG-2026-07-10T160005
     date: "2026-07-10"
     severity: high
