@@ -1,0 +1,16 @@
+tasks:
+  - id: detect-pyproject
+    description: "Extend DetectAppType() to check for pyproject.toml with [project.scripts] or [tool.uv]"
+    verify: "go test ./components/deploy/... -run DetectAppType"
+  - id: uv-sync-build
+    description: "Add uv sync --frozen build step triggered by AppPython + pyproject.toml presence"
+    verify: "go test ./components/deploy/... -run Python.*Build"
+  - id: parse-scripts
+    description: "Parse [project.scripts] from pyproject.toml for start command auto-detection"
+    verify: "go test ./components/deploy/... -run ParseScripts"
+  - id: init-manifest
+    description: "Update InitManifest() to detect pyproject.toml and generate uv-based manifest"
+    verify: "go test ./components/deploy/... -run InitManifest"
+  - id: verify-regression
+    description: "Confirm no regression in existing Node/Go/Static detection paths"
+    verify: "go test ./components/deploy/..."

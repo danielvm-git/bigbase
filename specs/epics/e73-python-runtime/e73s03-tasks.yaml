@@ -1,0 +1,16 @@
+tasks:
+  - id: writable-dir
+    description: "Allocate persistent writable dir per deployment under data/writable/<deployID>"
+    verify: "go test ./components/deploy/... -run WritableDir"
+  - id: health-poll-loop
+    description: "Add health polling goroutine to Supervisor: GET /health every 10s"
+    verify: "go test ./components/deploy/... -run Health.*Poll"
+  - id: health-restart-threshold
+    description: "Trigger restart after 3 consecutive health check failures"
+    verify: "go test ./components/deploy/... -run Health.*Restart"
+  - id: health-event
+    description: "Emit deploy.health_failed event on threshold trip"
+    verify: "go test ./components/deploy/... -run Health.*Event"
+  - id: verify-regression
+    description: "Confirm existing non-Python deployments unaffected by health polling"
+    verify: "go test ./components/deploy/..."

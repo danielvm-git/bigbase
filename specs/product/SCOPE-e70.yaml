@@ -1,0 +1,41 @@
+type: scope
+context: product
+id: e70
+title: "Site Deploy Manifest (bigbase.toml)"
+wsjf: 6.7
+total_bcps: 7
+depends_on: [e57, e67]
+
+in_scope:
+  - Persist deploy defaults (framework, build command, env vars) on site record
+  - bigbase.toml manifest in repository root as single source of deploy config
+  - TOML parsing with BurntSushi/toml
+  - Three-layer config merge: bigbase.toml → site defaults → request body overrides
+  - Parameterized CI templates (get_ci_template with deploy defaults)
+  - static-sidecar app profile for sidecar-only deployments
+  - Validation of TOML schema with clear error messages
+
+out_of_scope:
+  - Full CMS for deploy configuration
+  - Non-TOML manifest formats (YAML, JSON)
+  - Auto-generation of bigbase.toml from existing bigbase.yaml
+  - Remote URL-based manifest fetching
+  - Manifest inheritance or composition across repos
+
+stories:
+  - id: e70s01
+    title: "Persist deploy defaults on site record"
+    bcps: 2
+    depends_on: [e57]
+  - id: e70s02
+    title: "bigbase.toml manifest parsing in repository root"
+    bcps: 2
+    depends_on: [e70s01]
+  - id: e70s03
+    title: "Parameterized CI templates with deploy defaults"
+    bcps: 1
+    depends_on: [e67, e70s01]
+  - id: e70s04
+    title: "static-sidecar app profile"
+    bcps: 2
+    depends_on: [e70s02]

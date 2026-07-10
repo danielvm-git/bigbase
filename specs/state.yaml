@@ -1,31 +1,29 @@
 type: session-state
 context: infra
 active_flow: null
-active_epic_id: e72
-active_story_id: e72s04
-active_story_status: done
+active_epic_id: null
+active_story_id: null
+active_story_status: null
 release:
-  target_version: 2.72.0
-  codename: "Monitoring Observability"
+  target_version: 2.73.0
+  codename: "Python Runtime"
   last_tag: v2.72.0
   last_publish: '2026-07-09'
   ci_verified: true
   ci_verified_at: '2026-07-09T04:44:49Z'
 metrics:
-  session_start: '2026-07-08T15:56:00Z'
-  story_start: '2026-07-08T22:29:00-03:00'
-  session_end: '2026-07-09T01:45:00-03:00'
-  cycle_minutes: 332
-  epics_completed: 59
-  stories_completed: 179
+  session_start: '2026-07-10T10:56:00-03:00'
+  session_end: null
+  epics_completed: 60
+  stories_completed: 183
   bcps_per_hour: 0
 epic_cycle:
   step: 8
-  story_bcps: 3
-  story: e72s04
+  story_bcps: 2
+  story: e73s04
   audit_result: pass
   completed_steps: ["0", "1", "2", "3", "4", "5", "6", "7", "8"]
-  note: "e72s04 complete — shipped in PR #64, merged to main @ 82dc4987 (v2.72.0)"
+  note: "e73 shipped — 4 stories, 8 BCP. Python runtime complete."
   fast_mode: false
   story_complete: true
 bug_cycle:
@@ -34,13 +32,15 @@ bug_cycle:
   bug_file: null
 git:
   branch: main
-  hash: d88ddf00
+  hash: 8d48decc
   worktree: null
   ci_status: success
 handoff:
-  last_step_completed: "release-branch"
+  last_step_completed: "Bands 1+2: e73 Python runtime shipped (4 stories, 8 BCP). e70 capsule ready."
   open_decisions:
     - "Bootstrap mcp:provision keys via admin CreateAPIKey before MCP write tools work"
-  next_skill: null
-  summary: "Epic e72 released — squash-merged PR #64, capsule archived"
-  context: "main @ 82dc4987. 1022 tests green locally. semantic-release pending CI."
+    - "e70 capsule ready at specs/epics/e70-site-deploy-manifest/ -- depends on e57 schema"
+    - "Issues #41, #43 deferred to e61, e66. #44 closed. #45 open as someday-marker."
+  next_skill: "build-epic e57 -- then e70 unlocks"
+  summary: "e73 Python runtime shipped. #60, #42, #62 closed. e70 scoped. Ready for Band 3."
+  context: "main @ 8d48decc. v3.0.0 planning. e57 is the next step."

@@ -6,6 +6,7 @@ wsjf: 3.6
 total_bcps: 8
 status: planned
 depends_on: [e51, e57]
+note: "3 stories, 8 BCPs. DEFERRED: PolicyGate prerequisite — role/invite stories need a PolicyEnforcer interface in auth/proxy layer. Added per Issue #43."
 stories:
   - id: e66s01
   - id: e66s02

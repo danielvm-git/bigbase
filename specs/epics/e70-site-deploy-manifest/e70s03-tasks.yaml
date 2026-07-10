@@ -1,0 +1,10 @@
+tasks:
+  - id: read-defaults
+    description: "Read deploy_defaults from site record in get_ci_template"
+    verify: "go test ./components/mcp/... -run CITemplate.*Defaults"
+  - id: merge-toml
+    description: "Merge bigbase.toml defaults into CI template generation"
+    verify: "go test ./components/mcp/... -run CITemplate.*Merge"
+  - id: template-variants
+    description: "Generate correct template for each framework with defaults"
+    verify: "go test ./components/mcp/... -run CITemplate.*Framework"

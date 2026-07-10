@@ -1,0 +1,13 @@
+tasks:
+  - id: detect-uvicorn
+    description: "Parse pyproject.toml [project.dependencies] for uvicorn entry"
+    verify: "go test ./components/deploy/... -run UvicornDetect"
+  - id: uvicorn-start-cmd
+    description: "Generate uv run uvicorn start command with host/port from pyproject.toml"
+    verify: "go test ./components/deploy/... -run StartCommand.*uvicorn"
+  - id: fallback-start-cmd
+    description: "Fall back to python3 app.py when no uvicorn detected"
+    verify: "go test ./components/deploy/... -run StartCommand.*fallback"
+  - id: verify-regression
+    description: "Confirm existing Node/Go start commands unchanged"
+    verify: "go test ./components/deploy/..."

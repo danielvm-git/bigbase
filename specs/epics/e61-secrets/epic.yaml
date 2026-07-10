@@ -7,7 +7,7 @@ total_bcps: 3
 status: planned
 tier: 2
 depends_on: [e51, e57, deepen-env-resolver]
-note: "2 stories, 3 BCPs. Project-level encrypted secret store (AES-GCM via envcrypto) with backend CRUD API and admin UI tab inside ProjectDetailPage. Site env vars override project secrets on collision."
+note: "2 stories, 3 BCPs. Project-level encrypted secret store (AES-GCM via envcrypto) with backend CRUD API and admin UI tab inside ProjectDetailPage. Site env vars override project secrets on collision. DEFERRED: EnvResolver seam (layering: platform env → user env → secrets, precedence rules, redaction) must be specified in e61s01 — added per Issue #41."
 stories:
   - id: e61s01
     title: "Encrypted project secrets store & CRUD API"

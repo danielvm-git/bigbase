@@ -532,6 +532,30 @@ epics:
   tier: 2
   status: planned
 
+- id: e73
+  title: "Python (FastAPI) Runtime"
+  wsjf: 5.25
+  mode: capsule
+  tier: 1
+  status: planned
+  depends_on: []
+  note: "4 stories, 8 BCPs. Python runtime with uv/uvicorn. No e57 dependency. Reference: Grimoire."
+  capsule_dir: epics/e73-python-runtime
+  file: epics/e73-python-runtime/epic.yaml
+
+- id: e70
+  title: "Site Deploy Manifest (bigbase.toml)"
+  wsjf: 6.7
+  mode: capsule
+  tier: 2
+  status: planned
+  depends_on:
+  - e57
+  - e67
+  note: "4 stories, 7 BCPs. TOML deploy manifest. Blocked by e57 schema changes."
+  capsule_dir: epics/e70-site-deploy-manifest
+  file: epics/e70-site-deploy-manifest/epic.yaml
+
 - id: e71
   title: "Security — Host-Level Route Auth Policy"
   wsjf: 6.0

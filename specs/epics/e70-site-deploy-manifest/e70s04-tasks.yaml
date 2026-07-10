@@ -1,0 +1,10 @@
+tasks:
+  - id: sidecar-type
+    description: "Add static-sidecar to valid app type enum and detection"
+    verify: "go test ./components/deploy/... -run StaticSidecar.*Type"
+  - id: sidecar-build
+    description: "Minimal build step for sidecar: custom command from bigbase.toml"
+    verify: "go test ./components/deploy/... -run StaticSidecar.*Build"
+  - id: sidecar-start
+    description: "Start command directly from bigbase.toml without framework wrapper"
+    verify: "go test ./components/deploy/... -run StaticSidecar.*Start"

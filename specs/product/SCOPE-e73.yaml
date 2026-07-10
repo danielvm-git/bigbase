@@ -1,0 +1,55 @@
+type: scope
+context: product
+id: e73
+title: "Python (FastAPI) Runtime"
+wsjf: 5.25
+total_bcps: 8
+reference_app: "Grimoire — FastAPI 3.13, uv, SQLite, pyproject.toml (https://github.com/lucabello/grimoire)"
+
+in_scope:
+  - pyproject.toml detection as primary signal for Python apps
+  - uv package manager (uv sync --frozen) for deterministic builds
+  - uvicorn ASGI server auto-detection from pyproject.toml dependencies
+  - writable persistent disk per Python deployment
+  - per-app health polling via GET /health with configurable failure threshold
+  - system dependencies (apt-get) parsed from [tools.system_deps] in pyproject.toml
+  - background subprocess tracking via Supervisor multi-process model
+  - health endpoint (GET /health) on port from $PORT env var
+  - fallback detection: app.py / main.py when pyproject.toml absent
+
+out_of_scope:
+  - WSGI-only mode (gunicorn, uWSGI)
+  - pip-based installs (pip install -r requirements.txt)
+  - Docker-based Python hosting
+  - Django-specific scaffolding
+  - Flask-specific scaffolding (only generic ASGI via uvicorn)
+  - Auto-migration of requirements.txt to pyproject.toml
+  - Python version pinning (relies on system python3)
+  - Virtual environment management (uv handles its own venv)
+
+p0_minimum:
+  - pyproject.toml detection in DetectAppType()
+  - uv sync --frozen in build step
+  - parse [project.scripts] for entry point
+  - uvicorn auto-detection in pyproject.toml deps
+  - fallback to python3 app.py
+
+p1_stability:
+  - writable persistent disk directory
+  - health polling loop in Supervisor (GET /health)
+  - 3 consecutive failure threshold triggers restart
+
+p2_robustness:
+  - system_deps apt-get install
+  - background_processes multi-process tracking
+
+tiers:
+  - tier: P0
+    stories: [e73s01, e73s02]
+    description: "Core detection and runtime — unblock Grimoire deploy"
+  - tier: P1
+    stories: [e73s03]
+    description: "Stability — disk persistence and health monitoring"
+  - tier: P2
+    stories: [e73s04]
+    description: "Advanced — system deps and background processes"

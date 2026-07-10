@@ -1,0 +1,10 @@
+tasks:
+  - id: toml-parser
+    description: "Parse bigbase.toml from repo root using BurntSushi/toml"
+    verify: "go test ./components/deploy/... -run TOML"
+  - id: three-layer-merge
+    description: "Merge: bigbase.toml → site defaults → request body overrides"
+    verify: "go test ./components/deploy/... -run Merge"
+  - id: toml-validation
+    description: "Validate bigbase.toml schema with clear error messages"
+    verify: "go test ./components/deploy/... -run ValidateTOML"

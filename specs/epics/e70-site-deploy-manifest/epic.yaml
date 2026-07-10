@@ -1,0 +1,39 @@
+type: epic-shard
+context: domain
+id: e70
+title: "Site Deploy Manifest (bigbase.toml)"
+wsjf: 6.7
+total_bcps: 7
+status: planned
+tier: 2
+depends_on: [e57, e67]
+note: "4 stories, 7 BCPs. TOML-based deploy manifest with site-level defaults and CI template integration. Blocked by e57 (site schema changes needed for deploy_defaults)."
+stories:
+  - id: e70s01
+    title: "Persist deploy defaults on site record"
+    bcps: 2
+    status: pending
+    depends_on: [e57]
+    spec: e70s01-spec.md
+    tasks: e70s01-tasks.yaml
+  - id: e70s02
+    title: "bigbase.toml manifest parsing in repository root"
+    bcps: 2
+    status: pending
+    depends_on: [e70s01]
+    spec: e70s02-spec.md
+    tasks: e70s02-tasks.yaml
+  - id: e70s03
+    title: "Parameterized CI templates with deploy defaults"
+    bcps: 1
+    status: pending
+    depends_on: [e67, e70s01]
+    spec: e70s03-spec.md
+    tasks: e70s03-tasks.yaml
+  - id: e70s04
+    title: "static-sidecar app profile"
+    bcps: 2
+    status: pending
+    depends_on: [e70s02]
+    spec: e70s04-spec.md
+    tasks: e70s04-tasks.yaml

@@ -1,0 +1,19 @@
+tasks:
+  - id: system-deps-config
+    description: "Add SystemDeps field to Manifest struct"
+    verify: "go test ./components/deploy/... -run SystemDeps"
+  - id: apt-install
+    description: "Run apt-get install for system deps before uv sync"
+    verify: "go test ./components/deploy/... -run AptInstall"
+  - id: allowlist
+    description: "Sandbox: only allowlisted apt packages"
+    verify: "go test ./components/deploy/... -run Allowlist"
+  - id: background-processes-spec
+    description: "Add BackgroundProcesses to Spec struct"
+    verify: "go test ./components/deploy/... -run BackgroundProcesses"
+  - id: multi-process-supervisor
+    description: "Extend Supervisor to track main + N background processes"
+    verify: "go test ./components/deploy/... -run MultiProcess"
+  - id: verify-regression
+    description: "Confirm existing single-process deployments unaffected"
+    verify: "go test ./components/deploy/..."

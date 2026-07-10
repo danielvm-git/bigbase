@@ -1,0 +1,10 @@
+tasks:
+  - id: add-column
+    description: "Add deploy_defaults JSON column to sites table migration"
+    verify: "go test ./components/sites/... -run Migration"
+  - id: crud-endpoints
+    description: "Accept deploy_defaults in POST/PUT site endpoints, include in GET"
+    verify: "go test ./components/sites/... -run DeployDefaults"
+  - id: validate-schema
+    description: "Validate deploy_defaults schema (framework, build_command, env) on write"
+    verify: "go test ./components/sites/... -run ValidateDefaults"
