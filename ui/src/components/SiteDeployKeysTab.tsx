@@ -108,7 +108,7 @@ function GenerateModal({
             wordBreak: 'break-all',
           }}>
             <code style={{ flex: 1 }}>{result.key}</code>
-            <CopyButton text={result.key} />
+            <CopyButton value={result.key} />
           </div>
           <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
             <Button variant="primary" size="sm" onClick={handleClose}>
