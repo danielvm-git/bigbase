@@ -2,8 +2,8 @@ type: session-state
 context: infra
 active_flow: build_epic
 active_epic_id: e74
-active_story_id: e74s01
-active_story_status: pending
+active_story_id: e74s02
+active_story_status: done
 release:
   target_version: 2.73.0
   codename: "Python Runtime"
@@ -14,31 +14,30 @@ release:
 metrics:
   session_start: '2026-07-10T10:56:00-03:00'
   session_end: null
-  epics_completed: 60
-  stories_completed: 183
+  epics_completed: 61
+  stories_completed: 185
   bcps_per_hour: 0
 epic_cycle:
-  step: 3
-  story_bcps: 3
-  story: e74s01
-  audit_result: null
-  completed_steps: ["0", "1", "2"]
-  note: "e74s01 steps 0-2 complete (threat model, survey, plan). Moving to kickoff branch."
+  step: 8
+  story_bcps: 5
+  story: e74
+  audit_result: pass
+  completed_steps: ["0", "1", "2", "3", "4", "5", "6", "7", "8"]
+  note: "Epic e74 complete — both stories (REST endpoints + UI tab) merged to main."
   fast_mode: false
-  story_complete: false
+  story_complete: true
 bug_cycle:
   current_step: null
   completed_steps: []
   bug_file: null
 git:
   branch: main
-  hash: 1da01dbb
+  hash: aaec1092
   worktree: null
   ci_status: success
 handoff:
-  last_step_completed: "preflight-setup — state.yaml configured for e74"
-  open_decisions:
-    - "e74 build cycle: step 0 next (security-review)"
-  next_skill: "security-review"
-  summary: "e74 preflight complete. Starting Step 0 threat model."
-  context: "main @ 1da01dbb. e74 (self-service deploy tokens) active. Story e74s01 (REST) first."
+  last_step_completed: "e74 finalize — execution-status and state updated"
+  open_decisions: []
+  next_skill: ""
+  summary: "Epic e74 (Self-Service Deploy Tokens) complete. 5 BCPs delivered: 3 REST endpoints + UI tab. Merged to main."
+  context: "e74s01: POST/GET/DELETE /api/sites/{id}/deploy-keys with auth, validation, rate-limiting. e74s02: SiteDeployKeysTab component with generate modal, revoke confirmation, and all states."
