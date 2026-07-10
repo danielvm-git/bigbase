@@ -1,3 +1,10 @@
+## [2.76.1](https://github.com/danielvm-git/bigbase/compare/v2.76.0...v2.76.1) (2026-07-10)
+
+
+### Bug Fixes
+
+* **ui:** correct CopyButton prop name in SiteDeployKeysTab ([929beee](https://github.com/danielvm-git/bigbase/commit/929beee072f28739181c4150f870f4ff812e3ff6))
+
 # [2.76.0](https://github.com/danielvm-git/bigbase/compare/v2.75.0...v2.76.0) (2026-07-10)
 
 
