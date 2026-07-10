@@ -83,8 +83,7 @@ func (d *testDB) Migrate(migration string) error {
 }
 
 func TestCORSDefaultClosed(t *testing.T) {
-	// When no origins configured, CORS middleware is a no-op.
-	// Requests pass through unchanged, no Access-Control-* headers set.
+	// Empty allowlist denies cross-origin Origin; same-origin still passes.
 	var allowedOrigins []string
 	cors := CORS(allowedOrigins)
 
@@ -93,22 +92,30 @@ func TestCORSDefaultClosed(t *testing.T) {
 		_, _ = w.Write([]byte(`{"ok":true}`))
 	}))
 
-	req := httptest.NewRequest("GET", "/api/auth/me", nil)
-	req.Header.Set("Origin", "https://any-spa.example.com")
-	rec := httptest.NewRecorder()
+	t.Run("cross-origin denied", func(t *testing.T) {
+		req := httptest.NewRequest("GET", "/api/auth/me", nil)
+		req.Host = "api.example.com"
+		req.Header.Set("Origin", "https://evil.com")
+		rec := httptest.NewRecorder()
+		handler.ServeHTTP(rec, req)
+		if rec.Code != http.StatusForbidden {
+			t.Errorf("expected 403, got %d", rec.Code)
+		}
+		if rec.Header().Get("Access-Control-Allow-Origin") != "" {
+			t.Errorf("expected no ACAO, got %q", rec.Header().Get("Access-Control-Allow-Origin"))
+		}
+	})
 
-	handler.ServeHTTP(rec, req)
-
-	if rec.Code != http.StatusOK {
-		t.Errorf("expected 200, got %d", rec.Code)
-	}
-	if rec.Header().Get("Access-Control-Allow-Origin") != "" {
-		t.Errorf("expected no Access-Control-Allow-Origin header, got %q", rec.Header().Get("Access-Control-Allow-Origin"))
-	}
-	body := rec.Body.String()
-	if body != `{"ok":true}` {
-		t.Errorf("expected body %q, got %q", `{"ok":true}`, body)
-	}
+	t.Run("same-origin allowed", func(t *testing.T) {
+		req := httptest.NewRequest("GET", "/api/auth/me", nil)
+		req.Host = "api.example.com"
+		req.Header.Set("Origin", "http://api.example.com")
+		rec := httptest.NewRecorder()
+		handler.ServeHTTP(rec, req)
+		if rec.Code != http.StatusOK {
+			t.Errorf("expected 200, got %d", rec.Code)
+		}
+	})
 }
 
 func TestCORSPreflightAllowed(t *testing.T) {
