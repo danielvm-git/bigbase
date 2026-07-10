@@ -14,6 +14,7 @@ import (
 	"testing"
 
 	"github.com/danielvm/bigbase/components/db"
+	"github.com/danielvm/bigbase/components/deploy"
 	"github.com/danielvm/bigbase/components/git"
 	"github.com/danielvm/bigbase/components/sites"
 	"github.com/danielvm/bigbase/kernel"
@@ -612,9 +613,10 @@ func TestSiteManifestGetAndSave(t *testing.T) {
 
 	g := git.New(git.Options{DB: d, Logger: logger, Dir: gitDir})
 	s := sites.New(sites.Options{
-		DB:     d,
-		Logger: logger,
-		GitDir: gitDir,
+		DB:               d,
+		Logger:           logger,
+		GitDir:           gitDir,
+		ValidateManifest: deploy.ValidateManifest,
 	})
 	k.Register(d)
 	k.Register(g)

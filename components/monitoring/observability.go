@@ -11,7 +11,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/danielvm/bigbase/components/deploy"
 	"github.com/danielvm/bigbase/components/internal/eventrecorder"
 	"github.com/danielvm/bigbase/kernel"
 )
@@ -20,6 +19,28 @@ const (
 	perCategoryEventLimit = 20
 	relatedEventsWindow   = 30 * time.Minute
 )
+
+// Diagnosis is an AI-generated deploy failure explanation (owned here for ECC).
+type Diagnosis struct {
+	Diagnosis string `json:"diagnosis"`
+	Model     string `json:"model"`
+	CreatedAt string `json:"created_at"`
+}
+
+// CorrelatedEvent is a single related monitoring event.
+type CorrelatedEvent struct {
+	Hook      string         `json:"hook"`
+	Data      map[string]any `json:"data"`
+	Timestamp string         `json:"timestamp"`
+}
+
+// RelatedEvents bundles correlated events for a deployment window.
+type RelatedEvents struct {
+	DeployID    string                       `json:"deploy_id"`
+	WindowStart string                       `json:"window_start"`
+	WindowEnd   string                       `json:"window_end"`
+	Events      map[string][]CorrelatedEvent `json:"events"`
+}
 
 var knownEventHooks = []string{
 	"mutation", "request",
@@ -138,11 +159,11 @@ func (m *Monitoring) snapshotRelatedEvents(ctx context.Context, deployID, siteID
 		`UPDATE deployments SET related_events_snapshot = ? WHERE id = ?`, string(payload), deployID)
 }
 
-func (m *Monitoring) correlateEvents(ctx context.Context, siteID string, start, end time.Time) deploy.RelatedEvents {
-	out := deploy.RelatedEvents{
+func (m *Monitoring) correlateEvents(ctx context.Context, siteID string, start, end time.Time) RelatedEvents {
+	out := RelatedEvents{
 		WindowStart: start.UTC().Format(time.RFC3339),
 		WindowEnd:   end.UTC().Format(time.RFC3339),
-		Events: map[string][]deploy.CorrelatedEvent{
+		Events: map[string][]CorrelatedEvent{
 			"db_schema_changes": {},
 			"repo_changes":      {},
 			"data_mutations":    {},
@@ -171,7 +192,7 @@ func (m *Monitoring) correlateEvents(ctx context.Context, siteID string, start, 
 			continue
 		}
 		categoryCounts[cat]++
-		out.Events[cat] = append(out.Events[cat], deploy.CorrelatedEvent{
+		out.Events[cat] = append(out.Events[cat], CorrelatedEvent{
 			Hook:      ev.Hook,
 			Data:      ev.Data,
 			Timestamp: ev.Timestamp,
@@ -251,9 +272,9 @@ func (m *Monitoring) llmModel() string {
 	return "deepseek-chat"
 }
 
-// GetDiagnosis implements deploy.DeployDiagnosisReader.
-func (m *Monitoring) GetDiagnosis(ctx context.Context, deployID string) (deploy.Diagnosis, bool, error) {
-	var d deploy.Diagnosis
+// GetDiagnosis returns a stored deploy failure diagnosis.
+func (m *Monitoring) GetDiagnosis(ctx context.Context, deployID string) (Diagnosis, bool, error) {
+	var d Diagnosis
 	err := m.db.QueryRowContext(ctx,
 		`SELECT diagnosis, model, created_at FROM deploy_diagnoses WHERE deploy_id = ?`, deployID).
 		Scan(&d.Diagnosis, &d.Model, &d.CreatedAt)
@@ -263,16 +284,16 @@ func (m *Monitoring) GetDiagnosis(ctx context.Context, deployID string) (deploy.
 	return d, true, nil
 }
 
-// GetRelatedEvents implements deploy.DeployRelatedEventsReader.
-func (m *Monitoring) GetRelatedEvents(ctx context.Context, deployID string) (deploy.RelatedEvents, bool, error) {
+// GetRelatedEvents returns correlated events for a deployment.
+func (m *Monitoring) GetRelatedEvents(ctx context.Context, deployID string) (RelatedEvents, bool, error) {
 	var snapshot string
 	err := m.db.QueryRowContext(ctx,
 		`SELECT COALESCE(related_events_snapshot,'') FROM deployments WHERE id = ?`, deployID).Scan(&snapshot)
 	if err != nil {
-		return deploy.RelatedEvents{}, false, nil
+		return RelatedEvents{}, false, nil
 	}
 	if snapshot != "" {
-		var rel deploy.RelatedEvents
+		var rel RelatedEvents
 		if json.Unmarshal([]byte(snapshot), &rel) == nil {
 			return rel, true, nil
 		}
@@ -281,7 +302,7 @@ func (m *Monitoring) GetRelatedEvents(ctx context.Context, deployID string) (dep
 	if err := m.db.QueryRowContext(ctx,
 		`SELECT COALESCE(site_id,''), created_at FROM deployments WHERE id = ?`, deployID).
 		Scan(&siteID, &createdAt); err != nil {
-		return deploy.RelatedEvents{}, false, nil
+		return RelatedEvents{}, false, nil
 	}
 	end, _ := time.Parse(time.RFC3339, createdAt)
 	if end.IsZero() {

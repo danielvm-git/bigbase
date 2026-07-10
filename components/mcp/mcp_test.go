@@ -15,7 +15,6 @@ import (
 	mcpsdk "github.com/modelcontextprotocol/go-sdk/mcp"
 	_ "modernc.org/sqlite"
 
-	"github.com/danielvm/bigbase/components/deploy"
 	"github.com/danielvm/bigbase/components/mcp"
 	"github.com/danielvm/bigbase/kernel"
 )
@@ -189,8 +188,8 @@ exit status 1', '2026-06-19T13:00:00Z')`,
 // mockDeployer is a DeployTrigger that returns a fixed deployment.
 type mockDeployer struct{}
 
-func (m *mockDeployer) Trigger(_ context.Context, repoID, branch, siteName, siteID string, _ []string, _ string, _ string) (*deploy.Deployment, error) {
-	return &deploy.Deployment{
+func (m *mockDeployer) Trigger(_ context.Context, repoID, branch, siteName, siteID string, _ []string, _ string, _ string) (*mcp.DeploymentResult, error) {
+	return &mcp.DeploymentResult{
 		ID:     fmt.Sprintf("dep-%s-%s", repoID, branch),
 		Status: "building",
 		URL:    fmt.Sprintf("https://%s.bigbase.click", siteName),
