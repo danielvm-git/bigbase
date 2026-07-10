@@ -10,9 +10,14 @@ export function CopyButton({ value, label, className = '' }: CopyButtonProps) {
   const [copied, setCopied] = useState(false)
 
   async function handleCopy() {
-    await navigator.clipboard.writeText(value)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
+    try {
+      await navigator.clipboard.writeText(value)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch (err) {
+      console.error('Failed to copy to clipboard:', err)
+      alert('Failed to copy to clipboard. Please try again.')
+    }
   }
 
   return (
