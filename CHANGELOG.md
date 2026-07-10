@@ -1,3 +1,10 @@
+## [2.76.4](https://github.com/danielvm-git/bigbase/compare/v2.76.3...v2.76.4) (2026-07-10)
+
+
+### Bug Fixes
+
+* **ui:** CopyButton silent failure + pre-existing ESLint cleanup ([db94b7c](https://github.com/danielvm-git/bigbase/commit/db94b7c03f56600323aff8c9132e7d98185ff8b2)), closes [#68](https://github.com/danielvm-git/bigbase/issues/68)
+
 ## [2.76.3](https://github.com/danielvm-git/bigbase/compare/v2.76.2...v2.76.3) (2026-07-10)
 
 
