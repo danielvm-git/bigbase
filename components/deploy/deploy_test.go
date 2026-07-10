@@ -1000,6 +1000,11 @@ func TestDeployCustomSiteName(t *testing.T) {
 	if !strings.HasPrefix(url, "https://my-custom-slug.bigbase.click") {
 		t.Fatalf("url = %q, want prefix https://my-custom-slug.bigbase.click", url)
 	}
+
+	depID, _ := created["id"].(string)
+	if depID != "" {
+		waitForDeploymentTerminal(t, handler, depID, 5*time.Second)
+	}
 }
 
 func TestDeployLogColumnExists(t *testing.T) {
