@@ -12,8 +12,7 @@ BigBase Sites needs to list private GitHub repositories, mirror them into intern
 
 - Use a **GitHub App** (not user OAuth alone) for repo listing, clone tokens, and webhooks.
 - Mirror with `git clone --bare` into `data/git/{id}.git` and register `git_repos`.
-- Push deploys via kernel event **`onGitHubPush`**; **deploy** component subscribes and calls `TriggerDeployment`.
-- **Sites** component exposes `/api/sites` and delegates deploy to `TriggerDeploy` injected from `main.go` (composition root).
+- **Sites** component exposes `/api/sites` and delegates deploy via `TriggerDeploy` callback injected from `main.go` (composition root).
 
 ## Configuration
 

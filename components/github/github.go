@@ -445,17 +445,6 @@ func (g *GitHub) handleWebhook(w http.ResponseWriter, r *http.Request) {
 
 	_ = g.fetchMirror(r.Context(), gitRepoID, payload.Repository.FullName)
 
-	if g.bus != nil {
-		_ = g.bus.Emit(kernel.Event{
-			Name: "onGitHubPush",
-			Data: map[string]any{
-				"git_repo_id": gitRepoID,
-				"branch":      branch,
-				"full_name":   payload.Repository.FullName,
-			},
-		}, &kernel.Context{Logger: g.logger})
-	}
-
 	w.WriteHeader(http.StatusOK)
 }
 

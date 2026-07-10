@@ -1,9 +1,9 @@
 type: session-state
 context: infra
 active_flow: null
-active_epic_id: null
-active_story_id: null
-active_story_status: null
+active_epic_id: e72
+active_story_id: e72s04
+active_story_status: done
 release:
   target_version: 2.72.0
   codename: "Monitoring Observability"
@@ -20,21 +20,21 @@ metrics:
   stories_completed: 179
   bcps_per_hour: 0
 epic_cycle:
-  step: null
-  story_bcps: null
-  story: null
-  audit_result: null
-  completed_steps: []
-  note: "Epic e72 shipped — PR #64 merged to main (82dc4987)"
+  step: 8
+  story_bcps: 3
+  story: e72s04
+  audit_result: pass
+  completed_steps: ["0", "1", "2", "3", "4", "5", "6", "7", "8"]
+  note: "e72s04 complete — shipped in PR #64, merged to main @ 82dc4987 (v2.72.0)"
   fast_mode: false
-  story_complete: false
+  story_complete: true
 bug_cycle:
   current_step: null
   completed_steps: []
   bug_file: null
 git:
   branch: main
-  hash: 82dc4987
+  hash: d88ddf00
   worktree: null
   ci_status: success
 handoff:

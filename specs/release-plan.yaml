@@ -486,7 +486,7 @@ epics:
   file: epics/e64-schema-designer/epic.yaml
 - id: e65
   title: "Deploy \u2014 Preview Environments"
-  wsjf: 2.5
+  wsjf: 10.5
   mode: capsule
   tier: 2
   status: planned
@@ -494,7 +494,7 @@ epics:
   - e51
   - e57
   - e59s02
-  note: "2 stories, 2 BCPs. Depends on e59s02 (DB Branching) only \u2014 NOT all of e59. Unblocks as soon as branching ships."
+  note: "2 stories, 2 BCPs. Ships immediately after e59s02 in Wave 3. Consumer: big-library content review pipeline."
   capsule_dir: epics/e65-preview-envs
   file: epics/e65-preview-envs/epic.yaml
 - id: e66
