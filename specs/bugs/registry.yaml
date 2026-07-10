@@ -749,6 +749,19 @@ bugs:
     risk_level: low
     regression_guards:
       - 255/256 deploy tests pass (pre-existing flaky TestDeployStopShutsDownStaticServer)
+  - id: BUG-2026-07-10T160207
+    date: "2026-07-10"
+    severity: low
+    priority: low
+    scope: deploy
+    summary: "Manifest path traversal (CWE-22) — user-controlled manifestPath escapes build dir"
+    status: fixed
+    files_changed:
+      - components/deploy/manifest.go
+    approach: "Added path containment check to LoadManifestPath: reject absolute paths, resolve and verify result stays within project directory via filepath.Abs + strings.HasPrefix"
+    risk_level: low
+    regression_guards:
+      - All 34 manifest tests pass
   - id: BUG-2026-07-10T160209
     date: "2026-07-10"
     severity: low
