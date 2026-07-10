@@ -1,3 +1,10 @@
+## [2.76.5](https://github.com/danielvm-git/bigbase/compare/v2.76.4...v2.76.5) (2026-07-10)
+
+
+### Bug Fixes
+
+* **ui:** Tooltip event handler types — MouseEvent<HTMLElement> to match HTMLAttributes<HTMLElement> ([57b1fcc](https://github.com/danielvm-git/bigbase/commit/57b1fcc2a1a610e3e59e607e415140ac15a2f68a))
+
 ## [2.76.4](https://github.com/danielvm-git/bigbase/compare/v2.76.3...v2.76.4) (2026-07-10)
 
 
