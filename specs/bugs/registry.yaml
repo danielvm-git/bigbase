@@ -602,3 +602,51 @@ bugs:
       - components/sites/sites_test.go TestSitesListReturnsAllSitesWithDeployments
 
 
+
+  - id: BUG-2026-07-10T160102
+    date: "2026-07-10"
+    severity: medium
+    priority: medium
+    scope: sites
+    summary: "Sites component split 1600+ lines — extract inline migration to constant"
+    file: specs/bugs/BUG-2026-07-10T160102-sites-component-split.md
+    status: fixed
+    files_changed:
+      - components/sites/sites.go
+    approach: "Extracted inline sites table migration SQL to const sitesMigration"
+    risk_level: low
+    regression_guards:
+      - components/sites/sites_test.go (all existing tests pass)
+
+  - id: BUG-2026-07-10T160103
+    date: "2026-07-10"
+    severity: low
+    priority: low
+    scope: forge
+    summary: "Forge component split 536 lines — split into entity files by concern"
+    file: specs/bugs/BUG-2026-07-10T160103-forge-component-split.md
+    status: fixed
+    files_changed:
+      - components/forge/forge.go
+      - components/forge/issues.go
+      - components/forge/labels.go
+      - components/forge/wiki.go
+    approach: "Split 535-line forge.go into 4 files: forge.go (types/routing, 229 lines), issues.go (issue CRUD, 189 lines), labels.go (label CRUD, 79 lines), wiki.go (wiki CRUD, 56 lines)"
+    risk_level: low
+    regression_guards:
+      - components/forge/forge_test.go (all 8 tests pass)
+
+  - id: BUG-2026-07-10T160107
+    date: "2026-07-10"
+    severity: medium
+    priority: medium
+    scope: api
+    summary: "SQL endpoint regex blocking — per-request regex compilation causing overhead"
+    file: specs/bugs/BUG-2026-07-10T160107-sql-endpoint-regex-blocking.md
+    status: fixed
+    files_changed:
+      - components/api/api.go
+    approach: "Pre-compiled regex patterns (internalTableRegexes, blockedKeywordRegexes, selectCountRegex) at init() instead of per-request regexp.Compile/regexp.MustCompile"
+    risk_level: low
+    regression_guards:
+      - components/api/api_test.go (all 83 tests pass)
