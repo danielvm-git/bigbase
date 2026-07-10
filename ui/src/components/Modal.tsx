@@ -40,6 +40,8 @@ function trapTabKey(e: KeyboardEvent, dialog: HTMLDivElement) {
 export function Modal({ open, onClose, title, children }: ModalProps) {
   const dialogRef = useRef<HTMLDivElement>(null)
   const triggerRef = useRef<Element | null>(null)
+  const onCloseRef = useRef(onClose)
+  onCloseRef.current = onClose
 
   useEffect(() => {
     if (!open) return
@@ -50,7 +52,7 @@ export function Modal({ open, onClose, title, children }: ModalProps) {
 
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        onClose()
+        onCloseRef.current()
         return
       }
       if (dialog) trapTabKey(e, dialog)
@@ -71,7 +73,7 @@ export function Modal({ open, onClose, title, children }: ModalProps) {
         triggerRef.current.focus()
       }
     }
-  }, [open, onClose])
+  }, [open])
 
   if (!open) return null
 
