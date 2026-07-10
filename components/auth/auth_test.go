@@ -35,6 +35,7 @@ func setupAuth(t *testing.T) (*auth.Auth, http.Handler, http.Handler) {
 	a := auth.New(auth.Options{DB: d, Logger: logger, Secret: "test-secret-32-chars!!!"})
 	a.SetOTPStore(auth.NewMapOTPStore())
 	a.SetRateLimitStore(auth.NewMapRateLimitStore())
+	a.SetLoginLockoutStore(auth.NewMapLoginLockoutStore())
 
 	k.Register(a)
 	k.Register(d)
@@ -940,6 +941,7 @@ func setupAuthWithGoogle(t *testing.T) (*auth.Auth, http.Handler, http.Handler) 
 	})
 	a.SetOTPStore(auth.NewMapOTPStore())
 	a.SetRateLimitStore(auth.NewMapRateLimitStore())
+	a.SetLoginLockoutStore(auth.NewMapLoginLockoutStore())
 
 	k.Register(a)
 	k.Register(d)
@@ -972,6 +974,7 @@ func setupAuthWithPublicURL(t *testing.T, publicURL string) (*auth.Auth, http.Ha
 	})
 	a.SetOTPStore(auth.NewMapOTPStore())
 	a.SetRateLimitStore(auth.NewMapRateLimitStore())
+	a.SetLoginLockoutStore(auth.NewMapLoginLockoutStore())
 
 	k.Register(a)
 	k.Register(d)
@@ -2155,6 +2158,7 @@ func setupAuthWithDB(t *testing.T) (*auth.Auth, http.Handler, http.Handler, *db.
 	a := auth.New(auth.Options{DB: d, Logger: logger, Secret: "test-secret-32-chars!!!"})
 	a.SetOTPStore(auth.NewMapOTPStore())
 	a.SetRateLimitStore(auth.NewMapRateLimitStore())
+	a.SetLoginLockoutStore(auth.NewMapLoginLockoutStore())
 
 	k.Register(a)
 	k.Register(d)

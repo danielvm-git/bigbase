@@ -1,6 +1,7 @@
 package auth_test
 
 import (
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -256,23 +257,24 @@ func TestRateLimitIntegration(t *testing.T) {
 	})
 	rlHandler := rl.Middleware(handler)
 
-	// Send 60 login POSTs from same IP — all should pass (wrong password → 401, not 429)
-	loginBody := `{"email":"rl-int@test.com","password":"wrong"}`
+	// Send 60 login POSTs from same IP — unique emails so per-account lockout
+	// (BUG-160003) does not fire; IP rate limiter is what we assert here.
 	for i := 0; i < 60; i++ {
+		body := fmt.Sprintf(`{"email":"rl-int-%d@test.com","password":"wrong"}`, i)
 		req := httptest.NewRequest("POST", "/api/auth/login",
-			strings.NewReader(loginBody))
+			strings.NewReader(body))
 		req.Header.Set("Content-Type", "application/json")
 		req.RemoteAddr = "10.99.99.1:9999"
 		w := httptest.NewRecorder()
 		rlHandler.ServeHTTP(w, req)
 		if w.Code == http.StatusTooManyRequests {
-			t.Fatalf("request %d: got unexpected 429 (rate limited too early)", i+1)
+			t.Fatalf("request %d: got unexpected 429 (rate limited too early) body=%s", i+1, w.Body.String())
 		}
 	}
 
-	// 61st request should be rate limited
+	// 61st request should be rate limited by IP middleware
 	req := httptest.NewRequest("POST", "/api/auth/login",
-		strings.NewReader(loginBody))
+		strings.NewReader(`{"email":"rl-int-60@test.com","password":"wrong"}`))
 	req.Header.Set("Content-Type", "application/json")
 	req.RemoteAddr = "10.99.99.1:9999"
 	w := httptest.NewRecorder()
@@ -281,7 +283,7 @@ func TestRateLimitIntegration(t *testing.T) {
 		t.Fatalf("request 61: expected 429, got %d", w.Code)
 	}
 
-	// Body should include error message
+	// Body should include IP rate-limit message (not account lockout)
 	if !strings.Contains(w.Body.String(), "rate limit exceeded") {
 		t.Fatalf("expected 'rate limit exceeded' in body, got %s", w.Body.String())
 	}

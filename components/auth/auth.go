@@ -91,6 +91,7 @@ type Auth struct {
 	publicURL          string
 	otpStore           OTPStore
 	rateLimitStore     RateLimitStore
+	loginLockoutStore  LoginLockoutStore
 }
 
 var _ kernel.Component = (*Auth)(nil)
@@ -184,6 +185,7 @@ func New(opts Options) *Auth {
 	}
 	a.otpStore = NewDBOTPStore(opts.DB)
 	a.rateLimitStore = NewDBRateLimitStore(opts.DB)
+	a.loginLockoutStore = NewDBLoginLockoutStore(opts.DB)
 	// CWE-601: OAuth redirect URI must not fall back to attacker-controlled Host header.
 	// Require a configured publicURL when OAuth (Google) is enabled.
 	// Tests bypass this guard — production must always set PUBLIC_URL.
@@ -306,6 +308,10 @@ func (a *Auth) Start(ctx *kernel.Context) error {
 		window_start TEXT NOT NULL
 	)`); err != nil {
 		return fmt.Errorf("migrate otp_rate_limits table: %w", err)
+	}
+
+	if err := a.db.Migrate(loginLockoutsMigration); err != nil {
+		return fmt.Errorf("migrate login_lockouts table: %w", err)
 	}
 
 	if err := a.db.Migrate(`CREATE TABLE IF NOT EXISTS audit_events (
@@ -739,20 +745,32 @@ func (a *Auth) handleLogin(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 	defer cancel()
 
+	if locked, retryAfter, err := a.loginLockoutStore.CheckLocked(ctx, email); err != nil {
+		a.logger.Error("login lockout check failed", "error", err)
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		return
+	} else if locked {
+		w.Header().Set("Retry-After", retryAfterHeader(retryAfter))
+		kernel.WriteJSON(w, http.StatusTooManyRequests, map[string]string{"error": "account temporarily locked"})
+		return
+	}
+
 	var userID, defaultOrgID int64
 	var passwordHash, role string
 	err := a.db.QueryRowContext(ctx,
 		"SELECT id, password_hash, role, COALESCE(default_org_id, 0) FROM users WHERE email = ?", email).Scan(&userID, &passwordHash, &role, &defaultOrgID)
 	if err != nil {
-		a.recordAudit("auth.login_failed", 0, email, getIP(r), nil)
-		kernel.WriteJSON(w, http.StatusUnauthorized, map[string]string{"error": "invalid email or password"})
+		a.respondLoginFailure(w, r, email)
 		return
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(passwordHash), []byte(req.Password)); err != nil {
-		a.recordAudit("auth.login_failed", 0, email, getIP(r), nil)
-		kernel.WriteJSON(w, http.StatusUnauthorized, map[string]string{"error": "invalid email or password"})
+		a.respondLoginFailure(w, r, email)
 		return
+	}
+
+	if err := a.loginLockoutStore.ClearFailures(ctx, email); err != nil {
+		a.logger.Error("clear login lockout failed", "error", err)
 	}
 
 	token, err := createJWT(userID, email, role, defaultOrgID, a.secret, a.accessExpiry)
@@ -1710,6 +1728,28 @@ func (a *Auth) SetOTPStore(s OTPStore) {
 // SetRateLimitStore sets the rate limit store. Used for testing.
 func (a *Auth) SetRateLimitStore(s RateLimitStore) {
 	a.rateLimitStore = s
+}
+
+// SetLoginLockoutStore sets the login lockout store. Used for testing.
+func (a *Auth) SetLoginLockoutStore(s LoginLockoutStore) {
+	a.loginLockoutStore = s
+}
+
+func (a *Auth) respondLoginFailure(w http.ResponseWriter, r *http.Request, email string) {
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	locked, retryAfter, err := a.loginLockoutStore.RecordFailure(ctx, email)
+	if err != nil {
+		a.logger.Error("login lockout record failed", "error", err)
+	}
+	a.recordAudit("auth.login_failed", 0, email, getIP(r), nil)
+	if locked {
+		w.Header().Set("Retry-After", retryAfterHeader(retryAfter))
+		kernel.WriteJSON(w, http.StatusTooManyRequests, map[string]string{"error": "account temporarily locked"})
+		return
+	}
+	kernel.WriteJSON(w, http.StatusUnauthorized, map[string]string{"error": "invalid email or password"})
 }
 
 // getIP extracts the IP address from request, stripping the port.
