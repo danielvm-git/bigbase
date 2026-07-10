@@ -1,3 +1,32 @@
+# [2.74.0](https://github.com/danielvm-git/bigbase/compare/v2.73.0...v2.74.0) (2026-07-10)
+
+
+### Bug Fixes
+
+* **auth,proxy:** deny cross-origin when CORS allowlist empty (CWE-942) ([a6c1b9a](https://github.com/danielvm-git/bigbase/commit/a6c1b9a12e3732fbb0170d6037919c04b719c298))
+* **auth:** add per-email login lockout after failed attempts (CWE-307) ([15be74d](https://github.com/danielvm-git/bigbase/commit/15be74d6fcf308e44be1ade7549a379a2960a10e))
+* **auth:** never use Host header for OAuth public URL (CWE-601) ([742b55f](https://github.com/danielvm-git/bigbase/commit/742b55f679da2346b47a3dd5677814574eece017))
+* **auth:** recover CWE-601 and CWE-287 security fixes from orphaned commits ([1f6bf9a](https://github.com/danielvm-git/bigbase/commit/1f6bf9ab254b17a44e1d7ad170934f4ddc7b2b1d))
+* **auth:** set Secure cookies behind TLS-terminating proxies (CWE-319) ([b47875c](https://github.com/danielvm-git/bigbase/commit/b47875c9d6ce403f7f3b6d509be0dd8d67154897))
+* **ctxo:** index Go tree by excluding packages/* from workspace discovery ([7b87970](https://github.com/danielvm-git/bigbase/commit/7b879700cb740fbcff359636d14930cb2b8db868))
+* **deploy:** export state machine and harden AppType enum (OCP) ([0c2fd4e](https://github.com/danielvm-git/bigbase/commit/0c2fd4e7c3822f6059c957fb4f8317f51b55ecea))
+* **deploy:** prevent manifest path traversal (CWE-22) ([36722e3](https://github.com/danielvm-git/bigbase/commit/36722e3d731d1da0179c0360d677bc6bdf2b3b19))
+* **deploy:** replace error string matching with sentinel errors ([4ca826f](https://github.com/danielvm-git/bigbase/commit/4ca826f62a212cff9a287041a38dc164205e676b))
+* **ecc:** remove cross-component production imports ([ddd7efb](https://github.com/danielvm-git/bigbase/commit/ddd7efb57df839db846eb0fecb3cc3acb093d09f))
+* **kernel:** remove dead ConfigSchema/Hooks interfaces, add Component compile checks ([34b197c](https://github.com/danielvm-git/bigbase/commit/34b197c676d972ef39ab3cd8fe08a320adae96e9))
+* **mcp,backup,proxy:** unify custom DBer interfaces with kernel.QueryExecDBer ([e47c703](https://github.com/danielvm-git/bigbase/commit/e47c703b4061f0a64cd606b037575e8b1b0da31a))
+* **realtime:** restrict WebSocket CheckOrigin to allowlist ([9f6a6df](https://github.com/danielvm-git/bigbase/commit/9f6a6df73344b8352287f61ce2caa5e7d455d7f1))
+
+
+### Features
+
+* **plan:** add e74 epic capsule for self-service deploy tokens ([ff074ef](https://github.com/danielvm-git/bigbase/commit/ff074ef8b2a0a1a240a4afc2516ae10aa1c5ad33))
+
+
+### Performance Improvements
+
+* **api:** pre-compile SQL endpoint security regex patterns ([d1bd852](https://github.com/danielvm-git/bigbase/commit/d1bd85207a2a3b403ed4b25ea5eb4df226b1347e))
+
 # [2.73.0](https://github.com/danielvm-git/bigbase/compare/v2.72.0...v2.73.0) (2026-07-10)
 
 
