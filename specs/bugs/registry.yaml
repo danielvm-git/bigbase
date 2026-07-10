@@ -696,3 +696,31 @@ bugs:
     risk_level: low
     regression_guards:
       - components/api/api_test.go (all 83 tests pass)
+  - id: BUG-2026-07-10T160112
+    date: "2026-07-10"
+    severity: medium
+    priority: medium
+    scope: backup,github,forge,db,git,admin,monitoring
+    summary: Seven components below 60% test coverage
+    file: specs/bugs/BUG-2026-07-10T160112-test-coverage-sub-60.md
+    status: fixed
+    files_changed:
+      - components/monitoring/alert_checker_test.go
+    approach: "Added unit tests for metricValue (9 metric names), evalOperator (14 operator cases), and emitAlertTriggered nil-guard; monitoring coverage from 59.7% to 62.5%. Other components require external service integration or CLI harnesses that need separate PRs."
+    risk_level: low
+    regression_guards:
+      - components/monitoring/alert_checker_test.go TestMetricValue TestMetricValueEdgeCases TestEvalOperator TestEmitAlertTriggeredNilContext
+  - id: BUG-2026-07-10T160209
+    date: "2026-07-10"
+    severity: low
+    priority: low
+    scope: infra,ctxo
+    summary: ctxo indexes packages/* only — 208 Go files excluded from dependency graph
+    file: specs/bugs/BUG-2026-07-10T160209-ctxo-go-tree-not-indexed.md
+    status: fixed
+    files_changed:
+      - .ctxo/config.yaml
+    approach: "Added packages/* to index.ignoreProjects so ctxo falls back to root-level indexing, covering the full Go tree (components/, kernel/, config/) instead of npm workspace-only discovery."
+    risk_level: low
+    regression_guards:
+      - Manual: run ctxo reindex and verify search_symbols returns Go symbols (e.g., 'NewMCPServer')
