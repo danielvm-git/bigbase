@@ -1,6 +1,6 @@
 type: session-state
 context: infra
-active_flow: null
+active_flow: fix_bug
 active_epic_id: null
 active_story_id: null
 active_story_status: null
@@ -27,21 +27,21 @@ epic_cycle:
   fast_mode: false
   story_complete: true
 bug_cycle:
-  current_step: null
-  completed_steps: []
-  bug_file: null
+  current_step: 5
+  completed_steps: [1, 2, 3, 4]
+  bug_file: specs/bugs/BUG-2026-07-10T160003-login-no-brute-force-protection.md
 git:
-  branch: main
+  branch: fix/BUG-160003-login-lockout
   hash: 8d48decc
   worktree: null
   ci_status: success
 handoff:
-  last_step_completed: "Bands 1+2: e73 Python runtime shipped (4 stories, 8 BCP). e70 capsule ready."
+  last_step_completed: "BUG-160003 login lockout implemented and tests green"
   open_decisions:
     - "Bootstrap mcp:provision keys via admin CreateAPIKey before MCP write tools work"
     - "e70 capsule ready at specs/epics/e70-site-deploy-manifest/ -- depends on e57 schema"
     - "e74 capsule ready at specs/epics/e74-self-service-deploy-tokens/ -- self-service deploy tokens via REST + UI (2 stories, 5 BCPs)"
     - "Issues #41, #43 deferred to e61, e66. #44 closed. #45 open as someday-marker."
-  next_skill: "build-epic e57 -- then e70 unlocks"
-  summary: "e73 Python runtime shipped. #60, #42, #62 closed. e74 scoped. e70 capsule ready. Ready for Band 3."
-  context: "main @ 8d48decc. v3.0.0 planning. e57 is the next step. e74 (deploy token self-service) created after security review."
+  next_skill: release-branch
+  summary: "fix-bug queue — landing BUG-160003, then 160008 next."
+  context: "fix_bug cycle step 5 — release BUG-160003 login brute-force protection."

@@ -1,6 +1,70 @@
 type: bug-registry
 context: infra
 bugs:
+  - id: BUG-2026-07-10T160001
+    date: "2026-07-10"
+    severity: high
+    priority: critical
+    scope: auth
+    summary: OAuth redirect URI uses attacker-controlled Host when publicURL unset (CWE-601)
+    file: specs/bugs/BUG-2026-07-10T160001-oauth-host-header-poisoning.md
+    status: fixed
+    audit_source: specs/audit-code-2026-07-10.md
+    files_changed:
+      - components/auth/auth.go
+      - components/auth/auth_test.go
+    approach: Added isTestMode() guard in New() that panics in production when googleClientID is set but publicURL is empty, preventing attacker-controlled Host header from being used in OAuth redirect URIs. Rewrote TestOAuthPublicURLFallback as TestOAuthPublicURLOrDefaultIgnoresHostHeader.
+    risk_level: low
+    regression_guards:
+      - components/auth/auth_test.go TestOAuthPublicURLOrDefaultIgnoresHostHeader
+    note: Fix exists in orphaned git commit 8d217c9d — needs recovery
+  - id: BUG-2026-07-10T160002
+    date: "2026-07-10"
+    severity: high
+    priority: critical
+    scope: auth
+    summary: API key scopes not enforced in auth middleware — full org access (CWE-287)
+    file: specs/bugs/BUG-2026-07-10T160002-api-key-scope-bypass.md
+    status: fixed
+    audit_source: specs/audit-code-2026-07-10.md
+    files_changed:
+      - components/auth/auth.go
+      - components/auth/auth_test.go
+      - components/auth/apikeys_test.go
+    approach: Replaced ResolveAPIKey (org-only, no scopes) with ResolveOrgKey (returns scopes + requires site_id IS NULL) in Bearer token middleware. Added ctxOrgKeyScopes context key and OrgKeyScopesFromContext() exporter.
+    risk_level: low
+    regression_guards:
+      - components/auth/auth_test.go middleware_injects_org_key_scopes_into_context
+      - components/auth/apikeys_test.go TestAPIKeys/resolve_api_key_to_org_context
+    note: Fix exists in orphaned git commit c83772f2 — needs recovery
+  - id: BUG-2026-07-10T160003
+    date: "2026-07-10"
+    severity: high
+    priority: critical
+    scope: auth
+    summary: Password login has no rate limiting or lockout (CWE-307)
+    file: specs/bugs/BUG-2026-07-10T160003-login-no-brute-force-protection.md
+    status: fixed
+    audit_source: specs/audit-code-2026-07-10.md
+    files_changed:
+      - components/auth/loginlockout.go
+      - components/auth/auth.go
+      - components/auth/loginlockout_test.go
+      - components/auth/store_inmemory_test.go
+    approach: Added LoginLockoutStore with per-email failed attempt tracking; lock account for 15 minutes after 5 failures within 15 minutes; clear on successful login.
+    risk_level: low
+    regression_guards:
+      - components/auth/loginlockout_test.go TestLoginLockoutAfterMaxFailures
+      - components/auth/loginlockout_test.go TestLoginClearsLockoutOnSuccess
+  - id: BUG-2026-07-10T160004
+    date: "2026-07-10"
+    severity: high
+    priority: high
+    scope: auth,mcp,monitoring,sites
+    summary: Four production cross-component direct imports violate ECC
+    file: specs/bugs/BUG-2026-07-10T160004-ecc-cross-component-imports.md
+    status: open
+    audit_source: specs/audit-code-2026-07-10.md
   - id: BUG-2026-07-10T160005
     date: "2026-07-10"
     severity: high
@@ -47,6 +111,80 @@ bugs:
     regression_guards:
       - go test ./kernel/ ./components/backup/ ./components/proxy/
       - go test ./components/mcp/ (blocked by pre-existing deploy errors)
+  - id: BUG-2026-07-10T160006
+    date: "2026-07-10"
+    severity: high
+    priority: high
+    scope: kernel,auth,proxy,deploy,sites
+    summary: WithProjectID has zero production callers — e57 blocker
+    file: specs/bugs/BUG-2026-07-10T160006-withprojectid-not-activated.md
+    status: deferred
+    deferred_to: e57
+    audit_source: specs/audit-code-2026-07-10.md
+  - id: BUG-2026-07-10T160008
+    date: "2026-07-10"
+    severity: high
+    priority: high
+    scope: auth
+    summary: OAuth callback paths use PublicURLOrDefault Host fallback
+    file: specs/bugs/BUG-2026-07-10T160008-oauth-callback-host-header.md
+    status: open
+    audit_source: specs/audit-code-2026-07-10.md
+  - id: BUG-2026-07-10T160108
+    date: "2026-07-10"
+    severity: medium
+    priority: medium
+    scope: auth
+    summary: Refresh token rotation logic not fully verified (CWE-613)
+    file: specs/bugs/BUG-2026-07-10T160108-refresh-token-rotation-unverified.md
+    status: open
+    audit_source: specs/audit-code-2026-07-10.md
+  - id: BUG-2026-07-10T160110
+    date: "2026-07-10"
+    severity: medium
+    priority: medium
+    scope: auth
+    summary: OAuth/token cookies use Secure: r.TLS != nil behind TLS proxy (CWE-319)
+    file: specs/bugs/BUG-2026-07-10T160110-oauth-cookie-secure-flag.md
+    status: open
+    audit_source: specs/audit-code-2026-07-10.md
+  - id: BUG-2026-07-10T160111
+    date: "2026-07-10"
+    severity: medium
+    priority: high
+    scope: auth
+    summary: JWT generation lacks project_id claim for e57 scoping
+    file: specs/bugs/BUG-2026-07-10T160111-jwt-missing-project-id-claim.md
+    status: deferred
+    deferred_to: e57
+    audit_source: specs/audit-code-2026-07-10.md
+  - id: BUG-2026-07-10T160202
+    date: "2026-07-10"
+    severity: medium
+    priority: low
+    scope: auth
+    summary: auth.go 1756 lines — split handlers by concern
+    file: specs/bugs/BUG-2026-07-10T160202-auth-handler-monolith.md
+    status: open
+    audit_source: specs/audit-code-2026-07-10.md
+  - id: BUG-2026-07-10T160206
+    date: "2026-07-10"
+    severity: low
+    priority: medium
+    scope: realtime
+    summary: WebSocket accepts all origins — TODO in production
+    file: specs/bugs/BUG-2026-07-10T160206-websocket-origin-unrestricted.md
+    status: open
+    audit_source: specs/audit-code-2026-07-10.md
+  - id: BUG-2026-07-10T160208
+    date: "2026-07-10"
+    severity: low
+    priority: low
+    scope: auth
+    summary: Empty CORS allowlist passes through — comment says closed (CWE-942)
+    file: specs/bugs/BUG-2026-07-10T160208-cors-empty-allowlist-open.md
+    status: open
+    audit_source: specs/audit-code-2026-07-10.md
   - id: BUG-2026-07-09T001200
     date: "2026-07-09"
     severity: high
