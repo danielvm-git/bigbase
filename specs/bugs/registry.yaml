@@ -1,6 +1,52 @@
 type: bug-registry
 context: infra
 bugs:
+  - id: BUG-2026-07-10T160005
+    date: "2026-07-10"
+    severity: high
+    priority: high
+    scope: mcp
+    summary: MCP error details leaked at 13+ sites (CWE-200) — raw error messages exposed to MCP clients
+    file: specs/bugs/BUG-2026-07-10T160005-mcp-error-details-leaked.md
+    status: fixed
+    files_changed:
+      - components/mcp/mcp.go
+    approach: Replaced 14 fmt.Sprintf("Error: %v", err) patterns with logger.Error + generic user-facing messages; removed raw Go error details from all tool responses
+    risk_level: low
+    regression_guards:
+      - components/mcp/mcp_test.go
+  - id: BUG-2026-07-10T160106
+    date: "2026-07-10"
+    severity: medium
+    priority: medium
+    scope: mcp
+    summary: NewMCPServer god function 632 lines — monolithic tool registration
+    file: specs/bugs/BUG-2026-07-10T160106-newmcpserver-god-function.md
+    status: fixed
+    files_changed:
+      - components/mcp/mcp.go
+    approach: Extracted 8 register methods (ping, knowledge, deploy, CI template, repo, site, site key, auth policy) from NewMCPServer; each method handles a logical group of tool registrations
+    risk_level: low
+    regression_guards:
+      - components/mcp/mcp_test.go
+  - id: BUG-2026-07-10T160109
+    date: "2026-07-10"
+    severity: low
+    priority: low
+    scope: mcp,backup,proxy,kernel
+    summary: Custom DBer interfaces duplicated across mcp, backup, proxy — should use shared type
+    file: specs/bugs/BUG-2026-07-10T160109-custom-dber-interfaces.md
+    status: fixed
+    files_changed:
+      - kernel/dber.go
+      - components/mcp/mcp.go
+      - components/backup/backup.go
+      - components/proxy/proxy.go
+    approach: Added kernel.QueryExecDBer (minimal query/exec interface without Migrate); replaced all 3 custom DBer interfaces with type alias to kernel.QueryExecDBer; removed unused database/sql imports
+    risk_level: low
+    regression_guards:
+      - go test ./kernel/ ./components/backup/ ./components/proxy/
+      - go test ./components/mcp/ (blocked by pre-existing deploy errors)
   - id: BUG-2026-07-09T001200
     date: "2026-07-09"
     severity: high
