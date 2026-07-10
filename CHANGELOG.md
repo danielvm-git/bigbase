@@ -1,3 +1,18 @@
+# [2.73.0](https://github.com/danielvm-git/bigbase/compare/v2.72.0...v2.73.0) (2026-07-10)
+
+
+### Bug Fixes
+
+* remove dead onGitHubPush event emitter and fix ADR 0003 ([26fafb0](https://github.com/danielvm-git/bigbase/commit/26fafb0c18360e16da0b7e7600befc27a7b462b8)), closes [#60](https://github.com/danielvm-git/bigbase/issues/60)
+
+
+### Features
+
+* complete e73 Python runtime + planning for e70 (Bands 1+2) ([9577664](https://github.com/danielvm-git/bigbase/commit/9577664a9061b5a36635287592aeedb3d2ca4a1c)), closes [#41](https://github.com/danielvm-git/bigbase/issues/41) [#43](https://github.com/danielvm-git/bigbase/issues/43) [#44](https://github.com/danielvm-git/bigbase/issues/44) [#60](https://github.com/danielvm-git/bigbase/issues/60) [#42](https://github.com/danielvm-git/bigbase/issues/42) [#62](https://github.com/danielvm-git/bigbase/issues/62) [#44](https://github.com/danielvm-git/bigbase/issues/44) [#58](https://github.com/danielvm-git/bigbase/issues/58) [#41](https://github.com/danielvm-git/bigbase/issues/41) [#43](https://github.com/danielvm-git/bigbase/issues/43) [#45](https://github.com/danielvm-git/bigbase/issues/45)
+* **e73s01:** add pyproject.toml detection and uv package manager ([92edecd](https://github.com/danielvm-git/bigbase/commit/92edecd4dc1523c77f1bf33eb8a20d9f41beb8ca))
+* **e73s03:** add writable disk and health check polling to Supervisor ([248172c](https://github.com/danielvm-git/bigbase/commit/248172c98589f51939c68bf7ad5dd084be02aaae))
+* **e73s04:** add system dependencies and background process support ([8d48dec](https://github.com/danielvm-git/bigbase/commit/8d48decc0188833299e116bd35176d022fe4d18a))
+
 # [2.72.0](https://github.com/danielvm-git/bigbase/compare/v2.71.1...v2.72.0) (2026-07-09)
 
 
