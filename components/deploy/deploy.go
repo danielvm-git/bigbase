@@ -1078,6 +1078,9 @@ func (d *Deploy) buildApp(ctx context.Context, deployID, siteID, repoID, branch,
 	case AppGo:
 		return d.runBuildCommand(ctx, deployID, buildDir, siteEnv, "go", "build", "-o", "app", ".")
 	case AppPython:
+		if HasPyProjectTOML(buildDir) {
+			return d.runBuildCommand(ctx, deployID, buildDir, siteEnv, "uv", "sync", "--frozen")
+		}
 		return d.runBuildCommand(ctx, deployID, buildDir, siteEnv, "pip", "install", "--break-system-packages", "-r", "requirements.txt")
 	}
 	return nil
@@ -1179,12 +1182,7 @@ func (d *Deploy) startApp(ctx context.Context, buildDir string, deploy *Deployme
 			cmd = exec.CommandContext(ctx, filepath.Join(buildDir, "app"))
 			cmd.Dir = buildDir
 		case AppPython:
-			pythonBin := "python3"
-			if _, err := exec.LookPath(pythonBin); err != nil {
-				pythonBin = "python"
-			}
-			cmd = exec.CommandContext(ctx, pythonBin, "app.py")
-			cmd.Dir = buildDir
+			cmd = pythonStartCommand(ctx, buildDir)
 		}
 	}
 
@@ -1580,9 +1578,11 @@ func DetectAppType(buildDir string) AppType {
 	if fileExists(filepath.Join(buildDir, "go.mod")) {
 		return AppGo
 	}
-	// Python: only if a runnable entry point exists at root. requirements.txt
-	// alone is insufficient — many Node/static repos ship it alongside a Python
-	// tool without an actual web-server entry point.
+	// Python: pyproject.toml (PEP 518/621) is the primary signal for modern
+	// Python projects. Fall back to app.py/main.py for legacy projects.
+	if HasPyProjectTOML(buildDir) {
+		return AppPython
+	}
 	if fileExists(filepath.Join(buildDir, "app.py")) ||
 		fileExists(filepath.Join(buildDir, "main.py")) {
 		return AppPython

@@ -66,11 +66,7 @@ func (r *deployRunner) buildCmd(ctx context.Context, spec Spec) *exec.Cmd {
 	case AppGo:
 		return exec.CommandContext(ctx, filepath.Join(spec.Dir, "app"))
 	case AppPython:
-		python := "python3"
-		if _, err := exec.LookPath(python); err != nil {
-			python = "python"
-		}
-		return exec.CommandContext(ctx, python, "app.py")
+		return pythonStartCommand(ctx, spec.Dir)
 	case AppNode:
 		startCmd := GetStartCommand(spec.Dir)
 		parts := strings.Fields(startCmd)
