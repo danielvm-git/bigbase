@@ -399,4 +399,124 @@ func (a *Auth) handleDeleteAPIKey(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+func (a *Auth) handleCreateSiteKey(w http.ResponseWriter, r *http.Request) {
+	userID, ok := UserIDFromContext(r.Context())
+	if !ok {
+		kernel.WriteJSON(w, http.StatusUnauthorized, map[string]string{"error": "authorization required"})
+		return
+	}
+	siteID := r.PathValue("id")
+
+	var req struct {
+		Name   string   `json:"name"`
+		Scopes []string `json:"scopes"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json"})
+		return
+	}
+
+	// Validate name length and characters
+	if req.Name != "" {
+		if len(req.Name) > 100 {
+			kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "name must be 100 characters or fewer"})
+			return
+		}
+		for _, ch := range req.Name {
+			if (ch < 'a' || ch > 'z') && (ch < '0' || ch > '9') && ch != '-' && ch != '_' && ch != ' ' {
+				kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "name must be alphanumeric, hyphens, underscores, or spaces"})
+				return
+			}
+		}
+	}
+
+	// Validate scopes if provided
+	if len(req.Scopes) > 0 {
+		for _, s := range req.Scopes {
+			if s != "deploy" {
+				kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "unknown scope: " + s})
+				return
+			}
+		}
+	}
+
+	rawToken, keyID, err := a.CreateSiteKey(r.Context(), siteID, req.Name, req.Scopes)
+	if err != nil {
+		a.logger.Error("create site key", "key_id", keyID, "site_id", siteID, "error", err)
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		return
+	}
+
+	kernel.WriteJSON(w, http.StatusCreated, map[string]any{
+		"data": map[string]any{
+			"key_id":  keyID,
+			"site_id": siteID,
+			"name":    req.Name,
+			"key":     rawToken,
+		},
+	})
+	email, _ := UserEmailFromContext(r.Context())
+	a.recordAudit("auth.site_key_created", userID, email, getIP(r), map[string]any{
+		"site_id": siteID,
+		"key_id":  keyID,
+	})
+}
+
+func (a *Auth) handleListSiteKeys(w http.ResponseWriter, r *http.Request) {
+	if _, ok := UserIDFromContext(r.Context()); !ok {
+		kernel.WriteJSON(w, http.StatusUnauthorized, map[string]string{"error": "authorization required"})
+		return
+	}
+	siteID := r.PathValue("id")
+
+	keys, err := a.ListSiteKeys(r.Context(), siteID)
+	if err != nil {
+		a.logger.Error("list site keys", "site_id", siteID, "error", err)
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		return
+	}
+
+	// Convert to response format — metadata only, no raw tokens
+	type keyEntry struct {
+		KeyID      string  `json:"key_id"`
+		Name       string  `json:"name"`
+		CreatedAt  string  `json:"created_at"`
+		LastUsedAt *string `json:"last_used_at,omitempty"`
+	}
+	entries := make([]keyEntry, 0, len(keys))
+	for _, k := range keys {
+		entries = append(entries, keyEntry{
+			KeyID:      k.KeyID,
+			Name:       k.Name,
+			CreatedAt:  k.CreatedAt,
+			LastUsedAt: k.LastUsedAt,
+		})
+	}
+
+	kernel.WriteJSON(w, http.StatusOK, map[string]any{"data": entries})
+}
+
+func (a *Auth) handleRevokeSiteKey(w http.ResponseWriter, r *http.Request) {
+	userID, ok := UserIDFromContext(r.Context())
+	if !ok {
+		kernel.WriteJSON(w, http.StatusUnauthorized, map[string]string{"error": "authorization required"})
+		return
+	}
+	siteID := r.PathValue("id")
+	keyID := r.PathValue("keyID")
+
+	if err := a.RevokeSiteKey(r.Context(), keyID); err != nil {
+		a.logger.Error("revoke site key", "key_id", keyID, "site_id", siteID, "error", err)
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		return
+	}
+
+	kernel.WriteJSON(w, http.StatusOK, map[string]string{"status": "revoked"})
+	email, _ := UserEmailFromContext(r.Context())
+	a.recordAudit("auth.site_key_revoked", userID, email, getIP(r), map[string]any{
+		"site_id": siteID,
+		"key_id":  keyID,
+	})
+}
+
 // SetOTPStore sets the OTP store. Used for testing.

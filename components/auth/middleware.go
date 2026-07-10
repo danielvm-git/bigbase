@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/danielvm/bigbase/kernel"
 )
@@ -28,6 +29,17 @@ func (a *Auth) ProtectedHandler() http.Handler {
 	mux.HandleFunc("POST /api/orgs/{id}/api-keys", a.handleCreateAPIKey)
 	mux.HandleFunc("GET /api/orgs/{id}/api-keys", a.handleListAPIKeys)
 	mux.HandleFunc("DELETE /api/orgs/{id}/api-keys/{keyID}", a.handleDeleteAPIKey)
+	// Deploy-key routes with rate-limited POST (10 per site per hour per user)
+	rl := NewRateLimiter(RateLimiterConfig{
+		IPLimit:      3,
+		IPWindow:     time.Minute,
+		UserLimit:    10,
+		UserWindow:   time.Hour,
+		CleanupEvery: 10 * time.Minute,
+	})
+	mux.Handle("POST /api/sites/{id}/deploy-keys", rl.Middleware(http.HandlerFunc(a.handleCreateSiteKey)))
+	mux.HandleFunc("GET /api/sites/{id}/deploy-keys", a.handleListSiteKeys)
+	mux.HandleFunc("DELETE /api/sites/{id}/deploy-keys/{keyID}", a.handleRevokeSiteKey)
 	mux.HandleFunc("POST /api/auth/logout-all", a.handleLogoutAll)
 	return a.Middleware(mux)
 }
