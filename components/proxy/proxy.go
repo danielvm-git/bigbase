@@ -1340,12 +1340,18 @@ console.log(window.__BIGBASE_METADATA__);
 
 func (p *Proxy) corsMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if len(p.corsAllowedOrigins) == 0 {
+		origin := r.Header.Get("Origin")
+		if origin == "" {
 			next.ServeHTTP(w, r)
 			return
 		}
-		origin := r.Header.Get("Origin")
-		if origin == "" {
+		if len(p.corsAllowedOrigins) == 0 {
+			if !authSameOrigin(r, origin) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusForbidden)
+				_, _ = w.Write([]byte(`{"error":"origin not allowed"}`))
+				return
+			}
 			next.ServeHTTP(w, r)
 			return
 		}
@@ -1377,6 +1383,14 @@ func (p *Proxy) corsMiddleware(next http.Handler) http.Handler {
 		w.Header().Set("Vary", "Origin")
 		next.ServeHTTP(w, r)
 	})
+}
+
+func authSameOrigin(r *http.Request, origin string) bool {
+	scheme := "http"
+	if r.TLS != nil || strings.EqualFold(r.Header.Get("X-Forwarded-Proto"), "https") {
+		scheme = "https"
+	}
+	return origin == scheme+"://"+r.Host
 }
 
 type AuthPolicy struct {

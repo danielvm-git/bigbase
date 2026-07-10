@@ -202,8 +202,16 @@ bugs:
     scope: auth
     summary: Empty CORS allowlist passes through — comment says closed (CWE-942)
     file: specs/bugs/BUG-2026-07-10T160208-cors-empty-allowlist-open.md
-    status: open
+    status: fixed
     audit_source: specs/audit-code-2026-07-10.md
+    files_changed:
+      - components/auth/cors.go
+      - components/proxy/proxy.go
+      - components/auth/cors_test.go
+    approach: "Empty allowlist denies cross-origin; same-origin still allowed."
+    risk_level: low
+    regression_guards:
+      - components/auth/cors_test.go TestCORSDefaultClosed
   - id: BUG-2026-07-09T001200
     date: "2026-07-09"
     severity: high
