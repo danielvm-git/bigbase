@@ -56,6 +56,26 @@ var internalTables = map[string]bool{
 	"deployments": true, "functions": true, "messages": true,
 }
 
+// Pre-compiled regex patterns for SQL endpoint security checks.
+var (
+	internalTableRegexes []*regexp.Regexp
+	blockedKeywordRegexes = []*regexp.Regexp{
+		regexp.MustCompile(`(?i)\bJOIN\b`),
+		regexp.MustCompile(`(?i)\bUNION\b`),
+		regexp.MustCompile(`(?i)\bINTERSECT\b`),
+		regexp.MustCompile(`(?i)\bEXCEPT\b`),
+		regexp.MustCompile(`(?i)\bWITH\b`),
+	}
+	selectCountRegex = regexp.MustCompile(`(?i)\bSELECT\b`)
+)
+
+func init() {
+	for t := range internalTables {
+		internalTableRegexes = append(internalTableRegexes,
+			regexp.MustCompile(`(?i)\b` + regexp.QuoteMeta(t) + `\b`))
+	}
+}
+
 
 // DBer is an alias for kernel.DBer — the shared database abstraction.
 type DBer = kernel.DBer
@@ -591,17 +611,13 @@ func (a *API) handleSQL(w http.ResponseWriter, r *http.Request) {
 // isSimpleQuery returns true if the query contains no JOIN, UNION, INTERSECT,
 // EXCEPT, or WITH keywords and does not contain subqueries.
 func isSimpleQuery(q string) bool {
-	upper := strings.ToUpper(q)
-	blocked := []string{"JOIN", "UNION", "INTERSECT", "EXCEPT", "WITH"}
-	for _, kw := range blocked {
-		re := regexp.MustCompile(`(?i)\b` + kw + `\b`)
-		if re.MatchString(upper) {
+	for _, re := range blockedKeywordRegexes {
+		if re.MatchString(q) {
 			return false
 		}
 	}
 	// A simple query contains at most one SELECT keyword.
-	reSelect := regexp.MustCompile(`(?i)\bSELECT\b`)
-	matches := reSelect.FindAllStringIndex(upper, -1)
+	matches := selectCountRegex.FindAllStringIndex(q, -1)
 	return len(matches) <= 1
 }
 
