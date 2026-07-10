@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"strings"
 	"time"
 )
 
@@ -33,7 +32,7 @@ func (d *Deploy) ensurePipelineTimelineColumn() error {
 	if err == nil {
 		return nil
 	}
-	if strings.Contains(strings.ToLower(err.Error()), "duplicate column") {
+	if isDuplicateColumnError(err) {
 		return nil
 	}
 	return fmt.Errorf("add pipeline_timeline column: %w", err)

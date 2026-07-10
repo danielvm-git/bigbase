@@ -3,12 +3,15 @@ package deploy
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/danielvm/bigbase/kernel"
 )
 
 // RollbackEvent records a single rollback operation.
@@ -42,7 +45,7 @@ func (d *Deploy) Rollback(ctx context.Context, currentID string) (*RollbackEvent
 		"SELECT site_id, status FROM deployments WHERE id = ?", currentID).
 		Scan(&currentSiteID, &currentStatus)
 	if err != nil {
-		return nil, fmt.Errorf("deployment not found")
+		return nil, ErrDeploymentNotFound
 	}
 	if currentSiteID == "" {
 		return nil, fmt.Errorf("deployment has no site_id — cannot determine rollback target")
@@ -123,7 +126,7 @@ func (d *Deploy) Rollback(ctx context.Context, currentID string) (*RollbackEvent
 	}
 
 	// Record rollback event
-	eventID, err := generateID()
+	eventID, err := kernel.GenerateID()
 	if err != nil {
 		return nil, fmt.Errorf("generate rollback event id: %w", err)
 	}
@@ -146,22 +149,21 @@ func (d *Deploy) Rollback(ctx context.Context, currentID string) (*RollbackEvent
 
 func (d *Deploy) handleRollback(w http.ResponseWriter, r *http.Request, id string) {
 	if r.Method != http.MethodPost {
-		writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
+		kernel.WriteJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
 		return
 	}
 
 	event, err := d.Rollback(r.Context(), id)
 	if err != nil {
-		switch {
-		case strings.Contains(err.Error(), "deployment not found"):
-			writeJSON(w, http.StatusNotFound, map[string]string{"error": err.Error()})
-		default:
-			writeJSON(w, http.StatusConflict, map[string]string{"error": err.Error()})
+		if errors.Is(err, ErrDeploymentNotFound) {
+			kernel.WriteJSON(w, http.StatusNotFound, map[string]string{"error": "deployment not found"})
+		} else {
+			kernel.WriteJSON(w, http.StatusConflict, map[string]string{"error": "an error occurred"})
 		}
 		return
 	}
 
-	writeJSON(w, http.StatusOK, event)
+	kernel.WriteJSON(w, http.StatusOK, event)
 }
 
 // stopDeploymentWithTransition stops a deployment and uses TransitionState
@@ -231,7 +233,7 @@ func (d *Deploy) updateStatusHistory(ctx context.Context, id, from, to string) {
 // GET /api/deploy/{siteID}/rollback-events
 func (d *Deploy) handleRollbackEvents(w http.ResponseWriter, r *http.Request, siteID string) {
 	if r.Method != http.MethodGet {
-		writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
+		kernel.WriteJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
 		return
 	}
 
@@ -241,7 +243,7 @@ func (d *Deploy) handleRollbackEvents(w http.ResponseWriter, r *http.Request, si
 		 WHERE site_id = ?
 		 ORDER BY created_at DESC`, siteID)
 	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "query rollback events"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "query rollback events"})
 		return
 	}
 	defer func() { _ = rows.Close() }()
@@ -254,7 +256,7 @@ func (d *Deploy) handleRollbackEvents(w http.ResponseWriter, r *http.Request, si
 		}
 		events = append(events, ev)
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"data": events})
+	kernel.WriteJSON(w, http.StatusOK, map[string]any{"data": events})
 }
 
 // extractRepoName extracts the subdomain part from a hostname.

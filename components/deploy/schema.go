@@ -3,7 +3,6 @@ package deploy
 import (
 	"context"
 	"fmt"
-	"strings"
 )
 
 func (d *Deploy) ensureSiteIDColumn() error {
@@ -12,7 +11,7 @@ func (d *Deploy) ensureSiteIDColumn() error {
 	if err == nil {
 		return nil
 	}
-	if strings.Contains(strings.ToLower(err.Error()), "duplicate column") {
+	if isDuplicateColumnError(err) {
 		return nil
 	}
 	return fmt.Errorf("add site_id column: %w", err)
@@ -23,7 +22,7 @@ func (d *Deploy) ensureErrorMessageColumn() error {
 	if err == nil {
 		return nil
 	}
-	if strings.Contains(strings.ToLower(err.Error()), "duplicate column") {
+	if isDuplicateColumnError(err) {
 		return nil
 	}
 	return fmt.Errorf("add error_message column: %w", err)
@@ -34,7 +33,7 @@ func (d *Deploy) ensureBuildLogColumn() error {
 	if err == nil {
 		return nil
 	}
-	if strings.Contains(strings.ToLower(err.Error()), "duplicate column") {
+	if isDuplicateColumnError(err) {
 		return nil
 	}
 	return fmt.Errorf("add build_log column: %w", err)
@@ -45,7 +44,7 @@ func (d *Deploy) ensurePassthroughPathsColumn() error {
 	if err == nil {
 		return nil
 	}
-	if strings.Contains(strings.ToLower(err.Error()), "duplicate column") {
+	if isDuplicateColumnError(err) {
 		return nil
 	}
 	return fmt.Errorf("add passthrough_paths column: %w", err)
@@ -56,7 +55,7 @@ func (d *Deploy) ensurePIDColumn() error {
 	if err == nil {
 		return nil
 	}
-	if strings.Contains(strings.ToLower(err.Error()), "duplicate column") {
+	if isDuplicateColumnError(err) {
 		return nil
 	}
 	return fmt.Errorf("add pid column: %w", err)
@@ -67,7 +66,7 @@ func (d *Deploy) ensureStatusHistoryColumn() error {
 	if err == nil {
 		return nil
 	}
-	if strings.Contains(strings.ToLower(err.Error()), "duplicate column") {
+	if isDuplicateColumnError(err) {
 		return nil
 	}
 	return fmt.Errorf("add status_history column: %w", err)
@@ -78,7 +77,7 @@ func (d *Deploy) ensureManifestPathColumn() error {
 	if err == nil {
 		return nil
 	}
-	if strings.Contains(strings.ToLower(err.Error()), "duplicate column") {
+	if isDuplicateColumnError(err) {
 		return nil
 	}
 	return fmt.Errorf("add manifest_path column: %w", err)
@@ -89,7 +88,7 @@ func (d *Deploy) ensureHealthSummaryColumn() error {
 	if err == nil {
 		return nil
 	}
-	if strings.Contains(strings.ToLower(err.Error()), "duplicate column") {
+	if isDuplicateColumnError(err) {
 		return nil
 	}
 	return fmt.Errorf("add health_summary column: %w", err)

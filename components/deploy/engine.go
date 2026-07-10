@@ -12,6 +12,8 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/danielvm/bigbase/kernel"
 )
 
 func (d *Deploy) Trigger(ctx context.Context, repoID, branch, siteName, siteID string, passthroughPaths []string, appType string, manifestPath string) (*Deployment, error) {
@@ -25,7 +27,7 @@ func (d *Deploy) Trigger(ctx context.Context, repoID, branch, siteName, siteID s
 	var repoName string
 	err := d.db.QueryRowContext(ctx, "SELECT name FROM git_repos WHERE id = ?", repoID).Scan(&repoName)
 	if err != nil {
-		return nil, fmt.Errorf("repo not found")
+		return nil, ErrRepoNotFound
 	}
 
 	if siteName == "" {
@@ -38,7 +40,7 @@ func (d *Deploy) Trigger(ctx context.Context, repoID, branch, siteName, siteID s
 	// drainOldDeployments() signals them to drain gracefully.
 	d.collectPreviousDeployments(ctx, siteID, repoID)
 
-	id, err := generateID()
+	id, err := kernel.GenerateID()
 	if err != nil {
 		return nil, err
 	}

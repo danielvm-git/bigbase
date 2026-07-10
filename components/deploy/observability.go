@@ -14,7 +14,7 @@ func (d *Deploy) ensureRelatedEventsSnapshotColumn() error {
 	if err == nil {
 		return nil
 	}
-	if strings.Contains(strings.ToLower(err.Error()), "duplicate column") {
+	if isDuplicateColumnError(err) {
 		return nil
 	}
 	return err
@@ -22,44 +22,44 @@ func (d *Deploy) ensureRelatedEventsSnapshotColumn() error {
 
 func (d *Deploy) handleDeployDiagnosis(w http.ResponseWriter, r *http.Request, id string) {
 	if r.Method != http.MethodGet {
-		writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
+		kernel.WriteJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
 		return
 	}
 	if d.diagnosisReader == nil {
-		writeJSON(w, http.StatusNotFound, map[string]string{"error": "no diagnosis available"})
+		kernel.WriteJSON(w, http.StatusNotFound, map[string]string{"error": "no diagnosis available"})
 		return
 	}
 	diag, ok, err := d.diagnosisReader.GetDiagnosis(r.Context(), id)
 	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 	if !ok {
-		writeJSON(w, http.StatusNotFound, map[string]string{"error": "no diagnosis available"})
+		kernel.WriteJSON(w, http.StatusNotFound, map[string]string{"error": "no diagnosis available"})
 		return
 	}
-	writeJSON(w, http.StatusOK, diag)
+	kernel.WriteJSON(w, http.StatusOK, diag)
 }
 
 func (d *Deploy) handleDeployRelatedEvents(w http.ResponseWriter, r *http.Request, id string) {
 	if r.Method != http.MethodGet {
-		writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
+		kernel.WriteJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
 		return
 	}
 	if d.relatedEventsReader == nil {
-		writeJSON(w, http.StatusNotFound, map[string]string{"error": "deployment not found"})
+		kernel.WriteJSON(w, http.StatusNotFound, map[string]string{"error": "deployment not found"})
 		return
 	}
 	rel, ok, err := d.relatedEventsReader.GetRelatedEvents(r.Context(), id)
 	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 	if !ok {
-		writeJSON(w, http.StatusNotFound, map[string]string{"error": "deployment not found"})
+		kernel.WriteJSON(w, http.StatusNotFound, map[string]string{"error": "deployment not found"})
 		return
 	}
-	writeJSON(w, http.StatusOK, rel)
+	kernel.WriteJSON(w, http.StatusOK, rel)
 }
 
 func (d *Deploy) emitDeployFailed(ctx context.Context, id string) {

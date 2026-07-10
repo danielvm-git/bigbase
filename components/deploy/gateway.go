@@ -2,6 +2,7 @@ package deploy
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"os"
@@ -23,7 +24,7 @@ func (d *Deploy) Handler() http.Handler {
 }
 func (d *Deploy) HandleCreate(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
-		writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
+		kernel.WriteJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
 		return
 	}
 
@@ -37,11 +38,11 @@ func (d *Deploy) HandleCreate(w http.ResponseWriter, r *http.Request) {
 		ManifestPath     string   `json:"manifest_path"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid JSON"})
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid JSON"})
 		return
 	}
 	if req.RepoID == "" {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "repo_id is required"})
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "repo_id is required"})
 		return
 	}
 	if req.Branch == "" {
@@ -51,7 +52,7 @@ func (d *Deploy) HandleCreate(w http.ResponseWriter, r *http.Request) {
 	if siteID, ok := kernel.SiteIDFromContext(r.Context()); ok && siteID != "" {
 		if req.SiteID != "" && req.SiteID != siteID {
 			d.logger.Warn("deploy rejected: site key mismatch", "ctx_site_id", siteID, "req_site_id", req.SiteID)
-			writeJSON(w, http.StatusForbidden, map[string]string{"error": "site key not authorized for this site"})
+			kernel.WriteJSON(w, http.StatusForbidden, map[string]string{"error": "site key not authorized for this site"})
 			return
 		}
 		req.SiteID = siteID
@@ -59,20 +60,19 @@ func (d *Deploy) HandleCreate(w http.ResponseWriter, r *http.Request) {
 
 	deploy, err := d.Trigger(r.Context(), req.RepoID, req.Branch, req.SiteName, req.SiteID, req.PassthroughPaths, req.AppType, req.ManifestPath)
 	if err != nil {
-		switch err.Error() {
-		case "repo not found":
-			writeJSON(w, http.StatusNotFound, map[string]string{"error": err.Error()})
-		default:
+		if errors.Is(err, ErrRepoNotFound) {
+			kernel.WriteJSON(w, http.StatusNotFound, map[string]string{"error": "repo not found"})
+		} else {
 			d.logger.Error("create deployment", "error", err)
-			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+			kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		}
 		return
 	}
-	writeJSON(w, http.StatusCreated, deploy)
+	kernel.WriteJSON(w, http.StatusCreated, deploy)
 }
 func (d *Deploy) HandleList(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "GET" {
-		writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
+		kernel.WriteJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
 		return
 	}
 
@@ -80,7 +80,7 @@ func (d *Deploy) HandleList(w http.ResponseWriter, r *http.Request) {
 		"SELECT id, repo_id, site_id, COALESCE(branch,'main'), COALESCE(commit_sha,''), COALESCE(status,'pending'), COALESCE(url,''), COALESCE(port,0), COALESCE(app_type,''), COALESCE(error_message,''), COALESCE(passthrough_paths,''), COALESCE(manifest_path,''), COALESCE(health_summary,''), COALESCE(pipeline_timeline,''), created_at FROM deployments ORDER BY created_at DESC")
 	if err != nil {
 		d.logger.Error("list deployments", "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 	defer func() { _ = rows.Close() }()
@@ -97,7 +97,7 @@ func (d *Deploy) HandleList(w http.ResponseWriter, r *http.Request) {
 		dep.PipelineTimeline = parsePipelineTimeline(timelineJSON)
 		deployments = append(deployments, dep)
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"data": deployments})
+	kernel.WriteJSON(w, http.StatusOK, map[string]any{"data": deployments})
 }
 func (d *Deploy) handleDeploy(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
@@ -106,13 +106,13 @@ func (d *Deploy) handleDeploy(w http.ResponseWriter, r *http.Request) {
 	case "GET":
 		d.HandleList(w, r)
 	default:
-		writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
+		kernel.WriteJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
 	}
 }
 func (d *Deploy) handleDeployByID(w http.ResponseWriter, r *http.Request) {
 	path := strings.TrimPrefix(r.URL.Path, "/api/deploy/")
 	if path == "" {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "id required"})
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "id required"})
 		return
 	}
 
@@ -159,15 +159,15 @@ func (d *Deploy) handleDeployByID(w http.ResponseWriter, r *http.Request) {
 			"SELECT id, repo_id, site_id, branch, commit_sha, status, url, port, app_type, COALESCE(error_message,''), COALESCE(passthrough_paths,''), COALESCE(manifest_path,''), COALESCE(health_summary,''), COALESCE(pipeline_timeline,''), created_at FROM deployments WHERE id = ?", id).
 			Scan(&dep.ID, &dep.RepoID, &dep.SiteID, &dep.Branch, &dep.CommitSHA, &dep.Status, &dep.URL, &dep.Port, &appType, &dep.ErrorMessage, &passthroughJSON, &dep.ManifestPath, &dep.HealthSummary, &timelineJSON, &dep.CreatedAt)
 		if err != nil {
-			writeJSON(w, http.StatusNotFound, map[string]string{"error": "deployment not found"})
+			kernel.WriteJSON(w, http.StatusNotFound, map[string]string{"error": "deployment not found"})
 			return
 		}
 		dep.AppType = AppType(appType)
 		dep.PassthroughPaths = parsePassthroughPaths(passthroughJSON)
 		dep.PipelineTimeline = parsePipelineTimeline(timelineJSON)
-		writeJSON(w, http.StatusOK, dep)
+		kernel.WriteJSON(w, http.StatusOK, dep)
 	default:
-		writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
+		kernel.WriteJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
 	}
 }
 func (d *Deploy) handleDeleteDeployment(w http.ResponseWriter, r *http.Request, id string) {
@@ -176,11 +176,11 @@ func (d *Deploy) handleDeleteDeployment(w http.ResponseWriter, r *http.Request, 
 		"SELECT status, COALESCE(url,'') FROM deployments WHERE id = ?", id).
 		Scan(&status, &url)
 	if err != nil {
-		writeJSON(w, http.StatusNotFound, map[string]string{"error": "deployment not found"})
+		kernel.WriteJSON(w, http.StatusNotFound, map[string]string{"error": "deployment not found"})
 		return
 	}
 	if status == "pending" || status == "building" {
-		writeJSON(w, http.StatusConflict, map[string]string{"error": "deployment is in progress — wait or trigger a new deploy"})
+		kernel.WriteJSON(w, http.StatusConflict, map[string]string{"error": "deployment is in progress — wait or trigger a new deploy"})
 		return
 	}
 
@@ -194,7 +194,7 @@ func (d *Deploy) handleDeleteDeployment(w http.ResponseWriter, r *http.Request, 
 }
 func (d *Deploy) handleDeployLogs(w http.ResponseWriter, r *http.Request, id string) {
 	if r.Method != http.MethodGet {
-		writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
+		kernel.WriteJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
 		return
 	}
 
@@ -204,7 +204,7 @@ func (d *Deploy) handleDeployLogs(w http.ResponseWriter, r *http.Request, id str
 		"SELECT status, COALESCE(error_message,''), COALESCE(build_log,'') FROM deployments WHERE id = ?", id).
 		Scan(&status, &errMsg, &buildLog)
 	if err != nil {
-		writeJSON(w, http.StatusNotFound, map[string]string{"error": "deployment not found"})
+		kernel.WriteJSON(w, http.StatusNotFound, map[string]string{"error": "deployment not found"})
 		return
 	}
 
@@ -222,11 +222,11 @@ func (d *Deploy) handleDeployLogs(w http.ResponseWriter, r *http.Request, id str
 	if errMsg != "" {
 		payload["error_message"] = errMsg
 	}
-	writeJSON(w, http.StatusOK, payload)
+	kernel.WriteJSON(w, http.StatusOK, payload)
 }
 func (d *Deploy) handleDeployStats(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
+		kernel.WriteJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
 		return
 	}
 
@@ -265,5 +265,5 @@ func (d *Deploy) handleDeployStats(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	writeJSON(w, http.StatusOK, stats)
+	kernel.WriteJSON(w, http.StatusOK, stats)
 }
