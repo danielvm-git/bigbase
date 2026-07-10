@@ -2,8 +2,10 @@ package deploy
 
 import (
 	"context"
+	"fmt"
 	"math"
 	"math/rand/v2"
+	"net/http"
 	"sync"
 	"time"
 )
@@ -17,6 +19,14 @@ const (
 
 	crashLoopBurst  = 5
 	crashLoopWindow = 60 * time.Second
+
+	// healthPollInterval is how often the Supervisor polls the deployment's
+	// health endpoint during runtime.
+	healthPollInterval = 10 * time.Second
+
+	// healthFailureThreshold is the number of consecutive failures before
+	// the Supervisor forces a restart.
+	healthFailureThreshold = 3
 )
 
 // Supervisor owns the fleet of running deployments: restart policy (backoff +
@@ -78,7 +88,18 @@ func (s *Supervisor) Run(ctx context.Context, spec Spec) {
 		}
 		s.setInstance(spec.DeployID, inst)
 
+		// Start health polling if configured.
+		healthCtx, healthCancel := context.WithCancel(ctx)
+		healthDone := make(chan struct{})
+		if spec.HealthPort > 0 {
+			go s.healthLoop(healthCtx, spec, inst, healthDone)
+		}
+
 		waitErr := inst.Wait()
+		healthCancel()
+		if spec.HealthPort > 0 {
+			<-healthDone // wait for health goroutine to exit
+		}
 		s.setInstance(spec.DeployID, nil)
 		_ = waitErr // any exit without Stop() is treated as a crash
 
@@ -131,6 +152,48 @@ func (s *Supervisor) tripCrashLoop(spec Spec) {
 	}
 	if s.onEvent != nil {
 		s.onEvent("deploy.crash_looped", spec)
+	}
+}
+
+// healthLoop polls the deployment's health endpoint at a fixed interval.
+// After healthFailureThreshold consecutive failures, it stops the instance,
+// which causes the Supervisor's restart loop to kick in.
+func (s *Supervisor) healthLoop(ctx context.Context, spec Spec, inst Instance, done chan<- struct{}) {
+	defer close(done)
+
+	path := spec.HealthPath
+	if path == "" {
+		path = "/health"
+	}
+	url := fmt.Sprintf("http://localhost:%d%s", spec.HealthPort, path)
+	client := &http.Client{Timeout: 5 * time.Second}
+
+	failures := 0
+	ticker := time.NewTicker(healthPollInterval)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			resp, err := client.Get(url)
+			if err != nil || resp.StatusCode < 200 || resp.StatusCode >= 400 {
+				failures++
+				if failures >= healthFailureThreshold {
+					if s.onEvent != nil {
+						s.onEvent("deploy.health_failed", spec)
+					}
+					_ = inst.Stop(5 * time.Second)
+					return
+				}
+			} else {
+				failures = 0
+			}
+			if resp != nil {
+				_ = resp.Body.Close()
+			}
+		}
 	}
 }
 

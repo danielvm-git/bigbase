@@ -19,6 +19,14 @@ type Spec struct {
 	AppType  AppType
 	Env      []string // resolved env vars (PORT=N + manifest vars)
 	StartCmd []string // resolved start command; nil for static apps
+	// WritableDir is a deployment-scoped persistent directory for runtime
+	// data (logs, SQLite DBs, uploads). Created during build and passed
+	// as WRITABLE_DIR env var.
+	WritableDir string
+	// HealthPort is the port to poll for health checks. 0 disables polling.
+	HealthPort int
+	// HealthPath is the HTTP path to poll (default: /health).
+	HealthPath string
 }
 
 // Instance is a single-use live run of one deployment — a subprocess or an

@@ -1194,6 +1194,14 @@ func (d *Deploy) startApp(ctx context.Context, buildDir string, deploy *Deployme
 
 	cmd.Env = append(os.Environ(), fmt.Sprintf("PORT=%d", deploy.Port))
 
+	// Create and inject writable persistent directory for runtime data.
+	writableDir := filepath.Join(d.buildsDir, "..", "writable", deploy.ID)
+	if err := os.MkdirAll(writableDir, 0755); err != nil {
+		d.logger.Warn("create writable dir", "deployID", deploy.ID, "error", err)
+	} else {
+		cmd.Env = append(cmd.Env, "WRITABLE_DIR="+writableDir)
+	}
+
 	// Inject native DB connection (DB_PATH for SQLite, DATABASE_URL for Postgres).
 	if native := d.nativeDBEnv(); len(native) > 0 {
 		cmd.Env = append(cmd.Env, native...)
