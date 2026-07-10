@@ -1,3 +1,16 @@
+# [2.76.0](https://github.com/danielvm-git/bigbase/compare/v2.75.0...v2.76.0) (2026-07-10)
+
+
+### Bug Fixes
+
+* **deploy:** wait for deployment to reach terminal state in TestDeployCustomSiteName ([a349039](https://github.com/danielvm-git/bigbase/commit/a349039325025935ce5241b0428393da03917c67))
+
+
+### Features
+
+* **ui:** add Deploy Keys tab to Site Detail page ([68d9f6a](https://github.com/danielvm-git/bigbase/commit/68d9f6aef3667d3b652daf61f08a2cb5f905809a))
+* **ui:** add Deploy Keys tab to Site Detail page (#PR) ([aaec109](https://github.com/danielvm-git/bigbase/commit/aaec1092d5883bc70e8007447b11f4a92cea4b83)), closes [#PR](https://github.com/danielvm-git/bigbase/issues/PR)
+
 # [2.75.0](https://github.com/danielvm-git/bigbase/compare/v2.74.0...v2.75.0) (2026-07-10)
 
 
