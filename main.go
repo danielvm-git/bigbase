@@ -520,6 +520,10 @@ func startProxy() {
 	p.Handle("GET /api/orgs/", mComp.Middleware(authComp.ProtectedHandler()).ServeHTTP)
 	p.Handle("PATCH /api/orgs/", mComp.Middleware(authComp.ProtectedHandler()).ServeHTTP)
 	p.Handle("DELETE /api/orgs/", mComp.Middleware(authComp.ProtectedHandler()).ServeHTTP)
+	// Site deploy-key routes
+	p.Handle("POST /api/sites/{id}/deploy-keys", mComp.Middleware(authComp.ProtectedHandler()).ServeHTTP)
+	p.Handle("GET /api/sites/{id}/deploy-keys", mComp.Middleware(authComp.ProtectedHandler()).ServeHTTP)
+	p.Handle("DELETE /api/sites/{id}/deploy-keys/{keyID}", mComp.Middleware(authComp.ProtectedHandler()).ServeHTTP)
 	p.Handle("/api/monitoring/health", mComp.Handler().ServeHTTP)
 	p.Handle("/api/monitoring/metrics", authComp.Middleware(mComp.Handler()).ServeHTTP)
 	p.Handle("/api/monitoring/metrics/prometheus", mComp.Handler().ServeHTTP)
