@@ -126,6 +126,19 @@ func (a *Auth) PublicURLOrDefault(r *http.Request) string {
 	return a.publicURL
 }
 
+// cookieSecure reports whether auth cookies should set the Secure flag.
+// Behind a TLS-terminating proxy r.TLS is nil, so also honor https PublicURL
+// and X-Forwarded-Proto (CWE-319).
+func (a *Auth) cookieSecure(r *http.Request) bool {
+	if r.TLS != nil {
+		return true
+	}
+	if strings.HasPrefix(a.publicURL, "https://") {
+		return true
+	}
+	return strings.EqualFold(r.Header.Get("X-Forwarded-Proto"), "https")
+}
+
 // oauthCallbackRedirectURI returns the absolute Google OAuth callback URL.
 // Returns false when PublicURL is unset so callers fail closed instead of
 // using an attacker-controlled Host header.
@@ -597,7 +610,7 @@ func (a *Auth) writeAuthResponse(w http.ResponseWriter, r *http.Request, status 
 		Name:     "token",
 		Value:    token,
 		HttpOnly: true,
-		Secure:   r.TLS != nil,
+		Secure:   a.cookieSecure(r),
 		SameSite: http.SameSiteStrictMode,
 		Path:     "/",
 		MaxAge:   int(a.accessExpiry.Seconds()),
@@ -927,7 +940,7 @@ func (a *Auth) handleGoogleOAuth(w http.ResponseWriter, r *http.Request) {
 		Name:     "oauth_state",
 		Value:    cookieValue,
 		HttpOnly: true,
-		Secure:   r.TLS != nil,
+		Secure:   a.cookieSecure(r),
 		SameSite: http.SameSiteLaxMode,
 		Path:     "/",
 		MaxAge:   600,
@@ -1119,7 +1132,7 @@ func (a *Auth) clearOAuthStateCookie(w http.ResponseWriter, r *http.Request) {
 		HttpOnly: true,
 		Path:     "/",
 		MaxAge:   -1,
-		Secure:   r.TLS != nil,
+		Secure:   a.cookieSecure(r),
 		SameSite: http.SameSiteLaxMode,
 	})
 }

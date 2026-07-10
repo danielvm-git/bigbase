@@ -185,7 +185,7 @@ func (a *Auth) handleRefresh(w http.ResponseWriter, r *http.Request) {
 		Name:     "token",
 		Value:    accessToken,
 		HttpOnly: true,
-		Secure:   r.TLS != nil,
+		Secure:   a.cookieSecure(r),
 		SameSite: http.SameSiteStrictMode,
 		Path:     "/",
 		MaxAge:   int(a.accessExpiry.Seconds()),
