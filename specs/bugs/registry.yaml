@@ -128,8 +128,18 @@ bugs:
     scope: auth
     summary: OAuth callback paths use PublicURLOrDefault Host fallback
     file: specs/bugs/BUG-2026-07-10T160008-oauth-callback-host-header.md
-    status: open
+    status: fixed
     audit_source: specs/audit-code-2026-07-10.md
+    files_changed:
+      - components/auth/auth.go
+      - components/auth/anonymous.go
+      - components/auth/usermgmt.go
+      - components/auth/auth_test.go
+    approach: "PublicURLOrDefault never uses Host; oauthCallbackRedirectURI fails closed with 503 when PublicURL unset."
+    risk_level: low
+    regression_guards:
+      - components/auth/auth_test.go TestOAuthPublicURLOrDefaultNeverUsesHost
+      - components/auth/auth_test.go TestOAuthStartRequiresPublicURL
   - id: BUG-2026-07-10T160108
     date: "2026-07-10"
     severity: medium

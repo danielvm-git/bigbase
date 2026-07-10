@@ -25,6 +25,9 @@ func setupOAuthWithOpts(t *testing.T, opts auth.Options) (*auth.Auth, http.Handl
 	if opts.GoogleClientID == "" {
 		opts.GoogleClientID = "test-client-id"
 	}
+	if opts.PublicURL == "" {
+		opts.PublicURL = "https://test.example.com"
+	}
 	a := auth.New(opts)
 	k.Register(d)
 	k.Register(a)
