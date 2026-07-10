@@ -29,6 +29,22 @@ const (
 	AppStatic AppType = "static"
 )
 
+// IsValid reports whether the AppType is one of the known application types.
+func (a AppType) IsValid() bool {
+	switch a {
+	case AppNode, AppGo, AppPython, AppStatic:
+		return true
+	default:
+		return false
+	}
+}
+
+// AllAppTypes returns all known application types. New types should be added
+// to the const block above and this function to maintain OCP compliance.
+func AllAppTypes() []AppType {
+	return []AppType{AppNode, AppGo, AppPython, AppStatic}
+}
+
 type Deployment struct {
 	ID               string             `json:"id"`
 	RepoID           string             `json:"repo_id"`
@@ -80,7 +96,7 @@ type Deploy struct {
 	unsubscribe         func()
 	logHubsMu           sync.RWMutex
 	logHubs             map[string]*logHub
-	sm                  *stateMachine
+	sm                  *StateMachine
 	eventBus            *kernel.EventBus
 	supervisor          *Supervisor
 	envKey              []byte
@@ -166,7 +182,7 @@ func New(opts Options) *Deploy {
 		nextPort:       basePort,
 		apps:           make(map[string]*runningApp),
 		logHubs:        make(map[string]*logHub),
-		sm:             newStateMachine(),
+		sm:             NewStateMachine(),
 		DrainTimeout:   drainTimeout,
 		oldDeployments: make(map[string][]string),
 		dbDriver:       opts.DBDriver,

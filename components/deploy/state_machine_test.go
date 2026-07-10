@@ -5,7 +5,7 @@ import (
 )
 
 func TestStateMachineValidTransitions(t *testing.T) {
-	sm := newStateMachine()
+	sm := NewStateMachine()
 
 	tests := []struct {
 		from     DeploymentState
@@ -36,7 +36,7 @@ func TestStateMachineValidTransitions(t *testing.T) {
 }
 
 func TestStateMachineCanTransition(t *testing.T) {
-	sm := newStateMachine()
+	sm := NewStateMachine()
 
 	valid := []struct{ from, to string }{
 		{"pending", "building"},
@@ -86,7 +86,7 @@ func TestStateMachineCanTransition(t *testing.T) {
 }
 
 func TestStateMachineIsValidState(t *testing.T) {
-	sm := newStateMachine()
+	sm := NewStateMachine()
 
 	valid := []string{"pending", "building", "deploying", "running", "failed", "rolled_back", "draining", "stopped"}
 	for _, s := range valid {
