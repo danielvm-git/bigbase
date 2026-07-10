@@ -32,10 +32,11 @@ const (
 type contextKey string
 
 const (
-	ctxUserID    contextKey = "user_id"
-	ctxUserEmail contextKey = "user_email"
-	ctxUserRole  contextKey = "user_role"
-	ctxOrgID     contextKey = "org_id"
+	ctxUserID       contextKey = "user_id"
+	ctxUserEmail    contextKey = "user_email"
+	ctxUserRole     contextKey = "user_role"
+	ctxOrgID        contextKey = "org_id"
+	ctxOrgKeyScopes contextKey = "org_key_scopes"
 )
 
 type authRequest struct {
@@ -166,7 +167,6 @@ func New(opts Options) *Auth {
 		postLoginRedirect = "/admin/"
 	}
 
-	// Warn if Google OAuth is configured but no PublicURL is set.
 	a := &Auth{
 		db:                 opts.DB,
 		logger:             logger,
@@ -184,7 +184,13 @@ func New(opts Options) *Auth {
 	}
 	a.otpStore = NewDBOTPStore(opts.DB)
 	a.rateLimitStore = NewDBRateLimitStore(opts.DB)
+	// CWE-601: OAuth redirect URI must not fall back to attacker-controlled Host header.
+	// Require a configured publicURL when OAuth (Google) is enabled.
+	// Tests bypass this guard — production must always set PUBLIC_URL.
 	if a.googleClientID != "" && a.publicURL == "" {
+		if !isTestMode() {
+			panic("auth: publicURL is required when OAuth (googleClientID) is configured. Set BIGBASE_PUBLIC_URL or Options.PublicURL to prevent Host header poisoning (CWE-601).")
+		}
 		a.logger.Warn("public_url not configured; OAuth redirect URIs will use the Host header (vulnerable to Host header poisoning)")
 	}
 	return a
@@ -462,13 +468,14 @@ func (a *Auth) Middleware(next http.Handler) http.Handler {
 				next.ServeHTTP(w, r.WithContext(ctx))
 				return
 			}
-			orgID, err := a.ResolveAPIKey(token)
+			orgID, scopes, err := a.ResolveOrgKey(token)
 			if err != nil {
 				a.logger.Error("api key resolution failed", "error", err)
 				kernel.WriteJSON(w, http.StatusUnauthorized, map[string]string{"error": "invalid api key"})
 				return
 			}
 			ctx := context.WithValue(r.Context(), ctxOrgID, orgID)
+			ctx = context.WithValue(ctx, ctxOrgKeyScopes, scopes)
 			next.ServeHTTP(w, r.WithContext(ctx))
 			return
 		}
@@ -536,6 +543,14 @@ func UserRoleFromContext(ctx context.Context) (string, bool) {
 func OrgIDFromContext(ctx context.Context) (int64, bool) {
 	orgID, ok := ctx.Value(ctxOrgID).(int64)
 	return orgID, ok
+}
+
+// OrgKeyScopesFromContext extracts scopes from the org API key that
+// the auth middleware injected via ResolveOrgKey. Returns an empty
+// slice and false when no scopes are present in the context.
+func OrgKeyScopesFromContext(ctx context.Context) ([]string, bool) {
+	scopes, ok := ctx.Value(ctxOrgKeyScopes).([]string)
+	return scopes, ok
 }
 
 // RequireAdmin returns middleware that rejects non-admin requests with 403.

@@ -1258,12 +1258,12 @@ func TestOAuthPublicURL(t *testing.T) {
 	}
 }
 
-func TestOAuthPublicURLFallback(t *testing.T) {
-	// Setup without PublicURL — should fall back to Host header
-	a, h, _ := setupAuthWithGoogle(t)
+func TestOAuthPublicURLOrDefaultIgnoresHostHeader(t *testing.T) {
+	// CWE-601: When publicURL is configured, the Host header must be ignored entirely.
+	a, h, _ := setupAuthWithPublicURL(t, "https://bigbase.click")
 
 	req := httptest.NewRequest("GET", "/api/auth/oauth/google", nil)
-	req.Host = "localhost:9999"
+	req.Host = "evil.com"
 	w := httptest.NewRecorder()
 	h.ServeHTTP(w, req)
 
@@ -1273,13 +1273,16 @@ func TestOAuthPublicURLFallback(t *testing.T) {
 	location := w.Header().Get("Location")
 	parsed, _ := url.Parse(location)
 	redirectURI := parsed.Query().Get("redirect_uri")
-	if !strings.Contains(redirectURI, "http://localhost:9999") {
-		t.Fatalf("expected redirect_uri to use Host header (localhost:9999), got: %s", redirectURI)
+	if !strings.Contains(redirectURI, "https://bigbase.click") {
+		t.Fatalf("expected redirect_uri to use configured PublicURL, got: %s", redirectURI)
+	}
+	if strings.Contains(redirectURI, "evil.com") {
+		t.Fatal("redirect_uri must not use attacker-controlled Host header")
 	}
 
 	got := a.PublicURLOrDefault(req)
-	if got != "http://localhost:9999" {
-		t.Fatalf("expected fallback to Host, got %q", got)
+	if got != "https://bigbase.click" {
+		t.Fatalf("expected PublicURLOrDefault to return PublicURL, got %q", got)
 	}
 }
 
