@@ -1,6 +1,6 @@
 type: session-state
 context: infra
-active_flow: fix_bug
+active_flow: null
 active_epic_id: null
 active_story_id: null
 active_story_status: null
@@ -27,21 +27,21 @@ epic_cycle:
   fast_mode: false
   story_complete: true
 bug_cycle:
-  current_step: 5
-  completed_steps: [1, 2, 3, 4]
-  bug_file: specs/bugs/BUG-2026-07-10T160003-login-no-brute-force-protection.md
+  current_step: null
+  completed_steps: []
+  bug_file: null
 git:
-  branch: fix/BUG-160003-login-lockout
-  hash: 8d48decc
+  branch: main
+  hash: 1da01dbb
   worktree: null
   ci_status: success
 handoff:
-  last_step_completed: "BUG-160003 login lockout implemented and tests green"
+  last_step_completed: "fix-bug queue complete — 8 standalone July-10 bugs fixed; 160006/160111 deferred to e57"
   open_decisions:
     - "Bootstrap mcp:provision keys via admin CreateAPIKey before MCP write tools work"
     - "e70 capsule ready at specs/epics/e70-site-deploy-manifest/ -- depends on e57 schema"
     - "e74 capsule ready at specs/epics/e74-self-service-deploy-tokens/ -- self-service deploy tokens via REST + UI (2 stories, 5 BCPs)"
     - "Issues #41, #43 deferred to e61, e66. #44 closed. #45 open as someday-marker."
-  next_skill: release-branch
-  summary: "fix-bug queue — landing BUG-160003, then 160008 next."
-  context: "fix_bug cycle step 5 — release BUG-160003 login brute-force protection."
+  next_skill: "build-epic e57"
+  summary: "All 8 fix-bug queue items landed on main. Resume Band 3 with e57 project scoping (covers deferred WithProjectID + JWT project_id)."
+  context: "main @ 1da01dbb. fix_bug cleared. Next: build-epic e57."
