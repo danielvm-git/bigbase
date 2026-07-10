@@ -147,8 +147,14 @@ bugs:
     scope: auth
     summary: Refresh token rotation logic not fully verified (CWE-613)
     file: specs/bugs/BUG-2026-07-10T160108-refresh-token-rotation-unverified.md
-    status: open
+    status: fixed
     audit_source: specs/audit-code-2026-07-10.md
+    files_changed:
+      - components/auth/refreshtoken_test.go
+    approach: "Verified rotation + family invalidation; assert tip token revoked after replay."
+    risk_level: low
+    regression_guards:
+      - components/auth/refreshtoken_test.go TestRefreshToken/family_invalidation_on_replay
   - id: BUG-2026-07-10T160110
     date: "2026-07-10"
     severity: medium

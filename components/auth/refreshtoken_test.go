@@ -170,6 +170,13 @@ func TestRefreshToken(t *testing.T) {
 			t.Fatalf("replay rt0: expected 401, got %d", replayW.Code)
 		}
 
+		var rfResp2Body map[string]any
+		_ = json.NewDecoder(rfW2.Body).Decode(&rfResp2Body)
+		rt2, _ := rfResp2Body["refresh_token"].(string)
+		if rt2 == "" {
+			t.Fatal("expected rt2 from second rotation")
+		}
+
 		// rt1 should also be invalidated (family invalidation)
 		rfResp2 := httptest.NewRequest("POST", "/api/auth/refresh",
 			strings.NewReader(`{"refresh_token":"`+rt1+`"}`))
@@ -178,6 +185,16 @@ func TestRefreshToken(t *testing.T) {
 		handler.ServeHTTP(rfRespW2, rfResp2)
 		if rfRespW2.Code != http.StatusUnauthorized {
 			t.Fatalf("rt1 after family invalidation: expected 401, got %d", rfRespW2.Code)
+		}
+
+		// Current tip of family (rt2) must also be revoked after replay detection
+		rfResp3 := httptest.NewRequest("POST", "/api/auth/refresh",
+			strings.NewReader(`{"refresh_token":"`+rt2+`"}`))
+		rfResp3.Header.Set("Content-Type", "application/json")
+		rfRespW3 := httptest.NewRecorder()
+		handler.ServeHTTP(rfRespW3, rfResp3)
+		if rfRespW3.Code != http.StatusUnauthorized {
+			t.Fatalf("rt2 after family invalidation: expected 401, got %d body=%s", rfRespW3.Code, rfRespW3.Body.String())
 		}
 	})
 
