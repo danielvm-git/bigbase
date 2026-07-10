@@ -1,3 +1,16 @@
+# [2.75.0](https://github.com/danielvm-git/bigbase/compare/v2.74.0...v2.75.0) (2026-07-10)
+
+
+### Bug Fixes
+
+* **deploy:** wait for deployment to reach terminal state in TestDeployCustomSiteName ([7b76f18](https://github.com/danielvm-git/bigbase/commit/7b76f1805c7300205c2fdbf11d133f6526feb201))
+
+
+### Features
+
+* **auth:** implement site deploy key REST handlers ([2a935df](https://github.com/danielvm-git/bigbase/commit/2a935df77be6c14dbf7170411e17ce405333991f))
+* **auth:** implement site deploy key REST handlers (#PR) ([0904978](https://github.com/danielvm-git/bigbase/commit/0904978743059ba61b11c7805dcd2a9bd4601ce8)), closes [#PR](https://github.com/danielvm-git/bigbase/issues/PR)
+
 # [2.74.0](https://github.com/danielvm-git/bigbase/compare/v2.73.0...v2.74.0) (2026-07-10)
 
 
