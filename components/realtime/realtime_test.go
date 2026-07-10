@@ -3,6 +3,7 @@ package realtime_test
 import (
 	"encoding/json"
 	"errors"
+	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
@@ -259,4 +260,38 @@ func TestRealtimeBroadcastOnlySubscribedChannel(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected no message for unsubscribed channel")
 	}
+}
+
+func TestRealtimeCheckOrigin(t *testing.T) {
+	rt := realtime.New(realtime.Options{
+		AllowedOrigins: []string{"https://app.example.com"},
+		Validate:       func(token string) (int64, error) { return 1, nil },
+	})
+	server := httptest.NewServer(rt.Handler())
+	t.Cleanup(server.Close)
+
+	wsURL := "ws" + strings.TrimPrefix(server.URL, "http") + "/realtime?token=valid"
+
+	t.Run("allowed origin", func(t *testing.T) {
+		hdr := http.Header{}
+		hdr.Set("Origin", "https://app.example.com")
+		conn, _, err := websocket.DefaultDialer.Dial(wsURL, hdr)
+		if err != nil {
+			t.Fatalf("allowed origin dial: %v", err)
+		}
+		_ = conn.Close()
+	})
+
+	t.Run("denied origin", func(t *testing.T) {
+		hdr := http.Header{}
+		hdr.Set("Origin", "https://evil.com")
+		_, resp, err := websocket.DefaultDialer.Dial(wsURL, hdr)
+		if err == nil {
+			t.Fatal("expected dial failure for evil origin")
+		}
+		if resp != nil && resp.StatusCode != http.StatusForbidden {
+			// gorilla returns 403 on CheckOrigin false
+			t.Logf("got status %d (err=%v)", resp.StatusCode, err)
+		}
+	})
 }

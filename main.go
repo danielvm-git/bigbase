@@ -414,7 +414,8 @@ func startProxy() {
 		UpdateAuthPolicy: p.SetSiteAuthPolicy,
 	})
 	rt := realtime.New(realtime.Options{
-		Logger: logger,
+		Logger:         logger,
+		AllowedOrigins: corsAllowedOrigins,
 		Validate: func(token string) (int64, error) {
 			claims, err := authComp.ValidateToken(token)
 			if err != nil {
