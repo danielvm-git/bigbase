@@ -294,7 +294,7 @@ func (m *Monitoring) GetRelatedEvents(ctx context.Context, deployID string) (dep
 
 func (m *Monitoring) handleIncidents(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
+		kernel.WriteJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
 		return
 	}
 	status := r.URL.Query().Get("status")
@@ -305,7 +305,7 @@ func (m *Monitoring) handleIncidents(w http.ResponseWriter, r *http.Request) {
 	query += ` ORDER BY opened_at DESC LIMIT 100`
 	rows, err := m.db.QueryContext(r.Context(), query)
 	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 	defer func() { _ = rows.Close() }()
@@ -334,19 +334,19 @@ func (m *Monitoring) handleIncidents(w http.ResponseWriter, r *http.Request) {
 	if items == nil {
 		items = []incident{}
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"data": items})
+	kernel.WriteJSON(w, http.StatusOK, map[string]any{"data": items})
 }
 
 func (m *Monitoring) handleIncidentInvestigation(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
+		kernel.WriteJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
 		return
 	}
 	id := strings.TrimPrefix(r.URL.Path, "/api/monitoring/incidents/")
 	id = strings.TrimSuffix(id, "/investigation")
 	id = strings.Trim(id, "/")
 	if id == "" {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "id required"})
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "id required"})
 		return
 	}
 	var reportJSON, aiSummary string
@@ -354,18 +354,18 @@ func (m *Monitoring) handleIncidentInvestigation(w http.ResponseWriter, r *http.
 		`SELECT report_json, COALESCE(ai_summary,'') FROM monitoring_investigations WHERE incident_id = ? ORDER BY created_at DESC LIMIT 1`, id).
 		Scan(&reportJSON, &aiSummary)
 	if err != nil {
-		writeJSON(w, http.StatusNotFound, map[string]string{"error": "no investigation"})
+		kernel.WriteJSON(w, http.StatusNotFound, map[string]string{"error": "no investigation"})
 		return
 	}
 	var report map[string]any
 	if err := json.Unmarshal([]byte(reportJSON), &report); err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 	if aiSummary != "" {
 		report["ai_summary"] = aiSummary
 	}
-	writeJSON(w, http.StatusOK, report)
+	kernel.WriteJSON(w, http.StatusOK, report)
 }
 
 func newObservabilityID() (string, error) {

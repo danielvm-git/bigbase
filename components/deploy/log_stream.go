@@ -5,6 +5,8 @@ import (
 	"sync"
 
 	"github.com/gorilla/websocket"
+
+	"github.com/danielvm/bigbase/kernel"
 )
 
 var wsUpgrader = websocket.Upgrader{
@@ -107,7 +109,7 @@ func (d *Deploy) handleLogsStream(w http.ResponseWriter, r *http.Request, id str
 	var exists int
 	if err := d.db.QueryRowContext(r.Context(),
 		"SELECT COUNT(*) FROM deployments WHERE id = ?", id).Scan(&exists); err != nil || exists == 0 {
-		writeJSON(w, http.StatusNotFound, map[string]string{"error": "deployment not found"})
+		kernel.WriteJSON(w, http.StatusNotFound, map[string]string{"error": "deployment not found"})
 		return
 	}
 

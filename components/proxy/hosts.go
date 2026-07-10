@@ -194,7 +194,7 @@ func (p *Proxy) deploymentHostMiddleware(next http.Handler) http.Handler {
 			next.ServeHTTP(w, r)
 			return
 		}
-		
+
 		// Service hosts (MCP, admin, etc.) — proxy to backend, but let the
 		// proxy itself serve discovery / well-known endpoints.
 		if backendPort, ok := p.serviceHosts[host]; ok {

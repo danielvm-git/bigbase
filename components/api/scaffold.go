@@ -31,7 +31,7 @@ func generateScaffoldID() string {
 // Creates a named collection (table) with a default schema.
 func (a *API) handleScaffoldDB(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
-		writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
+		kernel.WriteJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
 		return
 	}
 
@@ -40,23 +40,23 @@ func (a *API) handleScaffoldDB(w http.ResponseWriter, r *http.Request) {
 	}
 	r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid JSON"})
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid JSON"})
 		return
 	}
 
 	name := strings.TrimSpace(req.Name)
 	if name == "" {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "name is required"})
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "name is required"})
 		return
 	}
 
 	if _, err := sanitize(name); err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
 		return
 	}
 
 	if internalTables[name] {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "reserved name"})
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "reserved name"})
 		return
 	}
 
@@ -65,21 +65,21 @@ func (a *API) handleScaffoldDB(w http.ResponseWriter, r *http.Request) {
 
 	if err := a.ensureTable(name); err != nil {
 		a.logger.Error("scaffold db create table", "name", name, "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 
 	a.emitMutation("scaffold_db", name, nil, siteIDFromRequest(r))
 
 	_ = ctx
-	writeJSON(w, http.StatusCreated, map[string]string{"name": name, "status": "created"})
+	kernel.WriteJSON(w, http.StatusCreated, map[string]string{"name": name, "status": "created"})
 }
 
 // handleScaffoldRepo handles POST /api/scaffold/repo.
 // Emits an event requesting the git component to initialise a new repo.
 func (a *API) handleScaffoldRepo(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
-		writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
+		kernel.WriteJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
 		return
 	}
 
@@ -88,13 +88,13 @@ func (a *API) handleScaffoldRepo(w http.ResponseWriter, r *http.Request) {
 	}
 	r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid JSON"})
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid JSON"})
 		return
 	}
 
 	name := strings.TrimSpace(req.Name)
 	if name == "" {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "name is required"})
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "name is required"})
 		return
 	}
 
@@ -102,14 +102,14 @@ func (a *API) handleScaffoldRepo(w http.ResponseWriter, r *http.Request) {
 		_ = a.bus.Emit(kernelEvent("scaffold_repo", map[string]any{"name": name}), nil)
 	}
 
-	writeJSON(w, http.StatusCreated, map[string]string{"name": name, "status": "initialised"})
+	kernel.WriteJSON(w, http.StatusCreated, map[string]string{"name": name, "status": "initialised"})
 }
 
 // handleScaffoldFunction handles POST /api/scaffold/function.
 // Creates a stub function record in the functions table.
 func (a *API) handleScaffoldFunction(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
-		writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
+		kernel.WriteJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
 		return
 	}
 
@@ -118,13 +118,13 @@ func (a *API) handleScaffoldFunction(w http.ResponseWriter, r *http.Request) {
 	}
 	r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid JSON"})
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid JSON"})
 		return
 	}
 
 	name := strings.TrimSpace(req.Name)
 	if name == "" {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "name is required"})
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "name is required"})
 		return
 	}
 
@@ -146,10 +146,10 @@ func (a *API) handleScaffoldFunction(w http.ResponseWriter, r *http.Request) {
 		"INSERT INTO functions (id, name, runtime, source) VALUES (?, ?, 'node18', '')",
 		id, name); err != nil {
 		a.logger.Error("scaffold function insert", "name", name, "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 
 	a.emitMutation("scaffold_function", "functions", id, siteIDFromRequest(r))
-	writeJSON(w, http.StatusCreated, map[string]any{"id": id, "name": name, "status": "created"})
+	kernel.WriteJSON(w, http.StatusCreated, map[string]any{"id": id, "name": name, "status": "created"})
 }

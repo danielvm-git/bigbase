@@ -12,11 +12,12 @@ import (
 	"testing"
 	"time"
 
+	mcpsdk "github.com/modelcontextprotocol/go-sdk/mcp"
+	_ "modernc.org/sqlite"
+
 	"github.com/danielvm/bigbase/components/deploy"
 	"github.com/danielvm/bigbase/components/mcp"
 	"github.com/danielvm/bigbase/kernel"
-	mcpsdk "github.com/modelcontextprotocol/go-sdk/mcp"
-	_ "modernc.org/sqlite"
 )
 
 func TestComponentImplementsKernelComponent(t *testing.T) {
@@ -506,7 +507,7 @@ func TestGetCodeExample(t *testing.T) {
 	}
 	for _, p := range pairs {
 		result, err := session.CallTool(ctx, &mcpsdk.CallToolParams{
-			Name: "get_code_example",
+			Name:      "get_code_example",
 			Arguments: map[string]interface{}{"service": p[0], "framework": p[1]},
 		})
 		if err != nil {
@@ -520,7 +521,7 @@ func TestGetCodeExample(t *testing.T) {
 	}
 	// Unknown pair returns helpful message
 	result, err := session.CallTool(ctx, &mcpsdk.CallToolParams{
-		Name: "get_code_example",
+		Name:      "get_code_example",
 		Arguments: map[string]interface{}{"service": "nope", "framework": "nope"},
 	})
 	if err != nil {

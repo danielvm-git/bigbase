@@ -12,9 +12,9 @@ import (
 // WebhookProvider implements the Provider interface by POST-ing JSON messages
 // to a configured URL with a Bearer token.
 type WebhookProvider struct {
-	url     string
-	token   string
-	client  *http.Client
+	url    string
+	token  string
+	client *http.Client
 }
 
 // NewWebhookProvider creates a WebhookProvider that sends messages to the given URL
@@ -32,9 +32,9 @@ func NewWebhookProvider(url, token string) *WebhookProvider {
 // Send POSTs a JSON-encoded message to the configured webhook URL.
 func (w *WebhookProvider) Send(ctx context.Context, msg Message) error {
 	payload := map[string]string{
-		"channel":  msg.Channel,
-		"to_addr":  msg.ToAddr,
-		"body":     msg.Body,
+		"channel": msg.Channel,
+		"to_addr": msg.ToAddr,
+		"body":    msg.Body,
 	}
 	if msg.Subject != "" {
 		payload["subject"] = msg.Subject

@@ -712,7 +712,7 @@ func TestSiteAuthPolicyStruct(t *testing.T) {
 	siteID := "site-auth-struct-test"
 	now := "2026-07-08T20:00:00Z"
 	policyJSON := `{"default":"protected","protected_paths":["/secret/*"],"public_paths":["/public"],"accept":["jwt"]}`
-	
+
 	_, err := s.DB().ExecContext(ctx,
 		`INSERT INTO sites (id, name, git_repo_id, production_branch, root_path, github_full_name, created_at, auth_policy)
 		 VALUES (?, 'test-site', 'repo-1', 'main', './', '', ?, ?)`,
@@ -850,5 +850,3 @@ func TestSiteAuthPolicyAPI(t *testing.T) {
 		t.Errorf("unexpected protected paths: %v", policy2.ProtectedPaths)
 	}
 }
-
-

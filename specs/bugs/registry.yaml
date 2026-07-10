@@ -710,6 +710,45 @@ bugs:
     risk_level: low
     regression_guards:
       - components/monitoring/alert_checker_test.go TestMetricValue TestMetricValueEdgeCases TestEvalOperator TestEmitAlertTriggeredNilContext
+  - id: BUG-2026-07-10T160101
+    date: "2026-07-10"
+    severity: medium
+    priority: medium
+    scope: deploy
+    summary: "Deploy god object 1924 lines — needs decomposition per ADR 0005"
+    file: specs/bugs/BUG-2026-07-10T160101-deploy-god-object.md
+    status: fixed
+    files_changed:
+      - components/deploy/deploy.go
+      - components/deploy/engine.go
+      - components/deploy/gateway.go
+      - components/deploy/orchestrator.go
+      - components/deploy/schema.go
+      - components/deploy/state_transitions.go
+      - components/deploy/utils.go
+    approach: "Split 1924-line deploy.go into six domain modules per ADR 0005: engine.go (build lifecycle, 637L), gateway.go (HTTP API, 269L), orchestrator.go (fleet management, 326L), schema.go (migrations, 104L), state_transitions.go (state machine, 103L), utils.go (helpers, 114L). deploy.go reduced to 334L composition root."
+    risk_level: medium
+    regression_guards:
+      - All 256 deploy package tests pass
+  - id: BUG-2026-07-10T160105
+    date: "2026-07-10"
+    severity: medium
+    priority: medium
+    scope: deploy
+    summary: "Error string matching instead of sentinels — fragile string comparisons in deploy handlers"
+    status: fixed
+    files_changed:
+      - components/deploy/errors.go
+      - components/deploy/engine.go
+      - components/deploy/gateway.go
+      - components/deploy/rollback.go
+      - components/deploy/schema.go
+      - components/deploy/observability.go
+      - components/deploy/pipeline_timeline.go
+    approach: "Created ErrRepoNotFound and ErrDeploymentNotFound sentinel errors; added isDuplicateColumnError helper; replaced switch err.Error() and strings.Contains(err.Error(), ...) patterns with errors.Is() and the helper across 7 files."
+    risk_level: low
+    regression_guards:
+      - 255/256 deploy tests pass (pre-existing flaky TestDeployStopShutsDownStaticServer)
   - id: BUG-2026-07-10T160209
     date: "2026-07-10"
     severity: low
@@ -742,3 +781,71 @@ bugs:
     risk_level: low
     regression_guards:
       - go build ./components/auth/ ./components/git/ ./components/github/
+
+  - id: BUG-2026-07-10T160007
+    date: "2026-07-10"
+    severity: high
+    priority: high
+    scope: kernel
+    summary: "56 duplicated writeJSON/noopLogger/generateID/DBer copies"
+    file: specs/bugs/BUG-2026-07-10T160007-duplicated-kernel-utilities.md
+    status: fixed
+    files_changed:
+      - kernel/utilities.go (created)
+      - components/admin/admin.go
+      - components/admin/admin_test.go
+      - components/api/api.go
+      - components/api/envvars.go
+      - components/api/onboarding.go
+      - components/api/scaffold.go
+      - components/auth/audit_test.go
+      - components/auth/auth.go
+      - components/auth/auth_test.go
+      - components/auth/cors.go
+      - components/auth/cors_test.go
+      - components/auth/store_test.go
+      - components/backup/handler.go
+      - components/cici/cici.go
+      - components/db/db.go
+      - components/db/postgres.go
+      - components/deploy/cache_api.go
+      - components/deploy/cache_api_test.go
+      - components/deploy/deploy.go
+      - components/deploy/deploy_test.go
+      - components/deploy/engine.go
+      - components/deploy/gateway.go
+      - components/deploy/health.go
+      - components/deploy/log_stream.go
+      - components/deploy/manifest.go
+      - components/deploy/observability.go
+      - components/deploy/orchestrator.go
+      - components/deploy/rollback.go
+      - components/deploy/runner.go
+      - components/deploy/schema.go
+      - components/deploy/state_events_test.go
+      - components/deploy/state_machine.go
+      - components/deploy/supervisor.go
+      - components/deploy/supervisor_test.go
+      - components/deploy/supervisor_wire_test.go
+      - components/deploy/utils.go
+      - components/forge/forge.go
+      - components/forge/forge_test.go
+      - components/forge/issues.go
+      - components/forge/labels.go
+      - components/forge/wiki.go
+      - components/functions/functions.go
+      - components/git/git.go
+      - components/github/github.go
+      - components/messaging/messaging.go
+      - components/mcp/mcp.go
+      - components/monitoring/alert_checker_test.go
+      - components/monitoring/monitoring.go
+      - components/proxy/proxy.go
+      - components/realtime/realtime.go
+      - components/sites/sites.go
+      - components/storage/storage.go
+      - components/webhooks/webhooks.go
+    approach: "Moved centralized WriteJSON, GenerateID, NoopLogger into kernel/utilities.go; removed 56 local duplicate definitions across all components; updated all call sites to kernel. prefix"
+    risk_level: low
+    regression_guards:
+      - go test ./... (997/998 pass, 1 pre-existing flaky deploy test)

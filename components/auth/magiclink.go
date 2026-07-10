@@ -12,6 +12,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/danielvm/bigbase/kernel"
 )
 
 // magicLinkStore is an in-memory store for magic link tokens.
@@ -37,11 +39,11 @@ func generateMagicToken() (string, error) {
 
 func (a *Auth) handleSendMagicLink(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
-		writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
+		kernel.WriteJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
 		return
 	}
 	if a.emailSender == nil {
-		writeJSON(w, http.StatusNotFound, map[string]string{"error": "magic link not configured"})
+		kernel.WriteJSON(w, http.StatusNotFound, map[string]string{"error": "magic link not configured"})
 		return
 	}
 
@@ -50,7 +52,7 @@ func (a *Auth) handleSendMagicLink(w http.ResponseWriter, r *http.Request) {
 		RedirectTo string `json:"redirect_to"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.Email == "" {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "email required"})
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "email required"})
 		return
 	}
 	email := strings.ToLower(req.Email)
@@ -60,18 +62,18 @@ func (a *Auth) handleSendMagicLink(w http.ResponseWriter, r *http.Request) {
 	allowed, err := a.rateLimitStore.Increment(r.Context(), email, now, maxOTPsPerHour)
 	if err != nil {
 		a.logger.Error("magic link rate limit check failed", "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal server error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal server error"})
 		return
 	}
 	if !allowed {
-		writeJSON(w, http.StatusTooManyRequests, map[string]string{"error": "too many requests"})
+		kernel.WriteJSON(w, http.StatusTooManyRequests, map[string]string{"error": "too many requests"})
 		return
 	}
 
 	token, err := generateMagicToken()
 	if err != nil {
 		a.logger.Error("generate magic token", "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 
@@ -99,7 +101,7 @@ func (a *Auth) handleSendMagicLink(w http.ResponseWriter, r *http.Request) {
 	}
 
 	a.emailSender.SendEmail(email, "Sign in to BigBase", fmt.Sprintf("Click here to sign in: %s", link))
-	writeJSON(w, http.StatusOK, map[string]bool{"ok": true})
+	kernel.WriteJSON(w, http.StatusOK, map[string]bool{"ok": true})
 }
 
 func (a *Auth) handleVerifyMagicLink(w http.ResponseWriter, r *http.Request) {
@@ -107,7 +109,7 @@ func (a *Auth) handleVerifyMagicLink(w http.ResponseWriter, r *http.Request) {
 	redirectTo := r.URL.Query().Get("redirect_to")
 
 	if token == "" {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "token required"})
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "token required"})
 		return
 	}
 
@@ -115,7 +117,7 @@ func (a *Auth) handleVerifyMagicLink(w http.ResponseWriter, r *http.Request) {
 	rec, ok := mlStore[token]
 	if !ok || rec.used || time.Now().After(rec.expiresAt) {
 		mlStoreMu.Unlock()
-		writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "invalid or expired token"})
+		kernel.WriteJSON(w, http.StatusUnauthorized, map[string]string{"error": "invalid or expired token"})
 		return
 	}
 
@@ -125,7 +127,7 @@ func (a *Auth) handleVerifyMagicLink(w http.ResponseWriter, r *http.Request) {
 	expectedHash := hex.EncodeToString(mac.Sum(nil))
 	if !hmac.Equal([]byte(rec.tokenHash), []byte(expectedHash)) {
 		mlStoreMu.Unlock()
-		writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "invalid token"})
+		kernel.WriteJSON(w, http.StatusUnauthorized, map[string]string{"error": "invalid token"})
 		return
 	}
 
@@ -138,14 +140,14 @@ func (a *Auth) handleVerifyMagicLink(w http.ResponseWriter, r *http.Request) {
 	userID, orgID, err := a.findOrCreateEmailUser(r.Context(), email)
 	if err != nil {
 		a.logger.Error("find or create magic link user", "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 
 	jwt, err := createJWT(userID, email, "user", orgID, a.secret, a.accessExpiry)
 	if err != nil {
 		a.logger.Error("create JWT", "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 

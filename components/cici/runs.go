@@ -12,6 +12,8 @@ import (
 	"time"
 
 	"gopkg.in/yaml.v3"
+
+	"github.com/danielvm/bigbase/kernel"
 )
 
 func (c *CICI) triggerRun(w http.ResponseWriter, r *http.Request) {
@@ -21,7 +23,7 @@ func (c *CICI) triggerRun(w http.ResponseWriter, r *http.Request) {
 		Event string `json:"event"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json"})
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json"})
 		return
 	}
 	if req.Event == "" {
@@ -30,14 +32,14 @@ func (c *CICI) triggerRun(w http.ResponseWriter, r *http.Request) {
 
 	wf, err := c.fetchWorkflow(r.Context(), workflowID)
 	if err != nil {
-		writeJSON(w, http.StatusNotFound, map[string]string{"error": "workflow not found"})
+		kernel.WriteJSON(w, http.StatusNotFound, map[string]string{"error": "workflow not found"})
 		return
 	}
 
-	runID, err := generateID()
+	runID, err := kernel.GenerateID()
 	if err != nil {
 		c.logger.Error("generate run id", "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 
@@ -46,13 +48,13 @@ func (c *CICI) triggerRun(w http.ResponseWriter, r *http.Request) {
 		"INSERT INTO cici_runs (id, workflow_id, event, status, started_at) VALUES (?, ?, ?, 'running', ?)",
 		runID, workflowID, req.Event, now); err != nil {
 		c.logger.Error("insert run", "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 
 	go c.executeRun(runID, wf)
 
-	writeJSON(w, http.StatusAccepted, PipelineRun{
+	kernel.WriteJSON(w, http.StatusAccepted, PipelineRun{
 		ID: runID, WorkflowID: workflowID, Event: req.Event,
 		Status: "running", StartedAt: now,
 	})
@@ -163,7 +165,7 @@ func (c *CICI) handleRuns(w http.ResponseWriter, r *http.Request) {
 	rows, err := c.db.QueryContext(ctx, query, args...)
 	if err != nil {
 		c.logger.Error("list runs", "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 	defer func() { _ = rows.Close() }()
@@ -179,10 +181,10 @@ func (c *CICI) handleRuns(w http.ResponseWriter, r *http.Request) {
 	}
 	if err := rows.Err(); err != nil {
 		c.logger.Error("iterate runs", "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"data": runs})
+	kernel.WriteJSON(w, http.StatusOK, map[string]any{"data": runs})
 }
 
 func (c *CICI) getRunLogs(w http.ResponseWriter, r *http.Request) {
@@ -195,7 +197,7 @@ func (c *CICI) getRunLogs(w http.ResponseWriter, r *http.Request) {
 		"SELECT id, run_id, step, output FROM cici_logs WHERE run_id = ? ORDER BY id", runID)
 	if err != nil {
 		c.logger.Error("get logs", "run_id", runID, "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 	defer func() { _ = rows.Close() }()
@@ -211,8 +213,8 @@ func (c *CICI) getRunLogs(w http.ResponseWriter, r *http.Request) {
 	}
 	if err := rows.Err(); err != nil {
 		c.logger.Error("iterate logs", "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"logs": logs})
+	kernel.WriteJSON(w, http.StatusOK, map[string]any{"logs": logs})
 }

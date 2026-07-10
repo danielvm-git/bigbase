@@ -1,8 +1,6 @@
 package forge
 
 import (
-	"crypto/rand"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -12,14 +10,6 @@ import (
 )
 
 const version = "0.1.0"
-
-
-type noopLogger struct{}
-
-func (noopLogger) Info(msg string, args ...any)  {}
-func (noopLogger) Warn(msg string, args ...any)  {}
-func (noopLogger) Error(msg string, args ...any) {}
-func (noopLogger) Debug(msg string, args ...any) {}
 
 // DBer is an alias for kernel.DBer — the shared database abstraction.
 type DBer = kernel.DBer
@@ -69,16 +59,16 @@ type Options struct {
 func New(opts Options) *Forge {
 	logger := opts.Logger
 	if logger == nil {
-		logger = noopLogger{}
+		logger = kernel.NoopLogger{}
 	}
 	return &Forge{db: opts.DB, logger: logger}
 }
 
-func (f *Forge) Name() string                    { return "forge" }
-func (f *Forge) Version() string                 { return version }
-func (f *Forge) Dependencies() []string          { return []string{"db"} }
-func (f *Forge) ConfigSchema() json.RawMessage   { return nil }
-func (f *Forge) Hooks() []kernel.HookDef         { return nil }
+func (f *Forge) Name() string                  { return "forge" }
+func (f *Forge) Version() string               { return version }
+func (f *Forge) Dependencies() []string        { return []string{"db"} }
+func (f *Forge) ConfigSchema() json.RawMessage { return nil }
+func (f *Forge) Hooks() []kernel.HookDef       { return nil }
 
 func (f *Forge) Init(ctx *kernel.Context, config json.RawMessage) error {
 	return nil
@@ -120,14 +110,6 @@ func (f *Forge) Stop(ctx *kernel.Context) error {
 	return nil
 }
 
-func generateID() (string, error) {
-	b := make([]byte, 16)
-	if _, err := rand.Read(b); err != nil {
-		return "", fmt.Errorf("generate id: %w", err)
-	}
-	return hex.EncodeToString(b), nil
-}
-
 func (f *Forge) Handler() http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/api/forge/issues/", f.handleIssueByID)
@@ -145,7 +127,7 @@ func (f *Forge) handleIssues(w http.ResponseWriter, r *http.Request) {
 	case "POST":
 		f.createIssue(w, r)
 	default:
-		writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
+		kernel.WriteJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
 	}
 }
 func (f *Forge) handleIssueByID(w http.ResponseWriter, r *http.Request) {
@@ -153,7 +135,7 @@ func (f *Forge) handleIssueByID(w http.ResponseWriter, r *http.Request) {
 	parts := strings.SplitN(path, "/", 2)
 	id := parts[0]
 	if id == "" {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "id required"})
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "id required"})
 		return
 	}
 
@@ -168,7 +150,7 @@ func (f *Forge) handleIssueByID(w http.ResponseWriter, r *http.Request) {
 	case "PATCH":
 		f.updateIssue(w, r, id)
 	default:
-		writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
+		kernel.WriteJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
 	}
 }
 func (f *Forge) handleLabels(w http.ResponseWriter, r *http.Request) {
@@ -178,18 +160,18 @@ func (f *Forge) handleLabels(w http.ResponseWriter, r *http.Request) {
 	case "POST":
 		f.createLabel(w, r)
 	default:
-		writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
+		kernel.WriteJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
 	}
 }
 func (f *Forge) handleBoard(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "GET" {
-		writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
+		kernel.WriteJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
 		return
 	}
 
 	repoID := r.URL.Query().Get("repo_id")
 	if repoID == "" {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "repo_id required"})
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "repo_id required"})
 		return
 	}
 
@@ -199,17 +181,17 @@ func (f *Forge) handleBoard(w http.ResponseWriter, r *http.Request) {
 		issues, err := f.fetchIssues(r.Context(), repoID, status)
 		if err != nil {
 			f.logger.Error("query board column", "status", status, "error", err)
-			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "failed to load board"})
+			kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "failed to load board"})
 			return
 		}
 		board[status] = issues
 	}
-	writeJSON(w, http.StatusOK, board)
+	kernel.WriteJSON(w, http.StatusOK, board)
 }
 func (f *Forge) handleWiki(w http.ResponseWriter, r *http.Request) {
 	title := strings.TrimPrefix(r.URL.Path, "/api/forge/wiki/")
 	if title == "" {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "page title required"})
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "page title required"})
 		return
 	}
 
@@ -219,11 +201,6 @@ func (f *Forge) handleWiki(w http.ResponseWriter, r *http.Request) {
 	case "PUT":
 		f.saveWiki(w, r, title)
 	default:
-		writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
+		kernel.WriteJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
 	}
-}
-func writeJSON(w http.ResponseWriter, status int, data any) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
-	_ = json.NewEncoder(w).Encode(data)
 }

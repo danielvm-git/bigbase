@@ -2,8 +2,6 @@ package messaging
 
 import (
 	"context"
-	"crypto/rand"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -14,14 +12,6 @@ import (
 )
 
 const version = "0.1.0"
-
-
-type noopLogger struct{}
-
-func (noopLogger) Info(msg string, args ...any)  {}
-func (noopLogger) Warn(msg string, args ...any)  {}
-func (noopLogger) Error(msg string, args ...any) {}
-func (noopLogger) Debug(msg string, args ...any) {}
 
 // DBer is an alias for kernel.DBer — the shared database abstraction.
 type DBer = kernel.DBer
@@ -50,19 +40,19 @@ type Provider interface {
 }
 
 type Messaging struct {
-	db          DBer
-	logger kernel.Logger
-	smtpHost    string
-	smtpPort    int
-	smtpUser    string
-	smtpPass    string
-	smtpFrom    string
-	providers   map[string]Provider
+	db        DBer
+	logger    kernel.Logger
+	smtpHost  string
+	smtpPort  int
+	smtpUser  string
+	smtpPass  string
+	smtpFrom  string
+	providers map[string]Provider
 }
 
 type Options struct {
 	DB       DBer
-	Logger kernel.Logger
+	Logger   kernel.Logger
 	SMTPHost string
 	SMTPPort int
 	SMTPUser string
@@ -73,7 +63,7 @@ type Options struct {
 func New(opts Options) *Messaging {
 	logger := opts.Logger
 	if logger == nil {
-		logger = noopLogger{}
+		logger = kernel.NoopLogger{}
 	}
 	if opts.SMTPHost == "" {
 		opts.SMTPHost = "localhost"
@@ -104,11 +94,11 @@ func (m *Messaging) Provider(channel string) Provider {
 	return m.providers[channel]
 }
 
-func (m *Messaging) Name() string                   { return "messaging" }
-func (m *Messaging) Version() string                { return version }
-func (m *Messaging) Dependencies() []string         { return []string{"db"} }
-func (m *Messaging) ConfigSchema() json.RawMessage  { return nil }
-func (m *Messaging) Hooks() []kernel.HookDef        { return nil }
+func (m *Messaging) Name() string                  { return "messaging" }
+func (m *Messaging) Version() string               { return version }
+func (m *Messaging) Dependencies() []string        { return []string{"db"} }
+func (m *Messaging) ConfigSchema() json.RawMessage { return nil }
+func (m *Messaging) Hooks() []kernel.HookDef       { return nil }
 
 func (m *Messaging) Init(ctx *kernel.Context, config json.RawMessage) error {
 	return nil
@@ -144,16 +134,8 @@ func (m *Messaging) Handler() http.Handler {
 	return mux
 }
 
-func generateID() (string, error) {
-	b := make([]byte, 16)
-	if _, err := rand.Read(b); err != nil {
-		return "", fmt.Errorf("generate id: %w", err)
-	}
-	return hex.EncodeToString(b), nil
-}
-
 func (m *Messaging) send(ctx context.Context, channel, toAddr, subject, body string) (*Message, error) {
-	id, err := generateID()
+	id, err := kernel.GenerateID()
 	if err != nil {
 		return nil, err
 	}
@@ -190,7 +172,7 @@ func (m *Messaging) send(ctx context.Context, channel, toAddr, subject, body str
 // and routes through the registered telegram channel provider.
 func (m *Messaging) handleTelegram(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
+		kernel.WriteJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
 		return
 	}
 
@@ -201,41 +183,35 @@ func (m *Messaging) handleTelegram(w http.ResponseWriter, r *http.Request) {
 		Token     string `json:"token,omitempty"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json"})
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json"})
 		return
 	}
 
 	if req.ChatID == "" {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "chat_id is required"})
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "chat_id is required"})
 		return
 	}
 	if req.Text == "" {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "text is required"})
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "text is required"})
 		return
 	}
 
 	msg, err := m.send(r.Context(), "telegram", req.ChatID, "", req.Text)
 	if err != nil {
 		m.logger.Error("telegram send", "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "send failed"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "send failed"})
 		return
 	}
 
-	writeJSON(w, http.StatusOK, msg)
+	kernel.WriteJSON(w, http.StatusOK, msg)
 }
 
 func (m *Messaging) handleMethod(w http.ResponseWriter, r *http.Request, method string) bool {
 	if r.Method != method {
-		writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
+		kernel.WriteJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
 		return false
 	}
 	return true
-}
-
-func writeJSON(w http.ResponseWriter, status int, data any) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
-	_ = json.NewEncoder(w).Encode(data)
 }
 
 func validateRequired(value, field string) string {

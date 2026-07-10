@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/danielvm/bigbase/kernel"
 )
 
 // cacheConfigMigration stores the operator-set max cache size as a single row.
@@ -53,10 +55,10 @@ func (d *Deploy) handleCache(w http.ResponseWriter, r *http.Request) {
 		stats, err := d.cache.Stats()
 		if err != nil {
 			d.logger.Error("cache stats", "error", err)
-			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+			kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 			return
 		}
-		writeJSON(w, http.StatusOK, map[string]any{
+		kernel.WriteJSON(w, http.StatusOK, map[string]any{
 			"total_entries":    stats.TotalEntries,
 			"total_size_bytes": stats.TotalSizeB,
 			"max_size_bytes":   d.cache.MaxBytes(),
@@ -64,19 +66,19 @@ func (d *Deploy) handleCache(w http.ResponseWriter, r *http.Request) {
 	case http.MethodDelete:
 		if err := d.cache.Clear(); err != nil {
 			d.logger.Error("cache clear", "error", err)
-			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+			kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 			return
 		}
-		writeJSON(w, http.StatusOK, map[string]string{"status": "cleared"})
+		kernel.WriteJSON(w, http.StatusOK, map[string]string{"status": "cleared"})
 	default:
-		writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
+		kernel.WriteJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
 	}
 }
 
 // handleCachePrune removes entries older than max_age_days (default 7).
 func (d *Deploy) handleCachePrune(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
+		kernel.WriteJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
 		return
 	}
 	r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
@@ -86,7 +88,7 @@ func (d *Deploy) handleCachePrune(w http.ResponseWriter, r *http.Request) {
 		MaxAgeDays *int `json:"max_age_days"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil && !errors.Is(err, io.EOF) {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json or body too large"})
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json or body too large"})
 		return
 	}
 	days := defaultPruneDays
@@ -94,23 +96,23 @@ func (d *Deploy) handleCachePrune(w http.ResponseWriter, r *http.Request) {
 		days = *req.MaxAgeDays
 	}
 	if days < 1 {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "max_age_days must be at least 1"})
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "max_age_days must be at least 1"})
 		return
 	}
 
 	pruned, err := d.cache.Prune(time.Duration(days) * 24 * time.Hour)
 	if err != nil {
 		d.logger.Error("cache prune", "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"pruned": pruned})
+	kernel.WriteJSON(w, http.StatusOK, map[string]any{"pruned": pruned})
 }
 
 // handleCacheConfig persists and applies the max cache size (PUT).
 func (d *Deploy) handleCacheConfig(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPut {
-		writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
+		kernel.WriteJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
 		return
 	}
 	r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
@@ -118,11 +120,11 @@ func (d *Deploy) handleCacheConfig(w http.ResponseWriter, r *http.Request) {
 		MaxSizeBytes int64 `json:"max_size_bytes"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json or body too large"})
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json or body too large"})
 		return
 	}
 	if req.MaxSizeBytes <= 0 {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "max_size_bytes must be positive"})
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "max_size_bytes must be positive"})
 		return
 	}
 
@@ -130,7 +132,7 @@ func (d *Deploy) handleCacheConfig(w http.ResponseWriter, r *http.Request) {
 	defer cancel()
 	if err := d.ensureCacheConfigTable(); err != nil {
 		d.logger.Error("ensure cache config table", "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 	_, err := d.db.ExecContext(ctx,
@@ -138,11 +140,11 @@ func (d *Deploy) handleCacheConfig(w http.ResponseWriter, r *http.Request) {
 		 ON CONFLICT(id) DO UPDATE SET max_bytes = excluded.max_bytes`, req.MaxSizeBytes)
 	if err != nil {
 		d.logger.Error("persist cache config", "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 	d.cache.SetMaxBytes(req.MaxSizeBytes)
-	writeJSON(w, http.StatusOK, map[string]any{"max_size_bytes": req.MaxSizeBytes})
+	kernel.WriteJSON(w, http.StatusOK, map[string]any{"max_size_bytes": req.MaxSizeBytes})
 }
 
 // handleSiteCache serves per-site cache status (GET) and purge (DELETE).
@@ -150,7 +152,7 @@ func (d *Deploy) handleSiteCache(w http.ResponseWriter, r *http.Request) {
 	siteID := strings.TrimPrefix(r.URL.Path, "/api/deploy/cache/site/")
 	siteID = strings.Trim(siteID, "/")
 	if siteID == "" {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "site id is required"})
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "site id is required"})
 		return
 	}
 
@@ -159,7 +161,7 @@ func (d *Deploy) handleSiteCache(w http.ResponseWriter, r *http.Request) {
 		entries, err := d.cache.SiteEntries(siteID)
 		if err != nil {
 			d.logger.Error("site cache entries", "site_id", siteID, "error", err)
-			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+			kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 			return
 		}
 		var totalSize int64
@@ -168,7 +170,7 @@ func (d *Deploy) handleSiteCache(w http.ResponseWriter, r *http.Request) {
 			totalSize += e.Size
 			totalHits += e.HitCount
 		}
-		writeJSON(w, http.StatusOK, map[string]any{
+		kernel.WriteJSON(w, http.StatusOK, map[string]any{
 			"entries":          entries,
 			"total_size_bytes": totalSize,
 			"total_hits":       totalHits,
@@ -176,11 +178,11 @@ func (d *Deploy) handleSiteCache(w http.ResponseWriter, r *http.Request) {
 	case http.MethodDelete:
 		if err := d.cache.PurgeSite(siteID); err != nil {
 			d.logger.Error("purge site cache", "site_id", siteID, "error", err)
-			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+			kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 			return
 		}
-		writeJSON(w, http.StatusOK, map[string]string{"status": "purged"})
+		kernel.WriteJSON(w, http.StatusOK, map[string]string{"status": "purged"})
 	default:
-		writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
+		kernel.WriteJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
 	}
 }

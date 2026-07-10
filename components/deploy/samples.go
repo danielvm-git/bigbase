@@ -4,6 +4,8 @@ import (
 	"context"
 	"net/http"
 	"strings"
+
+	"github.com/danielvm/bigbase/kernel"
 )
 
 // SampleApp describes a pre-built sample application users can deploy in one click.
@@ -49,47 +51,47 @@ func (d *Deploy) handleSamples(w http.ResponseWriter, r *http.Request) {
 
 	if path == "" {
 		if r.Method != "GET" {
-			writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
+			kernel.WriteJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
 			return
 		}
-		writeJSON(w, http.StatusOK, map[string]any{"data": catalogSamples})
+		kernel.WriteJSON(w, http.StatusOK, map[string]any{"data": catalogSamples})
 		return
 	}
 
 	// Expect :name/deploy
 	parts := strings.SplitN(path, "/", 2)
 	if len(parts) != 2 || parts[1] != "deploy" {
-		writeJSON(w, http.StatusNotFound, map[string]string{"error": "not found"})
+		kernel.WriteJSON(w, http.StatusNotFound, map[string]string{"error": "not found"})
 		return
 	}
 
 	name := parts[0]
 	if r.Method != "POST" {
-		writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
+		kernel.WriteJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
 		return
 	}
 
 	sample := sampleByName(name)
 	if sample == nil {
-		writeJSON(w, http.StatusNotFound, map[string]string{"error": "sample not found"})
+		kernel.WriteJSON(w, http.StatusNotFound, map[string]string{"error": "sample not found"})
 		return
 	}
 
 	repoID, err := d.ensureSampleRepo(r.Context(), sample)
 	if err != nil {
 		d.logger.Error("ensure sample repo", "name", name, "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 
 	deployment, err := d.Trigger(r.Context(), repoID, "main", "", "sample-site", nil, "", "")
 	if err != nil {
 		d.logger.Error("trigger sample deploy", "name", name, "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 
-	writeJSON(w, http.StatusCreated, deployment)
+	kernel.WriteJSON(w, http.StatusCreated, deployment)
 }
 
 // ensureSampleRepo returns the git_repos id for the sample, creating a stub row if needed.
@@ -100,7 +102,7 @@ func (d *Deploy) ensureSampleRepo(ctx context.Context, sample *SampleApp) (strin
 		return id, nil
 	}
 
-	newID, genErr := generateID()
+	newID, genErr := kernel.GenerateID()
 	if genErr != nil {
 		return "", genErr
 	}

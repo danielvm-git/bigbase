@@ -110,7 +110,7 @@ type Component struct {
 func New(opts Options) *Component {
 	logger := opts.Logger
 	if logger == nil {
-		logger = noopLogger{}
+		logger = kernel.NoopLogger{}
 	}
 	port := opts.Port
 	if port == 0 {
@@ -907,10 +907,3 @@ func (c *Component) Handler() http.Handler {
 
 	return mux
 }
-
-type noopLogger struct{}
-
-func (noopLogger) Info(msg string, args ...any)  {}
-func (noopLogger) Warn(msg string, args ...any)  {}
-func (noopLogger) Error(msg string, args ...any) {}
-func (noopLogger) Debug(msg string, args ...any) {}

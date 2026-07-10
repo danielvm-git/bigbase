@@ -53,6 +53,7 @@ func TestProjectIDContextMissing(t *testing.T) {
 // This is the critical security property — prevents context key spoofing.
 func TestProjectIDContextTypeIsolation(t *testing.T) {
 	// Set a string key "project_id" in context (simulating an attacker)
+	//nolint:staticcheck // deliberate use of string key to test type-safety isolation
 	ctx := context.WithValue(context.Background(), "project_id", int64(999))
 	got, ok := ProjectIDFromContext(ctx)
 

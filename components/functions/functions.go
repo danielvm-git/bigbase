@@ -2,16 +2,15 @@ package functions
 
 import (
 	"context"
-	"crypto/rand"
-	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
 	"sync"
 
-	"github.com/danielvm/bigbase/kernel"
 	"github.com/robfig/cron/v3"
+
+	"github.com/danielvm/bigbase/kernel"
 )
 
 var (
@@ -20,14 +19,6 @@ var (
 )
 
 const version = "0.1.0"
-
-
-type noopLogger struct{}
-
-func (noopLogger) Info(msg string, args ...any)  {}
-func (noopLogger) Warn(msg string, args ...any)  {}
-func (noopLogger) Error(msg string, args ...any) {}
-func (noopLogger) Debug(msg string, args ...any) {}
 
 // DBer is an alias for kernel.DBer — the shared database abstraction.
 type DBer = kernel.DBer
@@ -45,19 +36,19 @@ type Function struct {
 }
 
 type Functions struct {
-	db              DBer
-	logger kernel.Logger
-	timeout         int
-	runtimes        map[string]Runtime
-	cron            *cron.Cron
-	scheduleEnabled bool
-	mu              sync.Mutex
+	db               DBer
+	logger           kernel.Logger
+	timeout          int
+	runtimes         map[string]Runtime
+	cron             *cron.Cron
+	scheduleEnabled  bool
+	mu               sync.Mutex
 	scheduleEntryIDs map[string]cron.EntryID // fnID → cron entry
 }
 
 type Options struct {
 	DB              DBer
-	Logger kernel.Logger
+	Logger          kernel.Logger
 	Timeout         int
 	ScheduleEnabled bool
 }
@@ -65,7 +56,7 @@ type Options struct {
 func New(opts Options) *Functions {
 	logger := opts.Logger
 	if logger == nil {
-		logger = noopLogger{}
+		logger = kernel.NoopLogger{}
 	}
 	timeout := opts.Timeout
 	if timeout == 0 {
@@ -135,14 +126,6 @@ func (f *Functions) Stop(ctx *kernel.Context) error {
 	return nil
 }
 
-func generateID() (string, error) {
-	b := make([]byte, 16)
-	if _, err := rand.Read(b); err != nil {
-		return "", fmt.Errorf("generate id: %w", err)
-	}
-	return hex.EncodeToString(b), nil
-}
-
 func (f *Functions) Handler() http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/api/functions", f.handleFunctions)
@@ -171,12 +154,6 @@ func (f *Functions) scanFunction(row interface {
 func (f *Functions) fetchFunctionByID(ctx context.Context, id string) (Function, error) {
 	return f.scanFunction(f.db.QueryRowContext(ctx,
 		"SELECT id, name, runtime, source, trigger, schedule, env, timeout, created_at FROM functions WHERE id = ?", id))
-}
-
-func writeJSON(w http.ResponseWriter, status int, data any) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
-	_ = json.NewEncoder(w).Encode(data)
 }
 
 // startScheduleLoop initializes the cron scheduler and registers all
@@ -239,8 +216,8 @@ func (f *Functions) executeScheduled(fn Function) {
 	}
 
 	runCtx := RunContext{
-		Env:     fn.Env,
-		DB:      f.db,
+		Env: fn.Env,
+		DB:  f.db,
 	}
 	output, execErr := rt.Execute(fn.Source, fn.Timeout, runCtx)
 

@@ -6,6 +6,8 @@ import (
 	"encoding/json"
 	"net/http"
 	"time"
+
+	"github.com/danielvm/bigbase/kernel"
 )
 
 func (f *Forge) createIssue(w http.ResponseWriter, r *http.Request) {
@@ -17,21 +19,21 @@ func (f *Forge) createIssue(w http.ResponseWriter, r *http.Request) {
 		Labels      []string `json:"labels"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json"})
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json"})
 		return
 	}
 	if req.RepoID == "" || req.Title == "" {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "repo_id and title are required"})
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "repo_id and title are required"})
 		return
 	}
 	if req.Status == "" {
 		req.Status = "open"
 	}
 
-	id, err := generateID()
+	id, err := kernel.GenerateID()
 	if err != nil {
 		f.logger.Error("generate id", "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 
@@ -41,11 +43,11 @@ func (f *Forge) createIssue(w http.ResponseWriter, r *http.Request) {
 		"INSERT INTO forge_issues (id, repo_id, title, description, status, labels, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
 		id, req.RepoID, req.Title, req.Description, req.Status, string(labelsJSON), now, now); err != nil {
 		f.logger.Error("insert issue", "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 
-	writeJSON(w, http.StatusCreated, Issue{
+	kernel.WriteJSON(w, http.StatusCreated, Issue{
 		ID: id, RepoID: req.RepoID, Title: req.Title,
 		Description: req.Description, Status: req.Status,
 		Labels: req.Labels, CreatedAt: now, UpdatedAt: now,
@@ -55,17 +57,17 @@ func (f *Forge) createIssue(w http.ResponseWriter, r *http.Request) {
 func (f *Forge) listIssues(w http.ResponseWriter, r *http.Request) {
 	repoID := r.URL.Query().Get("repo_id")
 	if repoID == "" {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "repo_id query parameter required"})
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "repo_id query parameter required"})
 		return
 	}
 
 	issues, err := f.fetchIssues(r.Context(), repoID, "")
 	if err != nil {
 		f.logger.Error("list issues", "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"data": issues})
+	kernel.WriteJSON(w, http.StatusOK, map[string]any{"data": issues})
 }
 
 func (f *Forge) fetchIssues(ctx context.Context, repoID, status string) ([]Issue, error) {
@@ -111,11 +113,11 @@ func (f *Forge) getIssue(w http.ResponseWriter, r *http.Request, id string) {
 		"SELECT id, repo_id, title, description, status, labels, created_at, updated_at FROM forge_issues WHERE id = ?", id).
 		Scan(&i.ID, &i.RepoID, &i.Title, &i.Description, &i.Status, &labelsStr, &i.CreatedAt, &i.UpdatedAt)
 	if err != nil {
-		writeJSON(w, http.StatusNotFound, map[string]string{"error": "issue not found"})
+		kernel.WriteJSON(w, http.StatusNotFound, map[string]string{"error": "issue not found"})
 		return
 	}
 	_ = json.Unmarshal([]byte(labelsStr), &i.Labels)
-	writeJSON(w, http.StatusOK, i)
+	kernel.WriteJSON(w, http.StatusOK, i)
 }
 
 func (f *Forge) updateIssue(w http.ResponseWriter, r *http.Request, id string) {
@@ -126,13 +128,13 @@ func (f *Forge) updateIssue(w http.ResponseWriter, r *http.Request, id string) {
 		Labels      []string `json:"labels"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json"})
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json"})
 		return
 	}
 
 	validStatuses := map[string]bool{"open": true, "in_progress": true, "review": true, "closed": true}
 	if req.Status != "" && !validStatuses[req.Status] {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid status"})
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid status"})
 		return
 	}
 
@@ -143,15 +145,15 @@ func (f *Forge) updateIssue(w http.ResponseWriter, r *http.Request, id string) {
 		req.Title, req.Description, req.Status, string(labelsJSON), now, id)
 	if err != nil {
 		f.logger.Error("update issue", "id", id, "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]string{"status": "updated"})
+	kernel.WriteJSON(w, http.StatusOK, map[string]string{"status": "updated"})
 }
 
 func (f *Forge) handleComments(w http.ResponseWriter, r *http.Request, issueID string) {
 	if r.Method != "POST" {
-		writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
+		kernel.WriteJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
 		return
 	}
 
@@ -159,18 +161,18 @@ func (f *Forge) handleComments(w http.ResponseWriter, r *http.Request, issueID s
 		Content string `json:"content"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json"})
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json"})
 		return
 	}
 	if req.Content == "" {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "content is required"})
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "content is required"})
 		return
 	}
 
-	id, err := generateID()
+	id, err := kernel.GenerateID()
 	if err != nil {
 		f.logger.Error("generate id", "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 
@@ -179,11 +181,11 @@ func (f *Forge) handleComments(w http.ResponseWriter, r *http.Request, issueID s
 		"INSERT INTO forge_comments (id, issue_id, content, created_at) VALUES (?, ?, ?, ?)",
 		id, issueID, req.Content, now); err != nil {
 		f.logger.Error("insert comment", "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 
-	writeJSON(w, http.StatusCreated, Comment{
+	kernel.WriteJSON(w, http.StatusCreated, Comment{
 		ID: id, IssueID: issueID, Content: req.Content, CreatedAt: now,
 	})
 }

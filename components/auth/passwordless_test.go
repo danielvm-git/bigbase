@@ -14,9 +14,9 @@ import (
 )
 
 type captureSender struct {
-	lastTo    string
-	lastSubj  string
-	lastBody  string
+	lastTo   string
+	lastSubj string
+	lastBody string
 }
 
 func (c *captureSender) SendEmail(to, subject, body string) {

@@ -5,12 +5,14 @@ import (
 	"encoding/json"
 	"net/http"
 	"time"
+
+	"github.com/danielvm/bigbase/kernel"
 )
 
 func (f *Forge) getWiki(w http.ResponseWriter, r *http.Request, title string) {
 	repoID := r.URL.Query().Get("repo_id")
 	if repoID == "" {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "repo_id required"})
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "repo_id required"})
 		return
 	}
 
@@ -22,10 +24,10 @@ func (f *Forge) getWiki(w http.ResponseWriter, r *http.Request, title string) {
 		"SELECT title, repo_id, content, updated_at FROM forge_wiki WHERE title = ? AND repo_id = ?", title, repoID).
 		Scan(&page.Title, &page.RepoID, &page.Content, &page.UpdatedAt)
 	if err != nil {
-		writeJSON(w, http.StatusNotFound, map[string]string{"error": "page not found"})
+		kernel.WriteJSON(w, http.StatusNotFound, map[string]string{"error": "page not found"})
 		return
 	}
-	writeJSON(w, http.StatusOK, page)
+	kernel.WriteJSON(w, http.StatusOK, page)
 }
 
 func (f *Forge) saveWiki(w http.ResponseWriter, r *http.Request, title string) {
@@ -34,11 +36,11 @@ func (f *Forge) saveWiki(w http.ResponseWriter, r *http.Request, title string) {
 		Content string `json:"content"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json"})
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json"})
 		return
 	}
 	if req.RepoID == "" {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "repo_id is required"})
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "repo_id is required"})
 		return
 	}
 
@@ -49,8 +51,8 @@ func (f *Forge) saveWiki(w http.ResponseWriter, r *http.Request, title string) {
 		title, req.RepoID, req.Content, now)
 	if err != nil {
 		f.logger.Error("save wiki", "title", title, "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
-	writeJSON(w, http.StatusCreated, WikiPage{Title: title, RepoID: req.RepoID, Content: req.Content, UpdatedAt: now})
+	kernel.WriteJSON(w, http.StatusCreated, WikiPage{Title: title, RepoID: req.RepoID, Content: req.Content, UpdatedAt: now})
 }

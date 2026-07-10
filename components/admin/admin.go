@@ -10,7 +10,6 @@ import (
 
 const version = "0.1.0"
 
-
 type Admin struct {
 	logger kernel.Logger
 }

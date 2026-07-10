@@ -58,7 +58,7 @@ var internalTables = map[string]bool{
 
 // Pre-compiled regex patterns for SQL endpoint security checks.
 var (
-	internalTableRegexes []*regexp.Regexp
+	internalTableRegexes  []*regexp.Regexp
 	blockedKeywordRegexes = []*regexp.Regexp{
 		regexp.MustCompile(`(?i)\bJOIN\b`),
 		regexp.MustCompile(`(?i)\bUNION\b`),
@@ -72,10 +72,9 @@ var (
 func init() {
 	for t := range internalTables {
 		internalTableRegexes = append(internalTableRegexes,
-			regexp.MustCompile(`(?i)\b` + regexp.QuoteMeta(t) + `\b`))
+			regexp.MustCompile(`(?i)\b`+regexp.QuoteMeta(t)+`\b`))
 	}
 }
-
 
 // DBer is an alias for kernel.DBer — the shared database abstraction.
 type DBer = kernel.DBer
@@ -100,11 +99,11 @@ func New(opts Options) *API {
 	}
 }
 
-func (a *API) Name() string                 { return "api" }
-func (a *API) Version() string              { return version }
-func (a *API) Dependencies() []string       { return []string{"db"} }
+func (a *API) Name() string                  { return "api" }
+func (a *API) Version() string               { return version }
+func (a *API) Dependencies() []string        { return []string{"db"} }
 func (a *API) ConfigSchema() json.RawMessage { return nil }
-func (a *API) Hooks() []kernel.HookDef      { return nil }
+func (a *API) Hooks() []kernel.HookDef       { return nil }
 
 func (a *API) Init(ctx *kernel.Context, config json.RawMessage) error {
 	return nil
@@ -162,12 +161,12 @@ func (a *API) handleCollection(w http.ResponseWriter, r *http.Request) {
 
 	collection, err := sanitize(parts[0])
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
 		return
 	}
 
 	if internalTables[collection] {
-		writeJSON(w, http.StatusNotFound, map[string]string{"error": "not found"})
+		kernel.WriteJSON(w, http.StatusNotFound, map[string]string{"error": "not found"})
 		return
 	}
 
@@ -184,23 +183,23 @@ func (a *API) handleCollection(w http.ResponseWriter, r *http.Request) {
 		if len(parts) == 2 && parts[1] != "" {
 			a.updateRecord(w, r, collection, parts[1])
 		} else {
-			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "id required"})
+			kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "id required"})
 		}
 	case "DELETE":
 		if len(parts) == 2 && parts[1] != "" {
 			a.deleteRecord(w, r, collection, parts[1])
 		} else {
-			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "id required"})
+			kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "id required"})
 		}
 	default:
-		writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
+		kernel.WriteJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
 	}
 }
 
 func (a *API) listRecords(w http.ResponseWriter, r *http.Request, collection string) {
 	if err := a.ensureTable(collection); err != nil {
 		a.logger.Error("ensure table", "collection", collection, "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 
@@ -246,7 +245,7 @@ func (a *API) listRecords(w http.ResponseWriter, r *http.Request, collection str
 	rows, err := a.db.QueryContext(ctx, query, args...)
 	if err != nil {
 		a.logger.Error("list records query", "collection", collection, "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 	defer func() {
@@ -261,7 +260,7 @@ func (a *API) listRecords(w http.ResponseWriter, r *http.Request, collection str
 		var dataStr string
 		if err := rows.Scan(&id, &dataStr); err != nil {
 			a.logger.Error("scan row in listRecords", "collection", collection, "error", err)
-			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+			kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 			return
 		}
 		record := map[string]any{"id": id}
@@ -275,16 +274,16 @@ func (a *API) listRecords(w http.ResponseWriter, r *http.Request, collection str
 	}
 	if err := rows.Err(); err != nil {
 		a.logger.Error("iterate records", "collection", collection, "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"data": result})
+	kernel.WriteJSON(w, http.StatusOK, map[string]any{"data": result})
 }
 
 func (a *API) getRecord(w http.ResponseWriter, r *http.Request, collection, id string) {
 	if err := a.ensureTable(collection); err != nil {
 		a.logger.Error("ensure table", "collection", collection, "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 
@@ -296,11 +295,11 @@ func (a *API) getRecord(w http.ResponseWriter, r *http.Request, collection, id s
 	var recordID, recordOrgID int64
 	var dataStr string
 	if err := row.Scan(&recordID, &recordOrgID, &dataStr); err != nil {
-		writeJSON(w, http.StatusNotFound, map[string]string{"error": "not found"})
+		kernel.WriteJSON(w, http.StatusNotFound, map[string]string{"error": "not found"})
 		return
 	}
 	if orgID, ok := OrgIDFromContext(r.Context()); ok && recordOrgID != orgID {
-		writeJSON(w, http.StatusForbidden, map[string]string{"error": "access denied"})
+		kernel.WriteJSON(w, http.StatusForbidden, map[string]string{"error": "access denied"})
 		return
 	}
 	record := map[string]any{"id": recordID}
@@ -310,7 +309,7 @@ func (a *API) getRecord(w http.ResponseWriter, r *http.Request, collection, id s
 			record[k] = v
 		}
 	}
-	writeJSON(w, http.StatusOK, record)
+	kernel.WriteJSON(w, http.StatusOK, record)
 }
 
 func (a *API) emitMutation(mutType, collection string, id any, siteID string) {
@@ -336,7 +335,7 @@ func siteIDFromRequest(r *http.Request) string {
 func (a *API) createRecord(w http.ResponseWriter, r *http.Request, collection string) {
 	if err := a.ensureTable(collection); err != nil {
 		a.logger.Error("ensure table", "collection", collection, "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 
@@ -344,7 +343,7 @@ func (a *API) createRecord(w http.ResponseWriter, r *http.Request, collection st
 
 	var body map[string]any
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json or body too large"})
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json or body too large"})
 		return
 	}
 
@@ -359,19 +358,19 @@ func (a *API) createRecord(w http.ResponseWriter, r *http.Request, collection st
 		orgID, string(dataBytes))
 	if err != nil {
 		a.logger.Error("insert record", "collection", collection, "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 
 	id, _ := res.LastInsertId()
 	a.emitMutation("create", collection, id, siteIDFromRequest(r))
-	writeJSON(w, http.StatusCreated, map[string]any{"id": id})
+	kernel.WriteJSON(w, http.StatusCreated, map[string]any{"id": id})
 }
 
 func (a *API) updateRecord(w http.ResponseWriter, r *http.Request, collection, id string) {
 	if err := a.ensureTable(collection); err != nil {
 		a.logger.Error("ensure table", "collection", collection, "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 
@@ -379,7 +378,7 @@ func (a *API) updateRecord(w http.ResponseWriter, r *http.Request, collection, i
 
 	var body map[string]any
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json or body too large"})
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json or body too large"})
 		return
 	}
 
@@ -390,11 +389,11 @@ func (a *API) updateRecord(w http.ResponseWriter, r *http.Request, collection, i
 	var existingOrgID int64
 	var existingStr string
 	if err := row.Scan(&existingOrgID, &existingStr); err != nil {
-		writeJSON(w, http.StatusNotFound, map[string]string{"error": "not found"})
+		kernel.WriteJSON(w, http.StatusNotFound, map[string]string{"error": "not found"})
 		return
 	}
 	if orgID, ok := OrgIDFromContext(r.Context()); ok && existingOrgID != orgID {
-		writeJSON(w, http.StatusForbidden, map[string]string{"error": "access denied"})
+		kernel.WriteJSON(w, http.StatusForbidden, map[string]string{"error": "access denied"})
 		return
 	}
 
@@ -408,18 +407,18 @@ func (a *API) updateRecord(w http.ResponseWriter, r *http.Request, collection, i
 	_, err := a.db.ExecContext(ctx, fmt.Sprintf("UPDATE %s SET data = ? WHERE id = ?", collection), string(merged), id)
 	if err != nil {
 		a.logger.Error("update record", "collection", collection, "id", id, "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 
 	a.emitMutation("update", collection, id, siteIDFromRequest(r))
-	writeJSON(w, http.StatusOK, map[string]string{"status": "updated"})
+	kernel.WriteJSON(w, http.StatusOK, map[string]string{"status": "updated"})
 }
 
 func (a *API) deleteRecord(w http.ResponseWriter, r *http.Request, collection, id string) {
 	if err := a.ensureTable(collection); err != nil {
 		a.logger.Error("ensure table", "collection", collection, "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 
@@ -432,11 +431,11 @@ func (a *API) deleteRecord(w http.ResponseWriter, r *http.Request, collection, i
 		err := a.db.QueryRowContext(ctx,
 			fmt.Sprintf("SELECT org_id FROM %s WHERE id = ?", collection), id).Scan(&ownerOrgID)
 		if err != nil {
-			writeJSON(w, http.StatusNotFound, map[string]string{"error": "not found"})
+			kernel.WriteJSON(w, http.StatusNotFound, map[string]string{"error": "not found"})
 			return
 		}
 		if ownerOrgID != orgID {
-			writeJSON(w, http.StatusForbidden, map[string]string{"error": "access denied"})
+			kernel.WriteJSON(w, http.StatusForbidden, map[string]string{"error": "access denied"})
 			return
 		}
 	}
@@ -444,22 +443,22 @@ func (a *API) deleteRecord(w http.ResponseWriter, r *http.Request, collection, i
 	res, err := a.db.ExecContext(ctx, fmt.Sprintf("DELETE FROM %s WHERE id = ?", collection), id)
 	if err != nil {
 		a.logger.Error("delete record", "collection", collection, "id", id, "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 	affected, _ := res.RowsAffected()
 	if affected == 0 {
-		writeJSON(w, http.StatusNotFound, map[string]string{"error": "not found"})
+		kernel.WriteJSON(w, http.StatusNotFound, map[string]string{"error": "not found"})
 		return
 	}
 
 	a.emitMutation("delete", collection, id, siteIDFromRequest(r))
-	writeJSON(w, http.StatusOK, map[string]string{"status": "deleted"})
+	kernel.WriteJSON(w, http.StatusOK, map[string]string{"status": "deleted"})
 }
 
 func (a *API) listCollections(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "GET" {
-		writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
+		kernel.WriteJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
 		return
 	}
 
@@ -469,10 +468,10 @@ func (a *API) listCollections(w http.ResponseWriter, r *http.Request) {
 	names, err := a.fetchCollectionNames(ctx)
 	if err != nil {
 		a.logger.Error("fetch collection names", "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"data": names})
+	kernel.WriteJSON(w, http.StatusOK, map[string]any{"data": names})
 }
 
 func (a *API) fetchCollectionNames(ctx context.Context) ([]string, error) {
@@ -506,14 +505,14 @@ func (a *API) fetchCollectionNames(ctx context.Context) ([]string, error) {
 
 func (a *API) handleSQL(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
-		writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
+		kernel.WriteJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
 		return
 	}
 
 	// Defense-in-depth: require admin role even though the route-level middleware
 	// already gates on admin. This protects against future route misconfigurations.
 	if role, ok := UserRoleFromContext(r.Context()); !ok || role != "admin" {
-		writeJSON(w, http.StatusForbidden, map[string]string{"error": "forbidden"})
+		kernel.WriteJSON(w, http.StatusForbidden, map[string]string{"error": "forbidden"})
 		return
 	}
 
@@ -523,13 +522,13 @@ func (a *API) handleSQL(w http.ResponseWriter, r *http.Request) {
 		Query string `json:"query"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json or body too large"})
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json or body too large"})
 		return
 	}
 
 	q := strings.TrimSpace(req.Query)
 	if q == "" {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "query is required"})
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "query is required"})
 		return
 	}
 
@@ -538,13 +537,13 @@ func (a *API) handleSQL(w http.ResponseWriter, r *http.Request) {
 		pattern := `(?i)\b` + regexp.QuoteMeta(t) + `\b`
 		re, err := regexp.Compile(pattern)
 		if err == nil && re.MatchString(q) {
-			writeJSON(w, http.StatusForbidden, map[string]string{"error": "access to internal table " + t + " denied"})
+			kernel.WriteJSON(w, http.StatusForbidden, map[string]string{"error": "access to internal table " + t + " denied"})
 			return
 		}
 	}
 
 	if strings.Contains(q, ";") {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "only single-statement queries are allowed"})
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "only single-statement queries are allowed"})
 		return
 	}
 
@@ -552,7 +551,7 @@ func (a *API) handleSQL(w http.ResponseWriter, r *http.Request) {
 	switch firstWord {
 	case "SELECT", "EXPLAIN", "PRAGMA", "WITH":
 	default:
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "only read-only queries are allowed"})
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "only read-only queries are allowed"})
 		return
 	}
 
@@ -571,7 +570,7 @@ func (a *API) handleSQL(w http.ResponseWriter, r *http.Request) {
 			// Accesses a user collection table. Enforce strict isolation controls.
 			// Block UNION, JOIN, WITH, and subqueries to prevent scoping bypasses.
 			if !isSimpleQuery(normalized) {
-				writeJSON(w, http.StatusBadRequest, map[string]string{"error": "only simple queries (no JOIN, UNION, WITH, or subqueries) are allowed on collection tables for tenant isolation"})
+				kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "only simple queries (no JOIN, UNION, WITH, or subqueries) are allowed on collection tables for tenant isolation"})
 				return
 			}
 			execQuery, execArgs = scopeQueryForOrg(normalized, orgID)
@@ -582,7 +581,7 @@ func (a *API) handleSQL(w http.ResponseWriter, r *http.Request) {
 	rows, err := a.db.QueryContext(ctx, execQuery, execArgs...)
 	if err != nil {
 		a.logger.Error("sql execution failed", "query", q, "error", err)
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "query execution failed"})
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "query execution failed"})
 		return
 	}
 	defer func() {
@@ -594,18 +593,18 @@ func (a *API) handleSQL(w http.ResponseWriter, r *http.Request) {
 	columns, err := rows.Columns()
 	if err != nil {
 		a.logger.Error("get columns in handleSQL", "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 
 	result, err := rowsToMaps(rows, columns)
 	if err != nil {
 		a.logger.Error("rows to maps in handleSQL", "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 
-	writeJSON(w, http.StatusOK, map[string]any{"columns": columns, "rows": result})
+	kernel.WriteJSON(w, http.StatusOK, map[string]any{"columns": columns, "rows": result})
 }
 
 // isSimpleQuery returns true if the query contains no JOIN, UNION, INTERSECT,
@@ -711,8 +710,6 @@ func isInternalOrSysTable(name string) bool {
 	lower := strings.ToLower(name)
 	return strings.HasPrefix(lower, "sqlite_") || lower == "" || lower == "dual"
 }
-
-
 
 func rowsToMaps(rows *sql.Rows, columns []string) ([]map[string]any, error) {
 	// Uses any because SQLite column types are dynamic at runtime.
@@ -860,10 +857,4 @@ func parseSort(r *http.Request, collection string) string {
 	}
 
 	return fmt.Sprintf(" ORDER BY json_extract(data, '$.%s') %s", field, dir)
-}
-
-func writeJSON(w http.ResponseWriter, status int, data any) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
-	_ = json.NewEncoder(w).Encode(data)
 }

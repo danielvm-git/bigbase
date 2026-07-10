@@ -22,14 +22,6 @@ const version = "0.1.0"
 // DBer is an alias for kernel.DBer — the shared database abstraction.
 type DBer = kernel.DBer
 
-
-type noopLogger struct{}
-
-func (noopLogger) Info(msg string, args ...any)  {}
-func (noopLogger) Warn(msg string, args ...any)  {}
-func (noopLogger) Error(msg string, args ...any) {}
-func (noopLogger) Debug(msg string, args ...any) {}
-
 type Alert struct {
 	ID              string  `json:"id"`
 	Name            string  `json:"name"`
@@ -78,7 +70,7 @@ type MetricsCollector struct {
 
 type Monitoring struct {
 	db      DBer
-	logger kernel.Logger
+	logger  kernel.Logger
 	metrics *MetricsCollector
 	stream  *eventStream
 
@@ -86,11 +78,11 @@ type Monitoring struct {
 	cpuSampleAt  time.Time
 	cpuTotalNano int64
 
-	stopHost   chan struct{}
-	stopAlerts chan struct{}
-	kctx       *kernel.Context // set in Start; used by alert checker to emit events
-	recorder   *eventrecorder.Recorder
-	llm        *llm.Client
+	stopHost     chan struct{}
+	stopAlerts   chan struct{}
+	kctx         *kernel.Context // set in Start; used by alert checker to emit events
+	recorder     *eventrecorder.Recorder
+	llm          *llm.Client
 	llmModelName string
 }
 
@@ -103,7 +95,7 @@ type Options struct {
 func New(opts Options) *Monitoring {
 	logger := opts.Logger
 	if logger == nil {
-		logger = noopLogger{}
+		logger = kernel.NoopLogger{}
 	}
 	llmCfg, modelName := llmConfigFromOptions(opts)
 	return &Monitoring{
@@ -391,7 +383,7 @@ func (m *Monitoring) handleMetrics(w http.ResponseWriter, r *http.Request) {
 		avgLatency = sum / float64(len(allLatencies))
 	}
 
-	writeJSON(w, http.StatusOK, map[string]any{
+	kernel.WriteJSON(w, http.StatusOK, map[string]any{
 		"system": map[string]any{
 			"cpu_percent":    sys.CPUPercent,
 			"memory_mb":      sys.MemoryMB,
@@ -521,13 +513,13 @@ func (m *Monitoring) handleLogs(w http.ResponseWriter, r *http.Request) {
 	case "GET":
 		m.handleLogSearch(w, r)
 	default:
-		writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
+		kernel.WriteJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
 	}
 }
 
 func (m *Monitoring) handleLogCreate(w http.ResponseWriter, r *http.Request) {
 	if m.db == nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "db not configured"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "db not configured"})
 		return
 	}
 	var entry struct {
@@ -535,7 +527,7 @@ func (m *Monitoring) handleLogCreate(w http.ResponseWriter, r *http.Request) {
 		Message string `json:"message"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&entry); err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid JSON"})
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid JSON"})
 		return
 	}
 	if entry.Level == "" {
@@ -547,15 +539,15 @@ func (m *Monitoring) handleLogCreate(w http.ResponseWriter, r *http.Request) {
 		id, entry.Level, entry.Message)
 	if err != nil {
 		m.logger.Error("insert log", "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
-	writeJSON(w, http.StatusCreated, map[string]string{"id": id})
+	kernel.WriteJSON(w, http.StatusCreated, map[string]string{"id": id})
 }
 
 func (m *Monitoring) handleLogSearch(w http.ResponseWriter, r *http.Request) {
 	if m.db == nil {
-		writeJSON(w, http.StatusOK, map[string]any{"data": []LogEntry{}})
+		kernel.WriteJSON(w, http.StatusOK, map[string]any{"data": []LogEntry{}})
 		return
 	}
 	q := r.URL.Query().Get("q")
@@ -571,7 +563,7 @@ func (m *Monitoring) handleLogSearch(w http.ResponseWriter, r *http.Request) {
 	}
 	if err != nil {
 		m.logger.Error("search logs", "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 	defer func() { _ = rows.Close() }()
@@ -585,17 +577,17 @@ func (m *Monitoring) handleLogSearch(w http.ResponseWriter, r *http.Request) {
 		}
 		logs = append(logs, l)
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"data": logs})
+	kernel.WriteJSON(w, http.StatusOK, map[string]any{"data": logs})
 }
 
 func (m *Monitoring) handleLogByID(w http.ResponseWriter, r *http.Request) {
 	id := strings.TrimPrefix(r.URL.Path, "/api/monitoring/logs/")
 	if id == "" || strings.Contains(id, "/") {
-		writeJSON(w, http.StatusNotFound, map[string]string{"error": "not found"})
+		kernel.WriteJSON(w, http.StatusNotFound, map[string]string{"error": "not found"})
 		return
 	}
 	if m.db == nil {
-		writeJSON(w, http.StatusNotFound, map[string]string{"error": "not found"})
+		kernel.WriteJSON(w, http.StatusNotFound, map[string]string{"error": "not found"})
 		return
 	}
 	var l LogEntry
@@ -603,10 +595,10 @@ func (m *Monitoring) handleLogByID(w http.ResponseWriter, r *http.Request) {
 		"SELECT id, level, message, created_at FROM monitoring_logs WHERE id = ?", id).
 		Scan(&l.ID, &l.Level, &l.Message, &l.CreatedAt)
 	if err != nil {
-		writeJSON(w, http.StatusNotFound, map[string]string{"error": "log not found"})
+		kernel.WriteJSON(w, http.StatusNotFound, map[string]string{"error": "log not found"})
 		return
 	}
-	writeJSON(w, http.StatusOK, l)
+	kernel.WriteJSON(w, http.StatusOK, l)
 }
 
 func (m *Monitoring) handleAlerts(w http.ResponseWriter, r *http.Request) {
@@ -616,13 +608,13 @@ func (m *Monitoring) handleAlerts(w http.ResponseWriter, r *http.Request) {
 	case "POST":
 		m.handleAlertCreate(w, r)
 	default:
-		writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
+		kernel.WriteJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
 	}
 }
 
 func (m *Monitoring) handleAlertCreate(w http.ResponseWriter, r *http.Request) {
 	if m.db == nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "db not configured"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "db not configured"})
 		return
 	}
 	var alert struct {
@@ -634,11 +626,11 @@ func (m *Monitoring) handleAlertCreate(w http.ResponseWriter, r *http.Request) {
 		DurationSeconds int64   `json:"duration_seconds"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&alert); err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid JSON"})
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid JSON"})
 		return
 	}
 	if alert.Name == "" || alert.Metric == "" {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "name and metric are required"})
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "name and metric are required"})
 		return
 	}
 	if alert.DurationSeconds <= 0 {
@@ -654,22 +646,22 @@ func (m *Monitoring) handleAlertCreate(w http.ResponseWriter, r *http.Request) {
 		id, alert.Name, alert.Metric, alert.Threshold, alert.Operator, enabled, alert.DurationSeconds)
 	if err != nil {
 		m.logger.Error("insert alert", "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
-	writeJSON(w, http.StatusCreated, map[string]string{"id": id})
+	kernel.WriteJSON(w, http.StatusCreated, map[string]string{"id": id})
 }
 
 func (m *Monitoring) handleAlertList(w http.ResponseWriter, r *http.Request) {
 	if m.db == nil {
-		writeJSON(w, http.StatusOK, map[string]any{"data": []Alert{}})
+		kernel.WriteJSON(w, http.StatusOK, map[string]any{"data": []Alert{}})
 		return
 	}
 	rows, err := m.db.QueryContext(r.Context(),
 		"SELECT id, name, metric, threshold, operator, enabled, duration_seconds FROM monitoring_alerts ORDER BY name")
 	if err != nil {
 		m.logger.Error("list alerts", "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 	defer func() { _ = rows.Close() }()
@@ -685,13 +677,7 @@ func (m *Monitoring) handleAlertList(w http.ResponseWriter, r *http.Request) {
 		a.Enabled = enabled == 1
 		alerts = append(alerts, a)
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"data": alerts})
-}
-
-func writeJSON(w http.ResponseWriter, status int, data any) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
-	_ = json.NewEncoder(w).Encode(data)
+	kernel.WriteJSON(w, http.StatusOK, map[string]any{"data": alerts})
 }
 
 // handleMetricsStream, handleAlertByID, handleProcesses are implemented in separate files.

@@ -15,13 +15,13 @@ func TestNextBackoff(t *testing.T) {
 		frac    float64
 		want    time.Duration
 	}{
-		{attempt: 0, frac: 0, want: 0},                  // floor is always 0
-		{attempt: 0, frac: 1, want: 1 * time.Second},    // min(60s, 1s*2^0) = 1s
-		{attempt: 1, frac: 1, want: 2 * time.Second},    // 1s*2^1 = 2s
-		{attempt: 3, frac: 1, want: 8 * time.Second},    // 1s*2^3 = 8s
-		{attempt: 2, frac: 0.5, want: 2 * time.Second},  // 0.5 * 4s = 2s
-		{attempt: 6, frac: 1, want: 60 * time.Second},   // 1s*2^6 = 64s, capped to 60s
-		{attempt: 40, frac: 1, want: 60 * time.Second},  // no overflow at large attempt
+		{attempt: 0, frac: 0, want: 0},                 // floor is always 0
+		{attempt: 0, frac: 1, want: 1 * time.Second},   // min(60s, 1s*2^0) = 1s
+		{attempt: 1, frac: 1, want: 2 * time.Second},   // 1s*2^1 = 2s
+		{attempt: 3, frac: 1, want: 8 * time.Second},   // 1s*2^3 = 8s
+		{attempt: 2, frac: 0.5, want: 2 * time.Second}, // 0.5 * 4s = 2s
+		{attempt: 6, frac: 1, want: 60 * time.Second},  // 1s*2^6 = 64s, capped to 60s
+		{attempt: 40, frac: 1, want: 60 * time.Second}, // no overflow at large attempt
 	}
 	for _, tc := range cases {
 		if got := nextBackoff(tc.attempt, tc.frac); got != tc.want {
@@ -48,8 +48,8 @@ func TestIsCrashLooping(t *testing.T) {
 		want    bool
 	}{
 		{"empty history", nil, false},
-		{"four within window", at(5, 10, 20, 30), false},          // 4 < burst
-		{"five within window", at(5, 10, 20, 30, 40), true},       // 5 == burst
+		{"four within window", at(5, 10, 20, 30), false},                     // 4 < burst
+		{"five within window", at(5, 10, 20, 30, 40), true},                  // 5 == burst
 		{"five but spread beyond window", at(-120, -110, 10, 20, 30), false}, // only 3 within 60s
 	}
 	for _, tc := range cases {

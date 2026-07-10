@@ -5,15 +5,17 @@ import (
 	"fmt"
 	"net/http"
 	"time"
+
+	"github.com/danielvm/bigbase/kernel"
 )
 
 const sseInterval = 5 * time.Second
 
 // sseEvent is the payload emitted on the SSE stream.
 type sseEvent struct {
-	System  SystemMetrics `json:"system"`
-	Host    HostMetrics   `json:"host"`
-	SentAt  string        `json:"sent_at"`
+	System SystemMetrics `json:"system"`
+	Host   HostMetrics   `json:"host"`
+	SentAt string        `json:"sent_at"`
 }
 
 // handleMetricsStream serves a Server-Sent Events stream of host metrics, emitting
@@ -22,7 +24,7 @@ type sseEvent struct {
 func (m *Monitoring) handleMetricsStream(w http.ResponseWriter, r *http.Request) {
 	flusher, ok := w.(http.Flusher)
 	if !ok {
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "streaming not supported"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "streaming not supported"})
 		return
 	}
 

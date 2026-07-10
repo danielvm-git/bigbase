@@ -132,7 +132,7 @@ func TestForgeAddComment(t *testing.T) {
 	// Add comment
 	body := `{"content":"This is a comment"}`
 	id := issue["id"].(string)
-	req := httptest.NewRequest("POST", "/api/forge/issues/" + id + "/comments", strings.NewReader(body))
+	req := httptest.NewRequest("POST", "/api/forge/issues/"+id+"/comments", strings.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
 	w2 := httptest.NewRecorder()
 	h.ServeHTTP(w2, req)

@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/danielvm/bigbase/components/internal/envcrypto"
+	"github.com/danielvm/bigbase/kernel"
 )
 
 var validEnvKey = regexp.MustCompile(`^[A-Z][A-Z0-9_]*$`)
@@ -51,7 +52,7 @@ func (s *Sites) handleEnvVarsRoute(w http.ResponseWriter, r *http.Request, siteI
 		case http.MethodPost:
 			s.createEnvVar(w, r, siteID)
 		default:
-			writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
+			kernel.WriteJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
 		}
 		return
 	}
@@ -63,11 +64,11 @@ func (s *Sites) handleEnvVarsRoute(w http.ResponseWriter, r *http.Request, siteI
 		case http.MethodDelete:
 			s.deleteEnvVar(w, r, siteID, key)
 		default:
-			writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
+			kernel.WriteJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
 		}
 		return
 	}
-	writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid path"})
+	kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid path"})
 }
 
 // listEnvVars returns env vars with values masked server-side (F03).
@@ -78,7 +79,7 @@ func (s *Sites) listEnvVars(w http.ResponseWriter, r *http.Request, siteID strin
 		 FROM site_env_vars WHERE site_id = ? ORDER BY key`, siteID)
 	if err != nil {
 		s.logger.Error("list env vars", "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 	defer func() { _ = rows.Close() }()
@@ -89,15 +90,15 @@ func (s *Sites) listEnvVars(w http.ResponseWriter, r *http.Request, siteID strin
 	// returning partial data with a 200.
 	if scanErr != nil {
 		s.logger.Error("list env vars scan", "error", scanErr)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 	if err := rows.Err(); err != nil {
 		s.logger.Error("list env vars rows iteration", "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"data": items})
+	kernel.WriteJSON(w, http.StatusOK, map[string]any{"data": items})
 }
 
 // previewDecryptError is the visible sentinel preview shown for a row whose stored
@@ -141,7 +142,7 @@ func (s *Sites) createEnvVar(w http.ResponseWriter, r *http.Request, siteID stri
 	encrypted, err := envcrypto.Encrypt(s.encryptionKey, value)
 	if err != nil {
 		s.logger.Error("encrypt env var", "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 	ev, err := s.insertEnvVar(r.Context(), siteID, key, value, encrypted, buildTime, isRuntime)
@@ -149,7 +150,7 @@ func (s *Sites) createEnvVar(w http.ResponseWriter, r *http.Request, siteID stri
 		s.handleEnvVarWriteErr(w, "insert env var", err)
 		return
 	}
-	writeJSON(w, http.StatusCreated, ev)
+	kernel.WriteJSON(w, http.StatusCreated, ev)
 }
 
 func (s *Sites) updateEnvVar(w http.ResponseWriter, r *http.Request, siteID, key string) {
@@ -165,13 +166,13 @@ func (s *Sites) updateEnvVar(w http.ResponseWriter, r *http.Request, siteID, key
 	encrypted, err := envcrypto.Encrypt(s.encryptionKey, value)
 	if err != nil {
 		s.logger.Error("encrypt env var", "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 	now := time.Now().UTC().Format(time.RFC3339)
 	if err := s.execUpdateEnvVar(r.Context(), siteID, key, encrypted, buildTime, isRuntime, now); err != nil {
 		s.logger.Error("update env var", "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 	ev := EnvVar{
@@ -184,7 +185,7 @@ func (s *Sites) updateEnvVar(w http.ResponseWriter, r *http.Request, siteID, key
 		IsRuntime:    isRuntime,
 		UpdatedAt:    now,
 	}
-	writeJSON(w, http.StatusOK, ev)
+	kernel.WriteJSON(w, http.StatusOK, ev)
 }
 
 func (s *Sites) deleteEnvVar(w http.ResponseWriter, r *http.Request, siteID, key string) {
@@ -194,7 +195,7 @@ func (s *Sites) deleteEnvVar(w http.ResponseWriter, r *http.Request, siteID, key
 	}
 	if _, err := s.db.ExecContext(r.Context(), "DELETE FROM site_env_vars WHERE site_id = ? AND key = ?", siteID, key); err != nil {
 		s.logger.Error("delete env var", "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
@@ -208,22 +209,22 @@ func (s *Sites) decodeEnvVarBody(w http.ResponseWriter, r *http.Request, require
 		IsRuntime   bool   `json:"is_runtime"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid JSON"})
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid JSON"})
 		return
 	}
 	if requireKey && body.Key == "" {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "key is required"})
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "key is required"})
 		return
 	}
 	if requireKey && !validEnvKey.MatchString(body.Key) {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "key must be uppercase alphanumeric + underscore, starting with a letter"})
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "key must be uppercase alphanumeric + underscore, starting with a letter"})
 		return
 	}
 	return body.Key, body.Value, body.IsBuildTime, body.IsRuntime, true
 }
 
 func (s *Sites) insertEnvVar(ctx context.Context, siteID, key, plainValue, encrypted string, buildTime, isRuntime bool) (EnvVar, error) {
-	id, err := generateID()
+	id, err := kernel.GenerateID()
 	if err != nil {
 		return EnvVar{}, err
 	}
@@ -264,20 +265,20 @@ func (s *Sites) lookupEnvVarID(ctx context.Context, siteID, key string) (string,
 
 func (s *Sites) handleEnvVarLookupErr(w http.ResponseWriter, msg string, err error) {
 	if err == sql.ErrNoRows {
-		writeJSON(w, http.StatusNotFound, map[string]string{"error": "env var not found"})
+		kernel.WriteJSON(w, http.StatusNotFound, map[string]string{"error": "env var not found"})
 		return
 	}
 	s.logger.Error(msg, "error", err)
-	writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+	kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 }
 
 func (s *Sites) handleEnvVarWriteErr(w http.ResponseWriter, msg string, err error) {
 	if strings.Contains(err.Error(), "UNIQUE constraint") {
-		writeJSON(w, http.StatusConflict, map[string]string{"error": "env var with this key already exists"})
+		kernel.WriteJSON(w, http.StatusConflict, map[string]string{"error": "env var with this key already exists"})
 		return
 	}
 	s.logger.Error(msg, "error", err)
-	writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+	kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 }
 
 func boolToInt(b bool) int {

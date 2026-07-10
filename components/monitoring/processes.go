@@ -5,6 +5,8 @@ import (
 	"os"
 	"runtime"
 	"syscall"
+
+	"github.com/danielvm/bigbase/kernel"
 )
 
 // ProcessInfo describes a single tracked process.
@@ -21,7 +23,7 @@ type ProcessInfo struct {
 // for now we report the current process itself.
 func (m *Monitoring) handleProcesses(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
+		kernel.WriteJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
 		return
 	}
 
@@ -37,7 +39,7 @@ func (m *Monitoring) handleProcesses(w http.ResponseWriter, r *http.Request) {
 		Status: "running",
 	}
 
-	writeJSON(w, http.StatusOK, map[string]any{"processes": []ProcessInfo{info}})
+	kernel.WriteJSON(w, http.StatusOK, map[string]any{"processes": []ProcessInfo{info}})
 }
 
 // selfMemMB returns the current process's resident set size in MB using getrusage.
@@ -61,4 +63,3 @@ func selfMemMB() float64 {
 	runtime.ReadMemStats(&ms)
 	return float64(ms.Alloc) / 1024 / 1024
 }
-

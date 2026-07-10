@@ -67,11 +67,11 @@ func TestProxyDeploymentHost(t *testing.T) {
 func TestProxySiteIDMapping(t *testing.T) {
 	logger := testLogger{}
 	p := proxy.New(proxy.Options{Logger: logger})
-	
+
 	host := "site-1.bigbase.click"
 	siteID := "s123"
 	port := 12345
-	
+
 	if err := p.RegisterDeploymentHost(host, port, siteID, nil, nil); err != nil {
 		t.Fatalf("register failed: %v", err)
 	}
@@ -687,4 +687,3 @@ func TestProxyAuthPolicy(t *testing.T) {
 		t.Errorf("expected 401 for invalid token, got %d", code)
 	}
 }
-

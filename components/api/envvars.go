@@ -13,6 +13,8 @@ import (
 	"os"
 	"strings"
 	"time"
+
+	"github.com/danielvm/bigbase/kernel"
 )
 
 const envVarMigration = `CREATE TABLE IF NOT EXISTS env_vars (
@@ -45,7 +47,7 @@ type envVarRow struct {
 func (a *API) listEnvVars(w http.ResponseWriter, r *http.Request) {
 	if err := a.ensureEnvVarsTable(); err != nil {
 		a.logger.Error("ensure env_vars table", "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 
@@ -55,7 +57,7 @@ func (a *API) listEnvVars(w http.ResponseWriter, r *http.Request) {
 	rows, err := a.db.QueryContext(ctx, "SELECT id, name, created_at FROM env_vars ORDER BY name")
 	if err != nil {
 		a.logger.Error("list env_vars", "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 	defer func() { _ = rows.Close() }()
@@ -65,23 +67,23 @@ func (a *API) listEnvVars(w http.ResponseWriter, r *http.Request) {
 		var ev envVarRow
 		if err := rows.Scan(&ev.ID, &ev.Name, &ev.CreatedAt); err != nil {
 			a.logger.Error("scan env_var", "error", err)
-			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+			kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 			return
 		}
 		result = append(result, ev)
 	}
 	if err := rows.Err(); err != nil {
 		a.logger.Error("iterate env_vars", "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"data": result})
+	kernel.WriteJSON(w, http.StatusOK, map[string]any{"data": result})
 }
 
 func (a *API) createEnvVar(w http.ResponseWriter, r *http.Request) {
 	if err := a.ensureEnvVarsTable(); err != nil {
 		a.logger.Error("ensure env_vars table", "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 
@@ -91,29 +93,29 @@ func (a *API) createEnvVar(w http.ResponseWriter, r *http.Request) {
 		Value string `json:"value"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json or body too large"})
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json or body too large"})
 		return
 	}
 	if req.Name == "" {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "name is required"})
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "name is required"})
 		return
 	}
 	if !isValidEnvVarName(req.Name) {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "name must be alphanumeric and underscores only"})
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "name must be alphanumeric and underscores only"})
 		return
 	}
 
 	key, err := loadEncryptionKey()
 	if err != nil {
 		a.logger.Error("load encryption key", "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "encryption key not configured"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "encryption key not configured"})
 		return
 	}
 
 	encrypted, err := aesGCMEncrypt(key, req.Value)
 	if err != nil {
 		a.logger.Error("encrypt value", "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 
@@ -126,23 +128,23 @@ func (a *API) createEnvVar(w http.ResponseWriter, r *http.Request) {
 		req.Name, encrypted)
 	if err != nil {
 		a.logger.Error("upsert env_var", "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 	id, _ := res.LastInsertId()
-	writeJSON(w, http.StatusCreated, map[string]any{"id": id, "name": req.Name})
+	kernel.WriteJSON(w, http.StatusCreated, map[string]any{"id": id, "name": req.Name})
 }
 
 func (a *API) deleteEnvVar(w http.ResponseWriter, r *http.Request) {
 	if err := a.ensureEnvVarsTable(); err != nil {
 		a.logger.Error("ensure env_vars table", "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 
 	name := strings.TrimPrefix(r.URL.Path, "/api/env/")
 	if name == "" {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "name is required"})
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "name is required"})
 		return
 	}
 
@@ -152,15 +154,15 @@ func (a *API) deleteEnvVar(w http.ResponseWriter, r *http.Request) {
 	res, err := a.db.ExecContext(ctx, "DELETE FROM env_vars WHERE name = ?", name)
 	if err != nil {
 		a.logger.Error("delete env_var", "name", name, "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 	affected, _ := res.RowsAffected()
 	if affected == 0 {
-		writeJSON(w, http.StatusNotFound, map[string]string{"error": "not found"})
+		kernel.WriteJSON(w, http.StatusNotFound, map[string]string{"error": "not found"})
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]string{"status": "deleted"})
+	kernel.WriteJSON(w, http.StatusOK, map[string]string{"status": "deleted"})
 }
 
 // loadEncryptionKey reads the 32-byte AES-256 key from BIGBASE_ENCRYPTION_KEY (base64-encoded).

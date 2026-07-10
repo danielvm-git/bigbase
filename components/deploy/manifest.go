@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"gopkg.in/yaml.v3"
 )
@@ -45,12 +46,12 @@ func (hc ManifestHealthCheck) WithDefaults() ManifestHealthCheck {
 
 // Manifest represents a bigbase.yaml configuration file in a repo root.
 type Manifest struct {
-	Version     int                  `yaml:"version"`
-	Framework   string               `yaml:"framework"`
-	Build       ManifestBuild        `yaml:"build"`
-	Start       ManifestStart        `yaml:"start"`
-	Env         map[string]string    `yaml:"env"`
-	HealthCheck ManifestHealthCheck  `yaml:"health_check"`
+	Version     int                 `yaml:"version"`
+	Framework   string              `yaml:"framework"`
+	Build       ManifestBuild       `yaml:"build"`
+	Start       ManifestStart       `yaml:"start"`
+	Env         map[string]string   `yaml:"env"`
+	HealthCheck ManifestHealthCheck `yaml:"health_check"`
 }
 
 // ManifestBuild represents the build section of bigbase.yaml.
@@ -108,7 +109,25 @@ func LoadManifestPath(dir, manifestPath string) (*Manifest, error) {
 	if manifestPath == "" {
 		manifestPath = "bigbase.yaml"
 	}
-	path := filepath.Join(dir, manifestPath)
+
+	// Prevent path traversal (CWE-22): resolve and verify path stays within dir.
+	cleanManifestPath := filepath.Clean(manifestPath)
+	if filepath.IsAbs(cleanManifestPath) {
+		return nil, fmt.Errorf("manifest path must be relative: %s", manifestPath)
+	}
+	path := filepath.Join(dir, cleanManifestPath)
+	absDir, err := filepath.Abs(dir)
+	if err != nil {
+		return nil, fmt.Errorf("resolve manifest dir: %w", err)
+	}
+	absPath, err := filepath.Abs(path)
+	if err != nil {
+		return nil, fmt.Errorf("resolve manifest path: %w", err)
+	}
+	if !strings.HasPrefix(absPath, absDir+string(filepath.Separator)) && absPath != absDir {
+		return nil, fmt.Errorf("manifest path escapes project directory: %s", manifestPath)
+	}
+
 	data, err := os.ReadFile(path)
 	if err != nil {
 		if os.IsNotExist(err) {

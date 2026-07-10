@@ -10,6 +10,8 @@ import (
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/danielvm/bigbase/kernel"
 )
 
 const (
@@ -54,11 +56,11 @@ func hashCode(code string) string {
 
 func (a *Auth) handleSendOTP(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
-		writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
+		kernel.WriteJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
 		return
 	}
 	if a.emailSender == nil {
-		writeJSON(w, http.StatusNotFound, map[string]string{"error": "OTP not configured"})
+		kernel.WriteJSON(w, http.StatusNotFound, map[string]string{"error": "OTP not configured"})
 		return
 	}
 
@@ -66,7 +68,7 @@ func (a *Auth) handleSendOTP(w http.ResponseWriter, r *http.Request) {
 		Email string `json:"email"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.Email == "" {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "email required"})
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "email required"})
 		return
 	}
 	email := strings.ToLower(req.Email)
@@ -76,11 +78,11 @@ func (a *Auth) handleSendOTP(w http.ResponseWriter, r *http.Request) {
 	allowed, err := a.rateLimitStore.Increment(r.Context(), email, now, maxOTPsPerHour)
 	if err != nil {
 		a.logger.Error("OTP rate limit check failed", "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal server error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal server error"})
 		return
 	}
 	if !allowed {
-		writeJSON(w, http.StatusTooManyRequests, map[string]string{"error": "too many requests"})
+		kernel.WriteJSON(w, http.StatusTooManyRequests, map[string]string{"error": "too many requests"})
 		return
 	}
 
@@ -90,18 +92,18 @@ func (a *Auth) handleSendOTP(w http.ResponseWriter, r *http.Request) {
 	err = a.otpStore.Store(r.Context(), email, codeHash, now.Add(otpTTL))
 	if err != nil {
 		a.logger.Error("OTP store failed", "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal server error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal server error"})
 		return
 	}
 
 	a.emailSender.SendEmail(email, "Your verification code", fmt.Sprintf("Your code is: %s", code))
 	a.recordAudit("auth.otp_sent", 0, email, getIP(r), nil)
-	writeJSON(w, http.StatusOK, map[string]bool{"ok": true})
+	kernel.WriteJSON(w, http.StatusOK, map[string]bool{"ok": true})
 }
 
 func (a *Auth) handleVerifyOTP(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
-		writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
+		kernel.WriteJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
 		return
 	}
 
@@ -110,7 +112,7 @@ func (a *Auth) handleVerifyOTP(w http.ResponseWriter, r *http.Request) {
 		Code  string `json:"code"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.Email == "" || req.Code == "" {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "email and code required"})
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "email and code required"})
 		return
 	}
 	email := strings.ToLower(req.Email)
@@ -118,23 +120,23 @@ func (a *Auth) handleVerifyOTP(w http.ResponseWriter, r *http.Request) {
 	rec, err := a.otpStore.Get(r.Context(), email)
 	if err != nil {
 		a.logger.Error("OTP retrieve failed", "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal server error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal server error"})
 		return
 	}
 	if rec == nil {
-		writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "invalid code"})
+		kernel.WriteJSON(w, http.StatusUnauthorized, map[string]string{"error": "invalid code"})
 		return
 	}
 	if rec.attempts >= maxOTPAttempts || time.Now().After(rec.expiresAt) {
 		_ = a.otpStore.Delete(r.Context(), email)
-		writeJSON(w, http.StatusGone, map[string]string{"error": "code expired"})
+		kernel.WriteJSON(w, http.StatusGone, map[string]string{"error": "code expired"})
 		return
 	}
 	inputHash := hashCode(req.Code)
 	if subtle.ConstantTimeCompare([]byte(rec.codeHash), []byte(inputHash)) != 1 {
 		_ = a.otpStore.RecordAttempt(r.Context(), email)
 		a.recordAudit("auth.otp_failed", 0, email, getIP(r), nil)
-		writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "invalid code"})
+		kernel.WriteJSON(w, http.StatusUnauthorized, map[string]string{"error": "invalid code"})
 		return
 	}
 	_ = a.otpStore.Delete(r.Context(), email)
@@ -143,14 +145,14 @@ func (a *Auth) handleVerifyOTP(w http.ResponseWriter, r *http.Request) {
 	userID, orgID, err := a.findOrCreateEmailUser(r.Context(), email)
 	if err != nil {
 		a.logger.Error("find or create OTP user", "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 
 	token, err := createJWT(userID, email, "user", orgID, a.secret, a.accessExpiry)
 	if err != nil {
 		a.logger.Error("create JWT", "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 

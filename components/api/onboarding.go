@@ -4,6 +4,8 @@ import (
 	"context"
 	"net/http"
 	"time"
+
+	"github.com/danielvm/bigbase/kernel"
 )
 
 // OnboardingStep represents one step in the new-user checklist.
@@ -17,7 +19,7 @@ type OnboardingStep struct {
 // It checks whether each checklist action has been taken and returns the result.
 func (a *API) handleOnboarding(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "GET" {
-		writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
+		kernel.WriteJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
 		return
 	}
 
@@ -40,7 +42,7 @@ func (a *API) handleOnboarding(w http.ResponseWriter, r *http.Request) {
 	// "invite_team_member" — more than one user exists
 	steps[3].Done = a.tableHasMoreThanOneRow(ctx, "users")
 
-	writeJSON(w, http.StatusOK, map[string]any{"steps": steps})
+	kernel.WriteJSON(w, http.StatusOK, map[string]any{"steps": steps})
 }
 
 // collectionExists returns true if at least one user-created collection table exists.

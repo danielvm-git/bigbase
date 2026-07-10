@@ -17,13 +17,6 @@ import (
 
 const version = "0.1.0"
 
-type noopLogger struct{}
-
-func (noopLogger) Info(msg string, args ...any)  {}
-func (noopLogger) Warn(msg string, args ...any)  {}
-func (noopLogger) Error(msg string, args ...any) {}
-func (noopLogger) Debug(msg string, args ...any) {}
-
 // DBer is an alias for kernel.DBer — the shared database abstraction.
 type DBer = kernel.DBer
 
@@ -130,7 +123,7 @@ type Options struct {
 func New(opts Options) *Deploy {
 	logger := opts.Logger
 	if logger == nil {
-		logger = noopLogger{}
+		logger = kernel.NoopLogger{}
 	}
 	dir := opts.BuildsDir
 	if dir == "" {

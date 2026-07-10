@@ -35,7 +35,7 @@ func New(cfg Config) *Client {
 		model = "deepseek-chat"
 	}
 	return &Client{
-		cfg: Config{APIKey: cfg.APIKey, BaseURL: base, Model: model},
+		cfg:    Config{APIKey: cfg.APIKey, BaseURL: base, Model: model},
 		client: &http.Client{Timeout: 30 * time.Second},
 	}
 }

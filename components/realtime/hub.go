@@ -33,8 +33,8 @@ type statsReq struct {
 }
 
 type Hub struct {
-	clients    map[*Client]bool
-	rooms      map[string]map[*Client]bool
+	clients map[*Client]bool
+	rooms   map[string]map[*Client]bool
 
 	register    chan *Client
 	unregister  chan *Client

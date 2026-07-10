@@ -2,6 +2,8 @@ package monitoring
 
 import (
 	"testing"
+
+	"github.com/danielvm/bigbase/kernel"
 )
 
 // TestMetricValue verifies that metricValue maps metric names to the correct
@@ -100,6 +102,6 @@ func TestEvalOperator(t *testing.T) {
 }
 
 func TestEmitAlertTriggeredNilContext(t *testing.T) {
-	m := &Monitoring{kctx: nil, logger: &noopLogger{}}
+	m := &Monitoring{kctx: nil, logger: &kernel.NoopLogger{}}
 	m.emitAlertTriggered("alert-1", "test alert", "cpu_percent", 95.0, 90.0, "gt", "incident-1")
 }

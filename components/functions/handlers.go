@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/danielvm/bigbase/kernel"
 )
 
 func (f *Functions) handleFunctions(w http.ResponseWriter, r *http.Request) {
@@ -16,7 +18,7 @@ func (f *Functions) handleFunctions(w http.ResponseWriter, r *http.Request) {
 	case "GET":
 		f.handleList(w, r)
 	default:
-		writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
+		kernel.WriteJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
 	}
 }
 
@@ -25,7 +27,7 @@ func (f *Functions) handleFunctionByID(w http.ResponseWriter, r *http.Request) {
 	parts := strings.SplitN(path, "/", 2)
 	id := parts[0]
 	if id == "" {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "id required"})
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "id required"})
 		return
 	}
 
@@ -34,7 +36,7 @@ func (f *Functions) handleFunctionByID(w http.ResponseWriter, r *http.Request) {
 			f.handleRun(w, r, id)
 			return
 		}
-		writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
+		kernel.WriteJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
 		return
 	}
 
@@ -51,7 +53,7 @@ func (f *Functions) handleFunctionByID(w http.ResponseWriter, r *http.Request) {
 	case "DELETE":
 		f.handleDelete(w, r, id)
 	default:
-		writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
+		kernel.WriteJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
 	}
 }
 
@@ -59,14 +61,14 @@ func (f *Functions) handleCreate(w http.ResponseWriter, r *http.Request) {
 	r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
 	fn, err := f.decodeFunction(r)
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
 		return
 	}
 
-	fn.ID, err = generateID()
+	fn.ID, err = kernel.GenerateID()
 	if err != nil {
 		f.logger.Error("generate id", "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 
@@ -76,7 +78,7 @@ func (f *Functions) handleCreate(w http.ResponseWriter, r *http.Request) {
 		fn.ID, fn.Name, fn.Runtime, fn.Source, fn.Trigger, fn.Schedule, string(envJSON), fn.Timeout)
 	if err != nil {
 		f.logger.Error("insert function", "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 
@@ -89,7 +91,7 @@ func (f *Functions) handleCreate(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	writeJSON(w, http.StatusCreated, fn)
+	kernel.WriteJSON(w, http.StatusCreated, fn)
 }
 
 func (f *Functions) decodeFunction(r *http.Request) (Function, error) {
@@ -123,7 +125,7 @@ func (f *Functions) handleList(w http.ResponseWriter, r *http.Request) {
 		"SELECT id, name, runtime, source, trigger, schedule, env, timeout, created_at FROM functions ORDER BY created_at DESC")
 	if err != nil {
 		f.logger.Error("list functions", "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 	defer func() { _ = rows.Close() }()
@@ -140,27 +142,27 @@ func (f *Functions) handleList(w http.ResponseWriter, r *http.Request) {
 
 	if err := rows.Err(); err != nil {
 		f.logger.Error("iterate functions", "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 
-	writeJSON(w, http.StatusOK, map[string]any{"data": funcs})
+	kernel.WriteJSON(w, http.StatusOK, map[string]any{"data": funcs})
 }
 
 func (f *Functions) handleGet(w http.ResponseWriter, r *http.Request, id string) {
 	fn, err := f.fetchFunctionByID(r.Context(), id)
 	if err != nil {
-		writeJSON(w, http.StatusNotFound, map[string]string{"error": "function not found"})
+		kernel.WriteJSON(w, http.StatusNotFound, map[string]string{"error": "function not found"})
 		return
 	}
-	writeJSON(w, http.StatusOK, fn)
+	kernel.WriteJSON(w, http.StatusOK, fn)
 }
 
 func (f *Functions) handleUpdate(w http.ResponseWriter, r *http.Request, id string) {
 	r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
 	fn, err := f.decodeFunction(r)
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
 		return
 	}
 
@@ -170,20 +172,20 @@ func (f *Functions) handleUpdate(w http.ResponseWriter, r *http.Request, id stri
 		fn.Name, fn.Runtime, fn.Source, fn.Trigger, fn.Schedule, string(envJSON), fn.Timeout, id)
 	if err != nil {
 		f.logger.Error("update function", "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 
 	rows, _ := result.RowsAffected()
 	if rows == 0 {
-		writeJSON(w, http.StatusNotFound, map[string]string{"error": "function not found"})
+		kernel.WriteJSON(w, http.StatusNotFound, map[string]string{"error": "function not found"})
 		return
 	}
 
 	fn, err = f.fetchFunctionByID(r.Context(), id)
 	if err != nil {
 		f.logger.Error("fetch after update", "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 
@@ -194,20 +196,20 @@ func (f *Functions) handleUpdate(w http.ResponseWriter, r *http.Request, id stri
 		}
 	}
 
-	writeJSON(w, http.StatusOK, fn)
+	kernel.WriteJSON(w, http.StatusOK, fn)
 }
 
 func (f *Functions) handleDelete(w http.ResponseWriter, r *http.Request, id string) {
 	result, err := f.db.ExecContext(r.Context(), "DELETE FROM functions WHERE id = ?", id)
 	if err != nil {
 		f.logger.Error("delete function", "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 
 	rows, _ := result.RowsAffected()
 	if rows == 0 {
-		writeJSON(w, http.StatusNotFound, map[string]string{"error": "function not found"})
+		kernel.WriteJSON(w, http.StatusNotFound, map[string]string{"error": "function not found"})
 		return
 	}
 
@@ -218,19 +220,19 @@ func (f *Functions) handleDelete(w http.ResponseWriter, r *http.Request, id stri
 		}
 	}
 
-	writeJSON(w, http.StatusOK, map[string]string{"status": "deleted"})
+	kernel.WriteJSON(w, http.StatusOK, map[string]string{"status": "deleted"})
 }
 
 func (f *Functions) handleRun(w http.ResponseWriter, r *http.Request, id string) {
 	fn, err := f.fetchFunctionByID(r.Context(), id)
 	if err != nil {
-		writeJSON(w, http.StatusNotFound, map[string]string{"error": "function not found"})
+		kernel.WriteJSON(w, http.StatusNotFound, map[string]string{"error": "function not found"})
 		return
 	}
 
 	rt, ok := f.runtimes[fn.Runtime]
 	if !ok {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "unsupported runtime: " + fn.Runtime})
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "unsupported runtime: " + fn.Runtime})
 		return
 	}
 
@@ -248,7 +250,7 @@ func (f *Functions) handleRun(w http.ResponseWriter, r *http.Request, id string)
 	}
 
 	if execErr != nil {
-		writeJSON(w, http.StatusOK, map[string]any{
+		kernel.WriteJSON(w, http.StatusOK, map[string]any{
 			"execution_id": execID,
 			"logs":         output.Logs,
 			"error":        execErr.Error(),
@@ -257,7 +259,7 @@ func (f *Functions) handleRun(w http.ResponseWriter, r *http.Request, id string)
 		return
 	}
 
-	writeJSON(w, http.StatusOK, map[string]any{
+	kernel.WriteJSON(w, http.StatusOK, map[string]any{
 		"execution_id": execID,
 		"logs":         output.Logs,
 		"error":        nil,
@@ -266,7 +268,7 @@ func (f *Functions) handleRun(w http.ResponseWriter, r *http.Request, id string)
 }
 
 func (f *Functions) saveExecution(ctx context.Context, fnID string, output *RunOutput, execErr error) (string, error) {
-	id, err := generateID()
+	id, err := kernel.GenerateID()
 	if err != nil {
 		return "", err
 	}
@@ -298,14 +300,14 @@ func (f *Functions) saveExecution(ctx context.Context, fnID string, output *RunO
 
 func (f *Functions) handleFunctionLogs(w http.ResponseWriter, r *http.Request, fnID string) {
 	if r.Method != http.MethodGet {
-		writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
+		kernel.WriteJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
 		return
 	}
 
 	// Verify function exists
 	_, err := f.fetchFunctionByID(r.Context(), fnID)
 	if err != nil {
-		writeJSON(w, http.StatusNotFound, map[string]string{"error": "function not found"})
+		kernel.WriteJSON(w, http.StatusNotFound, map[string]string{"error": "function not found"})
 		return
 	}
 
@@ -314,7 +316,7 @@ func (f *Functions) handleFunctionLogs(w http.ResponseWriter, r *http.Request, f
 		fnID)
 	if dberr != nil {
 		f.logger.Error("query logs", "error", dberr)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 	defer func() { _ = rows.Close() }()
@@ -346,9 +348,9 @@ func (f *Functions) handleFunctionLogs(w http.ResponseWriter, r *http.Request, f
 
 	if err := rows.Err(); err != nil {
 		f.logger.Error("rows iteration error", "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 
-	writeJSON(w, http.StatusOK, map[string]any{"data": results})
+	kernel.WriteJSON(w, http.StatusOK, map[string]any{"data": results})
 }

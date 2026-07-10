@@ -46,7 +46,7 @@ func queryAuditEvents(t *testing.T, d DBer) []auditRow {
 }
 
 func TestAuditEventsTable(t *testing.T) {
-	logger := noopLogger{}
+	logger := kernel.NoopLogger{}
 	d := db.New(db.Options{Path: ":memory:", Logger: logger})
 	k := kernel.New(logger)
 	k.Register(d)
@@ -86,7 +86,7 @@ func TestAuditEventsTable(t *testing.T) {
 }
 
 func TestAuditFireAndForget(t *testing.T) {
-	logger := noopLogger{}
+	logger := kernel.NoopLogger{}
 	d := db.New(db.Options{Path: ":memory:", Logger: logger})
 	k := kernel.New(logger)
 	k.Register(d)
@@ -111,7 +111,7 @@ type mockEmailSender struct{}
 func (mockEmailSender) SendEmail(to, subject, body string) {}
 
 func TestAuditIntegration(t *testing.T) {
-	logger := noopLogger{}
+	logger := kernel.NoopLogger{}
 	d := db.New(db.Options{Path: ":memory:", Logger: logger})
 	k := kernel.New(logger)
 	k.Register(d)

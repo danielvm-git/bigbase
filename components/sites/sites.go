@@ -3,9 +3,7 @@ package sites
 import (
 	"bytes"
 	"context"
-	"crypto/rand"
 	"database/sql"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -21,14 +19,6 @@ import (
 )
 
 const version = "0.1.0"
-
-
-type noopLogger struct{}
-
-func (noopLogger) Info(msg string, args ...any)  {}
-func (noopLogger) Warn(msg string, args ...any)  {}
-func (noopLogger) Error(msg string, args ...any) {}
-func (noopLogger) Debug(msg string, args ...any) {}
 
 // DBer is an alias for kernel.DBer — the shared database abstraction.
 type DBer = kernel.DBer
@@ -91,7 +81,7 @@ type Sites struct {
 
 type Options struct {
 	DB                DBer
-	Logger kernel.Logger
+	Logger            kernel.Logger
 	GitDir            string
 	TriggerDeploy     DeployTrigger
 	DeleteSiteCleanup DeleteSiteCleanupFunc
@@ -109,7 +99,7 @@ type Options struct {
 func New(opts Options) *Sites {
 	logger := opts.Logger
 	if logger == nil {
-		logger = noopLogger{}
+		logger = kernel.NoopLogger{}
 	}
 	gitDir := opts.GitDir
 	if gitDir == "" {
@@ -181,14 +171,6 @@ func (s *Sites) Handler() http.Handler {
 	return mux
 }
 
-func generateID() (string, error) {
-	b := make([]byte, 16)
-	if _, err := rand.Read(b); err != nil {
-		return "", err
-	}
-	return hex.EncodeToString(b), nil
-}
-
 func (s *Sites) handleSites(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
@@ -196,7 +178,7 @@ func (s *Sites) handleSites(w http.ResponseWriter, r *http.Request) {
 	case http.MethodPost:
 		s.createSite(w, r)
 	default:
-		writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
+		kernel.WriteJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
 	}
 }
 
@@ -204,7 +186,7 @@ func (s *Sites) handleSiteByID(w http.ResponseWriter, r *http.Request) {
 	path := strings.TrimPrefix(r.URL.Path, "/api/sites/")
 	parts := strings.Split(strings.Trim(path, "/"), "/")
 	if len(parts) == 0 || parts[0] == "" {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "id required"})
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "id required"})
 		return
 	}
 	id := parts[0]
@@ -228,7 +210,7 @@ func (s *Sites) handleSiteByID(w http.ResponseWriter, r *http.Request) {
 			s.saveSiteManifest(w, r, id)
 			return
 		default:
-			writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
+			kernel.WriteJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
 			return
 		}
 	}
@@ -242,7 +224,7 @@ func (s *Sites) handleSiteByID(w http.ResponseWriter, r *http.Request) {
 			s.setSiteAuthPolicy(w, r, id)
 			return
 		default:
-			writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
+			kernel.WriteJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
 			return
 		}
 	}
@@ -264,7 +246,7 @@ func (s *Sites) handleSiteByID(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.Method != http.MethodGet {
-		writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
+		kernel.WriteJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
 		return
 	}
 	s.getSite(w, r, id)
@@ -277,10 +259,10 @@ func (s *Sites) listSites(w http.ResponseWriter, r *http.Request) {
 	sites, err := s.ListSites(ctx)
 	if err != nil {
 		s.logger.Error("list sites", "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"data": sites})
+	kernel.WriteJSON(w, http.StatusOK, map[string]any{"data": sites})
 }
 
 func (s *Sites) ListSites(ctx context.Context) ([]Site, error) {
@@ -404,10 +386,10 @@ func (s *Sites) getSite(w http.ResponseWriter, r *http.Request, id string) {
 
 	site, err := s.GetSite(ctx, id)
 	if err != nil {
-		writeJSON(w, http.StatusNotFound, map[string]string{"error": "site not found"})
+		kernel.WriteJSON(w, http.StatusNotFound, map[string]string{"error": "site not found"})
 		return
 	}
-	writeJSON(w, http.StatusOK, site)
+	kernel.WriteJSON(w, http.StatusOK, site)
 }
 
 func (s *Sites) GetSite(ctx context.Context, id string) (*Site, error) {
@@ -455,15 +437,15 @@ func (s *Sites) createSite(w http.ResponseWriter, r *http.Request) {
 		GitHubFullName   string `json:"github_full_name"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json"})
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json"})
 		return
 	}
 	if req.GitRepoID == "" {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "git_repo_id is required"})
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "git_repo_id is required"})
 		return
 	}
 	if req.Name == "" {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "name is required"})
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "name is required"})
 		return
 	}
 	if req.ProductionBranch == "" {
@@ -476,11 +458,11 @@ func (s *Sites) createSite(w http.ResponseWriter, r *http.Request) {
 	id, name, err := s.insertSite(r.Context(), req.GitRepoID, req.Name, req.ProductionBranch, req.RootPath, req.GitHubFullName)
 	if err != nil {
 		if strings.Contains(err.Error(), "not found") {
-			writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+			kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
 			return
 		}
 		s.logger.Error("create site", "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 
@@ -502,13 +484,13 @@ func (s *Sites) createSite(w http.ResponseWriter, r *http.Request) {
 	if s.triggerDeploy != nil {
 		dep, err := s.triggerDeploy(r.Context(), req.GitRepoID, req.ProductionBranch, name, id, nil, "")
 		if err != nil {
-			writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+			kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
 			return
 		}
 		site.LatestDeployment = dep
 	}
 
-	writeJSON(w, http.StatusCreated, site)
+	kernel.WriteJSON(w, http.StatusCreated, site)
 }
 
 // CreateSite provisions a site for a git repository (MCP SiteCreator).
@@ -537,7 +519,7 @@ func (s *Sites) insertSite(ctx context.Context, gitRepoID, name, branch, rootPat
 		name = repoName
 	}
 
-	id, err = generateID()
+	id, err = kernel.GenerateID()
 	if err != nil {
 		return "", "", fmt.Errorf("generate id: %w", err)
 	}
@@ -567,22 +549,22 @@ func (s *Sites) deleteSite(w http.ResponseWriter, r *http.Request, id string) {
 	target, err := s.siteDeleteTarget(ctx, id)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			writeJSON(w, http.StatusNotFound, map[string]string{"error": "site not found"})
+			kernel.WriteJSON(w, http.StatusNotFound, map[string]string{"error": "site not found"})
 			return
 		}
 		s.logger.Error("resolve site for delete", "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 
 	active, err := s.hasActiveDeployment(ctx, target)
 	if err != nil {
 		s.logger.Error("check active deployments for site delete", "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 	if active && s.deleteSiteCleanup == nil {
-		writeJSON(w, http.StatusConflict, map[string]string{"error": "site has an active deployment — wait for it to finish or delete deployments first"})
+		kernel.WriteJSON(w, http.StatusConflict, map[string]string{"error": "site has an active deployment — wait for it to finish or delete deployments first"})
 		return
 	}
 
@@ -594,7 +576,7 @@ func (s *Sites) deleteSite(w http.ResponseWriter, r *http.Request, id string) {
 
 	if err := s.deleteSiteRecords(ctx, target); err != nil {
 		s.logger.Error("delete site records", "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 
@@ -692,7 +674,7 @@ func (s *Sites) listSiteRequestLogs(w http.ResponseWriter, r *http.Request, site
 		append(args, limit)...)
 	if err != nil {
 		s.logger.Error("list request logs", "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 	defer func() { _ = rows.Close() }()
@@ -715,7 +697,7 @@ func (s *Sites) listSiteRequestLogs(w http.ResponseWriter, r *http.Request, site
 		data = append(data, l)
 	}
 
-	writeJSON(w, http.StatusOK, map[string]any{
+	kernel.WriteJSON(w, http.StatusOK, map[string]any{
 		"data":    data,
 		"total":   total,
 		"site_id": siteID,
@@ -746,16 +728,16 @@ func (s *Sites) redeploySite(w http.ResponseWriter, r *http.Request, id string) 
 	}
 
 	if s.triggerDeploy == nil {
-		writeJSON(w, http.StatusServiceUnavailable, map[string]string{"error": "deploy unavailable"})
+		kernel.WriteJSON(w, http.StatusServiceUnavailable, map[string]string{"error": "deploy unavailable"})
 		return
 	}
 
 	dep, err := s.triggerDeploy(ctx, gitRepoID, branch, siteName, id, nil, req.AppType)
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
 		return
 	}
-	writeJSON(w, http.StatusCreated, dep)
+	kernel.WriteJSON(w, http.StatusCreated, dep)
 }
 
 func (s *Sites) getSiteManifest(w http.ResponseWriter, r *http.Request, id string) {
@@ -764,13 +746,13 @@ func (s *Sites) getSiteManifest(w http.ResponseWriter, r *http.Request, id strin
 
 	repoID, branch, err := s.resolveRepoBranch(ctx, id)
 	if err != nil {
-		writeJSON(w, http.StatusNotFound, map[string]string{"error": "site or repository not found"})
+		kernel.WriteJSON(w, http.StatusNotFound, map[string]string{"error": "site or repository not found"})
 		return
 	}
 
 	repoPath := filepath.Join(s.gitDir, repoID+".git")
 	if _, err := os.Stat(repoPath); os.IsNotExist(err) {
-		writeJSON(w, http.StatusNotFound, map[string]string{"error": "git repository directory not found"})
+		kernel.WriteJSON(w, http.StatusNotFound, map[string]string{"error": "git repository directory not found"})
 		return
 	}
 
@@ -779,18 +761,18 @@ func (s *Sites) getSiteManifest(w http.ResponseWriter, r *http.Request, id strin
 	if err != nil {
 		errMsg := string(out)
 		if strings.Contains(errMsg, "exists but is not") || strings.Contains(errMsg, "does not exist") || strings.Contains(errMsg, "Invalid object name") || strings.Contains(errMsg, "fatal: path") {
-			writeJSON(w, http.StatusOK, map[string]any{
+			kernel.WriteJSON(w, http.StatusOK, map[string]any{
 				"exists":  false,
 				"content": "",
 			})
 			return
 		}
 		s.logger.Error("git show failed", "error", err, "output", errMsg)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "failed to read manifest file"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "failed to read manifest file"})
 		return
 	}
 
-	writeJSON(w, http.StatusOK, map[string]any{
+	kernel.WriteJSON(w, http.StatusOK, map[string]any{
 		"exists":  true,
 		"content": string(out),
 	})
@@ -801,12 +783,12 @@ func (s *Sites) saveSiteManifest(w http.ResponseWriter, r *http.Request, id stri
 		Content string `json:"content"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid JSON"})
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid JSON"})
 		return
 	}
 
 	if err := deploy.ValidateManifest([]byte(req.Content)); err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": fmt.Sprintf("invalid manifest: %v", err)})
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": fmt.Sprintf("invalid manifest: %v", err)})
 		return
 	}
 
@@ -815,23 +797,23 @@ func (s *Sites) saveSiteManifest(w http.ResponseWriter, r *http.Request, id stri
 
 	repoID, branch, err := s.resolveRepoBranch(ctx, id)
 	if err != nil {
-		writeJSON(w, http.StatusNotFound, map[string]string{"error": "site or repository not found"})
+		kernel.WriteJSON(w, http.StatusNotFound, map[string]string{"error": "site or repository not found"})
 		return
 	}
 
 	repoPath := filepath.Join(s.gitDir, repoID+".git")
 	if _, err := os.Stat(repoPath); os.IsNotExist(err) {
-		writeJSON(w, http.StatusNotFound, map[string]string{"error": "git repository directory not found"})
+		kernel.WriteJSON(w, http.StatusNotFound, map[string]string{"error": "git repository directory not found"})
 		return
 	}
 
 	if err := s.commitManifestToRepo(ctx, repoPath, branch, req.Content); err != nil {
 		s.logger.Error("failed to commit manifest", "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "failed to save manifest"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "failed to save manifest"})
 		return
 	}
 
-	writeJSON(w, http.StatusOK, map[string]any{"status": "ok"})
+	kernel.WriteJSON(w, http.StatusOK, map[string]any{"status": "ok"})
 }
 
 // commitManifestToRepo clones the repository, writes bigbase.yaml,
@@ -929,9 +911,9 @@ func (s *Sites) getSiteAuthPolicy(w http.ResponseWriter, r *http.Request, id str
 	err := s.db.QueryRowContext(ctx, "SELECT auth_policy FROM sites WHERE id = ?", id).Scan(&policyStr)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			writeJSON(w, http.StatusNotFound, map[string]string{"error": "site not found"})
+			kernel.WriteJSON(w, http.StatusNotFound, map[string]string{"error": "site not found"})
 		} else {
-			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
+			kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
 		}
 		return
 	}
@@ -943,7 +925,7 @@ func (s *Sites) getSiteAuthPolicy(w http.ResponseWriter, r *http.Request, id str
 	if policy.Default == "" {
 		policy.Default = "public"
 	}
-	writeJSON(w, http.StatusOK, policy)
+	kernel.WriteJSON(w, http.StatusOK, policy)
 }
 
 func (s *Sites) setSiteAuthPolicy(w http.ResponseWriter, r *http.Request, id string) {
@@ -954,13 +936,13 @@ func (s *Sites) setSiteAuthPolicy(w http.ResponseWriter, r *http.Request, id str
 	var exists int
 	err := s.db.QueryRowContext(ctx, "SELECT count(1) FROM sites WHERE id = ?", id).Scan(&exists)
 	if err != nil || exists == 0 {
-		writeJSON(w, http.StatusNotFound, map[string]string{"error": "site not found"})
+		kernel.WriteJSON(w, http.StatusNotFound, map[string]string{"error": "site not found"})
 		return
 	}
 
 	var policy AuthPolicy
 	if err := json.NewDecoder(r.Body).Decode(&policy); err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json"})
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json"})
 		return
 	}
 
@@ -969,20 +951,20 @@ func (s *Sites) setSiteAuthPolicy(w http.ResponseWriter, r *http.Request, id str
 		policy.Default = "public"
 	}
 	if policy.Default != "public" && policy.Default != "protected" {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid default policy value"})
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid default policy value"})
 		return
 	}
 
 	policyBytes, err := json.Marshal(policy)
 	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "marshal policy failed"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "marshal policy failed"})
 		return
 	}
 	policyStr := string(policyBytes)
 
 	_, err = s.db.ExecContext(ctx, "UPDATE sites SET auth_policy = ? WHERE id = ?", policyStr, id)
 	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
 		return
 	}
 
@@ -991,13 +973,7 @@ func (s *Sites) setSiteAuthPolicy(w http.ResponseWriter, r *http.Request, id str
 		s.updateAuthPolicy(id, policyStr)
 	}
 
-	writeJSON(w, http.StatusOK, map[string]any{"status": "ok", "policy": policy})
-}
-
-func writeJSON(w http.ResponseWriter, status int, data any) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
-	_ = json.NewEncoder(w).Encode(data)
+	kernel.WriteJSON(w, http.StatusOK, map[string]any{"status": "ok", "policy": policy})
 }
 
 var _ kernel.Component = (*Sites)(nil)

@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"strconv"
 	"time"
+
+	"github.com/danielvm/bigbase/kernel"
 )
 
 // OrgUsageDay is one daily bucket of usage data for an org.
@@ -96,16 +98,16 @@ func (m *Monitoring) handleOrgUsage(w http.ResponseWriter, r *http.Request) {
 
 	orgID, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil || orgID <= 0 {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid org id"})
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid org id"})
 		return
 	}
 
 	summary, err := m.GetOrgUsage(r.Context(), orgID)
 	if err != nil {
 		m.logger.Error("get org usage", "org_id", orgID, "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 
-	writeJSON(w, http.StatusOK, map[string]any{"data": summary})
+	kernel.WriteJSON(w, http.StatusOK, map[string]any{"data": summary})
 }

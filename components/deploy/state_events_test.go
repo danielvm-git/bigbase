@@ -29,7 +29,7 @@ func TestTransitionStateEmitsEvent(t *testing.T) {
 	var events []string
 
 	bus.Subscribe(kernel.HookDef{
-		Name:    "deploy.state_changed",
+		Name: "deploy.state_changed",
 		Handler: func(ctx *kernel.Context, e kernel.Event) error {
 			mu.Lock()
 			defer mu.Unlock()

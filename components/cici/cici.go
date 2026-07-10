@@ -1,25 +1,16 @@
 package cici
 
 import (
-	"crypto/rand"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"net/http"
 
-	"github.com/danielvm/bigbase/kernel"
 	"gopkg.in/yaml.v3"
+
+	"github.com/danielvm/bigbase/kernel"
 )
 
 const version = "0.1.0"
-
-
-type noopLogger struct{}
-
-func (noopLogger) Info(msg string, args ...any)  {}
-func (noopLogger) Warn(msg string, args ...any)  {}
-func (noopLogger) Error(msg string, args ...any) {}
-func (noopLogger) Debug(msg string, args ...any) {}
 
 // DBer is an alias for kernel.DBer — the shared database abstraction.
 type DBer = kernel.DBer
@@ -77,7 +68,7 @@ type CICI struct {
 func New(opts Options) *CICI {
 	logger := opts.Logger
 	if logger == nil {
-		logger = noopLogger{}
+		logger = kernel.NoopLogger{}
 	}
 	return &CICI{db: opts.DB, logger: logger}
 }
@@ -118,14 +109,6 @@ func (c *CICI) Stop(ctx *kernel.Context) error {
 	return nil
 }
 
-func generateID() (string, error) {
-	b := make([]byte, 16)
-	if _, err := rand.Read(b); err != nil {
-		return "", fmt.Errorf("generate id: %w", err)
-	}
-	return hex.EncodeToString(b), nil
-}
-
 func (c *CICI) Handler() http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /api/cici/runs", c.handleRuns)
@@ -134,10 +117,4 @@ func (c *CICI) Handler() http.Handler {
 	mux.HandleFunc("PUT /api/cici/{repo}/workflows", c.saveWorkflow)
 	mux.HandleFunc("POST /api/cici/{repo}/workflows/{id}/run", c.triggerRun)
 	return mux
-}
-
-func writeJSON(w http.ResponseWriter, status int, data any) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
-	_ = json.NewEncoder(w).Encode(data)
 }

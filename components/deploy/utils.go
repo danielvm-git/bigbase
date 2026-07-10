@@ -2,32 +2,19 @@ package deploy
 
 import (
 	"crypto/rand"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"math/big"
-	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
 )
 
-func generateID() (string, error) {
-	b := make([]byte, 16)
-	if _, err := rand.Read(b); err != nil {
-		return "", fmt.Errorf("generate id: %w", err)
-	}
-	return hex.EncodeToString(b), nil
-}
 func pickPort(base int) int {
 	n, _ := rand.Int(rand.Reader, big.NewInt(1000))
 	return base + int(n.Int64())
 }
-func writeJSON(w http.ResponseWriter, status int, data any) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
-	_ = json.NewEncoder(w).Encode(data)
-}
+
 func marshalPassthroughPaths(paths []string) string {
 	if len(paths) == 0 {
 		return ""

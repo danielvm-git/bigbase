@@ -31,13 +31,13 @@ const (
 )
 
 var publicTools = map[string]struct{}{
-	"ping":              {},
-	"list_services":     {},
-	"get_service_docs":  {},
-	"get_code_example":  {},
-	"list_frameworks":   {},
-	"get_ci_template":   {},
-	"deploy_guide":      {},
+	"ping":             {},
+	"list_services":    {},
+	"get_service_docs": {},
+	"get_code_example": {},
+	"list_frameworks":  {},
+	"get_ci_template":  {},
+	"deploy_guide":     {},
 }
 
 var writeTools = map[string]struct{}{

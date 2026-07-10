@@ -12,7 +12,7 @@ import (
 )
 
 func TestOTPStore(t *testing.T) {
-	logger := noopLogger{}
+	logger := kernel.NoopLogger{}
 	d := db.New(db.Options{Path: ":memory:", Logger: logger})
 	k := kernel.New(logger)
 	k.Register(d)
@@ -74,7 +74,7 @@ func TestOTPStore(t *testing.T) {
 }
 
 func TestRateLimitStore(t *testing.T) {
-	logger := noopLogger{}
+	logger := kernel.NoopLogger{}
 	d := db.New(db.Options{Path: ":memory:", Logger: logger})
 	k := kernel.New(logger)
 	k.Register(d)
@@ -154,7 +154,7 @@ func TestRateLimitStore(t *testing.T) {
 }
 
 func TestOTPPersistenceAcrossRestart(t *testing.T) {
-	logger := noopLogger{}
+	logger := kernel.NoopLogger{}
 	tempDir, err := os.MkdirTemp("", "bigbase-otp-test")
 	if err != nil {
 		t.Fatalf("create temp dir: %v", err)

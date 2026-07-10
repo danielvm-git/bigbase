@@ -15,7 +15,7 @@ type testLogger struct{}
 func (testLogger) Info(msg string, args ...any)  {}
 func (testLogger) Error(msg string, args ...any) {}
 func (testLogger) Debug(msg string, args ...any) {}
-func (testLogger) Warn(msg string, args ...any) {}
+func (testLogger) Warn(msg string, args ...any)  {}
 
 func TestAdminImplementsComponent(t *testing.T) {
 	var _ kernel.Component = &admin.Admin{}

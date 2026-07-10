@@ -5,18 +5,19 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/danielvm/bigbase/kernel"
 	"github.com/gorilla/websocket"
+
+	"github.com/danielvm/bigbase/kernel"
 )
 
 const (
-	version          = "0.1.0"
-	writeWait        = 10 * time.Second
-	pongWait         = 60 * time.Second
-	pingPeriod       = (pongWait * 9) / 10
-	maxMessageSize   = 4096
-	sendBufSize      = 256
-	channelPrefix    = "collection:"
+	version        = "0.1.0"
+	writeWait      = 10 * time.Second
+	pongWait       = 60 * time.Second
+	pingPeriod     = (pongWait * 9) / 10
+	maxMessageSize = 4096
+	sendBufSize    = 256
+	channelPrefix  = "collection:"
 )
 
 var upgrader = websocket.Upgrader{
@@ -26,30 +27,22 @@ var upgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool { return true },
 }
 
-
-type noopLogger struct{}
-
-func (noopLogger) Info(msg string, args ...any)  {}
-func (noopLogger) Warn(msg string, args ...any)  {}
-func (noopLogger) Error(msg string, args ...any) {}
-func (noopLogger) Debug(msg string, args ...any) {}
-
 type Options struct {
-	Logger kernel.Logger
+	Logger   kernel.Logger
 	Validate func(token string) (int64, error)
 }
 
 type Realtime struct {
-	logger kernel.Logger
-	hub        *Hub
-	validate   func(token string) (int64, error)
+	logger      kernel.Logger
+	hub         *Hub
+	validate    func(token string) (int64, error)
 	unsubscribe func()
 }
 
 func New(opts Options) *Realtime {
 	logger := opts.Logger
 	if logger == nil {
-		logger = noopLogger{}
+		logger = kernel.NoopLogger{}
 	}
 	validate := opts.Validate
 	if validate == nil {

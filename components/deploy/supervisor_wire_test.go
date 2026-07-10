@@ -15,14 +15,14 @@ import (
 // (and thus calls Runner.Spawn) rather than directly calling serveStatic/startApp.
 // This is the wiring test for e53s04.
 func TestTriggerRunsThroughSupervisor(t *testing.T) {
-	database := db.New(db.Options{Path: ":memory:", Logger: noopLogger{}})
+	database := db.New(db.Options{Path: ":memory:", Logger: kernel.NoopLogger{}})
 	if err := database.Start(&kernel.Context{}); err != nil {
 		t.Fatalf("db start: %v", err)
 	}
 	t.Cleanup(func() { _ = database.Stop(&kernel.Context{}) })
 
 	// dep0 creates the deployments table schema.
-	dep0 := New(Options{DB: database, Logger: noopLogger{}, BuildsDir: t.TempDir(), GitDir: t.TempDir()})
+	dep0 := New(Options{DB: database, Logger: kernel.NoopLogger{}, BuildsDir: t.TempDir(), GitDir: t.TempDir()})
 	if err := dep0.Start(&kernel.Context{}); err != nil {
 		t.Fatalf("dep0 start: %v", err)
 	}
@@ -58,7 +58,7 @@ func TestTriggerRunsThroughSupervisor(t *testing.T) {
 
 	dep := New(Options{
 		DB:           database,
-		Logger:       noopLogger{},
+		Logger:       kernel.NoopLogger{},
 		BuildsDir:    buildsDir,
 		GitDir:       t.TempDir(),
 		PublicDomain: "bigbase.click",

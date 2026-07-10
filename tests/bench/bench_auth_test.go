@@ -11,7 +11,7 @@ import (
 )
 
 func BenchmarkAuthValidateToken(b *testing.B) {
-	logger := noopLogger{}
+	logger := kernel.NoopLogger{}
 	d := db.New(db.Options{Path: ":memory:", Logger: logger})
 	a := auth.New(auth.Options{DB: d, Logger: logger, Secret: "bench-secret-32-chars!!!"})
 	k := kernel.New(logger)
@@ -44,7 +44,7 @@ func BenchmarkAuthValidateToken(b *testing.B) {
 }
 
 func BenchmarkAuthRegister(b *testing.B) {
-	logger := noopLogger{}
+	logger := kernel.NoopLogger{}
 	d := db.New(db.Options{Path: ":memory:", Logger: logger})
 	a := auth.New(auth.Options{DB: d, Logger: logger, Secret: "bench-secret-32-chars!!!"})
 	k := kernel.New(logger)

@@ -6,7 +6,7 @@ import (
 )
 
 const (
-	driverSQLite  = "sqlite"
+	driverSQLite   = "sqlite"
 	driverPostgres = "postgres"
 )
 

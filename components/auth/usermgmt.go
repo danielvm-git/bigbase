@@ -4,11 +4,13 @@ import (
 	"encoding/json"
 	"net/http"
 	"strings"
+
+	"github.com/danielvm/bigbase/kernel"
 )
 
 func (a *Auth) handleUpdateMe(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "PATCH" {
-		writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
+		kernel.WriteJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
 		return
 	}
 
@@ -20,20 +22,20 @@ func (a *Auth) handleUpdateMe(w http.ResponseWriter, r *http.Request) {
 		AvatarURL *string `json:"avatar_url"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json"})
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json"})
 		return
 	}
 
 	if req.Name != nil {
 		if len(*req.Name) > 100 {
-			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "name too long (max 100 chars)"})
+			kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "name too long (max 100 chars)"})
 			return
 		}
 		_, _ = a.db.ExecContext(r.Context(), "UPDATE users SET name = ? WHERE id = ?", *req.Name, userID)
 	}
 	if req.AvatarURL != nil {
 		if !strings.HasPrefix(*req.AvatarURL, "http://") && !strings.HasPrefix(*req.AvatarURL, "https://") {
-			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "avatar_url must be a valid URL"})
+			kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "avatar_url must be a valid URL"})
 			return
 		}
 		_, _ = a.db.ExecContext(r.Context(), "UPDATE users SET avatar_url = ? WHERE id = ?", *req.AvatarURL, userID)
@@ -43,7 +45,7 @@ func (a *Auth) handleUpdateMe(w http.ResponseWriter, r *http.Request) {
 	var dbName, dbAvatar, dbEmail, dbRole string
 	_ = a.db.QueryRowContext(r.Context(), "SELECT COALESCE(name,''), COALESCE(avatar_url,''), COALESCE(email,''), COALESCE(role,'') FROM users WHERE id = ?", userID).Scan(&dbName, &dbAvatar, &dbEmail, &dbRole)
 
-	writeJSON(w, http.StatusOK, map[string]any{
+	kernel.WriteJSON(w, http.StatusOK, map[string]any{
 		"id":         userID,
 		"email":      email,
 		"name":       dbName,
@@ -54,7 +56,7 @@ func (a *Auth) handleUpdateMe(w http.ResponseWriter, r *http.Request) {
 
 func (a *Auth) handleListIdentities(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "GET" {
-		writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
+		kernel.WriteJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
 		return
 	}
 
@@ -76,12 +78,12 @@ func (a *Auth) handleListIdentities(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
-	writeJSON(w, http.StatusOK, map[string]any{"identities": identities})
+	kernel.WriteJSON(w, http.StatusOK, map[string]any{"identities": identities})
 }
 
 func (a *Auth) handleLinkIdentity(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
-		writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
+		kernel.WriteJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
 		return
 	}
 
@@ -92,7 +94,7 @@ func (a *Auth) handleLinkIdentity(w http.ResponseWriter, r *http.Request) {
 		Code     string `json:"code"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.Provider != "google" || req.Code == "" {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "provider and code required"})
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "provider and code required"})
 		return
 	}
 
@@ -108,7 +110,7 @@ func (a *Auth) handleLinkIdentity(w http.ResponseWriter, r *http.Request) {
 	googleUser, err := verifier.Verify(r.Context(), req.Code)
 	if err != nil {
 		a.logger.Error("link identity verify", "error", err)
-		writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "google auth failed"})
+		kernel.WriteJSON(w, http.StatusUnauthorized, map[string]string{"error": "google auth failed"})
 		return
 	}
 
@@ -116,13 +118,13 @@ func (a *Auth) handleLinkIdentity(w http.ResponseWriter, r *http.Request) {
 	var existingID int64
 	err = a.db.QueryRowContext(r.Context(), "SELECT id FROM users WHERE google_id = ? AND id != ?", googleUser.GoogleID, userID).Scan(&existingID)
 	if err == nil {
-		writeJSON(w, http.StatusConflict, map[string]string{"error": "google account already linked to another user"})
+		kernel.WriteJSON(w, http.StatusConflict, map[string]string{"error": "google account already linked to another user"})
 		return
 	}
 
 	_, _ = a.db.ExecContext(r.Context(), "UPDATE users SET google_id = ?, avatar_url = ? WHERE id = ?", googleUser.GoogleID, googleUser.Avatar, userID)
 
-	writeJSON(w, http.StatusOK, map[string]any{
+	kernel.WriteJSON(w, http.StatusOK, map[string]any{
 		"provider":   "google",
 		"id":         googleUser.GoogleID,
 		"email":      googleUser.Email,
@@ -133,7 +135,7 @@ func (a *Auth) handleLinkIdentity(w http.ResponseWriter, r *http.Request) {
 
 func (a *Auth) handleUnlinkIdentity(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "DELETE" {
-		writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
+		kernel.WriteJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
 		return
 	}
 
@@ -142,7 +144,7 @@ func (a *Auth) handleUnlinkIdentity(w http.ResponseWriter, r *http.Request) {
 
 	// Can only unlink google provider.
 	if provider != "google" {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "unsupported provider"})
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "unsupported provider"})
 		return
 	}
 
@@ -150,10 +152,10 @@ func (a *Auth) handleUnlinkIdentity(w http.ResponseWriter, r *http.Request) {
 	var email string
 	err := a.db.QueryRowContext(r.Context(), "SELECT COALESCE(email,'') FROM users WHERE id = ?", userID).Scan(&email)
 	if err != nil || email == "" {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "cannot unlink only identity — add email first"})
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "cannot unlink only identity — add email first"})
 		return
 	}
 
 	_, _ = a.db.ExecContext(r.Context(), "UPDATE users SET google_id = NULL WHERE id = ?", userID)
-	writeJSON(w, http.StatusOK, map[string]bool{"ok": true})
+	kernel.WriteJSON(w, http.StatusOK, map[string]bool{"ok": true})
 }

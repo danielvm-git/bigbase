@@ -54,8 +54,8 @@ func TestAllowedSystemDep(t *testing.T) {
 
 func TestSpec_BackgroundProcesses(t *testing.T) {
 	spec := Spec{
-		DeployID:             "test-1",
-		BackgroundProcesses:  []string{"python worker.py", "celery -A tasks worker"},
+		DeployID:            "test-1",
+		BackgroundProcesses: []string{"python worker.py", "celery -A tasks worker"},
 	}
 	if len(spec.BackgroundProcesses) != 2 {
 		t.Errorf("expected 2 background processes, got %d", len(spec.BackgroundProcesses))

@@ -18,11 +18,11 @@ import (
 // cache directory, with Start() run so the config table exists.
 func newCacheTestDeploy(t *testing.T) (*Deploy, func()) {
 	t.Helper()
-	database := db.New(db.Options{Path: ":memory:", Logger: noopLogger{}})
+	database := db.New(db.Options{Path: ":memory:", Logger: kernel.NoopLogger{}})
 	if err := database.Start(&kernel.Context{}); err != nil {
 		t.Fatalf("db start: %v", err)
 	}
-	dep := New(Options{DB: database, Logger: noopLogger{}, CacheDir: t.TempDir()})
+	dep := New(Options{DB: database, Logger: kernel.NoopLogger{}, CacheDir: t.TempDir()})
 	if err := dep.Start(&kernel.Context{}); err != nil {
 		t.Fatalf("deploy start: %v", err)
 	}
@@ -170,7 +170,7 @@ func TestCacheAPI_SetConfig_Persists(t *testing.T) {
 		t.Errorf("live limit not updated: %d", d.cache.MaxBytes())
 	}
 	// Persisted: a fresh Deploy on the same DB should load the override.
-	d2 := New(Options{DB: d.db, Logger: noopLogger{}, CacheDir: t.TempDir()})
+	d2 := New(Options{DB: d.db, Logger: kernel.NoopLogger{}, CacheDir: t.TempDir()})
 	if err := d2.Start(&kernel.Context{}); err != nil {
 		t.Fatal(err)
 	}

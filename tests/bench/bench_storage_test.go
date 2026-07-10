@@ -13,7 +13,7 @@ import (
 )
 
 func BenchmarkStorageUpload(b *testing.B) {
-	logger := noopLogger{}
+	logger := kernel.NoopLogger{}
 	d := db.New(db.Options{Path: ":memory:", Logger: logger})
 	s := storage.New(storage.Options{DB: d, Logger: logger, Dir: b.TempDir()})
 	k := kernel.New(logger)

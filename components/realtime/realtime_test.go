@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
+
 	"github.com/danielvm/bigbase/components/realtime"
 )
 
@@ -87,9 +88,9 @@ func TestRealtimeSubscribeAndBroadcast(t *testing.T) {
 	time.Sleep(50 * time.Millisecond)
 
 	rt.Hub().Broadcast("posts", map[string]any{
-		"action": "mutation",
+		"action":  "mutation",
 		"channel": "collection:posts",
-		"type":   "create",
+		"type":    "create",
 	})
 
 	data := readWS(t, conn)

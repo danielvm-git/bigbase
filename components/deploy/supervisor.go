@@ -50,11 +50,11 @@ type Supervisor struct {
 // onEvent is called for observability events (e.g. "deploy.crash_looped").
 func NewSupervisor(r Runner, c Clock, reg DeploymentHostRegistry, onFailed func(string), onEvent func(string, Spec)) *Supervisor {
 	return &Supervisor{
-		runner:   r,
-		clock:    c,
-		registry: reg,
-		onFailed: onFailed,
-		onEvent:  onEvent,
+		runner:    r,
+		clock:     c,
+		registry:  reg,
+		onFailed:  onFailed,
+		onEvent:   onEvent,
 		stopping:  make(map[string]bool),
 		instances: make(map[string]Instance),
 	}

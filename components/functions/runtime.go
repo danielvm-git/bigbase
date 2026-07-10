@@ -12,8 +12,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/danielvm/bigbase/kernel"
 	"github.com/dop251/goja"
+
+	"github.com/danielvm/bigbase/kernel"
 )
 
 type RunOutput struct {

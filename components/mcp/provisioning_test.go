@@ -6,9 +6,10 @@ import (
 	"strings"
 	"testing"
 
+	mcpsdk "github.com/modelcontextprotocol/go-sdk/mcp"
+
 	"github.com/danielvm/bigbase/components/mcp"
 	"github.com/danielvm/bigbase/components/sites"
-	mcpsdk "github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
 type mockGitCreator struct {
@@ -200,9 +201,9 @@ func TestCreateSite(t *testing.T) {
 			Deployer:    &mockDeployer{},
 		})
 		text := callToolText(t, c, "create_site", map[string]any{
-			"git_repo_id":  "repo-1",
-			"name":         "app",
-			"auto_deploy":  true,
+			"git_repo_id": "repo-1",
+			"name":        "app",
+			"auto_deploy": true,
 		})
 		if !strings.Contains(text, `"url"`) {
 			t.Fatalf("expected deploy url in response: %s", text)

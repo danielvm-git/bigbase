@@ -8,10 +8,12 @@ import (
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/danielvm/bigbase/kernel"
 )
 
 const (
-	verifyTokenLen        = 6  // hex chars in verification token
+	verifyTokenLen        = 6     // hex chars in verification token
 	verifyTokenExpirySecs = 86400 // 24 hours
 )
 
@@ -97,13 +99,13 @@ func (a *Auth) isEmailVerified(ctx context.Context, userID int64) (bool, error) 
 // handleVerifyEmail handles GET /api/auth/verify-email?token=...
 func (a *Auth) handleVerifyEmail(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
+		kernel.WriteJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
 		return
 	}
 
 	token := r.URL.Query().Get("token")
 	if token == "" {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "token required"})
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "token required"})
 		return
 	}
 
@@ -116,14 +118,14 @@ func (a *Auth) handleVerifyEmail(w http.ResponseWriter, r *http.Request) {
 		"SELECT id, email_verify_token, email_verify_expires_at FROM users WHERE email_verify_token = ?",
 		token).Scan(&userID, &storedToken, &expiresAt)
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid or expired token"})
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid or expired token"})
 		return
 	}
 
 	// Check expiry.
 	exp, err := time.Parse(time.RFC3339, expiresAt)
 	if err != nil || time.Now().After(exp) {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid or expired token"})
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid or expired token"})
 		return
 	}
 
@@ -133,9 +135,9 @@ func (a *Auth) handleVerifyEmail(w http.ResponseWriter, r *http.Request) {
 		userID)
 	if err != nil {
 		a.logger.Error("mark email verified", "user_id", userID, "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 
-	writeJSON(w, http.StatusOK, map[string]string{"status": "email verified"})
+	kernel.WriteJSON(w, http.StatusOK, map[string]string{"status": "email verified"})
 }

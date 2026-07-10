@@ -24,14 +24,6 @@ const (
 	DriverPostgres = "postgres"
 )
 
-type noopLogger struct{}
-
-func (noopLogger) Info(msg string, args ...any)  {}
-func (noopLogger) Error(msg string, args ...any) {}
-func (noopLogger) Debug(msg string, args ...any) {}
-func (noopLogger) Warn(msg string, args ...any)  {}
-
-
 // Options configures the DB component.
 // Driver selects "sqlite" (default) or "postgres".
 // DSN is the data source name: a file path for SQLite or a connection
@@ -53,7 +45,7 @@ type DB struct {
 
 func New(opts Options) *DB {
 	if opts.Logger == nil {
-		opts.Logger = noopLogger{}
+		opts.Logger = kernel.NoopLogger{}
 	}
 	driver := opts.Driver
 	if driver == "" {
@@ -71,11 +63,11 @@ func New(opts Options) *DB {
 	}
 }
 
-func (d *DB) Name() string                 { return "db" }
-func (d *DB) Version() string              { return version }
-func (d *DB) Dependencies() []string       { return nil }
+func (d *DB) Name() string                  { return "db" }
+func (d *DB) Version() string               { return version }
+func (d *DB) Dependencies() []string        { return nil }
 func (d *DB) ConfigSchema() json.RawMessage { return nil }
-func (d *DB) Hooks() []kernel.HookDef      { return nil }
+func (d *DB) Hooks() []kernel.HookDef       { return nil }
 
 func (d *DB) Init(_ *kernel.Context, _ json.RawMessage) error {
 	if d.driver == DriverSQLite && d.dsn == "" {

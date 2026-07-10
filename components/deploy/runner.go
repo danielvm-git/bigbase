@@ -13,9 +13,9 @@ import (
 // in the Supervisor, not in the Instance.
 type Spec struct {
 	DeployID string
-	Host     string   // public hostname; "" for localhost-only
+	Host     string // public hostname; "" for localhost-only
 	Port     int
-	Dir      string   // serve/build output directory
+	Dir      string // serve/build output directory
 	AppType  AppType
 	Env      []string // resolved env vars (PORT=N + manifest vars)
 	StartCmd []string // resolved start command; nil for static apps

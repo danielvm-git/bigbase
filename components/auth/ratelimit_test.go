@@ -115,9 +115,9 @@ func TestRateLimit(t *testing.T) {
 
 	t.Run("user_bucket_takes_precedence_when_authenticated", func(t *testing.T) {
 		rl := auth.NewRateLimiter(auth.RateLimiterConfig{
-			IPLimit:      1,    // Very low IP limit
+			IPLimit:      1, // Very low IP limit
 			IPWindow:     time.Minute,
-			UserLimit:    10,   // Higher user limit
+			UserLimit:    10, // Higher user limit
 			UserWindow:   time.Minute,
 			CleanupEvery: time.Hour,
 		})

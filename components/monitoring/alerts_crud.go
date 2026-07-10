@@ -4,13 +4,15 @@ import (
 	"encoding/json"
 	"net/http"
 	"strings"
+
+	"github.com/danielvm/bigbase/kernel"
 )
 
 // handleAlertByID handles GET/DELETE for a single alert by ID.
 func (m *Monitoring) handleAlertByID(w http.ResponseWriter, r *http.Request) {
 	id := strings.TrimPrefix(r.URL.Path, "/api/monitoring/alerts/")
 	if id == "" || strings.Contains(id, "/") {
-		writeJSON(w, http.StatusNotFound, map[string]string{"error": "not found"})
+		kernel.WriteJSON(w, http.StatusNotFound, map[string]string{"error": "not found"})
 		return
 	}
 
@@ -22,13 +24,13 @@ func (m *Monitoring) handleAlertByID(w http.ResponseWriter, r *http.Request) {
 	case http.MethodPut:
 		m.handleAlertUpdate(w, r, id)
 	default:
-		writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
+		kernel.WriteJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
 	}
 }
 
 func (m *Monitoring) handleAlertGet(w http.ResponseWriter, r *http.Request, id string) {
 	if m.db == nil {
-		writeJSON(w, http.StatusNotFound, map[string]string{"error": "not found"})
+		kernel.WriteJSON(w, http.StatusNotFound, map[string]string{"error": "not found"})
 		return
 	}
 	var a Alert
@@ -37,31 +39,31 @@ func (m *Monitoring) handleAlertGet(w http.ResponseWriter, r *http.Request, id s
 		"SELECT id, name, metric, threshold, operator, enabled, duration_seconds FROM monitoring_alerts WHERE id = ?", id).
 		Scan(&a.ID, &a.Name, &a.Metric, &a.Threshold, &a.Operator, &enabled, &a.DurationSeconds)
 	if err != nil {
-		writeJSON(w, http.StatusNotFound, map[string]string{"error": "alert not found"})
+		kernel.WriteJSON(w, http.StatusNotFound, map[string]string{"error": "alert not found"})
 		return
 	}
 	a.Enabled = enabled == 1
-	writeJSON(w, http.StatusOK, a)
+	kernel.WriteJSON(w, http.StatusOK, a)
 }
 
 func (m *Monitoring) handleAlertDelete(w http.ResponseWriter, r *http.Request, id string) {
 	if m.db == nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "db not configured"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "db not configured"})
 		return
 	}
 	_, err := m.db.ExecContext(r.Context(),
 		"DELETE FROM monitoring_alerts WHERE id = ?", id)
 	if err != nil {
 		m.logger.Error("delete alert", "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]string{"id": id, "deleted": "true"})
+	kernel.WriteJSON(w, http.StatusOK, map[string]string{"id": id, "deleted": "true"})
 }
 
 func (m *Monitoring) handleAlertUpdate(w http.ResponseWriter, r *http.Request, id string) {
 	if m.db == nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "db not configured"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "db not configured"})
 		return
 	}
 	var body struct {
@@ -72,11 +74,11 @@ func (m *Monitoring) handleAlertUpdate(w http.ResponseWriter, r *http.Request, i
 		Enabled   bool    `json:"enabled"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid JSON"})
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid JSON"})
 		return
 	}
 	if body.Name == "" || body.Metric == "" {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "name and metric are required"})
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "name and metric are required"})
 		return
 	}
 	enabled := 0
@@ -88,8 +90,8 @@ func (m *Monitoring) handleAlertUpdate(w http.ResponseWriter, r *http.Request, i
 		body.Name, body.Metric, body.Threshold, body.Operator, enabled, id)
 	if err != nil {
 		m.logger.Error("update alert", "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]string{"id": id})
+	kernel.WriteJSON(w, http.StatusOK, map[string]string{"id": id})
 }

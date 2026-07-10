@@ -8,8 +8,8 @@ const (
 	StateBuilding   DeploymentState = "building"
 	StateDeploying  DeploymentState = "deploying"
 	StateRunning    DeploymentState = "running"
-	StateDraining  DeploymentState = "draining"
-	StateStopped   DeploymentState = "stopped"
+	StateDraining   DeploymentState = "draining"
+	StateStopped    DeploymentState = "stopped"
 	StateFailed     DeploymentState = "failed"
 	StateRolledBack DeploymentState = "rolled_back"
 )
@@ -32,14 +32,14 @@ type stateMachine struct {
 func newStateMachine() *stateMachine {
 	return &stateMachine{
 		valid: map[string][]string{
-			string(StatePending):            {string(StateBuilding)},
-			string(StateBuilding):           {string(StateDeploying), string(StateRunning), string(StateFailed)},
-			string(StateDeploying):          {string(StateRunning), string(StateFailed)},
-			string(StateRunning):            {string(StateFailed), string(StateRolledBack), string(StateDraining)},
-			string(StateDraining):          {string(StateStopped), string(StateFailed), string(StateRunning)},
-			string(StateStopped):           {string(StateRunning)},
-			string(StateFailed):             {},
-			string(StateRolledBack):         {},
+			string(StatePending):    {string(StateBuilding)},
+			string(StateBuilding):   {string(StateDeploying), string(StateRunning), string(StateFailed)},
+			string(StateDeploying):  {string(StateRunning), string(StateFailed)},
+			string(StateRunning):    {string(StateFailed), string(StateRolledBack), string(StateDraining)},
+			string(StateDraining):   {string(StateStopped), string(StateFailed), string(StateRunning)},
+			string(StateStopped):    {string(StateRunning)},
+			string(StateFailed):     {},
+			string(StateRolledBack): {},
 		},
 	}
 }
@@ -71,4 +71,3 @@ func (sm *stateMachine) IsValidState(status string) bool {
 	_, ok := sm.valid[status]
 	return ok
 }
-

@@ -8,6 +8,8 @@ import (
 	"time"
 
 	"gopkg.in/yaml.v3"
+
+	"github.com/danielvm/bigbase/kernel"
 )
 
 type saveWorkflowReq struct {
@@ -20,25 +22,25 @@ func (c *CICI) saveWorkflow(w http.ResponseWriter, r *http.Request) {
 
 	var req saveWorkflowReq
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json"})
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json"})
 		return
 	}
 	if req.Name == "" || req.YAML == "" {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "name and yaml are required"})
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "name and yaml are required"})
 		return
 	}
 
 	var wf workflowYAML
 	if err := yaml.Unmarshal([]byte(req.YAML), &wf); err != nil {
 		c.logger.Warn("invalid workflow yaml", "repo", repoID, "error", err)
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid workflow YAML format"})
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid workflow YAML format"})
 		return
 	}
 
-	id, err := generateID()
+	id, err := kernel.GenerateID()
 	if err != nil {
 		c.logger.Error("generate id", "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 
@@ -47,11 +49,11 @@ func (c *CICI) saveWorkflow(w http.ResponseWriter, r *http.Request) {
 		"INSERT INTO cici_workflows (id, repo_id, name, yaml, created_at) VALUES (?, ?, ?, ?, ?)",
 		id, repoID, req.Name, req.YAML, now); err != nil {
 		c.logger.Error("insert workflow", "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 
-	writeJSON(w, http.StatusCreated, WorkflowDef{
+	kernel.WriteJSON(w, http.StatusCreated, WorkflowDef{
 		ID: id, RepoID: repoID, Name: req.Name, YAML: req.YAML,
 	})
 }
@@ -66,7 +68,7 @@ func (c *CICI) listWorkflows(w http.ResponseWriter, r *http.Request) {
 		"SELECT id, repo_id, name, yaml FROM cici_workflows WHERE repo_id = ? ORDER BY name", repoID)
 	if err != nil {
 		c.logger.Error("list workflows", "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 	defer func() { _ = rows.Close() }()
@@ -82,10 +84,10 @@ func (c *CICI) listWorkflows(w http.ResponseWriter, r *http.Request) {
 	}
 	if err := rows.Err(); err != nil {
 		c.logger.Error("iterate workflows", "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"data": workflows})
+	kernel.WriteJSON(w, http.StatusOK, map[string]any{"data": workflows})
 }
 
 func (c *CICI) fetchWorkflow(ctx context.Context, id string) (*WorkflowDef, error) {

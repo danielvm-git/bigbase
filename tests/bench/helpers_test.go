@@ -8,13 +8,6 @@ import (
 	"testing"
 )
 
-type noopLogger struct{}
-
-func (noopLogger) Info(msg string, args ...any)  {}
-func (noopLogger) Warn(msg string, args ...any)  {}
-func (noopLogger) Error(msg string, args ...any) {}
-func (noopLogger) Debug(msg string, args ...any) {}
-
 func decodeJSON(tb testing.TB, res *http.Response, v any) {
 	tb.Helper()
 	defer func() { _ = res.Body.Close() }()

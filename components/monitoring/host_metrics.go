@@ -1,8 +1,9 @@
 package monitoring
 
 import (
-	"github.com/danielvm/bigbase/kernel"
 	"time"
+
+	"github.com/danielvm/bigbase/kernel"
 
 	gocpu "github.com/shirou/gopsutil/v3/cpu"
 	godisk "github.com/shirou/gopsutil/v3/disk"

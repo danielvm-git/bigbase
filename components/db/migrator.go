@@ -61,7 +61,7 @@ func (m *Migrator) applied() (map[string]bool, error) {
 	if err != nil {
 		return nil, fmt.Errorf("migrator: query applied: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	applied := make(map[string]bool)
 	for rows.Next() {
@@ -180,7 +180,7 @@ func (m *Migrator) Status() ([]MigrationRecord, error) {
 	if err != nil {
 		return nil, fmt.Errorf("migrator: status query: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	appliedMap := make(map[string]time.Time)
 	for rows.Next() {

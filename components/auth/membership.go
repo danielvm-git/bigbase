@@ -11,21 +11,21 @@ import (
 
 // OrgInvite represents a pending invitation to join an organization.
 type OrgInvite struct {
-	ID            int64   `json:"id"`
-	OrgID         int64   `json:"org_id"`
-	InviteeEmail  string  `json:"invitee_email"`
-	Role          string  `json:"role"`
-	Token         string  `json:"token"`
-	AcceptedAt    *string `json:"accepted_at,omitempty"`
-	ExpiresAt     string  `json:"expires_at"`
+	ID           int64   `json:"id"`
+	OrgID        int64   `json:"org_id"`
+	InviteeEmail string  `json:"invitee_email"`
+	Role         string  `json:"role"`
+	Token        string  `json:"token"`
+	AcceptedAt   *string `json:"accepted_at,omitempty"`
+	ExpiresAt    string  `json:"expires_at"`
 }
 
 // OrgMember represents a user who has accepted membership in an org.
 type OrgMember struct {
-	UserID    int64  `json:"user_id"`
-	Email     string `json:"email"`
-	Role      string `json:"role"`
-	JoinedAt  string `json:"joined_at"`
+	UserID   int64  `json:"user_id"`
+	Email    string `json:"email"`
+	Role     string `json:"role"`
+	JoinedAt string `json:"joined_at"`
 }
 
 // validMemberRoles lists the allowed roles for org membership.

@@ -12,10 +12,11 @@ import (
 	"testing"
 	"time"
 
+	jwt "github.com/golang-jwt/jwt/v5"
+
 	"github.com/danielvm/bigbase/components/auth"
 	"github.com/danielvm/bigbase/components/db"
 	"github.com/danielvm/bigbase/kernel"
-	jwt "github.com/golang-jwt/jwt/v5"
 )
 
 type testLogger struct{}
@@ -652,7 +653,6 @@ func makeExpiredAnonymousToken(t *testing.T, a *auth.Auth) string {
 	}
 	return signed
 }
-
 
 func TestListUsers(t *testing.T) {
 	_, handler, protected := setupAuth(t)
@@ -1495,10 +1495,10 @@ func TestOrganization(t *testing.T) {
 
 		d := db.New(db.Options{Path: ":memory:", Logger: logger})
 		a := auth.New(auth.Options{
-			DB:                d,
-			Logger:            logger,
-			Secret:            "test-secret-32-chars!!!",
-			GoogleClientID:    "test-client-id",
+			DB:                 d,
+			Logger:             logger,
+			Secret:             "test-secret-32-chars!!!",
+			GoogleClientID:     "test-client-id",
 			GoogleClientSecret: "test-client-secret",
 		})
 

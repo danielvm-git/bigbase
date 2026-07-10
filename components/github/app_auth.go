@@ -128,11 +128,11 @@ func (g *GitHub) listInstallationRepos(ctx context.Context, installationID int64
 
 	var out struct {
 		Repositories []struct {
-			ID          int64  `json:"id"`
-			FullName    string `json:"full_name"`
+			ID            int64  `json:"id"`
+			FullName      string `json:"full_name"`
 			DefaultBranch string `json:"default_branch"`
-			Private     bool   `json:"private"`
-			Description string `json:"description"`
+			Private       bool   `json:"private"`
+			Description   string `json:"description"`
 		} `json:"repositories"`
 	}
 	if err := json.NewDecoder(res.Body).Decode(&out); err != nil {

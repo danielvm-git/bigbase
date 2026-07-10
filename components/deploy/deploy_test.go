@@ -11,10 +11,10 @@ import (
 	"net/http/httptest"
 	"os"
 	"os/exec"
-	"sync"
 	"path/filepath"
-	"syscall"
 	"strings"
+	"sync"
+	"syscall"
 	"testing"
 	"time"
 
@@ -1963,7 +1963,6 @@ func TestValidateNodeBuildScriptNoPackageJSON(t *testing.T) {
 		t.Fatal("expected error when package.json missing")
 	}
 }
-
 
 func TestStopDeploymentKillsOrphanedProcess(t *testing.T) {
 	// RED: After a BigBase restart (d.apps cleared), a subsequent redeploy for

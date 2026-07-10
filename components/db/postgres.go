@@ -32,7 +32,7 @@ type PostgresDB struct {
 func NewPostgres(opts PostgresOptions) *PostgresDB {
 	logger := opts.Logger
 	if logger == nil {
-		logger = noopLogger{}
+		logger = kernel.NoopLogger{}
 	}
 	return &PostgresDB{
 		dsn:    opts.DSN,

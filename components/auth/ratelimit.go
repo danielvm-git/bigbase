@@ -7,6 +7,8 @@ import (
 	"strconv"
 	"sync"
 	"time"
+
+	"github.com/danielvm/bigbase/kernel"
 )
 
 // RateLimiterConfig configures the token-bucket rate limiter.
@@ -37,12 +39,12 @@ func DefaultRateLimiterConfig() RateLimiterConfig {
 
 // bucket is a token-bucket entry for a single client key.
 type bucket struct {
-	mu        sync.Mutex
-	tokens    int
-	limit     int
-	window    time.Duration
-	resetAt   time.Time
-	lastSeen  time.Time
+	mu       sync.Mutex
+	tokens   int
+	limit    int
+	window   time.Duration
+	resetAt  time.Time
+	lastSeen time.Time
 }
 
 // allow returns true if this request is within the limit, false if exceeded.
@@ -214,7 +216,7 @@ func (rl *RateLimiter) Middleware(next http.Handler) http.Handler {
 
 		if !b.allow() {
 			w.Header().Set("Retry-After", strconv.Itoa(b.retryAfter()))
-			writeJSON(w, http.StatusTooManyRequests, map[string]string{"error": "rate limit exceeded"})
+			kernel.WriteJSON(w, http.StatusTooManyRequests, map[string]string{"error": "rate limit exceeded"})
 			return
 		}
 

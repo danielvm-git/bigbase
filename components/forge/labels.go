@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/danielvm/bigbase/kernel"
 )
 
 func (f *Forge) createLabel(w http.ResponseWriter, r *http.Request) {
@@ -15,21 +17,21 @@ func (f *Forge) createLabel(w http.ResponseWriter, r *http.Request) {
 		Color  string `json:"color"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json"})
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json"})
 		return
 	}
 	if req.RepoID == "" || req.Name == "" {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "repo_id and name are required"})
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "repo_id and name are required"})
 		return
 	}
 	if req.Color == "" {
 		req.Color = "#cccccc"
 	}
 
-	id, err := generateID()
+	id, err := kernel.GenerateID()
 	if err != nil {
 		f.logger.Error("generate id", "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 
@@ -37,20 +39,20 @@ func (f *Forge) createLabel(w http.ResponseWriter, r *http.Request) {
 		"INSERT INTO forge_labels (id, repo_id, name, color) VALUES (?, ?, ?, ?)",
 		id, req.RepoID, req.Name, req.Color); err != nil {
 		if strings.Contains(err.Error(), "UNIQUE") {
-			writeJSON(w, http.StatusConflict, map[string]string{"error": "label already exists"})
+			kernel.WriteJSON(w, http.StatusConflict, map[string]string{"error": "label already exists"})
 			return
 		}
 		f.logger.Error("insert label", "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
-	writeJSON(w, http.StatusCreated, Label{ID: id, RepoID: req.RepoID, Name: req.Name, Color: req.Color})
+	kernel.WriteJSON(w, http.StatusCreated, Label{ID: id, RepoID: req.RepoID, Name: req.Name, Color: req.Color})
 }
 
 func (f *Forge) listLabels(w http.ResponseWriter, r *http.Request) {
 	repoID := r.URL.Query().Get("repo_id")
 	if repoID == "" {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "repo_id required"})
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "repo_id required"})
 		return
 	}
 
@@ -61,7 +63,7 @@ func (f *Forge) listLabels(w http.ResponseWriter, r *http.Request) {
 		"SELECT id, repo_id, name, color FROM forge_labels WHERE repo_id = ? ORDER BY name", repoID)
 	if err != nil {
 		f.logger.Error("list labels", "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 	defer func() { _ = rows.Close() }()
@@ -75,5 +77,5 @@ func (f *Forge) listLabels(w http.ResponseWriter, r *http.Request) {
 		}
 		labels = append(labels, l)
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"data": labels})
+	kernel.WriteJSON(w, http.StatusOK, map[string]any{"data": labels})
 }

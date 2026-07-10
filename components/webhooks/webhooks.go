@@ -7,7 +7,6 @@ import (
 	"bytes"
 	"context"
 	"crypto/hmac"
-	"crypto/rand"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
@@ -24,14 +23,6 @@ const (
 	maxAttempts      = 5
 	deliveryTimeout  = 10 * time.Second
 )
-
-
-type noopLogger struct{}
-
-func (noopLogger) Info(msg string, args ...any)  {}
-func (noopLogger) Warn(msg string, args ...any)  {}
-func (noopLogger) Error(msg string, args ...any) {}
-func (noopLogger) Debug(msg string, args ...any) {}
 
 // DBer is the database interface required by this component.
 type DBer = kernel.DBer
@@ -53,7 +44,7 @@ type Component struct {
 func New(opts Options) *Component {
 	logger := opts.Logger
 	if logger == nil {
-		logger = noopLogger{}
+		logger = kernel.NoopLogger{}
 	}
 	return &Component{
 		db:     opts.DB,
@@ -62,11 +53,11 @@ func New(opts Options) *Component {
 	}
 }
 
-func (c *Component) Name() string                 { return "webhooks" }
-func (c *Component) Version() string              { return componentVersion }
-func (c *Component) Dependencies() []string       { return []string{"db"} }
+func (c *Component) Name() string                  { return "webhooks" }
+func (c *Component) Version() string               { return componentVersion }
+func (c *Component) Dependencies() []string        { return []string{"db"} }
 func (c *Component) ConfigSchema() json.RawMessage { return nil }
-func (c *Component) Hooks() []kernel.HookDef      { return nil }
+func (c *Component) Hooks() []kernel.HookDef       { return nil }
 
 func (c *Component) Init(ctx *kernel.Context, config json.RawMessage) error {
 	return nil
@@ -102,12 +93,12 @@ func (c *Component) Handler() http.Handler {
 
 // Webhook represents a registered webhook endpoint.
 type Webhook struct {
-	ID        string    `json:"id"`
-	OrgID     string    `json:"org_id"`
-	URL       string    `json:"url"`
-	Events    []string  `json:"events"`
-	Secret    string    `json:"secret,omitempty"`
-	CreatedAt string    `json:"created_at,omitempty"`
+	ID        string   `json:"id"`
+	OrgID     string   `json:"org_id"`
+	URL       string   `json:"url"`
+	Events    []string `json:"events"`
+	Secret    string   `json:"secret,omitempty"`
+	CreatedAt string   `json:"created_at,omitempty"`
 }
 
 // EventPayload is the data sent to a webhook endpoint.
@@ -125,7 +116,7 @@ func (c *Component) listWebhooks(w http.ResponseWriter, r *http.Request) {
 		`SELECT id, org_id, url, events, created_at FROM webhooks ORDER BY created_at`)
 	if err != nil {
 		c.logger.Error("list webhooks", "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 	defer func() { _ = rows.Close() }()
@@ -143,10 +134,10 @@ func (c *Component) listWebhooks(w http.ResponseWriter, r *http.Request) {
 	}
 	if err := rows.Err(); err != nil {
 		c.logger.Error("iterate webhooks", "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"data": result})
+	kernel.WriteJSON(w, http.StatusOK, map[string]any{"data": result})
 }
 
 func (c *Component) createWebhook(w http.ResponseWriter, r *http.Request) {
@@ -158,21 +149,21 @@ func (c *Component) createWebhook(w http.ResponseWriter, r *http.Request) {
 		Secret string   `json:"secret"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json or body too large"})
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json or body too large"})
 		return
 	}
 	if req.URL == "" {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "url is required"})
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "url is required"})
 		return
 	}
 	if len(req.Events) == 0 {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "events is required"})
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "events is required"})
 		return
 	}
 
-	id, err := generateID()
+	id, err := kernel.GenerateID()
 	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 
@@ -186,11 +177,11 @@ func (c *Component) createWebhook(w http.ResponseWriter, r *http.Request) {
 		`INSERT INTO webhooks (id, org_id, url, events, secret, created_at) VALUES (?, ?, ?, ?, ?, ?)`,
 		id, req.OrgID, req.URL, string(eventsJSON), req.Secret, now); err != nil {
 		c.logger.Error("insert webhook", "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 
-	writeJSON(w, http.StatusCreated, Webhook{
+	kernel.WriteJSON(w, http.StatusCreated, Webhook{
 		ID:        id,
 		OrgID:     req.OrgID,
 		URL:       req.URL,
@@ -202,7 +193,7 @@ func (c *Component) createWebhook(w http.ResponseWriter, r *http.Request) {
 func (c *Component) deleteWebhook(w http.ResponseWriter, r *http.Request) {
 	id := strings.TrimPrefix(r.URL.Path, "/api/webhooks/")
 	if id == "" {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "id required"})
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "id required"})
 		return
 	}
 
@@ -212,15 +203,15 @@ func (c *Component) deleteWebhook(w http.ResponseWriter, r *http.Request) {
 	res, err := c.db.ExecContext(ctx, "DELETE FROM webhooks WHERE id = ?", id)
 	if err != nil {
 		c.logger.Error("delete webhook", "id", id, "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 	affected, _ := res.RowsAffected()
 	if affected == 0 {
-		writeJSON(w, http.StatusNotFound, map[string]string{"error": "not found"})
+		kernel.WriteJSON(w, http.StatusNotFound, map[string]string{"error": "not found"})
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]string{"status": "deleted"})
+	kernel.WriteJSON(w, http.StatusOK, map[string]string{"status": "deleted"})
 }
 
 // Deliver sends the event payload to the webhook's URL once (no retry).
@@ -283,20 +274,6 @@ func computeHMAC(secret string, body []byte) string {
 	mac := hmac.New(sha256.New, []byte(secret))
 	mac.Write(body)
 	return hex.EncodeToString(mac.Sum(nil))
-}
-
-func generateID() (string, error) {
-	b := make([]byte, 16)
-	if _, err := rand.Read(b); err != nil {
-		return "", err
-	}
-	return hex.EncodeToString(b), nil
-}
-
-func writeJSON(w http.ResponseWriter, status int, data any) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
-	_ = json.NewEncoder(w).Encode(data)
 }
 
 var _ kernel.Component = (*Component)(nil)

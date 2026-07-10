@@ -2,8 +2,6 @@ package storage
 
 import (
 	"context"
-	"crypto/rand"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -29,27 +27,19 @@ var allowedMimePrefixes = []string{
 
 const version = "0.1.0"
 
-
-type noopLogger struct{}
-
-func (noopLogger) Info(msg string, args ...any)  {}
-func (noopLogger) Warn(msg string, args ...any)  {}
-func (noopLogger) Error(msg string, args ...any) {}
-func (noopLogger) Debug(msg string, args ...any) {}
-
 // DBer is an alias for kernel.DBer — the shared database abstraction.
 type DBer = kernel.DBer
 
 type Storage struct {
 	db      DBer
-	logger kernel.Logger
+	logger  kernel.Logger
 	dir     string
 	maxSize int64
 }
 
 type Options struct {
 	DB      DBer
-	Logger kernel.Logger
+	Logger  kernel.Logger
 	Dir     string
 	MaxSize int64
 }
@@ -57,7 +47,7 @@ type Options struct {
 func New(opts Options) *Storage {
 	logger := opts.Logger
 	if logger == nil {
-		logger = noopLogger{}
+		logger = kernel.NoopLogger{}
 	}
 	dir := opts.Dir
 	if dir == "" {
@@ -70,11 +60,11 @@ func New(opts Options) *Storage {
 	return &Storage{db: opts.DB, logger: logger, dir: dir, maxSize: maxSize}
 }
 
-func (s *Storage) Name() string                    { return "storage" }
-func (s *Storage) Version() string                 { return version }
-func (s *Storage) Dependencies() []string          { return []string{"db"} }
-func (s *Storage) ConfigSchema() json.RawMessage   { return nil }
-func (s *Storage) Hooks() []kernel.HookDef         { return nil }
+func (s *Storage) Name() string                  { return "storage" }
+func (s *Storage) Version() string               { return version }
+func (s *Storage) Dependencies() []string        { return []string{"db"} }
+func (s *Storage) ConfigSchema() json.RawMessage { return nil }
+func (s *Storage) Hooks() []kernel.HookDef       { return nil }
 
 func (s *Storage) Init(ctx *kernel.Context, config json.RawMessage) error {
 	return nil
@@ -102,14 +92,6 @@ func (s *Storage) Stop(ctx *kernel.Context) error {
 	return nil
 }
 
-func generateID() (string, error) {
-	b := make([]byte, 16)
-	if _, err := rand.Read(b); err != nil {
-		return "", fmt.Errorf("generate id: %w", err)
-	}
-	return hex.EncodeToString(b), nil
-}
-
 func (s *Storage) Dir() string { return s.dir }
 
 func (s *Storage) DBer() DBer { return s.db }
@@ -132,33 +114,33 @@ type FileInfo struct {
 
 func (s *Storage) handleUpload(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
-		writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
+		kernel.WriteJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
 		return
 	}
 
 	content, filename, err := s.readUpload(w, r)
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
 		return
 	}
 
 	mimeType := detectMIME(content)
 	if !isMIMEAllowed(mimeType) {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "file type not allowed: " + mimeType})
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "file type not allowed: " + mimeType})
 		return
 	}
 
-	id, err := generateID()
+	id, err := kernel.GenerateID()
 	if err != nil {
 		s.logger.Error("generate id", "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 
 	fullPath, err := s.writeFile(id, filename, content)
 	if err != nil {
 		s.logger.Error("write file", "id", id, "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 
@@ -167,11 +149,11 @@ func (s *Storage) handleUpload(w http.ResponseWriter, r *http.Request) {
 	if err := s.insertFileMeta(r.Context(), id, filename, fileSize, mimeType, fullPath, now); err != nil {
 		s.logger.Error("insert file metadata", "id", id, "error", err)
 		_ = os.RemoveAll(filepath.Join(s.dir, id))
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 
-	writeJSON(w, http.StatusCreated, FileInfo{
+	kernel.WriteJSON(w, http.StatusCreated, FileInfo{
 		ID:        id,
 		Name:      filename,
 		Size:      fileSize,
@@ -231,18 +213,18 @@ func (s *Storage) insertFileMeta(ctx context.Context, id, name string, size int6
 
 func (s *Storage) handleFileList(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "GET" {
-		writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
+		kernel.WriteJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
 		return
 	}
 
 	files, err := s.fetchFiles(r.Context())
 	if err != nil {
 		s.logger.Error("list files", "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 
-	writeJSON(w, http.StatusOK, map[string]any{"data": files})
+	kernel.WriteJSON(w, http.StatusOK, map[string]any{"data": files})
 }
 
 func (s *Storage) fetchFiles(ctx context.Context) ([]FileInfo, error) {
@@ -269,7 +251,7 @@ func (s *Storage) fetchFiles(ctx context.Context) ([]FileInfo, error) {
 func (s *Storage) handleFiles(w http.ResponseWriter, r *http.Request) {
 	path := strings.TrimPrefix(r.URL.Path, "/api/storage/files/")
 	if path == "" {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "id required"})
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "id required"})
 		return
 	}
 
@@ -289,12 +271,12 @@ func (s *Storage) handleFiles(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
+	kernel.WriteJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
 }
 
 func (s *Storage) handleThumbnail(w http.ResponseWriter, r *http.Request, id string) {
 	if r.Method != http.MethodGet {
-		writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
+		kernel.WriteJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
 		return
 	}
 
@@ -305,12 +287,12 @@ func (s *Storage) handleThumbnail(w http.ResponseWriter, r *http.Request, id str
 	err := s.db.QueryRowContext(ctx,
 		"SELECT name, mime_type, path FROM storage_files WHERE id = ?", id).Scan(&name, &mimeType, &filePath)
 	if err != nil {
-		writeJSON(w, http.StatusNotFound, map[string]string{"error": "file not found"})
+		kernel.WriteJSON(w, http.StatusNotFound, map[string]string{"error": "file not found"})
 		return
 	}
 
 	if !strings.HasPrefix(mimeType, "image/") {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "file is not an image"})
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "file is not an image"})
 		return
 	}
 
@@ -318,17 +300,17 @@ func (s *Storage) handleThumbnail(w http.ResponseWriter, r *http.Request, id str
 	absDir, err := filepath.Abs(s.dir)
 	if err != nil {
 		s.logger.Error("resolve storage dir", "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 	absPath, err := filepath.Abs(fullPath)
 	if err != nil {
 		s.logger.Error("resolve thumbnail path", "path", fullPath, "error", err)
-		writeJSON(w, http.StatusForbidden, map[string]string{"error": "access denied"})
+		kernel.WriteJSON(w, http.StatusForbidden, map[string]string{"error": "access denied"})
 		return
 	}
 	if !strings.HasPrefix(absPath, absDir+string(filepath.Separator)) {
-		writeJSON(w, http.StatusForbidden, map[string]string{"error": "access denied"})
+		kernel.WriteJSON(w, http.StatusForbidden, map[string]string{"error": "access denied"})
 		return
 	}
 
@@ -344,7 +326,7 @@ func (s *Storage) handleFileDownload(w http.ResponseWriter, r *http.Request, id 
 	err := s.db.QueryRowContext(ctx,
 		"SELECT name, mime_type, path FROM storage_files WHERE id = ?", id).Scan(&name, &mimeType, &filePath)
 	if err != nil {
-		writeJSON(w, http.StatusNotFound, map[string]string{"error": "file not found"})
+		kernel.WriteJSON(w, http.StatusNotFound, map[string]string{"error": "file not found"})
 		return
 	}
 
@@ -353,23 +335,23 @@ func (s *Storage) handleFileDownload(w http.ResponseWriter, r *http.Request, id 
 	absDir, err := filepath.Abs(s.dir)
 	if err != nil {
 		s.logger.Error("resolve storage dir", "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 	absPath, err := filepath.Abs(fullPath)
 	if err != nil {
 		s.logger.Error("resolve file path", "path", fullPath, "error", err)
-		writeJSON(w, http.StatusForbidden, map[string]string{"error": "access denied"})
+		kernel.WriteJSON(w, http.StatusForbidden, map[string]string{"error": "access denied"})
 		return
 	}
 	if !strings.HasPrefix(absPath, absDir+string(filepath.Separator)) {
-		writeJSON(w, http.StatusForbidden, map[string]string{"error": "access denied"})
+		kernel.WriteJSON(w, http.StatusForbidden, map[string]string{"error": "access denied"})
 		return
 	}
 
 	if _, err := os.Stat(fullPath); os.IsNotExist(err) {
 		s.logger.Error("file missing from disk", "id", id, "path", fullPath)
-		writeJSON(w, http.StatusNotFound, map[string]string{"error": "file not found"})
+		kernel.WriteJSON(w, http.StatusNotFound, map[string]string{"error": "file not found"})
 		return
 	}
 
@@ -385,13 +367,13 @@ func (s *Storage) handleFileDelete(w http.ResponseWriter, r *http.Request, id st
 	var filePath string
 	err := s.db.QueryRowContext(ctx, "SELECT path FROM storage_files WHERE id = ?", id).Scan(&filePath)
 	if err != nil {
-		writeJSON(w, http.StatusNotFound, map[string]string{"error": "file not found"})
+		kernel.WriteJSON(w, http.StatusNotFound, map[string]string{"error": "file not found"})
 		return
 	}
 
 	if _, err := s.db.ExecContext(ctx, "DELETE FROM storage_files WHERE id = ?", id); err != nil {
 		s.logger.Error("delete file metadata", "id", id, "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 
@@ -400,17 +382,17 @@ func (s *Storage) handleFileDelete(w http.ResponseWriter, r *http.Request, id st
 	absDir, err := filepath.Abs(s.dir)
 	if err != nil {
 		s.logger.Error("resolve storage dir for delete", "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 	absDelete, err := filepath.Abs(deletePath)
 	if err != nil || !strings.HasPrefix(absDelete, absDir+string(filepath.Separator)) {
 		s.logger.Error("path traversal attempt in delete", "id", id)
-		writeJSON(w, http.StatusForbidden, map[string]string{"error": "access denied"})
+		kernel.WriteJSON(w, http.StatusForbidden, map[string]string{"error": "access denied"})
 		return
 	}
 	_ = os.RemoveAll(deletePath)
-	writeJSON(w, http.StatusOK, map[string]string{"status": "deleted"})
+	kernel.WriteJSON(w, http.StatusOK, map[string]string{"status": "deleted"})
 }
 
 func sanitizeFilename(name string) string {
@@ -420,11 +402,3 @@ func sanitizeFilename(name string) string {
 	)
 	return r.Replace(name)
 }
-
-func writeJSON(w http.ResponseWriter, status int, data any) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
-	_ = json.NewEncoder(w).Encode(data)
-}
-
-

@@ -135,4 +135,3 @@ func probeHealth(ctx context.Context, doer httpDoer, baseURL string, cfg Manifes
 
 	return result
 }
-

@@ -12,6 +12,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/danielvm/bigbase/kernel"
 )
 
 // site_domains uses a composite UNIQUE(site_id, domain): a domain is scoped to a
@@ -82,7 +84,7 @@ func (s *Sites) handleDomains(w http.ResponseWriter, r *http.Request) {
 	parts := strings.Split(strings.Trim(path, "/"), "/")
 	// parts[0] = site id, parts[1] = "domains", parts[2] = domain, parts[3] = "verify"
 	if len(parts) < 2 || parts[1] != "domains" {
-		writeJSON(w, http.StatusNotFound, map[string]string{"error": "not found"})
+		kernel.WriteJSON(w, http.StatusNotFound, map[string]string{"error": "not found"})
 		return
 	}
 	siteID := parts[0]
@@ -97,7 +99,7 @@ func (s *Sites) handleDomains(w http.ResponseWriter, r *http.Request) {
 	case len(parts) == 4 && parts[3] == "verify" && r.Method == http.MethodPost:
 		s.verifyDomain(w, r, siteID, parts[2])
 	default:
-		writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
+		kernel.WriteJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
 	}
 }
 
@@ -110,7 +112,7 @@ func (s *Sites) listDomains(w http.ResponseWriter, r *http.Request, siteID strin
 		 FROM site_domains WHERE site_id = ? ORDER BY created_at`, siteID)
 	if err != nil {
 		s.logger.Error("list domains", "site_id", siteID, "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 	defer func() { _ = rows.Close() }()
@@ -128,7 +130,7 @@ func (s *Sites) listDomains(w http.ResponseWriter, r *http.Request, siteID strin
 	}
 	if err := rows.Err(); err != nil {
 		s.logger.Error("iterate domains", "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 
@@ -142,7 +144,7 @@ func (s *Sites) listDomains(w http.ResponseWriter, r *http.Request, siteID strin
 		domains[i].CertExpiresAt = expiresAt
 	}
 
-	writeJSON(w, http.StatusOK, map[string]any{"data": domains})
+	kernel.WriteJSON(w, http.StatusOK, map[string]any{"data": domains})
 }
 
 // certStatusFor resolves the certificate status for a verified domain via the
@@ -177,16 +179,16 @@ func (s *Sites) registerDomain(w http.ResponseWriter, r *http.Request, siteID st
 		Domain string `json:"domain"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json"})
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json"})
 		return
 	}
 	domain := strings.ToLower(strings.TrimSpace(req.Domain))
 	if domain == "" {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "domain is required"})
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "domain is required"})
 		return
 	}
 	if !domainRE.MatchString(domain) {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid domain format"})
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid domain format"})
 		return
 	}
 
@@ -195,18 +197,18 @@ func (s *Sites) registerDomain(w http.ResponseWriter, r *http.Request, siteID st
 
 	// Guard against attaching domains to non-existent sites (no FK on the table).
 	if !s.siteExists(ctx, siteID) {
-		writeJSON(w, http.StatusNotFound, map[string]string{"error": "site not found"})
+		kernel.WriteJSON(w, http.StatusNotFound, map[string]string{"error": "site not found"})
 		return
 	}
 
-	id, err := generateID()
+	id, err := kernel.GenerateID()
 	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 	tokenBytes := make([]byte, 16)
 	if _, err := rand.Read(tokenBytes); err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 	verifyToken := hex.EncodeToString(tokenBytes)
@@ -217,15 +219,15 @@ func (s *Sites) registerDomain(w http.ResponseWriter, r *http.Request, siteID st
 		id, siteID, domain, verifyToken, now)
 	if err != nil {
 		if isUniqueViolation(err) {
-			writeJSON(w, http.StatusConflict, map[string]string{"error": "domain already registered for this site"})
+			kernel.WriteJSON(w, http.StatusConflict, map[string]string{"error": "domain already registered for this site"})
 			return
 		}
 		s.logger.Error("insert domain", "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 
-	writeJSON(w, http.StatusCreated, SiteDomain{
+	kernel.WriteJSON(w, http.StatusCreated, SiteDomain{
 		ID:          id,
 		SiteID:      siteID,
 		Domain:      domain,
@@ -249,12 +251,12 @@ func (s *Sites) deleteDomain(w http.ResponseWriter, r *http.Request, siteID, dom
 		siteID, domain)
 	if err != nil {
 		s.logger.Error("delete domain", "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 	affected, _ := res.RowsAffected()
 	if affected == 0 {
-		writeJSON(w, http.StatusNotFound, map[string]string{"error": "domain not found"})
+		kernel.WriteJSON(w, http.StatusNotFound, map[string]string{"error": "domain not found"})
 		return
 	}
 
@@ -270,7 +272,7 @@ func (s *Sites) deleteDomain(w http.ResponseWriter, r *http.Request, siteID, dom
 func (s *Sites) verifyDomain(w http.ResponseWriter, r *http.Request, siteID, domain string) {
 	if !s.verifyLim.allow(siteID+"|"+domain, time.Now()) {
 		w.Header().Set("Retry-After", "5")
-		writeJSON(w, http.StatusTooManyRequests, map[string]string{"error": "too many verification attempts, try again shortly"})
+		kernel.WriteJSON(w, http.StatusTooManyRequests, map[string]string{"error": "too many verification attempts, try again shortly"})
 		return
 	}
 
@@ -282,7 +284,7 @@ func (s *Sites) verifyDomain(w http.ResponseWriter, r *http.Request, siteID, dom
 		`SELECT verify_token FROM site_domains WHERE site_id = ? AND domain = ?`,
 		siteID, domain).Scan(&verifyToken)
 	if err != nil {
-		writeJSON(w, http.StatusNotFound, map[string]string{"error": "domain not registered"})
+		kernel.WriteJSON(w, http.StatusNotFound, map[string]string{"error": "domain not registered"})
 		return
 	}
 
@@ -302,7 +304,7 @@ func (s *Sites) verifyDomain(w http.ResponseWriter, r *http.Request, siteID, dom
 		}
 	}
 
-	writeJSON(w, http.StatusOK, map[string]any{
+	kernel.WriteJSON(w, http.StatusOK, map[string]any{
 		"domain":       domain,
 		"verified":     verified,
 		"verify_token": verifyToken,

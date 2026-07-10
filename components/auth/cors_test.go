@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/danielvm/bigbase/kernel"
 )
 
 func TestCORSMiddleware(t *testing.T) {
@@ -37,7 +39,7 @@ func TestCORSOptions(t *testing.T) {
 	tdb := &testDB{}
 	opts := Options{
 		DB:                 tdb,
-		Logger:             noopLogger{},
+		Logger:             kernel.NoopLogger{},
 		Secret:             "test-secret",
 		CORSAllowedOrigins: []string{"https://a.example.com", "https://b.example.com"},
 	}
@@ -49,7 +51,7 @@ func TestCORSOptions(t *testing.T) {
 		t.Errorf("unexpected origins: %v", a.corsAllowedOrigins)
 	}
 	// Default: no origins means nil.
-	def := New(Options{DB: tdb, Logger: noopLogger{}, Secret: "test"})
+	def := New(Options{DB: tdb, Logger: kernel.NoopLogger{}, Secret: "test"})
 	if len(def.corsAllowedOrigins) != 0 {
 		t.Errorf("expected 0 origins for default, got %d", len(def.corsAllowedOrigins))
 	}

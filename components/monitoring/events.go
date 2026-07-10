@@ -76,18 +76,18 @@ func (m *Monitoring) WithEventBus(bus *kernel.EventBus, hookNames []string) {
 		bus.Subscribe(kernel.HookDef{
 			Name:     hookName,
 			Priority: 1000,
-		Handler: func(_ *kernel.Context, ev kernel.Event) error {
-			siteID := eventSiteID(ev.Data)
-			if m.recorder != nil {
-				_ = m.recorder.Record(context.Background(), hookName, siteID, ev.Data)
-			}
-			m.stream.broadcast(BusEvent{
-				Hook:      hookName,
-				Data:      ev.Data,
-				Timestamp: time.Now().UTC().Format(time.RFC3339Nano),
-			})
-			return nil
-		},
+			Handler: func(_ *kernel.Context, ev kernel.Event) error {
+				siteID := eventSiteID(ev.Data)
+				if m.recorder != nil {
+					_ = m.recorder.Record(context.Background(), hookName, siteID, ev.Data)
+				}
+				m.stream.broadcast(BusEvent{
+					Hook:      hookName,
+					Data:      ev.Data,
+					Timestamp: time.Now().UTC().Format(time.RFC3339Nano),
+				})
+				return nil
+			},
 		})
 	}
 }
@@ -95,13 +95,13 @@ func (m *Monitoring) WithEventBus(bus *kernel.EventBus, hookNames []string) {
 // handleSSEEvents serves GET /api/monitoring/events as SSE.
 func (m *Monitoring) handleSSEEvents(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "GET" {
-		writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
+		kernel.WriteJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
 		return
 	}
 
 	flusher, ok := w.(http.Flusher)
 	if !ok {
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "streaming not supported"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "streaming not supported"})
 		return
 	}
 

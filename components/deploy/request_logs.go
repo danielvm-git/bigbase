@@ -3,6 +3,8 @@ package deploy
 import (
 	"context"
 	"time"
+
+	"github.com/danielvm/bigbase/kernel"
 )
 
 func (d *Deploy) RecordRequestLog(siteID, method, path string, status int, duration time.Duration) {
@@ -10,7 +12,7 @@ func (d *Deploy) RecordRequestLog(siteID, method, path string, status int, durat
 		return
 	}
 
-	id, err := generateID()
+	id, err := kernel.GenerateID()
 	if err != nil {
 		return
 	}
