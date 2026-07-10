@@ -27,6 +27,7 @@ export default function CiciPage() {
 
   useEffect(() => {
     if (!repoId) return
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true); setError('')
     Promise.all([
       fetch(`/api/cici/${repoId}/workflows`).then(r => r.json()),
@@ -47,7 +48,7 @@ export default function CiciPage() {
         const d = await res.json()
         setLogs(p => ({ ...p, [runId]: (d as { logs: Log[] }).logs || [] }))
       }
-    } catch {}
+    } catch { /* ignore */ }
   }
 
   const handleCreateWorkflow = async (e: React.FormEvent) => {

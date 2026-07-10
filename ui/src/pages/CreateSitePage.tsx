@@ -76,9 +76,11 @@ export default function CreateSitePage() {
     previewLines: previewMode ? PREVIEW_DEPLOY_LINES : undefined,
   })
 
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (logError) setDoneError(logError)
   }, [logError])
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const loadGitHub = async () => {
     setGhLoading(true)

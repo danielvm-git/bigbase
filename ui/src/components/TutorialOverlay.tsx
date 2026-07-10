@@ -124,6 +124,7 @@ export function TutorialOverlay({ onClose }: TutorialOverlayProps) {
 }
 
 // useTutorialTrigger returns show/hide helpers and whether to show the tutorial button.
+// eslint-disable-next-line react-refresh/only-export-components
 export function useTutorialTrigger() {
   const [visible, setVisible] = useState(false)
   const isDone = localStorage.getItem(TUTORIAL_DONE_KEY) === 'true'

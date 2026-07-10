@@ -23,6 +23,7 @@ export function BuildCachePanel() {
     setLoading(false)
   }
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { void load() }, [])
 
   const run = async (fn: () => Promise<{ ok: boolean; error?: string }>, successMsg: string) => {

@@ -28,7 +28,8 @@ export function Button(props: ButtonProps) {
     .join(' ')
 
   if (props.as === 'a') {
-    const { as: _, ...anchorProps } = props as ButtonAsLink
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { as: _as, ...anchorProps } = props as ButtonAsLink
     return (
       <a className={classes} {...anchorProps}>
         {children}
@@ -36,7 +37,8 @@ export function Button(props: ButtonProps) {
     )
   }
 
-  const { as: _, ...buttonProps } = props as ButtonAsButton
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { as: _as, ...buttonProps } = props as ButtonAsButton
   return (
     <button className={classes} {...buttonProps}>
       {children}

@@ -48,7 +48,6 @@ export function Input(props: InputProps) {
   // standard "I know I'm dropping this key" convention); the eslint
   // disable is the project's own noUnusedLocals not honouring that
   // convention yet. Tracked to lift when the lint config catches up.
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { prefix: _stripPrefix, ...inputAttrs } =
     (rest as InputAsInput & { prefix?: ReactElement })
   void _stripPrefix

@@ -17,12 +17,14 @@ export default function MessagingDetailPage() {
   const [body, setBody] = useState('')
   const [variables, setVariables] = useState('')
 
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (!template) return
     setSubject(template.subject)
     setBody(template.body)
     setVariables(template.variables.join(', '))
   }, [template])
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   if (!template) {
     return (

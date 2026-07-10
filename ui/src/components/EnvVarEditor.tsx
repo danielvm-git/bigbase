@@ -31,13 +31,14 @@ export function EnvVarEditor({ vars, onChange }: EnvVarEditorProps): ReactNode {
 
   const add = () => {
     const copy = { ...vars }
-    let next = ''
     let i = 1
-    do { next = `KEY_${i}`; i++ } while (next in copy && i < 1000)
+    let next = `KEY_${i}`
+    while (next in copy && i < 1000) { i++; next = `KEY_${i}` }
     if (i >= 1000) next = `KEY_${Date.now()}`
     copy[next] = ''
     onChange(copy)
   }
+
 
   if (entries.length === 0) {
     return (

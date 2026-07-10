@@ -21,7 +21,6 @@ vi.mock('../lib/previewMode', () => ({
   previewQuerySuffix: () => '',
 }))
 
-// eslint-disable-next-line import/first
 import CreateSitePage from './CreateSitePage'
 
 function renderPage() {

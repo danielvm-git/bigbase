@@ -143,9 +143,11 @@ function SiteManifest({ site, latestDeployment }: { site: Site; latestDeployment
     setLoading(false)
   }, [site.id])
 
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     loadManifest()
   }, [loadManifest])
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const handleCreate = () => {
     const appType = latestDeployment?.app_type || 'static'
@@ -330,7 +332,9 @@ export default function SiteDetailPage() {
     setLoading(false)
   }, [siteId])
 
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => { load() }, [load])
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   useEffect(() => {
     const active = deployments.some(d => d.status === 'pending' || d.status === 'building' || d.status === 'deploying')

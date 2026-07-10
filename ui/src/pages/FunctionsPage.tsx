@@ -45,6 +45,7 @@ export default function FunctionsPage() {
     finally { setLoading(false) }
   }
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { fetchFns() }, [])
 
   const openCreate = () => { setEditing(null); setForm(defaultForm); setShowForm(true) }

@@ -35,6 +35,7 @@ export default function StoragePage() {
     finally { setLoading(false) }
   }
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { fetchFiles() }, [])
 
   const handleUpload = async (e: React.FormEvent) => {

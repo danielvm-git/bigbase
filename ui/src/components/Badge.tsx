@@ -22,6 +22,7 @@ export function Badge({ variant = 'neutral', className = '', ...rest }: BadgePro
   return <span className={`badge ${variantClass[variant]} ${className}`} {...rest} />
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function statusBadgeVariant(status: string): BadgeVariant {
   const s = status.toLowerCase()
   if (s === 'running' || s === 'active' || s === 'ok' || s === 'healthy') return 'success'

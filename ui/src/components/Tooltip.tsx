@@ -15,7 +15,7 @@ export function Tooltip({ content, children, placement = 'top', className = '' }
 
   function cloneWithAriaDescribedBy(child: ReactNode) {
     if (!isValidElement(child)) return child
-    const el = child as React.ReactElement<any>
+    const el = child as React.ReactElement<React.HTMLAttributes<HTMLElement>>
     return cloneElement(el, {
       'aria-describedby': id,
       onMouseEnter: (e: React.MouseEvent) => { setVisible(true); el.props.onMouseEnter?.(e) },

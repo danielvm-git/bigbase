@@ -30,6 +30,7 @@ const FG_COLORS: Record<string, string> = {
   '97': '#f8f9fa', // bright white
 }
 
+// eslint-disable-next-line no-control-regex
 const ANSI_RE = /\x1b\[([\d;]*)m/g
 
 function styleToString(s: StyleState): string {

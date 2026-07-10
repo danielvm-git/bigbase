@@ -33,7 +33,7 @@ export function useBuildLogs(deploymentId: string) {
 
       setLines(data.lines || [])
       setStatus(data.status)
-    } catch (err) {
+    } catch {
       if (!isPolling) setError('Failed to fetch logs — network error')
     } finally {
       if (!isPolling) setLoading(false)
@@ -46,6 +46,7 @@ export function useBuildLogs(deploymentId: string) {
 
     let ws: WebSocket | null = null
     let closed = false
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsStreaming(false)
 
     // Always do an initial fetch for baseline data

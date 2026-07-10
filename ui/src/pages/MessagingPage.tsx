@@ -51,6 +51,7 @@ export default function MessagingPage() {
     finally { setLoading(false) }
   }
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { fetchMessages() }, [])
 
   const setPageTab = (id: string) => setSearchParams({ tab: id })
