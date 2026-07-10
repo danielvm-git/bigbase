@@ -156,8 +156,17 @@ bugs:
     scope: auth
     summary: OAuth/token cookies use Secure: r.TLS != nil behind TLS proxy (CWE-319)
     file: specs/bugs/BUG-2026-07-10T160110-oauth-cookie-secure-flag.md
-    status: open
+    status: fixed
     audit_source: specs/audit-code-2026-07-10.md
+    files_changed:
+      - components/auth/auth.go
+      - components/auth/refreshtoken.go
+      - components/auth/cookie_secure_test.go
+    approach: "cookieSecure() honors r.TLS, https PublicURL, and X-Forwarded-Proto."
+    risk_level: low
+    regression_guards:
+      - components/auth/cookie_secure_test.go TestCookieSecureWithHTTPSPublicURL
+      - components/auth/cookie_secure_test.go TestCookieSecureWithForwardedProto
   - id: BUG-2026-07-10T160111
     date: "2026-07-10"
     severity: medium
