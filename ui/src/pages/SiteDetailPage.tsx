@@ -15,6 +15,7 @@ import {
   SiteEnvVarsTab,
   SiteCacheTab,
   SiteDomainsTab,
+  SiteDeployKeysTab,
   Page,
 } from '../components'
 import { getSite, getSiteDeployments, deleteSite, getSiteManifest, saveSiteManifest, rollbackDeployment, getRollbackEvents } from '../lib/sitesData'
@@ -311,6 +312,7 @@ export default function SiteDetailPage() {
     { id: 'request-logs', label: 'Request Logs' },
     { id: 'env-vars', label: 'Env Vars' },
     { id: 'domains', label: 'Domains' },
+    { id: 'deploy-keys', label: 'Deploy Keys' },
     { id: 'cache', label: 'Cache' },
     { id: 'manifest', label: 'Manifest' },
   ]
@@ -577,6 +579,10 @@ export default function SiteDetailPage() {
 
       {activeTab === 'domains' && (
         <SiteDomainsTab siteId={siteId} />
+      )}
+
+      {activeTab === 'deploy-keys' && (
+        <SiteDeployKeysTab siteId={siteId} />
       )}
 
       {activeTab === 'cache' && (
