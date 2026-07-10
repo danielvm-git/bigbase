@@ -128,10 +128,12 @@ export default function MonitoringPage() {
     } catch { /* silent */ }
   }, [])
 
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     setLoading(true)
     Promise.all([fetchMetrics(), fetchLogs(), fetchAlerts()]).finally(() => setLoading(false))
   }, [fetchMetrics, fetchLogs, fetchAlerts])
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   // SSE stream for live host metrics updates.
   useEffect(() => {

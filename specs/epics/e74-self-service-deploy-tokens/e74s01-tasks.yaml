@@ -2,21 +2,28 @@ tasks:
   - id: handlers
     description: "Write handleCreateSiteKey, handleListSiteKeys, handleRevokeSiteKey in auth/auth.go — model after existing handleCreateAPIKey"
     verify: "go test ./components/auth/... -run SiteKeyHandler"
+    status: passing
   - id: route-registration
     description: "Register POST/GET/DELETE /api/sites/{id}/deploy-keys in auth ProtectedHandler or sites handler"
     verify: "go build ./..."
+    status: passing
   - id: input-validation
     description: "Validate name (max 100 chars), scopes (known values only), site_id (non-empty)"
     verify: "go test ./components/auth/... -run SiteKeyValidation"
+    status: passing
   - id: rate-limiter
     description: "Wire rate-limit middleware on POST endpoint — 10 per site per hour per user"
     verify: "go test ./components/auth/... -run SiteKeyRateLimit"
+    status: passing
   - id: log-redaction
     description: "Verify raw token never appears in server logs — only key_id and site_id"
     verify: "grep -n 'rawToken\\|token.*%s\\|token.*%v' components/auth/auth.go && echo 'FAIL' || echo 'PASS'"
+    status: passing
   - id: list-no-raw-tokens
     description: "GET list endpoint returns metadata only (no raw token column)"
     verify: "go test ./components/auth/... -run SiteKeyListNoTokens"
+    status: passing
   - id: audit-events
     description: "Add auth.site_key_created and auth.site_key_revoked audit events"
     verify: "grep -c 'site_key_created\\|site_key_revoked' components/auth/auth.go"
+    status: passing

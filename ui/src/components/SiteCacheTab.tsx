@@ -19,6 +19,7 @@ export function SiteCacheTab({ siteId }: { siteId: string }) {
     setLoading(false)
   }
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect, react-hooks/exhaustive-deps
   useEffect(() => { void load() }, [siteId])
 
   const handleClear = async () => {

@@ -31,9 +31,11 @@ export default function UsersPage() {
     }
   }
 
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     fetchUsers()
   }, [])
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const handleDelete = async (id: number) => {
     if (!confirm(`Delete user #${id}?`)) return

@@ -9,7 +9,6 @@ vi.mock('../lib/sitesData', () => ({
   clearSiteCache: (id: string) => clearSiteCache(id),
 }))
 
-// eslint-disable-next-line import/first
 import { SiteCacheTab } from './SiteCacheTab'
 
 const populatedStatus = {

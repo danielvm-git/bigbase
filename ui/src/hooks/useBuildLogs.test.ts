@@ -146,7 +146,7 @@ describe('useBuildLogs', () => {
 
     await vi.waitFor(() => expect(result.current.isStreaming).toBe(false))
 
-    delete (global as any).WebSocket
+    delete (global as Record<string, unknown>).WebSocket
   })
 
   it('falls back to polling when WebSocket errors', async () => {
@@ -187,7 +187,7 @@ describe('useBuildLogs', () => {
     expect(fetchSpy).toHaveBeenCalledTimes(2) // initial + first poll
 
     vi.useRealTimers()
-    delete (global as any).WebSocket
+    delete (global as Record<string, unknown>).WebSocket
   })
 
   it('stops polling when status is running', async () => {

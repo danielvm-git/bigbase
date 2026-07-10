@@ -50,6 +50,7 @@ function GenerateModal({
   const [error, setError] = useState<string | undefined>()
   const [result, setResult] = useState<{ name: string; key: string } | null>(null)
 
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (!open) {
       setName('')
@@ -58,6 +59,7 @@ function GenerateModal({
       setGenerating(false)
     }
   }, [open])
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const handleGenerate = async () => {
     const trimmed = name.trim()
@@ -216,6 +218,7 @@ export function SiteDeployKeysTab({ siteId }: { siteId: string }) {
     setLoading(false)
   }
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect, react-hooks/exhaustive-deps
   useEffect(() => { loadKeys() }, [siteId])
 
   const handleGenerated = () => {

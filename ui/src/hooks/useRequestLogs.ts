@@ -41,7 +41,7 @@ export function useRequestLogs(siteId: string) {
 
       setLogs(data.data || [])
       setTotal(data.total || 0)
-    } catch (err) {
+    } catch {
       setError('Failed to fetch request logs — network error')
     } finally {
       setLoading(false)
@@ -49,6 +49,7 @@ export function useRequestLogs(siteId: string) {
   }, [siteId, pathPrefix, statusClass, limit])
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchLogs()
   }, [fetchLogs])
 

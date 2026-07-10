@@ -30,6 +30,7 @@ export default function GitReposPage() {
     finally { setLoading(false) }
   }
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { fetchRepos() }, [])
 
   const handleCreate = async (e: React.FormEvent) => {

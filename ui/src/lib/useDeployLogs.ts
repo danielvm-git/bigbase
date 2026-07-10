@@ -61,7 +61,7 @@ export function useDeployLogs({
   const [loading, setLoading] = useState(false)
   const previewRef = useRef(previewLines)
 
-  previewRef.current = previewLines
+  useEffect(() => { previewRef.current = previewLines })
 
   const refresh = useCallback(async () => {
     if (!deploymentId) return
@@ -98,6 +98,7 @@ export function useDeployLogs({
 
   useEffect(() => {
     if (previewLines && !deploymentId) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setLines(previewLines)
     }
   }, [previewLines, deploymentId])

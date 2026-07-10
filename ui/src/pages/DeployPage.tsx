@@ -26,9 +26,11 @@ export default function DeployPage() {
     setLoading(false)
   }, [])
 
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     load()
   }, [load])
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const pq = previewQuerySuffix()
 

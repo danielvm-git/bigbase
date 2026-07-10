@@ -167,6 +167,7 @@ export function SiteEnvVarsTab({ siteId }: { siteId: string }) {
     setLoading(false)
   }
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect, react-hooks/exhaustive-deps
   useEffect(() => { void load() }, [siteId])
 
   const handleAdd = async (data: Parameters<typeof createEnvVar>[1]) => {

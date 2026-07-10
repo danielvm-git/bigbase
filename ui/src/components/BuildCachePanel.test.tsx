@@ -13,7 +13,6 @@ vi.mock('../lib/sitesData', () => ({
   setCacheMaxSize: (b: number) => setCacheMaxSize(b),
 }))
 
-// eslint-disable-next-line import/first
 import { BuildCachePanel } from './BuildCachePanel'
 
 const stats = { total_entries: 14, total_size_bytes: 1288490188, max_size_bytes: 2147483648 }

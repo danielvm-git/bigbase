@@ -26,6 +26,7 @@ function getStoredAccent(): AccentId {
   return 'default'
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function applyAccentToDocument(accent: AccentId) {
   const root = document.documentElement
   const theme = getAccentTheme(accent)

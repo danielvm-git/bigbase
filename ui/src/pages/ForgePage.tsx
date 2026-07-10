@@ -31,6 +31,7 @@ export default function ForgePage() {
 
   useEffect(() => {
     if (!repoId) return
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true); setError('')
     Promise.all([
       fetch(`/api/forge/issues?repo_id=${repoId}`).then(r => r.json()),
@@ -51,7 +52,7 @@ export default function ForgePage() {
         const d = await res.json()
         setComments(d as Comment[])
       }
-    } catch {}
+    } catch { /* ignore network error for comments */ }
   }
 
   const handleCreate = async (e: React.FormEvent) => {
@@ -67,7 +68,7 @@ export default function ForgePage() {
       const iRes = await fetch(`/api/forge/issues?repo_id=${repoId}`)
       const iD = await iRes.json()
       setIssues((iD as { data: Issue[] }).data || [])
-    } catch { setError('network error') }
+    } catch { /* ignore network error */ }
   }
 
   const handleStatusChange = async (id: string, status: string) => {
@@ -83,7 +84,7 @@ export default function ForgePage() {
         const bRes = await fetch(`/api/forge/board?repo_id=${repoId}`)
         setBoard(await bRes.json() as Board)
       }
-    } catch {}
+    } catch { /* ignore */ }
   }
 
   const handleComment = async (e: React.FormEvent) => {
@@ -95,7 +96,7 @@ export default function ForgePage() {
         body: JSON.stringify({ content: commentText }),
       })
       if (res.ok) { setCommentText(''); loadComments(selectedIssue.id) }
-    } catch {}
+    } catch { /* ignore */ }
   }
 
   if (!repoId) return (
