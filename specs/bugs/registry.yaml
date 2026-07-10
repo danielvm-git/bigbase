@@ -202,8 +202,18 @@ bugs:
     scope: auth
     summary: auth.go 1756 lines — split handlers by concern
     file: specs/bugs/BUG-2026-07-10T160202-auth-handler-monolith.md
-    status: open
+    status: fixed
     audit_source: specs/audit-code-2026-07-10.md
+    files_changed:
+      - components/auth/auth.go
+      - components/auth/middleware.go
+      - components/auth/credentials.go
+      - components/auth/oauth_handlers.go
+      - components/auth/org_http.go
+    approach: "Split handlers into middleware/credentials/oauth_handlers/org_http; auth.go composition root."
+    risk_level: low
+    regression_guards:
+      - go test ./components/auth/
   - id: BUG-2026-07-10T160206
     date: "2026-07-10"
     severity: low
