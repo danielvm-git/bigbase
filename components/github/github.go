@@ -3,7 +3,6 @@ package github
 import (
 	"context"
 	"crypto/hmac"
-	"crypto/rand"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
@@ -22,20 +21,30 @@ import (
 
 const version = "0.1.0"
 
-
-type noopLogger struct{}
-
-func (noopLogger) Info(msg string, args ...any)   {}
-func (noopLogger) Warn(msg string, args ...any)   {}
-func (noopLogger) Error(msg string, args ...any)  {}
-func (noopLogger) Debug(msg string, args ...any)  {}
+const (
+	githubInstallationsMigration = `CREATE TABLE IF NOT EXISTS github_installations (
+		installation_id INTEGER PRIMARY KEY,
+		account_login TEXT NOT NULL,
+		account_type TEXT NOT NULL DEFAULT 'User',
+		created_at TEXT NOT NULL DEFAULT (datetime('now'))
+	)`
+	githubRepoLinksMigration = `CREATE TABLE IF NOT EXISTS github_repo_links (
+		id TEXT PRIMARY KEY,
+		installation_id INTEGER NOT NULL,
+		github_repo_id INTEGER NOT NULL,
+		full_name TEXT NOT NULL UNIQUE,
+		git_repo_id TEXT NOT NULL,
+		production_branch TEXT NOT NULL DEFAULT 'main',
+		created_at TEXT NOT NULL DEFAULT (datetime('now'))
+	)`
+)
 
 // DBer is an alias for kernel.DBer — the shared database abstraction.
 type DBer = kernel.DBer
 
 type GitHub struct {
 	db             DBer
-	logger kernel.Logger
+	logger         kernel.Logger
 	gitDir         string
 	appID          string
 	appSlug        string
@@ -47,7 +56,7 @@ type GitHub struct {
 
 type Options struct {
 	DB             DBer
-	Logger kernel.Logger
+	Logger         kernel.Logger
 	GitDir         string
 	AppID          string
 	AppSlug        string
@@ -58,7 +67,7 @@ type Options struct {
 func New(opts Options) *GitHub {
 	logger := opts.Logger
 	if logger == nil {
-		logger = noopLogger{}
+		logger = kernel.NoopLogger{}
 	}
 	dir := opts.GitDir
 	if dir == "" {
@@ -76,11 +85,11 @@ func New(opts Options) *GitHub {
 	}
 }
 
-func (g *GitHub) Name() string                   { return "github" }
-func (g *GitHub) Version() string                { return version }
-func (g *GitHub) Dependencies() []string         { return []string{"db"} }
-func (g *GitHub) ConfigSchema() json.RawMessage  { return nil }
-func (g *GitHub) Hooks() []kernel.HookDef        { return nil }
+func (g *GitHub) Name() string                  { return "github" }
+func (g *GitHub) Version() string               { return version }
+func (g *GitHub) Dependencies() []string        { return []string{"db"} }
+func (g *GitHub) ConfigSchema() json.RawMessage { return nil }
+func (g *GitHub) Hooks() []kernel.HookDef       { return nil }
 
 func (g *GitHub) Init(ctx *kernel.Context, config json.RawMessage) error {
 	return nil
@@ -90,23 +99,10 @@ func (g *GitHub) Start(ctx *kernel.Context) error {
 	if err := os.MkdirAll(g.gitDir, 0755); err != nil {
 		return fmt.Errorf("create git dir: %w", err)
 	}
-	if err := g.db.Migrate(`CREATE TABLE IF NOT EXISTS github_installations (
-		installation_id INTEGER PRIMARY KEY,
-		account_login TEXT NOT NULL,
-		account_type TEXT NOT NULL DEFAULT 'User',
-		created_at TEXT NOT NULL DEFAULT (datetime('now'))
-	)`); err != nil {
+	if err := g.db.Migrate(githubInstallationsMigration); err != nil {
 		return fmt.Errorf("migrate github_installations: %w", err)
 	}
-	if err := g.db.Migrate(`CREATE TABLE IF NOT EXISTS github_repo_links (
-		id TEXT PRIMARY KEY,
-		installation_id INTEGER NOT NULL,
-		github_repo_id INTEGER NOT NULL,
-		full_name TEXT NOT NULL UNIQUE,
-		git_repo_id TEXT NOT NULL,
-		production_branch TEXT NOT NULL DEFAULT 'main',
-		created_at TEXT NOT NULL DEFAULT (datetime('now'))
-	)`); err != nil {
+	if err := g.db.Migrate(githubRepoLinksMigration); err != nil {
 		return fmt.Errorf("migrate github_repo_links: %w", err)
 	}
 	g.bus = ctx.Kernel.EventBus()
@@ -154,7 +150,7 @@ func (g *GitHub) Handler() http.Handler {
 
 func (g *GitHub) handleStatus(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
+		kernel.WriteJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
 		return
 	}
 	resp := map[string]any{
@@ -171,28 +167,28 @@ func (g *GitHub) handleStatus(w http.ResponseWriter, r *http.Request) {
 		resp["connected"] = true
 		resp["login"] = login
 	}
-	writeJSON(w, http.StatusOK, resp)
+	kernel.WriteJSON(w, http.StatusOK, resp)
 }
 
 func (g *GitHub) handleInstall(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
+		kernel.WriteJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
 		return
 	}
 	if !g.configured() {
-		writeJSON(w, http.StatusServiceUnavailable, map[string]string{
+		kernel.WriteJSON(w, http.StatusServiceUnavailable, map[string]string{
 			"error": "GitHub App not configured; set --github-app-id, --github-app-slug, --github-app-private-key-path",
 		})
 		return
 	}
-	state, _ := generateID()
+	state, _ := kernel.GenerateID()
 	url := fmt.Sprintf("https://github.com/apps/%s/installations/new?state=%s", g.appSlug, state)
 	http.Redirect(w, r, url, http.StatusFound)
 }
 
 func (g *GitHub) handleCallback(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
+		kernel.WriteJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
 		return
 	}
 	installationID := r.URL.Query().Get("installation_id")
@@ -202,7 +198,7 @@ func (g *GitHub) handleCallback(w http.ResponseWriter, r *http.Request) {
 	}
 	id, err := strconv.ParseInt(installationID, 10, 64)
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid installation_id"})
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid installation_id"})
 		return
 	}
 
@@ -229,17 +225,17 @@ type installationDetails struct {
 
 func (g *GitHub) handleRepos(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
+		kernel.WriteJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
 		return
 	}
 	if !g.configured() {
-		writeJSON(w, http.StatusOK, map[string]any{"data": []Repo{} })
+		kernel.WriteJSON(w, http.StatusOK, map[string]any{"data": []Repo{}})
 		return
 	}
 
 	instID, err := g.latestInstallationID(r.Context())
 	if err != nil {
-		writeJSON(w, http.StatusNotFound, map[string]string{
+		kernel.WriteJSON(w, http.StatusNotFound, map[string]string{
 			"error": "GitHub App is not installed",
 			"code":  "github_not_installed",
 		})
@@ -249,13 +245,13 @@ func (g *GitHub) handleRepos(w http.ResponseWriter, r *http.Request) {
 	repos, err := g.listInstallationRepos(r.Context(), instID)
 	if err != nil {
 		g.logger.Error("list github repos", "error", err, "installation_id", instID)
-		writeJSON(w, http.StatusBadGateway, map[string]string{
-			"error":   "failed to list repositories from GitHub",
-			"code":    "github_api_error",
+		kernel.WriteJSON(w, http.StatusBadGateway, map[string]string{
+			"error": "failed to list repositories from GitHub",
+			"code":  "github_api_error",
 		})
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"data": repos})
+	kernel.WriteJSON(w, http.StatusOK, map[string]any{"data": repos})
 }
 
 type Repo struct {
@@ -268,7 +264,7 @@ type Repo struct {
 
 func (g *GitHub) handleConnect(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
+		kernel.WriteJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
 		return
 	}
 	var req struct {
@@ -277,11 +273,11 @@ func (g *GitHub) handleConnect(w http.ResponseWriter, r *http.Request) {
 		Branch       string `json:"branch"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json"})
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json"})
 		return
 	}
 	if req.FullName == "" {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "full_name is required"})
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "full_name is required"})
 		return
 	}
 	if req.Branch == "" {
@@ -291,12 +287,12 @@ func (g *GitHub) handleConnect(w http.ResponseWriter, r *http.Request) {
 	gitRepoID, err := g.mirrorRepository(r.Context(), req.FullName, req.Branch)
 	if err != nil {
 		g.logger.Error("mirror repo", "repo", req.FullName, "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "failed to import repository"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "failed to import repository"})
 		return
 	}
 
 	instID, _ := g.latestInstallationID(r.Context())
-	linkID, _ := generateID()
+	linkID, _ := kernel.GenerateID()
 	now := time.Now().UTC().Format(time.RFC3339)
 	_, _ = g.db.ExecContext(r.Context(),
 		`INSERT INTO github_repo_links (id, installation_id, github_repo_id, full_name, git_repo_id, production_branch, created_at)
@@ -304,7 +300,7 @@ func (g *GitHub) handleConnect(w http.ResponseWriter, r *http.Request) {
 		 ON CONFLICT(full_name) DO UPDATE SET git_repo_id=excluded.git_repo_id, production_branch=excluded.production_branch`,
 		linkID, instID, req.GitHubRepoID, req.FullName, gitRepoID, req.Branch, now)
 
-	writeJSON(w, http.StatusOK, map[string]string{
+	kernel.WriteJSON(w, http.StatusOK, map[string]string{
 		"git_repo_id": gitRepoID,
 		"full_name":   req.FullName,
 	})
@@ -327,7 +323,7 @@ func (g *GitHub) mirrorRepository(ctx context.Context, fullName, branch string) 
 		return existingID, nil
 	}
 
-	id, err := generateID()
+	id, err := kernel.GenerateID()
 	if err != nil {
 		return "", err
 	}
@@ -394,20 +390,20 @@ func (g *GitHub) fetchMirror(ctx context.Context, gitRepoID, fullName string) er
 
 func (g *GitHub) handleWebhook(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
+		kernel.WriteJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
 		return
 	}
 
 	body, err := io.ReadAll(io.LimitReader(r.Body, 5<<20))
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "read body"})
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "read body"})
 		return
 	}
 
 	if g.webhookSecret != "" {
 		sig := r.Header.Get("X-Hub-Signature-256")
 		if !verifyWebhookSignature(g.webhookSecret, body, sig) {
-			writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "invalid signature"})
+			kernel.WriteJSON(w, http.StatusUnauthorized, map[string]string{"error": "invalid signature"})
 			return
 		}
 	}
@@ -419,7 +415,7 @@ func (g *GitHub) handleWebhook(w http.ResponseWriter, r *http.Request) {
 		} `json:"repository"`
 	}
 	if err := json.Unmarshal(body, &payload); err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json"})
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json"})
 		return
 	}
 
@@ -468,25 +464,11 @@ func verifyWebhookSignature(secret string, body []byte, signature string) bool {
 	return hmac.Equal(expected, got)
 }
 
-func generateID() (string, error) {
-	b := make([]byte, 16)
-	if _, err := rand.Read(b); err != nil {
-		return "", err
-	}
-	return hex.EncodeToString(b), nil
-}
-
 func (g *GitHub) latestInstallationID(ctx context.Context) (int64, error) {
 	var id int64
 	err := g.db.QueryRowContext(ctx,
 		"SELECT installation_id FROM github_installations ORDER BY created_at DESC LIMIT 1").Scan(&id)
 	return id, err
-}
-
-func writeJSON(w http.ResponseWriter, status int, data any) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
-	_ = json.NewEncoder(w).Encode(data)
 }
 
 var _ kernel.Component = (*GitHub)(nil)

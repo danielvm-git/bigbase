@@ -8,15 +8,14 @@ import (
 	"fmt"
 	"net/http"
 	"time"
+
+	"github.com/danielvm/bigbase/kernel"
 )
 
 const (
 	refreshTokenLen = 64 // hex chars (32 bytes of entropy)
-)
 
-// migrateRefreshTokens creates the refresh_tokens table.
-func (a *Auth) migrateRefreshTokens(ctx context.Context) error {
-	return a.db.Migrate(`CREATE TABLE IF NOT EXISTS refresh_tokens (
+	refreshTokenMigration = `CREATE TABLE IF NOT EXISTS refresh_tokens (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		user_id INTEGER NOT NULL,
 		token TEXT NOT NULL UNIQUE,
@@ -24,7 +23,12 @@ func (a *Auth) migrateRefreshTokens(ctx context.Context) error {
 		used INTEGER NOT NULL DEFAULT 0,
 		expires_at TEXT NOT NULL,
 		created_at TEXT NOT NULL
-	)`)
+	)`
+)
+
+// migrateRefreshTokens creates the refresh_tokens table.
+func (a *Auth) migrateRefreshTokens(ctx context.Context) error {
+	return a.db.Migrate(refreshTokenMigration)
 }
 
 // generateRefreshToken creates a cryptographically random 64-hex-char token.
@@ -81,7 +85,7 @@ func (a *Auth) invalidateFamily(ctx context.Context, family string) error {
 // handleRefresh handles POST /api/auth/refresh.
 func (a *Auth) handleRefresh(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
+		kernel.WriteJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
 		return
 	}
 
@@ -90,11 +94,11 @@ func (a *Auth) handleRefresh(w http.ResponseWriter, r *http.Request) {
 	}
 	r.Body = http.MaxBytesReader(w, r.Body, maxBodyBytes)
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json"})
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json"})
 		return
 	}
 	if req.RefreshToken == "" {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "refresh_token required"})
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "refresh_token required"})
 		return
 	}
 
@@ -109,21 +113,21 @@ func (a *Auth) handleRefresh(w http.ResponseWriter, r *http.Request) {
 		"SELECT id, user_id, family, expires_at, used FROM refresh_tokens WHERE token = ?",
 		req.RefreshToken).Scan(&tokenID, &userID, &family, &expiresAt, &used)
 	if err != nil {
-		writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "invalid refresh token"})
+		kernel.WriteJSON(w, http.StatusUnauthorized, map[string]string{"error": "invalid refresh token"})
 		return
 	}
 
 	// Replay detection: if already used, invalidate the entire family.
 	if used != 0 {
 		_ = a.invalidateFamily(ctx, family)
-		writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "refresh token already used"})
+		kernel.WriteJSON(w, http.StatusUnauthorized, map[string]string{"error": "refresh token already used"})
 		return
 	}
 
 	// Check expiry.
 	exp, parseErr := time.Parse(time.RFC3339, expiresAt)
 	if parseErr != nil || time.Now().After(exp) {
-		writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "refresh token expired"})
+		kernel.WriteJSON(w, http.StatusUnauthorized, map[string]string{"error": "refresh token expired"})
 		return
 	}
 
@@ -132,20 +136,20 @@ func (a *Auth) handleRefresh(w http.ResponseWriter, r *http.Request) {
 		"UPDATE refresh_tokens SET used = 1 WHERE id = ? AND used = 0", tokenID)
 	if err != nil {
 		a.logger.Error("invalidate old refresh token", "id", tokenID, "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 	rows, err := res.RowsAffected()
 	if err != nil {
 		a.logger.Error("check rows affected on rotation", "id", tokenID, "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 	if rows == 0 {
 		// Concurrent rotation or logout-all occurred between SELECT and UPDATE.
 		// Trigger family invalidation for security.
 		_ = a.invalidateFamily(ctx, family)
-		writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "refresh token already used"})
+		kernel.WriteJSON(w, http.StatusUnauthorized, map[string]string{"error": "refresh token already used"})
 		return
 	}
 
@@ -156,7 +160,7 @@ func (a *Auth) handleRefresh(w http.ResponseWriter, r *http.Request) {
 		"SELECT email, role, COALESCE(default_org_id, 0) FROM users WHERE id = ?", userID).Scan(&email, &role, &defaultOrgID)
 	if err != nil {
 		a.logger.Error("fetch user for refresh", "user_id", userID, "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 
@@ -164,7 +168,7 @@ func (a *Auth) handleRefresh(w http.ResponseWriter, r *http.Request) {
 	accessToken, err := createJWT(userID, email, role, defaultOrgID, a.secret, a.accessExpiry)
 	if err != nil {
 		a.logger.Error("create access token on refresh", "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 
@@ -172,7 +176,7 @@ func (a *Auth) handleRefresh(w http.ResponseWriter, r *http.Request) {
 	newRefreshToken, err := a.issueRefreshToken(ctx, userID, family)
 	if err != nil {
 		a.logger.Error("issue new refresh token", "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 
@@ -187,7 +191,7 @@ func (a *Auth) handleRefresh(w http.ResponseWriter, r *http.Request) {
 		MaxAge:   int(a.accessExpiry.Seconds()),
 	})
 
-	writeJSON(w, http.StatusOK, map[string]any{
+	kernel.WriteJSON(w, http.StatusOK, map[string]any{
 		"token":         accessToken,
 		"refresh_token": newRefreshToken,
 		"expires_at":    accessExpiresAt.UTC().Format(time.RFC3339),

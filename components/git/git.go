@@ -2,8 +2,6 @@ package git
 
 import (
 	"context"
-	"crypto/rand"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -13,18 +11,31 @@ import (
 	"time"
 
 	gogit "github.com/go-git/go-git/v5"
+
 	"github.com/danielvm/bigbase/kernel"
 )
 
 const version = "0.1.0"
 
-
-type noopLogger struct{}
-
-func (noopLogger) Info(msg string, args ...any)  {}
-func (noopLogger) Warn(msg string, args ...any)  {}
-func (noopLogger) Error(msg string, args ...any) {}
-func (noopLogger) Debug(msg string, args ...any) {}
+const (
+	gitReposMigration = `CREATE TABLE IF NOT EXISTS git_repos (
+		id TEXT PRIMARY KEY,
+		name TEXT NOT NULL UNIQUE,
+		owner_id INTEGER NOT NULL,
+		private INTEGER NOT NULL DEFAULT 1,
+		default_branch TEXT NOT NULL DEFAULT 'main',
+		description TEXT DEFAULT '',
+		created_at TEXT NOT NULL DEFAULT (datetime('now'))
+	)`
+	gitSSHKeysMigration = `CREATE TABLE IF NOT EXISTS git_ssh_keys (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		user_id INTEGER NOT NULL,
+		name TEXT NOT NULL,
+		public_key TEXT NOT NULL,
+		fingerprint TEXT NOT NULL,
+		created_at TEXT NOT NULL DEFAULT (datetime('now'))
+	)`
+)
 
 // DBer is an alias for kernel.DBer — the shared database abstraction.
 type DBer = kernel.DBer
@@ -40,9 +51,9 @@ type Repo struct {
 }
 
 type Git struct {
-	db      DBer
+	db     DBer
 	logger kernel.Logger
-	dir     string
+	dir    string
 }
 
 type Options struct {
@@ -54,7 +65,7 @@ type Options struct {
 func New(opts Options) *Git {
 	logger := opts.Logger
 	if logger == nil {
-		logger = noopLogger{}
+		logger = kernel.NoopLogger{}
 	}
 	dir := opts.Dir
 	if dir == "" {
@@ -63,11 +74,11 @@ func New(opts Options) *Git {
 	return &Git{db: opts.DB, logger: logger, dir: dir}
 }
 
-func (g *Git) Name() string                    { return "git" }
-func (g *Git) Version() string                 { return version }
-func (g *Git) Dependencies() []string          { return []string{"db"} }
-func (g *Git) ConfigSchema() json.RawMessage   { return nil }
-func (g *Git) Hooks() []kernel.HookDef         { return nil }
+func (g *Git) Name() string                  { return "git" }
+func (g *Git) Version() string               { return version }
+func (g *Git) Dependencies() []string        { return []string{"db"} }
+func (g *Git) ConfigSchema() json.RawMessage { return nil }
+func (g *Git) Hooks() []kernel.HookDef       { return nil }
 
 func (g *Git) Init(ctx *kernel.Context, config json.RawMessage) error {
 	return nil
@@ -77,25 +88,10 @@ func (g *Git) Start(ctx *kernel.Context) error {
 	if err := os.MkdirAll(g.dir, 0755); err != nil {
 		return fmt.Errorf("create git dir: %w", err)
 	}
-	if err := g.db.Migrate(`CREATE TABLE IF NOT EXISTS git_repos (
-		id TEXT PRIMARY KEY,
-		name TEXT NOT NULL UNIQUE,
-		owner_id INTEGER NOT NULL,
-		private INTEGER NOT NULL DEFAULT 1,
-		default_branch TEXT NOT NULL DEFAULT 'main',
-		description TEXT DEFAULT '',
-		created_at TEXT NOT NULL DEFAULT (datetime('now'))
-	)`); err != nil {
+	if err := g.db.Migrate(gitReposMigration); err != nil {
 		return fmt.Errorf("migrate git_repos table: %w", err)
 	}
-	if err := g.db.Migrate(`CREATE TABLE IF NOT EXISTS git_ssh_keys (
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		user_id INTEGER NOT NULL,
-		name TEXT NOT NULL,
-		public_key TEXT NOT NULL,
-		fingerprint TEXT NOT NULL,
-		created_at TEXT NOT NULL DEFAULT (datetime('now'))
-	)`); err != nil {
+	if err := g.db.Migrate(gitSSHKeysMigration); err != nil {
 		return fmt.Errorf("migrate git_ssh_keys table: %w", err)
 	}
 	g.logger.Info("git component ready", "dir", g.dir)
@@ -104,14 +100,6 @@ func (g *Git) Start(ctx *kernel.Context) error {
 
 func (g *Git) Stop(ctx *kernel.Context) error {
 	return nil
-}
-
-func generateID() (string, error) {
-	b := make([]byte, 16)
-	if _, err := rand.Read(b); err != nil {
-		return "", fmt.Errorf("generate id: %w", err)
-	}
-	return hex.EncodeToString(b), nil
 }
 
 func (g *Git) Handler() http.Handler {
@@ -128,7 +116,7 @@ func (g *Git) handleRepos(w http.ResponseWriter, r *http.Request) {
 	case "POST":
 		g.createRepo(w, r)
 	default:
-		writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
+		kernel.WriteJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
 	}
 }
 
@@ -139,26 +127,26 @@ func (g *Git) createRepo(w http.ResponseWriter, r *http.Request) {
 		Private     bool   `json:"private"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json"})
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json"})
 		return
 	}
 	if req.Name == "" {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "name is required"})
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "name is required"})
 		return
 	}
 
 	id, name, err := g.CreateRepo(r.Context(), req.Name, req.Description, req.Private)
 	if err != nil {
 		if strings.Contains(err.Error(), "already exists") {
-			writeJSON(w, http.StatusConflict, map[string]string{"error": "repo name already exists"})
+			kernel.WriteJSON(w, http.StatusConflict, map[string]string{"error": "repo name already exists"})
 			return
 		}
 		g.logger.Error("create repo", "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 
-	writeJSON(w, http.StatusCreated, Repo{
+	kernel.WriteJSON(w, http.StatusCreated, Repo{
 		ID:            id,
 		Name:          name,
 		OwnerID:       0,
@@ -175,7 +163,7 @@ func (g *Git) CreateRepo(ctx context.Context, name, description string, private 
 		return "", "", fmt.Errorf("name is required")
 	}
 
-	id, err = generateID()
+	id, err = kernel.GenerateID()
 	if err != nil {
 		return "", "", fmt.Errorf("generate id: %w", err)
 	}
@@ -215,7 +203,7 @@ func (g *Git) listRepos(w http.ResponseWriter, r *http.Request) {
 	rows, err := g.db.QueryContext(ctx, "SELECT id, name, owner_id, private, default_branch, description, created_at FROM git_repos ORDER BY name")
 	if err != nil {
 		g.logger.Error("list repos", "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 	defer func() { _ = rows.Close() }()
@@ -231,13 +219,13 @@ func (g *Git) listRepos(w http.ResponseWriter, r *http.Request) {
 		r.Private = privateInt != 0
 		repos = append(repos, r)
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"data": repos})
+	kernel.WriteJSON(w, http.StatusOK, map[string]any{"data": repos})
 }
 
 func (g *Git) handleRepoByID(w http.ResponseWriter, r *http.Request) {
 	id := strings.TrimPrefix(r.URL.Path, "/api/git/repos/")
 	if id == "" {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "id required"})
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "id required"})
 		return
 	}
 
@@ -247,7 +235,7 @@ func (g *Git) handleRepoByID(w http.ResponseWriter, r *http.Request) {
 	case "DELETE":
 		g.deleteRepo(w, r, id)
 	default:
-		writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
+		kernel.WriteJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
 	}
 }
 
@@ -261,11 +249,11 @@ func (g *Git) getRepo(w http.ResponseWriter, r *http.Request, id string) {
 		"SELECT id, name, owner_id, private, default_branch, description, created_at FROM git_repos WHERE id = ?", id).
 		Scan(&repo.ID, &repo.Name, &repo.OwnerID, &privateInt, &repo.DefaultBranch, &repo.Description, &repo.CreatedAt)
 	if err != nil {
-		writeJSON(w, http.StatusNotFound, map[string]string{"error": "repo not found"})
+		kernel.WriteJSON(w, http.StatusNotFound, map[string]string{"error": "repo not found"})
 		return
 	}
 	repo.Private = privateInt != 0
-	writeJSON(w, http.StatusOK, repo)
+	kernel.WriteJSON(w, http.StatusOK, repo)
 }
 
 func (g *Git) deleteRepo(w http.ResponseWriter, r *http.Request, id string) {
@@ -275,21 +263,15 @@ func (g *Git) deleteRepo(w http.ResponseWriter, r *http.Request, id string) {
 	res, err := g.db.ExecContext(ctx, "DELETE FROM git_repos WHERE id = ?", id)
 	if err != nil {
 		g.logger.Error("delete repo", "id", id, "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 	affected, _ := res.RowsAffected()
 	if affected == 0 {
-		writeJSON(w, http.StatusNotFound, map[string]string{"error": "repo not found"})
+		kernel.WriteJSON(w, http.StatusNotFound, map[string]string{"error": "repo not found"})
 		return
 	}
 
 	_ = os.RemoveAll(filepath.Join(g.dir, id+".git"))
-	writeJSON(w, http.StatusOK, map[string]string{"status": "deleted"})
-}
-
-func writeJSON(w http.ResponseWriter, status int, data any) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
-	_ = json.NewEncoder(w).Encode(data)
+	kernel.WriteJSON(w, http.StatusOK, map[string]string{"status": "deleted"})
 }
