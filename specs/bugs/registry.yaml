@@ -724,3 +724,21 @@ bugs:
     risk_level: low
     regression_guards:
       - Manual: run ctxo reindex and verify search_symbols returns Go symbols (e.g., 'NewMCPServer')
+
+  - id: BUG-2026-07-10T160203
+    date: "2026-07-10"
+    severity: low
+    priority: low
+    scope: auth,git,github
+    summary: "Inline migrations extract — extract inline SQL DDL to named constants"
+    file: specs/bugs/BUG-2026-07-10T160203-inline-migrations-extract.md
+    status: fixed
+    files_changed:
+      - components/auth/passwordreset.go
+      - components/auth/refreshtoken.go
+      - components/git/git.go
+      - components/github/github.go
+    approach: "Extracted inline CREATE TABLE migrations to const declarations (passwordResetMigration, refreshTokenMigration, gitReposMigration, gitSSHKeysMigration, githubInstallationsMigration, githubRepoLinksMigration)"
+    risk_level: low
+    regression_guards:
+      - go build ./components/auth/ ./components/git/ ./components/github/
