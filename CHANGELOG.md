@@ -1,3 +1,10 @@
+## [2.76.13](https://github.com/danielvm-git/bigbase/compare/v2.76.12...v2.76.13) (2026-07-11)
+
+
+### Bug Fixes
+
+* **proxy:** mount missing auth and org routes on gateway ([3423ec2](https://github.com/danielvm-git/bigbase/commit/3423ec2594d09e999431584a99caf7c98e8329fe))
+
 ## [2.76.12](https://github.com/danielvm-git/bigbase/compare/v2.76.11...v2.76.12) (2026-07-11)
 
 
