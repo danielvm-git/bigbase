@@ -4,10 +4,104 @@ status: todo
 bcps: 36
 tasks:
   - id: 1
-    description: "Write org isolation test"
+    description: "Org isolation (P0) — Two tenants A and B; A cannot read B's sites/resources"
     verify: "npx playwright test tests/e2e/api-surface.spec.ts -g 'Org Isolation'"
     status: todo
+    est_bcps: 5
+    security: high
   - id: 2
-    description: "Write path traversal guard test"
+    description: "Path traversal guard (P2) — Storage download with ../ patterns rejected"
     verify: "npx playwright test tests/e2e/api-surface.spec.ts -g 'Path Traversal'"
     status: todo
+    est_bcps: 3
+    security: medium
+  - id: 3
+    description: "Auth-scoped access — Unauthenticated requests to protected endpoints return 401"
+    verify: "npx playwright test tests/e2e/api-surface.spec.ts -g 'Auth Guard'"
+    status: todo
+    est_bcps: 4
+    security: high
+  - id: 4
+    description: "Error shape consistency — All endpoints return { error: string } on failure"
+    verify: "npx playwright test tests/e2e/api-surface.spec.ts -g 'Error Shape'"
+    status: todo
+    est_bcps: 3
+    security: medium
+  - id: 5
+    description: "CORS headers — OPTIONS preflight and cross-origin restrictions"
+    verify: "npx playwright test tests/e2e/api-surface.spec.ts -g 'CORS'"
+    status: todo
+    est_bcps: 2
+    security: low
+  - id: 6
+    description: "Rate limiting — Exceeding rate limits on auth endpoints returns 429"
+    verify: "npx playwright test tests/e2e/api-surface.spec.ts -g 'Rate Limit'"
+    status: todo
+    est_bcps: 2
+    security: medium
+  - id: 7
+    description: "Auth/Org CRUD smoke tests — register, login, me, org create/list"
+    verify: "npx playwright test tests/e2e/api-surface.spec.ts -g 'Auth CRUD'"
+    status: todo
+    est_bcps: 3
+    security: none
+  - id: 8
+    description: "API/DB CRUD smoke tests — collections create, read, update, delete"
+    verify: "npx playwright test tests/e2e/api-surface.spec.ts -g 'Collections CRUD'"
+    status: todo
+    est_bcps: 2
+    security: none
+  - id: 9
+    description: "Storage CRUD smoke tests — upload, list, download, delete file"
+    verify: "npx playwright test tests/e2e/api-surface.spec.ts -g 'Storage CRUD'"
+    status: todo
+    est_bcps: 2
+    security: none
+  - id: 10
+    description: "Sites CRUD smoke tests — create, get, list, delete site"
+    verify: "npx playwright test tests/e2e/api-surface.spec.ts -g 'Sites CRUD'"
+    status: todo
+    est_bcps: 2
+    security: none
+  - id: 11
+    description: "Deploy CRUD smoke tests — create deployment, get status, list, delete"
+    verify: "npx playwright test tests/e2e/api-surface.spec.ts -g 'Deploy CRUD'"
+    status: todo
+    est_bcps: 2
+    security: none
+  - id: 12
+    description: "Functions CRUD smoke tests — create, list, get, execute, delete function"
+    verify: "npx playwright test tests/e2e/api-surface.spec.ts -g 'Functions CRUD'"
+    status: todo
+    est_bcps: 2
+    security: none
+  - id: 13
+    description: "Git/Forge CRUD smoke tests — create repo, create issue, list boards"
+    verify: "npx playwright test tests/e2e/api-surface.spec.ts -g 'Git Forge CRUD'"
+    status: todo
+    est_bcps: 2
+    security: none
+  - id: 14
+    description: "Messaging smoke tests — send email/SMS/push endpoints exist and validate"
+    verify: "npx playwright test tests/e2e/api-surface.spec.ts -g 'Messaging Smoke'"
+    status: todo
+    est_bcps: 1
+    security: none
+  - id: 15
+    description: "Monitoring/Metrics smoke tests — health, metrics, alerts CRUD"
+    verify: "npx playwright test tests/e2e/api-surface.spec.ts -g 'Monitoring Smoke'"
+    status: todo
+    est_bcps: 1
+    security: none
+  - id: 16
+    description: "CICI/GitHub integration smoke tests — list runs, connect repo"
+    verify: "npx playwright test tests/e2e/api-surface.spec.ts -g 'CICI GitHub Smoke'"
+    status: todo
+    est_bcps: 1
+    security: none
+  - id: 17
+    description: "MCP/realtime smoke tests — MCP health, realtime status endpoint"
+    verify: "npx playwright test tests/e2e/api-surface.spec.ts -g 'MCP Realtime Smoke'"
+    status: todo
+    est_bcps: 1
+    security: none
