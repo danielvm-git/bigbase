@@ -1,3 +1,10 @@
+## [2.76.9](https://github.com/danielvm-git/bigbase/compare/v2.76.8...v2.76.9) (2026-07-11)
+
+
+### Bug Fixes
+
+* **auth,proxy,deps:** fix deploy keys prefix, scope RevokeSiteKey, harden CSP, update deps ([3dca1ba](https://github.com/danielvm-git/bigbase/commit/3dca1ba879ac84d04c0badacca3cd4eb5c3f6d9d))
+
 ## [2.76.8](https://github.com/danielvm-git/bigbase/compare/v2.76.7...v2.76.8) (2026-07-11)
 
 
