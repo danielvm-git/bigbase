@@ -163,7 +163,7 @@ jobs:
       # --- Upload binary as artifact ---
       - name: Upload binary artifact
         if: steps.detect-release.outputs.new_release == 'true'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: bigbase-linux-amd64
           path: ${{ env.BINARY_PATH }}
