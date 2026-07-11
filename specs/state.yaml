@@ -1,16 +1,16 @@
 type: session-state
 context: infra
 active_flow: build_epic
-active_epic_id: e74
-active_story_id: e74s02
-active_story_status: done
+active_epic_id: e75
+active_story_id: e75s01
+active_story_status: todo
 release:
-  target_version: 2.76.9
+  target_version: 2.76.10
   codename: "Bug Fix Sprint"
-  last_tag: v2.76.9
+  last_tag: v2.76.10
   last_publish: '2026-07-10'
   ci_verified: true
-  ci_verified_at: '2026-07-10T23:30:00-03:00'
+  ci_verified_at: '2026-07-10T23:40:00-03:00'
 metrics:
   session_start: '2026-07-10T10:56:00-03:00'
   session_end: null
@@ -18,21 +18,21 @@ metrics:
   stories_completed: 185
   bcps_per_hour: 0
 epic_cycle:
-  step: 8
-  story_bcps: 5
-  story: e74
+  step: 7
+  story_bcps: 4
+  story: e75
   audit_result: pass
-  completed_steps: ["0", "1", "2", "3", "4", "5", "6", "7", "8"]
-  note: "Epic e74 complete — both stories (REST endpoints + UI tab) merged to main."
+  completed_steps: ["0", "1", "2", "3", "4", "5", "6"]
+  note: "Step 6 done — audit PASS. F.I.R.S.T passes on new test. All checklist sections green."
   fast_mode: false
-  story_complete: true
+  story_complete: false
 bug_cycle:
   current_step: null
   completed_steps: []
   bug_file: null
 git:
-  branch: main
-  hash: aaec1092
+  branch: e75-deploy-hardening
+  hash: f82da447
   worktree: null
   ci_status: success
 handoff:

@@ -123,11 +123,11 @@ func createTestNodeRepo(t *testing.T, database *db.DB, repoID, gitDir string) st
 
 	repoPath := filepath.Join(gitDir, repoID+".git")
 	mustRun(t, "git", "init", "--bare", "-b", "main", repoPath)
-	mustRun(t, "git", "config", "--global", "--add", "safe.directory", repoPath)
+	mustRun(t, "git", "-C", repoPath, "config", "--local", "--add", "safe.directory", "'*'")
 
 	sourceDir := t.TempDir()
 	mustRun(t, "git", "init", "-b", "main", sourceDir)
-	mustRun(t, "git", "config", "--global", "--add", "safe.directory", sourceDir)
+	mustRun(t, "git", "-C", sourceDir, "config", "--local", "--add", "safe.directory", "'*'")
 	mustRun(t, "git", "-C", sourceDir, "config", "user.email", "test@test.com")
 	mustRun(t, "git", "-C", sourceDir, "config", "user.name", "test")
 	pkg := `{"name":"fail-build","private":true,"scripts":{"build":"false"}}`
@@ -164,12 +164,12 @@ func createTestRepo(t *testing.T, database *db.DB, repoID, gitDir string) string
 
 	repoPath := filepath.Join(gitDir, repoID+".git")
 	mustRun(t, "git", "init", "--bare", "-b", "main", repoPath)
-	// CI runners may mark temp dirs as dubious ownership (git 2.35+).
-	mustRun(t, "git", "config", "--global", "--add", "safe.directory", repoPath)
+	// Use local config instead of --global (macOS CI may restrict global git config).
+	mustRun(t, "git", "-C", repoPath, "config", "--local", "--add", "safe.directory", "'*'")
 
 	sourceDir := t.TempDir()
 	mustRun(t, "git", "init", "-b", "main", sourceDir)
-	mustRun(t, "git", "config", "--global", "--add", "safe.directory", sourceDir)
+	mustRun(t, "git", "-C", sourceDir, "config", "--local", "--add", "safe.directory", "'*'")
 	mustRun(t, "git", "-C", sourceDir, "config", "user.email", "test@test.com")
 	mustRun(t, "git", "-C", sourceDir, "config", "user.name", "test")
 	if err := os.WriteFile(filepath.Join(sourceDir, "index.html"), []byte("<h1>Hello</h1>"), 0644); err != nil {
@@ -707,12 +707,20 @@ func TestDeployStopShutsDownStaticServer(t *testing.T) {
 	ctx := &kernel.Context{Kernel: &kernel.Kernel{}}
 	_ = dep.Stop(ctx)
 
-	// After Stop, the port should NOT be accepting connections
-	time.Sleep(100 * time.Millisecond) // Give server time to shut down
-	conn, err = net.Dial("tcp", fmt.Sprintf("localhost:%d", port))
-	if err == nil {
-		_ = conn.Close()
-		t.Fatalf("port %d should be closed after Stop, but connection succeeded", port)
+	// After Stop, the port should be free.
+	// Use net.Listen — Dial can succeed even when the port is in a transition state.
+	var portFree bool
+	for i := 0; i < 100; i++ {
+		ln, err2 := net.Listen("tcp", fmt.Sprintf("localhost:%d", port))
+		if err2 == nil {
+			_ = ln.Close()
+			portFree = true
+			break
+		}
+		time.Sleep(50 * time.Millisecond)
+	}
+	if !portFree {
+		t.Fatalf("port %d should be free after Stop, but net.Listen failed after 5s retry", port)
 	}
 }
 
@@ -2196,11 +2204,11 @@ func createTestNodeRepoWithLockfile(t *testing.T, database *db.DB, repoID, gitDi
 
 	repoPath := filepath.Join(gitDir, repoID+".git")
 	mustRun(t, "git", "init", "--bare", "-b", "main", repoPath)
-	mustRun(t, "git", "config", "--global", "--add", "safe.directory", repoPath)
+	mustRun(t, "git", "-C", repoPath, "config", "--local", "--add", "safe.directory", "'*'")
 
 	sourceDir := t.TempDir()
 	mustRun(t, "git", "init", "-b", "main", sourceDir)
-	mustRun(t, "git", "config", "--global", "--add", "safe.directory", sourceDir)
+	mustRun(t, "git", "-C", sourceDir, "config", "--local", "--add", "safe.directory", "'*'")
 	mustRun(t, "git", "-C", sourceDir, "config", "user.email", "test@test.com")
 	mustRun(t, "git", "-C", sourceDir, "config", "user.name", "test")
 

@@ -60,6 +60,20 @@ func TestConnectionDrainTimeout(t *testing.T) {
 	}
 	waitForDeploymentTerminal(t, handler, dep2.ID, 10*time.Second)
 	verifyDeployStatus(t, handler, dep2.ID, "running")
+
+	// Drain is async — poll until first deployment reaches "stopped".
+	for i := 0; i < 20; i++ {
+		getReq := httptest.NewRequest("GET", "/api/deploy/"+dep1.ID, nil)
+		getW := httptest.NewRecorder()
+		handler.ServeHTTP(getW, getReq)
+		var got map[string]any
+		_ = json.NewDecoder(getW.Body).Decode(&got)
+		s, _ := got["status"].(string)
+		if s == "stopped" {
+			break
+		}
+		time.Sleep(100 * time.Millisecond)
+	}
 	verifyDeployStatus(t, handler, dep1.ID, "stopped")
 }
 

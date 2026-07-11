@@ -584,3 +584,24 @@ epics:
   capsule_dir: epics/archive/e72-monitoring-enhancements
   file: epics/archive/e72-monitoring-enhancements/epic.yaml
 
+- id: e73
+  title: "Python (FastAPI) Runtime"
+  wsjf: 5.25
+  mode: capsule
+  tier: 1
+  status: planned
+  depends_on: []
+  note: "4 stories, 8 BCPs. Python runtime with uv/uvicorn. No e57 dependency. Reference: Grimoire."
+  capsule_dir: epics/e73-python-runtime
+  file: epics/e73-python-runtime/epic.yaml
+
+- id: e75
+  title: "Deploy Hardening — Log Eviction + Flaky Tests"
+  wsjf: 3.0
+  mode: flat
+  tier: 3
+  status: planned
+  depends_on: []
+  note: "2 stories, 4 BCPs. FIFO log eviction + fix 3 flaky tests."
+  file: epics/e75-deploy-hardening.yaml
+

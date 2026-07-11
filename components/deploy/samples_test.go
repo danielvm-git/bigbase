@@ -39,11 +39,11 @@ func initSampleRepo(t *testing.T, database *db.DB, gitDir, sampleName string) st
 	// Bare repo on disk named <id>.git
 	repoPath := filepath.Join(gitDir, id+".git")
 	mustRun(t, "git", "init", "--bare", "-b", "main", repoPath)
-	mustRun(t, "git", "config", "--global", "--add", "safe.directory", repoPath)
+	mustRun(t, "git", "-C", repoPath, "config", "--local", "--add", "safe.directory", "'*'")
 
 	sourceDir := t.TempDir()
 	mustRun(t, "git", "init", "-b", "main", sourceDir)
-	mustRun(t, "git", "config", "--global", "--add", "safe.directory", sourceDir)
+	mustRun(t, "git", "-C", sourceDir, "config", "--local", "--add", "safe.directory", "'*'")
 	mustRun(t, "git", "-C", sourceDir, "config", "user.email", "test@test.com")
 	mustRun(t, "git", "-C", sourceDir, "config", "user.name", "test")
 	if err := os.WriteFile(filepath.Join(sourceDir, "index.html"), []byte("<h1>sample</h1>"), 0644); err != nil {

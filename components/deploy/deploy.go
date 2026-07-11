@@ -88,8 +88,7 @@ type Deploy struct {
 	publicDomain        string
 	useHTTPS            bool
 	hostRouter          DeploymentHostRegistry
-	deployLogsMu        sync.RWMutex
-	deployLogs          map[string][]string
+	logs                *logDeployments
 	mu                  sync.Mutex
 	nextPort            int
 	apps                map[string]*runningApp
@@ -184,6 +183,7 @@ func New(opts Options) *Deploy {
 		nextPort:       basePort,
 		apps:           make(map[string]*runningApp),
 		logHubs:        make(map[string]*logHub),
+		logs:           &logDeployments{},
 		sm:             NewStateMachine(),
 		DrainTimeout:   drainTimeout,
 		oldDeployments: make(map[string][]string),

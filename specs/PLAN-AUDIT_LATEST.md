@@ -1,118 +1,62 @@
-# Plan Audit — Epic e72: Monitoring Enhancements
+# Plan Audit — e75: Deploy Hardening (Log Eviction + Flaky Tests)
 
-**Date:** 2026-07-08 · **Verdict:** READY
-
-**Subject:** `specs/epics/e72-monitoring-enhancements/` + ADR 0007  
-**Operator constraint:** DeepSeek API as default LLM provider ([api-docs.deepseek.com](https://api-docs.deepseek.com))
-
----
+**Date:** 2026-07-10 · **Verdict:** READY — all 4 gaps closed
 
 ## Principles Alignment
 
 | Check | Status | Note |
 |-------|--------|------|
-| Vertical slices | ✅ | 4 stories (e72s01–s04), each shippable with own acceptance criteria and verify commands |
-| Scope bounded | ⚠️ | Per-story `Non-goals` / `Out of scope` present; no epic-level `in_scope`/`out_of_scope` block in `epic.yaml`. Waived — indexed in `release-plan.yaml` with WSJF + depends_on |
-| Success criteria | ✅ | Gherkin AC in each story `.md`; per-task `verify:` in all four `*-tasks.yaml` |
-| HARD GATE candidates | ✅ | ADR 0007 accepted — bus contracts, AlertIncident, composition-root seams resolved before build |
-| Domain language | ✅ | Observability vocabulary in `tech-stack.md`; ADR 0007 canonical terms |
-
----
+| Vertical slices | ⚠️ | e75s01 is a true vertical slice (struct refactor + FIFO logic + test). e75s02 groups three unrelated flaky fixes into one story — each is vertical on its own but the story isn't |
+| Scope bounded | ❌ | No `in_scope` / `out_of_scope` block. `covers:` lists only 3 files but the log eviction refactor will touch `logs.go` internals, `Deploy` struct fields, `appendDeployLog`, `getDeployLogs`, `deleteDeployLogs`, and their tests |
+| Success criteria defined | ⚠️ | Each task has a `verify:` command, but flaky-test tasks use `-count=5 -v` which is a smoke check, not a statistical proof of fix. Flaky test success criteria should be: "passes 10 consecutive parallel runs with -count=1" |
+| HARD GATE candidates | ❌ | No gates defined. Candidates: (a) before e75s01 — ensure existing log tests still pass with new FIFO struct, (b) before e75s02 — gate each flaky fix on `-count=10` stability |
+| Domain language | ✅ | "FIFO eviction", "deterministic log retention", "port race", "concurrent test interference" — consistent with tech-stack.md domain terms |
 
 ## Conventions Completeness
 
 | Check | Status | Note |
 |-------|--------|------|
-| `CLAUDE.md` / `AGENTS.md` | ✅ | Present; ECC, TDD, specs-first documented |
-| `CONVENTIONS.md` | ✅ | Go conventions, solo-git, Conventional Commits |
-| `specs/` layout | ✅ | Epic capsule, story specs, task YAMLs, ADR 0007 |
-| Commit conventions | ✅ | Conventional Commits + semantic-release in CONVENTIONS |
-| Git workflow mode | ✅ | **solo-git** (CONVENTIONS § Git & Workflow) |
-
----
+| AGENTS.md | ✅ | ctxo usage, git discipline, tool rules all defined |
+| CONVENTIONS.md | ✅ | ECC pattern, Go conventions, naming, testing, security |
+| specs/ layout | ✅ | `specs/epics/`, `specs/adr/`, `specs/tech-architecture/` |
+| Commit conventions | ✅ | Conventional Commits + semantic-release |
+| Git workflow | ✅ | Solo-git mode documented |
 
 ## Pre-flight Answers
 
-| Question | Value |
-|----------|-------|
-| **test** | `go test ./...` (per-task: `go test -run 'Test…' ./components/... -count=1`) |
-| **build** | `go build -o bigbase .` |
-| **lint** | `golangci-lint run ./...` |
-| **typecheck** | `go vet ./...` (Go — no separate tsc) |
-| **CI platform** | GitHub Actions (`.github/workflows/ci.yml` — SQLite + Postgres matrix) |
-| **Solo or team** | solo-git |
-| **Language + framework** | Go 1.26 · ECC kernel · SQLite/PostgreSQL |
-| **Greenfield or existing** | Existing codebase — monitoring + deploy components |
-
----
-
-## Epic Summary
-
-| Story | BCPs | Build order | Key deliverable |
-|-------|------|-------------|-----------------|
-| e72s02 | 2 | 1st | `pipeline_timeline` on deployments |
-| e72s03 | 2 | 2nd | `eventrecorder` + related-events snapshot |
-| e72s01 | 3 | 3rd | `deploy.failed` + DeepSeek diagnosis |
-| e72s04 | 3 | 4th | AlertIncident + investigation |
-
-**Prerequisites (cross-cutting):** deploy emits `deploy.failed`; fix dead `"deploy"` bus hook; proxy/api emit enriched events with `site_id`.
-
-**Architecture anchor:** `specs/adr/0007-e72-observability-seams.md`
-
----
-
-## LLM Provider — DeepSeek (operator decision, spec-updated)
-
-| Setting | Value | Source |
-|---------|-------|--------|
-| API style | OpenAI-compatible `POST /chat/completions` | [DeepSeek API docs](https://api-docs.deepseek.com) |
-| Default base URL | `https://api.deepseek.com` | ADR 0007 §7, e72s01 spec |
-| Default model | `deepseek-chat` | Cost-effective one-shot diagnosis |
-| API key | `BIGBASE_LLM_API_KEY` (primary) or `DEEPSEEK_API_KEY` (fallback) | e72s01-tasks.yaml task 1 |
-| Override model | `BIGBASE_LLM_MODEL=deepseek-v4-pro` | Harder investigations (optional) |
-| Disable AI | Unset API key — graceful 404 on diagnosis/investigation summary | e72s01 AC |
-
-**Implementation note:** `internal/llm` must **not** append `/v1` (DeepSeek base is `https://api.deepseek.com`, not OpenAI's `/v1` path). Tests use `httptest` mock.
-
----
-
-## Risk Register (audit findings)
-
-| Risk | Severity | Mitigation in plan |
-|------|----------|-------------------|
-| Bus hook mismatch (`"deploy"` vs `deploy.state_changed`) | P1 | ADR 0007 + e72s01 task 4 |
-| Alert re-fire every 30s | P1 | AlertIncident dedup in e72s04 task 1 |
-| `request`/`mutation` events lack `site_id` | P1 | e72s03 task 0 prerequisites |
-| LLM secrets in build logs | P1 | Strip before `Complete()` — e72s01 task 1 |
-| Cross-component import violation | P2 | Composition-root reader interfaces — ADR 0007 §4 |
-| e72s04 before e72s03 | P2 | `implementation_order` in epic.yaml |
-
----
+| Question | Answer |
+|----------|--------|
+| **Test command** | `go test -count=1 ./...` |
+| **Build command** | `go build ./...` |
+| **Lint command** | `go vet ./...` |
+| **Typecheck command** | `go build ./...` (Go build doubles as typecheck) |
+| **CI platform** | GitHub Actions + semantic-release |
+| **Solo or team** | Solo-git |
+| **Language + framework** | Go 1.26 · SQLite · ECC (Entity-Component-Construct) |
+| **Greenfield or existing** | Existing — BigBase (192+ Go source files, 19 components) |
+| **Full verify** | `go test -count=1 ./... && go build ./... && go vet ./...` |
 
 ## Open Gaps
 
-- [x] Architecture decisions unresolved → **closed** via ADR 0007 (prior session)
-- [x] LLM provider unspecified → **closed** — DeepSeek defaults applied to ADR 0007, e72s01, tech-stack
-- [ ] Epic-level `out_of_scope` block in `epic.yaml` — **waived** (per-story non-goals sufficient for 10 BCP epic)
-- [ ] `SCOPE_LATEST.yaml` does not list e72 — **waived** (e72 indexed in `release-plan.yaml` tier 2)
+(All closed — 2026-07-10)
 
----
+- [x] **Gap 1 — in_scope / out_of_scope block** added to e75 YAML. Scoped to logs.go methods + test file only; excludes gateway/engine/orchestrator/constants.
+- [x] **Gap 2 — HARD GATEs** defined for both stories: (pre-e75s01) existing TestDeployLogs passes with new FIFO struct — no regressions; (post-e75s02) all three flaky tests pass 10 consecutive runs with 0 failures.
+- [x] **Gap 3 — Flaky test verify** tightened from `-count=5` to `-count=10` with explicit "0 failures" criterion across all 3 tasks.
+- [x] **Gap 4 — e75s02t3 ambiguity** resolved: Option A (mutex-protected `pickPort()` counter) selected. Code sketch included in task notes.
 
 ## Verdict
 
-**READY** — proceed with `kickoff-branch` → `build-epic` (story order: e72s02 → e72s03 → e72s01 → e72s04).
+**READY** — proceed with `kickoff-branch` → `develop-tdd`
 
-Do **not** skip e72s03 before e72s04. Wire DeepSeek at implementation time:
+All 4 gaps closed in `specs/epics/e75-deploy-hardening.yaml`:
+| # | Gap | Resolution |
+|---|------|------------|
+| 1 | No in_scope/out_of_scope | ✅ Added — 4 log methods in scope, gateway/engine/orch excluded |
+| 2 | No HARD GATEs | ✅ Added — regression gate (pre-e75s01) + stability gate (post-e75s02) |
+| 3 | Verify -count=5 too weak | ✅ Tightened to -count=10 for all 3 flaky test tasks |
+| 4 | 4 ambiguous fix options | ✅ Option A selected — mutex-protected pickPort() counter |
 
-```bash
-export BIGBASE_LLM_API_KEY="<your-deepseek-key>"
-# optional overrides:
-# export BIGBASE_LLM_MODEL=deepseek-v4-pro
-# export BIGBASE_LLM_BASE_URL=https://api.deepseek.com
-```
+## Recommended next skill
 
----
-
-## Recommended Next Skill
-
-`kickoff-branch` (feature branch + clean test baseline) → `build-epic` starting **e72s02**.
+→ `kickoff-branch` → `develop-tdd`

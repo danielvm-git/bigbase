@@ -1,18 +1,22 @@
 package deploy
 
 import (
-	"crypto/rand"
 	"encoding/json"
 	"fmt"
-	"math/big"
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 )
 
+var pickPortMu sync.Mutex
+var pickPortCounter int64
+
 func pickPort(base int) int {
-	n, _ := rand.Int(rand.Reader, big.NewInt(1000))
-	return base + int(n.Int64())
+	pickPortMu.Lock()
+	defer pickPortMu.Unlock()
+	pickPortCounter++
+	return base + int(pickPortCounter)
 }
 
 func marshalPassthroughPaths(paths []string) string {

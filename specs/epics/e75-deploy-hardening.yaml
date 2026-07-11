@@ -11,11 +11,30 @@ covers:
   - components/deploy/logs.go
   - components/deploy/deploy_test.go
   - components/deploy/drain_test.go
+in_scope:
+  - "Refactor deployLogs map + order slice inside Deploy struct (logs.go:8-80)"
+  - "All four log methods: initDeployLogs, appendDeployLog, getDeployLogs, deleteDeployLogs"
+  - "New TestDeployLogFIFOEviction unit test"
+  - "Fix TestDeployStopShutsDownStaticServer — port-release retry in test only"
+  - "Fix TestConnectionDrainTimeout — git -c safe.directory instead of --global"
+  - "Fix TestRedeployReplacesPrevious — mutex-protected pickPort() counter"
+out_of_scope:
+  - "No changes to gateway.go, engine.go, orchestrator.go, or any non-log deploy code"
+  - "No changes to maxDeployLogDeployments or maxDeployLogLines constants"
+  - "No changes to WebSocket broadcast (log_stream.go) — logs.go only"
+  - "No changes to production path — port allocation fix is test-only (pickPort mutex)"
 stories:
   - id: e75s01
     title: "Deterministic log eviction — replace random map iteration with FIFO"
     status: todo
     bcps: 2
+    hard_gates:
+      - id: gate-e75s01-pre
+        desc: "Existing TestDeployLogs suite passes with new FIFO struct — no regressions"
+        verify: "go test ./components/deploy/ -run TestDeployLogs -count=1 -v"
+      - id: gate-e75s01-post
+        desc: "Full deploy test suite green after FIFO refactor"
+        verify: "go test -count=1 ./components/deploy/..."
     tasks:
       - id: e75s01t1
         desc: "Replace random map iteration in initDeployLogs with a deterministic FIFO eviction policy"
@@ -74,6 +93,10 @@ stories:
     title: "Fix three flaky tests in deploy component"
     status: todo
     bcps: 2
+    hard_gates:
+      - id: gate-e75s02-post
+        desc: "All three fixed tests pass 10 consecutive runs with 0 failures"
+        verify: "go test ./components/deploy/ -run 'TestDeployStopShutsDownStaticServer|TestConnectionDrainTimeout|TestRedeployReplacesPrevious' -count=10 -v 2>&1 | grep -c FAIL; [ $? -eq 1 ] && echo 'GATE: PASS (0 failures in 10 runs)' || echo 'GATE: FAIL'"
     tasks:
       - id: e75s02t1
         desc: "Fix TestDeployStopShutsDownStaticServer port race"
@@ -90,7 +113,7 @@ stories:
 
           Alternative: Check if server.Shutdown is being called correctly — verify the test
           doesn't use a stale reference to the old server.
-        verify: "go test ./components/deploy/ -run TestDeployStopShutsDownStaticServer -count=5 -v"
+        verify: "go test ./components/deploy/ -run TestDeployStopShutsDownStaticServer -count=10 -v"
 
       - id: e75s02t2
         desc: "Fix TestConnectionDrainTimeout git config safe.directory on macOS"
@@ -107,7 +130,7 @@ stories:
 
           Specifically: use `git clone -c safe.directory=<path>` or set the env var
           `GIT_CONFIG_NOSYSTEM=1` to avoid touching global config.
-        verify: "go test ./components/deploy/ -run TestConnectionDrainTimeout -count=5 -v"
+        verify: "go test ./components/deploy/ -run TestConnectionDrainTimeout -count=10 -v"
 
       - id: e75s02t3
         desc: "Fix TestRedeployReplacesPrevious concurrent test interference"
@@ -117,12 +140,29 @@ stories:
           Root cause: When tests run in parallel, multiple deployments may bind to the same
           port range. The pickPort() function may not be collision-safe under concurrency.
 
-          Fix options:
-            a. Make pickPort() use a mutex-protected incremental counter
-            b. Use atomic.AddInt32 for port allocation
-            c. Add a port allocation registry so no two concurrent tests get the same port
-            d. Run the test with -p=1 (serial) as a workaround, then fix the race
+          Fix: Make pickPort() use a mutex-protected incremental counter.
+          
+          Current pickPort() uses basePort + random offset. Under concurrency, two
+          parallel tests can land on the same port because the random offset has no
+          mutual exclusion.
+          
+          Option A (SELECTED): Add a sync.Mutex to pickPort() — each call acquires the
+          mutex, increments a package-level atomic counter, and returns basePort + counter.
+          This guarantees every parallel test gets a unique port.
+          
+          Implementation:
+            var pickPortMu sync.Mutex
+            var pickPortCounter int64
+            func pickPort(base int) int {
+                pickPortMu.Lock()
+                defer pickPortMu.Unlock()
+                pickPortCounter++
+                return base + int(pickPortCounter)
+            }
+          
+          The counter is global (int64 overflow is infeasible with 2^63 calls).
+          No per-test changes needed — all callers of pickPort() benefit atomically.
 
           The baselinePort is already per-test via pickPort(), but the port may still be
           in use by a concurrently-building deployment from another test.
-        verify: "go test ./components/deploy/ -run TestRedeployReplacesPrevious -count=5 -v"
+        verify: "go test ./components/deploy/ -run TestRedeployReplacesPrevious -count=10 -v"

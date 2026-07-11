@@ -1,30 +1,79 @@
 package deploy
 
-import "strings"
+import (
+	"strings"
+	"sync"
+)
 
-const maxDeployLogLines = 500
-const maxDeployLogDeployments = 100
+var maxDeployLogLines = 500
+var maxDeployLogDeployments = 100
 
-func (d *Deploy) initDeployLogs(id string) {
-	d.deployLogsMu.Lock()
-	defer d.deployLogsMu.Unlock()
-	if d.deployLogs == nil {
-		d.deployLogs = make(map[string][]string)
+type logDeployments struct {
+	mu     sync.Mutex
+	buffer map[string][]string
+	order  []string
+}
+
+func (l *logDeployments) init(id string) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	if l.buffer == nil {
+		l.buffer = make(map[string][]string)
 	}
-	for len(d.deployLogs) >= maxDeployLogDeployments {
-		var victim string
-		for k := range d.deployLogs {
-			if k != id {
-				victim = k
-				break
-			}
-		}
-		if victim == "" {
+	for len(l.buffer) >= maxDeployLogDeployments {
+		victim := l.order[0]
+		if victim == id {
 			break
 		}
-		d.deleteDeployLogs(victim)
+		delete(l.buffer, victim)
+		l.order = l.order[1:]
 	}
-	d.deployLogs[id] = nil
+	l.buffer[id] = nil
+	l.order = append(l.order, id)
+}
+
+func (l *logDeployments) append(id, line string) {
+	l.mu.Lock()
+	if l.buffer == nil {
+		l.buffer = make(map[string][]string)
+	}
+	buf := append(l.buffer[id], line)
+	if len(buf) > maxDeployLogLines {
+		buf = buf[len(buf)-maxDeployLogLines:]
+	}
+	l.buffer[id] = buf
+	l.mu.Unlock()
+}
+
+func (l *logDeployments) get(id string) []string {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	if l.buffer == nil {
+		return nil
+	}
+	src := l.buffer[id]
+	if len(src) == 0 {
+		return []string{}
+	}
+	out := make([]string, len(src))
+	copy(out, src)
+	return out
+}
+
+func (l *logDeployments) remove(id string) {
+	l.mu.Lock()
+	delete(l.buffer, id)
+	for i, oid := range l.order {
+		if oid == id {
+			l.order = append(l.order[:i], l.order[i+1:]...)
+			break
+		}
+	}
+	l.mu.Unlock()
+}
+
+func (d *Deploy) initDeployLogs(id string) {
+	d.logs.init(id)
 }
 
 func (d *Deploy) appendDeployLog(id, line string) {
@@ -32,16 +81,7 @@ func (d *Deploy) appendDeployLog(id, line string) {
 	if line == "" {
 		return
 	}
-	d.deployLogsMu.Lock()
-	if d.deployLogs == nil {
-		d.deployLogs = make(map[string][]string)
-	}
-	buf := append(d.deployLogs[id], line)
-	if len(buf) > maxDeployLogLines {
-		buf = buf[len(buf)-maxDeployLogLines:]
-	}
-	d.deployLogs[id] = buf
-	d.deployLogsMu.Unlock()
+	d.logs.append(id, line)
 
 	// Broadcast to WebSocket subscribers (non-blocking).
 	d.logHubsMu.RLock()
@@ -59,22 +99,9 @@ func (d *Deploy) appendDeployLogBlock(id, text string) {
 }
 
 func (d *Deploy) getDeployLogs(id string) []string {
-	d.deployLogsMu.RLock()
-	defer d.deployLogsMu.RUnlock()
-	if d.deployLogs == nil {
-		return nil
-	}
-	src := d.deployLogs[id]
-	if len(src) == 0 {
-		return []string{}
-	}
-	out := make([]string, len(src))
-	copy(out, src)
-	return out
+	return d.logs.get(id)
 }
 
 func (d *Deploy) deleteDeployLogs(id string) {
-	d.deployLogsMu.Lock()
-	delete(d.deployLogs, id)
-	d.deployLogsMu.Unlock()
+	d.logs.remove(id)
 }

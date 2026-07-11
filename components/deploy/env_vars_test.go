@@ -308,11 +308,11 @@ func createEnvVarBuildRepo(t *testing.T, database *db.DB, gitDir string) string 
 
 	repoPath := filepath.Join(gitDir, repoID+".git")
 	mustRun(t, "git", "init", "--bare", "-b", "main", repoPath)
-	mustRun(t, "git", "config", "--global", "--add", "safe.directory", repoPath)
+	mustRun(t, "git", "-C", repoPath, "config", "--local", "--add", "safe.directory", "'*'")
 
 	sourceDir := t.TempDir()
 	mustRun(t, "git", "init", "-b", "main", sourceDir)
-	mustRun(t, "git", "config", "--global", "--add", "safe.directory", sourceDir)
+	mustRun(t, "git", "-C", sourceDir, "config", "--local", "--add", "safe.directory", "'*'")
 	mustRun(t, "git", "-C", sourceDir, "config", "user.email", "test@test.com")
 	mustRun(t, "git", "-C", sourceDir, "config", "user.name", "test")
 
@@ -350,11 +350,11 @@ func createEnvVarRuntimeRepo(t *testing.T, database *db.DB, gitDir string) strin
 
 	repoPath := filepath.Join(gitDir, repoID+".git")
 	mustRun(t, "git", "init", "--bare", "-b", "main", repoPath)
-	mustRun(t, "git", "config", "--global", "--add", "safe.directory", repoPath)
+	mustRun(t, "git", "-C", repoPath, "config", "--local", "--add", "safe.directory", "'*'")
 
 	sourceDir := t.TempDir()
 	mustRun(t, "git", "init", "-b", "main", sourceDir)
-	mustRun(t, "git", "config", "--global", "--add", "safe.directory", sourceDir)
+	mustRun(t, "git", "-C", sourceDir, "config", "--local", "--add", "safe.directory", "'*'")
 	mustRun(t, "git", "-C", sourceDir, "config", "user.email", "test@test.com")
 	mustRun(t, "git", "-C", sourceDir, "config", "user.name", "test")
 
