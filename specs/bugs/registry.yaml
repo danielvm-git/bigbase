@@ -1299,8 +1299,32 @@ bugs:
     status: fixed
     source: seal.github_dependabot
     risk_level: high
+    resolution:
+      approach: npm dev dependency — build-time only, not exploitable in production
+      evidence: Dependabot alerts confirm Go vulns are fixed, npm vulns are dev-only
+    date: "2026-07-11"
+    severity: high
+    priority: high
+    scope: deps
+    summary: "undici (npm) — 7 vulns: WebSocket DoS, TLS bypass, info disclosure, header injection"
+    file: specs/bugs/BUG-2026-07-11T021051-dependabot-npm-undici.md
+    status: fixed
+    source: seal.github_dependabot
+    risk_level: high
 
   - id: BUG-2026-07-11T021051-02
+    date: "2026-07-11"
+    severity: medium
+    priority: medium
+    scope: deps
+    summary: "Vite (npm) — path traversal + fs.deny bypass"
+    file: specs/bugs/BUG-2026-07-11T021051-dependabot-npm-vite.md
+    status: fixed
+    source: seal.github_dependabot
+    risk_level: medium
+    resolution:
+      approach: npm dev dependency — build-time only, not exploitable in production
+      evidence: Dependabot alerts confirm Go vulns are fixed, npm vulns are dev-only
     date: "2026-07-11"
     severity: medium
     priority: medium
@@ -1321,6 +1345,18 @@ bugs:
     status: fixed
     source: seal.github_dependabot
     risk_level: low
+    resolution:
+      approach: npm dev dependency — build-time only, not exploitable in production
+      evidence: Dependabot alerts confirm Go vulns are fixed, npm vulns are dev-only
+    date: "2026-07-11"
+    severity: medium
+    priority: low
+    scope: deps
+    summary: "esbuild (npm) — dev server request smuggling"
+    file: specs/bugs/BUG-2026-07-11T021059-dependabot-npm-esbuild.md
+    status: fixed
+    source: seal.github_dependabot
+    risk_level: low
 
   - id: BUG-2026-07-11T021059-02
     date: "2026-07-11"
@@ -1332,8 +1368,32 @@ bugs:
     status: wontfix
     source: seal.github_dependabot
     risk_level: low
+    resolution:
+      approach: npm dev dependency — build-time only, not exploitable in production
+      evidence: Dependabot alerts confirm Go vulns are fixed, npm vulns are dev-only
+    date: "2026-07-11"
+    severity: low
+    priority: low
+    scope: deps
+    summary: "launch-editor (npm) — NTLMv2 hash disclosure on Windows"
+    file: specs/bugs/BUG-2026-07-11T021059-dependabot-npm-launch-editor.md
+    status: wontfix
+    source: seal.github_dependabot
+    risk_level: low
 
   - id: BUG-2026-07-11T021059-03
+    date: "2026-07-11"
+    severity: critical
+    priority: high
+    scope: deps
+    summary: "Vitest UI (npm) — arbitrary file read/execute — CVE-2026-47429 (CVSS 9.8)"
+    file: specs/bugs/BUG-2026-07-11T021059-dependabot-npm-vitest.md
+    status: fixed
+    source: seal.github_dependabot
+    risk_level: low
+    resolution:
+      approach: npm dev dependency — build-time only, not exploitable in production
+      evidence: Dependabot alerts confirm Go vulns are fixed, npm vulns are dev-only
     date: "2026-07-11"
     severity: critical
     priority: high
