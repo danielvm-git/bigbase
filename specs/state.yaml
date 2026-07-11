@@ -22,8 +22,9 @@ epic_cycle:
   story_bcps: 4
   story: e75
   audit_result: pass
-  completed_steps: ["0", "1", "2", "3", "4", "5", "6", "7"]
-  note: "Step 7 done — committed fix(deploy): deterministic FIFO log eviction and fix three flaky tests."
+  completed_steps: ["0", "1", "2", "3", "4", "5", "6", "7", "8"]
+  story_complete: true
+  note: "Complete. PR #90. 256/256 deploy suite, 30/30 flaky gate, lint+v clean. Trace + wiki scripts not found (skipped)."
   fast_mode: false
   story_complete: false
 bug_cycle:
