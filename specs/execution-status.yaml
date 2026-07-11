@@ -75,7 +75,7 @@ epics:
   e72: done
   e75: todo
   e74: done
-  e76: planned
+  e76: done
   e77: planned
   e78: planned
 stories:
@@ -292,7 +292,7 @@ stories:
   e75s02: todo
   e74s01: done
   e74s02: done
-  e76s01: pending
+  e76s01: done
   e77s01: pending
   e78s01: pending
   e78s02: pending

@@ -1,13 +1,73 @@
 story_id: e76s01
 title: Token Lifecycle E2E Tests
-status: todo
+status: passing
 bcps: 20
 tasks:
   - id: 1
-    description: "Write full session lifecycle test"
-    verify: "npx playwright test tests/e2e/token-lifecycle.spec.ts -g 'session lifecycle'"
-    status: todo
+    description: >
+      Scaffold tests/e2e/token-lifecycle.spec.ts with auth setup.
+      - Use test.beforeAll to start the Go server with --jwt-access-expiry=30s --jwt-refresh-expiry=60s
+        (via go run . serve or from a pre-built binary).
+      - Register ephemeral user (e2e-token-{ts}@test.com) and login.
+      - Store auth tokens (access token, refresh token) at module scope.
+      - Configure Playwright trace: 'on-first-retry', screenshots: 'only-on-failure',
+        storageState: undefined (per threat model §6.2).
+      - Verify: file compiles without type errors.
+    verify: "npx tsc --noEmit tests/e2e/token-lifecycle.spec.ts"
+    status: done
   - id: 2
-    description: "Write org API key lifecycle test"
-    verify: "npx playwright test tests/e2e/token-lifecycle.spec.ts -g 'org API key'"
-    status: todo
+    description: >
+      Full session lifecycle test (P0):
+      - Register a new user, capture the JWT + refresh token (assert 201, token is 3-segment JWT,
+        refresh_token is 64 hex chars).
+      - Login with same credentials, assert 200 and new token pair.
+      - Refresh the access token via POST /api/auth/refresh with the refresh_token,
+        assert 200 and a new token pair.
+      - Attempt to reuse the OLD (consumed) refresh token on POST /api/auth/refresh — assert 401
+        (rotation protection).
+      - Call POST /api/auth/logout-all with the JWT, assert 200.
+      - Verify old refresh token is invalidated after logout-all (assert 401).
+      - Document in comments that old JWTs remain valid until expiry (stateless design).
+    verify: "npx playwright test tests/e2e/token-lifecycle.spec.ts -g 'full session lifecycle'"
+    status: passing
+  - id: 3
+    description: >
+      Org API key lifecycle test (P0):
+      - Create an org via API, capture the bb_* API key from the response
+        (assert key starts with bb_ and is 67 chars: bb_ + 64 hex).
+      - Authenticate with the bb_* key on a protected endpoint via Authorization: Bearer header,
+        assert 200.
+      - Revoke the key via DELETE /api/org/{id}/keys/{keyID}, assert 204.
+      - Authenticate with the same bb_* key again — assert 401.
+      - Use unique credentials per worker (e.g. e2e-org-{workerIndex}) per threat model §5.3.
+      - afterAll: revoke all created keys, clean up test DB file.
+    verify: "npx playwright test tests/e2e/token-lifecycle.spec.ts -g 'org API key lifecycle'"
+    status: passing
+  - id: 4
+    description: >
+      Custom JWT lifetime enforcement test (P1):
+      - Use the server configured with --jwt-access-expiry=30s.
+      - Register + login to obtain a JWT.
+      - Decode the JWT (base64url decode the payload segment) and assert:
+        - exp claim is within 30s of iat claim (config window).
+        - iat claim is roughly now (within a few seconds tolerance).
+      - Verify the token format: 3 base64url-encoded segments separated by dots.
+      - This test validates claim structure without waiting for actual expiry,
+        since the server's token generation is already time-constrained by config.
+      - Note: This is a P1 — validate structure, not wait-for-expiry.
+    verify: "npx playwright test tests/e2e/token-lifecycle.spec.ts -g 'JWT lifetime enforcement'"
+    status: passing
+  - id: 5
+    description: >
+      Log redaction check test (P2):
+      - Send a request with an invalid/malformed token (e.g. Authorization: Bearer invalidtoken).
+      - Assert the endpoint returns 401.
+      - Capture server stdout/stderr output and grep for the raw token string value.
+      - Assert the raw token does NOT appear in server logs.
+      - Implementation note: this may require capturing server output via a child_process
+        or reading server log file. If server logs are not accessible from the test runner,
+        skip with a comment documenting why and file a follow-up.
+      - Also verify Playwright trace config is set to 'on-first-retry' per threat model §6.2.
+      - Threat model reference: CWE-532 (Insertion of Sensitive Info into Log).
+    verify: "npx playwright test tests/e2e/token-lifecycle.spec.ts -g 'log redaction'"
+    status: passing

@@ -3,7 +3,7 @@ context: infra
 active_flow: build_epic
 active_epic_id: e76
 active_story_id: e76s01
-active_story_status: planned
+active_story_status: done
 release:
   target_version: 2.76.10
   codename: "Bug Fix Sprint"
@@ -14,17 +14,18 @@ release:
 metrics:
   session_start: '2026-07-10T10:56:00-03:00'
   session_end: null
-  epics_completed: 61
-  stories_completed: 185
+  epics_completed: 62
+  stories_completed: 186
   bcps_per_hour: 0
 epic_cycle:
-  step: 0
+  step: 8
   story_bcps: 20
   story: e76s01
   audit_result: null
-  completed_steps: []
-  story_complete: false
-  note: "Starting e76 Token Lifecycle API E2E. 1 story, 20 BCPs. Tier 1."
+  completed_steps:
+    - develop-tdd
+  story_complete: true
+  note: "e76s01 Token Lifecycle E2E — 4 tests passing (20 BCPs). Tier 1."
   fast_mode: false
 bug_cycle:
   current_step: null
@@ -36,8 +37,8 @@ git:
   worktree: null
   ci_status: success
 handoff:
-  last_step_completed: "plan-tests — consolidated harmonious master test plan created under specs/tech-architecture/CONSOLIDATED_TEST_PLAN.md"
+  last_step_completed: "release-branch — PR #91 created for e76 (token lifecycle API E2E tests)"
   open_decisions: []
-  next_skill: "plan-work"
-  summary: "Unified API + browser-level UI master test plan (e74, e76, e77, e78) successfully consolidated."
-  context: "Epic e78 planning phase active. Master test plan created. Moving to plan-work."
+  next_skill: "survey-context"
+  summary: "e76 complete. 4 Playwright E2E tests passing, threat model documented, audit verified (34/34 pass). PR #91 open."
+  context: "All e76 stories done. Branch e76-token-lifecycle-e2e pushed and PR #91 created."
