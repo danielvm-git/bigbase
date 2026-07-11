@@ -18,7 +18,7 @@ metrics:
   stories_completed: 186
   bcps_per_hour: 0
 epic_cycle:
-  step: 3
+  step: 7
   story_bcps: 36
   story: e77s01
   audit_result: null
