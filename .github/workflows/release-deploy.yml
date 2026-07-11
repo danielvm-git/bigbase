@@ -74,7 +74,7 @@ jobs:
       # --- Semantic Release (only on push events, not workflow_dispatch) ---
       - name: Setup Node
         if: github.event_name == 'push'
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: '${{ env.NODE_VERSION }}'
           cache: 'npm'
