@@ -72,7 +72,7 @@ func TestSecurityHeaders(t *testing.T) {
 			defer func() { _ = resp.Body.Close() }()
 
 			csp := resp.Header.Get("Content-Security-Policy")
-			if csp != "default-src 'self'" {
+			if csp != "default-src 'self'; script-src 'self'; connect-src 'self'" {
 				t.Errorf("expected strict CSP for %s, got %q", path, csp)
 			}
 		}
@@ -132,8 +132,8 @@ func TestSecurityHeaders(t *testing.T) {
 		defer func() { _ = resp.Body.Close() }()
 
 		cc := resp.Header.Get("Cache-Control")
-		if cc != "no-store" {
-			t.Errorf("expected Cache-Control: no-store on /health, got %q", cc)
+		if cc != "no-store, no-cache, must-revalidate" {
+			t.Errorf("expected Cache-Control: no-store, no-cache, must-revalidate on /health, got %q", cc)
 		}
 	})
 
@@ -145,8 +145,8 @@ func TestSecurityHeaders(t *testing.T) {
 		defer func() { _ = resp.Body.Close() }()
 
 		cc := resp.Header.Get("Cache-Control")
-		if cc != "no-store" {
-			t.Errorf("expected Cache-Control: no-store on /api/version, got %q", cc)
+		if cc != "no-store, no-cache, must-revalidate" {
+			t.Errorf("expected Cache-Control: no-store, no-cache, must-revalidate on /api/version, got %q", cc)
 		}
 	})
 

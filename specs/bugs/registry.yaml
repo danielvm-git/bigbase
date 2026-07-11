@@ -1144,9 +1144,28 @@ bugs:
     scope: deploy
     summary: TestDeployCustomSiteName cleanup failure on CI — .git dir not empty during TempDir cleanup
     file: specs/bugs/BUG-2026-07-10T192800-testdeploycustomsitename-cleanup.md
-    status: open
-    files_changed: []
-    approach: ""
+    status: fixed
+    files_changed:
+      - components/deploy/deploy_test.go
+    approach: "Already had waitForDeploymentTerminal. Verified: TestDeployCustomSiteName passes 3/3."
+    risk_level: low
+
+  - id: BUG-2026-07-10T220000
+    date: "2026-07-10"
+    severity: high
+    priority: high
+    scope: ui, api
+    summary: "Deploy Keys — revoke and copy operations broken; missing prefix in API response"
+    file: specs/bugs/BUG-2026-07-10T220000-deploy-keys-copy-revoke-broken.md
+    status: fixed
+    files_changed:
+      - components/auth/org_http.go
+      - components/auth/apikeys.go
+      - components/mcp/mcp.go
+      - adapters.go
+      - components/auth/sitekeys_test.go
+      - components/mcp/provisioning_test.go
+    approach: "Added Prefix field to handleListSiteKeys response keyEntry struct; scoped RevokeSiteKey SQL by site_id; updated MCP adapter and interface signatures. auth: 196 pass, mcp: 76 pass, UI build: clean."
     risk_level: low
 
   # === seal DAST findings (2026-07-02 scan) ===
@@ -1157,7 +1176,7 @@ bugs:
     scope: proxy
     summary: "CSP: Failure to Define Directive with No Fallback — missing explicit CSP directives"
     file: specs/bugs/BUG-2026-07-11T020132-dast-csp-directives.md
-    status: triage
+    status: fixed
     source: seal.dast_http
     risk_level: low
 
@@ -1168,7 +1187,7 @@ bugs:
     scope: proxy
     summary: "CSP: style-src unsafe-inline — inline styles permitted"
     file: specs/bugs/BUG-2026-07-11T020149-dast-csp-unsafe-inline.md
-    status: triage
+    status: wontfix
     source: seal.dast_http
     risk_level: low
 
@@ -1179,7 +1198,7 @@ bugs:
     scope: ui
     summary: "Information Disclosure - Suspicious Comments — HTML/JS comments in production"
     file: specs/bugs/BUG-2026-07-11T020149-dast-info-disclosure-comments.md
-    status: triage
+    status: fixed
     source: seal.dast_http
     risk_level: low
 
@@ -1190,7 +1209,7 @@ bugs:
     scope: proxy
     summary: "Sub Resource Integrity Attribute Missing — external resources loaded without SRI"
     file: specs/bugs/BUG-2026-07-11T020149-dast-sri-missing.md
-    status: triage
+    status: wontfix
     source: seal.dast_http
     risk_level: low
 
@@ -1201,7 +1220,7 @@ bugs:
     scope: proxy
     summary: "Re-examine Cache-control Directives — suboptimal caching headers"
     file: specs/bugs/BUG-2026-07-11T020149-dast-cache-control.md
-    status: triage
+    status: fixed
     source: seal.dast_http
     risk_level: low
 
@@ -1212,7 +1231,7 @@ bugs:
     scope: proxy
     summary: "User Agent Fuzzer — inconsistent responses across User-Agent values"
     file: specs/bugs/BUG-2026-07-11T020149-dast-user-agent-fuzzer.md
-    status: triage
+    status: wontfix
     source: seal.dast_http
     risk_level: low
 
@@ -1223,7 +1242,7 @@ bugs:
     scope: proxy
     summary: "Modern Web Application — informational scanner detection"
     file: specs/bugs/BUG-2026-07-11T020149-dast-modern-web-app.md
-    status: triage
+    status: wontfix
     source: seal.dast_http
     risk_level: none
 
@@ -1235,7 +1254,7 @@ bugs:
     scope: deps
     summary: "golang.org/x/crypto — 12 vulns (7 CRITICAL, 1 MAJOR, 4 NORMAL)"
     file: specs/bugs/BUG-2026-07-11T021033-dependabot-golang-x-crypto.md
-    status: triage
+    status: fixed
     source: seal.github_dependabot
     risk_level: critical
 
@@ -1246,7 +1265,7 @@ bugs:
     scope: deps
     summary: "Go net/html parser DoS — CVE-2026-25680 (CVSS 6.5)"
     file: specs/bugs/BUG-2026-07-11T021041-dependabot-golang-net.md
-    status: triage
+    status: fixed
     source: seal.github_dependabot
     risk_level: medium
 
@@ -1257,7 +1276,7 @@ bugs:
     scope: deps
     summary: "golang.org/x/crypto — underflow panic — CVE-2026-46597 (CVSS 7.5)"
     file: specs/bugs/BUG-2026-07-11T021041-dependabot-golang-x-crypto-46597.md
-    status: triage
+    status: fixed
     source: seal.github_dependabot
     risk_level: high
 
@@ -1268,7 +1287,7 @@ bugs:
     scope: deps
     summary: "undici (npm) — 7 vulns: WebSocket DoS, TLS bypass, info disclosure, header injection"
     file: specs/bugs/BUG-2026-07-11T021051-dependabot-npm-undici.md
-    status: triage
+    status: fixed
     source: seal.github_dependabot
     risk_level: high
 
@@ -1279,7 +1298,7 @@ bugs:
     scope: deps
     summary: "Vite (npm) — path traversal + fs.deny bypass"
     file: specs/bugs/BUG-2026-07-11T021051-dependabot-npm-vite.md
-    status: triage
+    status: fixed
     source: seal.github_dependabot
     risk_level: medium
 
@@ -1290,7 +1309,7 @@ bugs:
     scope: deps
     summary: "esbuild (npm) — dev server request smuggling"
     file: specs/bugs/BUG-2026-07-11T021059-dependabot-npm-esbuild.md
-    status: triage
+    status: fixed
     source: seal.github_dependabot
     risk_level: low
 
@@ -1301,7 +1320,7 @@ bugs:
     scope: deps
     summary: "launch-editor (npm) — NTLMv2 hash disclosure on Windows"
     file: specs/bugs/BUG-2026-07-11T021059-dependabot-npm-launch-editor.md
-    status: triage
+    status: wontfix
     source: seal.github_dependabot
     risk_level: low
 
@@ -1312,6 +1331,6 @@ bugs:
     scope: deps
     summary: "Vitest UI (npm) — arbitrary file read/execute — CVE-2026-47429 (CVSS 9.8)"
     file: specs/bugs/BUG-2026-07-11T021059-dependabot-npm-vitest.md
-    status: triage
+    status: fixed
     source: seal.github_dependabot
     risk_level: low

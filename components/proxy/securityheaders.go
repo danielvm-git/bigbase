@@ -7,10 +7,17 @@ import (
 
 const (
 	// strictCSP is for API and JSON routes.
-	strictCSP = "default-src 'self'"
+	// Explicit script-src and connect-src are added alongside default-src for
+	// defense-in-depth and auditability, even though default-src 'self' already
+	// covers them as the fallback.
+	strictCSP = "default-src 'self'; script-src 'self'; connect-src 'self'"
 
-	// permissiveCSP is for HTML routes (home, docs) that need inline styles and Google Fonts.
-	permissiveCSP = "default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com"
+	// permissiveCSP is for HTML routes (home, docs, admin) that need inline styles
+	// and Google Fonts. unsafe-inline in style-src is a deliberate per-route choice:
+	// these routes serve static HTML pages where inline styles are used for
+	// server-rendered content. API, health, and all other routes use the strict
+	// policy above, so the XSS surface from unsafe-inline is limited.
+	permissiveCSP = "default-src 'self'; script-src 'self'; connect-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com"
 
 	// restrictivePermissionsPolicy disables browser features that are not needed.
 	restrictivePermissionsPolicy = "accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()"
@@ -31,10 +38,10 @@ func (p *Proxy) securityHeadersMiddleware(next http.Handler) http.Handler {
 		w.Header().Set("Referrer-Policy", "strict-origin-when-cross-origin")
 		w.Header().Set("Permissions-Policy", restrictivePermissionsPolicy)
 
-		// Set Cache-Control: no-store for API and health endpoints to prevent
-		// sensitive response caching.
+		// Set Cache-Control: no-store, no-cache, must-revalidate for API and health
+		// endpoints to prevent sensitive response caching (CWE-525).
 		if strings.HasPrefix(r.URL.Path, "/api/") || r.URL.Path == "/health" {
-			w.Header().Set("Cache-Control", "no-store")
+			w.Header().Set("Cache-Control", "no-store, no-cache, must-revalidate")
 		}
 
 		next.ServeHTTP(w, r)

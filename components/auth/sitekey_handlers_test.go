@@ -109,7 +109,9 @@ func TestSiteKeyHandlers(t *testing.T) {
 		loginW := httptest.NewRecorder()
 		handler.ServeHTTP(loginW, loginReq)
 		var loginResp map[string]any
-		json.NewDecoder(loginW.Body).Decode(&loginResp)
+		if err := json.NewDecoder(loginW.Body).Decode(&loginResp); err != nil {
+			t.Fatalf("decode login: %v", err)
+		}
 		token, _ := loginResp["token"].(string)
 
 		// Create two keys
@@ -176,7 +178,9 @@ func TestSiteKeyHandlers(t *testing.T) {
 		loginW := httptest.NewRecorder()
 		handler.ServeHTTP(loginW, loginReq)
 		var loginResp map[string]any
-		json.NewDecoder(loginW.Body).Decode(&loginResp)
+		if err := json.NewDecoder(loginW.Body).Decode(&loginResp); err != nil {
+			t.Fatalf("decode login: %v", err)
+		}
 		token, _ := loginResp["token"].(string)
 
 		// Create a key
@@ -193,7 +197,9 @@ func TestSiteKeyHandlers(t *testing.T) {
 		listW := httptest.NewRecorder()
 		protected.ServeHTTP(listW, listReq)
 		var listResp map[string]any
-		json.NewDecoder(listW.Body).Decode(&listResp)
+		if err := json.NewDecoder(listW.Body).Decode(&listResp); err != nil {
+			t.Fatalf("decode list: %v", err)
+		}
 		keys := listResp["data"].([]any)
 		if len(keys) < 1 {
 			t.Fatal("expected at least 1 key in list")
@@ -239,7 +245,9 @@ func TestSiteKeyHandlers(t *testing.T) {
 		loginW := httptest.NewRecorder()
 		handler.ServeHTTP(loginW, loginReq)
 		var loginResp map[string]any
-		json.NewDecoder(loginW.Body).Decode(&loginResp)
+		if err := json.NewDecoder(loginW.Body).Decode(&loginResp); err != nil {
+			t.Fatalf("decode login: %v", err)
+		}
 		token, _ := loginResp["token"].(string)
 
 		// Create a deploy key to get a bb_dep_ token
@@ -250,7 +258,9 @@ func TestSiteKeyHandlers(t *testing.T) {
 		createW := httptest.NewRecorder()
 		protected.ServeHTTP(createW, createReq)
 		var createResp map[string]any
-		json.NewDecoder(createW.Body).Decode(&createResp)
+		if err := json.NewDecoder(createW.Body).Decode(&createResp); err != nil {
+			t.Fatalf("decode create: %v", err)
+		}
 		depToken := createResp["data"].(map[string]any)["key"].(string)
 
 		// Use the bb_dep_ token as auth — should be rejected by middleware
@@ -268,7 +278,7 @@ func TestSiteKeyHandlers(t *testing.T) {
 	})
 }
 
-func TestSiteKeyInputValidation(t *testing.T) {
+		func TestSiteKeyInputValidation(t *testing.T) {
 	_, handler, protected, siteID := setupAuthWithSite(t)
 
 	// Register and login
@@ -284,7 +294,9 @@ func TestSiteKeyInputValidation(t *testing.T) {
 	loginW := httptest.NewRecorder()
 	handler.ServeHTTP(loginW, loginReq)
 	var loginResp map[string]any
-	json.NewDecoder(loginW.Body).Decode(&loginResp)
+	if err := json.NewDecoder(loginW.Body).Decode(&loginResp); err != nil {
+		t.Fatalf("decode login: %v", err)
+	}
 	token, _ := loginResp["token"].(string)
 
 	tests := []struct {
@@ -329,7 +341,9 @@ func TestSiteKeyListNoTokens(t *testing.T) {
 	loginW := httptest.NewRecorder()
 	handler.ServeHTTP(loginW, loginReq)
 	var loginResp map[string]any
-	json.NewDecoder(loginW.Body).Decode(&loginResp)
+	if err := json.NewDecoder(loginW.Body).Decode(&loginResp); err != nil {
+		t.Fatalf("decode login: %v", err)
+	}
 	token, _ := loginResp["token"].(string)
 
 	// Create a key first
@@ -350,7 +364,9 @@ func TestSiteKeyListNoTokens(t *testing.T) {
 	protected.ServeHTTP(listW, listReq)
 
 	var body map[string]any
-	json.NewDecoder(listW.Body).Decode(&body)
+	if err := json.NewDecoder(listW.Body).Decode(&body); err != nil {
+		t.Fatalf("decode list: %v", err)
+	}
 	keys, ok := body["data"].([]any)
 	if !ok {
 		t.Fatalf("expected data array, got %v", body)

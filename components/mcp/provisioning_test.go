@@ -72,12 +72,15 @@ func (m *mockSiteKeyCreator) ListSiteKeys(_ context.Context, siteID string) ([]m
 	}, nil
 }
 
-func (m *mockSiteKeyCreator) RevokeSiteKey(_ context.Context, keyID string) error {
+func (m *mockSiteKeyCreator) RevokeSiteKey(_ context.Context, siteID, keyID string) error {
 	if m.err != nil {
 		return m.err
 	}
 	if keyID == "" {
 		return errors.New("key_id is required")
+	}
+	if siteID == "" {
+		return errors.New("site_id is required")
 	}
 	return nil
 }
@@ -321,15 +324,22 @@ func TestListSiteKeys(t *testing.T) {
 func TestRevokeSiteKey(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		c := mcp.New(mcp.Options{Enabled: true, SiteKeyCreator: &mockSiteKeyCreator{}})
-		text := callToolText(t, c, "revoke_site_key", map[string]any{"key_id": "42"})
+		text := callToolText(t, c, "revoke_site_key", map[string]any{"key_id": "42", "site_id": "site-1"})
 		if !strings.Contains(text, `"revoked":"true"`) {
 			t.Fatalf("unexpected: %s", text)
 		}
 	})
 	t.Run("missing key_id", func(t *testing.T) {
 		c := mcp.New(mcp.Options{Enabled: true, SiteKeyCreator: &mockSiteKeyCreator{}})
-		text := callToolText(t, c, "revoke_site_key", nil)
+		text := callToolText(t, c, "revoke_site_key", map[string]any{"site_id": "site-1"})
 		if !strings.Contains(text, "key_id is required") {
+			t.Fatalf("unexpected: %s", text)
+		}
+	})
+	t.Run("missing site_id", func(t *testing.T) {
+		c := mcp.New(mcp.Options{Enabled: true, SiteKeyCreator: &mockSiteKeyCreator{}})
+		text := callToolText(t, c, "revoke_site_key", map[string]any{"key_id": "42"})
+		if !strings.Contains(text, "site_id is required") {
 			t.Fatalf("unexpected: %s", text)
 		}
 	})

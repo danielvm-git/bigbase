@@ -335,12 +335,15 @@ func (a *Auth) ListSiteKeys(ctx context.Context, siteID string) ([]SiteKeyEntry,
 }
 
 // RevokeSiteKey marks a site-scoped deploy key as revoked.
-func (a *Auth) RevokeSiteKey(ctx context.Context, keyID string) error {
+func (a *Auth) RevokeSiteKey(ctx context.Context, siteID, keyID string) error {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
 	if keyID == "" {
 		return fmt.Errorf("key_id is required")
+	}
+	if siteID == "" {
+		return fmt.Errorf("site_id is required")
 	}
 	id, err := strconv.ParseInt(keyID, 10, 64)
 	if err != nil {
@@ -348,8 +351,8 @@ func (a *Auth) RevokeSiteKey(ctx context.Context, keyID string) error {
 	}
 
 	res, err := a.db.ExecContext(ctx,
-		`UPDATE org_api_keys SET revoked = 1 WHERE id = ? AND site_id IS NOT NULL`,
-		id)
+		`UPDATE org_api_keys SET revoked = 1 WHERE id = ? AND site_id = ?`,
+		id, siteID)
 	if err != nil {
 		return fmt.Errorf("revoke site key: %w", err)
 	}
@@ -360,7 +363,7 @@ func (a *Auth) RevokeSiteKey(ctx context.Context, keyID string) error {
 	if n == 0 {
 		return fmt.Errorf("key %q not found", keyID)
 	}
-	a.logger.Info("site key revoked", "key_id", id)
+	a.logger.Info("site key revoked", "key_id", id, "site_id", siteID)
 	return nil
 }
 

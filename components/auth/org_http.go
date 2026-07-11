@@ -480,6 +480,7 @@ func (a *Auth) handleListSiteKeys(w http.ResponseWriter, r *http.Request) {
 	type keyEntry struct {
 		KeyID      string  `json:"key_id"`
 		Name       string  `json:"name"`
+		Prefix     string  `json:"prefix"`
 		CreatedAt  string  `json:"created_at"`
 		LastUsedAt *string `json:"last_used_at,omitempty"`
 	}
@@ -488,6 +489,7 @@ func (a *Auth) handleListSiteKeys(w http.ResponseWriter, r *http.Request) {
 		entries = append(entries, keyEntry{
 			KeyID:      k.KeyID,
 			Name:       k.Name,
+			Prefix:     k.Prefix,
 			CreatedAt:  k.CreatedAt,
 			LastUsedAt: k.LastUsedAt,
 		})
@@ -505,7 +507,7 @@ func (a *Auth) handleRevokeSiteKey(w http.ResponseWriter, r *http.Request) {
 	siteID := r.PathValue("id")
 	keyID := r.PathValue("keyID")
 
-	if err := a.RevokeSiteKey(r.Context(), keyID); err != nil {
+	if err := a.RevokeSiteKey(r.Context(), siteID, keyID); err != nil {
 		a.logger.Error("revoke site key", "key_id", keyID, "site_id", siteID, "error", err)
 		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return

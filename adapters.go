@@ -78,6 +78,7 @@ func (a mcpSiteKeyAdapter) ListSiteKeys(ctx context.Context, siteID string) ([]m
 		out = append(out, mcp.SiteKeyEntry{
 			KeyID:      k.KeyID,
 			Name:       k.Name,
+			Prefix:     k.Prefix,
 			CreatedAt:  k.CreatedAt,
 			Revoked:    k.Revoked,
 			LastUsedAt: k.LastUsedAt,
@@ -86,8 +87,8 @@ func (a mcpSiteKeyAdapter) ListSiteKeys(ctx context.Context, siteID string) ([]m
 	return out, nil
 }
 
-func (a mcpSiteKeyAdapter) RevokeSiteKey(ctx context.Context, keyID string) error {
-	return a.a.RevokeSiteKey(ctx, keyID)
+func (a mcpSiteKeyAdapter) RevokeSiteKey(ctx context.Context, siteID, keyID string) error {
+	return a.a.RevokeSiteKey(ctx, siteID, keyID)
 }
 
 type deployDiagnosisAdapter struct{ m *monitoring.Monitoring }

@@ -136,7 +136,7 @@ func TestSiteKeyRevoked(t *testing.T) {
 	if err != nil {
 		t.Fatalf("CreateSiteKey: %v", err)
 	}
-	if err := a.RevokeSiteKey(ctx, keyID); err != nil {
+	if err := a.RevokeSiteKey(ctx, "site-1", keyID); err != nil {
 		t.Fatalf("RevokeSiteKey: %v", err)
 	}
 	if _, err := a.ResolveSiteKey(token); err == nil {
@@ -186,7 +186,7 @@ func TestListSiteKeysMissingSite(t *testing.T) {
 
 func TestRevokeSiteKeyNotFound(t *testing.T) {
 	a, _ := setupSiteKeys(t)
-	err := a.RevokeSiteKey(context.Background(), "99999")
+	err := a.RevokeSiteKey(context.Background(), "site-1", "99999")
 	if err == nil || !strings.Contains(err.Error(), "not found") {
 		t.Fatalf("expected not found error, got %v", err)
 	}

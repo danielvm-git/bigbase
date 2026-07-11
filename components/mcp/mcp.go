@@ -66,6 +66,7 @@ type SiteLister interface {
 type SiteKeyEntry struct {
 	KeyID      string  `json:"key_id"`
 	Name       string  `json:"name"`
+	Prefix     string  `json:"prefix"`
 	CreatedAt  string  `json:"created_at"`
 	Revoked    bool    `json:"revoked"`
 	LastUsedAt *string `json:"last_used_at,omitempty"`
@@ -75,7 +76,7 @@ type SiteKeyEntry struct {
 type SiteKeyCreator interface {
 	CreateSiteKey(ctx context.Context, siteID, name string, scopes []string) (rawToken, keyID string, err error)
 	ListSiteKeys(ctx context.Context, siteID string) ([]SiteKeyEntry, error)
-	RevokeSiteKey(ctx context.Context, keyID string) error
+	RevokeSiteKey(ctx context.Context, siteID, keyID string) error
 }
 
 // Options configure the MCP component.
@@ -761,16 +762,20 @@ Port is set via ` + "`PORT`" + ` env var. Database is SQLite by default.
 			_ = json.Unmarshal(req.Params.Arguments, &args)
 		}
 		keyID, _ := args["key_id"].(string)
+		siteID, _ := args["site_id"].(string)
 		if keyID == "" {
 			return textResult("key_id is required. Use list_site_keys to find key IDs."), nil, nil
 		}
-		if err := c.siteKeyCreator.RevokeSiteKey(ctx, keyID); err != nil {
+		if siteID == "" {
+			return textResult("site_id is required. Use list_site_keys to find site IDs."), nil, nil
+		}
+		if err := c.siteKeyCreator.RevokeSiteKey(ctx, siteID, keyID); err != nil {
 			if strings.Contains(err.Error(), "not found") {
 				return textResult(fmt.Sprintf("Key %q not found.", keyID)), nil, nil
 			}
 			return textResult(fmt.Sprintf("Failed to revoke key: %v", err)), nil, nil
 		}
-		c.logger.Info("mcp tool", "tool", "revoke_site_key", "key_id", keyID)
+		c.logger.Info("mcp tool", "tool", "revoke_site_key", "key_id", keyID, "site_id", siteID)
 		return textResult(formatJSON(map[string]string{"key_id": keyID, "revoked": "true"})), nil, nil
 	})
 
