@@ -1,3 +1,10 @@
+## [2.76.10](https://github.com/danielvm-git/bigbase/compare/v2.76.9...v2.76.10) (2026-07-11)
+
+
+### Bug Fixes
+
+* **proxy,ci:** skip CSP on /api routes; preserve .env during deploy ([b5e99e4](https://github.com/danielvm-git/bigbase/commit/b5e99e465676e5eebde634b0fce08731aab5be7a))
+
 ## [2.76.9](https://github.com/danielvm-git/bigbase/compare/v2.76.8...v2.76.9) (2026-07-11)
 
 
