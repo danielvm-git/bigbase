@@ -1,3 +1,10 @@
+## [2.76.8](https://github.com/danielvm-git/bigbase/compare/v2.76.7...v2.76.8) (2026-07-11)
+
+
+### Bug Fixes
+
+* **security:** register 37 Dependabot + 7 DAST findings as bugs ([c28567f](https://github.com/danielvm-git/bigbase/commit/c28567f15c81580bcf078f6b3adc2f3139266ce3))
+
 ## [2.76.7](https://github.com/danielvm-git/bigbase/compare/v2.76.6...v2.76.7) (2026-07-11)
 
 
