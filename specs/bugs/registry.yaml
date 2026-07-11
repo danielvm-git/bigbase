@@ -1148,3 +1148,170 @@ bugs:
     files_changed: []
     approach: ""
     risk_level: low
+
+  # === seal DAST findings (2026-07-02 scan) ===
+  - id: BUG-2026-07-11T020132
+    date: "2026-07-02"
+    severity: medium
+    priority: low
+    scope: proxy
+    summary: "CSP: Failure to Define Directive with No Fallback — missing explicit CSP directives"
+    file: specs/bugs/BUG-2026-07-11T020132-dast-csp-directives.md
+    status: triage
+    source: seal.dast_http
+    risk_level: low
+
+  - id: BUG-2026-07-11T020149-02
+    date: "2026-07-02"
+    severity: medium
+    priority: low
+    scope: proxy
+    summary: "CSP: style-src unsafe-inline — inline styles permitted"
+    file: specs/bugs/BUG-2026-07-11T020149-dast-csp-unsafe-inline.md
+    status: triage
+    source: seal.dast_http
+    risk_level: low
+
+  - id: BUG-2026-07-11T020149-03
+    date: "2026-07-02"
+    severity: low
+    priority: low
+    scope: ui
+    summary: "Information Disclosure - Suspicious Comments — HTML/JS comments in production"
+    file: specs/bugs/BUG-2026-07-11T020149-dast-info-disclosure-comments.md
+    status: triage
+    source: seal.dast_http
+    risk_level: low
+
+  - id: BUG-2026-07-11T020149-04
+    date: "2026-07-02"
+    severity: medium
+    priority: low
+    scope: proxy
+    summary: "Sub Resource Integrity Attribute Missing — external resources loaded without SRI"
+    file: specs/bugs/BUG-2026-07-11T020149-dast-sri-missing.md
+    status: triage
+    source: seal.dast_http
+    risk_level: low
+
+  - id: BUG-2026-07-11T020149-05
+    date: "2026-07-02"
+    severity: low
+    priority: low
+    scope: proxy
+    summary: "Re-examine Cache-control Directives — suboptimal caching headers"
+    file: specs/bugs/BUG-2026-07-11T020149-dast-cache-control.md
+    status: triage
+    source: seal.dast_http
+    risk_level: low
+
+  - id: BUG-2026-07-11T020149-06
+    date: "2026-07-02"
+    severity: low
+    priority: low
+    scope: proxy
+    summary: "User Agent Fuzzer — inconsistent responses across User-Agent values"
+    file: specs/bugs/BUG-2026-07-11T020149-dast-user-agent-fuzzer.md
+    status: triage
+    source: seal.dast_http
+    risk_level: low
+
+  - id: BUG-2026-07-11T020149-07
+    date: "2026-07-02"
+    severity: info
+    priority: none
+    scope: proxy
+    summary: "Modern Web Application — informational scanner detection"
+    file: specs/bugs/BUG-2026-07-11T020149-dast-modern-web-app.md
+    status: triage
+    source: seal.dast_http
+    risk_level: none
+
+  # === seal GHS Dependabot findings (2026-07-11) ===
+  - id: BUG-2026-07-11T021033
+    date: "2026-07-11"
+    severity: critical
+    priority: critical
+    scope: deps
+    summary: "golang.org/x/crypto — 12 vulns (7 CRITICAL, 1 MAJOR, 4 NORMAL)"
+    file: specs/bugs/BUG-2026-07-11T021033-dependabot-golang-x-crypto.md
+    status: triage
+    source: seal.github_dependabot
+    risk_level: critical
+
+  - id: BUG-2026-07-11T021041-01
+    date: "2026-07-11"
+    severity: medium
+    priority: medium
+    scope: deps
+    summary: "Go net/html parser DoS — CVE-2026-25680 (CVSS 6.5)"
+    file: specs/bugs/BUG-2026-07-11T021041-dependabot-golang-net.md
+    status: triage
+    source: seal.github_dependabot
+    risk_level: medium
+
+  - id: BUG-2026-07-11T021041-02
+    date: "2026-07-11"
+    severity: high
+    priority: high
+    scope: deps
+    summary: "golang.org/x/crypto — underflow panic — CVE-2026-46597 (CVSS 7.5)"
+    file: specs/bugs/BUG-2026-07-11T021041-dependabot-golang-x-crypto-46597.md
+    status: triage
+    source: seal.github_dependabot
+    risk_level: high
+
+  - id: BUG-2026-07-11T021051-01
+    date: "2026-07-11"
+    severity: high
+    priority: high
+    scope: deps
+    summary: "undici (npm) — 7 vulns: WebSocket DoS, TLS bypass, info disclosure, header injection"
+    file: specs/bugs/BUG-2026-07-11T021051-dependabot-npm-undici.md
+    status: triage
+    source: seal.github_dependabot
+    risk_level: high
+
+  - id: BUG-2026-07-11T021051-02
+    date: "2026-07-11"
+    severity: medium
+    priority: medium
+    scope: deps
+    summary: "Vite (npm) — path traversal + fs.deny bypass"
+    file: specs/bugs/BUG-2026-07-11T021051-dependabot-npm-vite.md
+    status: triage
+    source: seal.github_dependabot
+    risk_level: medium
+
+  - id: BUG-2026-07-11T021059-01
+    date: "2026-07-11"
+    severity: medium
+    priority: low
+    scope: deps
+    summary: "esbuild (npm) — dev server request smuggling"
+    file: specs/bugs/BUG-2026-07-11T021059-dependabot-npm-esbuild.md
+    status: triage
+    source: seal.github_dependabot
+    risk_level: low
+
+  - id: BUG-2026-07-11T021059-02
+    date: "2026-07-11"
+    severity: low
+    priority: low
+    scope: deps
+    summary: "launch-editor (npm) — NTLMv2 hash disclosure on Windows"
+    file: specs/bugs/BUG-2026-07-11T021059-dependabot-npm-launch-editor.md
+    status: triage
+    source: seal.github_dependabot
+    risk_level: low
+
+  - id: BUG-2026-07-11T021059-03
+    date: "2026-07-11"
+    severity: critical
+    priority: high
+    scope: deps
+    summary: "Vitest UI (npm) — arbitrary file read/execute — CVE-2026-47429 (CVSS 9.8)"
+    file: specs/bugs/BUG-2026-07-11T021059-dependabot-npm-vitest.md
+    status: triage
+    source: seal.github_dependabot
+    risk_level: low
