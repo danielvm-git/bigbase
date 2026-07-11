@@ -1,9 +1,9 @@
 type: session-state
 context: infra
 active_flow: build_epic
-active_epic_id: e78
-active_story_id: e78s01
-active_story_status: todo
+active_epic_id: e76
+active_story_id: e76s01
+active_story_status: planned
 release:
   target_version: 2.76.10
   codename: "Bug Fix Sprint"
@@ -18,15 +18,14 @@ metrics:
   stories_completed: 185
   bcps_per_hour: 0
 epic_cycle:
-  step: 8
-  story_bcps: 4
-  story: e75
-  audit_result: pass
-  completed_steps: ["0", "1", "2", "3", "4", "5", "6", "7", "8"]
-  story_complete: true
-  note: "Complete. PR #90. 256/256 deploy suite, 30/30 flaky gate, lint+v clean. Trace + wiki scripts not found (skipped)."
-  fast_mode: false
+  step: 0
+  story_bcps: 20
+  story: e76s01
+  audit_result: null
+  completed_steps: []
   story_complete: false
+  note: "Starting e76 Token Lifecycle API E2E. 1 story, 20 BCPs. Tier 1."
+  fast_mode: false
 bug_cycle:
   current_step: null
   completed_steps: []
