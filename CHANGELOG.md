@@ -1,3 +1,10 @@
+## [2.76.12](https://github.com/danielvm-git/bigbase/compare/v2.76.11...v2.76.12) (2026-07-11)
+
+
+### Bug Fixes
+
+* **deploy:** deterministic FIFO log eviction and fix three flaky tests ([d8223da](https://github.com/danielvm-git/bigbase/commit/d8223daf9c5b7ed1e871d4f576f3563d49f95dc1))
+
 ## [2.76.11](https://github.com/danielvm-git/bigbase/compare/v2.76.10...v2.76.11) (2026-07-11)
 
 
