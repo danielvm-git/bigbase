@@ -47,6 +47,7 @@ env:
   VPS_BACKUPS_DIR: '/opt/bigbase/backups'
   VPS_DATA_DIR: '/opt/bigbase/data'
   VPS_ENV_FILE: '/opt/bigbase/.env'
+  GITHUB_APP_PEM_PATH: '/opt/bigbase/secrets/github-app.pem'
   HEALTH_URL: 'http://localhost:8080/api/monitoring/health'
   MAX_BACKUPS_TO_KEEP: 7
 
@@ -211,6 +212,9 @@ jobs:
           MAX_BACKUPS: ${{ env.MAX_BACKUPS_TO_KEEP }}
           GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
           GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          BIGBASE_GITHUB_APP_ID: ${{ secrets.BIGBASE_GITHUB_APP_ID }}
+          BIGBASE_GITHUB_APP_SLUG: ${{ secrets.BIGBASE_GITHUB_APP_SLUG }}
+          GITHUB_APP_PEM_PATH: ${{ env.GITHUB_APP_PEM_PATH }}
         with:
           host: ${{ secrets.CONTABO_HOST }}
           username: ${{ secrets.CONTABO_USER }}
@@ -220,7 +224,8 @@ jobs:
             BINARY_PATH,VPS_BIN_DIR,VPS_RELEASES_DIR,
             VPS_BACKUPS_DIR,VPS_DATA_DIR,VPS_ENV_FILE,
             HEALTH_URL,MAX_BACKUPS,
-            GOOGLE_CLIENT_ID,GOOGLE_CLIENT_SECRET
+            GOOGLE_CLIENT_ID,GOOGLE_CLIENT_SECRET,
+            BIGBASE_GITHUB_APP_ID,BIGBASE_GITHUB_APP_SLUG,GITHUB_APP_PEM_PATH
           # -------- Script executed on VPS --------
           script: |
             set -euo pipefail
@@ -272,8 +277,8 @@ jobs:
 
             # ----------------------------------------------------------------
             # Phase 4: Configure environment
-            # Preserve any manual env vars (e.g. GitHub App) by only
-            # updating Google OAuth lines instead of replacing the file.
+            # Preserve any manual env vars by only updating the known
+            # lines instead of replacing the whole file.
             # ----------------------------------------------------------------
             echo "=== Phase 4: Configure environment ==="
 
@@ -288,13 +293,37 @@ jobs:
                 echo "GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}"
                 echo "GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}"
               } >> "${VPS_ENV_FILE}"
-              chmod 600 "${VPS_ENV_FILE}"
-              chown bigbase:bigbase "${VPS_ENV_FILE}" 2>/dev/null || true
               echo "  Google OAuth credentials written to ${VPS_ENV_FILE}"
             else
               echo "  No Google OAuth credentials — deploying without social login"
-              # .env file is preserved (contains any manually-added credentials)
-              [ -f "${VPS_ENV_FILE}" ] && echo "  Preserved existing ${VPS_ENV_FILE}"
+            fi
+
+            # Write GitHub App credentials (from repo secrets) if .env exists
+            if [ -f "${VPS_ENV_FILE}" ] && [ -n "${BIGBASE_GITHUB_APP_ID:-}" ]; then
+              # Strip old GitHub App lines to avoid duplicates
+              sed -i '/^GITHUB_APP_ID=/d' "${VPS_ENV_FILE}"
+              sed -i '/^GITHUB_APP_SLUG=/d' "${VPS_ENV_FILE}"
+              sed -i '/^GITHUB_APP_PRIVATE_KEY_PATH=/d' "${VPS_ENV_FILE}"
+              {
+                echo "GITHUB_APP_ID=${BIGBASE_GITHUB_APP_ID}"
+                echo "GITHUB_APP_SLUG=${BIGBASE_GITHUB_APP_SLUG}"
+                echo "GITHUB_APP_PRIVATE_KEY_PATH=${GITHUB_APP_PEM_PATH}"
+              } >> "${VPS_ENV_FILE}"
+              echo "  GitHub App credentials written to ${VPS_ENV_FILE}"
+            elif [ ! -f "${VPS_ENV_FILE}" ] && [ -n "${BIGBASE_GITHUB_APP_ID:-}" ]; then
+              # Create .env from scratch with GitHub App credentials
+              mkdir -p "$(dirname "${VPS_ENV_FILE}")"
+              {
+                echo "GITHUB_APP_ID=${BIGBASE_GITHUB_APP_ID}"
+                echo "GITHUB_APP_SLUG=${BIGBASE_GITHUB_APP_SLUG}"
+                echo "GITHUB_APP_PRIVATE_KEY_PATH=${GITHUB_APP_PEM_PATH}"
+              } > "${VPS_ENV_FILE}"
+              chmod 600 "${VPS_ENV_FILE}"
+              echo "  GitHub App credentials written to new ${VPS_ENV_FILE}"
+            fi
+
+            if [ -f "${VPS_ENV_FILE}" ]; then
+              chmod 600 "${VPS_ENV_FILE}" 2>/dev/null || true
             fi
 
             # ----------------------------------------------------------------
