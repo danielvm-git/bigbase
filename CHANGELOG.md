@@ -1,3 +1,10 @@
+## [2.76.14](https://github.com/danielvm-git/bigbase/compare/v2.76.13...v2.76.14) (2026-07-11)
+
+
+### Bug Fixes
+
+* **ci:** sync root lockfile for vitest 4.1 in /packages/auth ([dda8f3e](https://github.com/danielvm-git/bigbase/commit/dda8f3ed23da61f90720a989b17baf16ff6fe73e))
+
 ## [2.76.13](https://github.com/danielvm-git/bigbase/compare/v2.76.12...v2.76.13) (2026-07-11)
 
 
