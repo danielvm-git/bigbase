@@ -1,3 +1,10 @@
+## [2.76.6](https://github.com/danielvm-git/bigbase/compare/v2.76.5...v2.76.6) (2026-07-11)
+
+
+### Bug Fixes
+
+* **deploy:** revert Phase 4 .env rewriting — GitHub App PEM/env vars corrupt startup ([a0fd845](https://github.com/danielvm-git/bigbase/commit/a0fd845d91b9b2ebc74552fe059b7a9e67cefa07))
+
 ## [2.76.5](https://github.com/danielvm-git/bigbase/compare/v2.76.4...v2.76.5) (2026-07-10)
 
 
