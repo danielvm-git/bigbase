@@ -600,7 +600,7 @@ epics:
   wsjf: 3.0
   mode: flat
   tier: 3
-  status: planned
+  status: done
   depends_on: []
   note: "2 stories, 4 BCPs. FIFO log eviction + fix 3 flaky tests."
   file: epics/e75-deploy-hardening.yaml
