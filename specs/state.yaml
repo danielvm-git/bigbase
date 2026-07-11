@@ -3,7 +3,7 @@ context: infra
 active_flow: build_epic
 active_epic_id: e76
 active_story_id: e76s01
-active_story_status: planned
+active_story_status: done
 release:
   target_version: 2.76.10
   codename: "Bug Fix Sprint"
@@ -14,17 +14,18 @@ release:
 metrics:
   session_start: '2026-07-10T10:56:00-03:00'
   session_end: null
-  epics_completed: 61
-  stories_completed: 185
+  epics_completed: 62
+  stories_completed: 186
   bcps_per_hour: 0
 epic_cycle:
-  step: 0
+  step: 8
   story_bcps: 20
   story: e76s01
   audit_result: null
-  completed_steps: []
-  story_complete: false
-  note: "Starting e76 Token Lifecycle API E2E. 1 story, 20 BCPs. Tier 1."
+  completed_steps:
+    - develop-tdd
+  story_complete: true
+  note: "e76s01 Token Lifecycle E2E — 4 tests passing (20 BCPs). Tier 1."
   fast_mode: false
 bug_cycle:
   current_step: null

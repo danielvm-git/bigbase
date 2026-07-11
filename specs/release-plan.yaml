@@ -621,7 +621,7 @@ epics:
   wsjf: 8.0
   mode: capsule
   tier: 1
-  status: planned
+  status: done
   depends_on: []
   note: "1 story, 20 BCPs. Full session lifecycle and org key lifecycle."
   capsule_dir: epics/e76-token-lifecycle-api-e2e
