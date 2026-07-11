@@ -271,21 +271,30 @@ jobs:
             fi
 
             # ----------------------------------------------------------------
-            # Phase 4: Write Google OAuth env file if secrets provided
+            # Phase 4: Configure environment
+            # Preserve any manual env vars (e.g. GitHub App) by only
+            # updating Google OAuth lines instead of replacing the file.
             # ----------------------------------------------------------------
             echo "=== Phase 4: Configure environment ==="
+
+            if [ -f "${VPS_ENV_FILE}" ]; then
+              # Remove any existing Google OAuth lines to avoid duplicates
+              sed -i '/^GOOGLE_CLIENT_ID=/d' "${VPS_ENV_FILE}"
+              sed -i '/^GOOGLE_CLIENT_SECRET=/d' "${VPS_ENV_FILE}"
+            fi
 
             if [ -n "${GOOGLE_CLIENT_ID:-}" ] && [ -n "${GOOGLE_CLIENT_SECRET:-}" ]; then
               {
                 echo "GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}"
                 echo "GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}"
-              } > "${VPS_ENV_FILE}"
+              } >> "${VPS_ENV_FILE}"
               chmod 600 "${VPS_ENV_FILE}"
               chown bigbase:bigbase "${VPS_ENV_FILE}" 2>/dev/null || true
-              echo "  Environment file written: ${VPS_ENV_FILE}"
+              echo "  Google OAuth credentials written to ${VPS_ENV_FILE}"
             else
               echo "  No Google OAuth credentials — deploying without social login"
-              rm -f "${VPS_ENV_FILE}" 2>/dev/null || true
+              # .env file is preserved (contains any manually-added credentials)
+              [ -f "${VPS_ENV_FILE}" ] && echo "  Preserved existing ${VPS_ENV_FILE}"
             fi
 
             # ----------------------------------------------------------------

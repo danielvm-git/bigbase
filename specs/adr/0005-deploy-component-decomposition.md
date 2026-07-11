@@ -5,7 +5,10 @@ context: BigBase deploy component — split 1819-line monolith into three module
 
 ## Status
 
-Accepted
+Accepted — **Implemented** (e45 cycle, July 2026).
+`deploy.go` reduced from 1875 → 342 lines. Engine, Gateway, and Orchestrator
+extracted to separate files. See `components/deploy/engine.go`, `gateway.go`,
+`orchestrator.go`.
 
 ## Principle
 

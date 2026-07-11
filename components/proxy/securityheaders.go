@@ -26,12 +26,18 @@ const (
 // securityHeadersMiddleware adds standard security headers to every response.
 func (p *Proxy) securityHeadersMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		csp := strictCSP
-		if r.URL.Path == "/" || r.URL.Path == "/docs" || r.URL.Path == "/admin" || strings.HasPrefix(r.URL.Path, "/admin/") {
-			csp = permissiveCSP
+		// API routes serve JSON, not HTML — CSP is a browser security
+		// mechanism for HTML documents. Applying strictCSP to JSON error
+		// responses (e.g. 503 from GitHub install) can block the browser's
+		// built-in error page styling.
+		if !strings.HasPrefix(r.URL.Path, "/api/") {
+			csp := strictCSP
+			if r.URL.Path == "/" || r.URL.Path == "/docs" || r.URL.Path == "/admin" || strings.HasPrefix(r.URL.Path, "/admin/") {
+				csp = permissiveCSP
+			}
+			w.Header().Set("Content-Security-Policy", csp)
 		}
 
-		w.Header().Set("Content-Security-Policy", csp)
 		w.Header().Set("Strict-Transport-Security", "max-age=63072000; includeSubDomains")
 		w.Header().Set("X-Frame-Options", "DENY")
 		w.Header().Set("X-Content-Type-Options", "nosniff")

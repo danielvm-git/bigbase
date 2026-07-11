@@ -1,0 +1,128 @@
+type: epic-shard
+context: domain
+id: e75
+title: "Deploy Hardening — Log Eviction + Flaky Tests"
+wsjf: 3.0
+wsjf_rationale: "BV=4(improves reliability: deterministic log retention + stable CI) TC=2(no urgency, but flaky tests erode dev velocity) RR=4(prevent time wasted on re-running flaky tests + debugging missing logs) / JS=3(~1.5 days across 2 stories)"
+status: todo
+tier: 3
+depends_on: []
+covers:
+  - components/deploy/logs.go
+  - components/deploy/deploy_test.go
+  - components/deploy/drain_test.go
+stories:
+  - id: e75s01
+    title: "Deterministic log eviction — replace random map iteration with FIFO"
+    status: todo
+    bcps: 2
+    tasks:
+      - id: e75s01t1
+        desc: "Replace random map iteration in initDeployLogs with a deterministic FIFO eviction policy"
+        notes: |
+          Current code (logs.go:8-28) uses Go map random iteration to pick a victim:
+            for len(d.deployLogs) >= maxDeployLogDeployments {
+                var victim string
+                for k := range d.deployLogs {  // RANDOM iteration order
+                    if k != id { victim = k; break }
+                }
+                ...
+            }
+
+          Replace with a deterministic FIFO policy that evicts the oldest deployment logs first:
+
+          Option A — Track insertion order with a separate ordered slice:
+            type logDeployments struct {
+                mu      sync.Mutex
+                buffer  map[string][]string  // deployment ID → log lines
+                order   []string             // insertion-ordered list of IDs
+            }
+
+            func (d *Deploy) initDeployLogs(id string) {
+                d.logs.mu.Lock()
+                defer d.logs.mu.Unlock()
+                // Evict oldest if at capacity
+                for len(d.logs.buffer) >= maxDeployLogDeployments {
+                    victim := d.logs.order[0]
+                    if victim == id { break }  // don't evict ourselves
+                    delete(d.logs.buffer, victim)
+                    d.logs.order = d.logs.order[1:]
+                }
+                d.logs.buffer[id] = nil
+                d.logs.order = append(d.logs.order, id)
+            }
+
+          Option B — Use container/list for O(1) head removal. Either is fine; Option A is simpler.
+
+          Update appendDeployLog, getDeployLogs, deleteDeployLogs to use the new structure.
+          Keep the same capacity limits (maxDeployLogDeployments=100, maxDeployLogLines=500).
+        verify: "go test ./components/deploy/ -run TestDeployLogs -v"
+
+      - id: e75s01t2
+        desc: "Add unit test for deterministic FIFO eviction order"
+        notes: |
+          New test TestDeployLogFIFOEviction:
+            - Create Deploy with capacity 3
+            - Append logs to deployments A, B, C, D (in order)
+            - Verify A is evicted (oldest), not B or C
+            - Verify B, C, D logs are intact
+            - Append to E → verify B is evicted next
+            - Verify deterministic order is always oldest-first
+        verify: "go test ./components/deploy/ -run TestDeployLogFIFOEviction -v"
+
+  - id: e75s02
+    title: "Fix three flaky tests in deploy component"
+    status: todo
+    bcps: 2
+    tasks:
+      - id: e75s02t1
+        desc: "Fix TestDeployStopShutsDownStaticServer port race"
+        notes: |
+          deploy_test.go:715 — port 10870 should be closed after Stop, but connection succeeded.
+
+          Root cause: The test creates a static server on a port, calls Stop(), then immediately
+          tries to connect to verify the port is closed. On macOS, port release can take
+          a few ms after server.Shutdown() returns.
+
+          Fix: Add a retry loop with short sleep after server.Shutdown, or use the port
+          assignment pattern from TestRedeployReplacesPrevious that picks a unique port
+          via pickPort() and waits for OS-level release.
+
+          Alternative: Check if server.Shutdown is being called correctly — verify the test
+          doesn't use a stale reference to the old server.
+        verify: "go test ./components/deploy/ -run TestDeployStopShutsDownStaticServer -count=5 -v"
+
+      - id: e75s02t2
+        desc: "Fix TestConnectionDrainTimeout git config safe.directory on macOS"
+        notes: |
+          drain_test.go:46 — git config --global --add safe.directory ... exit status 255
+
+          Root cause: The test attempts to run `git config --global --add safe.directory`
+          on a temp directory, but the --global git config may not be writable on macOS CI
+          runners or machines with restricted git config.
+
+          Fix: Use `GIT_CONFIG_GLOBAL=/dev/null` or `git -c safe.directory=<path>` instead
+          of modifying the global git config. Store the safe.directory value in the test's
+          local git config or pass it as a command-line flag to each git invocation.
+
+          Specifically: use `git clone -c safe.directory=<path>` or set the env var
+          `GIT_CONFIG_NOSYSTEM=1` to avoid touching global config.
+        verify: "go test ./components/deploy/ -run TestConnectionDrainTimeout -count=5 -v"
+
+      - id: e75s02t3
+        desc: "Fix TestRedeployReplacesPrevious concurrent test interference"
+        notes: |
+          deploy_test.go:1925 — second deployment serving on port 10631, body = "ok", want 'Hello'
+
+          Root cause: When tests run in parallel, multiple deployments may bind to the same
+          port range. The pickPort() function may not be collision-safe under concurrency.
+
+          Fix options:
+            a. Make pickPort() use a mutex-protected incremental counter
+            b. Use atomic.AddInt32 for port allocation
+            c. Add a port allocation registry so no two concurrent tests get the same port
+            d. Run the test with -p=1 (serial) as a workaround, then fix the race
+
+          The baselinePort is already per-test via pickPort(), but the port may still be
+          in use by a concurrently-building deployment from another test.
+        verify: "go test ./components/deploy/ -run TestRedeployReplacesPrevious -count=5 -v"

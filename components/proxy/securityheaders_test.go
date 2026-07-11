@@ -62,8 +62,8 @@ func TestSecurityHeaders(t *testing.T) {
 		}
 	})
 
-	t.Run("API routes receive strict CSP", func(t *testing.T) {
-		routes := []string{"/health", "/api/version"}
+	t.Run("API routes do NOT receive CSP (JSON responses don't need CSP)", func(t *testing.T) {
+		routes := []string{"/api/version", "/api/github/install"}
 		for _, path := range routes {
 			resp, err := http.Get("http://localhost:" + port + path)
 			if err != nil {
@@ -72,9 +72,22 @@ func TestSecurityHeaders(t *testing.T) {
 			defer func() { _ = resp.Body.Close() }()
 
 			csp := resp.Header.Get("Content-Security-Policy")
-			if csp != "default-src 'self'; script-src 'self'; connect-src 'self'" {
-				t.Errorf("expected strict CSP for %s, got %q", path, csp)
+			if csp != "" {
+				t.Errorf("expected no CSP for %s (JSON API route), got %q", path, csp)
 			}
+		}
+	})
+
+	t.Run("health endpoint receives strict CSP", func(t *testing.T) {
+		resp, err := http.Get("http://localhost:" + port + "/health")
+		if err != nil {
+			t.Fatalf("GET /health: %v", err)
+		}
+		defer func() { _ = resp.Body.Close() }()
+
+		csp := resp.Header.Get("Content-Security-Policy")
+		if csp != "default-src 'self'; script-src 'self'; connect-src 'self'" {
+			t.Errorf("expected strict CSP for /health, got %q", csp)
 		}
 	})
 

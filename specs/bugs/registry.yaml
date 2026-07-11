@@ -1168,6 +1168,15 @@ bugs:
     approach: "Added Prefix field to handleListSiteKeys response keyEntry struct; scoped RevokeSiteKey SQL by site_id; updated MCP adapter and interface signatures. auth: 196 pass, mcp: 76 pass, UI build: clean."
     risk_level: low
 
+  - id: BUG-2026-07-11T030000
+    date: "2026-07-11"
+    severity: high
+    priority: high
+    scope: proxy, infra
+    summary: "v2.76.9 CSP blocks browser stylesheets on API error pages; deploy pipeline wipes GitHub credentials"
+    file: specs/bugs/BUG-2026-07-11T030000-csp-blocks-api-error-pages.md
+    status: fixed
+
   # === seal DAST findings (2026-07-02 scan) ===
   - id: BUG-2026-07-11T020132
     date: "2026-07-02"

@@ -2,10 +2,10 @@
 
 **type:** tech-stack
 **context:** infra
-**version:** 2.71.0
-**supersedes:** v2.63.0 snapshot
+**version:** 2.76.7
+**supersedes:** v2.71.0 snapshot
 **verify:** `go test ./... && go build ./... && go vet ./...`
-**last-scan:** 2026-07-08 (cold read, 12-commit delta since v2.63.0)
+**last-scan:** 2026-07-10 (bulk fix session, 17 bugs fixed across deploy/auth/proxy/monitoring/cici/test)
 
 ## Overview
 
@@ -13,7 +13,8 @@ BigBase is a single-binary, open-source Backend-as-a-Service (BaaS) platform bui
 with Go. It uses the **Entity-Component-Construct (ECC)** pattern: a lightweight
 kernel discovers, starts, and connects independent components via an event bus.
 
-**192 Go source files · 101 test files · 584 test functions · 20 component directories**
+**~196 Go source files · ~105 test files · ~600 test functions · 20 component directories**
+**(Deploy component decomposed per ADR 0005: engine.go, gateway.go, orchestratorator.go — deploy.go reduced from 1875→342 lines)**
 
 ## Stack
 
@@ -162,8 +163,6 @@ kernel discovers, starts, and connects independent components via an event bus.
 
 | Signal | Location | Risk |
 |--------|----------|------|
-| `writeJSON` duplicated 14× | 41 call sites across 16 components | DRY violation; shared helper blocked by no cross-component imports rule |
-| `deploy.go` — 1875 lines | `components/deploy/deploy.go` | ADR 0005 decomposition (Engine/Gateway/Orchestrator) **designed but not yet implemented** — spec vocabulary exists, code split does not |
 | `auth.go` — 1756 lines | `components/auth/auth.go` | Split started (separate files: otp.go, store.go, apikeys.go, etc.) — manageable but watch for continued growth |
 | `proxy/hosts.go` — 488 lines | `components/proxy/hosts.go` | Auth policy enforcement + metadata injection + deployment routing in one middleware; e71 added significant logic here |
 | Inline migrations scattered | All component `Init()` | Schema state not observable; migrations run on every boot; ALTER failures silently ignored. 3 new columns added since v2.63: `auth_policy`, `pipeline_timeline`, `status_history` |
@@ -172,6 +171,7 @@ kernel discovers, starts, and connects independent components via an event bus.
 | `DBer` aliased in 13 components | 3 keep local interfaces (backup, mcp, webhooks) | Pattern is stable and understood |
 | Scope keys: `SiteID` adopted, `ProjectID` stalled | `kernel/scope.go` | `WithSiteID` called by proxy+deploy flows; `WithProjectID` has no consumers since e57s01 |
 | ADR 0007 (e72) landed | `deploy/pipeline_timeline.go`, `internal/eventrecorder/`, `internal/llm/`, `monitoring/observability.go`, `deploy/observability.go` | Pipeline timeline, persistent event recorder (FIFO 5000), `deploy.failed` + `deploy_diagnoses`, related-events snapshot, alert incidents + investigations |
+| Deploy log eviction non-deterministic | `deploy/logs.go:14-26` | `initDeployLogs` uses Go map random iteration for victim selection — log loss is unpredictable, not FIFO |
 
 ## Recent Features Landed (v2.67 → v2.71)
 
@@ -239,22 +239,37 @@ github → github.scaffold_repo     (CI pipeline trigger)
 realtime → mutation events         (WebSocket fan-out)
 ```
 
-## Deploy Architecture (ADR 0005 — vocabulary only)
+## Deploy Architecture (ADR 0005 — implemented)
 
 BigBase replicates Docker supervision — restart-on-crash, health checks — in a lightweight
-in-process Go module (ADR 0004). ADR 0005 defines the decomposition:
+in-process Go module (ADR 0004). ADR 0005 defines the decomposition, which has been
+implemented in the e45 cycle:
 
 ```
-Deploy (composition root — deploy.go, 1875 lines)
-  ├── Gateway (HTTP handlers only, delegates to Engine)
-  ├── Engine  (per-deployment lifecycle: clone→build→start→health→register)
-  └── Orchestrator (fleet: resume-on-boot, drain, rollback, delete)
+Deploy (composition root — deploy.go, 342 lines)
+  ├── Gateway (gateway.go — HTTP handlers only, delegates to Engine)
+  ├── Engine  (engine.go — per-deployment lifecycle: clone→build→start→health→register)
+  └── Orchestrator (orchestrator.go — fleet: resume-on-boot, drain, rollback, delete)
 ```
 
-**Current code reality:** `deploy.go` is still monolithic. The state machine (`state_machine.go`),
-supervisor (`supervisor.go`), health (`health.go`), cache (`cache.go`), domain routing (`domain_routing.go`),
-and pipeline timeline (`pipeline_timeline.go`) have been extracted — but the main `Deploy` struct
-and HTTP handlers still coexist in `deploy.go`. ADR 0005 vocabulary is the spec; the full split is e52+ work.
+Supporting modules: `manifest.go` (builder manifest parsing), `supervisor.go` (process
+supervision), `health.go` (health probing), `cache.go` (build caching), `state_machine.go`
+(status transitions), `runner.go` (Run/RunWithLogs interface), `log_stream.go` (WebSocket
+log streaming), `logs.go` (log retention), `request_logs.go` (request-level logging),
+`rollback.go`, `schema.go`, `seams.go`, `dep_env.go` (native DB env injection),
+`pipeline_timeline.go`, `python.go` (Python build support, e74).
+
+### Domain Language for Security Patterns
+These terms describe the deploy component's security posture and appear in reviews,
+bug reports, and planning:
+
+| Term | Definition |
+|------|------------|
+| **SQL-safety doctrine** | All SQL queries MUST use `?` parameter binding. Zero string interpolation allowed. Proven by review. |
+| **No-shell subprocess** | All external commands use `exec.Command(argv...)`. No `shell=true`, no `os.system()`. |
+| **Auth gate** | Every API endpoint behind a common middleware chain. No "skip auth" bypass. |
+| **Unguessable ID** | `kernel.GenerateID()` from `crypto/rand` → 32-char hex, 128 bits. |
+| **Site key scoping** | Deploy keys (`bb_dep_*`) grant access to exactly one site. Enforced via `kernel.SiteIDFromContext` at the gateway. |
 
 ### Canonical terms (for planning)
 - **Engine** — `Run(spec) → Result` behind a single seam; hides clone/build/start/health/cache
@@ -263,6 +278,30 @@ and HTTP handlers still coexist in `deploy.go`. ADR 0005 vocabulary is the spec;
 - **Supervisor** — crash-loop detect + exponential backoff restart (implemented)
 - **PipelineTimeline** — per-stage timestamps (clone, build, start, health) stored as JSON on `deployments` row
 - **NativeDBEnv** — injects `DATABASE_URL` (Postgres) or `DB_PATH` (SQLite) into deployed app env
+
+### Deploy Security Hardening (e45)
+
+The deploy component follows four security patterns, proven by security review
+(REVIEW_2026-07-10):
+
+1. **SQL-safety doctrine (e45s41)** — every SQL query in the deploy component uses
+   `?` parameter binding with `ExecContext`/`QueryRowContext`. Zero instances of
+   string interpolation in SQL across all deploy files.
+2. **No-shell subprocess pattern** — all `exec.Command` calls use argv form
+   (`exec.Command("git", "checkout", branch)`). No `shell=True` or equivalent.
+   Even user-controlled `branch` values are safe (argv never passes through a shell).
+3. **Auth gate consistency** — all deploy API endpoints share the same middleware
+   chain. Site deploy keys (`bb_dep_*`) are scoped to a single site via
+   `kernel.SiteIDFromContext`.
+4. **Unguessable IDs** — all deployment and repo IDs are generated by
+   `kernel.GenerateID()` (16 bytes from `crypto/rand` → 32-char hex string,
+   128 bits of entropy). Unguessable per cryptographic property, with no `.` or `/`
+   characters that could escape path construction.
+5. **Path traversal hardening** — `LoadManifestPath` applies `filepath.Clean` +
+   `filepath.IsAbs` + `strings.HasPrefix` (CWE-22 fix).
+
+These patterns are independently verified and tested; no security findings at
+confidence ≥ 8 were identified in the July 2026 review.
 
 ## External Services
 
@@ -285,7 +324,7 @@ and HTTP handlers still coexist in `deploy.go`. ADR 0005 vocabulary is the spec;
 | 0002 | JWT + bcrypt Auth | Accepted |
 | 0003 | GitHub App for Sites | Accepted |
 | 0004 | No containers (Docker/K8s) — in-process Go Supervisor + systemd isolation | Accepted |
-| 0005 | Deploy decomposition: Engine + Gateway + Orchestrator | Accepted (spec); **code split pending** |
+| 0005 | Deploy decomposition: Engine + Gateway + Orchestrator | **Implemented** (e45 cycle) |
 | — | ECC pattern (no direct cross-component imports) | Accepted |
 | — | PostgreSQL dual-driver (modernc.org/sqlite + pgx/v5) | Accepted (e18) |
 | — | Multi-tenant org isolation at API/DB layer | Accepted (e23) |
@@ -308,6 +347,10 @@ and HTTP handlers still coexist in `deploy.go`. ADR 0005 vocabulary is the spec;
 | v2.70.0 | e56 | DB-backed OTP store, rate limiting, audit logging |
 | v2.71.0 | e71 | Host-level route auth policy, JWT + site-key enforcement, passthrough identity headers |
 | v2.72.0 | e72 | Pipeline timeline, correlated event recorder, AI deploy diagnosis, alert investigations |
+| v2.73.0 | e74 | Python runtime support (poetry/pip build, app type detection, native DB env) |
+| v2.74.0 | e45 | Deploy decomposition (ADR 0005), deploy key prefix + security hardening, SQL-safety doctrine proof |
+| v2.75.0 | e26 | Compose deploy, log streaming WebSocket, manifest parser, Node/Python build caching |
+| v2.76.0+ | — | Bulk bug fix: 17 fixes across deploy keys+security, dep vulns (7 critical), DAST CSP/Cache-Control, test cleanup, comment stripping |
 
 ## Verification
 

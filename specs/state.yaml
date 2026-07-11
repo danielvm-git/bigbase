@@ -5,12 +5,12 @@ active_epic_id: e74
 active_story_id: e74s02
 active_story_status: done
 release:
-  target_version: 2.73.0
-  codename: "Python Runtime"
-  last_tag: v2.72.0
-  last_publish: '2026-07-09'
+  target_version: 2.76.9
+  codename: "Bug Fix Sprint"
+  last_tag: v2.76.9
+  last_publish: '2026-07-10'
   ci_verified: true
-  ci_verified_at: '2026-07-09T04:44:49Z'
+  ci_verified_at: '2026-07-10T23:30:00-03:00'
 metrics:
   session_start: '2026-07-10T10:56:00-03:00'
   session_end: null
@@ -36,8 +36,8 @@ git:
   worktree: null
   ci_status: success
 handoff:
-  last_step_completed: "e74 finalize — execution-status and state updated"
+  last_step_completed: "release-branch — 17 bugs fixed, pushed, CI all green, release deployed"
   open_decisions: []
   next_skill: ""
-  summary: "Epic e74 (Self-Service Deploy Tokens) complete. 5 BCPs delivered: 3 REST endpoints + UI tab. Merged to main."
-  context: "e74s01: POST/GET/DELETE /api/sites/{id}/deploy-keys with auth, validation, rate-limiting. e74s02: SiteDeployKeysTab component with generate modal, revoke confirmation, and all states."
+  summary: "Bulk bug fix session: deploy keys prefix+security, dep vulns (7 critical), DAST CSP/Cache-Control, test cleanup, comment stripping. All 17 bugs fixed. CI: Release & Deploy, CodeQL, CI, Go modules update all success."
+  context: "Phase 1-5 complete. Commit 3dca1ba8 deployed. semantic-release auto-tagged new version."
