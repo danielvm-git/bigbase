@@ -37,8 +37,8 @@ git:
   worktree: null
   ci_status: success
 handoff:
-  last_step_completed: "plan-tests — consolidated harmonious master test plan created under specs/tech-architecture/CONSOLIDATED_TEST_PLAN.md"
+  last_step_completed: "release-branch — PR #91 created for e76 (token lifecycle API E2E tests)"
   open_decisions: []
-  next_skill: "plan-work"
-  summary: "Unified API + browser-level UI master test plan (e74, e76, e77, e78) successfully consolidated."
-  context: "Epic e78 planning phase active. Master test plan created. Moving to plan-work."
+  next_skill: "survey-context"
+  summary: "e76 complete. 4 Playwright E2E tests passing, threat model documented, audit verified (34/34 pass). PR #91 open."
+  context: "All e76 stories done. Branch e76-token-lifecycle-e2e pushed and PR #91 created."
