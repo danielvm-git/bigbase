@@ -49,6 +49,7 @@ func (a *Auth) ensureSiteKeyColumns() error {
 	for _, stmt := range []string{
 		`ALTER TABLE org_api_keys ADD COLUMN site_id TEXT NULL`,
 		`ALTER TABLE org_api_keys ADD COLUMN revoked INTEGER NOT NULL DEFAULT 0`,
+		`ALTER TABLE org_api_keys ADD COLUMN prefix TEXT DEFAULT ''`,
 	} {
 		if err := a.db.Migrate(stmt); err != nil {
 			if strings.Contains(strings.ToLower(err.Error()), "duplicate column") {
@@ -213,6 +214,7 @@ type SiteKeyCreated struct {
 type SiteKeyEntry struct {
 	KeyID      string  `json:"key_id"`
 	Name       string  `json:"name"`
+	Prefix     string  `json:"prefix"`
 	CreatedAt  string  `json:"created_at"`
 	Revoked    bool    `json:"revoked"`
 	LastUsedAt *string `json:"last_used_at,omitempty"`
@@ -252,6 +254,7 @@ func (a *Auth) createSiteKeyRecord(ctx context.Context, siteID, name string, sco
 		return nil, fmt.Errorf("generate site key: %w", err)
 	}
 
+	prefix := rawPrefix(raw)
 	keyHash := hashAPIKey(raw)
 	scopesStr := joinScopes(scopes)
 	if scopesStr == "" {
@@ -260,9 +263,9 @@ func (a *Auth) createSiteKeyRecord(ctx context.Context, siteID, name string, sco
 	now := time.Now().UTC().Format(time.RFC3339)
 
 	res, err := a.db.ExecContext(ctx,
-		`INSERT INTO org_api_keys (org_id, site_id, key_hash, name, scopes, created_at, revoked)
-		 VALUES (?, ?, ?, ?, ?, ?, 0)`,
-		0, siteID, keyHash, name, scopesStr, now)
+		`INSERT INTO org_api_keys (org_id, site_id, key_hash, name, scopes, created_at, revoked, prefix)
+		 VALUES (?, ?, ?, ?, ?, ?, 0, ?)`,
+		0, siteID, keyHash, name, scopesStr, now, prefix)
 	if err != nil {
 		return nil, fmt.Errorf("insert site key: %w", err)
 	}
@@ -299,7 +302,7 @@ func (a *Auth) ListSiteKeys(ctx context.Context, siteID string) ([]SiteKeyEntry,
 	}
 
 	rows, err := a.db.QueryContext(ctx,
-		`SELECT id, name, created_at, revoked, last_used_at
+		`SELECT id, name, prefix, created_at, revoked, last_used_at
 		 FROM org_api_keys WHERE site_id = ? ORDER BY id`,
 		siteID)
 	if err != nil {
@@ -310,15 +313,16 @@ func (a *Auth) ListSiteKeys(ctx context.Context, siteID string) ([]SiteKeyEntry,
 	keys := make([]SiteKeyEntry, 0)
 	for rows.Next() {
 		var id int64
-		var name, createdAt string
+		var name, prefix, createdAt string
 		var revoked int
 		var lastUsed sql.NullString
-		if err := rows.Scan(&id, &name, &createdAt, &revoked, &lastUsed); err != nil {
+		if err := rows.Scan(&id, &name, &prefix, &createdAt, &revoked, &lastUsed); err != nil {
 			return nil, fmt.Errorf("scan site key: %w", err)
 		}
 		entry := SiteKeyEntry{
 			KeyID:     fmt.Sprintf("%d", id),
 			Name:      name,
+			Prefix:    prefix,
 			CreatedAt: createdAt,
 			Revoked:   revoked != 0,
 		}
@@ -397,6 +401,14 @@ func generateSiteKey() (string, error) {
 		return "", err
 	}
 	return "bb_dep_" + hex.EncodeToString(b), nil
+}
+
+// rawPrefix returns the first 13 characters of a bb_dep_ key (prefix + first 8 hex chars).
+func rawPrefix(raw string) string {
+	if len(raw) > 13 {
+		return raw[:13]
+	}
+	return raw
 }
 
 // generateRawAPIKey creates a 32-byte hex-encoded random key prefixed with "bb_".

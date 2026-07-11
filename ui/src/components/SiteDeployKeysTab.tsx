@@ -8,7 +8,7 @@ function DeployKeyRow({
   onRevoke,
 }: {
   k: SiteDeployKey
-  onRevoke: (id: string) => void
+  onRevoke: () => void
 }) {
   return (
     <tr>
@@ -21,14 +21,17 @@ function DeployKeyRow({
         {new Date(k.created_at).toLocaleDateString()}
       </td>
       <td>
-        <Button
-          variant="ghost"
-          size="sm"
-          style={{ color: 'var(--error)' }}
-          onClick={() => onRevoke(k.key_id)}
-        >
-          Revoke
-        </Button>
+        <div style={{ display: 'flex', gap: 'var(--space-1)', alignItems: 'center' }}>
+          <CopyButton value={k.key_id} label="ID" />
+          <Button
+            variant="ghost"
+            size="sm"
+            style={{ color: 'var(--error)' }}
+            onClick={onRevoke}
+          >
+            Revoke
+          </Button>
+        </div>
       </td>
     </tr>
   )
@@ -160,12 +163,14 @@ function GenerateModal({
 function RevokeConfirmModal({
   open,
   keyName,
+  error,
   onConfirm,
   onClose,
   revoking,
 }: {
   open: boolean
   keyName: string
+  error?: string
   onConfirm: () => void
   onClose: () => void
   revoking: boolean
@@ -177,6 +182,11 @@ function RevokeConfirmModal({
           Are you sure you want to revoke <strong>{keyName}</strong>?
           Any services using this key will lose access immediately.
         </p>
+        {error && (
+          <p style={{ color: 'var(--error)', fontSize: 'var(--text-xs)', margin: 0 }}>
+            {error}
+          </p>
+        )}
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-2)' }}>
           <Button variant="ghost" size="sm" onClick={onClose} disabled={revoking}>
             Cancel
@@ -203,6 +213,7 @@ export function SiteDeployKeysTab({ siteId }: { siteId: string }) {
   const [showGenerate, setShowGenerate] = useState(false)
   const [revokeTarget, setRevokeTarget] = useState<{ id: string; name: string } | null>(null)
   const [revoking, setRevoking] = useState(false)
+  const [revokeError, setRevokeError] = useState<string | undefined>()
   const [rateLimited, setRateLimited] = useState(false)
 
   const loadKeys = async () => {
@@ -229,16 +240,18 @@ export function SiteDeployKeysTab({ siteId }: { siteId: string }) {
   const handleRevoke = async () => {
     if (!revokeTarget) return
     setRevoking(true)
+    setRevokeError(undefined)
     const res = await revokeDeployKey(siteId, revokeTarget.id)
     if (res.ok) {
       setRevokeTarget(null)
+      setRevokeError(undefined)
       loadKeys()
     } else {
       const msg = res.error || 'Failed to revoke key'
       if (msg.includes('rate') || msg.includes('limit') || msg.includes('429')) {
-        setError('Rate limited. Please try again later.')
+        setRevokeError('Rate limited. Please try again later.')
       } else {
-        setError(msg)
+        setRevokeError(msg)
       }
     }
     setRevoking(false)
@@ -267,8 +280,9 @@ export function SiteDeployKeysTab({ siteId }: { siteId: string }) {
       <RevokeConfirmModal
         open={revokeTarget !== null}
         keyName={revokeTarget?.name || ''}
+        error={revokeError}
         onConfirm={handleRevoke}
-        onClose={() => setRevokeTarget(null)}
+        onClose={() => { setRevokeTarget(null); setRevokeError(undefined) }}
         revoking={revoking}
       />
 
@@ -306,9 +320,8 @@ export function SiteDeployKeysTab({ siteId }: { siteId: string }) {
             </thead>
             <tbody>
               {keys.map(k => (
-                <DeployKeyRow key={k.key_id} k={k} onRevoke={(id) => {
-                  const found = keys.find(x => x.key_id === id)
-                  setRevokeTarget(found ? { id: found.key_id, name: found.name } : null)
+                <DeployKeyRow key={k.key_id} k={k} onRevoke={() => {
+                  setRevokeTarget({ id: k.key_id, name: k.name })
                 }} />
               ))}
             </tbody>

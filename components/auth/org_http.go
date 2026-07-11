@@ -480,6 +480,7 @@ func (a *Auth) handleListSiteKeys(w http.ResponseWriter, r *http.Request) {
 	type keyEntry struct {
 		KeyID      string  `json:"key_id"`
 		Name       string  `json:"name"`
+		Prefix     string  `json:"prefix"`
 		CreatedAt  string  `json:"created_at"`
 		LastUsedAt *string `json:"last_used_at,omitempty"`
 	}
@@ -488,6 +489,7 @@ func (a *Auth) handleListSiteKeys(w http.ResponseWriter, r *http.Request) {
 		entries = append(entries, keyEntry{
 			KeyID:      k.KeyID,
 			Name:       k.Name,
+			Prefix:     k.Prefix,
 			CreatedAt:  k.CreatedAt,
 			LastUsedAt: k.LastUsedAt,
 		})
