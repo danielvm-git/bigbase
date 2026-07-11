@@ -1,3 +1,10 @@
+## [2.76.7](https://github.com/danielvm-git/bigbase/compare/v2.76.6...v2.76.7) (2026-07-11)
+
+
+### Bug Fixes
+
+* **security:** register 7 seal DAST findings as bugs in bug registry ([d06af5e](https://github.com/danielvm-git/bigbase/commit/d06af5ef93d9f5031bffe267c1bb87e2784d483d))
+
 ## [2.76.6](https://github.com/danielvm-git/bigbase/compare/v2.76.5...v2.76.6) (2026-07-11)
 
 
