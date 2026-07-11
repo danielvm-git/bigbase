@@ -87,7 +87,7 @@ bugs:
     status: fixed
     files_changed:
       - components/mcp/mcp.go
-    approach: Replaced 14 fmt.Sprintf("Error: %v", err) patterns with logger.Error + generic user-facing messages; removed raw Go error details from all tool responses
+    approach: 'Replaced 14 fmt.Sprintf("Error: %v", err) patterns with logger.Error + generic user-facing messages; removed raw Go error details from all tool responses'
     risk_level: low
     regression_guards:
       - components/mcp/mcp_test.go
@@ -1408,69 +1408,110 @@ bugs:
 
   - id: BUG-2026-07-11T032535
     date: "2026-07-11"
-    severity: 
-    priority: 
+    severity: critical
+    priority: critical
     scope: security
-    summary: ""
+    summary: "3 git command injection sites (CWE-78) — git clone/fetch uses user-controlled input without -- separator or fullName validation"
     file: specs/bugs/BUG-2026-07-11T032535-codeql-command-injection.md
-    status: triage
+    status: fixed
     source: seal.github_code_scanning
-    risk_level: 
+    risk_level: critical
+    files_changed:
+      - components/deploy/engine.go
+      - components/github/github.go
+    approach: "Added '--' separator before user-controlled git args in cloneAndCheckout (engine.go), clone --bare (github.go), and fetch --prune (github.go). Added validFullName regex (^[a-zA-Z0-9_.-]+/[a-zA-Z0-9_.-]+$) to mirrorRepository."
+    risk_level: low
 
   - id: BUG-2026-07-11T032535
     date: "2026-07-11"
-    severity: 
-    priority: 
-    scope: security
-    summary: ""
+    severity: medium
+    priority: low
+    scope: security,api,functions,db
+    summary: "CodeQL SQL injection alerts #8-#15 — passthrough wrappers; tainted table-name interpolation in api.go and functions/runtime.go guarded by sanitize()"
     file: specs/bugs/BUG-2026-07-11T032535-codeql-sql-injection.md
-    status: triage
+    status: needs-audit
     source: seal.github_code_scanning
-    risk_level: 
+    risk_level: low
+    investigation:
+      date: "2026-07-11"
+      findings:
+        - "8 alerts are on passthrough wrappers in db.go and postgres.go — not injection points themselves"
+        - "~60 call sites analyzed: ~44 safe (hardcoded/parameterized), ~16 needs-audit (table name interpolation with sanitize guard)"
+        - "No actual injection risk found — all dynamic VALUES use ? placeholders; table/column names use sanitize() [a-zA-Z0-9_]+"
+        - "Architectural concern: table names cannot be parameterized, so sanitize bypass would be critical"
+      evidence: "Investigation report in BUG-2026-07-11T032535-codeql-sql-injection.md"
 
   - id: BUG-2026-07-11T032549
     date: "2026-07-11"
-    severity: 
-    priority: 
-    scope: security
-    summary: ""
+    severity: normal
+    priority: high
+    scope: security,auth
+    summary: "Cookie 'Secure' attribute not set on 3 http.SetCookie calls (CWE-614)"
     file: specs/bugs/BUG-2026-07-11T032549-codeql-cookie-secure.md
-    status: triage
+    status: fixed
     source: seal.github_code_scanning
-    risk_level: 
+    risk_level: low
+    files_changed:
+      - components/auth/magiclink.go
+      - components/auth/oauth_handlers.go
+    approach: "Added Secure: true to three http.Cookie structs in magiclink.go (line 162) and oauth_handlers.go (lines 152, 171) that were missing the flag."
+    regression_guards:
+      - go build ./components/auth/
+      - go test ./components/auth/ -count=1
 
   - id: BUG-2026-07-11T032549
     date: "2026-07-11"
-    severity: 
-    priority: 
-    scope: security
-    summary: ""
+    severity: normal
+    priority: high
+    scope: security,auth
+    summary: "Open URL redirect (CWE-601) — isSPAOriginAllowed uses strings.HasPrefix, vulnerable to subdomain bypass (alert #4)"
     file: specs/bugs/BUG-2026-07-11T032549-codeql-open-redirect.md
-    status: triage
+    status: fixed
     source: seal.github_code_scanning
-    risk_level: 
+    risk_level: low
+    files_changed:
+      - components/auth/auth.go
+      - components/auth/oauth_redirect_test.go
+    approach: "Replaced strings.HasPrefix in isSPAOriginAllowed with proper URL parsing and exact scheme+host comparison. Relative URLs (no host) always allowed — safe. Subdomain bypass no longer works."
+    regression_guards:
+      - components/auth/oauth_redirect_test.go TestGoogleCallbackSPARejectsSubdomainBypass
+      - components/auth/oauth_redirect_test.go TestGoogleCallbackSPARejectedOrigin
 
   - id: BUG-2026-07-11T032549
     date: "2026-07-11"
-    severity: 
-    priority: 
-    scope: security
-    summary: ""
+    severity: high
+    priority: high
+    scope: deploy,git
+    summary: "Path traversal (CWE-22) — 3 true positives: engine.go, gateway.go, git.go (alerts #17, #18, #20)"
     file: specs/bugs/BUG-2026-07-11T032549-codeql-path-traversal.md
-    status: triage
+    status: fixed
     source: seal.github_code_scanning
-    risk_level: 
+    risk_level: low
+    files_changed:
+      - components/deploy/engine.go
+      - components/deploy/gateway.go
+      - components/git/git.go
+    approach: "Added filepath.Clean + strings.Contains(cleanID, '..') containment checks before all filesystem path operations using user-controlled IDs. False positives (#19 manifest.go, #21 storage.go, #22 cache_archive.go) marked wontfix — guards already exist."
+    regression_guards:
+      - go build ./components/deploy/ ./components/git/
+      - go test ./components/deploy/ ./components/git/ -count=1
 
   - id: BUG-2026-07-11T032549
     date: "2026-07-11"
-    severity: 
-    priority: 
-    scope: security
-    summary: ""
+    severity: medium
+    priority: high
+    scope: security,auth
+    summary: "Weak cryptographic hashing — raw SHA-256 for API key storage (CWE-327)"
     file: specs/bugs/BUG-2026-07-11T032549-codeql-weak-crypto.md
-    status: triage
+    status: fixed
     source: seal.github_code_scanning
-    risk_level: 
+    risk_level: low
+    files_changed:
+      - components/auth/apikeys.go
+    approach: Replaced raw SHA-256 with HMAC-SHA256 using the auth component's server secret. Converted hashAPIKey from a standalone function to a method on *Auth that uses hmac.New(sha256.New, a.secret). This binds API key hashes to the server secret, preventing rainbow table attacks.
+    regression_guards:
+      - go build ./components/auth/
+      - go test ./components/auth/ -count=1
 
   - id: BUG-2026-07-11T032549
     date: "2026-07-11"

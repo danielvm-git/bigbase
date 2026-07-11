@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	"crypto/hmac"
 	"crypto/rand"
 	"crypto/sha256"
 	"database/sql"
@@ -71,7 +72,7 @@ func (a *Auth) CreateAPIKey(ctx context.Context, orgID int64, name string, scope
 		return nil, fmt.Errorf("generate api key: %w", err)
 	}
 
-	keyHash := hashAPIKey(raw)
+	keyHash := a.hashAPIKey(raw)
 	scopesStr := joinScopes(scopes)
 	now := time.Now().UTC().Format(time.RFC3339)
 
@@ -149,7 +150,7 @@ func (a *Auth) ResolveOrgKey(rawKey string) (int64, []string, error) {
 		return 0, nil, fmt.Errorf("invalid org api key")
 	}
 
-	keyHash := hashAPIKey(rawKey)
+	keyHash := a.hashAPIKey(rawKey)
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -177,7 +178,7 @@ func (a *Auth) ResolveOrgKey(rawKey string) (int64, []string, error) {
 
 // ResolveAPIKey looks up the org_id for a raw API key. Returns an error when not found.
 func (a *Auth) ResolveAPIKey(rawKey string) (int64, error) {
-	keyHash := hashAPIKey(rawKey)
+	keyHash := a.hashAPIKey(rawKey)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -255,7 +256,7 @@ func (a *Auth) createSiteKeyRecord(ctx context.Context, siteID, name string, sco
 	}
 
 	prefix := rawPrefix(raw)
-	keyHash := hashAPIKey(raw)
+	keyHash := a.hashAPIKey(raw)
 	scopesStr := joinScopes(scopes)
 	if scopesStr == "" {
 		scopesStr = "deploy"
@@ -369,7 +370,7 @@ func (a *Auth) RevokeSiteKey(ctx context.Context, siteID, keyID string) error {
 
 // ResolveSiteKey looks up the site_id for a bb_dep_ prefixed key.
 func (a *Auth) ResolveSiteKey(rawKey string) (string, error) {
-	keyHash := hashAPIKey(rawKey)
+	keyHash := a.hashAPIKey(rawKey)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -423,10 +424,13 @@ func generateRawAPIKey() (string, error) {
 	return "bb_" + hex.EncodeToString(b), nil
 }
 
-// hashAPIKey produces a SHA-256 hex digest of the raw key.
-func hashAPIKey(rawKey string) string {
-	sum := sha256.Sum256([]byte(rawKey))
-	return hex.EncodeToString(sum[:])
+// hashAPIKey produces an HMAC-SHA256 hex digest of the raw key using the server secret.
+// HMAC binds the hash to the server secret, preventing rainbow table attacks on stored
+// API key hashes while remaining fast for high-entropy random token verification.
+func (a *Auth) hashAPIKey(rawKey string) string {
+	mac := hmac.New(sha256.New, a.secret)
+	mac.Write([]byte(rawKey))
+	return hex.EncodeToString(mac.Sum(nil))
 }
 
 // joinScopes converts a scopes slice to a comma-separated string.

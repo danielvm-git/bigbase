@@ -12,7 +12,7 @@ CodeQL detected 3 cookies set without the `Secure` flag. These cookies are trans
 Set `Secure: true` on all cookies when the connection is HTTPS. The existing `cookieSecure()` helper in the auth component should be used consistently.
 
 ## Status
-triage
+fixed
 
 ## Source
 seal.github_code_scanning

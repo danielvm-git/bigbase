@@ -272,6 +272,11 @@ func (g *Git) deleteRepo(w http.ResponseWriter, r *http.Request, id string) {
 		return
 	}
 
-	_ = os.RemoveAll(filepath.Join(g.dir, id+".git"))
+	cleanID := filepath.Clean(id)
+	if strings.Contains(cleanID, "..") || strings.Contains(cleanID, "/") {
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid id"})
+		return
+	}
+	_ = os.RemoveAll(filepath.Join(g.dir, cleanID+".git"))
 	kernel.WriteJSON(w, http.StatusOK, map[string]string{"status": "deleted"})
 }

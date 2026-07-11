@@ -1,6 +1,6 @@
 ---
 bug_id: BUG-2026-07-10T220000
-status: open
+status: fixed
 severity: high
 scope: ui, api
 title: Deploy Keys — revoke and copy operations broken

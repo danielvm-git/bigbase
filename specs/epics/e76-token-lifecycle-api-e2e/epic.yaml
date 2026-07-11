@@ -1,0 +1,17 @@
+type: epic-shard
+context: quality
+id: e76
+title: "Token Lifecycle API E2E"
+wsjf: 8.0
+total_bcps: 20
+status: planned
+tier: 1
+depends_on: []
+note: "1 story, 20 BCPs. Full session lifecycle and org key lifecycle testing."
+stories:
+  - id: e76s01
+    title: "Token Lifecycle E2E Tests"
+    bcps: 20
+    status: pending
+    spec: e76s01-spec.md
+    tasks: e76s01-tasks.yaml

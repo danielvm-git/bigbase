@@ -135,7 +135,14 @@ func (d *Deploy) runDeployment(deploy *Deployment, buildDir, repoName string) {
 	d.updateStatus(deploy.ID, "building")
 	d.appendDeployLog(deploy.ID, "→ Status: building")
 
-	repoPath := filepath.Join(d.gitDir, deploy.RepoID+".git")
+	repoID := filepath.Clean(deploy.RepoID)
+	if strings.Contains(repoID, "..") {
+		d.logger.Error("invalid repoID", "id", deploy.RepoID)
+		d.appendDeployLog(deploy.ID, "✗ Invalid repository ID")
+		d.updateStatus(deploy.ID, "failed")
+		return
+	}
+	repoPath := filepath.Join(d.gitDir, repoID+".git")
 	if _, err := os.Stat(repoPath); err != nil {
 		d.logger.Error("repo not found on disk", "id", deploy.RepoID, "path", repoPath)
 		d.appendDeployLog(deploy.ID, "✗ Repository not found on disk")
@@ -295,7 +302,7 @@ func (d *Deploy) runDeployment(deploy *Deployment, buildDir, repoName string) {
 	}
 }
 func (d *Deploy) cloneAndCheckout(ctx context.Context, deployID, repoPath, buildDir, branch string) error {
-	cmd := exec.CommandContext(ctx, "git", "clone", repoPath, ".")
+	cmd := exec.CommandContext(ctx, "git", "clone", "--", repoPath, ".")
 	cmd.Dir = buildDir
 	cmd.Stderr = nil
 	if err := cmd.Run(); err != nil {

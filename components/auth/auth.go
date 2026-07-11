@@ -8,6 +8,7 @@ import (
 	"flag"
 	"fmt"
 	"net/http"
+	"net/url"
 	"os"
 	"strings"
 	"time"
@@ -98,13 +99,28 @@ func (a *Auth) CORSMiddleware() func(http.Handler) http.Handler {
 	return CORS(a.corsAllowedOrigins)
 }
 
-// isSPAOriginAllowed checks if the given URL starts with one of the allowed SPA origins.
+// isSPAOriginAllowed checks if the given URL matches one of the allowed SPA origins.
+// It parses the URL and compares scheme + hostname exactly to prevent subdomain
+// bypass attacks like https://trusted.example.com.evil.com (CWE-601).
+// Relative URLs (no host) are always safe — they resolve against the current origin.
 func (a *Auth) isSPAOriginAllowed(redirectURL string) bool {
 	if len(a.spaOriginAllowlist) == 0 {
 		return false
 	}
-	for _, origin := range a.spaOriginAllowlist {
-		if strings.HasPrefix(redirectURL, origin) {
+	parsed, err := url.Parse(redirectURL)
+	if err != nil {
+		return false
+	}
+	// Relative redirects (no host) are always safe — same origin.
+	if parsed.Host == "" {
+		return true
+	}
+	for _, allowed := range a.spaOriginAllowlist {
+		allowedParsed, err := url.Parse(allowed)
+		if err != nil {
+			continue
+		}
+		if parsed.Scheme == allowedParsed.Scheme && parsed.Host == allowedParsed.Host {
 			return true
 		}
 	}

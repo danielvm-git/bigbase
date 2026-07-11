@@ -1,0 +1,13 @@
+story_id: e78s03
+title: Sites & Deploy UI
+status: todo
+bcps: 6
+tasks:
+  - id: 1
+    description: "Write Deploy Token UI lifecycle test"
+    verify: "npx playwright test tests/e2e/deploy-keys-ui.spec.ts -g 'Deploy Token UI'"
+    status: todo
+  - id: 2
+    description: "Write UI Env Vars Editor test"
+    verify: "npx playwright test tests/e2e/sites-ui.spec.ts -g 'Env Vars'"
+    status: todo

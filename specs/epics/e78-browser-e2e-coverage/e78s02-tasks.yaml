@@ -1,0 +1,13 @@
+story_id: e78s02
+title: Dashboard & Navigation
+status: todo
+bcps: 4
+tasks:
+  - id: 1
+    description: "Write dashboard widgets test"
+    verify: "npx playwright test tests/e2e/dashboard-nav.spec.ts -g 'dashboard widgets'"
+    status: todo
+  - id: 2
+    description: "Write sidebar navigation test"
+    verify: "npx playwright test tests/e2e/dashboard-nav.spec.ts -g 'Sidebar navigation'"
+    status: todo

@@ -605,3 +605,47 @@ epics:
   note: "2 stories, 4 BCPs. FIFO log eviction + fix 3 flaky tests."
   file: epics/e75-deploy-hardening.yaml
 
+- id: e74
+  title: "Self-Service Deploy Tokens (UI + REST)"
+  wsjf: 7.3
+  mode: capsule
+  tier: 2
+  status: planned
+  depends_on: []
+  note: "2 stories, 5 BCPs."
+  capsule_dir: epics/e74-self-service-deploy-tokens
+  file: epics/e74-self-service-deploy-tokens/epic.yaml
+
+- id: e76
+  title: "Token Lifecycle API E2E"
+  wsjf: 8.0
+  mode: capsule
+  tier: 1
+  status: planned
+  depends_on: []
+  note: "1 story, 20 BCPs. Full session lifecycle and org key lifecycle."
+  capsule_dir: epics/e76-token-lifecycle-api-e2e
+  file: epics/e76-token-lifecycle-api-e2e/epic.yaml
+
+- id: e77
+  title: "API Surface E2E"
+  wsjf: 8.0
+  mode: capsule
+  tier: 1
+  status: planned
+  depends_on: []
+  note: "1 story, 36 BCPs. All 17 components coverage."
+  capsule_dir: epics/e77-api-surface-e2e
+  file: epics/e77-api-surface-e2e/epic.yaml
+
+- id: e78
+  title: "Browser E2E Test Coverage — All UI Routes"
+  wsjf: 8.0
+  mode: capsule
+  tier: 1
+  status: planned
+  depends_on: [e76, e77]
+  note: "6 stories, 36 BCPs. Comprehensive Playwright browser-level test suite."
+  capsule_dir: epics/e78-browser-e2e-coverage
+  file: epics/e78-browser-e2e-coverage/epic.yaml
+

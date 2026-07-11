@@ -14,55 +14,65 @@
 
 | Scenario ID | Behavior Description | Risk | Test Level | Target File |
 |-------------|---------------------|------|------------|-------------|
-| SC-e75-P0-01 | **Login Page renders** — email/password fields, submit button, toggle to register mode, Google OAuth button (when configured) | P0 | E2E | `tests/e2e/login-ui.spec.ts` |
-| SC-e75-P0-02 | **Login with valid credentials** — fill form, submit, redirect to `/`, cookie set | P0 | E2E | `tests/e2e/login-ui.spec.ts` |
-| SC-e75-P0-03 | **Login with invalid credentials** — show error message, no redirect | P0 | E2E | `tests/e2e/login-ui.spec.ts` |
-| SC-e75-P0-04 | **Register new user** — fill register form, create account, auto-login, redirect to `/` | P0 | E2E | `tests/e2e/login-ui.spec.ts` |
-| SC-e75-P0-05 | **Logout** — click logout sidebar button, redirect to `/login`, cannot access protected routes | P0 | E2E | `tests/e2e/login-ui.spec.ts` |
-| SC-e75-P0-06 | **Dashboard renders** — system status panel, site count, navigation present, footer visible | P0 | E2E | `tests/e2e/dashboard.spec.ts` |
-| SC-e75-P0-07 | **Site Detail Page loads** — tabs render (Deploy Keys, Env Vars, Cache, Domains), deployment history visible | P0 | E2E | `tests/e2e/sites-ui.spec.ts` |
+| `SC-e75-P0-01` | **Login Page renders** — email/password fields, submit button, toggle to register mode, Google OAuth button (when configured) | P0 | E2E | `tests/e2e/login-ui.spec.ts` |
+| `SC-e75-P0-02` | **Login with valid credentials** — fill form, submit, redirect to `/`, cookie set | P0 | E2E | `tests/e2e/login-ui.spec.ts` |
+| `SC-e75-P0-03` | **Login with invalid credentials** — show error message, no redirect | P0 | E2E | `tests/e2e/login-ui.spec.ts` |
+| `SC-e75-P0-04` | **Register new user** — fill register form, create account, auto-login, redirect to `/` | P0 | E2E | `tests/e2e/login-ui.spec.ts` |
+| `SC-e75-P0-05` | **Logout** — click logout sidebar button, redirect to `/login`, cannot access protected routes | P0 | E2E | `tests/e2e/login-ui.spec.ts` |
+| `SC-e75-P0-06` | **Dashboard renders** — system status panel, site count, navigation present, footer visible | P0 | E2E | `tests/e2e/dashboard.spec.ts` |
+| `SC-e75-P0-07` | **Site Detail Page loads** — tabs render (Deploy Keys, Env Vars, Cache, Domains), deployment history visible | P0 | E2E | `tests/e2e/sites-ui.spec.ts` |
+| `SC-e75-P0-08` | **Data Studio - view schema** — Database tables list correctly loads, tables show respective column schemas | P0 | E2E | `tests/e2e/data-studio.spec.ts` |
+| `SC-e75-P0-09` | **SQL Editor - execute query** — Enter valid `SELECT` query, run execution, verify response rows render in data cells | P0 | E2E | `tests/e2e/sql-editor.spec.ts` |
 
 ### P1 — High (common user flows, regression-prone)
 
 | Scenario ID | Behavior Description | Risk | Test Level | Target File |
 |-------------|---------------------|------|------------|-------------|
-| SC-e75-P1-01 | **Deploy Keys tab — generate key** — open generate modal, fill name, submit, key shown with CopyButton | P1 | E2E | `tests/e2e/deploy-keys-ui.spec.ts` |
-| SC-e75-P1-02 | **Deploy Keys tab — copy ID** — click CopyButton on a key row, clipboard has key_id value | P1 | E2E | `tests/e2e/deploy-keys-ui.spec.ts` |
-| SC-e75-P1-03 | **Deploy Keys tab — revoke key** — click Revoke, confirm in dialog, key disappears from list | P1 | E2E | `tests/e2e/deploy-keys-ui.spec.ts` |
-| SC-e75-P1-04 | **Deploy Keys tab — revoke error displayed** — API failure shows error in modal, list not changed | P1 | E2E | `tests/e2e/deploy-keys-ui.spec.ts` |
-| SC-e75-P1-05 | **Create Site wizard — step through** — repo selection, config, deploy, success state | P1 | E2E | `tests/e2e/sites-ui.spec.ts` |
-| SC-e75-P1-06 | **Sidebar navigation — all routes accessible** — click each nav item, verify page renders without 404 | P1 | E2E | `tests/e2e/navigation.spec.ts` |
-| SC-e75-P1-07 | **Sites list page** — shows sites cards, click navigates to detail | P1 | E2E | `tests/e2e/sites-ui.spec.ts` |
-| SC-e75-P1-08 | **Password reset flow** — "Forgot password?" link, enter email, "Email sent" confirmation | P1 | E2E | `tests/e2e/login-ui.spec.ts` |
-| SC-e75-P1-09 | **Theme toggle** — click dark/light toggle in sidebar footer, theme persists across navigation | P1 | E2E | `tests/e2e/navigation.spec.ts` |
-| SC-e75-P1-10 | **Auth guard** — unauthenticated user redirected to `/login` when accessing protected route | P1 | Integration | `ui/src/components/AppShell.test.tsx` |
+| `SC-e75-P1-01` | **Deploy Keys tab — generate key** — open generate modal, fill name, submit, key shown with CopyButton | P1 | E2E | `tests/e2e/deploy-keys-ui.spec.ts` |
+| `SC-e75-P1-02` | **Deploy Keys tab — copy ID** — click CopyButton on a key row, clipboard has key_id value | P1 | E2E | `tests/e2e/deploy-keys-ui.spec.ts` |
+| `SC-e75-P1-03` | **Deploy Keys tab — revoke key** — click Revoke, confirm in dialog, key disappears from list | P1 | E2E | `tests/e2e/deploy-keys-ui.spec.ts` |
+| `SC-e75-P1-04` | **Deploy Keys tab — revoke error displayed** — API failure shows error in modal, list not changed | P1 | E2E | `tests/e2e/deploy-keys-ui.spec.ts` |
+| `SC-e75-P1-05` | **Create Site wizard — step through** — repo selection, config, deploy, success state | P1 | E2E | `tests/e2e/sites-ui.spec.ts` |
+| `SC-e75-P1-06` | **Sidebar navigation — all routes accessible** — click each nav item, verify page renders without 404 | P1 | E2E | `tests/e2e/navigation.spec.ts` |
+| `SC-e75-P1-07` | **Sites list page** — shows sites cards, click navigates to detail | P1 | E2E | `tests/e2e/sites-ui.spec.ts` |
+| `SC-e75-P1-08` | **Password reset flow** — "Forgot password?" link, enter email, "Email sent" confirmation | P1 | E2E | `tests/e2e/login-ui.spec.ts` |
+| `SC-e75-P1-09` | **Theme toggle** — click dark/light toggle in sidebar footer, theme persists across navigation | P1 | E2E | `tests/e2e/navigation.spec.ts` |
+| `SC-e75-P1-10` | **Auth guard** — unauthenticated user redirected to `/login` when accessing protected route | P1 | Integration | `ui/src/components/AppShell.test.tsx` |
+| `SC-e75-P1-11` | **Functions - save & run code** — Edit function body, save changes, click run execution, confirm console log output | P1 | E2E | `tests/e2e/functions-ui.spec.ts` |
+| `SC-e75-P1-12` | **Settings - change password** — Fill change password form fields, submit, confirm notification success toast | P1 | E2E | `tests/e2e/settings-ui.spec.ts` |
+| `SC-e75-P1-13` | **Settings - update workspace name** — Input new workspace name, save, verify sidebar updates dynamically | P1 | E2E | `tests/e2e/settings-ui.spec.ts` |
+| `SC-e75-P1-14` | **Deploy - stream build logs** — Verify WebSocket log lines append dynamically to page panel on deployment run | P1 | E2E | `tests/e2e/sites-ui.spec.ts` |
 
 ### P2 — Medium (secondary features)
 
 | Scenario ID | Behavior Description | Risk | Test Level | Target File |
 |-------------|---------------------|------|------------|-------------|
-| SC-e75-P2-01 | **Storage page — upload file** | P2 | E2E | `tests/e2e/storage-ui.spec.ts` |
-| SC-e75-P2-02 | **Storage page — delete file** | P2 | E2E | `tests/e2e/storage-ui.spec.ts` |
-| SC-e75-P2-03 | **Functions page — list and filter** | P2 | E2E | `tests/e2e/functions-ui.spec.ts` |
-| SC-e75-P2-04 | **Function Detail page — view logs** | P2 | E2E | `tests/e2e/functions-ui.spec.ts` |
-| SC-e75-P2-05 | **Messaging page — create template** | P2 | E2E | `tests/e2e/messaging-ui.spec.ts` |
-| SC-e75-P2-06 | **Settings page — renders correctly** | P2 | E2E | `tests/e2e/settings-ui.spec.ts` |
-| SC-e75-P2-07 | **CI/CD page — pipeline list renders** | P2 | E2E | `tests/e2e/cici-ui.spec.ts` |
-| SC-e75-P2-08 | **Monitoring page — metrics load** | P2 | E2E | `tests/e2e/monitoring-ui.spec.ts` |
-| SC-e75-P2-09 | **404 page — unknown route** — navigating to `/nonexistent` shows NotFoundPage | P2 | E2E | `tests/e2e/navigation.spec.ts` |
-| SC-e75-P2-10 | **Users page — list renders with data** | P2 | E2E | `tests/e2e/users-ui.spec.ts` |
+| `SC-e75-P2-01` | **Storage page — upload file** — Drop a file, confirm list updates with file meta and thumbnails | P2 | E2E | `tests/e2e/storage-ui.spec.ts` |
+| `SC-e75-P2-02` | **Storage page — delete file** — Click delete button, confirm removal, item is pulled from file index | P2 | E2E | `tests/e2e/storage-ui.spec.ts` |
+| `SC-e75-P2-03` | **Functions page — list and filter** | P2 | E2E | `tests/e2e/functions-ui.spec.ts` |
+| `SC-e75-P2-04` | **Function Detail page — view logs** | P2 | E2E | `tests/e2e/functions-ui.spec.ts` |
+| `SC-e75-P2-05` | **Messaging page — create template** | P2 | E2E | `tests/e2e/messaging-ui.spec.ts` |
+| `SC-e75-P2-06` | **Settings page — renders correctly** | P2 | E2E | `tests/e2e/settings-ui.spec.ts` |
+| `SC-e75-P2-07` | **CI/CD page — pipeline list renders** | P2 | E2E | `tests/e2e/cici-ui.spec.ts` |
+| `SC-e75-P2-08` | **Monitoring page — metrics load** | P2 | E2E | `tests/e2e/monitoring-ui.spec.ts` |
+| `SC-e75-P2-09` | **404 page — unknown route** — navigating to `/nonexistent` shows NotFoundPage | P2 | E2E | `tests/e2e/navigation.spec.ts` |
+| `SC-e75-P2-10` | **Users page — list renders with data** | P2 | E2E | `tests/e2e/users-ui.spec.ts` |
+| `SC-e75-P2-11` | **Data Studio - add table record** — Click "Add Row", fill input fields, save, record matches in database | P2 | E2E | `tests/e2e/data-studio.spec.ts` |
+| `SC-e75-P2-12` | **SQL Editor - invalid query** — Execute malformed query, check database syntax error displays in error panel | P2 | E2E | `tests/e2e/sql-editor.spec.ts` |
+| `SC-e75-P2-13` | **Storage - file download** — Click download button, verify downloaded file matches schema/meta | P2 | E2E | `tests/e2e/storage-ui.spec.ts` |
 
 ### P3 — Low (edge cases, states)
 
 | Scenario ID | Behavior Description | Risk | Test Level | Target File |
 |-------------|---------------------|------|------------|-------------|
-| SC-e75-P3-01 | **Empty states** — pages with no data display EmptyState component (e.g., no sites, no deploy keys) | P3 | Integration | `ui/src/components/EmptyState.test.tsx` |
-| SC-e75-P3-02 | **API error displays error message** — network failure shows error UI, not blank page | P3 | Integration | `ui/src/components/Alert.test.tsx` |
-| SC-e75-P3-03 | **Loading skeleton** — pages show skeleton/loading state while data loads | P3 | Integration | `ui/src/components/SkeletonCard.test.tsx` |
-| SC-e75-P3-04 | **Realtime page — connection status** | P3 | E2E | `tests/e2e/realtime-ui.spec.ts` |
-| SC-e75-P3-05 | **Events page — event list renders** | P3 | E2E | `tests/e2e/events-ui.spec.ts` |
-| SC-e75-P3-06 | **Git Repos page — list renders** | P3 | E2E | `tests/e2e/repos-ui.spec.ts` |
-| SC-e75-P3-07 | **Forge page — issues/kanban renders** | P3 | E2E | `tests/e2e/forge-ui.spec.ts` |
+| `SC-e75-P3-01` | **Empty states** — pages with no data display EmptyState component (e.g., no sites, no deploy keys) | P3 | Integration | `ui/src/components/EmptyState.test.tsx` |
+| `SC-e75-P3-02` | **API error displays error message** — network failure shows error UI, not blank page | P3 | Integration | `ui/src/components/Alert.test.tsx` |
+| `SC-e75-P3-03` | **Loading skeleton** — pages show skeleton/loading state while data loads | P3 | Integration | `ui/src/components/SkeletonCard.test.tsx` |
+| `SC-e75-P3-04` | **Realtime page — connection status** | P3 | E2E | `tests/e2e/realtime-ui.spec.ts` |
+| `SC-e75-P3-05` | **Events page — event list renders** | P3 | E2E | `tests/e2e/events-ui.spec.ts` |
+| `SC-e75-P3-06` | **Git Repos page — list renders** | P3 | E2E | `tests/e2e/repos-ui.spec.ts` |
+| `SC-e75-P3-07` | **Forge page — issues/kanban renders** | P3 | E2E | `tests/e2e/forge-ui.spec.ts` |
+| `SC-e75-P3-08` | **Dashboard - Onboarding checklist** — Interact with checklist items, status updates dynamically | P3 | E2E | `tests/e2e/dashboard.spec.ts` |
 
 ---
 
@@ -87,6 +97,7 @@ export async function createSiteWithKeys(request: APIRequestContext, token: stri
   `go run . serve --port 9999 --db /tmp/bigbase-e2e.db`
 - Each spec file uses unique email (`e2e-${Date.now()}@test.com`) to avoid collisions
 - **Isolation:** No shared state between test files — each file registers its own user
+- **Schema Pre-population**: SQL tests seed transient schema tables before data studio loads.
 
 ### Network intercepts (for integration tests)
 - MSW handlers in `ui/src/mocks/` for vitest integration tests
@@ -116,6 +127,8 @@ Create shared page objects for reuse across tests:
 | `SitesListPage` | `tests/e2e/pages/sites.page.ts` | `goto()`, `clickSite(name)`, `getSiteCount()` |
 | `SiteDetailPage` | `tests/e2e/pages/site-detail.page.ts` | `goto(siteId)`, `activateTab(name)`, `getActiveTab()` |
 | `DeployKeysTab` | `tests/e2e/pages/deploy-keys-tab.page.ts` | `generateKey(name)`, `copyKeyId(index)`, `revokeKey(index)`, `getKeys()` |
+| `DataStudioPage`| `tests/e2e/pages/data-studio.page.ts` | `goto()`, `selectTable(name)`, `addRow(fields)`, `getRows()` |
+| `SqlEditorPage` | `tests/e2e/pages/sql-editor.page.ts`  | `goto()`, `runQuery(query)`, `getResults()` |
 
 ---
 
@@ -147,8 +160,9 @@ Create shared page objects for reuse across tests:
 |-------|-----------|--------|-------------|
 | **e75s01** — Login E2E | SC-P0-01–05, SC-P1-08 | 3 BCPs | Auth fixture |
 | **e75s02** — Navigation & Shell | SC-P0-06, SC-P1-06/09, SC-P2-09 | 2 BCPs | Auth fixture |
-| **e75s03** — Sites & Deploy Keys | SC-P0-07, SC-P1-01–05/07 | 4 BCPs | Site fixture |
-| **e75s04** — Secondary pages | SC-P2-01–10 | 4 BCPs | Auth fixture |
-| **e75s05** — Edge cases & hardening | SC-P3-01–07 | 2 BCPs | All fixtures |
+| **e75s03** — Sites & Deploy Keys | SC-P0-07, SC-P1-01–04, SC-P1-14 | 4 BCPs | Site fixture |
+| **e75s04** — Data Studio & SQL | SC-P0-08–09, SC-P2-11–12 | 3 BCPs | Auth fixture |
+| **e75s05** — Secondary pages & Settings | SC-P2-01–08, SC-P2-10, SC-P1-11–13, SC-P2-13 | 4 BCPs | Auth fixture |
+| **e75s06** — Edge cases & hardening | SC-P3-01–08 | 2 BCPs | All fixtures |
 
-**Total:** 15 BCPs across 5 stories.
+**Total:** 18 BCPs across 6 stories.

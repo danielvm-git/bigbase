@@ -124,6 +124,35 @@ func TestGoogleCallbackSPARejectedOrigin(t *testing.T) {
 	}
 }
 
+func TestGoogleCallbackSPARejectsSubdomainBypass(t *testing.T) {
+	// CWE-601: strings.HasPrefix("https://trusted.example.com.evil.com", "https://trusted.example.com")
+	// would incorrectly return true. The fix must do proper URL origin comparison.
+	a, h := setupOAuthWithOpts(t, auth.Options{
+		SPAOriginAllowlist: []string{"https://trusted.example.com"},
+	})
+	a.SetGoogleVerifier(&mockGoogleVerifier{user: &auth.GoogleUser{GoogleID: "g-1", Email: "test@example.com"}})
+
+	rawState := "test-state-bypass"
+	spaRedirect := "https://trusted.example.com.evil.com/steal-token"
+	signedState := auth.SignSPAState(rawState, spaRedirect, []byte("test-secret-32-chars!!!"))
+
+	req := httptest.NewRequest("GET", "/api/auth/oauth/google/callback?code=test-code&state="+rawState, nil)
+	req.AddCookie(&http.Cookie{Name: "oauth_state", Value: signedState})
+	rec := httptest.NewRecorder()
+	h.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusFound {
+		t.Fatalf("expected 302, got %d", rec.Code)
+	}
+	// Must fall back to default /admin/, NOT redirect to evil.com.
+	if rec.Header().Get("Location") != "/admin/" {
+		t.Errorf("expected fallback to /admin/ for subdomain bypass, got %q", rec.Header().Get("Location"))
+	}
+	if rec.Header().Get("Set-Cookie") == "" {
+		t.Error("expected Set-Cookie with token for fallback")
+	}
+}
+
 func TestGoogleCallbackDefaultBehavior(t *testing.T) {
 	// No SPAOriginAllowlist configured — should behave as before.
 	a, h := setupOAuthWithOpts(t, auth.Options{})

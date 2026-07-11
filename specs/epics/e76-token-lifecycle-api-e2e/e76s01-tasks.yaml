@@ -1,0 +1,13 @@
+story_id: e76s01
+title: Token Lifecycle E2E Tests
+status: todo
+bcps: 20
+tasks:
+  - id: 1
+    description: "Write full session lifecycle test"
+    verify: "npx playwright test tests/e2e/token-lifecycle.spec.ts -g 'session lifecycle'"
+    status: todo
+  - id: 2
+    description: "Write org API key lifecycle test"
+    verify: "npx playwright test tests/e2e/token-lifecycle.spec.ts -g 'org API key'"
+    status: todo

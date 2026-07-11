@@ -70,3 +70,4 @@ __pycache__/
 
 # Test-generated git repos (must be created in t.TempDir() only)
 repo-*.git
+bigbase_linux

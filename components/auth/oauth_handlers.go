@@ -153,6 +153,7 @@ func (a *Auth) handleGoogleCallback(w http.ResponseWriter, r *http.Request) {
 		Name:     "token",
 		Value:    token,
 		HttpOnly: true,
+		Secure:   true,
 		Path:     "/",
 		MaxAge:   86400,
 	})
@@ -172,6 +173,7 @@ func (a *Auth) handleLogout(w http.ResponseWriter, r *http.Request) {
 		Name:     "token",
 		Value:    "",
 		HttpOnly: true,
+		Secure:   true,
 		Path:     "/",
 		MaxAge:   -1,
 	})

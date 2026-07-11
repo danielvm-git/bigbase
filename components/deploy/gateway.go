@@ -171,6 +171,11 @@ func (d *Deploy) handleDeployByID(w http.ResponseWriter, r *http.Request) {
 	}
 }
 func (d *Deploy) handleDeleteDeployment(w http.ResponseWriter, r *http.Request, id string) {
+	cleanID := filepath.Clean(id)
+	if strings.Contains(cleanID, "..") || strings.Contains(cleanID, "/") {
+		http.Error(w, "invalid id", http.StatusBadRequest)
+		return
+	}
 	var status, url string
 	err := d.db.QueryRowContext(r.Context(),
 		"SELECT status, COALESCE(url,'') FROM deployments WHERE id = ?", id).
@@ -186,7 +191,7 @@ func (d *Deploy) handleDeleteDeployment(w http.ResponseWriter, r *http.Request, 
 
 	d.stopDeployment(id, "replaced")
 
-	_ = os.RemoveAll(filepath.Join(d.buildsDir, id))
+	_ = os.RemoveAll(filepath.Join(d.buildsDir, cleanID))
 	d.deleteDeployLogs(id)
 	_, _ = d.db.ExecContext(r.Context(), "DELETE FROM deployments WHERE id = ?", id)
 

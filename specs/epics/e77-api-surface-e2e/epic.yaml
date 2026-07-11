@@ -1,0 +1,17 @@
+type: epic-shard
+context: quality
+id: e77
+title: "API Surface E2E"
+wsjf: 8.0
+total_bcps: 36
+status: planned
+tier: 1
+depends_on: []
+note: "1 story, 36 BCPs. Remaining API surface (all 17 components) coverage."
+stories:
+  - id: e77s01
+    title: "API Surface E2E Tests"
+    bcps: 36
+    status: pending
+    spec: e77s01-spec.md
+    tasks: e77s01-tasks.yaml

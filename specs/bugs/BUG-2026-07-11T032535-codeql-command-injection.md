@@ -12,7 +12,7 @@ CodeQL detected 3 instances where Go code builds OS commands using user-controll
 Replace raw command construction with `exec.Command` using a fixed command + safe arguments. Use allowlist-based validation for any user-controlled input that must influence the command.
 
 ## Status
-triage
+fixed
 
 ## Source
 seal.github_code_scanning

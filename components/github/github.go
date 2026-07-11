@@ -12,6 +12,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -55,6 +56,8 @@ type GitHub struct {
 }
 
 var _ kernel.Component = (*GitHub)(nil)
+
+var validFullName = regexp.MustCompile(`^[a-zA-Z0-9_.-]+/[a-zA-Z0-9_.-]+$`)
 
 type Options struct {
 	DB             DBer
@@ -307,14 +310,11 @@ func (g *GitHub) handleConnect(w http.ResponseWriter, r *http.Request) {
 }
 
 func (g *GitHub) mirrorRepository(ctx context.Context, fullName, branch string) (string, error) {
+	if !validFullName.MatchString(fullName) {
+		return "", fmt.Errorf("invalid full_name: %q", fullName)
+	}
 	parts := strings.SplitN(fullName, "/", 2)
-	if len(parts) != 2 {
-		return "", fmt.Errorf("invalid full_name")
-	}
-	repoName := strings.ReplaceAll(fullName, "/", "-")
-	if strings.Contains(repoName, "..") {
-		return "", fmt.Errorf("invalid repo name")
-	}
+	repoName := parts[0] + "-" + parts[1]
 
 	var existingID string
 	err := g.db.QueryRowContext(ctx, "SELECT git_repo_id FROM github_repo_links WHERE full_name = ?", fullName).Scan(&existingID)
@@ -343,7 +343,7 @@ func (g *GitHub) mirrorRepository(ctx context.Context, fullName, branch string) 
 	}
 
 	if _, err := os.Stat(repoDir); os.IsNotExist(err) {
-		cmd := exec.CommandContext(ctx, "git", "clone", "--bare", cloneURL, repoDir)
+		cmd := exec.CommandContext(ctx, "git", "clone", "--bare", "--", cloneURL, repoDir)
 		cmd.Stderr = nil
 		if err := cmd.Run(); err != nil {
 			_ = os.RemoveAll(repoDir)
@@ -383,7 +383,7 @@ func (g *GitHub) fetchMirror(ctx context.Context, gitRepoID, fullName string) er
 			}
 		}
 	}
-	cmd := exec.CommandContext(ctx, "git", "fetch", "--prune", remote, "+refs/heads/*:refs/heads/*")
+	cmd := exec.CommandContext(ctx, "git", "fetch", "--prune", "--", remote, "+refs/heads/*:refs/heads/*")
 	cmd.Dir = repoDir
 	return cmd.Run()
 }

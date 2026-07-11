@@ -1,0 +1,9 @@
+story_id: e78s05
+title: Secondary Pages
+status: todo
+bcps: 6
+tasks:
+  - id: 1
+    description: "Write UI Password Reset test"
+    verify: "npx playwright test tests/e2e/settings-ui.spec.ts -g 'Password Reset Form'"
+    status: todo

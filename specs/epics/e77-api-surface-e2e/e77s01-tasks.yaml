@@ -1,0 +1,13 @@
+story_id: e77s01
+title: API Surface E2E Tests
+status: todo
+bcps: 36
+tasks:
+  - id: 1
+    description: "Write org isolation test"
+    verify: "npx playwright test tests/e2e/api-surface.spec.ts -g 'Org Isolation'"
+    status: todo
+  - id: 2
+    description: "Write path traversal guard test"
+    verify: "npx playwright test tests/e2e/api-surface.spec.ts -g 'Path Traversal'"
+    status: todo

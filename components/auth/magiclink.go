@@ -163,6 +163,7 @@ func (a *Auth) handleVerifyMagicLink(w http.ResponseWriter, r *http.Request) {
 		Name:     "token",
 		Value:    jwt,
 		HttpOnly: true,
+		Secure:   true,
 		Path:     "/",
 		MaxAge:   86400,
 	})
