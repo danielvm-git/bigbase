@@ -1,3 +1,10 @@
+## [2.76.11](https://github.com/danielvm-git/bigbase/compare/v2.76.10...v2.76.11) (2026-07-11)
+
+
+### Bug Fixes
+
+* **deploy:** restore GitHub App credentials to .env on deploy ([f82da44](https://github.com/danielvm-git/bigbase/commit/f82da447b46ae9bde40ce50a3d2f149b76a24e40))
+
 ## [2.76.10](https://github.com/danielvm-git/bigbase/compare/v2.76.9...v2.76.10) (2026-07-11)
 
 
