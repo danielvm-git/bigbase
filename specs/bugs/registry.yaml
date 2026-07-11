@@ -1403,3 +1403,82 @@ bugs:
     status: fixed
     source: seal.github_dependabot
     risk_level: low
+
+  # === GHS Code Scanning findings (2026-07-11) ===
+
+  - id: BUG-2026-07-11T032535
+    date: "2026-07-11"
+    severity: 
+    priority: 
+    scope: security
+    summary: ""
+    file: specs/bugs/BUG-2026-07-11T032535-codeql-command-injection.md
+    status: triage
+    source: seal.github_code_scanning
+    risk_level: 
+
+  - id: BUG-2026-07-11T032535
+    date: "2026-07-11"
+    severity: 
+    priority: 
+    scope: security
+    summary: ""
+    file: specs/bugs/BUG-2026-07-11T032535-codeql-sql-injection.md
+    status: triage
+    source: seal.github_code_scanning
+    risk_level: 
+
+  - id: BUG-2026-07-11T032549
+    date: "2026-07-11"
+    severity: 
+    priority: 
+    scope: security
+    summary: ""
+    file: specs/bugs/BUG-2026-07-11T032549-codeql-cookie-secure.md
+    status: triage
+    source: seal.github_code_scanning
+    risk_level: 
+
+  - id: BUG-2026-07-11T032549
+    date: "2026-07-11"
+    severity: 
+    priority: 
+    scope: security
+    summary: ""
+    file: specs/bugs/BUG-2026-07-11T032549-codeql-open-redirect.md
+    status: triage
+    source: seal.github_code_scanning
+    risk_level: 
+
+  - id: BUG-2026-07-11T032549
+    date: "2026-07-11"
+    severity: 
+    priority: 
+    scope: security
+    summary: ""
+    file: specs/bugs/BUG-2026-07-11T032549-codeql-path-traversal.md
+    status: triage
+    source: seal.github_code_scanning
+    risk_level: 
+
+  - id: BUG-2026-07-11T032549
+    date: "2026-07-11"
+    severity: 
+    priority: 
+    scope: security
+    summary: ""
+    file: specs/bugs/BUG-2026-07-11T032549-codeql-weak-crypto.md
+    status: triage
+    source: seal.github_code_scanning
+    risk_level: 
+
+  - id: BUG-2026-07-11T032549
+    date: "2026-07-11"
+    severity: 
+    priority: 
+    scope: security
+    summary: ""
+    file: specs/bugs/BUG-2026-07-11T032549-codeql-zip-slip.md
+    status: triage
+    source: seal.github_code_scanning
+    risk_level: 
