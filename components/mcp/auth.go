@@ -1,3 +1,7 @@
+// story: e71s01
+// story: e71s02
+// story: e71s03
+// story: e71s04
 package mcp
 
 import (
@@ -45,7 +49,6 @@ var writeTools = map[string]struct{}{
 	"create_site":              {},
 	"deploy_site":              {},
 	"provision_ci_credentials": {},
-	"list_site_keys":           {},
 	"revoke_site_key":          {},
 }
 
