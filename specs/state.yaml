@@ -10,7 +10,7 @@ release:
   last_tag: v2.76.10
   last_publish: '2026-07-10'
   ci_verified: true
-  ci_verified_at: '2026-07-10T23:40:00-03:00'
+  ci_verified_at: '2026-07-11T00:55:00-03:00'
 metrics:
   session_start: '2026-07-10T10:56:00-03:00'
   session_end: null
@@ -33,9 +33,9 @@ bug_cycle:
   bug_file: null
 git:
   branch: main
-  hash: 07c2474e
+  hash: 186b7713
   worktree: null
-  ci_status: running
+  ci_status: success
 handoff:
   last_step_completed: "release-branch — e75 pushed to main, PR #90 closed, CI running"
   open_decisions: []
