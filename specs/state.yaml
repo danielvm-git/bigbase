@@ -32,13 +32,13 @@ bug_cycle:
   completed_steps: []
   bug_file: null
 git:
-  branch: e75-deploy-hardening
-  hash: f82da447
+  branch: main
+  hash: 07c2474e
   worktree: null
-  ci_status: success
+  ci_status: running
 handoff:
-  last_step_completed: "release-branch — 17 bugs fixed, pushed, CI all green, release deployed"
+  last_step_completed: "release-branch — e75 pushed to main, PR #90 closed, CI running"
   open_decisions: []
   next_skill: ""
-  summary: "Bulk bug fix session: deploy keys prefix+security, dep vulns (7 critical), DAST CSP/Cache-Control, test cleanup, comment stripping. All 17 bugs fixed. CI: Release & Deploy, CodeQL, CI, Go modules update all success."
-  context: "Phase 1-5 complete. Commit 3dca1ba8 deployed. semantic-release auto-tagged new version."
+  summary: "Epic e75 complete: FIFO log eviction + 3 flaky test fixes (256/256 tests, lint+v clean). Pushed to main at 07c2474e. CI in progress."
+  context: "Release v2.76.11 pushed. e75 done. CI running for e75 commit on main."
