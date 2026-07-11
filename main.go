@@ -513,6 +513,11 @@ func startProxy() {
 	}
 	p.Handle("GET /api/auth/users", mComp.Middleware(authComp.ProtectedHandler()).ServeHTTP)
 	p.Handle("GET /api/auth/me", mComp.Middleware(authComp.ProtectedHandler()).ServeHTTP)
+	p.Handle("PATCH /api/auth/me", mComp.Middleware(authComp.ProtectedHandler()).ServeHTTP)
+	p.Handle("GET /api/auth/me/identities", mComp.Middleware(authComp.ProtectedHandler()).ServeHTTP)
+	p.Handle("POST /api/auth/me/identities", mComp.Middleware(authComp.ProtectedHandler()).ServeHTTP)
+	p.Handle("DELETE /api/auth/me/identities/{provider}", mComp.Middleware(authComp.ProtectedHandler()).ServeHTTP)
+	p.Handle("POST /api/auth/logout-all", mComp.Middleware(authComp.ProtectedHandler()).ServeHTTP)
 	p.Handle("DELETE /api/auth/users/", mComp.Middleware(authComp.ProtectedHandler()).ServeHTTP)
 	// Org routes
 	p.Handle("POST /api/orgs", mComp.Middleware(authComp.ProtectedHandler()).ServeHTTP)
@@ -520,6 +525,12 @@ func startProxy() {
 	p.Handle("GET /api/orgs/", mComp.Middleware(authComp.ProtectedHandler()).ServeHTTP)
 	p.Handle("PATCH /api/orgs/", mComp.Middleware(authComp.ProtectedHandler()).ServeHTTP)
 	p.Handle("DELETE /api/orgs/", mComp.Middleware(authComp.ProtectedHandler()).ServeHTTP)
+	p.Handle("POST /api/orgs/{id}/api-keys", mComp.Middleware(authComp.ProtectedHandler()).ServeHTTP)
+	p.Handle("GET /api/orgs/{id}/api-keys", mComp.Middleware(authComp.ProtectedHandler()).ServeHTTP)
+	p.Handle("DELETE /api/orgs/{id}/api-keys/{keyID}", mComp.Middleware(authComp.ProtectedHandler()).ServeHTTP)
+	p.Handle("POST /api/orgs/{id}/invites", mComp.Middleware(authComp.ProtectedHandler()).ServeHTTP)
+	p.Handle("POST /api/orgs/{id}/invites/{token}/accept", mComp.Middleware(authComp.ProtectedHandler()).ServeHTTP)
+	p.Handle("GET /api/orgs/{id}/members", mComp.Middleware(authComp.ProtectedHandler()).ServeHTTP)
 	// Site deploy-key routes
 	p.Handle("POST /api/sites/{id}/deploy-keys", mComp.Middleware(authComp.ProtectedHandler()).ServeHTTP)
 	p.Handle("GET /api/sites/{id}/deploy-keys", mComp.Middleware(authComp.ProtectedHandler()).ServeHTTP)
