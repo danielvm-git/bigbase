@@ -1,9 +1,21 @@
 story_id: e78s06
-title: DevOps Pages
+title: DevOps, Monitoring & Forge
 status: todo
-bcps: 10
+bcps: 18
 tasks:
   - id: 1
-    description: "Write Monitoring log search test"
-    verify: "npx playwright test tests/e2e/monitoring-ui.spec.ts -g 'Monitoring log search'"
+    description: "Write E2E test for Monitoring Hardware & Alerts (e14, e25)"
+    verify: "npx playwright test tests/e2e/monitoring-ui.spec.ts -g 'Hardware & Alerts'"
+    status: todo
+  - id: 2
+    description: "Write E2E test for Realtime & Events (e11, e17, e22)"
+    verify: "npx playwright test tests/e2e/events-ui.spec.ts -g 'Realtime & Events'"
+    status: todo
+  - id: 3
+    description: "Write E2E test for Forge Kanban & Wiki (e08)"
+    verify: "npx playwright test tests/e2e/forge-ui.spec.ts -g 'Forge Kanban & Wiki'"
+    status: todo
+  - id: 4
+    description: "Write E2E test for Git Repo Management (e07)"
+    verify: "npx playwright test tests/e2e/repos-ui.spec.ts -g 'Repo Management'"
     status: todo

@@ -1,13 +1,21 @@
 story_id: e78s03
-title: Sites & Deploy UI
+title: Sites, Deploy & CI/CD
 status: todo
-bcps: 6
+bcps: 25
 tasks:
   - id: 1
-    description: "Write Deploy Token UI lifecycle test"
-    verify: "npx playwright test tests/e2e/deploy-keys-ui.spec.ts -g 'Deploy Token UI'"
+    description: "Write E2E test for Create Site via GitHub (e13, e15)"
+    verify: "npx playwright test tests/e2e/deploy-ui.spec.ts -g 'Create Site'"
     status: todo
   - id: 2
-    description: "Write UI Env Vars Editor test"
-    verify: "npx playwright test tests/e2e/sites-ui.spec.ts -g 'Env Vars'"
+    description: "Write E2E test for Site Detail Tabs (Manifest, Env Vars, Cache) (e40, e41, e42)"
+    verify: "npx playwright test tests/e2e/deploy-ui.spec.ts -g 'Site Detail Tabs'"
+    status: todo
+  - id: 3
+    description: "Write E2E test for Site Actions (Rollback, Drain, Delete) (e36, e44, e45)"
+    verify: "npx playwright test tests/e2e/deploy-ui.spec.ts -g 'Site Actions'"
+    status: todo
+  - id: 4
+    description: "Write E2E test for CI/CD Pipeline & Streaming Logs (e09, e17, e26, e27, e39)"
+    verify: "npx playwright test tests/e2e/cici-ui.spec.ts -g 'CI/CD Logs and DAG'"
     status: todo

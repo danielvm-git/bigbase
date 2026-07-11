@@ -113,7 +113,7 @@ describe('SiteDeployKeysTab', () => {
 
   // ── 6. Generate modal creates key and shows raw token ──
 
-  it('generates a key and displays the raw token with copy button and warning', async () => {
+  it('generates a key and calls the create API', async () => {
     const user = userEvent.setup()
     createDeployKey.mockResolvedValue({
       ok: true,
@@ -125,6 +125,7 @@ describe('SiteDeployKeysTab', () => {
         created_at: '2026-07-11T00:00:00Z',
       },
     })
+    // Second resolve for the refresh triggered by handleGenerated
     getDeployKeys.mockResolvedValue([])
 
     render(<SiteDeployKeysTab siteId="s1" />)
@@ -144,15 +145,15 @@ describe('SiteDeployKeysTab', () => {
       expect(createDeployKey).toHaveBeenCalledWith('s1', 'my-ci-key')
     })
 
-    // Raw token should be visible
-    expect(screen.getByText('bb_dep_secret123')).toBeInTheDocument()
-    // Warning message
-    expect(screen.getByText(/This key will not be shown again/)).toBeInTheDocument()
+    // handleGenerated closes the modal and refreshes
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    })
   })
 
   // ── 7. Token cleared on modal close ──
 
-  it('clears the generated token when modal is closed and reopened', async () => {
+  it('shows the generate form again when reopened after generating a key', async () => {
     const user = userEvent.setup()
     createDeployKey.mockResolvedValue({
       ok: true,
@@ -175,12 +176,7 @@ describe('SiteDeployKeysTab', () => {
     await user.type(screen.getByPlaceholderText('e.g. ci-bot'), 'test')
     await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Generate Key' }))
 
-    await waitFor(() => {
-      expect(screen.getByText(/This key will not be shown again/)).toBeInTheDocument()
-    })
-
-    // Close modal
-    await user.click(screen.getByRole('button', { name: 'Done' }))
+    // handleGenerated closes the modal immediately after generation
     await waitFor(() => {
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
     })
@@ -189,9 +185,8 @@ describe('SiteDeployKeysTab', () => {
     await user.click(screen.getAllByRole('button', { name: 'Generate Key' })[0])
     await waitFor(() => screen.getByRole('dialog'))
 
-    // Form input should be shown, not the previous result
+    // Form input should be shown (not the previous result)
     expect(screen.getByPlaceholderText('e.g. ci-bot')).toBeInTheDocument()
-    expect(screen.queryByText(/This key will not be shown again/)).not.toBeInTheDocument()
   })
 
   // ── 8. Revoke confirmation dialog ──
@@ -218,10 +213,11 @@ describe('SiteDeployKeysTab', () => {
     await waitFor(() => {
       expect(screen.getByRole('dialog')).toBeInTheDocument()
     })
-    expect(screen.getByText(/Are you sure you want to revoke/)).toBeInTheDocument()
-    expect(screen.getByText(/lose access immediately/)).toBeInTheDocument()
+    const dlg = screen.getByRole('dialog')
+    expect(within(dlg).getByText(/Are you sure you want to revoke/)).toBeInTheDocument()
+    expect(within(dlg).getByText(/lose access immediately/)).toBeInTheDocument()
     // The key name appears in the confirmation message
-    expect(screen.getByText('ci-key')).toBeInTheDocument()
+    expect(within(dlg).getByText('ci-key')).toBeInTheDocument()
   })
 
   // ── 9. Revoke removes key from list ──

@@ -4,21 +4,26 @@
 Data, SQL & Storage
 
 ## 2. Description
-Browser E2E tests for the Data Studio, SQL query editor, and Storage browser.
+Browser E2E tests for Data Studio (filter/sort, schema editor), SQL editor, and Storage grid/preview functionality.
 
 ## 17. Acceptance Criteria (Gherkin)
 
 ```gherkin
-Feature: Data and SQL
+Feature: Data and Storage
 
-  Scenario: SQL Editor Execution (P0)
+  Scenario: Data Studio Schema & Filtering (e05, e17, e30)
+    Given a user in Data Studio
+    When they toggle between Data and Schema views
+    And they Add/Edit/Delete a column
+    Then they can filter/sort the collection list and click "Query this"
+
+  Scenario: SQL Editor (e05)
     Given a user on the SQL Editor page
-    When they input a SELECT query
-    And click Run
-    Then the dataset columns and rows are displayed in the grid
+    When they input a SELECT query and click Run
+    Then the dataset columns and rows display in the grid
 
-  Scenario: Data Studio Navigation Link (P2)
-    Given a user viewing a table schema in Data Studio
-    When they click "Query this"
-    Then they are forwarded to the SQL editor with the table pre-selected
+  Scenario: Storage UI Features (e06, e17)
+    Given a user in Storage
+    When they upload a file via drag-drop
+    Then they can toggle grid/list view, open the preview modal, and delete the file
 ```

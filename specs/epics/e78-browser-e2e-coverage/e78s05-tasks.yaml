@@ -1,9 +1,17 @@
 story_id: e78s05
-title: Secondary Pages
+title: Functions, Messaging & Users
 status: todo
-bcps: 6
+bcps: 15
 tasks:
   - id: 1
-    description: "Write UI Password Reset test"
-    verify: "npx playwright test tests/e2e/settings-ui.spec.ts -g 'Password Reset Form'"
+    description: "Write E2E test for Functions CRUD & Logs (e10, e17)"
+    verify: "npx playwright test tests/e2e/functions-ui.spec.ts -g 'Functions CRUD'"
+    status: todo
+  - id: 2
+    description: "Write E2E test for Messaging Template Editor (e12, e17)"
+    verify: "npx playwright test tests/e2e/messaging-ui.spec.ts -g 'Messaging Editor'"
+    status: todo
+  - id: 3
+    description: "Write E2E test for Users Management (e17)"
+    verify: "npx playwright test tests/e2e/users-ui.spec.ts -g 'Users Management'"
     status: todo

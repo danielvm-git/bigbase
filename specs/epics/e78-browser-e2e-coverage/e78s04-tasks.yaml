@@ -1,13 +1,17 @@
 story_id: e78s04
 title: Data, SQL & Storage
 status: todo
-bcps: 6
+bcps: 15
 tasks:
   - id: 1
-    description: "Write SQL Editor Execution test"
-    verify: "npx playwright test tests/e2e/sql-editor.spec.ts -g 'SQL Editor Execution'"
+    description: "Write E2E test for Data Studio Schema & Filtering (e05, e17, e30)"
+    verify: "npx playwright test tests/e2e/data-ui.spec.ts -g 'Data Studio Schema'"
     status: todo
   - id: 2
-    description: "Write Data Studio Navigation Link test"
-    verify: "npx playwright test tests/e2e/data-studio.spec.ts -g 'Query this'"
+    description: "Write E2E test for SQL Editor Execution (e05)"
+    verify: "npx playwright test tests/e2e/data-ui.spec.ts -g 'SQL Editor'"
+    status: todo
+  - id: 3
+    description: "Write E2E test for Storage UI (e06, e17)"
+    verify: "npx playwright test tests/e2e/storage-ui.spec.ts -g 'Storage UI'"
     status: todo

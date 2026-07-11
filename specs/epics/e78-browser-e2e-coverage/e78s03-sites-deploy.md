@@ -1,28 +1,33 @@
-# e78s03: Sites & Deploy UI
+# e78s03: Sites, Deploy & CI/CD
 
 ## 1. Title
-Sites & Deploy UI
+Sites, Deploy & CI/CD
 
 ## 2. Description
-Browser E2E tests for the sites listing, deploy token modal, environment variables editor, and site detail views.
+Browser E2E tests covering Site deployment lifecycle (GitHub connect, rollback, drain), Site Detail tabs (Manifest, Env Vars, Cache, Logs), and CI/CD pipelines/DAG.
 
 ## 17. Acceptance Criteria (Gherkin)
 
 ```gherkin
 Feature: Sites and Deploy
 
-  Scenario: Deploy Token UI lifecycle (P0)
-    Given a user on a site detail page
-    When they open the deploy keys tab
-    And create a new key
-    Then the key value is displayed once
-    And the new key appears in the list
-    When they click revoke
-    Then the key is removed from the list
+  Scenario: Create Site via GitHub (e13, e15)
+    Given a user on /deploy/new
+    When they complete the GitHub connect flow
+    And trigger a one-click deploy with app-type detection
+    Then the site begins deploying
 
-  Scenario: UI Env Vars Editor (P1)
-    Given a user on the site env vars tab
-    When they add a new key and value
-    And save
-    Then the variables are saved and displayed
+  Scenario: Site Detail Tabs & Actions (e36, e40, e41, e42, e44, e45)
+    Given a user on a Site Detail page
+    When they navigate through Manifest, Env Vars, and Cache tabs
+    Then they can inline-edit bigbase.yaml, bulk import .env, and clear cache
+    When they trigger a Rollback or Zero-downtime drain
+    Then the status timeline reflects the pulsing drain state
+
+  Scenario: CI/CD Pipeline & Streaming Logs (e09, e17, e26, e27, e39)
+    Given a deploying site
+    Then the TerminalLogViewer shows streaming build logs (WebSocket)
+    And they can filter Request logs
+    When they view the CI/CD pipeline history
+    Then the workflow DAG and StreamLog components render correctly
 ```

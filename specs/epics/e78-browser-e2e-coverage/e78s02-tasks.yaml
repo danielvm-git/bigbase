@@ -1,13 +1,21 @@
 story_id: e78s02
-title: Dashboard & Navigation
+title: Dashboard, Layout & Settings
 status: todo
-bcps: 4
+bcps: 20
 tasks:
   - id: 1
-    description: "Write dashboard widgets test"
-    verify: "npx playwright test tests/e2e/dashboard-nav.spec.ts -g 'dashboard widgets'"
+    description: "Write E2E test for Responsive Sidebar & Theming (e17, e51)"
+    verify: "npx playwright test tests/e2e/dashboard-ui.spec.ts -g 'Sidebar & Theming'"
     status: todo
   - id: 2
-    description: "Write sidebar navigation test"
-    verify: "npx playwright test tests/e2e/dashboard-nav.spec.ts -g 'Sidebar navigation'"
+    description: "Write E2E test for DX Onboarding & Tutorial (e22)"
+    verify: "npx playwright test tests/e2e/dashboard-ui.spec.ts -g 'DX Onboarding'"
+    status: todo
+  - id: 3
+    description: "Write E2E test for Dashboard Metrics & Org Usage (e23)"
+    verify: "npx playwright test tests/e2e/dashboard-ui.spec.ts -g 'Metrics & Org Usage'"
+    status: todo
+  - id: 4
+    description: "Write E2E test for Settings Tabs (e17)"
+    verify: "npx playwright test tests/e2e/settings-ui.spec.ts -g 'Settings Tabs'"
     status: todo

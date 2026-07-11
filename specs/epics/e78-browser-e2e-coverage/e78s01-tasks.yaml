@@ -1,13 +1,17 @@
 story_id: e78s01
 title: Login & Authentication UI
 status: todo
-bcps: 4
+bcps: 12
 tasks:
   - id: 1
-    description: "Write successful login test"
-    verify: "npx playwright test tests/e2e/login-ui.spec.ts -g 'Successful Login'"
+    description: "Write E2E test for Login and Registration (e04)"
+    verify: "npx playwright test tests/e2e/auth-ui.spec.ts -g 'Login and Registration'"
     status: todo
   - id: 2
-    description: "Write registration form test"
-    verify: "npx playwright test tests/e2e/login-ui.spec.ts -g 'Registration'"
+    description: "Write E2E test for Password Reset UI (e17)"
+    verify: "npx playwright test tests/e2e/auth-ui.spec.ts -g 'Password Reset UI'"
+    status: todo
+  - id: 3
+    description: "Write E2E test for /admin/auth Framework Previews (e34)"
+    verify: "npx playwright test tests/e2e/auth-ui.spec.ts -g 'Framework Previews'"
     status: todo
