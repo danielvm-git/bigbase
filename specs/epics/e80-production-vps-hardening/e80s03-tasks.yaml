@@ -1,0 +1,29 @@
+type: tasks
+story: e80s03
+title: "Contabo VPS operations — snapshots and API monitoring"
+bcps: 2
+tasks:
+  - id: e80s03t1
+    desc: "Install cntb CLI and configure Contabo API credentials"
+    notes: |
+      Install from https://github.com/contabo/cntb
+      Configure with: cntb config set-credentials
+        --oauth2-clientid=<ClientId>
+        --oauth2-client-secret=<ClientSecret>
+        --oauth2-user=<API User>
+        --oauth2-password='<API Password>'
+      Verify: cntb get instances shows the BigBase VPS.
+    verify: "cntb get instances 2>&1 | grep -q 'running'"
+    layer: vps
+
+  - id: e80s03t2
+    desc: "Schedule monthly Contabo snapshot via crontab + API script"
+    notes: |
+      Create /opt/bigbase/scripts/contabo-snapshot.sh:
+        - Authenticate via cntb or direct OAuth token
+        - POST /v1/compute/instances/{id}/snapshots
+        - Log result to /var/log/bigbase/snapshot.log
+      Crontab: 0 4 1 * * /opt/bigbase/scripts/contabo-snapshot.sh
+      Store instance ID in /opt/bigbase/.contabo_instance_id
+    verify: "crontab -l | grep contabo-snapshot && test -x /opt/bigbase/scripts/contabo-snapshot.sh"
+    layer: vps

@@ -54,6 +54,7 @@ Open [http://localhost:8080](http://localhost:8080) for the landing page, or [ht
 - **Messaging**: Email (SMTP), SMS, Push, Webhook, Telegram providers.
 - **Site Hosting**: Deploy web apps from GitHub, custom domains with TLS.
 - **Monitoring**: Metrics (Prometheus), structured JSON logs, alerts, health checks, SSE events.
+- **Production Hardening**: Three-layer security model — Ubuntu OS (UFW + fail2ban + unattended-upgrades), BigBase (systemd + alerts + backups), Contabo VPS (snapshots + health checks). See `.agents/skills/harden-vps/SKILL.md`.
 - **Admin UI**: Embedded React SPA — 8 pages, dark mode, responsive.
 - **MCP Server**: Model Context Protocol (SSE and stdio transports) for AI tool integration.
 

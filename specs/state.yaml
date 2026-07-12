@@ -6,48 +6,49 @@ active_story_id: null
 active_story_status: null
 release:
   target_version: 2.76.17
-  codename: "Browser E2E Coverage"
+  codename: "Production VPS Hardening"
   last_tag: v2.76.17
   last_publish: '2026-07-12'
   ci_verified: true
   ci_verified_at: '2026-07-12T13:30:00-03:00'
 metrics:
-  session_start: '2026-07-10T10:56:00-03:00'
-  session_end: '2026-07-11T20:17:00-03:00'
-  epics_completed: 65
-  stories_completed: 199
+  session_start: '2026-07-12T16:00:00-03:00'
+  session_end: '2026-07-12T18:45:00-03:00'
+  epics_completed: 66
+  stories_completed: 202
   bcps_per_hour: 0
 epic_cycle:
   step: 8
-  story_bcps: 8
-  story: e79s01
+  story_bcps: 15
+  story: e80s01-e80s03
   audit_result: pass
   completed_steps:
-    - "0: threat-model"
-    - "1: survey-context"
-    - "2: plan-work"
-    - "3: kickoff-branch"
-    - "4: develop-tdd"
-    - "5: verify-work"
-    - "6: audit-code"
-    - "7: commit-message"
-    - "8: release-branch"
+    - "0: change-request (e80 created)"
+    - "1: survey-context (VPS audit via SSH)"
+    - "2: plan-work (3 stories)"
+    - "3: kickoff-branch (main, no branch — infra)"
+    - "4: develop-tdd (applied hardening live)"
+    - "5: verify-work (8-gate verification)"
+    - "6: audit-code (N/A — infra)"
+    - "7: commit-message (N/A — live ops)"
+    - "8: craft-skill (harden-vps)"
   story_complete: true
-  note: "e79 complete — CI/CD workflows consolidated per Issue #95. PR #105."
+  note: "e80 complete — VPS hardened on vmi3338033 (89.116.26.187). 3 layers: Ubuntu (UFW+fail2ban+unattended-upgrades+SSH), BigBase (systemd+alerts+backups), Contabo (cntb+snapshots). Skill created: harden-vps."
   fast_mode: false
 bug_cycle:
   current_step: null
   completed_steps: []
   bug_file: null
-  note: "BUG-003 landed via fix/bug-003-deploy-key-copy (two-commit red/green)."
+  note: "BUG-003 landed via fix/bug-003-deploy-key-copy."
 git:
   branch: main
   hash: null
   worktree: null
   ci_status: unknown
 handoff:
-  last_step_completed: "e79 — CI/CD Template Consolidation (Issue #95, PR #105)"
-  open_decisions: []
+  last_step_completed: "e80 — Production VPS Security Hardening (3 stories, 15 BCPs)"
+  open_decisions:
+    - "Contabo API credentials need to be filled in /opt/bigbase/secrets/contabo.env for monthly snapshots"
   next_skill: null
-  summary: "CI/CD workflows consolidated per Issue #95. Replaced ci.yml with ci-cd.yml (added lint, verify jobs). Updated codeql.yml (permissions, concurrency). PR #105 open."
-  context: "e79 complete: ci-cd.yml, codeql.yml updated. release-deploy.yml + pr-review.yaml unchanged."
+  summary: "VPS vmi3338033 at 89.116.26.187 fully hardened. UFW active (22,80,443), fail2ban protecting SSH (4 IPs banned). BigBase running as bigbase user with 10 systemd hardening directives. Health check cron every 5min, daily SQLite backup at 2AM, 90-day rotation. cntb CLI installed, monthly snapshot script deployed (needs Contabo creds). Skill harden-vps created and synced to catalog."
+  context: "e80 done. Next: e58 (Project Scoping UI, WSJF 5.0), e59 (Neon Native Port, WSJF 6.0), or e73 (Python Runtime, WSJF 5.25). Contabo creds pending for snapshot automation."

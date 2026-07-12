@@ -51,6 +51,33 @@ orca terminal wait --terminal <handle> --for tui-idle --timeout-ms 300000 --json
 - **Run `terminal read` before `terminal send`** unless the next input is obvious.
 - **Cursor-based paging for long output:** after the initial tail preview, page from `oldestCursor`, then keep advancing with `nextCursor` while `limited` is true and `nextCursor !== latestCursor`.
 - Terminal handles are runtime-scoped — if Orca restarts or returns `terminal_handle_stale`, reacquire with `terminal list`.
+- **Base64 encoding for scripts:** When sending multi-line scripts to Orca terminals via `--text`, `$VAR`, `$(…)` and `%` get interpreted by the local shell. Encode locally with `base64`, decode remotely: `echo '<b64>' | base64 -d > script.sh`.
+
+## harden-vps — Production VPS Security (LOAD BEFORE VPS work)
+
+**ALWAYS load `.agents/skills/harden-vps/SKILL.md` before SSHing into the production VPS.** The skill contains the three-layer hardening model, gotchas (crontab % escaping, fail2ban missing-log crash, BigBase alerts require SQLite insert), and the 8-gate verification matrix.
+
+### VPS Quick Reference
+- **IP:** 89.116.26.187 (vmi3338033)
+- **User:** root (SSH key required)
+- **Contabo Customer ID:** 15027696
+- **BigBase service:** `systemctl status bigbase`
+- **Health check:** `/opt/bigbase/scripts/healthcheck.sh`
+- **Backups:** `/backup/bigbase-YYYYMMDD.db` (2AM daily, 90-day rotation)
+- **Contabo creds:** `/opt/bigbase/.env` (CONTABO_CLIENT_ID, CONTABO_CLIENT_SECRET, CONTABO_API_USER, CONTABO_API_PASSWORD — deployed via GitHub Actions). Local dev: add to `.envrc`.
+
+### VPS Verification (8 gates)
+```bash
+ufw status|grep -q active||echo FAIL:ufw
+fail2ban-client status sshd>/dev/null 2>&1||echo FAIL:fail2ban
+systemctl is-active unattended-upgrades|grep -q active||echo FAIL:unattended
+sshd -T|grep -q 'permitrootlogin no'||echo FAIL:sshd
+systemctl show bigbase -p NoNewPrivileges|grep -q yes||echo FAIL:systemd
+systemctl is-active bigbase|grep -q active||echo FAIL:bigbase
+sqlite3 /opt/bigbase/data/bigbase.db "SELECT count(*) FROM monitoring_alerts"|grep -q 3||echo FAIL:alerts
+crontab -l|grep -q healthcheck&&crontab -l|grep -q bigbase.db&&crontab -l|grep -q contabo-snapshot||echo FAIL:crontab
+echo ALL 8 GATES PASSED
+```
 
 ## opensrc — Dependency Source Code (READ BEFORE reaching for other tools)
 

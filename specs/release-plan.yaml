@@ -423,6 +423,21 @@ epics:
     Wave 3: e59s02 (DB Branching, complex, only prereq for e65).
   capsule_dir: epics/e59-neon-native-port
   file: epics/e59-neon-native-port/epic.yaml
+- id: e80
+  title: "Production VPS Security Hardening — Contabo"
+  wsjf: 4.8
+  mode: capsule
+  tier: 1
+  status: done
+  depends_on:
+  - e14
+  - e20
+  capsule_dir: epics/e80-production-vps-hardening
+  file: epics/e80-production-vps-hardening/epic.yaml
+  note: |
+    Applied to vmi3338033 (89.116.26.187) on 2026-07-12.
+    3 stories, 15 BCPs. Skill created: harden-vps.
+
 - id: e60
   title: "DX — Route Rename /deploy → /sites"
   wsjf: 4.0

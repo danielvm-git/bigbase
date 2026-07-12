@@ -1,0 +1,81 @@
+type: tasks
+story: e80s01
+title: "Ubuntu OS security hardening"
+bcps: 10
+tasks:
+  - id: e80s01t1
+    desc: "UFW firewall — default deny inbound, allow only SSH (22), HTTP (80), HTTPS (443)"
+    verify: "sudo ufw status verbose | grep -q 'Status: active' && sudo ufw status | grep -q '22/tcp.*ALLOW'"
+    layer: os
+
+  - id: e80s01t2
+    desc: "fail2ban — install, configure SSH jail (maxretry=3, bantime=3600, findtime=600)"
+    verify: "sudo fail2ban-client status sshd | grep -q 'Currently banned'"
+
+  - id: e80s01t3
+    desc: "fail2ban — create BigBase auth filter monitoring POST /api/auth/login 401s"
+    notes: |
+      Filter regex: ^.*"POST /api/auth/login HTTP.*" 401 .*$
+      Jail: maxretry=10, bantime=1800, findtime=300
+      Port: http,https (Caddy proxies to BigBase)
+    verify: "sudo fail2ban-client status bigbase-auth | grep -q 'Currently banned'"
+    layer: os
+
+  - id: e80s01t4
+    desc: "SSH hardening — PermitRootLogin no, PasswordAuthentication no, PubkeyAuthentication yes, MaxAuthTries 3, MaxSessions 2"
+    notes: |
+      Optional: Port 2222 (non-default)
+      Strong ciphers: chacha20-poly1305, aes256-gcm
+      Strong KEX: curve25519-sha256
+      After editing sshd_config: sudo systemctl restart sshd
+    verify: "sudo sshd -T | grep -E 'permitrootlogin no|passwordauthentication no|pubkeyauthentication yes'"
+    layer: os
+
+  - id: e80s01t5
+    desc: "unattended-upgrades — install, enable security-only updates, auto-reboot at 4AM"
+    verify: "sudo systemctl is-active unattended-upgrades && sudo unattended-upgrades --dry-run --debug 2>&1 | grep -q 'No packages found'"
+    layer: os
+
+  - id: e80s01t6
+    desc: "unattended-upgrades — verify timer is enabled and running daily"
+    verify: "systemctl list-timers | grep unattended-upgrades"
+    layer: os
+
+  - id: e80s01t7
+    desc: "systemd service — create hardened /etc/systemd/system/bigbase.service"
+    notes: |
+      User=bigbase (non-root)
+      NoNewPrivileges=yes
+      ProtectSystem=strict
+      ProtectHome=yes
+      ReadWritePaths=/opt/bigbase/data /opt/bigbase/logs
+      PrivateTmp=yes
+      ProtectKernelTunables=yes
+      ProtectKernelModules=yes
+      ProtectControlGroups=yes
+      RestrictAddressFamilies=AF_INET AF_INET6
+      RestrictRealtime=yes
+      LimitNOFILE=65536
+      Restart=always
+      RestartSec=5
+    verify: "systemctl show bigbase -p NoNewPrivileges -p ProtectSystem -p User | grep -E 'NoNewPrivileges=yes|ProtectSystem=strict|User=bigbase'"
+    layer: os
+
+  - id: e80s01t8
+    desc: "Create non-root 'bigbase' user and migrate service ownership"
+    verify: "id bigbase && stat -c '%U' /opt/bigbase/bigbase | grep bigbase"
+    layer: os
+
+  - id: e80s01t9
+    desc: "Enable BigBase to start on boot"
+    verify: "systemctl is-enabled bigbase | grep enabled"
+    layer: os
+
+  - id: e80s01t10
+    desc: "Verify service survives simulated reboot (restart + health check)"
+    notes: |
+      systemctl restart bigbase
+      sleep 5
+      curl -s https://bigbase.click/api/monitoring/health
+    verify: "sudo systemctl restart bigbase && sleep 5 && curl -sf https://bigbase.click/api/monitoring/health | jq -e '.status == \"ok\"'"
+    layer: os

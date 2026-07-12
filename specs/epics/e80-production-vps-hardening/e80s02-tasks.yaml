@@ -1,0 +1,38 @@
+type: tasks
+story: e80s02
+title: "BigBase monitoring alerts and backup automation"
+bcps: 3
+tasks:
+  - id: e80s02t1
+    desc: "Create BigBase alerts — disk > 80%, CPU > 90%, RAM > 85% via POST /api/monitoring/alerts"
+    notes: |
+      Three alerts:
+      1. Name: "VPS Disk > 80%", metric: disk_used_percent, threshold: 80, operator: gt, duration_seconds: 300
+      2. Name: "VPS CPU > 90%", metric: cpu_percent, threshold: 90, operator: gt, duration_seconds: 60
+      3. Name: "VPS RAM > 85%", metric: mem_used_percent, threshold: 85, operator: gt, duration_seconds: 120
+      Use Bearer token auth. All alerts enabled: true.
+    verify: "curl -sf https://bigbase.click/api/monitoring/alerts | jq '.data | length' | grep -q '^3$'"
+    layer: bigbase
+
+  - id: e80s02t2
+    desc: "Deploy health check cron script at /opt/bigbase/scripts/healthcheck.sh (every 5 min)"
+    notes: |
+      Script checks:
+      - Disk usage (df /, alert if > 85%)
+      - RAM usage (free, alert if > 90%)
+      - BigBase service active (systemctl is-active bigbase, restart if not)
+      - Reboot pending ([ -f /var/run/reboot-required ])
+      Log to /var/log/bigbase/health.log with timestamps.
+      Cron: */5 * * * * /opt/bigbase/scripts/healthcheck.sh
+      Make script executable: chmod +x
+    verify: "crontab -l | grep healthcheck && test -x /opt/bigbase/scripts/healthcheck.sh"
+    layer: os
+
+  - id: e80s02t3
+    desc: "Automate daily SQLite backup via crontab + 90-day rotation"
+    notes: |
+      Crontab entry: 0 2 * * * cp /opt/bigbase/data/bigbase.db /backup/bigbase-$(date +\%Y\%m\%d).db
+      Cleanup: 0 3 * * * find /backup/ -name 'bigbase-*.db' -mtime +90 -delete
+      Ensure /backup/ directory exists with correct permissions (bigbase user writable).
+    verify: "crontab -l | grep 'bigbase.db' && test -d /backup"
+    layer: os
