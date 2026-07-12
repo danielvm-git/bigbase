@@ -1,3 +1,5 @@
+// story: e78s01
+// story: e76s01
 import { test, expect } from '@playwright/test';
 
 test.use({ baseURL: 'http://localhost:9999' });

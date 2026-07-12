@@ -1,21 +1,45 @@
 story_id: e78s06
 title: DevOps, Monitoring & Forge
 status: todo
-bcps: 18
+bcps: 10
 tasks:
   - id: 1
-    description: "Write E2E test for Monitoring Hardware & Alerts (e14, e25)"
-    verify: "npx playwright test tests/e2e/monitoring-ui.spec.ts -g 'Hardware & Alerts'"
+    description: "E2E test for Hardware Monitoring — CPU, Memory, Disk, Network (e14). Cover: navigate to Monitoring page; verify CPU/memory chart components (AreaChart) render with data; verify disk usage gauge (DonutGauge) shows used/available; verify network sparkline renders with inbound/outbound traffic data points."
+    verify: "npx playwright test tests/e2e/monitoring-ui.spec.ts -g 'Hardware Monitoring'"
     status: todo
   - id: 2
-    description: "Write E2E test for Realtime & Events (e11, e17, e22)"
-    verify: "npx playwright test tests/e2e/events-ui.spec.ts -g 'Realtime & Events'"
+    description: "E2E test for Alert Rules Configuration (e25). Cover: navigate to Alert Rules section; create new alert rule with metric/condition/threshold; verify rule appears in rules list; edit existing rule threshold; delete rule with confirmation; verify rule removed."
+    verify: "npx playwright test tests/e2e/monitoring-ui.spec.ts -g 'Alert Rules'"
     status: todo
   - id: 3
-    description: "Write E2E test for Forge Kanban & Wiki (e08)"
-    verify: "npx playwright test tests/e2e/forge-ui.spec.ts -g 'Forge Kanban & Wiki'"
+    description: "E2E test for Realtime Inspector (e11, e17). Cover: navigate to Realtime page; verify connections panel lists active WebSocket connections; verify subscriptions panel shows channel subscriptions; verify message log shows recent events with timestamps."
+    verify: "npx playwright test tests/e2e/events-ui.spec.ts -g 'Realtime Inspector'"
     status: todo
   - id: 4
-    description: "Write E2E test for Git Repo Management (e07)"
+    description: "E2E test for Events Bus Visualizer Canvas (e22). Cover: navigate to Events page; verify Event Bus visualizer canvas renders with service nodes; verify event propagation animation renders on event trigger; verify clicking a node shows event detail panel with event metadata."
+    verify: "npx playwright test tests/e2e/events-ui.spec.ts -g 'Events Bus Visualizer'"
+    status: todo
+  - id: 5
+    description: "E2E test for Forge Issue Tracker & Kanban Board (e08). Cover: navigate to Forge page; verify Issue tracker renders with issue cards (title, status, assignee); create new issue via modal form; click through issue states (Open → In Progress → Done) on Kanban board; verify Wiki UI renders markdown content with proper formatting."
+    verify: "npx playwright test tests/e2e/forge-ui.spec.ts -g 'Forge Kanban and Wiki'"
+    status: todo
+  - id: 6
+    description: "E2E test for Git Repo Management (e07). Cover: navigate to Repos page; verify repo list renders with name, branch, last commit info; click a repo to view detail (branches, commits); verify clone URL display and copy functionality."
     verify: "npx playwright test tests/e2e/repos-ui.spec.ts -g 'Repo Management'"
+    status: todo
+  - id: 7
+    description: "E2E test for Monitoring — empty state and refresh. Cover: navigate to Monitoring with no metrics data; verify empty state components display placeholder text; verify auto-refresh interval (if present) updates chart data; verify manual refresh button triggers data reload."
+    verify: "npx playwright test tests/e2e/monitoring-ui.spec.ts -g 'Monitoring Refresh'"
+    status: todo
+  - id: 8
+    description: "E2E test for Forge — Wiki page navigation and edit. Cover: navigate to Forge Wiki; verify sidebar TOC renders with page links; click a Wiki page and verify markdown content renders; verify edit button opens markdown editor; verify save updates content on page."
+    verify: "npx playwright test tests/e2e/forge-ui.spec.ts -g 'Wiki Page Editor'"
+    status: todo
+  - id: 9
+    description: "E2E test for Realtime — channel subscribe/unsubscribe. Cover: subscribe to a realtime channel; verify channel appears in subscriptions list with status; unsubscribe and verify channel removed; verify message log filters by channel."
+    verify: "npx playwright test tests/e2e/events-ui.spec.ts -g 'Realtime Channels'"
+    status: todo
+  - id: 10
+    description: "E2E test for Repos — create and delete repo. Cover: navigate to Repos and create new repo via form; verify new repo appears in list; delete repo with confirmation modal; verify repo removed from list; verify error state for duplicate repo name."
+    verify: "npx playwright test tests/e2e/repos-ui.spec.ts -g 'Repo Create Delete'"
     status: todo

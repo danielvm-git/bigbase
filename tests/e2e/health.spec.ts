@@ -1,3 +1,6 @@
+// story: e78s01
+// story: e77s01
+// story: e43s01
 import { test, expect } from '@playwright/test';
 
 test('GET /health returns 200 with status field', async ({ request }) => {

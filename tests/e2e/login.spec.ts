@@ -1,3 +1,4 @@
+// story: e78s01
 import { test, expect } from '@playwright/test';
 
 test('POST /api/auth/register creates user and returns token', async ({ request }) => {

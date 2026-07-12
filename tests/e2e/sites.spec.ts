@@ -1,3 +1,4 @@
+// story: e78s01
 import { test, expect } from '@playwright/test';
 
 const email = `e2e-sites-${Date.now()}@test.com`;

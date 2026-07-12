@@ -1,3 +1,4 @@
+// story: e78s01
 import { test, expect, type APIResponse } from '@playwright/test';
 
 test.use({ baseURL: 'http://localhost:9999' });
