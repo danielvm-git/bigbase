@@ -462,7 +462,7 @@ func (d *Deploy) startApp(ctx context.Context, buildDir string, deploy *Deployme
 			cmd = exec.CommandContext(ctx, filepath.Join(buildDir, "app"))
 			cmd.Dir = buildDir
 		case AppPython:
-			cmd = pythonStartCommand(ctx, buildDir)
+			cmd = pythonStartCommand(ctx, buildDir, deploy.Port)
 		}
 	}
 

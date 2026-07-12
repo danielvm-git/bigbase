@@ -152,7 +152,7 @@ func TestPythonStartCommand_Uvicorn(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(dir, "pyproject.toml"), []byte(content), 0644); err != nil {
 		t.Fatal(err)
 	}
-	cmd := pythonStartCommand(context.Background(), dir)
+	cmd := pythonStartCommand(context.Background(), dir, 8000)
 	if cmd == nil {
 		t.Fatal("expected start command")
 	}
@@ -168,7 +168,7 @@ func TestPythonStartCommand_Fallback(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(dir, "app.py"), []byte("print(\"hello\")"), 0644); err != nil {
 		t.Fatal(err)
 	}
-	cmd := pythonStartCommand(context.Background(), dir)
+	cmd := pythonStartCommand(context.Background(), dir, 8000)
 	if cmd == nil {
 		t.Fatal("expected start command")
 	}
@@ -184,7 +184,7 @@ func TestPythonStartCommand_Uvicorn_Path(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(dir, "pyproject.toml"), []byte(content), 0644); err != nil {
 		t.Fatal(err)
 	}
-	cmd := pythonStartCommand(context.Background(), dir)
+	cmd := pythonStartCommand(context.Background(), dir, 8000)
 	if cmd == nil {
 		t.Fatal("expected start command")
 	}
@@ -211,7 +211,7 @@ func TestPythonStartCommand_PyProject_NoUv(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(dir, "pyproject.toml"), []byte(content), 0644); err != nil {
 		t.Fatal(err)
 	}
-	cmd := pythonStartCommand(context.Background(), dir)
+	cmd := pythonStartCommand(context.Background(), dir, 8000)
 	if cmd == nil {
 		t.Fatal("expected start command")
 	}
@@ -219,5 +219,20 @@ func TestPythonStartCommand_PyProject_NoUv(t *testing.T) {
 	// When uv is available, it uses "uv". When not, falls back to python3/python.
 	if baseName != "uv" && baseName != "python3" && baseName != "python" {
 		t.Errorf("base name = %s, want uv, python3, or python", baseName)
+	}
+}
+
+func TestPythonStartCommand_SetsDir(t *testing.T) {
+	dir := t.TempDir()
+	content := "[project]\nname = \"testapp\"\ndependencies = [\"fastapi>=0.100\", \"uvicorn>=0.30\"]\n\n[project.scripts]\ndev = \"testapp.main:app\"\n"
+	if err := os.WriteFile(filepath.Join(dir, "pyproject.toml"), []byte(content), 0644); err != nil {
+		t.Fatal(err)
+	}
+	cmd := pythonStartCommand(context.Background(), dir, 8000)
+	if cmd == nil {
+		t.Fatal("expected start command")
+	}
+	if cmd.Dir != dir {
+		t.Errorf("cmd.Dir = %q, want %q", cmd.Dir, dir)
 	}
 }

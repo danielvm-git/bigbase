@@ -2,6 +2,7 @@ package deploy
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -147,7 +148,7 @@ func resolvePythonBin() string {
 // pythonStartCommand returns the exec.Cmd for starting a Python deployment.
 // Uses uv run when pyproject.toml is present and uv is available; falls back
 // to python3 when uv is not installed.
-func pythonStartCommand(ctx context.Context, buildDir string) *exec.Cmd {
+func pythonStartCommand(ctx context.Context, buildDir string, port int) *exec.Cmd {
 	pp := ParsePyProjectTOML(buildDir)
 	if pp != nil {
 		_, uvErr := exec.LookPath("uv")
@@ -157,29 +158,42 @@ func pythonStartCommand(ctx context.Context, buildDir string) *exec.Cmd {
 			if module == "" {
 				module = "app"
 			}
+			portStr := fmt.Sprintf("%d", port)
 			if useUV {
-				return exec.CommandContext(ctx, "uv", "run", "uvicorn",
-					module+":"+appVar, "--host", "0.0.0.0", "--port", "$PORT")
+				cmd := exec.CommandContext(ctx, "uv", "run", "uvicorn",
+					module+":"+appVar, "--host", "0.0.0.0", "--port", portStr)
+				cmd.Dir = buildDir
+				return cmd
 			}
 			// Fallback: python3 -m uvicorn
 			pythonBin := resolvePythonBin()
-			return exec.CommandContext(ctx, pythonBin, "-m", "uvicorn",
-				module+":"+appVar, "--host", "0.0.0.0", "--port", "$PORT")
+			cmd := exec.CommandContext(ctx, pythonBin, "-m", "uvicorn",
+				module+":"+appVar, "--host", "0.0.0.0", "--port", portStr)
+			cmd.Dir = buildDir
+			return cmd
 		}
 		// Fallback: run the app module directly with uv.
 		scriptModule, _ := pp.EntryPoint()
 		if scriptModule != "" {
 			if useUV {
-				return exec.CommandContext(ctx, "uv", "run", "python", "-m", scriptModule)
+				cmd := exec.CommandContext(ctx, "uv", "run", "python", "-m", scriptModule)
+				cmd.Dir = buildDir
+				return cmd
 			}
 			pythonBin := resolvePythonBin()
-			return exec.CommandContext(ctx, pythonBin, "-m", scriptModule)
+			cmd := exec.CommandContext(ctx, pythonBin, "-m", scriptModule)
+			cmd.Dir = buildDir
+			return cmd
 		}
 		if useUV {
-			return exec.CommandContext(ctx, "uv", "run", "python", "app.py")
+			cmd := exec.CommandContext(ctx, "uv", "run", "python", "app.py")
+			cmd.Dir = buildDir
+			return cmd
 		}
 		pythonBin := resolvePythonBin()
-		return exec.CommandContext(ctx, pythonBin, "app.py")
+		cmd := exec.CommandContext(ctx, pythonBin, "app.py")
+		cmd.Dir = buildDir
+		return cmd
 	}
 	// Legacy Python: no pyproject.toml, use python3 with app.py.
 	pythonBin := resolvePythonBin()
