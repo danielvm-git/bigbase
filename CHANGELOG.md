@@ -1,3 +1,10 @@
+## [2.76.19](https://github.com/danielvm-git/bigbase/compare/v2.76.18...v2.76.19) (2026-07-12)
+
+
+### Bug Fixes
+
+* **deploy:** kill process group to clean up orphaned child processes ([#107](https://github.com/danielvm-git/bigbase/issues/107)) ([fd0cc74](https://github.com/danielvm-git/bigbase/commit/fd0cc74985ba2d877a3ce8828396533d7037110a))
+
 ## [2.76.18](https://github.com/danielvm-git/bigbase/compare/v2.76.17...v2.76.18) (2026-07-12)
 
 
