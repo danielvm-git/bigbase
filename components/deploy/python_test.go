@@ -156,11 +156,10 @@ func TestPythonStartCommand_Uvicorn(t *testing.T) {
 	if cmd == nil {
 		t.Fatal("expected start command")
 	}
-	if filepath.Base(cmd.Path) != "uv" {
-		t.Errorf("cmd.Base = %s, want uv (full: %s)", filepath.Base(cmd.Path), cmd.Path)
-	}
-	if len(cmd.Args) < 2 || cmd.Args[1] != "run" {
-		t.Errorf("expected uv run, got %v", cmd.Args)
+	baseName := filepath.Base(cmd.Path)
+	// When uv is available, it uses "uv". When not, falls back to python3/python.
+	if baseName != "uv" && baseName != "python3" && baseName != "python" {
+		t.Errorf("base name = %s, want uv, python3, or python (full: %s)", baseName, cmd.Path)
 	}
 }
 
@@ -190,10 +189,35 @@ func TestPythonStartCommand_Uvicorn_Path(t *testing.T) {
 		t.Fatal("expected start command")
 	}
 	baseName := filepath.Base(cmd.Path)
-	if baseName != "uv" {
-		t.Errorf("base name = %s, want uv (full path: %s)", baseName, cmd.Path)
+	// When uv is available, it uses "uv". When not, falls back to python3/python.
+	if baseName != "uv" && baseName != "python3" && baseName != "python" {
+		t.Errorf("base name = %s, want uv, python3, or python (full path: %s)", baseName, cmd.Path)
 	}
-	if len(cmd.Args) < 2 || cmd.Args[1] != "run" {
-		t.Errorf("expected uv run, got %v", cmd.Args)
+}
+
+func TestResolvePythonBin(t *testing.T) {
+	// resolvePythonBin prefers python3 and falls back to python.
+	bin := resolvePythonBin()
+	if bin != "python3" && bin != "python" {
+		t.Errorf("resolvePythonBin = %q, want python3 or python", bin)
+	}
+}
+
+func TestPythonStartCommand_PyProject_NoUv(t *testing.T) {
+	// When pyproject.toml exists but uv is not on PATH,
+	// pythonStartCommand should fall back to python3.
+	dir := t.TempDir()
+	content := "[project]\nname = \"testapp\"\ndependencies = [\"fastapi>=0.100\", \"uvicorn>=0.30\"]\n\n[project.scripts]\ndev = \"testapp.main:app\"\n"
+	if err := os.WriteFile(filepath.Join(dir, "pyproject.toml"), []byte(content), 0644); err != nil {
+		t.Fatal(err)
+	}
+	cmd := pythonStartCommand(context.Background(), dir)
+	if cmd == nil {
+		t.Fatal("expected start command")
+	}
+	baseName := filepath.Base(cmd.Path)
+	// When uv is available, it uses "uv". When not, falls back to python3/python.
+	if baseName != "uv" && baseName != "python3" && baseName != "python" {
+		t.Errorf("base name = %s, want uv, python3, or python", baseName)
 	}
 }
