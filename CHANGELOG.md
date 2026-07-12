@@ -1,3 +1,10 @@
+## [2.78.2](https://github.com/danielvm-git/bigbase/compare/v2.78.1...v2.78.2) (2026-07-12)
+
+
+### Bug Fixes
+
+* **deploy:** set cmd.Dir and replace literal $PORT in pythonStartCommand ([2b15531](https://github.com/danielvm-git/bigbase/commit/2b1553148fcf82c596326ad6508cf0cd61861957))
+
 ## [2.78.1](https://github.com/danielvm-git/bigbase/compare/v2.78.0...v2.78.1) (2026-07-12)
 
 
