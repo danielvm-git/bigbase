@@ -1550,3 +1550,42 @@ bugs:
     regression_guards:
       - components/deploy/python_test.go TestResolvePythonBin
       - components/deploy/python_test.go TestPythonStartCommand_PyProject_NoUv
+
+  - id: BUG-2026-07-12T000001
+    date: "2026-07-12"
+    severity: low
+    priority: low
+    scope: proxy
+    summary: "DAST scan flagged CSP Header Not Set on BigBase BaaS Platform API routes — false positive; CSP is correctly route-aware per securityheaders.go"
+    file: specs/bugs/BUG-2026-07-12T000001-dast-csp-header-not-set.md
+    status: wontfix
+    source: seal.dast_http
+    risk_level: low
+    resolution:
+      approach: "False positive. CSP headers are present on HTML routes (/ , /docs, /admin). API routes intentionally omit CSP since CSP is a browser mechanism for HTML documents. Documented in securityheaders.go."
+
+  - id: BUG-2026-07-12T000002
+    date: "2026-07-12"
+    severity: medium
+    priority: low
+    scope: security,deploy
+    summary: "CodeQL alert #19 — path traversal in manifest.go — false positive; LoadManifestPath already has filepath.Abs + strings.HasPrefix containment guard"
+    file: specs/bugs/BUG-2026-07-12T000002-codeql-path-traversal-19.md
+    status: wontfix
+    source: seal.github_code_scanning
+    risk_level: low
+    related:
+      - BUG-2026-07-11T032549-codeql-path-traversal
+
+  - id: BUG-2026-07-12T000003
+    date: "2026-07-12"
+    severity: medium
+    priority: low
+    scope: security,storage
+    summary: "CodeQL alert #21 — path traversal in storage.go — false positive; file path containment guards already exist"
+    file: specs/bugs/BUG-2026-07-12T000003-codeql-path-traversal-21.md
+    status: wontfix
+    source: seal.github_code_scanning
+    risk_level: low
+    related:
+      - BUG-2026-07-11T032549-codeql-path-traversal
