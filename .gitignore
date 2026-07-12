@@ -2,6 +2,7 @@
 bigbase
 bigbase-linux-amd64
 bigbase-darwin-*
+bigbase_linux
 *.exe
 *.test
 *.out
@@ -51,8 +52,8 @@ allure-history/
 
 
 # Ctxo local cache (auto-rebuilt, never committed)
-.ctxo/.cache/
-.ctxo/index/
+.ctxo/*
+!.ctxo/config.yaml
 
 # Dev tooling (local-only)
 .bts.toml
@@ -61,6 +62,9 @@ allure-history/
 .vscode/mcp.json
 .greptile/
 .pi/
+.mimocode/
+mimocode.jsonc
+<stdin>
 
 # Cursor IDE local config (may contain API keys)
 .cursor/
@@ -70,4 +74,3 @@ __pycache__/
 
 # Test-generated git repos (must be created in t.TempDir() only)
 repo-*.git
-bigbase_linux
