@@ -663,4 +663,13 @@ epics:
   note: "1 story, 8 BCPs. Migrated to consolidated templates from .github template repo. PR #105."
   capsule_dir: epics/e79-ci-cd-consolidation
   file: epics/e79-ci-cd-consolidation/epic.yaml
+- id: e80
+  title: "Multi-Language Deploy — Rust, PHP, Java, Ruby"
+  wsjf: 1.6
+  mode: flat
+  tier: 2
+  status: open
+  depends_on: [e13]
+  note: "5 stories. Extends Deploy with 4 new runtimes (Rust/PHP/Java/Ruby) + profiles + CI templates."
+  file: epics/e80-multi-language-deploy.yaml
 
