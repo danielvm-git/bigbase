@@ -1,3 +1,11 @@
+## [2.76.17](https://github.com/danielvm-git/bigbase/compare/v2.76.16...v2.76.17) (2026-07-12)
+
+
+### Bug Fixes
+
+* **api,functions:** add tableName type for defense-in-depth SQL injection hardening ([cfa81db](https://github.com/danielvm-git/bigbase/commit/cfa81db5aa2ce3412afbc1cb63c366ef58fc9e17))
+* **mcp:** move list_site_keys from writeTools to tierRead ([787ec38](https://github.com/danielvm-git/bigbase/commit/787ec3844272cfe0c562dd86b27418e2566dc57d))
+
 ## [2.76.16](https://github.com/danielvm-git/bigbase/compare/v2.76.15...v2.76.16) (2026-07-12)
 
 
