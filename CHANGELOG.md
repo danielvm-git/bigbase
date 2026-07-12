@@ -1,3 +1,10 @@
+# [2.78.0](https://github.com/danielvm-git/bigbase/compare/v2.77.0...v2.78.0) (2026-07-12)
+
+
+### Features
+
+* **deploy:** add e80 multi-language deploy epic — Rust, PHP, Java, Ruby ([394f081](https://github.com/danielvm-git/bigbase/commit/394f081d0960491de4fd918ec5b1f0e25c7ec408))
+
 # [2.77.0](https://github.com/danielvm-git/bigbase/compare/v2.76.20...v2.77.0) (2026-07-12)
 
 
