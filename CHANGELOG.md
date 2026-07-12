@@ -1,3 +1,10 @@
+## [2.76.16](https://github.com/danielvm-git/bigbase/compare/v2.76.15...v2.76.16) (2026-07-12)
+
+
+### Bug Fixes
+
+* **ui:** deploy key copy button copies displayed prefix, not internal id ([#97](https://github.com/danielvm-git/bigbase/issues/97)) ([18b9c80](https://github.com/danielvm-git/bigbase/commit/18b9c80345f11e1c0c5469ae6ee1fce74f8b3d6d))
+
 ## [2.76.15](https://github.com/danielvm-git/bigbase/compare/v2.76.14...v2.76.15) (2026-07-12)
 
 
