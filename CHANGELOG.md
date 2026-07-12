@@ -1,3 +1,10 @@
+## [2.78.1](https://github.com/danielvm-git/bigbase/compare/v2.78.0...v2.78.1) (2026-07-12)
+
+
+### Bug Fixes
+
+* **e80:** add e80s00 VPS runtime installation story + dependency chain ([53e8181](https://github.com/danielvm-git/bigbase/commit/53e818156af54aaac503df48854a036f574cdc7e))
+
 # [2.78.0](https://github.com/danielvm-git/bigbase/compare/v2.77.0...v2.78.0) (2026-07-12)
 
 
