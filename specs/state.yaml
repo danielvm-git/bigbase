@@ -39,6 +39,7 @@ bug_cycle:
   current_step: null
   completed_steps: []
   bug_file: null
+  note: "BUG-003 landed via fix/bug-003-deploy-key-copy (two-commit red/green)."
 git:
   branch: main
   hash: 02d9d5f5
