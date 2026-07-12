@@ -1,3 +1,10 @@
+## [2.76.18](https://github.com/danielvm-git/bigbase/compare/v2.76.17...v2.76.18) (2026-07-12)
+
+
+### Bug Fixes
+
+* **ci:** resolve golangci-lint sha mismatch and verify subshell bug ([e826159](https://github.com/danielvm-git/bigbase/commit/e826159f1b5d29ba211392d712b40df240adb4e5))
+
 ## [2.76.17](https://github.com/danielvm-git/bigbase/compare/v2.76.16...v2.76.17) (2026-07-12)
 
 
