@@ -1,6 +1,6 @@
 type: session-state
 context: infra
-active_flow: null
+active_flow: fix_bug
 active_epic_id: null
 active_story_id: null
 active_story_status: null
@@ -45,8 +45,8 @@ git:
   worktree: null
   ci_status: success
 handoff:
-  last_step_completed: "e78 released — merged to main, branch archived"
+  last_step_completed: "BUG-2026-07-11T032549-codeql-zip-slip triaged as false positive (wontfix)"
   open_decisions: []
-  next_skill: "next-epic"
-  summary: "e78 released. 6 stories, 14 Playwright spec files (53 tests), 36 BCPs. Merged to main and epic capsule archived."
-  context: "e78 complete and released. Ready for next epic."
+  next_skill: null
+  summary: "Zip slip bug #2 triaged: false positive. extractEntry() in cache_archive.go already has filepath.Clean + isUnderDir containment guard. No archive/zip usage in codebase. Tests: 254 pass, 2 pre-existing failures (unrelated)."
+  context: "Bug #2 (zip slip) — false positive, closed as wontfix."

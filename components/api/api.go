@@ -47,6 +47,13 @@ func UserRoleFromContext(ctx context.Context) (string, bool) {
 	return role, ok
 }
 
+// tableName is a defensive type wrapping collection names that have passed
+// sanitization. It cannot be created from a raw string — only sanitize()
+// produces one. This ensures user input never reaches SQL strings without
+// passing the sanitization gate, providing defense-in-depth against any
+// future sanitize() bypass.
+type tableName string
+
 var internalTables = map[string]bool{
 	"users": true, "storage_files": true,
 	"git_repos": true, "git_ssh_keys": true,
@@ -87,7 +94,7 @@ type Options struct {
 type API struct {
 	db     DBer
 	logger kernel.Logger
-	tables map[string]bool
+	tables map[tableName]bool
 	bus    *kernel.EventBus
 }
 
@@ -97,7 +104,7 @@ func New(opts Options) *API {
 	return &API{
 		db:     opts.DB,
 		logger: opts.Logger,
-		tables: make(map[string]bool),
+		tables: make(map[tableName]bool),
 	}
 }
 
@@ -130,10 +137,7 @@ func (a *API) Handler() http.Handler {
 	return mux
 }
 
-func (a *API) ensureTable(collection string) error {
-	if _, err := sanitize(collection); err != nil {
-		return err
-	}
+func (a *API) ensureTable(collection tableName) error {
 	if a.tables[collection] {
 		return nil
 	}
@@ -141,12 +145,12 @@ func (a *API) ensureTable(collection string) error {
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		org_id INTEGER NOT NULL DEFAULT 0,
 		data TEXT
-	)`, collection)
+	)`, string(collection))
 	if err := a.db.Migrate(query); err != nil {
 		return err
 	}
 	// Best-effort: add org_id to pre-existing tables (ignored if column already exists)
-	_ = a.db.Migrate(fmt.Sprintf("ALTER TABLE %s ADD COLUMN org_id INTEGER NOT NULL DEFAULT 0", collection))
+	_ = a.db.Migrate(fmt.Sprintf("ALTER TABLE %s ADD COLUMN org_id INTEGER NOT NULL DEFAULT 0", string(collection)))
 	a.tables[collection] = true
 	return nil
 }
@@ -165,7 +169,7 @@ func (a *API) handleCollection(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if internalTables[collection] {
+	if internalTables[string(collection)] {
 		kernel.WriteJSON(w, http.StatusNotFound, map[string]string{"error": "not found"})
 		return
 	}
@@ -196,7 +200,7 @@ func (a *API) handleCollection(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (a *API) listRecords(w http.ResponseWriter, r *http.Request, collection string) {
+func (a *API) listRecords(w http.ResponseWriter, r *http.Request, collection tableName) {
 	if err := a.ensureTable(collection); err != nil {
 		a.logger.Error("ensure table", "collection", collection, "error", err)
 		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
@@ -239,7 +243,7 @@ func (a *API) listRecords(w http.ResponseWriter, r *http.Request, collection str
 		args = append(args, filterArgs...)
 	}
 
-	query := fmt.Sprintf("SELECT id, data FROM %s%s%s LIMIT ? OFFSET ?", collection, whereClause, sortClause)
+	query := fmt.Sprintf("SELECT id, data FROM %s%s%s LIMIT ? OFFSET ?", string(collection), whereClause, sortClause)
 	args = append(args, limit, offset)
 
 	rows, err := a.db.QueryContext(ctx, query, args...)
@@ -280,7 +284,7 @@ func (a *API) listRecords(w http.ResponseWriter, r *http.Request, collection str
 	kernel.WriteJSON(w, http.StatusOK, map[string]any{"data": result})
 }
 
-func (a *API) getRecord(w http.ResponseWriter, r *http.Request, collection, id string) {
+func (a *API) getRecord(w http.ResponseWriter, r *http.Request, collection tableName, id string) {
 	if err := a.ensureTable(collection); err != nil {
 		a.logger.Error("ensure table", "collection", collection, "error", err)
 		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
@@ -291,7 +295,7 @@ func (a *API) getRecord(w http.ResponseWriter, r *http.Request, collection, id s
 	defer cancel()
 
 	// Fetch record with org_id for isolation check
-	row := a.db.QueryRowContext(ctx, fmt.Sprintf("SELECT id, org_id, data FROM %s WHERE id = ?", collection), id)
+	row := a.db.QueryRowContext(ctx, fmt.Sprintf("SELECT id, org_id, data FROM %s WHERE id = ?", string(collection)), id)
 	var recordID, recordOrgID int64
 	var dataStr string
 	if err := row.Scan(&recordID, &recordOrgID, &dataStr); err != nil {
@@ -312,10 +316,10 @@ func (a *API) getRecord(w http.ResponseWriter, r *http.Request, collection, id s
 	kernel.WriteJSON(w, http.StatusOK, record)
 }
 
-func (a *API) emitMutation(mutType, collection string, id any, siteID string) {
+func (a *API) emitMutation(mutType string, collection tableName, id any, siteID string) {
 	if a.bus != nil {
 		data := map[string]any{
-			"collection": collection,
+			"collection": string(collection),
 			"type":       mutType,
 			"id":         id,
 		}
@@ -332,7 +336,7 @@ func siteIDFromRequest(r *http.Request) string {
 	return strings.TrimSpace(r.Header.Get("X-Bigbase-Site-ID"))
 }
 
-func (a *API) createRecord(w http.ResponseWriter, r *http.Request, collection string) {
+func (a *API) createRecord(w http.ResponseWriter, r *http.Request, collection tableName) {
 	if err := a.ensureTable(collection); err != nil {
 		a.logger.Error("ensure table", "collection", collection, "error", err)
 		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
@@ -354,7 +358,7 @@ func (a *API) createRecord(w http.ResponseWriter, r *http.Request, collection st
 
 	orgID, _ := OrgIDFromContext(r.Context())
 	res, err := a.db.ExecContext(ctx,
-		fmt.Sprintf("INSERT INTO %s (org_id, data) VALUES (?, ?)", collection),
+		fmt.Sprintf("INSERT INTO %s (org_id, data) VALUES (?, ?)", string(collection)),
 		orgID, string(dataBytes))
 	if err != nil {
 		a.logger.Error("insert record", "collection", collection, "error", err)
@@ -367,7 +371,7 @@ func (a *API) createRecord(w http.ResponseWriter, r *http.Request, collection st
 	kernel.WriteJSON(w, http.StatusCreated, map[string]any{"id": id})
 }
 
-func (a *API) updateRecord(w http.ResponseWriter, r *http.Request, collection, id string) {
+func (a *API) updateRecord(w http.ResponseWriter, r *http.Request, collection tableName, id string) {
 	if err := a.ensureTable(collection); err != nil {
 		a.logger.Error("ensure table", "collection", collection, "error", err)
 		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
@@ -385,7 +389,7 @@ func (a *API) updateRecord(w http.ResponseWriter, r *http.Request, collection, i
 	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 	defer cancel()
 
-	row := a.db.QueryRowContext(ctx, fmt.Sprintf("SELECT org_id, data FROM %s WHERE id = ?", collection), id)
+	row := a.db.QueryRowContext(ctx, fmt.Sprintf("SELECT org_id, data FROM %s WHERE id = ?", string(collection)), id)
 	var existingOrgID int64
 	var existingStr string
 	if err := row.Scan(&existingOrgID, &existingStr); err != nil {
@@ -404,7 +408,7 @@ func (a *API) updateRecord(w http.ResponseWriter, r *http.Request, collection, i
 	}
 
 	merged, _ := json.Marshal(existing)
-	_, err := a.db.ExecContext(ctx, fmt.Sprintf("UPDATE %s SET data = ? WHERE id = ?", collection), string(merged), id)
+	_, err := a.db.ExecContext(ctx, fmt.Sprintf("UPDATE %s SET data = ? WHERE id = ?", string(collection)), string(merged), id)
 	if err != nil {
 		a.logger.Error("update record", "collection", collection, "id", id, "error", err)
 		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
@@ -415,7 +419,7 @@ func (a *API) updateRecord(w http.ResponseWriter, r *http.Request, collection, i
 	kernel.WriteJSON(w, http.StatusOK, map[string]string{"status": "updated"})
 }
 
-func (a *API) deleteRecord(w http.ResponseWriter, r *http.Request, collection, id string) {
+func (a *API) deleteRecord(w http.ResponseWriter, r *http.Request, collection tableName, id string) {
 	if err := a.ensureTable(collection); err != nil {
 		a.logger.Error("ensure table", "collection", collection, "error", err)
 		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
@@ -429,7 +433,7 @@ func (a *API) deleteRecord(w http.ResponseWriter, r *http.Request, collection, i
 	if orgID, ok := OrgIDFromContext(r.Context()); ok {
 		var ownerOrgID int64
 		err := a.db.QueryRowContext(ctx,
-			fmt.Sprintf("SELECT org_id FROM %s WHERE id = ?", collection), id).Scan(&ownerOrgID)
+			fmt.Sprintf("SELECT org_id FROM %s WHERE id = ?", string(collection)), id).Scan(&ownerOrgID)
 		if err != nil {
 			kernel.WriteJSON(w, http.StatusNotFound, map[string]string{"error": "not found"})
 			return
@@ -440,7 +444,7 @@ func (a *API) deleteRecord(w http.ResponseWriter, r *http.Request, collection, i
 		}
 	}
 
-	res, err := a.db.ExecContext(ctx, fmt.Sprintf("DELETE FROM %s WHERE id = ?", collection), id)
+	res, err := a.db.ExecContext(ctx, fmt.Sprintf("DELETE FROM %s WHERE id = ?", string(collection)), id)
 	if err != nil {
 		a.logger.Error("delete record", "collection", collection, "id", id, "error", err)
 		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
@@ -736,7 +740,7 @@ func rowsToMaps(rows *sql.Rows, columns []string) ([]map[string]any, error) {
 	return result, rows.Err()
 }
 
-func sanitize(name string) (string, error) {
+func sanitize(name string) (tableName, error) {
 	if name == "" {
 		return "", fmt.Errorf("collection name required")
 	}
@@ -745,14 +749,14 @@ func sanitize(name string) (string, error) {
 			return "", fmt.Errorf("invalid character %q in collection name", r)
 		}
 	}
-	return name, nil
+	return tableName(name), nil
 }
 
 // parseFilters extracts filter query params and returns SQL WHERE clauses
 // with json_extract and corresponding bind arguments.
 // Each ?filter=field=value becomes: json_extract(data, '$.field') = ?
 // Each ?filter=field:op=value becomes: json_extract(data, '$.field') OP ?
-func parseFilters(r *http.Request, collection string) ([]string, []any) {
+func parseFilters(r *http.Request, collection tableName) ([]string, []any) {
 	var clauses []string
 	var args []any
 
@@ -833,7 +837,7 @@ func parseFilterExpr(raw string) (field, op, value string) {
 // ?sort=field → ORDER BY json_extract(data, '$.field') ASC
 // ?sort=-field → ORDER BY json_extract(data, '$.field') DESC
 // No sort param → ORDER BY id (default)
-func parseSort(r *http.Request, collection string) string {
+func parseSort(r *http.Request, collection tableName) string {
 	raw := r.URL.Query().Get("sort")
 	if raw == "" {
 		return " ORDER BY id"

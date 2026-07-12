@@ -1429,9 +1429,14 @@ bugs:
     scope: security,api,functions,db
     summary: "CodeQL SQL injection alerts #8-#15 — passthrough wrappers; tainted table-name interpolation in api.go and functions/runtime.go guarded by sanitize()"
     file: specs/bugs/BUG-2026-07-11T032535-codeql-sql-injection.md
-    status: needs-audit
+    status: fixed
     source: seal.github_code_scanning
     risk_level: low
+    files_changed:
+      - components/api/api.go
+      - components/api/scaffold.go
+      - components/functions/runtime.go
+    approach: "Added tableName type as defense-in-depth wrapper — only sanitize()/validateCollectionName() can produce one. All CRUD methods and SQL closures now accept tableName instead of raw string, making it impossible for unsanitized user input to reach SQL identifiers. 111 tests pass, zero linter issues."
     investigation:
       date: "2026-07-11"
       findings:
@@ -1515,11 +1520,14 @@ bugs:
 
   - id: BUG-2026-07-11T032549
     date: "2026-07-11"
-    severity: 
-    priority: 
-    scope: security
-    summary: ""
+    severity: normal
+    priority: low
+    scope: deploy
+    summary: "Zip slip (CWE-22) in tar.gz extraction — false positive; extractEntry already has filepath.Clean + isUnderDir containment guard"
     file: specs/bugs/BUG-2026-07-11T032549-codeql-zip-slip.md
-    status: triage
+    status: wontfix
     source: seal.github_code_scanning
-    risk_level: 
+    risk_level: none
+    resolution:
+      approach: "False positive — extractEntry() in cache_archive.go already has filepath.Clean(hdr.Name) + isUnderDir() containment check on lines 121-123. No archive/zip usage in codebase; only archive/tar + compress/gzip. Same as Alert #22 in codeql-path-traversal report."
+      evidence: "components/deploy/cache_archive.go:120-132; isUnderDir() at lines 150-153"

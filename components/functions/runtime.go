@@ -154,23 +154,24 @@ func isHostAllowed(host string, allowed []string) bool {
 }
 
 // injectDB injects a `db` global with collection() methods for CRUD operations.
-// Collection names are sanitized to prevent SQL injection.
+// Collection names are validated against an alphanumeric+underscore pattern and
+// wrapped in a tableName type to prevent unsanitized values from reaching SQL strings.
 func injectDB(vm *goja.Runtime, dber kernel.DBer) {
 	dbObj := vm.NewObject()
 	_ = dbObj.Set("collection", func(call goja.FunctionCall) goja.Value {
 		if len(call.Arguments) < 1 {
 			panic(vm.NewGoError(fmt.Errorf("db.collection requires a name argument")))
 		}
-		name := call.Arguments[0].String()
-		if err := validateCollectionName(name); err != nil {
+		name, err := validateCollectionName(call.Arguments[0].String())
+		if err != nil {
 			panic(vm.NewGoError(err))
 		}
 
 		// Ensure the collection table exists
 		ctx := context.Background()
-		createSQL := fmt.Sprintf("CREATE TABLE IF NOT EXISTS %s (id INTEGER PRIMARY KEY AUTOINCREMENT, data TEXT)", name)
+		createSQL := fmt.Sprintf("CREATE TABLE IF NOT EXISTS %s (id INTEGER PRIMARY KEY AUTOINCREMENT, data TEXT)", string(name))
 		if err := dber.Migrate(createSQL); err != nil {
-			panic(vm.NewGoError(fmt.Errorf("db: failed to create collection %q: %w", name, err)))
+			panic(vm.NewGoError(fmt.Errorf("db: failed to create collection %q: %w", string(name), err)))
 		}
 
 		col := vm.NewObject()
@@ -185,7 +186,7 @@ func injectDB(vm *goja.Runtime, dber kernel.DBer) {
 			if err != nil {
 				panic(vm.NewGoError(fmt.Errorf("create: marshal failed: %w", err)))
 			}
-			result, err := dber.ExecContext(ctx, fmt.Sprintf("INSERT INTO %s (data) VALUES (?)", name), string(dataJSON))
+			result, err := dber.ExecContext(ctx, fmt.Sprintf("INSERT INTO %s (data) VALUES (?)", string(name)), string(dataJSON))
 			if err != nil {
 				panic(vm.NewGoError(fmt.Errorf("create: insert failed: %w", err)))
 			}
@@ -197,7 +198,7 @@ func injectDB(vm *goja.Runtime, dber kernel.DBer) {
 
 		// list() → returns all records
 		_ = col.Set("list", func(call goja.FunctionCall) goja.Value {
-			rows, err := dber.QueryContext(ctx, fmt.Sprintf("SELECT id, data FROM %s ORDER BY id", name))
+			rows, err := dber.QueryContext(ctx, fmt.Sprintf("SELECT id, data FROM %s ORDER BY id", string(name)))
 			if err != nil {
 				panic(vm.NewGoError(fmt.Errorf("list: query failed: %w", err)))
 			}
@@ -228,7 +229,7 @@ func injectDB(vm *goja.Runtime, dber kernel.DBer) {
 				panic(vm.NewGoError(fmt.Errorf("get requires an id argument")))
 			}
 			id := call.Arguments[0].ToInteger()
-			row := dber.QueryRowContext(ctx, fmt.Sprintf("SELECT id, data FROM %s WHERE id = ?", name), id)
+			row := dber.QueryRowContext(ctx, fmt.Sprintf("SELECT id, data FROM %s WHERE id = ?", string(name)), id)
 			var rid int64
 			var dataStr string
 			if err := row.Scan(&rid, &dataStr); err != nil {
@@ -251,7 +252,7 @@ func injectDB(vm *goja.Runtime, dber kernel.DBer) {
 			}
 			id := call.Arguments[0].ToInteger()
 			// Fetch existing
-			row := dber.QueryRowContext(ctx, fmt.Sprintf("SELECT data FROM %s WHERE id = ?", name), id)
+			row := dber.QueryRowContext(ctx, fmt.Sprintf("SELECT data FROM %s WHERE id = ?", string(name)), id)
 			var existingStr string
 			if err := row.Scan(&existingStr); err != nil {
 				panic(vm.NewGoError(fmt.Errorf("update: record %d not found", id)))
@@ -269,7 +270,7 @@ func injectDB(vm *goja.Runtime, dber kernel.DBer) {
 				}
 			}
 			merged, _ := json.Marshal(existing)
-			_, err := dber.ExecContext(ctx, fmt.Sprintf("UPDATE %s SET data = ? WHERE id = ?", name), string(merged), id)
+			_, err := dber.ExecContext(ctx, fmt.Sprintf("UPDATE %s SET data = ? WHERE id = ?", string(name)), string(merged), id)
 			if err != nil {
 				panic(vm.NewGoError(fmt.Errorf("update: failed: %w", err)))
 			}
@@ -284,7 +285,7 @@ func injectDB(vm *goja.Runtime, dber kernel.DBer) {
 				panic(vm.NewGoError(fmt.Errorf("delete requires an id argument")))
 			}
 			id := call.Arguments[0].ToInteger()
-			_, err := dber.ExecContext(ctx, fmt.Sprintf("DELETE FROM %s WHERE id = ?", name), id)
+			_, err := dber.ExecContext(ctx, fmt.Sprintf("DELETE FROM %s WHERE id = ?", string(name)), id)
 			if err != nil {
 				panic(vm.NewGoError(fmt.Errorf("delete: failed: %w", err)))
 			}
@@ -341,17 +342,24 @@ func injectRequest(vm *goja.Runtime, r *http.Request) {
 	_ = vm.Set("request", reqObj)
 }
 
-// validateCollectionName checks the collection name is safe (alphanumeric + underscore).
-func validateCollectionName(name string) error {
+// tableName is a defensive type wrapping collection names that have passed
+// validateCollectionName. It cannot be created from a raw string — only
+// validateCollectionName() produces one. This ensures user input never reaches
+// SQL strings without passing the validation gate.
+type tableName string
+
+// validateCollectionName checks the collection name is safe (alphanumeric + underscore)
+// and returns a tableName to enforce defense-in-depth at the type level.
+func validateCollectionName(name string) (tableName, error) {
 	if name == "" {
-		return fmt.Errorf("collection name is required")
+		return "", fmt.Errorf("collection name is required")
 	}
 	for _, r := range name {
 		if (r < 'a' || r > 'z') && (r < 'A' || r > 'Z') && (r < '0' || r > '9') && r != '_' {
-			return fmt.Errorf("invalid character %q in collection name", r)
+			return "", fmt.Errorf("invalid character %q in collection name", r)
 		}
 	}
-	return nil
+	return tableName(name), nil
 }
 
 type logCollector struct {

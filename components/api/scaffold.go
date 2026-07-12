@@ -50,12 +50,13 @@ func (a *API) handleScaffoldDB(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if _, err := sanitize(name); err != nil {
+	tn, err := sanitize(name)
+	if err != nil {
 		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
 		return
 	}
 
-	if internalTables[name] {
+	if internalTables[string(tn)] {
 		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "reserved name"})
 		return
 	}
@@ -63,16 +64,16 @@ func (a *API) handleScaffoldDB(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 	defer cancel()
 
-	if err := a.ensureTable(name); err != nil {
+	if err := a.ensureTable(tn); err != nil {
 		a.logger.Error("scaffold db create table", "name", name, "error", err)
 		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 
-	a.emitMutation("scaffold_db", name, nil, siteIDFromRequest(r))
+	a.emitMutation("scaffold_db", tn, nil, siteIDFromRequest(r))
 
 	_ = ctx
-	kernel.WriteJSON(w, http.StatusCreated, map[string]string{"name": name, "status": "created"})
+	kernel.WriteJSON(w, http.StatusCreated, map[string]string{"name": string(tn), "status": "created"})
 }
 
 // handleScaffoldRepo handles POST /api/scaffold/repo.
@@ -150,6 +151,6 @@ func (a *API) handleScaffoldFunction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	a.emitMutation("scaffold_function", "functions", id, siteIDFromRequest(r))
+	a.emitMutation("scaffold_function", tableName("functions"), id, siteIDFromRequest(r))
 	kernel.WriteJSON(w, http.StatusCreated, map[string]any{"id": id, "name": name, "status": "created"})
 }
