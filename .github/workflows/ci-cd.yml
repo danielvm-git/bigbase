@@ -1,0 +1,204 @@
+# ============================================================================
+# ci-cd.yml — Consolidated CI/CD Pipeline for BigBase
+#
+# Migrated from danielvm-git/.github ci-cd-go.yml template (v2.0.0)
+# Adapted for BigBase: PostgreSQL matrix, Allure report, Go 1.26
+#
+# Pipeline:
+#   ci (SQLite + PostgreSQL matrix) → lint → verify → allure report
+#
+# Note: Semantic release + SSH deploy stay in release-deploy.yml
+# ============================================================================
+name: CI/CD
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-cd-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  GO_VERSION: '1.26'
+
+# ============================================================================
+# JOB: CI — Build, Vet, Test (SQLite + PostgreSQL matrix)
+# ============================================================================
+jobs:
+  ci:
+    name: Test (${{ matrix.db }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    strategy:
+      fail-fast: false
+      matrix:
+        db: [sqlite, postgres]
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: bigbase_test
+          POSTGRES_USER: bigbase
+          POSTGRES_PASSWORD: bigbase_test_pw
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      BIGBASE_DB_DRIVER: ${{ matrix.db }}
+      BIGBASE_DB_DSN: ${{ matrix.db == 'postgres' && 'postgres://bigbase:bigbase_test_pw@localhost:5432/bigbase_test' || ':memory:' }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go ${{ env.GO_VERSION }}
+        uses: actions/setup-go@v6
+        with:
+          go-version: '${{ env.GO_VERSION }}'
+          cache: true
+
+      - name: Download modules
+        run: go mod download
+
+      - name: Build
+        run: go build ./...
+
+      - name: Vet
+        run: go vet ./...
+
+      - name: Test
+        run: go test ./... -count=1 -timeout 120s
+
+  # ==========================================================================
+  # JOB: Lint — golangci-lint
+  # ==========================================================================
+  lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Go ${{ env.GO_VERSION }}
+        uses: actions/setup-go@v6
+        with:
+          go-version: '${{ env.GO_VERSION }}'
+          cache: true
+
+      - name: Install golangci-lint
+        run: go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.11.0
+
+      - name: golangci-lint
+        run: golangci-lint run ./...
+
+  # ==========================================================================
+  # JOB: Verify — Preflight + Conventional Commits + No AI Attribution
+  # ==========================================================================
+  verify:
+    if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Preflight
+        run: |
+          if [ -f scripts/preflight.sh ]; then
+            bash scripts/preflight.sh
+          elif [ -f Makefile ] && grep -q '^preflight:' Makefile; then
+            make preflight
+          else
+            echo "WARN: No preflight script found — add scripts/preflight.sh"
+          fi
+
+      - name: Check Conventional Commits
+        run: |
+          NON_CC=$(git log origin/main..HEAD --no-merges --format="%s" | grep -v -c -E "^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\(.+\))?!?: " || true)
+          if [ "$NON_CC" -gt 0 ]; then
+            echo "FAIL: $NON_CC commits do not follow Conventional Commits"
+            git log origin/main..HEAD --no-merges --format="%s" | grep -v -E "^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\(.+\))?!?: "
+            exit 1
+          fi
+          echo "PASS: All commits follow Conventional Commits"
+
+      - name: Check no AI agent attribution
+        run: |
+          NON_CURSOR=$(git log origin/main..HEAD --format="%B" | grep -iE '^co[- ]authored[- ]by:' | grep -v -i 'cursor' | wc -l | tr -d ' ')
+          if [ "$NON_CURSOR" -gt 0 ]; then
+            echo "FAIL: Non-Cursor Co-authored-by: footer found — blocked by CONVENTIONS.md"
+            git log origin/main..HEAD --format="%B" | grep -iE '^co[- ]authored[- ]by:' | grep -v -i 'cursor'
+            exit 1
+          fi
+          echo "PASS: No AI agent attribution"
+
+  # ==========================================================================
+  # JOB: Report — Generate Progress Dashboard (Allure + GitHub Pages)
+  # ==========================================================================
+  report:
+    name: Generate Progress Dashboard
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: ci
+    if: always()
+    concurrency:
+      group: pages-deploy
+      cancel-in-progress: false
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: pip install pyyaml
+
+      - name: Sync execution status from epic shards
+        run: bash scripts/sync-status-from-epics.sh
+
+      - name: Generate JUnit Progress XML
+        run: python3 scripts/generate-allure-report.py
+
+      - name: Get Allure history
+        uses: actions/checkout@v4
+        if: always()
+        continue-on-error: true
+        with:
+          ref: gh-pages
+          path: gh-pages
+
+      - name: Generate Allure Report
+        uses: simple-elf/allure-report-action@e463a472d3b1d750f9544369d60589ff1964c820
+        if: always()
+        id: allure-report
+        with:
+          allure_results: allure-results
+          gh_pages: gh-pages
+          allure_report: allure-report
+          allure_history: allure-history
+
+      - name: Deploy report to GitHub Pages
+        if: always()
+        uses: peaceiris/actions-gh-pages@47f197a2200bb9de68ba5f48fad1c088eb1c4a32
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: allure-history
