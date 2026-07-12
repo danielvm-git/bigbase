@@ -1983,6 +1983,7 @@ func TestStopDeploymentKillsOrphanedProcess(t *testing.T) {
 
 	// Start a long-running sleep process to simulate an orphaned app
 	sleepCmd := exec.Command("sleep", "300")
+	sleepCmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
 	if err := sleepCmd.Start(); err != nil {
 		t.Fatalf("start sleep: %v", err)
 	}
@@ -2033,8 +2034,9 @@ func TestStopDeploymentKillsOrphanedProcess(t *testing.T) {
 		t.Fatalf("Trigger: %v", err)
 	}
 
-	// Allow async stopDeployment to execute
-	time.Sleep(500 * time.Millisecond)
+	// Allow async stopDeployment to execute (Trigger → runDeployment goroutine →
+	// drainOldDeployments → drainDeployment goroutine → stopDeployment → killProcessGroup).
+	time.Sleep(2 * time.Second)
 
 	// Verify orphaned process is no longer running
 	_processCheckAlive(t, pid, false)
@@ -2042,22 +2044,31 @@ func TestStopDeploymentKillsOrphanedProcess(t *testing.T) {
 
 func _processCheckAlive(t *testing.T, pid int, expectAlive bool) {
 	t.Helper()
-	p, err := os.FindProcess(pid)
-	// On Unix, FindProcess always succeeds. Use Signal(0) to check liveness.
-	if err != nil {
-		// On some platforms (e.g. Windows), FindProcess may fail for dead procs.
-		if expectAlive {
-			t.Fatalf("FindProcess(%d): %v — expected alive", pid, err)
+	if expectAlive {
+		err := syscall.Kill(pid, 0)
+		if err != nil {
+			t.Fatalf("process %d should be alive, but kill(pid, 0) failed: %v", pid, err)
 		}
 		return
 	}
-	err = p.Signal(os.Signal(syscall.Signal(0)))
-	if expectAlive && err != nil {
-		t.Fatalf("process %d should be alive, got Signal(0): %v", pid, err)
+	// When expecting dead, poll with backoff — SIGKILL delivery is asynchronous,
+	// and kill(pid, 0) returns nil for zombies that haven't been reaped yet.
+	// Use Wait4 with WNOHANG to distinguish running vs zombie vs gone.
+	for i := 0; i < 40; i++ {
+		time.Sleep(25 * time.Millisecond)
+
+		// First try Wait4 — if it reaps a zombie, the process is truly dead.
+		var wstatus syscall.WaitStatus
+		reaped, err := syscall.Wait4(pid, &wstatus, syscall.WNOHANG, nil)
+		if reaped > 0 {
+			return // reaped the zombie — process is dead
+		}
+		if reaped == -1 && err == syscall.ECHILD {
+			return // process already reaped or doesn't exist
+		}
+		// reaped == 0 and err == nil: process still running
 	}
-	if !expectAlive && err == nil {
-		t.Fatalf("process %d should be dead after redeploy, but Signal(0) succeeded", pid)
-	}
+	t.Fatalf("process %d should be dead after redeploy, but still alive after 1s", pid)
 }
 
 func TestEnsurePIDColumnIdempotent(t *testing.T) {

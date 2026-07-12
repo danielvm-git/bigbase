@@ -10,12 +10,23 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
+	"syscall"
 	"time"
 
 	"github.com/danielvm/bigbase/kernel"
 )
 
 const version = "0.1.0"
+
+// killProcessGroup kills a process by PID and also signals its entire process group.
+// Sending to both the PID directly and the PGID ensures the process dies even if
+// Setpgid wasn't applied (e.g. orphaned processes from a previous session).
+func killProcessGroup(pgid int) {
+	// Kill the process directly (always works).
+	_ = syscall.Kill(pgid, syscall.SIGKILL)
+	// Also kill the process group in case child processes exist as a separate group.
+	_ = syscall.Kill(-pgid, syscall.SIGKILL)
+}
 
 // DBer is an alias for kernel.DBer — the shared database abstraction.
 type DBer = kernel.DBer
@@ -332,9 +343,9 @@ func (d *Deploy) Stop(ctx *kernel.Context) error {
 			_ = app.server.Shutdown(shutdownCtx)
 			cancel()
 		}
-		// Kill process-based deployments
+		// Kill process-based deployments and their entire process tree.
 		if app.cmd != nil && app.cmd.Process != nil {
-			_ = app.cmd.Process.Kill()
+			killProcessGroup(app.cmd.Process.Pid)
 		}
 		delete(d.apps, id)
 	}

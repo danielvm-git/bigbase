@@ -11,6 +11,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/danielvm/bigbase/kernel"
@@ -92,7 +93,7 @@ func (d *Deploy) stopDeployment(id, newStatus string) {
 
 	if hasApp {
 		if app.cmd != nil && app.cmd.Process != nil {
-			_ = app.cmd.Process.Kill()
+			killProcessGroup(app.cmd.Process.Pid)
 		}
 		if app.server != nil {
 			shutdownCtx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
@@ -104,17 +105,14 @@ func (d *Deploy) stopDeployment(id, newStatus string) {
 		}
 	} else {
 		// Orphaned process recovery: the deployment was started in a previous
-		// BigBase session (or survived a crash). Read the PID from DB and kill.
+		// BigBase session (or survived a crash). Read the PID from DB and kill
+		// the entire process tree.
 		var pid int
 		err := d.db.QueryRowContext(context.Background(),
 			"SELECT pid FROM deployments WHERE id = ?", id).Scan(&pid)
 		if err == nil && pid > 0 {
-			if p, err := os.FindProcess(pid); err == nil {
-				if err := p.Kill(); err == nil {
-					d.logger.Info("killed orphaned process", "id", id, "pid", pid)
-				}
-				_, _ = p.Wait() // reap zombie so Signal(0) reflects dead state
-			}
+			killProcessGroup(pid)
+			d.logger.Info("killed orphaned process group", "id", id, "pid", pid)
 		}
 	}
 
@@ -469,6 +467,10 @@ func (d *Deploy) startApp(ctx context.Context, buildDir string, deploy *Deployme
 		d.updateStatus(deploy.ID, "failed")
 		return
 	}
+
+	// Put the child in its own process group so Stop can kill the entire tree
+	// (npm exec → node, python → uvicorn, etc.) without leaking orphans.
+	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
 
 	cmd.Env = append(os.Environ(), fmt.Sprintf("PORT=%d", deploy.Port))
 
