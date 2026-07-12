@@ -643,9 +643,9 @@ epics:
   wsjf: 5.0
   mode: capsule
   tier: 2
-  status: planned
+  status: done
   depends_on: []
-  note: "1 story, 8 BCPs. Migrate to consolidated templates from .github template repo."
+  note: "1 story, 8 BCPs. Migrated to consolidated templates from .github template repo. PR #105."
   capsule_dir: epics/e79-ci-cd-consolidation
   file: epics/e79-ci-cd-consolidation/epic.yaml
 

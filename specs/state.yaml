@@ -1,8 +1,8 @@
 type: session-state
 context: infra
-active_flow: build_epic
-active_epic_id: e79
-active_story_id: e79s01
+active_flow: null
+active_epic_id: null
+active_story_id: null
 active_story_status: null
 release:
   target_version: 2.76.17
@@ -18,16 +18,22 @@ metrics:
   stories_completed: 199
   bcps_per_hour: 0
 epic_cycle:
-  step: 3
+  step: 8
   story_bcps: 8
   story: e79s01
-  audit_result: null
+  audit_result: pass
   completed_steps:
     - "0: threat-model"
     - "1: survey-context"
     - "2: plan-work"
-  story_complete: false
-  note: "Consolidating CI/CD workflows per Issue #95 — template migration from .github repo."
+    - "3: kickoff-branch"
+    - "4: develop-tdd"
+    - "5: verify-work"
+    - "6: audit-code"
+    - "7: commit-message"
+    - "8: release-branch"
+  story_complete: true
+  note: "e79 complete — CI/CD workflows consolidated per Issue #95. PR #105."
   fast_mode: false
 bug_cycle:
   current_step: null
@@ -36,12 +42,12 @@ bug_cycle:
   note: "BUG-003 landed via fix/bug-003-deploy-key-copy (two-commit red/green)."
 git:
   branch: main
-  hash: 88cd63b9
+  hash: null
   worktree: null
-  ci_status: success
+  ci_status: unknown
 handoff:
-  last_step_completed: "BUG-2026-07-11T032549-codeql-zip-slip triaged as false positive (wontfix)"
+  last_step_completed: "e79 — CI/CD Template Consolidation (Issue #95, PR #105)"
   open_decisions: []
   next_skill: null
-  summary: "Zip slip bug #2 triaged: false positive. extractEntry() in cache_archive.go already has filepath.Clean + isUnderDir containment guard. No archive/zip usage in codebase. Tests: 254 pass, 2 pre-existing failures (unrelated)."
-  context: "Bug #2 (zip slip) — false positive, closed as wontfix."
+  summary: "CI/CD workflows consolidated per Issue #95. Replaced ci.yml with ci-cd.yml (added lint, verify jobs). Updated codeql.yml (permissions, concurrency). PR #105 open."
+  context: "e79 complete: ci-cd.yml, codeql.yml updated. release-deploy.yml + pr-review.yaml unchanged."
