@@ -1,3 +1,10 @@
+## [2.78.3](https://github.com/danielvm-git/bigbase/compare/v2.78.2...v2.78.3) (2026-07-12)
+
+
+### Bug Fixes
+
+* **deploy:** default ASGI import string to app:app when no entry point declared ([d10da52](https://github.com/danielvm-git/bigbase/commit/d10da5278a63aadf0ee386afbe8aa4d7e5f5c293))
+
 ## [2.78.2](https://github.com/danielvm-git/bigbase/compare/v2.78.1...v2.78.2) (2026-07-12)
 
 
