@@ -1,3 +1,4 @@
+import path from 'path';
 import { defineConfig } from '@playwright/test';
 
 export default defineConfig({
@@ -16,6 +17,6 @@ export default defineConfig({
     url: 'http://localhost:9999/health',
     reuseExistingServer: !process.env.CI,
     timeout: 120000,
-    cwd: process.cwd(),
+    cwd: path.resolve(__dirname, '../..'),
   },
 });

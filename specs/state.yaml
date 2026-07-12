@@ -1,8 +1,8 @@
 type: session-state
 context: infra
 active_flow: build_epic
-active_epic_id: e77
-active_story_id: e77s01
+active_epic_id: e78
+active_story_id: e78s01
 active_story_status: pending
 release:
   target_version: 2.76.10
@@ -14,17 +14,20 @@ release:
 metrics:
   session_start: '2026-07-10T10:56:00-03:00'
   session_end: null
-  epics_completed: 62
-  stories_completed: 186
+  epics_completed: 63
+  stories_completed: 187
   bcps_per_hour: 0
 epic_cycle:
-  step: 7
-  story_bcps: 36
-  story: e77s01
+  step: 3
+  story_bcps: 4
+  story: e78s01
   audit_result: null
-  completed_steps: []
+  completed_steps:
+    - "0: threat-model"
+    - "1: survey-context"
+    - "2: plan-work"
   story_complete: false
-  note: "e77s01 API Surface E2E — 36 BCPs. All 17 components coverage."
+  note: "e78s01 Login & Authentication UI — 4 BCPs (of 36 epic total). Browser E2E tests."
   fast_mode: false
 bug_cycle:
   current_step: null
@@ -36,8 +39,8 @@ git:
   worktree: null
   ci_status: success
 handoff:
-  last_step_completed: "release-branch — PR #91 created for e76 (token lifecycle API E2E tests)"
+  last_step_completed: "steps 0-2 complete for e78 — threat model + survey + plan work"
   open_decisions: []
-  next_skill: "survey-context"
-  summary: "e76 complete. 4 Playwright E2E tests passing, threat model documented, audit verified (34/34 pass). PR #91 open."
-  context: "All e76 stories done. Branch e76-token-lifecycle-e2e pushed and PR #91 created."
+  next_skill: "step-3: kickoff-branch"
+  summary: "e78 Phase 1 done. state.yaml reset for e78 (active_story: e78s01). Threat model created at specs/security/epics/e78/THREAT_MODEL.md — 5 threats identified (T1–T5), all in application under test, not test code. BCPs reconciled: epic.yaml says 36 total, all 6 task files updated to match (4+4+6+6+6+10=36). 44 total tasks fleshed out with detailed descriptions and verify commands."
+  context: "Phase 1 complete. Ready for step 3 (kickoff-branch)."

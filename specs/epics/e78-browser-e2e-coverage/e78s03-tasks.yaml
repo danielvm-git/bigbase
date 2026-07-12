@@ -1,21 +1,29 @@
 story_id: e78s03
 title: Sites, Deploy & CI/CD
 status: todo
-bcps: 25
+bcps: 6
 tasks:
   - id: 1
-    description: "Write E2E test for Create Site via GitHub (e13, e15)"
-    verify: "npx playwright test tests/e2e/deploy-ui.spec.ts -g 'Create Site'"
+    description: "E2E test for Create Site via GitHub flow (e13, e15). Cover: navigate to /deploy/new; complete GitHub repository connect flow; trigger one-click deploy with auto app-type detection; verify site begins deploying and status indicator shows progress."
+    verify: "npx playwright test tests/e2e/deploy-ui.spec.ts -g 'Create Site via GitHub'"
     status: todo
   - id: 2
-    description: "Write E2E test for Site Detail Tabs (Manifest, Env Vars, Cache) (e40, e41, e42)"
+    description: "E2E test for Site Detail Tabs (Manifest, Env Vars, Cache) (e40, e41, e42). Cover: navigate to Site Detail page; click Manifest tab and inline-edit bigbase.yaml content; click Env Vars tab and bulk-import .env file; click Cache tab and clear cache with confirmation."
     verify: "npx playwright test tests/e2e/deploy-ui.spec.ts -g 'Site Detail Tabs'"
     status: todo
   - id: 3
-    description: "Write E2E test for Site Actions (Rollback, Drain, Delete) (e36, e44, e45)"
+    description: "E2E test for Site Actions — Rollback, Zero-downtime Drain, Delete (e36, e44, e45). Cover: trigger rollback to previous deploy; trigger zero-downtime drain and verify pulsing drain state in status timeline; delete site with modal confirmation; verify deleted site removed from list."
     verify: "npx playwright test tests/e2e/deploy-ui.spec.ts -g 'Site Actions'"
     status: todo
   - id: 4
-    description: "Write E2E test for CI/CD Pipeline & Streaming Logs (e09, e17, e26, e27, e39)"
-    verify: "npx playwright test tests/e2e/cici-ui.spec.ts -g 'CI/CD Logs and DAG'"
+    description: "E2E test for CI/CD Pipeline DAG Rendering (e09, e17, e26). Cover: navigate to CI/CD pipeline history; verify workflow DAG renders with correct stages; verify StreamLog component displays log entries; verify BuildLogs terminal viewer renders build output."
+    verify: "npx playwright test tests/e2e/cici-ui.spec.ts -g 'CI/CD Pipeline DAG'"
+    status: todo
+  - id: 5
+    description: "E2E test for Streaming Build Logs — TerminalLogViewer (e27, e39). Cover: navigate to a deploying site; verify TerminalLogViewer shows streaming build log lines via WebSocket; verify Request log tab filters and displays request entries; verify log line counts and timestamps."
+    verify: "npx playwright test tests/e2e/deploy-ui.spec.ts -g 'Streaming Build Logs'"
+    status: todo
+  - id: 6
+    description: "E2E test for XSS Mitigation in Manifest Editor (security). Cover: attempt stored XSS payload in bigbase.yaml inline editor (e.g., <script>alert(1)</script>); verify payload renders as escaped text (not executable HTML) in manifest preview."
+    verify: "npx playwright test tests/e2e/deploy-ui.spec.ts -g 'Manifest XSS Guard'"
     status: todo

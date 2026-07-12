@@ -1,17 +1,21 @@
 story_id: e78s01
 title: Login & Authentication UI
 status: todo
-bcps: 12
+bcps: 4
 tasks:
   - id: 1
-    description: "Write E2E test for Login and Registration (e04)"
-    verify: "npx playwright test tests/e2e/auth-ui.spec.ts -g 'Login and Registration'"
+    description: "E2E test for Registration → Login → Dashboard flow (e04). Cover: fill registration form, receive redirect to onboarding, log out, log in with credentials, verify session cookie set and dashboard renders."
+    verify: "npx playwright test tests/e2e/login-ui.spec.ts -g 'Registration and Login'"
     status: todo
   - id: 2
-    description: "Write E2E test for Password Reset UI (e17)"
-    verify: "npx playwright test tests/e2e/auth-ui.spec.ts -g 'Password Reset UI'"
+    description: "E2E test for Password Reset UI flow (e17). Cover: click 'forgot password' link on login page, submit email, verify reset confirmation toast appears. Also verify invalid email handling."
+    verify: "npx playwright test tests/e2e/login-ui.spec.ts -g 'Password Reset'"
     status: todo
   - id: 3
-    description: "Write E2E test for /admin/auth Framework Previews (e34)"
-    verify: "npx playwright test tests/e2e/auth-ui.spec.ts -g 'Framework Previews'"
+    description: "E2E test for Auth Framework Component Preview at /admin/auth (e34). Cover: navigate to auth page, click through React/Vue/Svelte framework tabs, verify <SignIn>, <SignUp>, and <UserButton> preview components render in each tab. Verify code snippet blocks update per tab."
+    verify: "npx playwright test tests/e2e/login-ui.spec.ts -g 'Auth Framework Previews'"
+    status: todo
+  - id: 4
+    description: "E2E test for unauthenticated redirect and token lifecycle. Cover: navigate to protected hash route without auth → redirect to login; after login, verify redirect back to original route; after logout, verify protected route shows login again."
+    verify: "npx playwright test tests/e2e/login-ui.spec.ts -g 'Auth Redirects'"
     status: todo
