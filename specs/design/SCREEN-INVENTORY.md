@@ -4,10 +4,11 @@ Living map of every screen: its route, owning epic, and prototype status.
 Updated before each epic implementation starts.
 
 **Last updated:** 2026-07-12
-**Prototype project:** BigBase Prototype (`ec1480a1`) — BUILT. `BigBase Console.html` (modular `bb/*.jsx` runtime: split source files concatenated into `bundle.jsx`) + `BigBase Landing.html` (static marketing page mirroring bigbase.click root).
+**Prototype project:** BigBase Prototype (`ec1480a1`) — BUILT. `BigBase Console.html` (modular `bb/*.jsx` runtime: 13 split source files concatenated into `bundle.jsx` per `bb/MANIFEST.md`, regenerated via `bb/make-bundle.sh`) + `BigBase Landing.html` (static marketing page mirroring bigbase.click root).
 **Design System project:** BigBase Design System (`502492b2`) — tokens (`colors_and_type.css`: light/dark + 12 monthly accents + indigo default) + `components.css` + `_ds_bundle.js` component previews.
 **Spec file:** `specs/design/PROTOTYPE-SPEC-v1.md` — spec for all 20 screens (updated 2026-07-12: 13 accents, v2.76.15 footer, 8 Site Detail tabs).
-**Known debt (harmonization Phase 1):** `bundle.jsx` drifted from split files (Deploy Keys tab dead at runtime); `pages-projects.jsx` monkey-patches a second app over the first render. Fix: split files become the only editable source, bundle regenerated via documented manifest, EnhancedApp dissolved.
+**Harmonization Phase 1 — done:** `pages-projects.jsx`'s e58 project routes + PROJECT sidebar zone + ContextBar are now merged directly into `app.jsx`/`shell.jsx` (the split-file sources); `EnhancedApp`/`EnhancedSidebar` and the second `ReactDOM.createRoot(...).render(...)` call are gone — there is exactly one render pass. `bundle.jsx` is a generated artifact (`bb/make-bundle.sh`, verified idempotent) covering all 13 sections that used to live only inside it (icons, functions, users-messaging, devops, monitoring, forge, misc now also have standalone split files). Deploy Keys tab (previously dead at runtime because it existed in `pages-sites.jsx` but not in the deployed `bundle.jsx`) now renders correctly — verified live in-browser.
+**New finding for Phase 2 (P2 design-system project):** `_ds_bundle.js` contains a leftover mirrored copy of `source/bigbase-ui/main.tsx` that unconditionally self-mounts (`createRoot(document.getElementById('root')).render(<StrictMode><HashRouter><App/></HashRouter></StrictMode>)`) using the react-stubs demo `App`, not the console's real app. On any page that also loads `bb/bundle.jsx` into the same `#root` (i.e. `BigBase Console.html`), this fires first, throws (react-stubs demo references something the console page doesn't have), and logs a "createRoot called twice" + "type is invalid" console error before the real app's render call overwrites it. Harmless to the final rendered page — real console visually correct in every test — but pollutes the console on every load and should be gated (e.g. behind a `!document.querySelector('[data-bb-app]')` check or split into a truly separate preview-only bundle) as part of Phase 2's design-system cleanup.
 
 ---
 
@@ -22,9 +23,9 @@ Legend — **Spec**: described in PROTOTYPE-SPEC/UPDATE-BRIEF · **P2**: design-
 | Global Dashboard | `/` | ✅ | ✅ | ✅ | ✅ | — |
 | Sites List | `/sites` | ✅ | ✅ | ✅ | ⚠️ `/deploy` | e60 rename |
 | Create Site | `/sites/new` | ✅ | ✅ | ✅ | ⚠️ `/deploy/new` | e60 |
-| Site Detail (8 tabs) | `/sites/:id` | ✅ | ⚠️ table/modal classes | ⚠️ bundle drift (7 tabs live) | ⚠️ `/deploy/:id` | Ph 1 + e60 |
+| Site Detail (8 tabs) | `/sites/:id` | ✅ | ⚠️ table/modal classes | ✅ 8 tabs (Ph 1 fixed) | ⚠️ `/deploy/:id` | e60 |
 | — Previews tab | (tab) | ✅ e65 brief | ⚠️ | ✅ | ❌ | e65 |
-| — Deploy Keys tab | (tab) | ✅ | ⚠️ | ⚠️ dead in bundle | ✅ | Ph 1 |
+| — Deploy Keys tab | (tab) | ✅ | ⚠️ | ✅ (Ph 1 fixed — was dead in bundle) | ✅ | — |
 | Data Studio (+Schema Designer) | `/data` | ✅ e64 brief | ⚠️ | ✅ | ⚠️ no designer | e64 |
 | SQL Editor | `/sql` | ✅ | ✅ | ✅ | ✅ | e58 replaces w/ scoped |
 | Storage | `/storage` | ✅ | ✅ | ✅ | ✅ | — |
@@ -39,11 +40,11 @@ Legend — **Spec**: described in PROTOTYPE-SPEC/UPDATE-BRIEF · **P2**: design-
 | Events | `/events` | ✅ | ✅ | ✅ | ✅ | — |
 | Settings | `/settings` | ✅ | ✅ | ✅ | ✅ | — |
 | 404 | `*` | ⚠️ | ✅ | ❌ | ✅ | Ph 4 story |
-| Projects List | `/projects` | ✅ e58 | ⚠️ | ✅ | ❌ | e58 |
-| Project Dashboard | `/project/:id` | ✅ e58 | ⚠️ | ✅ | ❌ | e58 |
-| Project SQL (3-panel) | `/project/:id/sql[/:branch]` | ✅ e58 | ⚠️ | ✅ | ❌ | e58 |
-| Project Branches | `/project/:id/branches` | ✅ e58 | ⚠️ | ✅ | ❌ | e58/e59s02 |
-| Project Settings (5 tabs incl. Secrets) | `/project/:id/settings` | ✅ e58+e61 | ⚠️ | ✅ | ❌ | e58, e61 |
+| Projects List | `/projects` | ✅ e58 | ⚠️ | ✅ (single-app, Ph 1) | ❌ | e58 |
+| Project Dashboard | `/project/:id` | ✅ e58 | ⚠️ | ✅ (single-app, Ph 1) | ❌ | e58 |
+| Project SQL (3-panel) | `/project/:id/sql[/:branch]` | ✅ e58 | ⚠️ | ✅ (single-app, Ph 1) | ❌ | e58 |
+| Project Branches | `/project/:id/branches` | ✅ e58 | ⚠️ | ✅ (single-app, Ph 1) | ❌ | e58/e59s02 |
+| Project Settings (5 tabs incl. Secrets) | `/project/:id/settings` | ✅ e58+e61 | ⚠️ | ✅ (single-app, Ph 1) | ❌ | e58, e61 |
 | Usage Dashboard | `/usage` | ✅ e63 brief | ⚠️ | ❌ (intentionally held until ship) | ❌ | e63 |
 | Platform Users / Settings / Invites | `/admin/platform/*` | ❌ not designed | ❌ | ❌ | ❌ | e66 (brief first) |
 
