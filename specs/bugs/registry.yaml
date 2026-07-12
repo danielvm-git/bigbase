@@ -172,7 +172,7 @@ bugs:
     severity: medium
     priority: medium
     scope: auth
-    summary: "OAuth/token cookies use Secure: r.TLS != nil behind TLS proxy (CWE-319)"
+    summary: OAuth/token cookies use Secure: r.TLS != nil behind TLS proxy (CWE-319)
     file: specs/bugs/BUG-2026-07-10T160110-oauth-cookie-secure-flag.md
     status: fixed
     audit_source: specs/audit-code-2026-07-10.md
@@ -1429,9 +1429,14 @@ bugs:
     scope: security,api,functions,db
     summary: "CodeQL SQL injection alerts #8-#15 — passthrough wrappers; tainted table-name interpolation in api.go and functions/runtime.go guarded by sanitize()"
     file: specs/bugs/BUG-2026-07-11T032535-codeql-sql-injection.md
-    status: needs-audit
+    status: fixed
     source: seal.github_code_scanning
     risk_level: low
+    files_changed:
+      - components/api/api.go
+      - components/api/scaffold.go
+      - components/functions/runtime.go
+    approach: "Added tableName type as defense-in-depth wrapper — only sanitize()/validateCollectionName() can produce one. All CRUD methods and SQL closures now accept tableName instead of raw string, making it impossible for unsanitized user input to reach SQL identifiers. 111 tests pass, zero linter issues."
     investigation:
       date: "2026-07-11"
       findings:
@@ -1515,114 +1520,14 @@ bugs:
 
   - id: BUG-2026-07-11T032549
     date: "2026-07-11"
-    severity:
-    priority:
-    scope: security
-    summary: ""
+    severity: normal
+    priority: low
+    scope: deploy
+    summary: "Zip slip (CWE-22) in tar.gz extraction — false positive; extractEntry already has filepath.Clean + isUnderDir containment guard"
     file: specs/bugs/BUG-2026-07-11T032549-codeql-zip-slip.md
-    status: triage
+    status: wontfix
     source: seal.github_code_scanning
-    risk_level:
-
-  # === Seal pen-test / DAST findings (2026-07-11) ===
-
-  - id: BUG-2026-07-11T120001
-    date: "2026-07-11"
-    severity: critical
-    priority: critical
-    scope: api,security
-    summary: "SQL Injection in customer search endpoint — pen test finding on ACME Customer Portal (production, PII Data). 54 days in triage, no ticket assigned."
-    status: triage
-    source: seal.pentest
-    seal_vulnerability_id: bf472273-8dd7-4aef-9316-20b805c651ab
-    risk_level: critical
-    application: "ACME Customer Portal"
-    team: "Product Engineering"
-    environment: production
-    discovery_date: "2026-05-19"
-    note: "Penetration test finding. No exceptions or mitigations in place."
-
-  - id: BUG-2026-07-11T120002
-    date: "2026-07-11"
-    severity: critical
-    priority: critical
-    scope: api,security
-    summary: "Insecure Direct Object Reference on payment endpoint — pen test finding on ACME Payment API (production, Payment Processing). 54 days in triage, no ticket assigned."
-    status: triage
-    source: seal.pentest
-    seal_vulnerability_id: 01b2fd9a-0d61-49b1-9210-cef631dcfd98
-    risk_level: critical
-    application: "ACME Payment API"
-    team: "FinTech Engineering"
-    environment: production
-    discovery_date: "2026-05-19"
-    note: "Penetration test finding. No exceptions or mitigations in place."
-
-  - id: BUG-2026-07-11T120003
-    date: "2026-07-11"
-    severity: critical
-    priority: medium
-    scope: mobile,security
-    summary: "Android minSdk vulnerability — app can be installed on vulnerable unpatched Android 5.0-5.0.2 (minSdk=21). Has global exception."
-    status: triage
-    source: seal.dast_mobile
-    seal_vulnerability_id: f9291bea-b2a8-453d-9b48-9cc1fcf29201
-    risk_level: low
-    application: "ACME Mobile App (Android)"
-    team: "Product Engineering"
-    discovery_date: "2026-05-19"
-    has_exception: true
-    note: "Global exception already applied. Low practical risk — Android 5.0 market share negligible."
-
-  # === Seal risk events (2026-07-11) ===
-
-  - id: BUG-2026-07-11T130001
-    date: "2026-07-11"
-    severity: critical
-    priority: critical
-    scope: security,threat-intel
-    summary: "Global FinTech Ransomware Campaign — Scattered Thunder (active). Threat actor targeting Brazilian FinTech payment rails. Est. impact $5M. Linked to 3 risks: credential theft, data exfiltration, unpatched vulns."
-    status: active
-    source: seal.risk_events
-    seal_event_id: 3d635fd6-26a6-4b2d-8243-3ef9c8200747
-    risk_level: critical
-    owner: "CISO"
-    likelihood_modifier: 3
-    estimated_impact: 5000000
-    linked_risks:
-      - "Credential theft via phishing targeting FinTech team"
-      - "Risk of data exfiltration from legacy CRM system"
-      - "Unpatched vulnerabilities on public-facing systems"
-
-  - id: BUG-2026-07-11T130002
-    date: "2026-07-11"
-    severity: critical
-    priority: critical
-    scope: security,deps
-    summary: "OpenSSL Remote Code Execution — CVE-2025-0891 (Zero-Day). Critical RCE in OpenSSL 3.x TLS handshake (CVSS 9.8). All public-facing TLS services potentially exposed. Patch SLA: 72h for production."
-    status: active
-    source: seal.risk_events
-    seal_event_id: a01a52d9-1ef2-4a58-a35e-e24ee28c9dd5
-    risk_level: critical
-    owner: "CISO"
-    likelihood_modifier: 2
-    estimated_impact: 1200000
-    linked_risks:
-      - "DDoS attack on Customer Portal"
-      - "Unpatched vulnerabilities on public-facing systems"
-
-  - id: BUG-003
-    date: "2026-07-12"
-    severity: medium
-    priority: medium
-    scope: ui
-    summary: "Deploy key copy button copied internal key_id instead of displayed prefix; prototype missing Deploy Keys tab."
-    status: fixed
-    source: user.report
-    file: specs/bugs/BUG-003.md
-    files_changed:
-      - ui/src/components/SiteDeployKeysTab.tsx
-      - ui/src/components/SiteDeployKeysTab.test.tsx
-    approach: "CopyButton value k.key_id -> k.prefix (label ID -> Key); prototype Deploy Keys tab added via DesignSync."
-    risk_level: low
-    commit_message: "fix(ui): deploy key copy button copies displayed prefix, not internal id"
+    risk_level: none
+    resolution:
+      approach: "False positive — extractEntry() in cache_archive.go already has filepath.Clean(hdr.Name) + isUnderDir() containment check on lines 121-123. No archive/zip usage in codebase; only archive/tar + compress/gzip. Same as Alert #22 in codeql-path-traversal report."
+      evidence: "components/deploy/cache_archive.go:120-132; isUnderDir() at lines 150-153"

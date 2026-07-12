@@ -154,7 +154,19 @@ The 8 CodeQL alerts are **technically correct** (tainted input reaches the wrapp
 The real vulnerability is architectural: **table names cannot be parameterized**, so every table-name interpolation is a single `sanitize()` bypass away from being a critical SQL injection. A defense-in-depth improvement would use a table ID lookup (e.g., map collection names to integer IDs) so that user input never appears in the SQL string at all.
 
 ## Status
-needs-audit
+fixed
+
+## Fix — 2026-07-12
+
+Added `tableName` wrapper type for defense-in-depth:
+
+- **`components/api/api.go`**: `tableName` type; `sanitize()` returns `tableName`; all CRUD methods, `emitMutation`, `parseFilters`, `parseSort` accept `tableName` instead of `string`
+- **`components/api/scaffold.go`**: Updated `handleScaffoldDB` to use `tableName` from `sanitize()`
+- **`components/functions/runtime.go`**: `tableName` type; `validateCollectionName()` returns `tableName`; all SQL closures use `string(name)`
+
+The `tableName` type can only be created by `sanitize()` or `validateCollectionName()`. This means unsanitized user input can never reach SQL identifiers — the Go compiler enforces the boundary at the type level. Even if the regex guard were bypassed, raw strings cannot be passed to SQL-building functions without an explicit `tableName(rawString)` conversion, which is a deliberate action visible during code review.
+
+PR: #104
 
 ## Source
 seal.github_code_scanning
