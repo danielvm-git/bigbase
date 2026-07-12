@@ -1,11 +1,16 @@
 type: release-plan
 context: domain
 release:
-  version: 3.0.0
-  codename: Project Scoping + Neon Native Port
+  version: 3.1.0
+  codename: "Multi-Language Deploy + Deploy Tokens + Python Runtime"
   status: planning
   semantic_release: true
-  bump_hint: major
+  bump_hint: minor
+# Waves:
+#   Wave 1 (parallel, current): e57, e74, e73, e81
+#   Wave 2 (after e57): e59, e58, e70
+#   Wave 3 (after e59s02): e65, e68, e60
+#   Wave 4 (after e57): e61, e62, e63, e64, e66
 epics:
 - id: e01
   title: "CLI \u2014 BigBase Breathes"
@@ -385,6 +390,7 @@ epics:
   mode: capsule
   tier: 0
   status: planned
+  wave: 1
   blocks:
   - e58
   - e59
@@ -394,7 +400,7 @@ epics:
   - e64
   - e65
   - e66
-  note: 5 stories, 21 BCPs. Foundation for multi-tenant isolation.
+  note: "5 stories, 21 BCPs. Foundation for multi-tenant isolation. CRITICAL PATH — blocks 8 epics."
   capsule_dir: epics/e57-project-scoping-backend
   file: epics/e57-project-scoping-backend/epic.yaml
 - id: e58
@@ -545,7 +551,9 @@ epics:
   file: epics/archive/e68-native-db-connection.yaml
   mode: flat
   tier: 2
+  wave: 3
   status: planned
+  note: "Highest WSJF (10.5) but blocked by Wave 1 sequencing. Ships in Wave 3."
 
 - id: e73
   title: "Python (FastAPI) Runtime"
@@ -553,8 +561,9 @@ epics:
   mode: capsule
   tier: 1
   status: planned
+  wave: 1
   depends_on: []
-  note: "4 stories, 8 BCPs. Python runtime with uv/uvicorn. No e57 dependency. Reference: Grimoire."
+  note: "4 stories, 8 BCPs. Python runtime with uv/uvicorn. No e57 dependency. Ships in Wave 1."
   capsule_dir: epics/e73-python-runtime
   file: epics/e73-python-runtime/epic.yaml
 
@@ -615,8 +624,9 @@ epics:
   mode: capsule
   tier: 2
   status: planned
+  wave: 1
   depends_on: []
-  note: "2 stories, 5 BCPs."
+  note: "2 stories, 5 BCPs. No e57 dependency. Ships in Wave 1."
   capsule_dir: epics/e74-self-service-deploy-tokens
   file: epics/e74-self-service-deploy-tokens/epic.yaml
 
@@ -663,13 +673,14 @@ epics:
   note: "1 story, 8 BCPs. Migrated to consolidated templates from .github template repo. PR #105."
   capsule_dir: epics/e79-ci-cd-consolidation
   file: epics/e79-ci-cd-consolidation/epic.yaml
-- id: e80
+- id: e81
   title: "Multi-Language Deploy — Rust, PHP, Java, Ruby"
   wsjf: 1.6
   mode: flat
   tier: 2
   status: open
+  wave: 1
   depends_on: [e13]
-  note: "5 stories. Extends Deploy with 4 new runtimes (Rust/PHP/Java/Ruby) + profiles + CI templates."
-  file: epics/e80-multi-language-deploy.yaml
+  note: "6 stories (incl. e81s00 infra). Extends Deploy with 4 new runtimes + profiles + CI templates. Ships in Wave 1."
+  file: epics/e81-multi-language-deploy.yaml
 
