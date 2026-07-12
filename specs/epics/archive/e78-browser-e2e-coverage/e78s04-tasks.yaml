@@ -1,0 +1,29 @@
+story_id: e78s04
+title: Data, SQL & Storage
+status: todo
+bcps: 6
+tasks:
+  - id: 1
+    description: "E2E test for Data Studio Schema Editor & Filtering (e05, e17, e30). Cover: toggle between Data view (table rows) and Schema view (column definitions); Add new column with name/type, Edit existing column, Delete column; filter collection list by column value; sort columns ascending/descending; click 'Query This' navigates to SQL editor with pre-filled query."
+    verify: "npx playwright test tests/e2e/data-ui.spec.ts -g 'Data Studio Schema'"
+    status: todo
+  - id: 2
+    description: "E2E test for SQL Editor Execution (e05). Cover: navigate to SQL Editor; type a SELECT query in the code editor; click Run; verify results grid renders with column headers and row data; verify error state for invalid SQL shows error message."
+    verify: "npx playwright test tests/e2e/data-ui.spec.ts -g 'SQL Editor'"
+    status: todo
+  - id: 3
+    description: "E2E test for Storage UI — Upload, Preview, Delete (e06, e17). Cover: upload a file via drag-drop zone; verify file appears in storage listing; toggle between grid view and list view; open file preview modal and verify content renders; delete file with confirmation; verify file removed from listing."
+    verify: "npx playwright test tests/e2e/storage-ui.spec.ts -g 'Storage UI'"
+    status: todo
+  - id: 4
+    description: "E2E test for Storage File Preview — authenticated URLs (security). Cover: directly navigate to file preview URL without auth token; verify 401/403 response (not cached content); verify preview modal content does not persist in browser cache after modal close."
+    verify: "npx playwright test tests/e2e/storage-ui.spec.ts -g 'Storage Auth Guard'"
+    status: todo
+  - id: 5
+    description: "E2E test for Data Studio — Row detail view. Cover: click a data row to expand detail view; verify all column values display correctly; verify pagination controls work when dataset has multiple pages; verify search/filter across all columns."
+    verify: "npx playwright test tests/e2e/data-ui.spec.ts -g 'Data Row Detail'"
+    status: todo
+  - id: 6
+    description: "E2E test for Storage — file type handling. Cover: upload image file and verify thumbnail renders in grid; upload text file and verify content preview; verify download button triggers file download with correct filename."
+    verify: "npx playwright test tests/e2e/storage-ui.spec.ts -g 'Storage File Types'"
+    status: todo

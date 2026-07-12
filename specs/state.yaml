@@ -1,21 +1,21 @@
 type: session-state
 context: infra
 active_flow: null
-active_epic_id: e78
+active_epic_id: null
 active_story_id: null
-active_story_status: completed
+active_story_status: null
 release:
-  target_version: 2.76.10
-  codename: "Bug Fix Sprint"
-  last_tag: v2.76.10
-  last_publish: '2026-07-10'
+  target_version: 2.76.14
+  codename: "Browser E2E Coverage"
+  last_tag: v2.76.13
+  last_publish: '2026-07-11'
   ci_verified: true
-  ci_verified_at: '2026-07-11T00:55:00-03:00'
+  ci_verified_at: '2026-07-11T22:30:00-03:00'
 metrics:
   session_start: '2026-07-10T10:56:00-03:00'
   session_end: '2026-07-11T20:17:00-03:00'
-  epics_completed: 64
-  stories_completed: 193
+  epics_completed: 65
+  stories_completed: 199
   bcps_per_hour: 0
 epic_cycle:
   step: 8
@@ -40,13 +40,13 @@ bug_cycle:
   completed_steps: []
   bug_file: null
 git:
-  branch: e78-browser-e2e-coverage
-  hash: 186b7713
+  branch: main
+  hash: 02d9d5f5
   worktree: null
   ci_status: success
 handoff:
-  last_step_completed: "steps 0-8 complete — e78 fully built and released"
+  last_step_completed: "e78 released — merged to main, branch archived"
   open_decisions: []
   next_skill: "next-epic"
-  summary: "e78 complete. All 6 stories implemented across 14 Playwright spec files (53 tests). 36 BCPs covered. Branch e78-browser-e2e-coverage ready for PR."
-  context: "e78 complete. All browser E2E tests passing. Threat model documented. Ready for next epic."
+  summary: "e78 released. 6 stories, 14 Playwright spec files (53 tests), 36 BCPs. Merged to main and epic capsule archived."
+  context: "e78 complete and released. Ready for next epic."

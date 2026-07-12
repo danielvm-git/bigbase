@@ -1,0 +1,52 @@
+type: epic-shard
+context: quality
+id: e78
+title: "Browser E2E Test Coverage — All UI Routes"
+wsjf: 8.0
+wsjf_rationale: "BV=9(currently ZERO browser E2E tests — every UI bug is caught by users, not tests) TC=10(urgent — each deploy risks regression across 22 UI routes) RR=8(high risk, no safety net) / JS=3(~36 BCPs across 6 stories)"
+total_bcps: 36
+status: planned
+tier: 1
+depends_on: [e76, e77]
+note: "Comprehensive Playwright browser-level test suite covering all 22 UI routes. 0 browser E2E tests exist today. This epic closes the gap entirely."
+out_of_scope:
+  - "Testing of third-party external integrations (e.g., GitHub webhooks, SMTP email dispatch)"
+  - "API request-level validation (handled by e76 and e77)"
+  - "Performance and load testing"
+stories:
+  - id: e78s01
+    title: "Login & Authentication UI — browser E2E"
+    bcps: 4
+    status: pending
+    spec: e78s01-login-ui.md
+    tasks: e78s01-tasks.yaml
+  - id: e78s02
+    title: "Dashboard & Navigation — browser E2E"
+    bcps: 4
+    status: pending
+    spec: e78s02-dashboard-nav.md
+    tasks: e78s02-tasks.yaml
+  - id: e78s03
+    title: "Sites & Deploy UI — browser E2E"
+    bcps: 6
+    status: pending
+    spec: e78s03-sites-deploy.md
+    tasks: e78s03-tasks.yaml
+  - id: e78s04
+    title: "Data, SQL & Storage — browser E2E"
+    bcps: 6
+    status: pending
+    spec: e78s04-data-storage.md
+    tasks: e78s04-tasks.yaml
+  - id: e78s05
+    title: "Secondary Pages (Functions, Messaging, Users, Settings) — browser E2E"
+    bcps: 6
+    status: pending
+    spec: e78s05-secondary-pages.md
+    tasks: e78s05-tasks.yaml
+  - id: e78s06
+    title: "DevOps Pages (CI/CD, Monitoring, Forge, Realtime, Events, Git) — browser E2E"
+    bcps: 10
+    status: pending
+    spec: e78s06-devops-pages.md
+    tasks: e78s06-tasks.yaml
