@@ -2,10 +2,10 @@
 
 **type:** tech-stack
 **context:** infra
-**version:** 2.76.7
+**version:** 2.76.16
 **supersedes:** v2.71.0 snapshot
 **verify:** `go test ./... && go build ./... && go vet ./...`
-**last-scan:** 2026-07-10 (bulk fix session, 17 bugs fixed across deploy/auth/proxy/monitoring/cici/test)
+**last-scan:** 2026-07-12 (incremental: SQL injection hardening, MCP auth tier fix, E2E test expansion, dependency bumps)
 
 ## Overview
 
@@ -13,7 +13,7 @@ BigBase is a single-binary, open-source Backend-as-a-Service (BaaS) platform bui
 with Go. It uses the **Entity-Component-Construct (ECC)** pattern: a lightweight
 kernel discovers, starts, and connects independent components via an event bus.
 
-**~196 Go source files · ~105 test files · ~600 test functions · 20 component directories**
+**~106 Go source files · ~103 test files · ~209 total .go files · 20 component directories**
 **(Deploy component decomposed per ADR 0005: engine.go, gateway.go, orchestratorator.go — deploy.go reduced from 1875→342 lines)**
 
 ## Stack
@@ -21,7 +21,7 @@ kernel discovers, starts, and connects independent components via an event bus.
 | Layer | Technology |
 |-------|-----------|
 | Language | Go 1.26.3 (`go.mod`) |
-| Database | SQLite (`modernc.org/sqlite` v1.50, zero-CGO) · PostgreSQL (`pgx/v5 stdlib`) |
+| Database | SQLite (`modernc.org/sqlite` v1.53, zero-CGO) · PostgreSQL (`pgx/v5 stdlib`) |
 | Auth | bcrypt + HS256 JWT (`golang-jwt/jwt/v5`) · Google OAuth 2.0 · API keys (`X-API-Key`) · OTP · magic-link · phone · **site deploy keys (`bb_dep_*`)** · **MCP org keys with scoped `mcp:provision`** |
 | Auth hardening | DB-backed OTP store · rate limiting · audit logging (`components/auth/store.go`, `otp.go`) |
 | Functions runtime | goja (pure Go JS) with fetch, db, request context, env, cron bindings |
@@ -166,12 +166,15 @@ kernel discovers, starts, and connects independent components via an event bus.
 | `auth.go` — 1756 lines | `components/auth/auth.go` | Split started (separate files: otp.go, store.go, apikeys.go, etc.) — manageable but watch for continued growth |
 | `proxy/hosts.go` — 488 lines | `components/proxy/hosts.go` | Auth policy enforcement + metadata injection + deployment routing in one middleware; e71 added significant logic here |
 | Inline migrations scattered | All component `Init()` | Schema state not observable; migrations run on every boot; ALTER failures silently ignored. 3 new columns added since v2.63: `auth_policy`, `pipeline_timeline`, `status_history` |
-| Event bus covers 15 files | `deploy/`, `monitoring/`, `api/`, `github/`, `realtime/`, `proxy/` | Growing adoption; monitoring fix (e72) will align hook names with actual emissions (`deploy.state_changed` vs `"deploy"`) |
-| Project scoping — foundation only | `kernel/scope.go` (40 lines) | `WithProjectID`/`ProjectIDFromContext` defined; **zero callers** after 2 release cycles. Auth injection and query scoping stories pending. |
+| Event bus covers 15 files | `deploy/`, `monitoring/`, `api/`, `github/`, `realtime/`, `proxy/` | Growing adoption; v2.76.16 cleaned up hook names — removed phantom `scaffold_db`/`scaffold_function` subscriptions, added `deploy.diagnosed` to `knownEventHooks` |
+| Project scoping — foundation only | `kernel/scope.go` (40 lines) | `WithProjectID`/`ProjectIDFromContext` **removed** (v2.76.16) — zero callers after 2 release cycles. `WithSiteID` is the active scope key. |
 | `DBer` aliased in 13 components | 3 keep local interfaces (backup, mcp, webhooks) | Pattern is stable and understood |
-| Scope keys: `SiteID` adopted, `ProjectID` stalled | `kernel/scope.go` | `WithSiteID` called by proxy+deploy flows; `WithProjectID` has no consumers since e57s01 |
+| Scope keys: `SiteID` active | `kernel/scope.go` | `WithSiteID` called by proxy+deploy flows; `WithProjectID` removed (v2.76.16) |
 | ADR 0007 (e72) landed | `deploy/pipeline_timeline.go`, `internal/eventrecorder/`, `internal/llm/`, `monitoring/observability.go`, `deploy/observability.go` | Pipeline timeline, persistent event recorder (FIFO 5000), `deploy.failed` + `deploy_diagnoses`, related-events snapshot, alert incidents + investigations |
 | Deploy log eviction non-deterministic | `deploy/logs.go:14-26` | `initDeployLogs` uses Go map random iteration for victim selection — log loss is unpredictable, not FIFO |
+| SQL injection hardening (v2.76.16) | `components/api/`, `components/functions/` | `tableName` type added for defense-in-depth against CodeQL-flagged SQL injection — table names now type-checked at compile time |
+| MCP auth tier correction (v2.76.16) | `components/mcp/auth.go` | `list_site_keys` moved from `writeTools` to `tierRead` — was incorrectly requiring write-scoped tokens for a read-only operation |
+| E2E test coverage expanded (v2.76.16) | `tests/e2e/` | 22 SPA route browser-level E2E tests + 17 API component request-level E2E tests added |
 
 ## Recent Features Landed (v2.67 → v2.71)
 
@@ -351,6 +354,7 @@ confidence ≥ 8 were identified in the July 2026 review.
 | v2.74.0 | e45 | Deploy decomposition (ADR 0005), deploy key prefix + security hardening, SQL-safety doctrine proof |
 | v2.75.0 | e26 | Compose deploy, log streaming WebSocket, manifest parser, Node/Python build caching |
 | v2.76.0+ | — | Bulk bug fix: 17 fixes across deploy keys+security, dep vulns (7 critical), DAST CSP/Cache-Control, test cleanup, comment stripping |
+| v2.76.16 | — | SQL injection hardening (`tableName` type), MCP auth tier fix (`list_site_keys` moved to read tier), E2E coverage (22 SPA routes + 17 API components), dependency bumps (Go 1.26.3, React 19.2.7, modernc.org/sqlite 1.53.0) |
 
 ## Verification
 

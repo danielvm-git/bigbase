@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Outlet, useNavigate } from 'react-router-dom'
+import { Outlet, Link, useNavigate } from 'react-router-dom'
 import { Icon, type IconName } from './components/Icon'
 import { ThemePicker } from './components/ThemePicker'
 import { TutorialOverlay, useTutorialTrigger } from './components/TutorialOverlay'
@@ -42,7 +42,14 @@ export default function Layout() {
       .catch(() => {})
   }, [])
 
-  const handleLogout = () => nav('/login')
+  const closeSidebar = () => setSidebarOpen(false)
+
+  const handleLogout = () => {
+    fetch('/api/auth/logout', { method: 'POST' }).catch(() => {})
+    setUser(null)
+    closeSidebar()
+    nav('/login')
+  }
 
   const initial = user?.email?.[0]?.toUpperCase() || '?'
 
@@ -87,10 +94,10 @@ export default function Layout() {
       </div>
       <ul className="sidebar-nav sidebar-footer-nav">
         <li>
-          <a href="/settings">
+          <Link to="/settings" onClick={closeSidebar}>
             <Icon name="settings" size={18} />
             <span>Settings</span>
-          </a>
+          </Link>
         </li>
       </ul>
       <div className="sidebar-user">

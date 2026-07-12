@@ -2,7 +2,8 @@
 // story: e76s01
 import { test, expect } from '@playwright/test';
 
-test.use({ baseURL: 'http://localhost:9999' });
+// baseURL comes from playwright.config.ts (paired with webServer --jwt-access-expiry=30s).
+// Do NOT override here — a mismatch causes the TTL assertion to fail.
 
 // Module-scoped auth state for scaffold tests.
 const email = `e2e-token-${Date.now()}@test.com`;

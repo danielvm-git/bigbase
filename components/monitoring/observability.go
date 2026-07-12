@@ -44,9 +44,9 @@ type RelatedEvents struct {
 
 var knownEventHooks = []string{
 	"mutation", "request",
-	"deploy.state_changed", "deploy.failed",
+	"deploy.state_changed", "deploy.failed", "deploy.diagnosed",
 	"alert.triggered", "alert.investigation_complete",
-	"scaffold_db", "scaffold_repo", "scaffold_function",
+	"scaffold_repo",
 }
 
 func (m *Monitoring) initObservability() error {

@@ -78,3 +78,6 @@ specs/TRACEABILITY_LATEST.md
 
 # Test-generated git repos (must be created in t.TempDir() only)
 repo-*.git
+
+# Ctxo local cache (never committed)
+.ctxo/.cache/
