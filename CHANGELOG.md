@@ -1,3 +1,10 @@
+## [2.76.20](https://github.com/danielvm-git/bigbase/compare/v2.76.19...v2.76.20) (2026-07-12)
+
+
+### Bug Fixes
+
+* **deploy:** fall back to pip/python3 when uv is not on PATH ([fcabcf6](https://github.com/danielvm-git/bigbase/commit/fcabcf643f7e959c3dd8b721cdd923db4f2f77b5))
+
 ## [2.76.19](https://github.com/danielvm-git/bigbase/compare/v2.76.18...v2.76.19) (2026-07-12)
 
 
