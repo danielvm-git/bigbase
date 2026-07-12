@@ -1531,3 +1531,22 @@ bugs:
     resolution:
       approach: "False positive — extractEntry() in cache_archive.go already has filepath.Clean(hdr.Name) + isUnderDir() containment check on lines 121-123. No archive/zip usage in codebase; only archive/tar + compress/gzip. Same as Alert #22 in codeql-path-traversal report."
       evidence: "components/deploy/cache_archive.go:120-132; isUnderDir() at lines 150-153"
+
+  - id: BUG-2026-07-12T171000
+    date: "2026-07-12"
+    severity: medium
+    priority: high
+    scope: deploy
+    summary: "Python deploys fail when uv is not installed on build server"
+    file: specs/bugs/BUG-2026-07-12T171000-uv-not-in-path.md
+    status: fixed
+    files_changed:
+      - components/deploy/engine.go
+      - components/deploy/python.go
+      - components/deploy/python_test.go
+    approach: "Added exec.LookPath('uv') checks at build time (engine.go) and runtime (python.go); fall back to pip install and python3/python respectively. Extracted resolvePythonBin() helper."
+    risk_level: low
+    commit_message: "fix(deploy): fall back to pip/python3 when uv is not on PATH"
+    regression_guards:
+      - components/deploy/python_test.go TestResolvePythonBin
+      - components/deploy/python_test.go TestPythonStartCommand_PyProject_NoUv

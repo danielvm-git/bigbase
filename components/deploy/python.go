@@ -136,33 +136,53 @@ func allowedSystemDep(name string) bool {
 	return allowedSystemDeps[name]
 }
 
+// resolvePythonBin returns the preferred Python binary available on PATH.
+func resolvePythonBin() string {
+	if _, err := exec.LookPath("python3"); err == nil {
+		return "python3"
+	}
+	return "python"
+}
+
 // pythonStartCommand returns the exec.Cmd for starting a Python deployment.
-// Uses uv run when pyproject.toml is present; falls back to python3 app.py.
+// Uses uv run when pyproject.toml is present and uv is available; falls back
+// to python3 when uv is not installed.
 func pythonStartCommand(ctx context.Context, buildDir string) *exec.Cmd {
 	pp := ParsePyProjectTOML(buildDir)
 	if pp != nil {
-		// uv-managed project: use uv run to invoke the app.
-		// Module discovery will be enhanced in e73s02 (uvicorn detection).
+		_, uvErr := exec.LookPath("uv")
+		useUV := uvErr == nil
 		if pp.HasUvicorn() {
 			module, appVar := pp.EntryPoint()
 			if module == "" {
 				module = "app"
 			}
-			return exec.CommandContext(ctx, "uv", "run", "uvicorn",
+			if useUV {
+				return exec.CommandContext(ctx, "uv", "run", "uvicorn",
+					module+":"+appVar, "--host", "0.0.0.0", "--port", "$PORT")
+			}
+			// Fallback: python3 -m uvicorn
+			pythonBin := resolvePythonBin()
+			return exec.CommandContext(ctx, pythonBin, "-m", "uvicorn",
 				module+":"+appVar, "--host", "0.0.0.0", "--port", "$PORT")
 		}
 		// Fallback: run the app module directly with uv.
 		scriptModule, _ := pp.EntryPoint()
 		if scriptModule != "" {
-			return exec.CommandContext(ctx, "uv", "run", "python", "-m", scriptModule)
+			if useUV {
+				return exec.CommandContext(ctx, "uv", "run", "python", "-m", scriptModule)
+			}
+			pythonBin := resolvePythonBin()
+			return exec.CommandContext(ctx, pythonBin, "-m", scriptModule)
 		}
-		return exec.CommandContext(ctx, "uv", "run", "python", "app.py")
+		if useUV {
+			return exec.CommandContext(ctx, "uv", "run", "python", "app.py")
+		}
+		pythonBin := resolvePythonBin()
+		return exec.CommandContext(ctx, pythonBin, "app.py")
 	}
 	// Legacy Python: no pyproject.toml, use python3 with app.py.
-	pythonBin := "python3"
-	if _, err := exec.LookPath(pythonBin); err != nil {
-		pythonBin = "python"
-	}
+	pythonBin := resolvePythonBin()
 	cmd := exec.CommandContext(ctx, pythonBin, "app.py")
 	cmd.Dir = buildDir
 	return cmd

@@ -370,7 +370,11 @@ func (d *Deploy) buildApp(ctx context.Context, deployID, siteID, repoID, branch,
 					}
 				}
 			}
-			return d.runBuildCommand(ctx, deployID, buildDir, siteEnv, "uv", "sync", "--frozen")
+			if _, lookErr := exec.LookPath("uv"); lookErr == nil {
+				return d.runBuildCommand(ctx, deployID, buildDir, siteEnv, "uv", "sync", "--frozen")
+			}
+			d.appendDeployLog(deployID, "→ uv not found, falling back to pip install")
+			return d.runBuildCommand(ctx, deployID, buildDir, siteEnv, "pip", "install", "--break-system-packages", ".")
 		}
 		return d.runBuildCommand(ctx, deployID, buildDir, siteEnv, "pip", "install", "--break-system-packages", "-r", "requirements.txt")
 	}
