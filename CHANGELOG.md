@@ -1,3 +1,10 @@
+## [2.76.15](https://github.com/danielvm-git/bigbase/compare/v2.76.14...v2.76.15) (2026-07-12)
+
+
+### Bug Fixes
+
+* **mcp:** move list_site_keys from writeTools to tierRead ([d6d93dc](https://github.com/danielvm-git/bigbase/commit/d6d93dcad14a75a8d627505bb9f8499ba284da4c))
+
 ## [2.76.14](https://github.com/danielvm-git/bigbase/compare/v2.76.13...v2.76.14) (2026-07-11)
 
 
