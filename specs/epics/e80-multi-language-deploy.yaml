@@ -6,8 +6,31 @@ wsjf: 1.6
 wsjf_rationale: "BV=5(rust/java shops) TC=3(no deadline) RR=5(enables new runtimes) / JS=8(2wk)"
 status: open
 stories:
+  - id: e80s00
+    title: "VPS runtime installation — Rust, PHP, Java, Ruby"
+    status: open
+    tasks:
+      - desc: "Install Rust toolchain (rustup + cargo) on Contabo VPS"
+        verify: "ssh root@89.116.26.187 'rustc --version && cargo --version'"
+        infra: true
+      - desc: "Install PHP 8.x + composer on Contabo VPS"
+        verify: "ssh root@89.116.26.187 'php --version && composer --version'"
+        infra: true
+      - desc: "Install OpenJDK 21 + Maven on Contabo VPS"
+        verify: "ssh root@89.116.26.187 'java --version && mvn --version'"
+        infra: true
+      - desc: "Install Ruby 3.x + bundler on Contabo VPS"
+        verify: "ssh root@89.116.26.187 'ruby --version && gem --version && bundle --version'"
+        infra: true
+      - desc: "Ensure bigbase user can execute all new runtimes"
+        verify: "ssh root@89.116.26.187 'sudo -u bigbase rustc --version && sudo -u bigbase php --version && sudo -u bigbase java --version && sudo -u bigbase ruby --version'"
+        infra: true
+      - desc: "Restart BigBase service so exec.LookPath() finds new binaries"
+        verify: "ssh root@89.116.26.187 'systemctl restart bigbase && systemctl is-active bigbase'"
+        infra: true
   - id: e80s01
     title: "Rust runtime support"
+    depends_on: [e80s00]
     status: open
     tasks:
       - desc: "Detect Cargo.toml in repo root"
@@ -21,6 +44,7 @@ stories:
 
   - id: e80s02
     title: "PHP runtime support"
+    depends_on: [e80s00]
     status: open
     tasks:
       - desc: "Detect composer.json in repo root"
@@ -34,6 +58,7 @@ stories:
 
   - id: e80s03
     title: "Java runtime support"
+    depends_on: [e80s00]
     status: open
     tasks:
       - desc: "Detect pom.xml or build.gradle in repo root"
@@ -47,6 +72,7 @@ stories:
 
   - id: e80s04
     title: "Ruby runtime support"
+    depends_on: [e80s00]
     status: open
     tasks:
       - desc: "Detect Gemfile in repo root"
@@ -60,6 +86,7 @@ stories:
 
   - id: e80s05
     title: "Deploy profiles & bigbase.toml for new runtimes"
+    depends_on: [e80s01, e80s02, e80s03, e80s04]
     status: open
     tasks:
       - desc: "Add rust/php/java/ruby to AllAppTypes()"
