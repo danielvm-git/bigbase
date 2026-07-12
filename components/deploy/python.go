@@ -158,6 +158,9 @@ func pythonStartCommand(ctx context.Context, buildDir string, port int) *exec.Cm
 			if module == "" {
 				module = "app"
 			}
+			if appVar == "" {
+				appVar = "app"
+			}
 			portStr := fmt.Sprintf("%d", port)
 			if useUV {
 				cmd := exec.CommandContext(ctx, "uv", "run", "uvicorn",

@@ -1589,3 +1589,26 @@ bugs:
     risk_level: low
     related:
       - BUG-2026-07-11T032549-codeql-path-traversal
+
+  - id: BUG-004
+    date: "2026-07-12"
+    severity: critical
+    priority: critical
+    scope: deploy
+    summary: "Python/uvicorn deployments fail — missing cmd.Dir, literal $PORT, and empty appVar default"
+    file: specs/bugs/BUG-004-python-uvicorn-spawn.md
+    status: fixed
+    files_changed:
+      - components/deploy/python.go
+      - components/deploy/engine.go
+      - components/deploy/deploy_runner.go
+      - components/deploy/python_test.go
+    approach: |
+      1. Added cmd.Dir = buildDir on every return path in pythonStartCommand
+      2. Changed signature to accept port int, replaced literal "$PORT" with fmt.Sprintf("%d", port)
+      3. Added default "app" for appVar when EntryPoint returns empty
+      4. Updated callers in engine.go and deploy_runner.go to pass port
+    risk_level: low
+    regression_guards:
+      - components/deploy/python_test.go TestPythonStartCommand_SetsDir
+      - components/deploy/python_test.go TestPythonStartCommand_UvicornDefaultsAppApp

@@ -236,3 +236,36 @@ func TestPythonStartCommand_SetsDir(t *testing.T) {
 		t.Errorf("cmd.Dir = %q, want %q", cmd.Dir, dir)
 	}
 }
+
+func TestPythonStartCommand_UvicornDefaultsAppApp(t *testing.T) {
+	// When pyproject.toml has uvicorn but no [project.scripts] section,
+	// the ASGI import string must default to "app:app", not "app:".
+	dir := t.TempDir()
+	content := "[project]\nname = \"testapp\"\ndependencies = [\"fastapi>=0.100\", \"uvicorn>=0.30\"]\n"
+	if err := os.WriteFile(filepath.Join(dir, "pyproject.toml"), []byte(content), 0644); err != nil {
+		t.Fatal(err)
+	}
+	cmd := pythonStartCommand(context.Background(), dir, 8000)
+	if cmd == nil {
+		t.Fatal("expected start command")
+	}
+	if cmd.Dir != dir {
+		t.Errorf("cmd.Dir = %q, want %q", cmd.Dir, dir)
+	}
+	// Check that the ASGI import string is "app:app" not "app:"
+	for _, arg := range cmd.Args {
+		if arg == "app:" {
+			t.Errorf("found invalid ASGI import string %q in args %v — expected app:app", arg, cmd.Args)
+		}
+	}
+	// Verify the last two args are --port 8000 (not $PORT)
+	args := cmd.Args
+	if len(args) >= 2 {
+		if args[len(args)-2] != "--port" {
+			t.Errorf("expected --port arg, got %s", args[len(args)-2])
+		}
+		if args[len(args)-1] != "8000" {
+			t.Errorf("expected port 8000, got %s", args[len(args)-1])
+		}
+	}
+}
