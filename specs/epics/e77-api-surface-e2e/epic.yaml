@@ -4,7 +4,7 @@ id: e77
 title: "API Surface E2E"
 wsjf: 8.0
 total_bcps: 36
-status: planned
+status: done
 tier: 1
 depends_on: []
 note: "1 story, 36 BCPs. Remaining API surface (all 17 components) coverage."

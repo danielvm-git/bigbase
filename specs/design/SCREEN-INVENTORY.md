@@ -3,67 +3,51 @@
 Living map of every screen: its route, owning epic, and prototype status.
 Updated before each epic implementation starts.
 
-**Last updated:** 2026-06-30  
-**Prototype project:** BigBase Prototype (`ec1480a1`) — CLEAN SLATE. `PROTOTYPE-SPEC-v1.md` uploaded. Awaiting user to build `BigBase Console.html` in claude.ai/design using the spec.  
-**Design System project:** BigBase Design System (`502492b2`) — component previews + tokens in root  
-**Local source:** `specs/archive/bigbase-prototype-3/` — empty, awaiting export of new prototype  
-**Spec file:** `specs/design/PROTOTYPE-SPEC-v1.md` — from-scratch spec for all 20 screens, grounded in actual source code
+**Last updated:** 2026-07-12
+**Prototype project:** BigBase Prototype (`ec1480a1`) — BUILT. `BigBase Console.html` (modular `bb/*.jsx` runtime: split source files concatenated into `bundle.jsx`) + `BigBase Landing.html` (static marketing page mirroring bigbase.click root).
+**Design System project:** BigBase Design System (`502492b2`) — tokens (`colors_and_type.css`: light/dark + 12 monthly accents + indigo default) + `components.css` + `_ds_bundle.js` component previews.
+**Spec file:** `specs/design/PROTOTYPE-SPEC-v1.md` — spec for all 20 screens (updated 2026-07-12: 13 accents, v2.76.15 footer, 8 Site Detail tabs).
+**Known debt (harmonization Phase 1):** `bundle.jsx` drifted from split files (Deploy Keys tab dead at runtime); `pages-projects.jsx` monkey-patches a second app over the first render. Fix: split files become the only editable source, bundle regenerated via documented manifest, EnhancedApp dissolved.
 
 ---
 
-## Current App (Shipped — 18 screens)
+## Surface Parity Matrix (harmonization scoreboard)
 
-| Screen | Route | Page file | Epic | Prototype | Notes |
-|--------|-------|-----------|------|-----------|-------|
-| Global Dashboard | `/` | DashboardPage.tsx | e05/e17 | ✅ | Metrics, onboarding, health |
-| Sites List | `/sites` | DeployPage.tsx | e15 | ⚠️ route drift | Code still uses `/deploy`; e60 renames |
-| Site Detail | `/sites/:siteId` | SiteDetailPage.tsx | e15 | ⚠️ route drift | 5 tabs: Overview/Deploys/Domains/Logs/Settings |
-| Create Site | `/sites/new` | CreateSitePage.tsx | e15 | ⚠️ route drift | GitHub OAuth wizard |
-| SQL Editor | `/sql` | SqlEditorPage.tsx | e03 | ✅ | Will be replaced by scoped version in e58 |
-| Data Studio | `/data` | DataStudioPage.tsx | e03 | ✅ | Collection browser, record editor |
-| Storage | `/storage` | StoragePage.tsx | e06 | ✅ | Bucket browser, file list, upload |
-| Functions List | `/functions` | FunctionsPage.tsx | e10 | ✅ | |
-| Function Detail | `/functions/:id` | FunctionDetailPage.tsx | e10 | ✅ | Source, logs, triggers |
-| Users | `/users` | UsersPage.tsx | e04 | ✅ | Auth users (not platform members) |
-| Messaging | `/messaging` | MessagingPage.tsx | e12 | ✅ | |
-| Messaging Detail | `/messaging/:id` | MessagingDetailPage.tsx | e12 | ✅ | Template editor |
-| Git Repos | `/repos` | GitReposPage.tsx | e07 | ✅ | |
-| CI/CD | `/cici` | CiciPage.tsx | e09 | ✅ | Pipeline runs |
-| Monitoring | `/monitoring` | MonitoringPage.tsx | e14 | ✅ | Health grid, metrics, activity |
-| Settings | `/settings` | SettingsPage.tsx | e17 | ✅ | Theme, accent, auth |
-| **Forge** | `/forge` | ForgePage.tsx | e08 | ❌ MISSING | Issues, kanban, labels, wiki. Fix: Step 2 brief |
-| **Realtime** | `/realtime` | RealtimePage.tsx | e11 | ❌ MISSING | WebSocket channel hub. Fix: Step 2 brief |
-| **Events** | `/events` | EventsPage.tsx | e11 | ❌ MISSING | SSE event bus live stream. Fix: Step 2 brief |
-| Login | `/login` | LoginPage.tsx | e04 | ✅ | Email/password + Google OAuth |
+Legend — **Spec**: described in PROTOTYPE-SPEC/UPDATE-BRIEF · **P2**: design-system classes cover it · **P1**: renders in prototype · **Live**: shipped in `ui/src` on bigbase.click. ✅ aligned · ⚠️ partial/drift · ❌ missing · `eXX` = open epic that closes it.
 
----
+| Screen | Route | Spec | P2 | P1 | Live | Gap owner |
+|--------|-------|------|----|----|------|-----------|
+| Landing (marketing) | `/` (public) | ✅ | ✅ | ✅ | ✅ | — |
+| Login | `/login` | ✅ | ✅ | ✅ | ✅ | — |
+| Global Dashboard | `/` | ✅ | ✅ | ✅ | ✅ | — |
+| Sites List | `/sites` | ✅ | ✅ | ✅ | ⚠️ `/deploy` | e60 rename |
+| Create Site | `/sites/new` | ✅ | ✅ | ✅ | ⚠️ `/deploy/new` | e60 |
+| Site Detail (8 tabs) | `/sites/:id` | ✅ | ⚠️ table/modal classes | ⚠️ bundle drift (7 tabs live) | ⚠️ `/deploy/:id` | Ph 1 + e60 |
+| — Previews tab | (tab) | ✅ e65 brief | ⚠️ | ✅ | ❌ | e65 |
+| — Deploy Keys tab | (tab) | ✅ | ⚠️ | ⚠️ dead in bundle | ✅ | Ph 1 |
+| Data Studio (+Schema Designer) | `/data` | ✅ e64 brief | ⚠️ | ✅ | ⚠️ no designer | e64 |
+| SQL Editor | `/sql` | ✅ | ✅ | ✅ | ✅ | e58 replaces w/ scoped |
+| Storage | `/storage` | ✅ | ✅ | ✅ | ✅ | — |
+| Functions List / Detail | `/functions[/:id]` | ✅ | ✅ | ✅ | ✅ | — |
+| Users | `/users` | ✅ | ✅ | ✅ | ✅ | — |
+| Messaging / Detail | `/messaging[/:id]` | ✅ | ✅ | ✅ | ✅ | — |
+| Git Repos | `/repos` | ✅ | ✅ | ✅ | ✅ | — |
+| CI/CD | `/cici` | ✅ | ⚠️ terminal class | ✅ | ✅ | Ph 2 |
+| Monitoring | `/monitoring` | ✅ | ⚠️ donut/sparkline | ✅ | ✅ | Ph 2 |
+| Forge | `/forge` | ✅ | ⚠️ kanban class | ✅ | ✅ | Ph 2 |
+| Realtime | `/realtime` | ✅ | ✅ | ✅ | ✅ | — |
+| Events | `/events` | ✅ | ✅ | ✅ | ✅ | — |
+| Settings | `/settings` | ✅ | ✅ | ✅ | ✅ | — |
+| 404 | `*` | ⚠️ | ✅ | ❌ | ✅ | Ph 4 story |
+| Projects List | `/projects` | ✅ e58 | ⚠️ | ✅ | ❌ | e58 |
+| Project Dashboard | `/project/:id` | ✅ e58 | ⚠️ | ✅ | ❌ | e58 |
+| Project SQL (3-panel) | `/project/:id/sql[/:branch]` | ✅ e58 | ⚠️ | ✅ | ❌ | e58 |
+| Project Branches | `/project/:id/branches` | ✅ e58 | ⚠️ | ✅ | ❌ | e58/e59s02 |
+| Project Settings (5 tabs incl. Secrets) | `/project/:id/settings` | ✅ e58+e61 | ⚠️ | ✅ | ❌ | e58, e61 |
+| Usage Dashboard | `/usage` | ✅ e63 brief | ⚠️ | ❌ (intentionally held until ship) | ❌ | e63 |
+| Platform Users / Settings / Invites | `/admin/platform/*` | ❌ not designed | ❌ | ❌ | ❌ | e66 (brief first) |
 
-## Post-e57/e58 Screens (Design C — Plan Ready)
-
-Source: `specs/DESIGN_C_HANDOFF.md`
-
-| Screen | Route | Epic | Prototype | Notes |
-|--------|-------|------|-----------|-------|
-| Project Selector + Branch Selector | header overlay | e57s05 / e58 | ✅ Section 2 of prototype | Dropdown in top bar |
-| Project Dashboard | `/project/:id` | e58 | ✅ Section 2 of prototype | Stats, connection string, recent queries, branch cards |
-| Unified SQL + Data | `/project/:id/sql/:branch?` | e57/e58 | ✅ Section 2 of prototype | 3-panel: schema tree / editor / results |
-| Project Settings | `/project/:id/settings` | e58 | ✅ Section 2 of prototype | 4 tabs: General / DB / Env Vars / Danger Zone |
-| Branches | `/project/:id/branches` | e59s02 | ✅ Section 2 of prototype | "Coming soon" treatment |
-| Projects List (global) | `/projects` (or global dashboard) | e58 | ✅ Section 2 of prototype | Shown when no project selected |
-
----
-
-## Future Epic Screens (Planned — Not Yet Designed)
-
-| Screen | Route | Epic | Prototype | Design Notes |
-|--------|-------|------|-----------|--------------|
-| Secrets Manager | `/project/:id/secrets` (or Settings tab) | e61 | — | Env var editor pattern, masking, rotation |
-| Usage Dashboard | `/admin/usage` or sidebar item | e63 | — | Resource tracking: compute, storage, bandwidth, queries |
-| Schema Designer | `/data/schema` or tab on Data Studio | e64 | — | Visual ERD + table CRUD editor |
-| Preview Environments | `/sites/:id/previews` | e65 | — | PR-linked preview deployments |
-| Platform Users | `/admin/platform/users` | e66 | — | Operators/admins (distinct from Auth users) |
-| Platform Settings | `/admin/platform/settings` | e66 | — | Global instance config: SMTP, OAuth providers, rate limits |
-| Team/Org Invites | `/admin/platform/invites` | e66 | — | Role assignment: admin/member/viewer |
+**P2 ⚠️ column note:** design system lacks classes for modal, app-footer, bare `.table`, segmented, switch, donut/sparkline, timeline, kanban, terminal — currently `bb-*` in prototype `custom.css` or inline. Closed by harmonization Phase 2.
 
 ---
 
@@ -76,7 +60,7 @@ Build     →  Sites, Functions
 Data      →  Data Studio, SQL Editor, Storage
 Auth      →  Users
 Engage    →  Messaging
-DevOps    →  Git Repos, CI/CD, Monitoring, Forge, Realtime
+DevOps    →  Git Repos, CI/CD, Monitoring, Forge, Realtime, Events
 Footer    →  Settings
 ```
 
@@ -93,7 +77,7 @@ GLOBAL ZONE (always visible)
   Data Studio, Storage
   Users
   Messaging
-  Git Repos, CI/CD, Monitoring, Forge, Realtime
+  Git Repos, CI/CD, Monitoring, Forge, Realtime, Events
 Footer: Platform Settings (e66) | Account Settings
 ```
 
@@ -109,20 +93,19 @@ Footer: Platform Settings (e66) | Account Settings
 Before each epic implementation:
 
 1. Claude Code generates a targeted update brief → saved to `specs/design/UPDATE-BRIEF-eXX.md`
-2. User posts brief to the **BigBase Prototype** project on claude.ai/design
-3. Claude Design updates the affected screens **within the single `BigBase Console.html` file** — never creates a new file
-4. User exports the updated HTML → replaces `specs/archive/bigbase-prototype-3/BigBase Console.html`
-5. Claude Code generates gap analysis → `specs/design-feedback/eXX-VS-PROTOTYPE.md`
-6. Implementation begins
+2. Prototype edit happens in the **split source files** (`bb/*.jsx`) — never directly in `bundle.jsx`; then `bundle.jsx` is regenerated per `bb/MANIFEST.md` concat order and pushed with `DesignSync.finalize_plan → DesignSync.write_files` to the BigBase Prototype project (`ec1480a1`). (Posting the brief to claude.ai/design for Claude Design remains a valid alternative path; export then replaces the split files.)
+3. Claude Code generates gap analysis → `specs/design-feedback/eXX-VS-PROTOTYPE.md`
+4. Implementation begins
+5. On phase/epic exit: update the **Surface Parity Matrix** above — it is the harmonization scoreboard.
 
 **Rules:**
-- There is always exactly ONE prototype file: `BigBase Console.html`
-- New screens go into an existing section or a new labelled section — never a new file
+- There is always exactly ONE prototype app: `BigBase Console.html` loading the generated `bundle.jsx` (plus the standalone `BigBase Landing.html` for the public marketing page)
+- New screens go into the appropriate split file (or a new `bb/pages-*.jsx` added to the manifest) — never a second HTML console
 - Solo Component Spec explorations are temporary: merge into the prototype within the same work session and delete the solo file
 
 **Design System sync** (after any epic that ships new or changed components):
 ```
 DesignSync.finalize_plan → DesignSync.write_files
 ```
-Target project: `BigBase Design System` (`502492b2-4dcc-4024-9e7a-26baa7943ca7`)  
+Target project: `BigBase Design System` (`502492b2-4dcc-4024-9e7a-26baa7943ca7`)
 This project holds component previews, tokens, and brand assets only — no prototype screens.

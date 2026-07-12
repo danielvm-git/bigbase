@@ -5,7 +5,7 @@ title: "Browser E2E Test Coverage — All UI Routes"
 wsjf: 8.0
 wsjf_rationale: "BV=9(currently ZERO browser E2E tests — every UI bug is caught by users, not tests) TC=10(urgent — each deploy risks regression across 22 UI routes) RR=8(high risk, no safety net) / JS=3(~36 BCPs across 6 stories)"
 total_bcps: 36
-status: planned
+status: done
 tier: 1
 depends_on: [e76, e77]
 note: "Comprehensive Playwright browser-level test suite covering all 22 UI routes. 0 browser E2E tests exist today. This epic closes the gap entirely."

@@ -54,9 +54,12 @@ APPEARANCE
 
 [🌙 Dark mode]       ← secondary sm button, full width, icon + label
                        label toggles: "Dark mode" / "Light mode"
-Accent [● ● ● ● ● ●] ← ThemePicker: 6 color swatches inline
-                       colors: indigo violet rose amber emerald slate
-                       selected swatch has white ring
+Accent [● Indigo ▾]  ← ThemePicker: trigger button + popover menu (role=menu)
+                       13 accents: Indigo (default) + 12 monthly themes
+                       (january teal, february orange, march purple, april green,
+                        may lavender, june rainbow, july peach, august silver,
+                        september yellow, october pink, november blue, december red)
+                       each menu item: color dot + label + ✓ on active
 
 [⚙ Settings]         ← nav link with settings icon
 
@@ -69,11 +72,11 @@ Active nav item: indigo text + indigo left border accent + slightly lighter bg.
 ### AppFooter (appears below page content, inside the content area, on every page)
 
 ```
-[B] © 2026 BigBase · MIT License          [Help]  v2.62.2  ·  Built with BigPowers by danielvm-git  ·  GitHub  ·  Changelog
+[B] © 2026 BigBase · MIT License          [Help]  v2.76.15  ·  Built with BigPowers by danielvm-git  ·  GitHub  ·  Changelog
 ```
 
 - Left: "B" logomark (small, 20px) + muted text "© 2026 BigBase · MIT License"
-- Right: `[Help]` secondary-sm button | `v2.62.2` monospace muted | separator `·` | "Built with BigPowers by danielvm-git" (BigPowers and danielvm-git are inline links, accent color) | "GitHub" link | "Changelog" link
+- Right: `[Help]` secondary-sm button | version string (monospace muted, sourced from the repo `VERSION` file — currently v2.76.15) | separator `·` | "Built with BigPowers by danielvm-git" (BigPowers and danielvm-git are inline links, accent color) | "GitHub" link | "Changelog" link
 - Thin top border, minimal padding (8px vertical), spans full content width
 
 ---
@@ -370,8 +373,11 @@ Health: ✓ Passed (42ms avg, 3 probes)  ← indigo text, small, below timeline
 ### Tabs
 
 ```
-[Deployments]  [Logs]  [Domains]  [Env Vars]  [Cache]  [Manifest]
+[Deployments]  [Logs]  [Domains]  [Previews]  [Env Vars]  [Deploy Keys]  [Cache]  [Manifest]
 ```
+
+8 tabs. `Previews` added by e65 (preview environments); `Deploy Keys` mirrors
+production's SiteDeployKeysTab (name, key prefix, last used, created, copy/revoke).
 
 #### Deployments tab
 

@@ -34,7 +34,7 @@ ECC pattern: Kernel (discovery, lifecycle, event bus, config merge) + pluggable 
 
 ## Specs (bigpowers YAML)
 
-Read `specs/state.yaml`, `specs/release-plan.yaml`, and the active file under `specs/epics/` before coding. Architecture: `specs/plans/TECH_STACK_LATEST.md`. Legacy docs: `specs/archive/` only.
+Read `specs/state.yaml`, `specs/release-plan.yaml`, and the active file under `specs/epics/` before coding. Architecture: `specs/tech-architecture/tech-stack.md` (canonical; `specs/plans/TECH_STACK_LATEST.md` is superseded). Legacy docs: `specs/archive/` only.
 
 ## Agent Rules
 - Read specs YAML (not `specs/archive/`) before writing code.
