@@ -22,7 +22,7 @@ function DeployKeyRow({
       </td>
       <td>
         <div style={{ display: 'flex', gap: 'var(--space-1)', alignItems: 'center' }}>
-          <CopyButton value={k.key_id} label="ID" />
+          <CopyButton value={k.prefix} label="Key" />
           <Button
             variant="ghost"
             size="sm"

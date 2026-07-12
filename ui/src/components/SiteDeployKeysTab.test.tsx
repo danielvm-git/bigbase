@@ -54,6 +54,37 @@ describe('SiteDeployKeysTab', () => {
     expect(screen.getAllByRole('button', { name: 'Revoke' }).length).toBe(2)
   })
 
+  // ── 1b. Copy button copies the displayed prefix, not the internal key_id ──
+
+  it('copies the displayed key prefix, not the internal key_id, when the copy button is clicked', async () => {
+    const user = userEvent.setup()
+    const writeText = vi.fn().mockResolvedValue(undefined)
+    Object.defineProperty(navigator, 'clipboard', {
+      configurable: true,
+      writable: true,
+      value: { writeText },
+    })
+    const keys = [
+      {
+        key_id: 'key-1',
+        name: 'ci-key',
+        prefix: 'bb_dep_abc',
+        last_used_at: '2026-06-15T10:00:00Z',
+        created_at: '2026-01-10T08:00:00Z',
+      },
+    ]
+    getDeployKeys.mockResolvedValue(keys)
+
+    render(<SiteDeployKeysTab siteId="s1" />)
+
+    await waitFor(() => screen.getByText('ci-key'))
+
+    await user.click(screen.getByRole('button', { name: /Copy/ }))
+
+    expect(writeText).toHaveBeenCalledWith('bb_dep_abc')
+    expect(writeText).not.toHaveBeenCalledWith('key-1')
+  })
+
   // ── 2. Empty state ──
 
   it('shows empty state when no deploy keys exist', async () => {
