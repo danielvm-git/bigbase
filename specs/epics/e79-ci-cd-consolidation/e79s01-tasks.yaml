@@ -1,0 +1,43 @@
+story_id: e79s01
+title: "Consolidate CI/CD workflows with template migration"
+status: pending
+bcps: 8
+tasks:
+  - id: 1
+    description: >
+      Create new ci-cd.yml from ci-cd-go.yml template, adapted for BigBase.
+      - Copy template structure: ci, lint, verify jobs
+      - Set GO_VERSION to 1.26 (not 1.22)
+      - Add PostgreSQL matrix to ci job (sqlite + postgres, matching current ci.yml)
+      - Preserve Postgres service container config from current ci.yml
+      - Add Allure report job (from current ci.yml report job)
+      - Do NOT include semantic-release or deploy jobs (handled by release-deploy.yml)
+      - Name: "CI/CD"
+      - Add concurrency group
+    verify: "yamllint .github/workflows/ci-cd.yml"
+    status: pending
+  - id: 2
+    description: >
+      Update codeql.yml to new template format.
+      - Copy template from .github repo
+      - Set LANGUAGES env to handle both go and javascript-typescript
+      - Note: template uses single env var — keep matrix strategy for 2 languages
+      - Preserve go build-mode: manual, javascript-typescript build-mode: none
+      - Update name to "CodeQL"
+    verify: "yamllint .github/workflows/codeql.yml"
+    status: pending
+  - id: 3
+    description: >
+      Remove old ci.yml (superseded by ci-cd.yml).
+      - Verify ci-cd.yml covers all ci.yml functionality
+      - Delete .github/workflows/ci.yml
+    verify: "test ! -f .github/workflows/ci.yml"
+    status: pending
+  - id: 4
+    description: >
+      Final validation — confirm all 4 workflows are valid.
+      - Validate YAML for all workflow files
+      - Confirm no references to deleted ci.yml remain
+      - Confirm release-deploy.yml and pr-review.yaml are unchanged
+    verify: "yamllint .github/workflows/*.yml .github/workflows/*.yaml && ls .github/workflows/"
+    status: pending

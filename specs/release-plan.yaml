@@ -638,3 +638,14 @@ epics:
   capsule_dir: epics/e78-browser-e2e-coverage
   file: epics/e78-browser-e2e-coverage/epic.yaml
 
+- id: e79
+  title: "CI/CD Template Consolidation — Issue #95"
+  wsjf: 5.0
+  mode: capsule
+  tier: 2
+  status: planned
+  depends_on: []
+  note: "1 story, 8 BCPs. Migrate to consolidated templates from .github template repo."
+  capsule_dir: epics/e79-ci-cd-consolidation
+  file: epics/e79-ci-cd-consolidation/epic.yaml
+

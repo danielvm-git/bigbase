@@ -1,8 +1,8 @@
 type: session-state
 context: infra
-active_flow: null
-active_epic_id: null
-active_story_id: null
+active_flow: build_epic
+active_epic_id: e79
+active_story_id: e79s01
 active_story_status: null
 release:
   target_version: 2.76.17
@@ -18,22 +18,16 @@ metrics:
   stories_completed: 199
   bcps_per_hour: 0
 epic_cycle:
-  step: 8
-  story_bcps: 4
-  story: all
+  step: 3
+  story_bcps: 8
+  story: e79s01
   audit_result: null
   completed_steps:
     - "0: threat-model"
     - "1: survey-context"
     - "2: plan-work"
-    - "3: kickoff-branch"
-    - "4: develop-test"
-    - "5: verify-work"
-    - "6: audit-code"
-    - "7: security-review"
-    - "8: release-branch"
-  story_complete: true
-  note: "e78 complete — 6 stories, all UI routes covered by browser E2E tests."
+  story_complete: false
+  note: "Consolidating CI/CD workflows per Issue #95 — template migration from .github repo."
   fast_mode: false
 bug_cycle:
   current_step: null

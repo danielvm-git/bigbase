@@ -1,0 +1,17 @@
+type: epic-shard
+context: infra
+id: e79
+title: "CI/CD Template Consolidation — Issue #95"
+wsjf: 5.0
+total_bcps: 8
+status: planned
+tier: 2
+depends_on: []
+note: "1 story, 8 BCPs. Migrate CI/CD workflows to consolidated templates from danielvm-git/.github. Replace ci.yml with ci-cd.yml, update codeql.yml. Keep release-deploy.yml (SSH) and pr-review.yaml unchanged."
+stories:
+  - id: e79s01
+    title: "Consolidate CI/CD workflows with template migration"
+    bcps: 8
+    status: pending
+    spec: e79s01-spec.md
+    tasks: e79s01-tasks.yaml
