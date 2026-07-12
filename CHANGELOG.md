@@ -1,3 +1,10 @@
+# [2.77.0](https://github.com/danielvm-git/bigbase/compare/v2.76.20...v2.77.0) (2026-07-12)
+
+
+### Features
+
+* **infra:** production VPS hardening — 3-layer security for Contabo vmi3338033 ([c4a03f3](https://github.com/danielvm-git/bigbase/commit/c4a03f313d186918f78b45e876c0af9a63935740))
+
 ## [2.76.20](https://github.com/danielvm-git/bigbase/compare/v2.76.19...v2.76.20) (2026-07-12)
 
 
