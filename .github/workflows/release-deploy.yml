@@ -16,7 +16,7 @@
 #   2. Deploy to Contabo VPS via SSH
 #   3. Automatic rollback on health check failure
 # ============================================================================
-name: Release & Deploy
+name: Release (BigBase)
 
 on:
   push:
