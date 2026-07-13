@@ -1,3 +1,10 @@
+## [2.79.3](https://github.com/danielvm-git/bigbase/compare/v2.79.2...v2.79.3) (2026-07-13)
+
+
+### Bug Fixes
+
+* **security:** add 'unsafe-inline' to script-src in permissive CSP ([0d8a0a5](https://github.com/danielvm-git/bigbase/commit/0d8a0a5ce33e70216ac3637f05c92f1a60f8c135))
+
 ## [2.79.2](https://github.com/danielvm-git/bigbase/compare/v2.79.1...v2.79.2) (2026-07-13)
 
 
