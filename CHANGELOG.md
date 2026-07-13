@@ -1,3 +1,10 @@
+## [2.79.6](https://github.com/danielvm-git/bigbase/compare/v2.79.5...v2.79.6) (2026-07-13)
+
+
+### Bug Fixes
+
+* **deps:** downgrade TypeScript to ~6.0.3 for typescript-eslint compatibility ([ed325f4](https://github.com/danielvm-git/bigbase/commit/ed325f4399dfa0d1a5ae96d503dd1d78b6fa47c6))
+
 ## [2.79.5](https://github.com/danielvm-git/bigbase/compare/v2.79.4...v2.79.5) (2026-07-13)
 
 
