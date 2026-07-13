@@ -5,12 +5,12 @@ active_epic_id: null
 active_story_id: null
 active_story_status: null
 release:
-  target_version: 2.77.0
-  codename: "Production VPS Hardening"
-  last_tag: null
+  target_version: 2.79.0
+  codename: "Python Uvicorn CLI Entry Fix + Manifest ASGI Import"
+  last_tag: v2.79.0
   last_publish: '2026-07-12'
-  ci_verified: false
-  ci_verified_at: null
+  ci_verified: true
+  ci_verified_at: '2026-07-12T22:20:00-03:00'
 metrics:
   session_start: '2026-07-12T16:00:00-03:00'
   session_end: '2026-07-12T18:45:00-03:00'
@@ -37,18 +37,24 @@ epic_cycle:
   fast_mode: false
 bug_cycle:
   current_step: null
-  completed_steps: []
-  bug_file: null
-  note: "BUG-003 landed via fix/bug-003-deploy-key-copy."
+  completed_steps:
+    - "investigate-bug (BUG-004 root cause: 3 bugs in pythonStartCommand)"
+    - "develop-tdd (fix: cmd.Dir, port param, appVar default)"
+    - "validate-fix (260/260 deploy tests)"
+    - "investigate-bug (follow-up: CLI entry points used as ASGI imports)"
+    - "develop-tdd (feat: isCLIScriptEntry heuristic + manifest asgi_import)"
+    - "validate-fix (275/275 tests, 270 deploy + 5 hardening manifest validation)"
+    - "release-branch (CI passed, v2.79.0 deployed)"
+  bug_file: specs/bugs/BUG-004-python-uvicorn-spawn.md
+  note: "BUG-004 fully resolved. 3 commits landed: c94cd216 (CLI detection), 014e7d60 (manifest asgi_import), ee9305a7 (hardening tests). Semantic-release published v2.78.4 and v2.79.0. Grimoire redeploy pending — needs bigbase.yaml with asgi_import: grimoire.app:create_app --factory"
 git:
   branch: main
   hash: null
   worktree: null
   ci_status: unknown
 handoff:
-  last_step_completed: "e80 — Production VPS Security Hardening (3 stories, 15 BCPs)"
+  last_step_completed: "BUG-004 — Python/uvicorn deploy fix + manifest asgi_import (v2.79.0)"
   open_decisions:
-    - "Contabo API credentials need to be filled in /opt/bigbase/secrets/contabo.env for monthly snapshots"
+    - "Grimoire needs bigbase.yaml with asgi_import: grimoire.app:create_app --factory, then redeploy via GitHub push"
   next_skill: null
-  summary: "VPS vmi3338033 at 89.116.26.187 fully hardened. UFW active (22,80,443), fail2ban protecting SSH (4 IPs banned). BigBase running as bigbase user with 10 systemd hardening directives. Health check cron every 5min, daily SQLite backup at 2AM, 90-day rotation. cntb CLI installed, monthly snapshot script deployed (needs Contabo creds). Skill harden-vps created and synced to catalog."
-  context: "e80 done. e57-e66 (project scoping, Neon port, route rename, secrets, CSP, usage, schema designer, previews, multi-user platform) superseded 2026-07-12 and archived to epics/archive/ — see specs/design-feedback/e66-admin-split-VS-CONVERSATION.md. Admin console split being replanned from scratch via scope-work/slice-tasks/plan-work. Next: e73 (Python Runtime, WSJF 5.25), or run scope-work for the new admin-split epic. Contabo creds pending for snapshot automation."
+  summary: "BUG-004 fully resolved in v2.79.0. Three commits: CLI detection heuristic (isCLIScriptEntry), manifest asgi_import field, hardening validation tests. 275/275 deploy tests pass. Semantic-release auto-deployed to VPS. Grimoire will serve full HTML dashboard once bigbase.yaml is added to repo and redeployed."
