@@ -1,3 +1,10 @@
+## [2.79.4](https://github.com/danielvm-git/bigbase/compare/v2.79.3...v2.79.4) (2026-07-13)
+
+
+### Bug Fixes
+
+* **ci:** update actions/setup-python from v5 to v6 ([1d36ae3](https://github.com/danielvm-git/bigbase/commit/1d36ae315af7c0f99dab422caa6b375c62415773)), closes [#112](https://github.com/danielvm-git/bigbase/issues/112)
+
 ## [2.79.3](https://github.com/danielvm-git/bigbase/compare/v2.79.2...v2.79.3) (2026-07-13)
 
 
