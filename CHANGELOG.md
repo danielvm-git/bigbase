@@ -1,3 +1,10 @@
+## [2.79.5](https://github.com/danielvm-git/bigbase/compare/v2.79.4...v2.79.5) (2026-07-13)
+
+
+### Bug Fixes
+
+* **security:** apply permissive CSP to all non-API routes ([bec075c](https://github.com/danielvm-git/bigbase/commit/bec075c1407306de27e7a3b4fa52ef2a76a6bc35))
+
 ## [2.79.4](https://github.com/danielvm-git/bigbase/compare/v2.79.3...v2.79.4) (2026-07-13)
 
 
