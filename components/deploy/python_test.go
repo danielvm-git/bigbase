@@ -161,6 +161,17 @@ func TestPythonStartCommand_Uvicorn(t *testing.T) {
 	if baseName != "uv" && baseName != "python3" && baseName != "python" {
 		t.Errorf("base name = %s, want uv, python3, or python (full: %s)", baseName, cmd.Path)
 	}
+	// Non-CLI entry points like "testapp.main:app" are used as ASGI import strings directly.
+	hasCorrectImport := false
+	for _, arg := range cmd.Args {
+		if arg == "testapp.main:app" {
+			hasCorrectImport = true
+			break
+		}
+	}
+	if !hasCorrectImport {
+		t.Errorf("expected ASGI import string 'testapp.main:app' in args %v", cmd.Args)
+	}
 }
 
 func TestPythonStartCommand_Fallback(t *testing.T) {
@@ -266,6 +277,92 @@ func TestPythonStartCommand_UvicornDefaultsAppApp(t *testing.T) {
 		}
 		if args[len(args)-1] != "8000" {
 			t.Errorf("expected port 8000, got %s", args[len(args)-1])
+		}
+	}
+}
+
+func TestPythonStartCommand_CLIScriptFallsBackToAppApp(t *testing.T) {
+	// When [project.scripts] contains a CLI entry point (e.g. __main__:main),
+	// the ASGI import string must fall back to "app:app" instead of using
+	// the CLI entry as an ASGI import.
+	tests := []struct {
+		name      string
+		entry     string
+		wantImport string
+	}{
+		{
+			name:       "grimoire-like __main__:main",
+			entry:      "grimoire = \"grimoire.__main__:main\"",
+			wantImport: "app:app",
+		},
+		{
+			name:       "CLI variable name 'main'",
+			entry:      "dev = \"myapp.cli:main\"",
+			wantImport: "app:app",
+		},
+		{
+			name:       "CLI variable name 'run'",
+			entry:      "dev = \"myapp.cli:run\"",
+			wantImport: "app:app",
+		},
+		{
+			name:       "valid ASGI entry kept",
+			entry:      "dev = \"myapp.main:app\"",
+			wantImport: "myapp.main:app",
+		},
+		{
+			name:       "factory entry kept",
+			entry:      "dev = \"myapp.main:create_app\"",
+			wantImport: "myapp.main:create_app",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			dir := t.TempDir()
+			content := "[project]\nname = \"testapp\"\ndependencies = [\"fastapi>=0.100\", \"uvicorn>=0.30\"]\n\n[project.scripts]\n" + tt.entry + "\n"
+			if err := os.WriteFile(filepath.Join(dir, "pyproject.toml"), []byte(content), 0644); err != nil {
+				t.Fatal(err)
+			}
+			cmd := pythonStartCommand(context.Background(), dir, 8000)
+			if cmd == nil {
+				t.Fatal("expected start command")
+			}
+			found := false
+			for _, arg := range cmd.Args {
+				if arg == tt.wantImport {
+					found = true
+					break
+				}
+			}
+			if !found {
+				t.Errorf("expected ASGI import %q in args %v", tt.wantImport, cmd.Args)
+			}
+		})
+	}
+}
+
+func TestIsCLIScriptEntry(t *testing.T) {
+	tests := []struct {
+		module  string
+		appVar  string
+		isCLI   bool
+	}{
+		{"grimoire.__main__", "main", true},
+		{"grimoire.__main__", "app", true},  // __main__ always CLI
+		{"myapp.main", "main", true},
+		{"myapp.cli", "run", true},
+		{"myapp.main", "cli", true},
+		{"myapp.main", "entrypoint", true},
+		{"myapp.main", "app", false},
+		{"myapp.main", "create_app", false},
+		{"myapp.main", "application", false},
+		{"app", "app", false},
+	}
+	for _, tt := range tests {
+		got := isCLIScriptEntry(tt.module, tt.appVar)
+		if got != tt.isCLI {
+			t.Errorf("isCLIScriptEntry(%q, %q) = %v, want %v", tt.module, tt.appVar, got, tt.isCLI)
 		}
 	}
 }

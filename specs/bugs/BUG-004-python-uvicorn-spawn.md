@@ -74,3 +74,26 @@ go test ./components/deploy/... -count=1
 **Evidence:** 260/260 deploy tests pass (`go test ./components/deploy/... -count=1`).
 
 **Commit:** `fix(deploy): default ASGI import string to app:app when no entry point declared`
+
+---
+
+## Follow-up Fix (2026-07-12): CLI Entry Points Used as ASGI Import
+
+### Additional Symptom
+When `[project.scripts]` contains a CLI entry point (e.g., `grimoire.__main__:main`), the code reused it as the uvicorn ASGI import string. This caused deployed apps to run in a degraded state — responding to requests but serving unexpected content (e.g., JSON instead of HTML dashboards).
+
+### Root Cause
+`[project.scripts]` entries per PEP 621 define **console_scripts** (CLI commands), not ASGI applications. The code treated ALL script entries as ASGI import strings equally, when CLI entries like `__main__:main` should never be passed to uvicorn.
+
+### Fix Applied
+Added `isCLIScriptEntry(module, appVar) bool` heuristic that detects CLI patterns:
+- Module ends with `__main__` (e.g., `grimoire.__main__`)
+- App variable is `main`, `cli`, `entrypoint`, or `run`
+
+When a CLI entry is detected, the ASGI import falls back to the universal FastAPI convention of `app:app` instead of using the CLI entry point.
+
+### Known Limitation
+Some apps (like Grimoire with `src/` layout) use a non-standard ASGI import path (e.g., `grimoire.app:create_app --factory`). These will fail cleanly with "Could not import module app" instead of running in a degraded state. A follow-up BigBase manifest feature will allow users to configure the ASGI import string explicitly.
+
+### Evidence
+267/267 deploy tests pass (7 new tests added for CLI detection).

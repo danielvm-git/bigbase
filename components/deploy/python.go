@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 
 	"github.com/BurntSushi/toml"
 )
@@ -105,6 +106,23 @@ func splitEntryPoint(entry string) (module, appVar string) {
 	return entry, "app"
 }
 
+// isCLIScriptEntry returns true when the module/appVar pair looks like a
+// PEP 621 console_script entry point rather than an ASGI application import.
+// CLI scripts typically end in __main__:main or __main__:cli.
+func isCLIScriptEntry(module, appVar string) bool {
+	// __main__ modules are CLI entry points, not ASGI apps.
+	if strings.HasSuffix(module, "__main__") {
+		return true
+	}
+	// Variable names like "main", "cli", "entrypoint", "run" indicate
+	// a CLI function, not an ASGI application instance.
+	switch appVar {
+	case "main", "cli", "entrypoint", "run":
+		return true
+	}
+	return false
+}
+
 // SystemDeps returns the system dependencies declared in [tools.system_deps],
 // filtered to only allowlisted packages.
 func (pp *PyProjectTOML) SystemDeps() []string {
@@ -159,6 +177,14 @@ func pythonStartCommand(ctx context.Context, buildDir string, port int) *exec.Cm
 				module = "app"
 			}
 			if appVar == "" {
+				appVar = "app"
+			}
+			// Heuristic: if the entry point looks like a CLI script
+			// (module ends with __main__ or the variable is "main"), it's
+			// a PEP 621 console_script, not an ASGI application. Fall back
+			// to the universal FastAPI convention of app:app.
+			if isCLIScriptEntry(module, appVar) {
+				module = "app"
 				appVar = "app"
 			}
 			portStr := fmt.Sprintf("%d", port)
