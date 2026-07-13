@@ -62,8 +62,9 @@ type ManifestBuild struct {
 
 // ManifestStart represents the start section of bigbase.yaml.
 type ManifestStart struct {
-	Command string `yaml:"command"`
-	Port    int    `yaml:"port"`
+	Command    string `yaml:"command"`
+	Port       int    `yaml:"port"`
+	ASGIImport string `yaml:"asgi_import"`
 }
 
 // validFrameworks is the set of framework values accepted by the manifest.
@@ -170,8 +171,11 @@ func (m *Manifest) validate() error {
 	if m.Build.Command == "" {
 		return fmt.Errorf("build.command is required")
 	}
+	// start.command is required unless Python framework with explicit asgi_import.
 	if m.Start.Command == "" {
-		return fmt.Errorf("start.command is required")
+		if m.Framework != "python" || m.Start.ASGIImport == "" {
+			return fmt.Errorf("start.command is required")
+		}
 	}
 	if m.Start.Port < 1 || m.Start.Port > 65535 {
 		return fmt.Errorf("start.port must be between 1 and 65535, got %d", m.Start.Port)

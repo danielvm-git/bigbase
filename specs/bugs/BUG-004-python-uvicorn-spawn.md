@@ -93,7 +93,38 @@ Added `isCLIScriptEntry(module, appVar) bool` heuristic that detects CLI pattern
 When a CLI entry is detected, the ASGI import falls back to the universal FastAPI convention of `app:app` instead of using the CLI entry point.
 
 ### Known Limitation
-Some apps (like Grimoire with `src/` layout) use a non-standard ASGI import path (e.g., `grimoire.app:create_app --factory`). These will fail cleanly with "Could not import module app" instead of running in a degraded state. A follow-up BigBase manifest feature will allow users to configure the ASGI import string explicitly.
+~~Some apps (like Grimoire with `src/` layout) use a non-standard ASGI import path (e.g., `grimoire.app:create_app --factory`). These will fail cleanly with "Could not import module app" instead of running in a degraded state.~~ **Resolved below.**
 
 ### Evidence
 267/267 deploy tests pass (7 new tests added for CLI detection).
+
+---
+
+## Follow-up Fix 2 (2026-07-12): Manifest `asgi_import` Override
+
+### Symptom
+Apps with non-standard ASGI import paths (e.g., `grimoire.app:create_app --factory`) could not be configured, forcing `app:app` which doesn't work for `src/`-layout packages.
+
+### Root Cause
+No mechanism existed to override the auto-detected ASGI import string. The only signal was `[project.scripts]` which conflates CLI commands with ASGI apps.
+
+### Fix Applied
+Added `asgi_import` field to `bigbase.yaml` under `start:`:
+
+```yaml
+start:
+  command: ""                          # empty = auto-detect
+  port: 8000
+  asgi_import: "grimoire.app:create_app --factory"
+```
+
+Changes:
+- `ManifestStart.ASGIImport` field in `manifest.go` — accepts `"module:app"` or `"module:app --factory --reload"` format
+- `validate()` relaxed: `start.command` may be empty when `framework: python` and `asgi_import` is set
+- `pythonStartCommand(ctx, buildDir, port, manifest)` now accepts `*Manifest`, checks `manifest.Start.ASGIImport` to override the ASGI import
+- `parseASGIImport(raw)` splits the string into `(importStr, extraArgs)` for uvicorn flags
+- `orchestrator.go` resume path now loads manifest from build dir (instead of passing nil)
+- Callers in `engine.go` and `deploy_runner.go` updated
+
+### Evidence
+270/270 deploy tests pass (3 new tests: `TestParseASGIImport`, `TestPythonStartCommand_ManifestASGIImport`, `TestPythonStartCommand_ManifestASGIImportSimple`).

@@ -152,7 +152,7 @@ func TestPythonStartCommand_Uvicorn(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(dir, "pyproject.toml"), []byte(content), 0644); err != nil {
 		t.Fatal(err)
 	}
-	cmd := pythonStartCommand(context.Background(), dir, 8000)
+	cmd := pythonStartCommand(context.Background(), dir, 8000, nil)
 	if cmd == nil {
 		t.Fatal("expected start command")
 	}
@@ -179,7 +179,7 @@ func TestPythonStartCommand_Fallback(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(dir, "app.py"), []byte("print(\"hello\")"), 0644); err != nil {
 		t.Fatal(err)
 	}
-	cmd := pythonStartCommand(context.Background(), dir, 8000)
+	cmd := pythonStartCommand(context.Background(), dir, 8000, nil)
 	if cmd == nil {
 		t.Fatal("expected start command")
 	}
@@ -195,7 +195,7 @@ func TestPythonStartCommand_Uvicorn_Path(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(dir, "pyproject.toml"), []byte(content), 0644); err != nil {
 		t.Fatal(err)
 	}
-	cmd := pythonStartCommand(context.Background(), dir, 8000)
+	cmd := pythonStartCommand(context.Background(), dir, 8000, nil)
 	if cmd == nil {
 		t.Fatal("expected start command")
 	}
@@ -222,7 +222,7 @@ func TestPythonStartCommand_PyProject_NoUv(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(dir, "pyproject.toml"), []byte(content), 0644); err != nil {
 		t.Fatal(err)
 	}
-	cmd := pythonStartCommand(context.Background(), dir, 8000)
+	cmd := pythonStartCommand(context.Background(), dir, 8000, nil)
 	if cmd == nil {
 		t.Fatal("expected start command")
 	}
@@ -239,7 +239,7 @@ func TestPythonStartCommand_SetsDir(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(dir, "pyproject.toml"), []byte(content), 0644); err != nil {
 		t.Fatal(err)
 	}
-	cmd := pythonStartCommand(context.Background(), dir, 8000)
+	cmd := pythonStartCommand(context.Background(), dir, 8000, nil)
 	if cmd == nil {
 		t.Fatal("expected start command")
 	}
@@ -256,7 +256,7 @@ func TestPythonStartCommand_UvicornDefaultsAppApp(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(dir, "pyproject.toml"), []byte(content), 0644); err != nil {
 		t.Fatal(err)
 	}
-	cmd := pythonStartCommand(context.Background(), dir, 8000)
+	cmd := pythonStartCommand(context.Background(), dir, 8000, nil)
 	if cmd == nil {
 		t.Fatal("expected start command")
 	}
@@ -324,7 +324,7 @@ func TestPythonStartCommand_CLIScriptFallsBackToAppApp(t *testing.T) {
 			if err := os.WriteFile(filepath.Join(dir, "pyproject.toml"), []byte(content), 0644); err != nil {
 				t.Fatal(err)
 			}
-			cmd := pythonStartCommand(context.Background(), dir, 8000)
+			cmd := pythonStartCommand(context.Background(), dir, 8000, nil)
 			if cmd == nil {
 				t.Fatal("expected start command")
 			}
@@ -363,6 +363,111 @@ func TestIsCLIScriptEntry(t *testing.T) {
 		got := isCLIScriptEntry(tt.module, tt.appVar)
 		if got != tt.isCLI {
 			t.Errorf("isCLIScriptEntry(%q, %q) = %v, want %v", tt.module, tt.appVar, got, tt.isCLI)
+		}
+	}
+}
+
+func TestParseASGIImport(t *testing.T) {
+	tests := []struct {
+		raw       string
+		wantStr   string
+		wantExtra []string
+	}{
+		{"app:app", "app:app", nil},
+		{"grimoire.app:create_app --factory", "grimoire.app:create_app", []string{"--factory"}},
+		{"myapp.main:app", "myapp.main:app", nil},
+		{"pkg.module:app_var --reload --reload-dir src", "pkg.module:app_var", []string{"--reload", "--reload-dir", "src"}},
+	}
+	for _, tt := range tests {
+		gotStr, gotExtra := parseASGIImport(tt.raw)
+		if gotStr != tt.wantStr {
+			t.Errorf("parseASGIImport(%q) str = %q, want %q", tt.raw, gotStr, tt.wantStr)
+		}
+		if len(gotExtra) != len(tt.wantExtra) {
+			t.Errorf("parseASGIImport(%q) extra = %v, want %v", tt.raw, gotExtra, tt.wantExtra)
+			continue
+		}
+		for i := range gotExtra {
+			if gotExtra[i] != tt.wantExtra[i] {
+				t.Errorf("parseASGIImport(%q) extra[%d] = %q, want %q", tt.raw, i, gotExtra[i], tt.wantExtra[i])
+			}
+		}
+	}
+}
+
+func TestPythonStartCommand_ManifestASGIImport(t *testing.T) {
+	dir := t.TempDir()
+	content := "[project]\nname = \"testapp\"\ndependencies = [\"fastapi>=0.100\", \"uvicorn>=0.30\"]\n\n[project.scripts]\ngrimoire = \"grimoire.__main__:main\"\n"
+	if err := os.WriteFile(filepath.Join(dir, "pyproject.toml"), []byte(content), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	manifest := &Manifest{
+		Start: ManifestStart{
+			ASGIImport: "grimoire.app:create_app --factory",
+		},
+	}
+	cmd := pythonStartCommand(context.Background(), dir, 8000, manifest)
+	if cmd == nil {
+		t.Fatal("expected start command")
+	}
+
+	// Must contain the ASGI import string from the manifest.
+	foundImport := false
+	foundFactory := false
+	for _, arg := range cmd.Args {
+		if arg == "grimoire.app:create_app" {
+			foundImport = true
+		}
+		if arg == "--factory" {
+			foundFactory = true
+		}
+	}
+	if !foundImport {
+		t.Errorf("expected ASGI import 'grimoire.app:create_app' in args %v", cmd.Args)
+	}
+	if !foundFactory {
+		t.Errorf("expected --factory flag in args %v", cmd.Args)
+	}
+	// Must NOT contain the CLI entry point.
+	for _, arg := range cmd.Args {
+		if arg == "grimoire.__main__:main" {
+			t.Errorf("CLI entry point %q should not appear in args %v", arg, cmd.Args)
+		}
+	}
+}
+
+func TestPythonStartCommand_ManifestASGIImportSimple(t *testing.T) {
+	dir := t.TempDir()
+	content := "[project]\nname = \"testapp\"\ndependencies = [\"fastapi>=0.100\", \"uvicorn>=0.30\"]\n"
+	if err := os.WriteFile(filepath.Join(dir, "pyproject.toml"), []byte(content), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	manifest := &Manifest{
+		Start: ManifestStart{
+			ASGIImport: "custom.module:application",
+		},
+	}
+	cmd := pythonStartCommand(context.Background(), dir, 8000, manifest)
+	if cmd == nil {
+		t.Fatal("expected start command")
+	}
+
+	foundImport := false
+	for _, arg := range cmd.Args {
+		if arg == "custom.module:application" {
+			foundImport = true
+			break
+		}
+	}
+	if !foundImport {
+		t.Errorf("expected ASGI import 'custom.module:application' in args %v", cmd.Args)
+	}
+	// Must NOT have extra --factory flag
+	for _, arg := range cmd.Args {
+		if arg == "--factory" {
+			t.Errorf("unexpected --factory in args %v", cmd.Args)
 		}
 	}
 }

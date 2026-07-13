@@ -123,6 +123,21 @@ func isCLIScriptEntry(module, appVar string) bool {
 	return false
 }
 
+// parseASGIImport splits a manifest asgi_import value into the ASGI import
+// string and extra uvicorn arguments. For example:
+//
+//	"grimoire.app:create_app --factory" → ("grimoire.app:create_app", ["--factory"])
+//	"myapp.main:app"                   → ("myapp.main:app", nil)
+//	"app:app"                          → ("app:app", nil)
+func parseASGIImport(raw string) (importStr string, extraArgs []string) {
+	// Find the first space to split import string from extra args.
+	spaceIdx := strings.IndexByte(raw, ' ')
+	if spaceIdx < 0 {
+		return raw, nil
+	}
+	return raw[:spaceIdx], strings.Fields(raw[spaceIdx+1:])
+}
+
 // SystemDeps returns the system dependencies declared in [tools.system_deps],
 // filtered to only allowlisted packages.
 func (pp *PyProjectTOML) SystemDeps() []string {
@@ -166,7 +181,10 @@ func resolvePythonBin() string {
 // pythonStartCommand returns the exec.Cmd for starting a Python deployment.
 // Uses uv run when pyproject.toml is present and uv is available; falls back
 // to python3 when uv is not installed.
-func pythonStartCommand(ctx context.Context, buildDir string, port int) *exec.Cmd {
+//
+// When manifest is non-nil and specifies an asgi_import, it takes priority
+// over auto-detection from pyproject.toml [project.scripts].
+func pythonStartCommand(ctx context.Context, buildDir string, port int, manifest *Manifest) *exec.Cmd {
 	pp := ParsePyProjectTOML(buildDir)
 	if pp != nil {
 		_, uvErr := exec.LookPath("uv")
@@ -187,17 +205,35 @@ func pythonStartCommand(ctx context.Context, buildDir string, port int) *exec.Cm
 				module = "app"
 				appVar = "app"
 			}
+
+			var extraArgs []string
+			// Manifest ASGI import override takes priority over heuristics.
+			if manifest != nil && manifest.Start.ASGIImport != "" {
+				asgiImport, extra := parseASGIImport(manifest.Start.ASGIImport)
+				module, appVar = splitEntryPoint(asgiImport)
+				extraArgs = extra
+				if module == "" {
+					module = "app"
+				}
+				if appVar == "" {
+					appVar = "app"
+				}
+			}
+
 			portStr := fmt.Sprintf("%d", port)
+			baseArgs := []string{module + ":" + appVar}
+			baseArgs = append(baseArgs, extraArgs...)
+			baseArgs = append(baseArgs, "--host", "0.0.0.0", "--port", portStr)
 			if useUV {
-				cmd := exec.CommandContext(ctx, "uv", "run", "uvicorn",
-					module+":"+appVar, "--host", "0.0.0.0", "--port", portStr)
+				args := append([]string{"run", "uvicorn"}, baseArgs...)
+				cmd := exec.CommandContext(ctx, "uv", args...)
 				cmd.Dir = buildDir
 				return cmd
 			}
 			// Fallback: python3 -m uvicorn
 			pythonBin := resolvePythonBin()
-			cmd := exec.CommandContext(ctx, pythonBin, "-m", "uvicorn",
-				module+":"+appVar, "--host", "0.0.0.0", "--port", portStr)
+			args := append([]string{"-m", "uvicorn"}, baseArgs...)
+			cmd := exec.CommandContext(ctx, pythonBin, args...)
 			cmd.Dir = buildDir
 			return cmd
 		}

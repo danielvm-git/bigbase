@@ -104,7 +104,8 @@ func (d *Deploy) resumeCandidates(candidates []resumeCandidate) {
 			URL:     c.rawURL,
 			AppType: appType,
 		}
-		go d.startApp(context.Background(), serveDir, deploy, appType, c.repoName, nil)
+		manifest, _ := LoadManifest(serveDir) // best-effort: load if present
+		go d.startApp(context.Background(), serveDir, deploy, appType, c.repoName, manifest)
 		d.logger.Info("resumed process deployment", "id", c.id, "appType", string(appType), "port", c.port, "host", HostFromDeploymentURL(c.rawURL))
 	}
 }
