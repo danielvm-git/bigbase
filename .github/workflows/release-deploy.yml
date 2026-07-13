@@ -176,7 +176,7 @@ jobs:
       # ======================================================================
       - name: Download built binary
         if: steps.detect-release.outputs.new_release == 'true'
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: bigbase-linux-amd64
 
