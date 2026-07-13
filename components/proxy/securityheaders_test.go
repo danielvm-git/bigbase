@@ -27,8 +27,8 @@ func TestSecurityHeaders(t *testing.T) {
 
 	waitForServer(t, port, "/health")
 
-	t.Run("home page, docs, and admin paths receive permissive CSP for styles and fonts", func(t *testing.T) {
-		paths := []string{"/", "/docs", "/admin", "/admin/", "/admin/settings"}
+	t.Run("all non-API non-health routes receive permissive CSP", func(t *testing.T) {
+		paths := []string{"/", "/docs", "/admin", "/admin/", "/admin/settings", "/checks", "/actions", "/backlog"}
 		for _, path := range paths {
 			resp, err := http.Get("http://localhost:" + port + path)
 			if err != nil {

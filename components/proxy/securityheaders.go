@@ -35,10 +35,15 @@ func (p *Proxy) securityHeadersMiddleware(next http.Handler) http.Handler {
 		// mechanism for HTML documents. Applying strictCSP to JSON error
 		// responses (e.g. 503 from GitHub install) can block the browser's
 		// built-in error page styling.
+		//
+		// All non-API routes get permissiveCSP because deployed sites serve
+		// HTML from many paths (e.g. /checks, /actions, /backlog), not just
+		// /, /docs, and /admin. The permissive policy allows inline scripts,
+		// inline styles, and CDN resources needed by HTMX-based apps.
 		if !strings.HasPrefix(r.URL.Path, "/api/") {
-			csp := strictCSP
-			if r.URL.Path == "/" || r.URL.Path == "/docs" || r.URL.Path == "/admin" || strings.HasPrefix(r.URL.Path, "/admin/") {
-				csp = permissiveCSP
+			csp := permissiveCSP
+			if r.URL.Path == "/health" {
+				csp = strictCSP
 			}
 			w.Header().Set("Content-Security-Policy", csp)
 		}
