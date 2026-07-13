@@ -1,3 +1,10 @@
+## [2.79.1](https://github.com/danielvm-git/bigbase/compare/v2.79.0...v2.79.1) (2026-07-13)
+
+
+### Bug Fixes
+
+* **e81:** add e81s06 security regression tests — 6 bug registry gaps ([eaff909](https://github.com/danielvm-git/bigbase/commit/eaff90902c027ad321722fd4ebd5ad6c471d3dc0))
+
 # [2.79.0](https://github.com/danielvm-git/bigbase/compare/v2.78.4...v2.79.0) (2026-07-13)
 
 
