@@ -1,3 +1,10 @@
+## [2.79.2](https://github.com/danielvm-git/bigbase/compare/v2.79.1...v2.79.2) (2026-07-13)
+
+
+### Bug Fixes
+
+* **proxy:** expand permissive CSP to allow CDN resources for deployed sites ([17481cf](https://github.com/danielvm-git/bigbase/commit/17481cf4145bf5e8c78c182bdec53e0d4c517932))
+
 ## [2.79.1](https://github.com/danielvm-git/bigbase/compare/v2.79.0...v2.79.1) (2026-07-13)
 
 
