@@ -1,3 +1,10 @@
+## [2.78.4](https://github.com/danielvm-git/bigbase/compare/v2.78.3...v2.78.4) (2026-07-13)
+
+
+### Bug Fixes
+
+* **deploy:** fall back to app:app when entry point is a CLI script ([c94cd21](https://github.com/danielvm-git/bigbase/commit/c94cd2162021c7dfd185891bd494f1fcfd9078a7))
+
 ## [2.78.3](https://github.com/danielvm-git/bigbase/compare/v2.78.2...v2.78.3) (2026-07-12)
 
 
