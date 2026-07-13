@@ -7,10 +7,13 @@ release:
   semantic_release: true
   bump_hint: minor
 # Waves:
-#   Wave 1 (parallel, current): e57, e74, e73, e81
-#   Wave 2 (after e57): e59, e58, e70
-#   Wave 3 (after e59s02): e65, e68, e60
-#   Wave 4 (after e57): e61, e62, e63, e64, e66
+#   e57-e66 (project scoping, Neon port, route rename, secrets, CSP, usage,
+#   schema designer, previews, multi-user platform) SUPERSEDED 2026-07-12 and
+#   archived to epics/archive/ — replanning the admin console split from
+#   scratch via scope-work/slice-tasks/plan-work. See
+#   specs/design-feedback/e66-admin-split-VS-CONVERSATION.md.
+#   Wave 1 (parallel, current): e74, e73, e81
+#   Wave 2: e70 (still depends on the old e57 schema shape — recheck once the new epic lands), e68
 epics:
 - id: e01
   title: "CLI \u2014 BigBase Breathes"
@@ -389,7 +392,7 @@ epics:
   wsjf: 7.0
   mode: capsule
   tier: 0
-  status: planned
+  status: superseded
   wave: 1
   blocks:
   - e58
@@ -401,34 +404,37 @@ epics:
   - e65
   - e66
   note: "5 stories, 21 BCPs. Foundation for multi-tenant isolation. CRITICAL PATH — blocks 8 epics."
-  capsule_dir: epics/e57-project-scoping-backend
-  file: epics/e57-project-scoping-backend/epic.yaml
+  capsule_dir: epics/archive/e57-project-scoping-backend
+  file: epics/archive/e57-project-scoping-backend/epic.yaml
+  superseded_note: "SUPERSEDED 2026-07-12 — replanning admin console split (repositories vs platform, instance-admin vs org-workspace lenses) from scratch via scope-work/slice-tasks/plan-work. See specs/design-feedback/e66-admin-split-VS-CONVERSATION.md. Archived, not deleted — spec content preserved for reference."
 - id: e58
   title: "Project Scoping \u2014 Admin UI"
   wsjf: 5.0
   mode: capsule
   tier: 1
-  status: planned
+  status: superseded
   depends_on:
   - e51
   - e57
   note: 1 story, 3 BCPs.
-  capsule_dir: epics/e58-project-scoping-ui
-  file: epics/e58-project-scoping-ui/epic.yaml
+  capsule_dir: epics/archive/e58-project-scoping-ui
+  file: epics/archive/e58-project-scoping-ui/epic.yaml
+  superseded_note: "SUPERSEDED 2026-07-12 — replanning admin console split (repositories vs platform, instance-admin vs org-workspace lenses) from scratch via scope-work/slice-tasks/plan-work. See specs/design-feedback/e66-admin-split-VS-CONVERSATION.md. Archived, not deleted — spec content preserved for reference."
 - id: e59
   title: "Native Feature Port \u2014 SQL-over-HTTP, Better Auth, MCP Tools, DB Branching"
   wsjf: 6.0
   mode: capsule
   tier: 1
-  status: planned
+  status: superseded
   depends_on:
   - e57
   note: |
     4 stories, 13 BCPs. e59s05 extracted as BUG-001 (specs/bugs/). Stories ship independently \u2014 NOT an atomic block.
     Wave 2: e59s01 (SQL-over-HTTP), e59s03 (Better Auth), e59s04 (MCP tools) \u2014 all after e57 only.
     Wave 3: e59s02 (DB Branching, complex, only prereq for e65).
-  capsule_dir: epics/e59-neon-native-port
-  file: epics/e59-neon-native-port/epic.yaml
+  capsule_dir: epics/archive/e59-neon-native-port
+  file: epics/archive/e59-neon-native-port/epic.yaml
+  superseded_note: "SUPERSEDED 2026-07-12 — replanning admin console split (repositories vs platform, instance-admin vs org-workspace lenses) from scratch via scope-work/slice-tasks/plan-work. See specs/design-feedback/e66-admin-split-VS-CONVERSATION.md. Archived, not deleted — spec content preserved for reference."
 - id: e80
   title: "Production VPS Security Hardening — Contabo"
   wsjf: 4.8
@@ -449,87 +455,94 @@ epics:
   wsjf: 4.0
   mode: capsule
   tier: 2
-  status: planned
+  status: superseded
   depends_on:
   - e57
   note: |
     1 story, ~1 BCP. Mechanical rename: App.tsx (16 refs) + main.go (24 Go routes) + 11 test files.
     Ships in Wave 2 alongside e58. Aligns codebase with all prototype and IA spec routes.
     No functional change — pure routing alias with 301 redirect from /deploy/* for backward compat.
-  capsule_dir: epics/e60-route-rename
-  file: epics/e60-route-rename/epic.yaml
+  capsule_dir: epics/archive/e60-route-rename
+  file: epics/archive/e60-route-rename/epic.yaml
+  superseded_note: "SUPERSEDED 2026-07-12 — replanning admin console split (repositories vs platform, instance-admin vs org-workspace lenses) from scratch via scope-work/slice-tasks/plan-work. See specs/design-feedback/e66-admin-split-VS-CONVERSATION.md. Archived, not deleted — spec content preserved for reference."
 - id: e61
   title: "Deploy \u2014 Secrets Management"
   wsjf: 3.5
   mode: capsule
   tier: 2
-  status: planned
+  status: superseded
   depends_on:
   - e51
   - e57
   note: 2 stories, 3 BCPs.
-  capsule_dir: epics/e61-secrets
-  file: epics/e61-secrets/epic.yaml
+  capsule_dir: epics/archive/e61-secrets
+  file: epics/archive/e61-secrets/epic.yaml
+  superseded_note: "SUPERSEDED 2026-07-12 — replanning admin console split (repositories vs platform, instance-admin vs org-workspace lenses) from scratch via scope-work/slice-tasks/plan-work. See specs/design-feedback/e66-admin-split-VS-CONVERSATION.md. Archived, not deleted — spec content preserved for reference."
 - id: e62
   title: "Proxy \u2014 Configurable CSP Headers (incl. unsafe-inline fix)"
   wsjf: 3.0
   mode: capsule
   tier: 2
-  status: planned
+  status: superseded
   depends_on:
   - e57
   note: 2 stories, 3 BCPs. Per-site CSP with nonce support.
-  capsule_dir: epics/e62-csp-headers
-  file: epics/e62-csp-headers/epic.yaml
+  capsule_dir: epics/archive/e62-csp-headers
+  file: epics/archive/e62-csp-headers/epic.yaml
+  superseded_note: "SUPERSEDED 2026-07-12 — replanning admin console split (repositories vs platform, instance-admin vs org-workspace lenses) from scratch via scope-work/slice-tasks/plan-work. See specs/design-feedback/e66-admin-split-VS-CONVERSATION.md. Archived, not deleted — spec content preserved for reference."
 - id: e63
   title: "Admin \u2014 Usage Dashboard"
   wsjf: 3.0
   mode: capsule
   tier: 2
-  status: planned
+  status: superseded
   depends_on:
   - e51
   - e57
   note: 2 stories, 3 BCPs.
-  capsule_dir: epics/e63-usage-dashboard
-  file: epics/e63-usage-dashboard/epic.yaml
+  capsule_dir: epics/archive/e63-usage-dashboard
+  file: epics/archive/e63-usage-dashboard/epic.yaml
+  superseded_note: "SUPERSEDED 2026-07-12 — replanning admin console split (repositories vs platform, instance-admin vs org-workspace lenses) from scratch via scope-work/slice-tasks/plan-work. See specs/design-feedback/e66-admin-split-VS-CONVERSATION.md. Archived, not deleted — spec content preserved for reference."
 - id: e64
   title: "Admin \u2014 Collection Schema Designer"
   wsjf: 2.5
   mode: capsule
   tier: 2
-  status: planned
+  status: superseded
   depends_on:
   - e51
   - e57
   note: 2 stories, 2 BCPs.
-  capsule_dir: epics/e64-schema-designer
-  file: epics/e64-schema-designer/epic.yaml
+  capsule_dir: epics/archive/e64-schema-designer
+  file: epics/archive/e64-schema-designer/epic.yaml
+  superseded_note: "SUPERSEDED 2026-07-12 — replanning admin console split (repositories vs platform, instance-admin vs org-workspace lenses) from scratch via scope-work/slice-tasks/plan-work. See specs/design-feedback/e66-admin-split-VS-CONVERSATION.md. Archived, not deleted — spec content preserved for reference."
 - id: e65
   title: "Deploy \u2014 Preview Environments"
   wsjf: 10.5
   mode: capsule
   tier: 2
-  status: planned
+  status: superseded
   depends_on:
   - e51
   - e57
   - e59s02
   note: "2 stories, 2 BCPs. Ships immediately after e59s02 in Wave 3. Consumer: big-library content review pipeline."
-  capsule_dir: epics/e65-preview-envs
-  file: epics/e65-preview-envs/epic.yaml
+  capsule_dir: epics/archive/e65-preview-envs
+  file: epics/archive/e65-preview-envs/epic.yaml
+  superseded_note: "SUPERSEDED 2026-07-12 — replanning admin console split (repositories vs platform, instance-admin vs org-workspace lenses) from scratch via scope-work/slice-tasks/plan-work. See specs/design-feedback/e66-admin-split-VS-CONVERSATION.md. Archived, not deleted — spec content preserved for reference."
 - id: e66
   title: "Multi-User Platform \u2014 Admin, roles, invites"
   wsjf: 3.6
   mode: capsule
   tier: 2
-  status: planned
+  status: superseded
   depends_on:
   - e51
   - e57
   note: 3 stories, 8 BCPs.
-  capsule_dir: epics/e66-multi-user-platform
-  file: epics/e66-multi-user-platform/epic.yaml
+  capsule_dir: epics/archive/e66-multi-user-platform
+  file: epics/archive/e66-multi-user-platform/epic.yaml
+  superseded_note: "SUPERSEDED 2026-07-12 — replanning admin console split (repositories vs platform, instance-admin vs org-workspace lenses) from scratch via scope-work/slice-tasks/plan-work. See specs/design-feedback/e66-admin-split-VS-CONVERSATION.md. Archived, not deleted — spec content preserved for reference."
 
 - id: e67
   title: "MCP Provisioning Tools — Zero-to-Production from AI Agents"

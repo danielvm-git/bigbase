@@ -1,0 +1,81 @@
+type: scope
+context: product
+id: e82
+title: "Admin Console Split — Repositories vs Platform, Instance-Admin vs Org-Workspace"
+status: draft
+supersedes: [e57, e58, e59, e60, e61, e62, e63, e64, e65, e66]
+depends_on: []
+note: |
+  Replaces e57-e66 (archived to epics/archive/, status: superseded in release-plan.yaml).
+  No structural dependency on the old e57 backend — this epic builds on the multi-tenant
+  orgs/org_members model already shipped in components/auth, not a new tenant primitive.
+  wsjf/total_bcps intentionally left unset here — assign during slice-tasks/plan-release.
+
+core_value: >
+  Separate "manage my hosted git repos" from "manage the BigBase app" as two distinct
+  entry points, and within the app itself, separate "operate this server" from
+  "use my project" as two lenses a solo user can grow into real multi-tenancy from
+  without a rewrite.
+
+summary: |
+  Today ui/src ships one React app, one flat sidebar, and one login for everything —
+  git hosting (Git Repos, Forge, CI/CD) sits next to the BaaS admin (data, auth, storage,
+  messaging, monitoring) with no separation. This epic introduces a two-door entry split
+  (Repositories vs Platform) and, inside Platform, a combined switcher between an
+  instance-admin lens (server-wide, gated by a new users.is_superadmin flag) and an
+  org-workspace lens (per-org, using the orgs/org_members tables that already ship in
+  components/auth).
+
+  The prior attempt at this territory (e57 Project Scoping Backend + e58 Admin UI + e66
+  Multi-User Platform) modeled "project" as a Neon-style database resource with branches —
+  a different axis entirely, and never got past unspecced stubs for the multi-user pieces.
+  That work is archived, not deleted, and its detailed specs (e57s01-05, e58s01, e59s01-04)
+  remain available to mine for backend patterns even though the IA direction changed.
+
+in_scope:
+  - id: e82s-door-split
+    title: Two-door login — Repositories vs Platform, each its own sign-in
+  - id: e82s-repos-shell
+    title: Repositories area — Git Repos, Forge (issues/wiki/labels), CI/CD under one login and route namespace
+  - id: e82s-platform-lenses
+    title: Platform area two-lens switcher (This server / org rows) — instance-admin vs org-workspace, same account today
+  - id: e82s-superadmin-flag
+    title: users.is_superadmin schema flag gating the instance-admin lens
+  - id: e82s-scoped-pages
+    title: Dashboard, Data & SQL, Storage, Messaging, Users, Monitoring, Settings each render correctly for both lenses
+  - id: e82s-naming
+    title: "Rename collision fix: org = tenant (existing), \"project\" stays reserved for any future Neon-style DB resource, this epic's org-scoped lens is called \"org workspace\" everywhere"
+  - id: e82s-prototype-brief
+    title: New claude.ai/design update brief posted to the live prototype (ec1480a1, BigBase Prototype) once screens are implementation-ready
+
+out_of_scope:
+  - item: Neon-style per-project database branching
+    reason: was e59s02, unrelated axis, explicitly deferred — not needed for the door/lens split
+  - item: Full PolicyEnforcer / policy gate (Issue #43)
+    reason: real architectural work, independently useful, but this epic ships against a simple is_superadmin boolean instead so it isn't blocked on it
+  - item: Secrets management UI, Usage dashboard, Collection schema designer, Preview environments
+    reason: were e61/e63/e64/e65 — downstream features that happened to depend on the old e57 schema, not part of the IA split itself; re-sequence against this epic once it lands
+  - item: /deploy → /sites route rename mechanics
+    reason: was e60, a separate mechanical concern that can proceed independently of the door split
+  - item: Fully separate identity/auth systems per door
+    reason: still an open decision from the design conversation — default to one shared auth session gated by role/org unless a future story decides otherwise
+
+constraints:
+  - Solo user today (the operator is also the only org member) — every choice must work at party-of-one and grow into real multi-tenant invites without rework
+  - Must build on the existing components/auth orgs/org_members tables — no new tenant primitive
+  - Currently shipped routes (ui/src, /deploy/*) must keep working during the transition — no big-bang cutover
+
+success_criteria:
+  - A user can sign in through two distinct doors (Repositories, Platform)
+  - Inside Platform, the switcher shows at least "This server" (admin) and one org-workspace row, both resolving to the same account today
+  - users.is_superadmin exists and gates the instance-admin lens; org_members.role continues to gate org-workspace access
+  - Dashboard, Data & SQL, Storage, Messaging, Users, Monitoring, Settings each render correctly scoped for both lenses
+  - Every gap in specs/design-feedback/e66-admin-split-VS-CONVERSATION.md is either closed or explicitly re-deferred with a written reason
+
+references:
+  - specs/design-feedback/e66-admin-split-VS-CONVERSATION.md
+  - specs/epics/archive/e57-project-scoping-backend (backend patterns to mine; IA superseded)
+  - specs/epics/archive/e66-multi-user-platform (closest prior attempt, was an unspecced stub)
+  - components/auth/orgs.go, components/auth/membership.go (existing multi-tenant primitives)
+  - claude.ai/design project ec1480a1 "BigBase Prototype" (live prototype, design-sync.config.json target)
+  - claude.ai/design project 502492b2 "BigBase Design System" (reference only, not the sync target)
