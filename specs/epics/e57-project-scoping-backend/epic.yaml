@@ -36,6 +36,7 @@ stories:
     status: planned
     spec: e57s04-spec.md
     tasks: e57s04-tasks.yaml
+    note: "Include anonymous token write block regression test (BUG-20260628T050000) — verify POST/PUT/PATCH/DELETE return 403 for anon tokens. Also covered in e81s06."
   - id: e57s05
     title: "Deepen: EnvResolver seam for projects"
     bcps: 3

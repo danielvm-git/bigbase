@@ -95,3 +95,28 @@ stories:
         verify: "go test ./components/deploy/ -run TestManifestProfiles -v"
       - desc: "Update get_ci_template() to return correct workflow for each app_type"
         verify: "go test ./components/mcp/ -run TestCITemplatesAll -v"
+
+  - id: e81s06
+    title: "Security regression tests — bug registry gaps"
+    depends_on: []
+    status: open
+    note: "6 regression test gaps from bug registry (2026-07-12 audit). Code guards exist but no tests to prevent reintroduction."
+    tasks:
+      - desc: "Path traversal regression test — verify filepath.Clean + containment in engine.go, gateway.go, git.go reject ../ patterns"
+        verify: "go test ./components/deploy/ -run TestPathTraversal -v && go test ./components/git/ -run TestPathTraversal -v"
+        bug_ref: BUG-2026-07-11T032549-codeql-path-traversal
+      - desc: "Command injection regression test — verify -- separator in git clone/fetch prevents arg injection"
+        verify: "go test ./components/deploy/ -run TestCommandInjection -v && go test ./components/github/ -run TestCommandInjection -v"
+        bug_ref: BUG-2026-07-11T032535-codeql-command-injection
+      - desc: "Anonymous token write block regression test — verify POST/PUT/PATCH/DELETE return 403 for anonymous tokens"
+        verify: "go test ./components/auth/ -run TestAnonymousWriteBlocked -v"
+        bug_ref: BUG-20260628T050000-anon-write
+      - desc: "AppType.IsValid() regression test — verify known types valid, unknown types invalid"
+        verify: "go test ./components/deploy/ -run TestAppTypeIsValid -v"
+        bug_ref: BUG-2026-07-10T160201
+      - desc: "Error sentinel regression test — verify ErrRepoNotFound/ErrDeploymentNotFound work with errors.Is"
+        verify: "go test ./components/deploy/ -run TestErrorSentinels -v"
+        bug_ref: BUG-2026-07-10T160105
+      - desc: "Manifest path traversal regression test — verify LoadManifestPath rejects absolute paths and ../ escapes"
+        verify: "go test ./components/deploy/ -run TestManifestPathTraversal -v"
+        bug_ref: BUG-2026-07-10T160207
