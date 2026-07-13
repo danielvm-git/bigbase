@@ -13,15 +13,16 @@ const (
 	strictCSP = "default-src 'self'; script-src 'self'; connect-src 'self'"
 
 	// permissiveCSP is for HTML routes (home, docs, admin) and deployed static
-	// sites that need inline styles, Google Fonts, and common CDN resources.
-	// unsafe-inline in style-src is a deliberate per-route choice: these routes
-	// serve static HTML pages where inline styles are used for server-rendered
-	// content. API, health, and all other routes use the strict policy above,
-	// so the XSS surface from unsafe-inline is limited.
+	// sites that need inline styles, inline scripts, Google Fonts, and common
+	// CDN resources. unsafe-inline in both script-src and style-src is a
+	// deliberate per-route choice: these routes serve static HTML pages where
+	// inline scripts (theme toggles, HTMX handlers) and inline styles are used
+	// for server-rendered content. API, health, and all other routes use the
+	// strict policy above, so the XSS surface from unsafe-inline is limited.
 	// CDN entries (jsdelivr, cloudflare, tailwindcss, unpkg) are needed for
 	// deployed sites that load UI frameworks from public CDNs. TODO: make CSP
 	// configurable per-site so each deployment can declare its own allowed sources.
-	permissiveCSP = "default-src 'self'; script-src 'self' https://cdn.tailwindcss.com https://unpkg.com; connect-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net"
+	permissiveCSP = "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://unpkg.com; connect-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net"
 
 	// restrictivePermissionsPolicy disables browser features that are not needed.
 	restrictivePermissionsPolicy = "accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()"
