@@ -433,3 +433,72 @@ func writeFile(t *testing.T, path, content string) {
 		t.Fatalf("writeFile: %v", err)
 	}
 }
+
+func TestValidateManifest_ASGIImportRelaxesStartCommand(t *testing.T) {
+	tests := []struct {
+		name    string
+		yaml    string
+		wantErr bool
+	}{
+		{
+			name: "Python with asgi_import and no start.command is valid",
+			yaml: `version: 1
+framework: python
+build:
+  command: uv sync --frozen
+start:
+  asgi_import: grimoire.app:create_app --factory
+  port: 8000
+`,
+			wantErr: false,
+		},
+		{
+			name: "Python without asgi_import and no start.command is invalid",
+			yaml: `version: 1
+framework: python
+build:
+  command: uv sync --frozen
+start:
+  port: 8000
+`,
+			wantErr: true,
+		},
+		{
+			name: "Node without start.command is invalid (asgi_import ignored)",
+			yaml: `version: 1
+framework: node
+build:
+  command: npm run build
+start:
+  asgi_import: something:app
+  port: 3000
+`,
+			wantErr: true,
+		},
+		{
+			name: "Python with both asgi_import and start.command is valid",
+			yaml: `version: 1
+framework: python
+build:
+  command: uv sync --frozen
+start:
+  command: uvicorn myapp.main:app
+  asgi_import: grimoire.app:create_app
+  port: 8000
+`,
+			wantErr: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := ValidateManifest([]byte(tt.yaml))
+			if tt.wantErr && err == nil {
+				t.Errorf("expected validation error, got nil")
+			}
+			if !tt.wantErr && err != nil {
+				t.Errorf("unexpected validation error: %v", err)
+			}
+		})
+	}
+}

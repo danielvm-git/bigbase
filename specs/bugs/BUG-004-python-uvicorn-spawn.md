@@ -126,5 +126,12 @@ Changes:
 - `orchestrator.go` resume path now loads manifest from build dir (instead of passing nil)
 - Callers in `engine.go` and `deploy_runner.go` updated
 
+### Hardening Added
+- **Type guard:** `port int` parameter type prevents `$PORT` string injection (structurally impossible)
+- **Schema validation:** `ValidateManifest()` ensures `start.command` is required unless `framework: python` + `asgi_import` is set → validated by `TestValidateManifest_ASGIImportRelaxesStartCommand` (4 sub-cases)
+- **Defensive defaults:** 4 layers of defaults ensure both `module` and `appVar` always resolve to `"app"` before passing to uvicorn
+- **CLI heuristic escape hatch:** Manifest `asgi_import` field overrides any auto-detection, including false positives from `isCLIScriptEntry`
+- **Path resolution:** `cmd.Dir = buildDir` on every return path prevents working directory confusion
+
 ### Evidence
-270/270 deploy tests pass (3 new tests: `TestParseASGIImport`, `TestPythonStartCommand_ManifestASGIImport`, `TestPythonStartCommand_ManifestASGIImportSimple`).
+270/270 deploy tests pass (3 new manifest tests: `TestParseASGIImport`, `TestPythonStartCommand_ManifestASGIImport`, `TestPythonStartCommand_ManifestASGIImportSimple`). 4 hardening tests: `TestValidateManifest_ASGIImportRelaxesStartCommand`.

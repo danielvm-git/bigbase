@@ -1595,20 +1595,39 @@ bugs:
     severity: critical
     priority: critical
     scope: deploy
-    summary: "Python/uvicorn deployments fail — missing cmd.Dir, literal $PORT, and empty appVar default"
+    summary: "Python/uvicorn deployments fail — missing cmd.Dir, literal $PORT, empty appVar default, and CLI entry points used as ASGI imports"
     file: specs/bugs/BUG-004-python-uvicorn-spawn.md
     status: fixed
     files_changed:
       - components/deploy/python.go
       - components/deploy/engine.go
       - components/deploy/deploy_runner.go
+      - components/deploy/orchestrator.go
+      - components/deploy/manifest.go
+      - components/deploy/manifest_test.go
       - components/deploy/python_test.go
     approach: |
       1. Added cmd.Dir = buildDir on every return path in pythonStartCommand
       2. Changed signature to accept port int, replaced literal "$PORT" with fmt.Sprintf("%d", port)
       3. Added default "app" for appVar when EntryPoint returns empty
       4. Updated callers in engine.go and deploy_runner.go to pass port
+      5. Added isCLIScriptEntry() heuristic to detect PEP 621 console_scripts and fall back to app:app
+      6. Added manifest asgi_import field for explicit ASGI import override (e.g., "grimoire.app:create_app --factory")
+      7. Added parseASGIImport() for splitting import string from extra uvicorn flags
+      8. Relaxed manifest validation: start.command optional when framework=python + asgi_import set
     risk_level: low
+    hardening:
+      - "Type guard: port int prevents $PORT string injection"
+      - "Schema validation: ValidateManifest ensures start.command required unless python + asgi_import"
+      - "Defensive defaults: 4 layers ensure module and appVar resolve to 'app' before uvicorn"
+      - "CLI heuristic escape hatch: manifest asgi_import field overrides any auto-detection"
+      - "Path resolution: cmd.Dir = buildDir on every return path"
     regression_guards:
       - components/deploy/python_test.go TestPythonStartCommand_SetsDir
       - components/deploy/python_test.go TestPythonStartCommand_UvicornDefaultsAppApp
+      - components/deploy/python_test.go TestPythonStartCommand_CLIScriptFallsBackToAppApp
+      - components/deploy/python_test.go TestPythonStartCommand_ManifestASGIImport
+      - components/deploy/python_test.go TestPythonStartCommand_ManifestASGIImportSimple
+      - components/deploy/python_test.go TestParseASGIImport
+      - components/deploy/python_test.go TestIsCLIScriptEntry
+      - components/deploy/manifest_test.go TestValidateManifest_ASGIImportRelaxesStartCommand
