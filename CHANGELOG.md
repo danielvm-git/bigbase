@@ -1,3 +1,10 @@
+# [2.79.0](https://github.com/danielvm-git/bigbase/compare/v2.78.4...v2.79.0) (2026-07-13)
+
+
+### Features
+
+* **deploy:** add asgi_import to bigbase.yaml manifest for Python apps ([014e7d6](https://github.com/danielvm-git/bigbase/commit/014e7d60478293303dfbc89cd3a2acbbcaec570e))
+
 ## [2.78.4](https://github.com/danielvm-git/bigbase/compare/v2.78.3...v2.78.4) (2026-07-13)
 
 
