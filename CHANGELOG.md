@@ -1,3 +1,10 @@
+## [2.79.8](https://github.com/danielvm-git/bigbase/compare/v2.79.7...v2.79.8) (2026-07-23)
+
+
+### Bug Fixes
+
+* **security:** cross-tenant deployment hijack via missing org_id check ([60fb506](https://github.com/danielvm-git/bigbase/commit/60fb5066ee8c9b044ce8a3371e6a6e2356095935)), closes [#134](https://github.com/danielvm-git/bigbase/issues/134)
+
 ## [2.79.7](https://github.com/danielvm-git/bigbase/compare/v2.79.6...v2.79.7) (2026-07-23)
 
 
