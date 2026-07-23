@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/danielvm/bigbase/components/auth"
 	"github.com/danielvm/bigbase/kernel"
 )
 
@@ -50,12 +51,31 @@ func (d *Deploy) HandleCreate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if siteID, ok := kernel.SiteIDFromContext(r.Context()); ok && siteID != "" {
+		// Site deploy key auth — verify the key matches the requested site.
 		if req.SiteID != "" && req.SiteID != siteID {
 			d.logger.Warn("deploy rejected: site key mismatch", "ctx_site_id", siteID, "req_site_id", req.SiteID)
 			kernel.WriteJSON(w, http.StatusForbidden, map[string]string{"error": "site key not authorized for this site"})
 			return
 		}
 		req.SiteID = siteID
+	} else if req.SiteID != "" {
+		// JWT/API-key auth — verify the site belongs to the caller's org.
+		if orgID, ok := auth.OrgIDFromContext(r.Context()); ok && orgID > 0 {
+			var siteOrgID int64
+			err := d.db.QueryRowContext(r.Context(),
+				"SELECT COALESCE(org_id, 0) FROM sites WHERE id = ?", req.SiteID).Scan(&siteOrgID)
+			if err != nil {
+				d.logger.Warn("deploy rejected: site not found", "site_id", req.SiteID, "error", err)
+				kernel.WriteJSON(w, http.StatusForbidden, map[string]string{"error": "site not found or access denied"})
+				return
+			}
+			if siteOrgID != 0 && siteOrgID != orgID {
+				d.logger.Warn("deploy rejected: cross-tenant attempt",
+					"caller_org", orgID, "site_org", siteOrgID, "site_id", req.SiteID)
+				kernel.WriteJSON(w, http.StatusForbidden, map[string]string{"error": "site not found or access denied"})
+				return
+			}
+		}
 	}
 
 	deploy, err := d.Trigger(r.Context(), req.RepoID, req.Branch, req.SiteName, req.SiteID, req.PassthroughPaths, req.AppType, req.ManifestPath)

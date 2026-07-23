@@ -14,6 +14,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/danielvm/bigbase/components/auth"
 	"github.com/danielvm/bigbase/kernel"
 )
 
@@ -153,6 +154,7 @@ func (s *Sites) Start(ctx *kernel.Context) error {
 		return fmt.Errorf("migrate sites: %w", err)
 	}
 	_ = s.db.Migrate(`ALTER TABLE sites ADD COLUMN auth_policy TEXT NOT NULL DEFAULT '{}'`)
+	_ = s.db.Migrate(`ALTER TABLE sites ADD COLUMN org_id INTEGER NOT NULL DEFAULT 0`)
 	if err := s.migrateDomains(); err != nil {
 		return fmt.Errorf("migrate site_domains: %w", err)
 	}
@@ -527,12 +529,18 @@ func (s *Sites) insertSite(ctx context.Context, gitRepoID, name, branch, rootPat
 		return "", "", fmt.Errorf("generate id: %w", err)
 	}
 
+	// Extract org_id from context for multi-tenant isolation.
+	var orgID int64
+	if oid, ok := auth.OrgIDFromContext(ctx); ok {
+		orgID = oid
+	}
+
 	now := time.Now().UTC().Format(time.RFC3339)
 	_, err = s.db.ExecContext(ctx,
-		`INSERT INTO sites (id, name, git_repo_id, production_branch, root_path, github_full_name, created_at)
-		 VALUES (?, ?, ?, ?, ?, ?, ?)
+		`INSERT INTO sites (id, name, git_repo_id, production_branch, root_path, github_full_name, created_at, org_id)
+		 VALUES (?, ?, ?, ?, ?, ?, ?, ?)
 		 ON CONFLICT(id) DO NOTHING`,
-		id, name, gitRepoID, branch, rootPath, githubFullName, now)
+		id, name, gitRepoID, branch, rootPath, githubFullName, now, orgID)
 	if err != nil {
 		return "", "", fmt.Errorf("insert site: %w", err)
 	}
