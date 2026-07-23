@@ -1,6 +1,6 @@
 type: session-state
 context: infra
-active_flow: fix_bug
+active_flow: null
 active_epic_id: null
 active_story_id: null
 active_story_status: null
@@ -36,20 +36,20 @@ epic_cycle:
   note: "e80 complete — VPS hardened on vmi3338033 (89.116.26.187). 3 layers: Ubuntu (UFW+fail2ban+unattended-upgrades+SSH), BigBase (systemd+alerts+backups), Contabo (cntb+snapshots). Skill created: harden-vps."
   fast_mode: false
 bug_cycle:
-  current_step: 4
+  current_step: null
   completed_steps:
-    - "investigate-bug (BUG-004 root cause: 3 bugs in pythonStartCommand)"
-    - "develop-tdd (fix: cmd.Dir, port param, appVar default)"
-    - "validate-fix (260/260 deploy tests)"
-    - "investigate-bug (follow-up: CLI entry points used as ASGI imports)"
-    - "develop-tdd (feat: isCLIScriptEntry heuristic + manifest asgi_import)"
-    - "validate-fix (275/275 tests, 270 deploy + 5 hardening manifest validation)"
-    - "release-branch (CI passed, v2.79.0 deployed)"
+    - "investigate-bug (BUG-134 cross-tenant deploy hijack: missing org_id check)"
+    - "diagnose-root (root cause: SiteIDFromContext skipped for JWT/API-key auth)"
+    - "develop-tdd (fix: add org_id to sites table + ownership verification in HandleCreate)"
+    - "validate-fix (176s deploy tests + 4s sites tests all pass)"
+    - "investigate-bug (BUG-138 auth-next bypass: missing setToken call)"
+    - "develop-tdd (fix: add client.setToken(token) + null session check)"
+    - "validate-fix (8/8 auth-next tests pass, TypeScript clean)"
     - "investigate-bug (BUG-132 IDOR injectDB: no org_id scoping)"
     - "develop-tdd (fix: add OrgID to RunContext, scope all queries by org_id)"
-    - "validate-fix (26/26 tests, cross-tenant isolation verified)"
+    - "validate-fix (26/26 functions tests, cross-tenant isolation verified)"
   bug_file: specs/bugs/BUG-2026-07-13T150000-idor-injectdb.md
-  note: "BUG-132 (IDOR injectDB) fixed. RunContext.OrgID added, all db.collection() queries scoped by org_id. Cross-tenant isolation test added. Ready for release."
+  note: "BUG-132 (IDOR injectDB) fixed. RunContext.OrgID added, all db.collection() queries scoped by org_id. Cross-tenant isolation test added. All 27 packages pass. Pushed 3c4d001."
 git:
   branch: main
   hash: null
