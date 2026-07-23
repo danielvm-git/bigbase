@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/danielvm/bigbase/components/auth"
 	"github.com/danielvm/bigbase/kernel"
 )
 
@@ -236,10 +237,12 @@ func (f *Functions) handleRun(w http.ResponseWriter, r *http.Request, id string)
 		return
 	}
 
+	orgID, _ := auth.OrgIDFromContext(r.Context())
 	runCtx := RunContext{
 		Env:     fn.Env,
 		DB:      f.db,
 		Request: r,
+		OrgID:   orgID,
 	}
 	output, execErr := rt.Execute(fn.Source, fn.Timeout, runCtx)
 

@@ -21,6 +21,20 @@ func (testLogger) Warn(msg string, args ...any)  {}
 func (testLogger) Error(msg string, args ...any) {}
 func (testLogger) Debug(msg string, args ...any) {}
 
+// toInt converts a numeric value (float64 or int64) to int for test assertions.
+func toInt(v any) int {
+	switch n := v.(type) {
+	case float64:
+		return int(n)
+	case int64:
+		return int(n)
+	case int:
+		return n
+	default:
+		return 0
+	}
+}
+
 func setupFunctions(t *testing.T) *functions.Functions {
 	t.Helper()
 	logger := testLogger{}
@@ -891,5 +905,101 @@ func TestSchedule(t *testing.T) {
 	}
 	if !found {
 		t.Fatal("expected at least one successful scheduled execution")
+	}
+}
+
+func TestDBCrossTenantIsolation(t *testing.T) {
+	// Verifies that db.collection() queries are scoped by org_id.
+	// Two different orgs should not see each other's data.
+	logger := testLogger{}
+	k := kernel.New(logger)
+	d := db.New(db.Options{Path: ":memory:", Logger: logger})
+	f := functions.New(functions.Options{DB: d, Logger: logger})
+	k.Register(f)
+	k.Register(d)
+	if err := k.Start(); err != nil {
+		t.Fatalf("kernel start: %v", err)
+	}
+	defer func() { _ = k.Stop() }()
+
+	rt := functions.NewJSRuntime()
+
+	createSrc := `
+		var col = db.collection('items');
+		col.create({value: env.ITEM_VALUE});
+	`
+	listSrc := `
+		var col = db.collection('items');
+		var items = col.list();
+		return {count: items.length};
+	`
+
+	// Org 1 creates a record
+	_, err := rt.Execute(createSrc, 30, functions.RunContext{
+		DB:    d,
+		OrgID: 1,
+		Env:   map[string]string{"ITEM_VALUE": "org1-secret"},
+	})
+	if err != nil {
+		t.Fatalf("org1 create: %v", err)
+	}
+
+	// Org 2 creates a record
+	_, err = rt.Execute(createSrc, 30, functions.RunContext{
+		DB:    d,
+		OrgID: 2,
+		Env:   map[string]string{"ITEM_VALUE": "org2-secret"},
+	})
+	if err != nil {
+		t.Fatalf("org2 create: %v", err)
+	}
+
+	// Org 1 should see only its own record
+	out1, err := rt.Execute(listSrc, 30, functions.RunContext{
+		DB:    d,
+		OrgID: 1,
+	})
+	if err != nil {
+		t.Fatalf("org1 list: %v", err)
+	}
+	res1, ok := out1.Result.(map[string]any)
+	if !ok {
+		t.Fatalf("org1 list type: %T", out1.Result)
+	}
+	if count := toInt(res1["count"]); count != 1 {
+		t.Fatalf("org1: expected 1 item (isolation broken!), got %d", count)
+	}
+
+	// Org 2 should see only its own record
+	out2, err := rt.Execute(listSrc, 30, functions.RunContext{
+		DB:    d,
+		OrgID: 2,
+	})
+	if err != nil {
+		t.Fatalf("org2 list: %v", err)
+	}
+	res2, ok := out2.Result.(map[string]any)
+	if !ok {
+		t.Fatalf("org2 list type: %T", out2.Result)
+	}
+	if count := toInt(res2["count"]); count != 1 {
+		t.Fatalf("org2: expected 1 item (isolation broken!), got %d", count)
+	}
+
+	// Cross-tenant get should return null
+	getSrc := `
+		var col = db.collection('items');
+		return col.get(OTHER_ID);
+	`
+	getSrcOrg2 := strings.Replace(getSrc, "OTHER_ID", "1", 1)
+	outGet, err := rt.Execute(getSrcOrg2, 30, functions.RunContext{
+		DB:    d,
+		OrgID: 2,
+	})
+	if err != nil {
+		t.Fatalf("cross-tenant get: %v", err)
+	}
+	if outGet.Result != nil {
+		t.Fatalf("cross-tenant get: expected null, got %v", outGet.Result)
 	}
 }

@@ -1,6 +1,6 @@
 type: session-state
 context: infra
-active_flow: null
+active_flow: fix_bug
 active_epic_id: null
 active_story_id: null
 active_story_status: null
@@ -36,7 +36,7 @@ epic_cycle:
   note: "e80 complete — VPS hardened on vmi3338033 (89.116.26.187). 3 layers: Ubuntu (UFW+fail2ban+unattended-upgrades+SSH), BigBase (systemd+alerts+backups), Contabo (cntb+snapshots). Skill created: harden-vps."
   fast_mode: false
 bug_cycle:
-  current_step: null
+  current_step: 4
   completed_steps:
     - "investigate-bug (BUG-004 root cause: 3 bugs in pythonStartCommand)"
     - "develop-tdd (fix: cmd.Dir, port param, appVar default)"
@@ -45,8 +45,11 @@ bug_cycle:
     - "develop-tdd (feat: isCLIScriptEntry heuristic + manifest asgi_import)"
     - "validate-fix (275/275 tests, 270 deploy + 5 hardening manifest validation)"
     - "release-branch (CI passed, v2.79.0 deployed)"
-  bug_file: specs/bugs/BUG-004-python-uvicorn-spawn.md
-  note: "BUG-004 fully resolved. 3 commits landed: c94cd216 (CLI detection), 014e7d60 (manifest asgi_import), ee9305a7 (hardening tests). Semantic-release published v2.78.4 and v2.79.0. Grimoire redeploy pending — needs bigbase.yaml with asgi_import: grimoire.app:create_app --factory"
+    - "investigate-bug (BUG-132 IDOR injectDB: no org_id scoping)"
+    - "develop-tdd (fix: add OrgID to RunContext, scope all queries by org_id)"
+    - "validate-fix (26/26 tests, cross-tenant isolation verified)"
+  bug_file: specs/bugs/BUG-2026-07-13T150000-idor-injectdb.md
+  note: "BUG-132 (IDOR injectDB) fixed. RunContext.OrgID added, all db.collection() queries scoped by org_id. Cross-tenant isolation test added. Ready for release."
 git:
   branch: main
   hash: null

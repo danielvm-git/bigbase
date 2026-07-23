@@ -10,6 +10,7 @@ import (
 
 	"github.com/robfig/cron/v3"
 
+	"github.com/danielvm/bigbase/components/auth"
 	"github.com/danielvm/bigbase/kernel"
 )
 
@@ -215,9 +216,11 @@ func (f *Functions) executeScheduled(fn Function) {
 		return
 	}
 
+	orgID, _ := auth.OrgIDFromContext(context.Background())
 	runCtx := RunContext{
-		Env: fn.Env,
-		DB:  f.db,
+		Env:   fn.Env,
+		DB:    f.db,
+		OrgID: orgID,
 	}
 	output, execErr := rt.Execute(fn.Source, fn.Timeout, runCtx)
 

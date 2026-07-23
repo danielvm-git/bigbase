@@ -33,10 +33,17 @@ type RunContext struct {
 	Env     map[string]string
 	DB      kernel.DBer
 	Request *http.Request
+	OrgID   int64
 }
 
 type Runtime interface {
 	Execute(source string, timeout int, ctx RunContext) (*RunOutput, error)
+}
+
+// NewJSRuntime returns a Runtime that executes user functions in a goja VM.
+// Exported for testing cross-tenant isolation.
+func NewJSRuntime() Runtime {
+	return &jsRuntime{}
 }
 
 type jsRuntime struct{}
@@ -46,7 +53,7 @@ func (*jsRuntime) Execute(source string, timeout int, ctx RunContext) (*RunOutpu
 	col := injectConsole(vm)
 	injectEnv(vm, ctx.Env)
 	injectFetch(vm, ctx.Env)
-	injectDB(vm, ctx.DB)
+	injectDB(vm, ctx.DB, ctx.OrgID)
 	injectRequest(vm, ctx.Request)
 
 	code := "(function() {" + source + "\n})()"
@@ -156,7 +163,8 @@ func isHostAllowed(host string, allowed []string) bool {
 // injectDB injects a `db` global with collection() methods for CRUD operations.
 // Collection names are validated against an alphanumeric+underscore pattern and
 // wrapped in a tableName type to prevent unsanitized values from reaching SQL strings.
-func injectDB(vm *goja.Runtime, dber kernel.DBer) {
+// All queries are scoped by org_id to prevent cross-tenant data access (IDOR fix).
+func injectDB(vm *goja.Runtime, dber kernel.DBer, orgID int64) {
 	dbObj := vm.NewObject()
 	_ = dbObj.Set("collection", func(call goja.FunctionCall) goja.Value {
 		if len(call.Arguments) < 1 {
@@ -167,9 +175,9 @@ func injectDB(vm *goja.Runtime, dber kernel.DBer) {
 			panic(vm.NewGoError(err))
 		}
 
-		// Ensure the collection table exists
+		// Ensure the collection table exists with org_id column for tenant isolation
 		ctx := context.Background()
-		createSQL := fmt.Sprintf("CREATE TABLE IF NOT EXISTS %s (id INTEGER PRIMARY KEY AUTOINCREMENT, data TEXT)", string(name))
+		createSQL := fmt.Sprintf("CREATE TABLE IF NOT EXISTS %s (id INTEGER PRIMARY KEY AUTOINCREMENT, org_id INTEGER NOT NULL DEFAULT 0, data TEXT)", string(name))
 		if err := dber.Migrate(createSQL); err != nil {
 			panic(vm.NewGoError(fmt.Errorf("db: failed to create collection %q: %w", string(name), err)))
 		}
@@ -186,7 +194,7 @@ func injectDB(vm *goja.Runtime, dber kernel.DBer) {
 			if err != nil {
 				panic(vm.NewGoError(fmt.Errorf("create: marshal failed: %w", err)))
 			}
-			result, err := dber.ExecContext(ctx, fmt.Sprintf("INSERT INTO %s (data) VALUES (?)", string(name)), string(dataJSON))
+			result, err := dber.ExecContext(ctx, fmt.Sprintf("INSERT INTO %s (org_id, data) VALUES (?, ?)", string(name)), orgID, string(dataJSON))
 			if err != nil {
 				panic(vm.NewGoError(fmt.Errorf("create: insert failed: %w", err)))
 			}
@@ -198,7 +206,7 @@ func injectDB(vm *goja.Runtime, dber kernel.DBer) {
 
 		// list() → returns all records
 		_ = col.Set("list", func(call goja.FunctionCall) goja.Value {
-			rows, err := dber.QueryContext(ctx, fmt.Sprintf("SELECT id, data FROM %s ORDER BY id", string(name)))
+			rows, err := dber.QueryContext(ctx, fmt.Sprintf("SELECT id, data FROM %s WHERE org_id = ? ORDER BY id", string(name)), orgID)
 			if err != nil {
 				panic(vm.NewGoError(fmt.Errorf("list: query failed: %w", err)))
 			}
@@ -229,7 +237,7 @@ func injectDB(vm *goja.Runtime, dber kernel.DBer) {
 				panic(vm.NewGoError(fmt.Errorf("get requires an id argument")))
 			}
 			id := call.Arguments[0].ToInteger()
-			row := dber.QueryRowContext(ctx, fmt.Sprintf("SELECT id, data FROM %s WHERE id = ?", string(name)), id)
+			row := dber.QueryRowContext(ctx, fmt.Sprintf("SELECT id, data FROM %s WHERE id = ? AND org_id = ?", string(name)), id, orgID)
 			var rid int64
 			var dataStr string
 			if err := row.Scan(&rid, &dataStr); err != nil {
@@ -252,7 +260,7 @@ func injectDB(vm *goja.Runtime, dber kernel.DBer) {
 			}
 			id := call.Arguments[0].ToInteger()
 			// Fetch existing
-			row := dber.QueryRowContext(ctx, fmt.Sprintf("SELECT data FROM %s WHERE id = ?", string(name)), id)
+			row := dber.QueryRowContext(ctx, fmt.Sprintf("SELECT data FROM %s WHERE id = ? AND org_id = ?", string(name)), id, orgID)
 			var existingStr string
 			if err := row.Scan(&existingStr); err != nil {
 				panic(vm.NewGoError(fmt.Errorf("update: record %d not found", id)))
@@ -270,7 +278,7 @@ func injectDB(vm *goja.Runtime, dber kernel.DBer) {
 				}
 			}
 			merged, _ := json.Marshal(existing)
-			_, err := dber.ExecContext(ctx, fmt.Sprintf("UPDATE %s SET data = ? WHERE id = ?", string(name)), string(merged), id)
+			_, err := dber.ExecContext(ctx, fmt.Sprintf("UPDATE %s SET data = ? WHERE id = ? AND org_id = ?", string(name)), string(merged), id, orgID)
 			if err != nil {
 				panic(vm.NewGoError(fmt.Errorf("update: failed: %w", err)))
 			}
@@ -285,7 +293,7 @@ func injectDB(vm *goja.Runtime, dber kernel.DBer) {
 				panic(vm.NewGoError(fmt.Errorf("delete requires an id argument")))
 			}
 			id := call.Arguments[0].ToInteger()
-			_, err := dber.ExecContext(ctx, fmt.Sprintf("DELETE FROM %s WHERE id = ?", string(name)), id)
+			_, err := dber.ExecContext(ctx, fmt.Sprintf("DELETE FROM %s WHERE id = ? AND org_id = ?", string(name)), id, orgID)
 			if err != nil {
 				panic(vm.NewGoError(fmt.Errorf("delete: failed: %w", err)))
 			}
