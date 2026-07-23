@@ -1,3 +1,10 @@
+## [2.79.7](https://github.com/danielvm-git/bigbase/compare/v2.79.6...v2.79.7) (2026-07-23)
+
+
+### Bug Fixes
+
+* **functions:** scope db.collection() queries by org_id to prevent IDOR ([3c4d001](https://github.com/danielvm-git/bigbase/commit/3c4d0016700e6d5b8c8cd904cd980f5ef94526cd)), closes [#132](https://github.com/danielvm-git/bigbase/issues/132)
+
 ## [2.79.6](https://github.com/danielvm-git/bigbase/compare/v2.79.5...v2.79.6) (2026-07-13)
 
 
