@@ -1,6 +1,6 @@
 ---
 bug_id: BUG-143
-status: open
+status: fixed
 severity: high
 scope: monitoring
 title: "Cross-Tenant Operational Data Exposure (monitoring/alerts/incidents/events)"
