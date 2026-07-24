@@ -76,6 +76,13 @@ func (m *Monitoring) initObservability() error {
 	)`); err != nil {
 		return err
 	}
+	// Add org_id column for tenant isolation (BUG-143).
+	if _, err := m.db.Exec(
+		"ALTER TABLE monitoring_alert_incidents ADD COLUMN org_id INTEGER NOT NULL DEFAULT 0"); err != nil {
+		if !strings.Contains(err.Error(), "duplicate column") {
+			m.logger.Warn("add org_id column to incidents", "error", err)
+		}
+	}
 	if err := m.db.Migrate(`CREATE TABLE IF NOT EXISTS monitoring_investigations (
 		id TEXT PRIMARY KEY,
 		incident_id TEXT NOT NULL,
@@ -84,6 +91,13 @@ func (m *Monitoring) initObservability() error {
 		created_at TEXT NOT NULL DEFAULT (datetime('now'))
 	)`); err != nil {
 		return err
+	}
+	// Add org_id column for tenant isolation (BUG-143).
+	if _, err := m.db.Exec(
+		"ALTER TABLE monitoring_investigations ADD COLUMN org_id INTEGER NOT NULL DEFAULT 0"); err != nil {
+		if !strings.Contains(err.Error(), "duplicate column") {
+			m.logger.Warn("add org_id column to investigations", "error", err)
+		}
 	}
 	return nil
 }
@@ -318,13 +332,20 @@ func (m *Monitoring) handleIncidents(w http.ResponseWriter, r *http.Request) {
 		kernel.WriteJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
 		return
 	}
+	// Require org_id for tenant isolation (BUG-143).
+	orgID, ok := kernel.OrgIDFromContext(r.Context())
+	if !ok {
+		kernel.WriteJSON(w, http.StatusUnauthorized, map[string]string{"error": "org_id required"})
+		return
+	}
 	status := r.URL.Query().Get("status")
-	query := `SELECT id, rule_id, metric, value, threshold, operator, opened_at, resolved_at FROM monitoring_alert_incidents`
+	query := `SELECT id, rule_id, metric, value, threshold, operator, opened_at, resolved_at FROM monitoring_alert_incidents WHERE org_id = ?`
+	args := []any{orgID}
 	if status == "open" {
-		query += ` WHERE resolved_at IS NULL`
+		query += ` AND resolved_at IS NULL`
 	}
 	query += ` ORDER BY opened_at DESC LIMIT 100`
-	rows, err := m.db.QueryContext(r.Context(), query)
+	rows, err := m.db.QueryContext(r.Context(), query, args...)
 	if err != nil {
 		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
