@@ -1,0 +1,43 @@
+type: epic-shard
+context: domain
+id: e82
+title: "Artifact-first deploy (shared API + Actions + Admin UI)"
+wsjf: 8.0
+total_bcps: 12
+status: planned
+tier: 2
+depends_on: []
+note: >
+  One multipart POST /api/sites/{id}/deploy contract for GitHub Actions and Admin UI.
+  CI builds once; host unpacks and starts (no VPS clone/build). Empty or missing
+  artifact returns 4xx plus deploy log line "no build artifact found". Depends on
+  P0 deploy-key site ownership fix (BUG-2026-07-24-deploy-key-organization-required).
+stories:
+  - id: e82s01
+    title: "Multipart deploy API + empty-artifact error/log"
+    bcps: 3
+    status: pending
+    depends_on: []
+    spec: e82s01-spec.md
+    tasks: e82s01-tasks.yaml
+  - id: e82s02
+    title: "Engine unpack/start; skip host build"
+    bcps: 3
+    status: pending
+    depends_on: [e82s01]
+    spec: e82s02-spec.md
+    tasks: e82s02-tasks.yaml
+  - id: e82s03
+    title: "bigbase-deploy action uploads CI artifact"
+    bcps: 3
+    status: pending
+    depends_on: [e82s01]
+    spec: e82s03-spec.md
+    tasks: e82s03-tasks.yaml
+  - id: e82s04
+    title: "Admin UI upload + deploy log feedback parity"
+    bcps: 3
+    status: pending
+    depends_on: [e82s01]
+    spec: e82s04-spec.md
+    tasks: e82s04-tasks.yaml

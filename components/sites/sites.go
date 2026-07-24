@@ -423,11 +423,35 @@ func (s *Sites) latestDeployment(ctx context.Context, repoID string) (*Deploymen
 	return &d, nil
 }
 
-// requireSiteOwnership verifies that the caller's org owns the given site.
-// Returns true if the check passes, or writes a 404 error and returns false.
-// This prevents IDOR attacks by ensuring cross-org access is denied.
+// requireSiteOwnership verifies the caller may access the given site.
+// Returns true if the check passes, or writes an error and returns false.
 // The siteID parameter can be either a site id or a git_repo_id (legacy alias).
+//
+// Auth modes:
+//   - Site deploy key (bb_dep_*): middleware sets SiteID only — allow when the
+//     resolved URL site matches the key's site (mirrors deploy gateway).
+//   - JWT / org API key: require org_id and match sites.org_id (legacy org_id=0 allowed).
+//
+// Do not inject org_id for bb_dep_* in middleware — that would escalate a
+// site-scoped token to org-wide access.
 func (s *Sites) requireSiteOwnership(ctx context.Context, w http.ResponseWriter, siteID string) bool {
+	// Site deploy key auth — key is scoped to one site; URL may use id or git_repo_id alias.
+	if keySiteID, ok := kernel.SiteIDFromContext(ctx); ok && keySiteID != "" {
+		var dbID, dbGitRepoID string
+		err := s.db.QueryRowContext(ctx,
+			"SELECT id, git_repo_id FROM sites WHERE id = ? OR git_repo_id = ?", siteID, siteID).
+			Scan(&dbID, &dbGitRepoID)
+		if err != nil {
+			kernel.WriteJSON(w, http.StatusNotFound, map[string]string{"error": "site not found"})
+			return false
+		}
+		if keySiteID != dbID && keySiteID != dbGitRepoID {
+			kernel.WriteJSON(w, http.StatusNotFound, map[string]string{"error": "site not found"})
+			return false
+		}
+		return true
+	}
+
 	orgID, ok := auth.OrgIDFromContext(ctx)
 	if !ok || orgID == 0 {
 		kernel.WriteJSON(w, http.StatusForbidden, map[string]string{"error": "organization required"})
