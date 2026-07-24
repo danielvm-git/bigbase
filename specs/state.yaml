@@ -1,13 +1,13 @@
 type: session-state
 context: infra
-active_flow: null
+active_flow: fix_bug
 active_epic_id: null
 active_story_id: null
 active_story_status: null
-bug_id: null
+bug_id: BUG-2026-07-24-deploy-404-site-not-found
 release:
-  target_version: 2.79.10
-  codename: "Deploy-key site ownership fix"
+  target_version: 2.79.11
+  codename: "Never-bounce deploy (404 + runtime/framework matrix)"
   last_tag: v2.79.10
   last_publish: '2026-07-24'
   ci_verified: true
@@ -36,10 +36,18 @@ epic_cycle:
   story_complete: true
   note: "e80 complete — VPS hardened on vmi3338033 (89.116.26.187). 3 layers: Ubuntu (UFW+fail2ban+unattended-upgrades+SSH), BigBase (systemd+alerts+backups), Contabo (cntb+snapshots). Skill created: harden-vps."
   fast_mode: false
-bug_cycle: null
+bug_cycle:
+  current_step: 5
+  completed_steps:
+    - 1
+    - 2
+    - 3
+    - 4
+  handoff:
+    next_skill: release-branch
 git:
   branch: main
-  hash: 29f8a7229
+  hash: 1be8e46b4
   worktree: null
   ci_status: success
 cleanup:
@@ -68,10 +76,9 @@ cleanup:
     - "TestResumeSvelteKitStaticDeployment — environment-dependent (deploy_test.go:1717)"
     - "TestHealthCheckIntegrationFail — git push in temp dir fails (health_integration_test.go:77)"
 handoff:
-  last_step_completed: "release-branch — Horizon A merged (#163, #165), worktrees pruned, origin clean"
+  last_step_completed: "gate-state — active_flow=fix_bug, bug_cycle.current_step=1"
   open_decisions:
     - "e82-artifact-deploy: multipart upload CD (next epic)"
-    - "Prod smoke: bb_dep_* deploy on VPS after v2.79.10"
-    - "Optional: move danielvm-git/.github @v1 tag to ec06cce for fail-with-body"
-  next_skill: null
-  summary: "Horizon A complete. Deploy-key ownership fix shipped v2.79.10. Consumer issues open on grimoire/big-exames/big-library."
+    - "Fleet realign exames/grimoire/library after identity+framework fix"
+  next_skill: release-branch
+  summary: "Fix-bug cycle for deploy 404 site not found (#161 follow-up after #163/v2.79.10). Scope: identity codes, unique name, repo bind, runtime/framework matrix, MCP templates, fleet smoke."

@@ -41,11 +41,18 @@ func FormatBuildCommand(name string, args ...string) string {
 	return strings.Join(parts, " ")
 }
 func DetectAppType(buildDir string) AppType {
+	// Framework modes (Astro / SvelteKit) map to static|node before generic Node.
+	if fm := DetectFrameworkMode(buildDir); fm.Framework != "" && !fm.Ambiguous && fm.AppType != "" {
+		return fm.AppType
+	}
 	if fileExists(filepath.Join(buildDir, "package.json")) {
 		return AppNode
 	}
 	if fileExists(filepath.Join(buildDir, "go.mod")) {
 		return AppGo
+	}
+	if fileExists(filepath.Join(buildDir, "composer.json")) {
+		return AppPHP
 	}
 	// Python: pyproject.toml (PEP 518/621) is the primary signal for modern
 	// Python projects. Fall back to app.py/main.py for legacy projects.
@@ -60,6 +67,27 @@ func DetectAppType(buildDir string) AppType {
 		return AppStatic
 	}
 	return AppStatic
+}
+
+// ResolveAppRoot returns buildDir joined with site root_path, rejecting escapes.
+func ResolveAppRoot(buildDir, rootPath string) string {
+	rootPath = strings.TrimSpace(rootPath)
+	if rootPath == "" || rootPath == "." || rootPath == "./" {
+		return buildDir
+	}
+	if filepath.IsAbs(rootPath) {
+		return buildDir
+	}
+	clean := filepath.Clean(rootPath)
+	if clean == ".." || strings.HasPrefix(clean, ".."+string(filepath.Separator)) {
+		return buildDir
+	}
+	candidate := filepath.Join(buildDir, clean)
+	rel, err := filepath.Rel(buildDir, candidate)
+	if err != nil || rel == ".." || strings.HasPrefix(rel, ".."+string(filepath.Separator)) {
+		return buildDir
+	}
+	return candidate
 }
 func GetStartCommand(buildDir string) string {
 	data, err := os.ReadFile(filepath.Join(buildDir, "package.json"))

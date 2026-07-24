@@ -1675,3 +1675,24 @@ bugs:
       - components/sites/sitekey_ownership_test.go
     related:
       - BUG-136
+  - id: BUG-2026-07-24-deploy-404-site-not-found
+    date: "2026-07-24"
+    severity: critical
+    priority: critical
+    scope: sites,deploy,auth,mcp
+    summary: "HTTP 404 site not found on bb_dep_ deploy after #163 — orphan key/SITE_ID bundle; need structured codes + unique name + repo bind + runtime/framework matrix"
+    file: specs/bugs/BUG-2026-07-24-deploy-404-site-not-found.md
+    status: fixed
+    github_issues: [155, 161, 163]
+    consumer_issues:
+      - danielvm-git/big-exames#3
+      - danielvm-git/grimoire#5
+      - danielvm-git/big-library#4
+    related:
+      - BUG-2026-07-24-deploy-key-organization-required
+      - BUG-2026-07-24T184443
+      - BUG-2026-07-24T091500
+    approach: "Structured site_not_found/key_site_mismatch; unique site name; redeploy git_repo_id bind; AppPHP; framework mode Astro/SvelteKit; MCP validate; fleet fresh keys"
+    regression_guards:
+      - components/sites/sitekey_ownership_test.go
+      - components/deploy/framework_mode_test.go

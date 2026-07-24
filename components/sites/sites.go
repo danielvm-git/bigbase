@@ -423,6 +423,16 @@ func (s *Sites) latestDeployment(ctx context.Context, repoID string) (*Deploymen
 	return &d, nil
 }
 
+// writeSiteAccessError writes a structured identity error for deploy DX.
+// status stays 404 for cross-tenant cases so existence is not leaked.
+func writeSiteAccessError(w http.ResponseWriter, status int, code, message, hint string) {
+	kernel.WriteJSON(w, status, map[string]string{
+		"error": message,
+		"code":  code,
+		"hint":  hint,
+	})
+}
+
 // requireSiteOwnership verifies the caller may access the given site.
 // Returns true if the check passes, or writes an error and returns false.
 // The siteID parameter can be either a site id or a git_repo_id (legacy alias).
@@ -442,11 +452,13 @@ func (s *Sites) requireSiteOwnership(ctx context.Context, w http.ResponseWriter,
 			"SELECT id, git_repo_id FROM sites WHERE id = ? OR git_repo_id = ?", siteID, siteID).
 			Scan(&dbID, &dbGitRepoID)
 		if err != nil {
-			kernel.WriteJSON(w, http.StatusNotFound, map[string]string{"error": "site not found"})
+			writeSiteAccessError(w, http.StatusNotFound, "site_not_found", "site not found",
+				"Confirm BIGBASE_SITE_ID matches an existing site (list_sites / MCP). Re-provision with provision_ci_credentials if the site was recreated.")
 			return false
 		}
 		if keySiteID != dbID && keySiteID != dbGitRepoID {
-			kernel.WriteJSON(w, http.StatusNotFound, map[string]string{"error": "site not found"})
+			writeSiteAccessError(w, http.StatusNotFound, "key_site_mismatch", "site not found",
+				"Deploy key is bound to a different site than BIGBASE_SITE_ID. Rotate: provision_ci_credentials for the canonical site_id, then gh secret set BIGBASE_DEPLOY_TOKEN and BIGBASE_SITE_ID.")
 			return false
 		}
 		return true
@@ -461,7 +473,8 @@ func (s *Sites) requireSiteOwnership(ctx context.Context, w http.ResponseWriter,
 	var dbOrgID int64
 	err := s.db.QueryRowContext(ctx, "SELECT org_id FROM sites WHERE id = ? OR git_repo_id = ?", siteID, siteID).Scan(&dbOrgID)
 	if err != nil {
-		kernel.WriteJSON(w, http.StatusNotFound, map[string]string{"error": "site not found"})
+		writeSiteAccessError(w, http.StatusNotFound, "site_not_found", "site not found",
+			"No site matches this id. Use list_sites or create_site, then provision_ci_credentials.")
 		return false
 	}
 
@@ -470,7 +483,8 @@ func (s *Sites) requireSiteOwnership(ctx context.Context, w http.ResponseWriter,
 		// dbOrgID == 0 is a legacy site predating org_id scoping — never a
 		// real org, so it's accessible to any authenticated org rather than
 		// permanently orphaned.
-		kernel.WriteJSON(w, http.StatusNotFound, map[string]string{"error": "site not found"})
+		writeSiteAccessError(w, http.StatusNotFound, "site_not_found", "site not found",
+			"No site matches this id for your organization.")
 		return false
 	}
 	return true
@@ -557,6 +571,11 @@ func (s *Sites) createSite(w http.ResponseWriter, r *http.Request) {
 
 	id, name, err := s.insertSite(r.Context(), req.GitRepoID, req.Name, req.ProductionBranch, req.RootPath, req.GitHubFullName)
 	if err != nil {
+		if strings.Contains(err.Error(), "site name already taken") {
+			writeSiteAccessError(w, http.StatusConflict, "site_name_taken", "site name already taken",
+				"Use a unique site name (subdomain), or redeploy the existing site with its site_id and a fresh bb_dep_ key.")
+			return
+		}
 		if strings.Contains(err.Error(), "not found") {
 			kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
 			return
@@ -619,15 +638,25 @@ func (s *Sites) insertSite(ctx context.Context, gitRepoID, name, branch, rootPat
 		name = repoName
 	}
 
-	id, err = kernel.GenerateID()
-	if err != nil {
-		return "", "", fmt.Errorf("generate id: %w", err)
-	}
-
 	// Extract org_id from context for multi-tenant isolation.
 	var orgID int64
 	if oid, ok := auth.OrgIDFromContext(ctx); ok {
 		orgID = oid
+	}
+
+	// Reject duplicate names within the same org (and against legacy org_id=0
+	// rows) so org_id recovery / re-provision cannot create a second "exames".
+	var existingID string
+	dupErr := s.db.QueryRowContext(ctx,
+		`SELECT id FROM sites WHERE name = ? AND (org_id = ? OR org_id = 0) LIMIT 1`,
+		name, orgID).Scan(&existingID)
+	if dupErr == nil && existingID != "" {
+		return "", "", fmt.Errorf("site name already taken: %s", name)
+	}
+
+	id, err = kernel.GenerateID()
+	if err != nil {
+		return "", "", fmt.Errorf("generate id: %w", err)
 	}
 
 	now := time.Now().UTC().Format(time.RFC3339)
@@ -832,14 +861,17 @@ func (s *Sites) redeploySite(w http.ResponseWriter, r *http.Request, id string) 
 	}
 	_ = json.NewDecoder(r.Body).Decode(&req)
 
-	var gitRepoID, branch, siteName string
+	// Always bind redeploy to the sites row (canonical id + git_repo_id).
+	// Never fall back to treating the URL id as a bare git_repos id — that
+	// path caused wrong-repo clones when SITE_ID drifted (#155).
+	var siteID, gitRepoID, branch, siteName string
 	err := s.db.QueryRowContext(ctx,
-		"SELECT git_repo_id, production_branch, name FROM sites WHERE id = ? OR git_repo_id = ?", id, id).
-		Scan(&gitRepoID, &branch, &siteName)
+		"SELECT id, git_repo_id, production_branch, name FROM sites WHERE id = ? OR git_repo_id = ?", id, id).
+		Scan(&siteID, &gitRepoID, &branch, &siteName)
 	if err != nil {
-		gitRepoID = id
-		branch = "main"
-		_ = s.db.QueryRowContext(ctx, "SELECT name, default_branch FROM git_repos WHERE id = ?", id).Scan(&siteName, &branch)
+		writeSiteAccessError(w, http.StatusNotFound, "site_not_found", "site not found",
+			"Redeploy requires a sites row. Create the site, then provision_ci_credentials for its site_id.")
+		return
 	}
 	if req.Branch != "" {
 		branch = req.Branch
@@ -850,7 +882,7 @@ func (s *Sites) redeploySite(w http.ResponseWriter, r *http.Request, id string) 
 		return
 	}
 
-	dep, err := s.triggerDeploy(ctx, gitRepoID, branch, siteName, id, nil, req.AppType)
+	dep, err := s.triggerDeploy(ctx, gitRepoID, branch, siteName, siteID, nil, req.AppType)
 	if err != nil {
 		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
 		return

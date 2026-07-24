@@ -91,6 +91,10 @@ func (a mcpSiteKeyAdapter) RevokeSiteKey(ctx context.Context, siteID, keyID stri
 	return a.a.RevokeSiteKey(ctx, siteID, keyID)
 }
 
+func (a mcpSiteKeyAdapter) ResolveSiteKey(rawKey string) (string, error) {
+	return a.a.ResolveSiteKey(rawKey)
+}
+
 type deployDiagnosisAdapter struct{ m *monitoring.Monitoring }
 
 func (a deployDiagnosisAdapter) GetDiagnosis(ctx context.Context, deployID string) (deploy.Diagnosis, bool, error) {

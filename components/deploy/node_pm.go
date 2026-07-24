@@ -60,22 +60,28 @@ func packageManagerFromPackageJSON(dir string) string {
 
 // ensureNodePackageManager verifies the package manager binary is on PATH.
 // For pnpm and yarn, runs corepack enable once when missing.
+// Never falls back to a different package manager (pnpm must not become npm).
 func ensureNodePackageManager(pm string) error {
 	if _, err := exec.LookPath(pm); err == nil {
 		return nil
 	}
 	if pm == "pnpm" || pm == "yarn" {
 		if err := tryCorepackEnable(); err != nil {
-			return fmt.Errorf("%s not found on PATH; enable Corepack or install %s: %w", pm, pm, err)
+			return codedErr("tool_missing",
+				fmt.Sprintf("%s not found on PATH", pm),
+				fmt.Sprintf("Install %s or run `corepack enable` on the deploy host. Do not substitute npm when the lockfile requires %s.", pm, pm))
 		}
 		if _, err := exec.LookPath(pm); err == nil {
 			return nil
 		}
 	}
 	if pm == "bun" {
-		return fmt.Errorf("bun not found on PATH; install bun or use npm/pnpm/yarn")
+		return codedErr("tool_missing", "bun not found on PATH",
+			"Install bun on the deploy host, or switch the project to npm/pnpm/yarn with a matching lockfile.")
 	}
-	return fmt.Errorf("%s not found on PATH; enable Corepack or install %s", pm, pm)
+	return codedErr("tool_missing",
+		fmt.Sprintf("%s not found on PATH", pm),
+		fmt.Sprintf("Install %s (or enable Corepack for pnpm/yarn) on the deploy host. No silent package-manager fallback.", pm))
 }
 
 func tryCorepackEnable() error {
