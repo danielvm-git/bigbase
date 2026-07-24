@@ -6,6 +6,27 @@
 * **api:** parenthesize WHERE clause in scopeQueryForOrg to prevent SQL injection (BUG-129) ([0f58b4c](https://github.com/danielvm-git/bigbase/commit/0f58b4cd5b03727a0f8d68feb3a422e2aba7551c)), closes [#129](https://github.com/danielvm-git/bigbase/issues/129)
 * **auth:** bridge org_id into kernel context for storage/monitoring ([#151](https://github.com/danielvm-git/bigbase/issues/151)) ([c306687](https://github.com/danielvm-git/bigbase/commit/c306687ab7ba10f7648821011c68c067b30fa7b2))
 * **auth:** GREEN — fail closed on popup postMessage to prevent JWT leak ([0862c58](https://github.com/danielvm-git/bigbase/commit/0862c58a83807097e474f9dc00116f464c444da5))
+* **ci:** add --legacy-peer-deps to UI npm ci for TS 7 compat ([7c87028](https://github.com/danielvm-git/bigbase/commit/7c87028737eeb35b7e3b8f89ddb22da4210e1b05))
+* **deploy:** detect pnpm/yarn/bun for Node site builds ([129143f](https://github.com/danielvm-git/bigbase/commit/129143f684326a0c3a525f9ab64667b4c9368fd0))
+* **deploy:** register sites component in TestDeployContract ([#156](https://github.com/danielvm-git/bigbase/issues/156)) ([ac44242](https://github.com/danielvm-git/bigbase/commit/ac44242be3fcd1d4a1fff4f3e017aea073476208))
+* **functions:** add org_id scoping to prevent IDOR on all CRUD handlers ([827b41e](https://github.com/danielvm-git/bigbase/commit/827b41e960588bc862fbc680630af2ac96912507)), closes [#131](https://github.com/danielvm-git/bigbase/issues/131)
+* **security:** add org_id multi-tenant isolation to all site endpoints ([5527beb](https://github.com/danielvm-git/bigbase/commit/5527bebf25e56cadc764a8e2878b115e2ad097dd))
+* **security:** auth bypass in @bigbase/auth-next SDK middleware ([822caaa](https://github.com/danielvm-git/bigbase/commit/822caaa19eef68c0614743b92ca5686ed3b59619)), closes [#138](https://github.com/danielvm-git/bigbase/issues/138)
+* **security:** cross-tenant message leak — add org_id to messages table ([09de0a0](https://github.com/danielvm-git/bigbase/commit/09de0a078b7f1ec477125ac65bf694d65870807b)), closes [#140](https://github.com/danielvm-git/bigbase/issues/140)
+* **security:** cross-tenant operational data exposure in monitoring endpoints ([9d1e0e5](https://github.com/danielvm-git/bigbase/commit/9d1e0e5795c9439f06e37e01b9ec9dfdb1f27cb5)), closes [#143](https://github.com/danielvm-git/bigbase/issues/143)
+* **security:** IDOR on deployment lifecycle — scope all handlers by org_id ([c69ccf4](https://github.com/danielvm-git/bigbase/commit/c69ccf4efe01e77fd625b0ba937c54f5112e83f1)), closes [#141](https://github.com/danielvm-git/bigbase/issues/141)
+* **security:** IDOR on site deploy keys — add ownership verification ([1c13e7c](https://github.com/danielvm-git/bigbase/commit/1c13e7c393cbf42dc8238c2d3eaeeec77030f5d5)), closes [#135](https://github.com/danielvm-git/bigbase/issues/135)
+* **security:** RCE via cici workflows — IDOR to unsandboxed exec.CommandContext ([50c1459](https://github.com/danielvm-git/bigbase/commit/50c1459961b52541657b515759d3c54b99252000)), closes [#130](https://github.com/danielvm-git/bigbase/issues/130)
+* **security:** scope storage file handlers by org_id (BUG-133) ([2736ef5](https://github.com/danielvm-git/bigbase/commit/2736ef5814c11a4e0317bcbcbc47e7fa14c970ef)), closes [#133](https://github.com/danielvm-git/bigbase/issues/133)
+
+## [2.79.9](https://github.com/danielvm-git/bigbase/compare/v2.79.8...v2.79.9) (2026-07-24)
+
+
+### Bug Fixes
+
+* **api:** parenthesize WHERE clause in scopeQueryForOrg to prevent SQL injection (BUG-129) ([0f58b4c](https://github.com/danielvm-git/bigbase/commit/0f58b4cd5b03727a0f8d68feb3a422e2aba7551c)), closes [#129](https://github.com/danielvm-git/bigbase/issues/129)
+* **auth:** bridge org_id into kernel context for storage/monitoring ([#151](https://github.com/danielvm-git/bigbase/issues/151)) ([c306687](https://github.com/danielvm-git/bigbase/commit/c306687ab7ba10f7648821011c68c067b30fa7b2))
+* **auth:** GREEN — fail closed on popup postMessage to prevent JWT leak ([0862c58](https://github.com/danielvm-git/bigbase/commit/0862c58a83807097e474f9dc00116f464c444da5))
 * **deploy:** detect pnpm/yarn/bun for Node site builds ([129143f](https://github.com/danielvm-git/bigbase/commit/129143f684326a0c3a525f9ab64667b4c9368fd0))
 * **deploy:** register sites component in TestDeployContract ([#156](https://github.com/danielvm-git/bigbase/issues/156)) ([ac44242](https://github.com/danielvm-git/bigbase/commit/ac44242be3fcd1d4a1fff4f3e017aea073476208))
 * **functions:** add org_id scoping to prevent IDOR on all CRUD handlers ([827b41e](https://github.com/danielvm-git/bigbase/commit/827b41e960588bc862fbc680630af2ac96912507)), closes [#131](https://github.com/danielvm-git/bigbase/issues/131)
