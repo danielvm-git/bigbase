@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/danielvm/bigbase/kernel"
 )
@@ -51,7 +52,7 @@ func TestSiteKeyCrossSite(t *testing.T) {
 }
 
 func TestSiteKeyMatchingSite(t *testing.T) {
-	dep, _, database, gitDir := setupDeploy(t)
+	dep, handler, database, gitDir := setupDeploy(t)
 	repoID := createTestRepo(t, database, "repo-y", gitDir)
 
 	_, err := database.Exec(`CREATE TABLE IF NOT EXISTS sites (
@@ -85,4 +86,16 @@ func TestSiteKeyMatchingSite(t *testing.T) {
 	if w.Code != http.StatusCreated {
 		t.Fatalf("expected 201, got %d: %s", w.Code, w.Body.String())
 	}
+
+	var created map[string]any
+	if err := json.NewDecoder(w.Body).Decode(&created); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	depID, _ := created["id"].(string)
+	if depID == "" {
+		t.Fatalf("expected non-empty id, got: %v", created)
+	}
+	// Wait for the background runDeployment goroutine to finish before the test
+	// returns — otherwise it races t.TempDir()'s cleanup on gitDir/buildsDir.
+	waitForDeploymentTerminal(t, handler, depID, 10*time.Second)
 }

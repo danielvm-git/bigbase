@@ -185,15 +185,70 @@ jobs:
           ref: gh-pages
           path: gh-pages
 
-      - name: Generate Allure Report
-        uses: simple-elf/allure-report-action@e463a472d3b1d750f9544369d60589ff1964c820
+      - name: Setup Java (Allure commandline runtime)
+        uses: actions/setup-java@v4
         if: always()
-        id: allure-report
         with:
-          allure_results: allure-results
-          gh_pages: gh-pages
-          allure_report: allure-report
-          allure_history: allure-history
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Node (Allure commandline)
+        uses: actions/setup-node@v4
+        if: always()
+        with:
+          node-version: '20'
+
+      - name: Generate Allure Report
+        if: always()
+        env:
+          ALLURE_RESULTS: allure-results
+          ALLURE_REPORT: allure-report
+          ALLURE_HISTORY: allure-history
+          GH_PAGES: gh-pages
+          KEEP_REPORTS: '20'
+          REPORT_NAME: 'Allure Report with history'
+        run: |
+          set -e
+          mkdir -p "$GH_PAGES" "$ALLURE_HISTORY"
+          cp -r "$GH_PAGES"/. "$ALLURE_HISTORY"/
+
+          REPO_NAME="${GITHUB_REPOSITORY#*/}"
+          PAGES_URL="https://${GITHUB_REPOSITORY_OWNER}.github.io/${REPO_NAME}"
+
+          COUNT=$(ls "$ALLURE_HISTORY" | wc -l)
+          echo "count folders in $ALLURE_HISTORY: $COUNT"
+          KEEP_PLUS=$((KEEP_REPORTS + 1))
+          if (( COUNT > KEEP_PLUS )); then
+            ( cd "$ALLURE_HISTORY" \
+              && rm -f index.html \
+              && rm -rf last-history \
+              && ls | sort -n | grep -v 'CNAME' | head -n -$((KEEP_PLUS - 2)) | xargs -r rm -rf )
+          fi
+
+          {
+            printf '<!DOCTYPE html><meta charset="utf-8"><meta http-equiv="refresh" content="0; URL=%s/%s/index.html">\n' "$PAGES_URL" "$GITHUB_RUN_NUMBER"
+            printf '<meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0">\n'
+          } > "$ALLURE_HISTORY/index.html"
+
+          cat > executor.json <<EOF
+          {"name":"GitHub Actions","type":"github","reportName":"$REPORT_NAME",
+          "url":"$PAGES_URL",
+          "reportUrl":"$PAGES_URL/$GITHUB_RUN_NUMBER",
+          "buildUrl":"$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID",
+          "buildName":"GitHub Actions Run #$GITHUB_RUN_ID","buildOrder":"$GITHUB_RUN_NUMBER"}
+          EOF
+          mv executor.json "$ALLURE_RESULTS/"
+
+          mkdir -p "$ALLURE_RESULTS/history"
+          cp -r "$GH_PAGES/last-history/." "$ALLURE_RESULTS/history/" 2>/dev/null || true
+
+          echo "generating report from $ALLURE_RESULTS to $ALLURE_REPORT ..."
+          npx --yes allure-commandline@2.32.0 generate --clean "$ALLURE_RESULTS" -o "$ALLURE_REPORT"
+
+          mkdir -p "$ALLURE_HISTORY/$GITHUB_RUN_NUMBER"
+          cp -r "$ALLURE_REPORT/." "$ALLURE_HISTORY/$GITHUB_RUN_NUMBER/"
+          mkdir -p "$ALLURE_HISTORY/last-history"
+          cp -r "$ALLURE_REPORT/history/." "$ALLURE_HISTORY/last-history/"
 
       - name: Deploy report to GitHub Pages
         if: always()

@@ -195,11 +195,13 @@ func TestSitesContract(t *testing.T) {
 func TestDeployContract(t *testing.T) {
 	dd := inMemoryDB(t)
 	g := git.New(git.Options{DB: dd, Logger: testLogger{}})
+	s := sites.New(sites.Options{DB: dd, Logger: testLogger{}})
 	dpl := deploy.New(deploy.Options{DB: dd, Logger: testLogger{}})
 
 	k := kernel.New(testLogger{})
 	k.Register(dd)
 	k.Register(g)
+	k.Register(s)
 	k.Register(dpl)
 	if err := k.Start(); err != nil {
 		t.Fatalf("kernel start: %v", err)
