@@ -85,6 +85,21 @@ func (m *mockSiteKeyCreator) RevokeSiteKey(_ context.Context, siteID, keyID stri
 	return nil
 }
 
+type mockSiteKeyResolver struct {
+	siteID string
+	err    error
+}
+
+func (m *mockSiteKeyResolver) ResolveSiteKey(rawKey string) (string, error) {
+	if m.err != nil {
+		return "", m.err
+	}
+	if m.siteID != "" {
+		return m.siteID, nil
+	}
+	return "site-1", nil
+}
+
 type mockSiteLister struct {
 	sites []mcp.SiteInfo
 	err   error
@@ -245,6 +260,9 @@ func TestGetCITemplate(t *testing.T) {
 		if !strings.Contains(text, "node") || !strings.Contains(text, "static") {
 			t.Fatalf("expected catalog types: %s", text)
 		}
+		if !strings.Contains(text, "php") || !strings.Contains(text, "astro-static") || !strings.Contains(text, "sveltekit-node") {
+			t.Fatalf("expected php/astro/sveltekit catalog types: %s", text)
+		}
 	})
 	t.Run("static yaml", func(t *testing.T) {
 		text := callToolText(t, c, "get_ci_template", map[string]any{"app_type": "static"})
@@ -255,9 +273,64 @@ func TestGetCITemplate(t *testing.T) {
 			t.Fatalf("expected v3 workflow_run deploy template: %s", text)
 		}
 	})
+	t.Run("php template", func(t *testing.T) {
+		text := callToolText(t, c, "get_ci_template", map[string]any{"app_type": "php"})
+		if !strings.Contains(text, "bigbase-deploy@v1") {
+			t.Fatalf("expected php deploy template: %s", text)
+		}
+	})
+	t.Run("astro-static alias", func(t *testing.T) {
+		text := callToolText(t, c, "get_ci_template", map[string]any{"app_type": "astro-static"})
+		if !strings.Contains(text, "bigbase-deploy@v1") {
+			t.Fatalf("expected astro-static → static template: %s", text)
+		}
+	})
 	t.Run("unknown type", func(t *testing.T) {
 		text := callToolText(t, c, "get_ci_template", map[string]any{"app_type": "unknown"})
 		if !strings.Contains(text, "No template for") {
+			t.Fatalf("unexpected: %s", text)
+		}
+	})
+}
+
+func TestValidateCICredentials(t *testing.T) {
+	t.Run("site ok without token", func(t *testing.T) {
+		c := mcp.New(mcp.Options{Enabled: true, SiteLister: &mockSiteLister{}})
+		text := callToolText(t, c, "validate_ci_credentials", map[string]any{"site_id": "site-1"})
+		if !strings.Contains(text, `"ok":true`) || !strings.Contains(text, `"git_repo_id":"repo-1"`) {
+			t.Fatalf("unexpected: %s", text)
+		}
+	})
+	t.Run("site missing", func(t *testing.T) {
+		c := mcp.New(mcp.Options{Enabled: true, SiteLister: &mockSiteLister{}})
+		text := callToolText(t, c, "validate_ci_credentials", map[string]any{"site_id": "missing"})
+		if !strings.Contains(text, "site_not_found") {
+			t.Fatalf("unexpected: %s", text)
+		}
+	})
+	t.Run("key mismatch", func(t *testing.T) {
+		c := mcp.New(mcp.Options{
+			Enabled:         true,
+			SiteLister:      &mockSiteLister{},
+			SiteKeyResolver: &mockSiteKeyResolver{siteID: "other-site"},
+		})
+		text := callToolText(t, c, "validate_ci_credentials", map[string]any{
+			"site_id": "site-1", "deploy_token": "bb_dep_" + strings.Repeat("b", 64),
+		})
+		if !strings.Contains(text, "key_site_mismatch") {
+			t.Fatalf("unexpected: %s", text)
+		}
+	})
+	t.Run("key match", func(t *testing.T) {
+		c := mcp.New(mcp.Options{
+			Enabled:         true,
+			SiteLister:      &mockSiteLister{},
+			SiteKeyResolver: &mockSiteKeyResolver{siteID: "site-1"},
+		})
+		text := callToolText(t, c, "validate_ci_credentials", map[string]any{
+			"site_id": "site-1", "deploy_token": "bb_dep_" + strings.Repeat("c", 64),
+		})
+		if !strings.Contains(text, `"ok":true`) || !strings.Contains(text, "Identity bundle OK") {
 			t.Fatalf("unexpected: %s", text)
 		}
 	})

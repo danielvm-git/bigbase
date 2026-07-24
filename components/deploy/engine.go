@@ -181,45 +181,90 @@ func (d *Deploy) runDeployment(deploy *Deployment, buildDir, repoName string) {
 		d.appendDeployLog(deploy.ID, fmt.Sprintf("→ Commit: %s", short))
 	}
 
-	// Load deployment manifest if present in the repo root.
+	// Honor sites.root_path (monorepos / pnpm workspaces) for detection + build.
+	appRoot := buildDir
+	if deploy.SiteID != "" {
+		var rootPath string
+		_ = d.db.QueryRowContext(context.Background(),
+			"SELECT root_path FROM sites WHERE id = ?", deploy.SiteID).Scan(&rootPath)
+		appRoot = ResolveAppRoot(buildDir, rootPath)
+		if appRoot != buildDir {
+			d.appendDeployLog(deploy.ID, fmt.Sprintf("→ App root: %s", rootPath))
+		}
+	}
+
+	// Load deployment manifest if present in the app root.
 	manifestPathStr := "bigbase.yaml"
 	if deploy.ManifestPath != "" {
 		manifestPathStr = deploy.ManifestPath
 	}
-	manifest, loadErr := LoadManifestPath(buildDir, deploy.ManifestPath)
+	manifest, loadErr := LoadManifestPath(appRoot, deploy.ManifestPath)
 	if loadErr != nil {
 		d.appendDeployLog(deploy.ID, fmt.Sprintf("⚠ Invalid %s: %v — falling back to auto-detection", manifestPathStr, loadErr))
 	}
 
-	appType := deploy.AppType
-	if appType == "" {
-		if manifest != nil {
-			appType = manifestToAppType(manifest)
-			d.appendDeployLog(deploy.ID, fmt.Sprintf("→ Manifest: framework=%s", manifest.Framework))
-		} else {
-			appType = DetectAppType(buildDir)
+	var appType AppType
+	outDirHint := ""
+	switch {
+	case deploy.AppType != "":
+		resolved, outDir, resolveErr := ResolveDeployAppType(appRoot, deploy.AppType)
+		if resolveErr != nil {
+			d.logger.Error("resolve app type", "error", resolveErr)
+			d.appendDeployLog(deploy.ID, "✗ "+resolveErr.Error())
+			d.failDeployment(deploy.ID, resolveErr)
+			return
 		}
+		appType = resolved
+		outDirHint = outDir
+	case manifest != nil:
+		appType = manifestToAppType(manifest)
+		d.appendDeployLog(deploy.ID, fmt.Sprintf("→ Manifest: framework=%s", manifest.Framework))
+	default:
+		resolved, outDir, resolveErr := ResolveDeployAppType(appRoot, "")
+		if resolveErr != nil {
+			d.logger.Error("resolve app type", "error", resolveErr)
+			d.appendDeployLog(deploy.ID, "✗ "+resolveErr.Error())
+			d.failDeployment(deploy.ID, resolveErr)
+			return
+		}
+		appType = resolved
+		outDirHint = outDir
 	}
 	_, _ = d.db.ExecContext(context.Background(),
 		"UPDATE deployments SET app_type = ? WHERE id = ?", string(appType), deploy.ID)
 	d.appendDeployLog(deploy.ID, fmt.Sprintf("→ Detected app type: %s", appType))
 
+	// Pure static (index.html present, no package.json build) can serve immediately.
+	// Framework-static (Astro/SvelteKit) and other package.json apps still need install+build
+	// even when the host model is static — otherwise we serve a source directory listing.
 	if appType == AppStatic {
-		d.appendDeployLog(deploy.ID, "→ Serving static files")
-		d.updateStatus(deploy.ID, "running")
-		d.finalizeDeploymentURL(deploy, repoName)
-		d.persistPipelineTimeline(deploy.ID, timeline)
-		d.appendDeployLog(deploy.ID, fmt.Sprintf("→ Deployed at %s", deploy.URL))
-		_ = d.RegisterCustomDomainHosts(context.Background(), deploy.SiteID, deploy.Port)
-		// Drain old deployments now that new host is registered
-		d.drainOldDeployments(deploy.SiteID)
-		go d.serveStatic(context.Background(), buildDir, deploy, repoName)
-		return
+		needsNodeBuild := fileExists(filepath.Join(appRoot, "package.json")) &&
+			!fileExists(filepath.Join(appRoot, "index.html"))
+		if !needsNodeBuild {
+			serveDir := appRoot
+			if outDirHint != "" {
+				candidate := filepath.Join(appRoot, outDirHint)
+				if _, err := os.Stat(candidate); err == nil {
+					serveDir = candidate
+				}
+			}
+			d.appendDeployLog(deploy.ID, "→ Serving static files")
+			d.updateStatus(deploy.ID, "running")
+			d.finalizeDeploymentURL(deploy, repoName)
+			d.persistPipelineTimeline(deploy.ID, timeline)
+			d.appendDeployLog(deploy.ID, fmt.Sprintf("→ Deployed at %s", deploy.URL))
+			_ = d.RegisterCustomDomainHosts(context.Background(), deploy.SiteID, deploy.Port)
+			d.drainOldDeployments(deploy.SiteID)
+			go d.serveStatic(context.Background(), serveDir, deploy, repoName)
+			return
+		}
+		d.appendDeployLog(deploy.ID, "→ Static host model requires Node build (package.json without index.html)")
+		appType = AppNode
 	}
 
 	timeline.BuildStart = timelineNow()
 	d.persistPipelineTimeline(deploy.ID, timeline)
-	if err := d.buildApp(ctx, deploy.ID, deploy.SiteID, deploy.RepoID, deploy.Branch, buildDir, appType, manifest); err != nil {
+	if err := d.buildApp(ctx, deploy.ID, deploy.SiteID, deploy.RepoID, deploy.Branch, appRoot, appType, manifest); err != nil {
 		d.logger.Error("build app", "type", appType, "error", err)
 		d.persistPipelineTimeline(deploy.ID, timeline)
 		d.failDeployment(deploy.ID, err)
@@ -228,9 +273,9 @@ func (d *Deploy) runDeployment(deploy *Deployment, buildDir, repoName string) {
 	timeline.BuildEnd = timelineNow()
 	d.persistPipelineTimeline(deploy.ID, timeline)
 
-	serveDir := buildDir
+	serveDir := appRoot
 	if manifest != nil && manifest.Build.Output != "" {
-		outputDir := filepath.Join(buildDir, manifest.Build.Output)
+		outputDir := filepath.Join(appRoot, manifest.Build.Output)
 		if _, err := os.Stat(outputDir); err == nil {
 			serveDir = outputDir
 			appType = AppStatic
@@ -240,19 +285,30 @@ func (d *Deploy) runDeployment(deploy *Deployment, buildDir, repoName string) {
 			d.appendDeployLog(deploy.ID, fmt.Sprintf("→ Serving manifest output: %s", manifest.Build.Output))
 		}
 	} else if appType == AppNode {
-		if _, err := os.Stat(filepath.Join(buildDir, "dist")); err == nil {
-			serveDir = filepath.Join(buildDir, "dist")
-			appType = AppStatic
-			deploy.AppType = AppStatic
-			_, _ = d.db.ExecContext(context.Background(),
-				"UPDATE deployments SET app_type = ? WHERE id = ?", string(AppStatic), deploy.ID)
-		} else if _, err := os.Stat(filepath.Join(buildDir, "build")); err == nil {
-			// SvelteKit adapter-static outputs to build/ by default
-			serveDir = filepath.Join(buildDir, "build")
-			appType = AppStatic
-			deploy.AppType = AppStatic
-			_, _ = d.db.ExecContext(context.Background(),
-				"UPDATE deployments SET app_type = ? WHERE id = ?", string(AppStatic), deploy.ID)
+		if outDirHint != "" {
+			if _, err := os.Stat(filepath.Join(appRoot, outDirHint)); err == nil {
+				serveDir = filepath.Join(appRoot, outDirHint)
+				appType = AppStatic
+				deploy.AppType = AppStatic
+				_, _ = d.db.ExecContext(context.Background(),
+					"UPDATE deployments SET app_type = ? WHERE id = ?", string(AppStatic), deploy.ID)
+			}
+		}
+		if appType == AppNode {
+			if _, err := os.Stat(filepath.Join(appRoot, "dist")); err == nil {
+				serveDir = filepath.Join(appRoot, "dist")
+				appType = AppStatic
+				deploy.AppType = AppStatic
+				_, _ = d.db.ExecContext(context.Background(),
+					"UPDATE deployments SET app_type = ? WHERE id = ?", string(AppStatic), deploy.ID)
+			} else if _, err := os.Stat(filepath.Join(appRoot, "build")); err == nil {
+				// SvelteKit adapter-static outputs to build/ by default
+				serveDir = filepath.Join(appRoot, "build")
+				appType = AppStatic
+				deploy.AppType = AppStatic
+				_, _ = d.db.ExecContext(context.Background(),
+					"UPDATE deployments SET app_type = ? WHERE id = ?", string(AppStatic), deploy.ID)
+			}
 		}
 	}
 
@@ -363,8 +419,28 @@ func (d *Deploy) buildApp(ctx context.Context, deployID, siteID, repoID, branch,
 		}
 		return nil
 	case AppGo:
+		if _, err := exec.LookPath("go"); err != nil {
+			return codedErr("tool_missing", "go not found on PATH",
+				"Install Go on the deploy host (matching go.mod) before deploying AppType=go.")
+		}
 		return d.runBuildCommand(ctx, deployID, buildDir, siteEnv, "go", "build", "-o", "app", ".")
+	case AppPHP:
+		if _, err := exec.LookPath("composer"); err != nil {
+			return codedErr("tool_missing", "composer not found on PATH",
+				"Install Composer (and PHP) on the deploy host before deploying AppType=php.")
+		}
+		if _, err := exec.LookPath("php"); err != nil {
+			return codedErr("tool_missing", "php not found on PATH",
+				"Install PHP on the deploy host before deploying AppType=php.")
+		}
+		return d.runBuildCommand(ctx, deployID, buildDir, siteEnv, "composer", "install", "--no-dev", "--optimize-autoloader")
 	case AppPython:
+		if _, err := exec.LookPath("python3"); err != nil {
+			if _, err2 := exec.LookPath("python"); err2 != nil {
+				return codedErr("tool_missing", "python3 not found on PATH",
+					"Install Python 3 on the deploy host before deploying AppType=python.")
+			}
+		}
 		if HasPyProjectTOML(buildDir) {
 			pp := ParsePyProjectTOML(buildDir)
 			if pp != nil {
@@ -483,6 +559,13 @@ func (d *Deploy) startApp(ctx context.Context, buildDir string, deploy *Deployme
 			cmd.Dir = buildDir
 		case AppPython:
 			cmd = pythonStartCommand(ctx, buildDir, deploy.Port, manifest)
+		case AppPHP:
+			docRoot := buildDir
+			if st, err := os.Stat(filepath.Join(buildDir, "public")); err == nil && st.IsDir() {
+				docRoot = filepath.Join(buildDir, "public")
+			}
+			cmd = exec.CommandContext(ctx, "php", "-S", fmt.Sprintf("0.0.0.0:%d", deploy.Port), "-t", docRoot)
+			cmd.Dir = buildDir
 		}
 	}
 

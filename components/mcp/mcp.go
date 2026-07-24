@@ -79,6 +79,11 @@ type SiteKeyCreator interface {
 	RevokeSiteKey(ctx context.Context, siteID, keyID string) error
 }
 
+// SiteKeyResolver dry-runs bb_dep_* → site_id resolution for validate_ci_credentials.
+type SiteKeyResolver interface {
+	ResolveSiteKey(rawKey string) (siteID string, err error)
+}
+
 // Options configure the MCP component.
 type Options struct {
 	// Logger is the structured logger. If nil, a no-op logger is used.
@@ -102,6 +107,8 @@ type Options struct {
 	SiteLister SiteLister
 	// SiteKeyCreator provisions CI credentials for provision_ci_credentials.
 	SiteKeyCreator SiteKeyCreator
+	// SiteKeyResolver validates bb_dep_* binding for validate_ci_credentials.
+	SiteKeyResolver SiteKeyResolver
 	// OrgKeyAuthenticator validates bb_ org keys for HTTP MCP auth. Nil disables auth (stdio/tests).
 	OrgKeyAuthenticator OrgKeyAuthenticator
 	// UpdateAuthPolicy notifies the proxy when a site's auth policy changes.
@@ -123,6 +130,7 @@ type Component struct {
 	siteCreator       SiteCreator
 	siteLister        SiteLister
 	siteKeyCreator    SiteKeyCreator
+	siteKeyResolver   SiteKeyResolver
 	orgKeyAuth        OrgKeyAuthenticator
 	updateAuthPolicy  func(siteID string, policyJSON string)
 	streamableHandler http.Handler // created once, reused across requests for session persistence
@@ -155,6 +163,7 @@ func New(opts Options) *Component {
 		siteCreator:      opts.SiteCreator,
 		siteLister:       opts.SiteLister,
 		siteKeyCreator:   opts.SiteKeyCreator,
+		siteKeyResolver:  opts.SiteKeyResolver,
 		orgKeyAuth:       opts.OrgKeyAuthenticator,
 		updateAuthPolicy: opts.UpdateAuthPolicy,
 	}
@@ -540,6 +549,88 @@ Port is set via ` + "`PORT`" + ` env var. Database is SQLite by default.
 		}
 		types := collectAppTypes(ciTemplates)
 		return textResult(fmt.Sprintf("No template for %q. Available types: %s", appType, strings.Join(types, ", "))), nil, nil
+	})
+
+	// registerValidateCICredentials — dry-run identity bundle before CI deploy.
+	c.registerTool(srv, tierPublic, &mcpsdk.Tool{
+		Name: "validate_ci_credentials",
+		Description: "Dry-run CI identity: confirm site_id exists and optional bb_dep_ token binds to that site. " +
+			"Returns ok/code/hint. Use before gh secret set / deploy. Does not inject org_id for site keys.",
+	}, func(ctx context.Context, req *mcpsdk.CallToolRequest, _ any) (*mcpsdk.CallToolResult, any, error) {
+		var args map[string]any
+		if req.Params.Arguments != nil {
+			_ = json.Unmarshal(req.Params.Arguments, &args)
+		}
+		siteID, _ := args["site_id"].(string)
+		token, _ := args["deploy_token"].(string)
+		if siteID == "" {
+			return textResult(formatJSON(map[string]any{
+				"ok": false, "code": "site_not_found", "error": "site_id is required",
+				"hint": "Pass the canonical sites.id from list_sites / create_site.",
+			})), nil, nil
+		}
+		if c.siteLister == nil {
+			return textResult(formatJSON(map[string]any{
+				"ok": false, "code": "site_not_found", "error": "Site discovery requires a Sites component",
+				"hint": "Start BigBase with the Sites component enabled.",
+			})), nil, nil
+		}
+		site, err := c.siteLister.GetSite(ctx, siteID)
+		if err != nil || site == nil {
+			return textResult(formatJSON(map[string]any{
+				"ok": false, "code": "site_not_found", "error": "site not found",
+				"site_id": siteID,
+				"hint":    "Confirm BIGBASE_SITE_ID matches list_sites. Re-create the site if it was deleted, then provision_ci_credentials.",
+			})), nil, nil
+		}
+		out := map[string]any{
+			"ok":           true,
+			"code":         "ok",
+			"site_id":      site.ID,
+			"name":         site.Name,
+			"git_repo_id":  site.GitRepoID,
+			"hint":         "Site exists. Set BIGBASE_SITE_ID to this site_id. Provision bb_dep_ with provision_ci_credentials if needed.",
+			"token_checked": false,
+		}
+		if token == "" {
+			return textResult(formatJSON(out)), nil, nil
+		}
+		if !strings.HasPrefix(token, "bb_dep_") {
+			out["ok"] = false
+			out["code"] = "key_site_mismatch"
+			out["error"] = "deploy_token must be a bb_dep_ site key"
+			out["hint"] = "Use provision_ci_credentials — do not use org bb_ keys or passwords."
+			out["token_checked"] = true
+			return textResult(formatJSON(out)), nil, nil
+		}
+		if c.siteKeyResolver == nil {
+			out["ok"] = false
+			out["code"] = "key_site_mismatch"
+			out["error"] = "token validation requires Auth component"
+			out["hint"] = "Start BigBase with Auth enabled, or omit deploy_token to only check site_id."
+			out["token_checked"] = true
+			return textResult(formatJSON(out)), nil, nil
+		}
+		keySiteID, err := c.siteKeyResolver.ResolveSiteKey(token)
+		out["token_checked"] = true
+		if err != nil {
+			out["ok"] = false
+			out["code"] = "site_not_found"
+			out["error"] = "deploy key not found or revoked"
+			out["hint"] = "provision_ci_credentials for this site_id, then gh secret set BIGBASE_DEPLOY_TOKEN."
+			return textResult(formatJSON(out)), nil, nil
+		}
+		if keySiteID != site.ID && keySiteID != site.GitRepoID {
+			out["ok"] = false
+			out["code"] = "key_site_mismatch"
+			out["error"] = "deploy key is bound to a different site"
+			out["key_site_id"] = keySiteID
+			out["hint"] = "Rotate: provision_ci_credentials for the canonical site_id, update BIGBASE_DEPLOY_TOKEN and BIGBASE_SITE_ID together."
+			return textResult(formatJSON(out)), nil, nil
+		}
+		out["hint"] = "Identity bundle OK — site_id and bb_dep_ key match. Safe to deploy with bigbase-deploy@v1."
+		c.logger.Info("mcp tool", "tool", "validate_ci_credentials", "site_id", site.ID, "ok", true)
+		return textResult(formatJSON(out)), nil, nil
 	})
 
 	// registerCreateRepo

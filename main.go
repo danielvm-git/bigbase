@@ -453,6 +453,7 @@ func startProxy() {
 		SiteCreator:         st,
 		SiteLister:          mcpSiteListerAdapter{s: st},
 		SiteKeyCreator:      mcpSiteKeyAdapter{a: authComp},
+		SiteKeyResolver:     mcpSiteKeyAdapter{a: authComp},
 		OrgKeyAuthenticator: authComp,
 		UpdateAuthPolicy:    p.SetSiteAuthPolicy,
 	})

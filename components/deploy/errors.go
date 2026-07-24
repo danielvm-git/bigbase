@@ -2,6 +2,7 @@ package deploy
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 )
 
@@ -11,6 +12,24 @@ var (
 	ErrRepoNotFound       = errors.New("repo not found")
 	ErrDeploymentNotFound = errors.New("deployment not found")
 )
+
+// CodedError is a deploy failure with a stable machine code and operator hint.
+type CodedError struct {
+	Code    string
+	Message string
+	Hint    string
+}
+
+func (e *CodedError) Error() string {
+	if e.Hint == "" {
+		return fmt.Sprintf("%s (%s)", e.Message, e.Code)
+	}
+	return fmt.Sprintf("%s (%s): %s", e.Message, e.Code, e.Hint)
+}
+
+func codedErr(code, message, hint string) error {
+	return &CodedError{Code: code, Message: message, Hint: hint}
+}
 
 // isDuplicateColumnError reports whether err is a "duplicate column" error
 // from either SQLite or PostgreSQL, used during migration idempotency checks.
