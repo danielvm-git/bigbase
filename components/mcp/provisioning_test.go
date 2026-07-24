@@ -248,8 +248,11 @@ func TestGetCITemplate(t *testing.T) {
 	})
 	t.Run("static yaml", func(t *testing.T) {
 		text := callToolText(t, c, "get_ci_template", map[string]any{"app_type": "static"})
-		if !strings.Contains(text, "BIGBASE_SITE_ID") || !strings.Contains(text, "/api/deploy") {
-			t.Fatalf("expected deploy yaml: %s", text)
+		if !strings.Contains(text, "BIGBASE_SITE_ID") || !strings.Contains(text, "bigbase-deploy@v1") {
+			t.Fatalf("expected v3 deploy yaml with bigbase-deploy action: %s", text)
+		}
+		if !strings.Contains(text, "workflow_run") {
+			t.Fatalf("expected v3 workflow_run deploy template: %s", text)
 		}
 	})
 	t.Run("unknown type", func(t *testing.T) {

@@ -1,9 +1,10 @@
 type: session-state
 context: infra
-active_flow: null
+active_flow: fix_bug
 active_epic_id: null
 active_story_id: null
 active_story_status: null
+bug_id: BUG-2026-07-24-deploy-key-organization-required
 release:
   target_version: 2.79.0
   codename: "Python Uvicorn CLI Entry Fix + Manifest ASGI Import"
@@ -35,11 +36,14 @@ epic_cycle:
   story_complete: true
   note: "e80 complete — VPS hardened on vmi3338033 (89.116.26.187). 3 layers: Ubuntu (UFW+fail2ban+unattended-upgrades+SSH), BigBase (systemd+alerts+backups), Contabo (cntb+snapshots). Skill created: harden-vps."
   fast_mode: false
-bug_cycle: null
+bug_cycle:
+  current_step: 3
+  completed_steps: [1, 2]
+  bug_file: specs/bugs/BUG-2026-07-24-deploy-key-organization-required.md
 git:
-  branch: main
+  branch: fix/deploy-key-site-ownership
   hash: null
-  worktree: null
+  worktree: ../fix-deploy-key-site-ownership
   ci_status: unknown
 cleanup:
   completed_at: '2026-07-13T16:10:00-03:00'
@@ -67,11 +71,9 @@ cleanup:
     - "TestResumeSvelteKitStaticDeployment — environment-dependent (deploy_test.go:1717)"
     - "TestHealthCheckIntegrationFail — git push in temp dir fails (health_integration_test.go:77)"
 handoff:
-  last_step_completed: "pre-e81 cleanup — 14-step CI-gated plan executed (rerun)"
+  last_step_completed: "wt-a-spec — BUG + registry + kickoff worktree fix/deploy-key-site-ownership"
   open_decisions:
-    - "Grimoire needs bigbase.yaml with asgi_import: grimoire.app:create_app --factory, then redeploy via GitHub push"
-    - "Step 7: appleboy/scp-action has no v1.2.5 tag — latest is v1.0.0 (already pinned at ff85246)"
-    - "Group B UI PRs (#117 #115 #113): build passes, vitest fails due to missing jsdom — left open with comments for manual merge"
-    - "2 pre-existing deploy integration test failures — environment-dependent, not caused by cleanup"
-  next_skill: null
-  summary: "Pre-e81 cleanup rerun complete. 5 CI-action Dependabot PRs already merged (all CI-green), 1 issue closed (#45), 3 deferred (#41/#43) or planned (#58), guardrails doc committed and pushed (CI green). Group B UI PRs left open (build passes, vitest blocked by missing jsdom). Final gate: 1103/1105 Go tests pass (2 pre-existing failures), go vet clean, UI build ok, CI green on main."
+    - "Do not inject org_id for bb_dep_* in middleware (SAFE site-key branch only)"
+    - "e82-artifact-deploy seeded after P0; multipart upload not in this PR body"
+  next_skill: develop-tdd
+  summary: "Horizon A WT-A: fix requireSiteOwnership site-key branch for bb_dep_ deploy keys (403 organization required). Branch fix/deploy-key-site-ownership."

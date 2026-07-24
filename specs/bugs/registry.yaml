@@ -1661,3 +1661,17 @@ bugs:
     status: fixed
     related:
       - BUG-136
+  - id: BUG-2026-07-24-deploy-key-organization-required
+    date: "2026-07-24"
+    severity: critical
+    priority: critical
+    scope: auth,sites,deploy
+    summary: "bb_dep_ site deploy keys get 403 organization required on /api/sites/{id}/deploy — requireSiteOwnership requires org_id; middleware only sets SiteID"
+    file: specs/bugs/BUG-2026-07-24-deploy-key-organization-required.md
+    status: open
+    github_issues: [161, 162]
+    approach: "SAFE: extend requireSiteOwnership with SiteIDFromContext branch (match URL site id / git_repo_id); do NOT inject org_id in middleware for bb_dep_*"
+    regression_guards:
+      - components/sites/sitekey_ownership_test.go
+    related:
+      - BUG-136
