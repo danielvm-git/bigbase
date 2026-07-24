@@ -138,7 +138,7 @@ jobs:
         if: steps.detect-release.outputs.new_release == 'true'
         working-directory: ui
         run: |
-          npm ci --prefer-offline
+          npm ci --prefer-offline --legacy-peer-deps
           npm run build
           echo "Admin UI built: $(ls -lh dist/ | wc -l) files"
 
