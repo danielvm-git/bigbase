@@ -159,8 +159,8 @@ elsewhere in this same workflow.
 - [x] Full suite green: `go test ./... -count=1`
 - [x] `go vet ./...` clean
 - [x] `go build ./...` clean
-- [ ] CI green end-to-end on the PR (pending — Test/lint/verify jobs confirmed; Allure job to be
-      confirmed on push)
+- [x] CI green end-to-end on PR #156 (Test sqlite/postgres, lint, verify, Generate Progress
+      Dashboard, CodeQL, Snyk — all pass)
 
 ## Resolution
 
@@ -173,3 +173,4 @@ elsewhere in this same workflow.
 - `go vet ./...` — clean
 - `go build ./...` — clean
 - `python3 -c "import yaml; yaml.safe_load(...)"` on `ci-cd.yml` — valid YAML
+- Merged: PR [#156](https://github.com/danielvm-git/bigbase/pull/156), squash-merged to `main` 2026-07-24T20:24:03Z, all CI checks green
