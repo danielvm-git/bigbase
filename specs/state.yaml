@@ -1,6 +1,6 @@
 type: session-state
 context: infra
-active_flow: fix_bug
+active_flow: null
 active_epic_id: null
 active_story_id: null
 active_story_status: null
@@ -35,12 +35,7 @@ epic_cycle:
   story_complete: true
   note: "e80 complete — VPS hardened on vmi3338033 (89.116.26.187). 3 layers: Ubuntu (UFW+fail2ban+unattended-upgrades+SSH), BigBase (systemd+alerts+backups), Contabo (cntb+snapshots). Skill created: harden-vps."
   fast_mode: false
-bug_cycle:
-  current_step: 5
-  completed_steps: [1, 2, 3, 4]
-  bug_id: BUG-2026-07-24T165040
-  handoff:
-    next_skill: release-branch
+bug_cycle: null
 git:
   branch: main
   hash: null
