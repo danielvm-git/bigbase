@@ -1,3 +1,10 @@
+## [2.79.11](https://github.com/danielvm-git/bigbase/compare/v2.79.10...v2.79.11) (2026-07-24)
+
+
+### Bug Fixes
+
+* **deploy:** never-bounce identity and framework deploy matrix ([#166](https://github.com/danielvm-git/bigbase/issues/166)) ([e77fd13](https://github.com/danielvm-git/bigbase/commit/e77fd137a0fcdc1a7521123153d8c065f11bafca))
+
 ## [2.79.10](https://github.com/danielvm-git/bigbase/compare/v2.79.9...v2.79.10) (2026-07-24)
 
 
