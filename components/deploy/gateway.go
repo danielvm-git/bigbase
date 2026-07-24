@@ -1,6 +1,7 @@
 package deploy
 
 import (
+	"database/sql"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -90,14 +91,89 @@ func (d *Deploy) HandleCreate(w http.ResponseWriter, r *http.Request) {
 	}
 	kernel.WriteJSON(w, http.StatusCreated, deploy)
 }
+
+// verifyDeploymentOwnership checks that the deployment's site belongs to the
+// caller's org. Returns true if access is allowed (same org, no org_id in
+// context, or deployment has no site). Returns false and writes 403 if denied.
+func (d *Deploy) verifyDeploymentOwnership(w http.ResponseWriter, r *http.Request, deploymentID string) bool {
+	orgID, ok := auth.OrgIDFromContext(r.Context())
+	if !ok || orgID == 0 {
+		return true // no org_id in context (site deploy key) — allow
+	}
+
+	var siteID string
+	err := d.db.QueryRowContext(r.Context(),
+		"SELECT COALESCE(site_id, '') FROM deployments WHERE id = ?", deploymentID).
+		Scan(&siteID)
+	if err != nil {
+		kernel.WriteJSON(w, http.StatusNotFound, map[string]string{"error": "deployment not found"})
+		return false
+	}
+	if siteID == "" {
+		return true // no site — can't verify ownership
+	}
+
+	var siteOrgID int64
+	err = d.db.QueryRowContext(r.Context(),
+		"SELECT COALESCE(org_id, 0) FROM sites WHERE id = ?", siteID).Scan(&siteOrgID)
+	if err != nil {
+		return true // site not found — allow (site may not have org_id)
+	}
+	if siteOrgID != 0 && siteOrgID != orgID {
+		d.logger.Warn("access denied: cross-org deployment access",
+			"caller_org", orgID, "site_org", siteOrgID, "deployment_id", deploymentID)
+		kernel.WriteJSON(w, http.StatusForbidden, map[string]string{"error": "access denied"})
+		return false
+	}
+	return true
+}
+
+// verifySiteOwnership checks that the given site belongs to the caller's org.
+// Returns true if access is allowed. Returns false and writes 403 if denied.
+func (d *Deploy) verifySiteOwnership(w http.ResponseWriter, r *http.Request, siteID string) bool {
+	orgID, ok := auth.OrgIDFromContext(r.Context())
+	if !ok || orgID == 0 {
+		return true
+	}
+
+	var siteOrgID int64
+	err := d.db.QueryRowContext(r.Context(),
+		"SELECT COALESCE(org_id, 0) FROM sites WHERE id = ?", siteID).Scan(&siteOrgID)
+	if err != nil {
+		return true
+	}
+	if siteOrgID != 0 && siteOrgID != orgID {
+		d.logger.Warn("access denied: cross-org site access",
+			"caller_org", orgID, "site_org", siteOrgID, "site_id", siteID)
+		kernel.WriteJSON(w, http.StatusForbidden, map[string]string{"error": "access denied"})
+		return false
+	}
+	return true
+}
+
 func (d *Deploy) HandleList(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "GET" {
 		kernel.WriteJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
 		return
 	}
 
-	rows, err := d.db.QueryContext(r.Context(),
-		"SELECT id, repo_id, site_id, COALESCE(branch,'main'), COALESCE(commit_sha,''), COALESCE(status,'pending'), COALESCE(url,''), COALESCE(port,0), COALESCE(app_type,''), COALESCE(error_message,''), COALESCE(passthrough_paths,''), COALESCE(manifest_path,''), COALESCE(health_summary,''), COALESCE(pipeline_timeline,''), created_at FROM deployments ORDER BY created_at DESC")
+	// Scope by caller's org_id if present (JWT/API-key auth).
+	var rows *sql.Rows
+	var err error
+	if orgID, ok := auth.OrgIDFromContext(r.Context()); ok && orgID > 0 {
+		rows, err = d.db.QueryContext(r.Context(),
+			`SELECT d.id, d.repo_id, d.site_id, COALESCE(d.branch,'main'), COALESCE(d.commit_sha,''),
+				COALESCE(d.status,'pending'), COALESCE(d.url,''), COALESCE(d.port,0), COALESCE(d.app_type,''),
+				COALESCE(d.error_message,''), COALESCE(d.passthrough_paths,''), COALESCE(d.manifest_path,''),
+				COALESCE(d.health_summary,''), COALESCE(d.pipeline_timeline,''), d.created_at
+			 FROM deployments d
+			 LEFT JOIN sites s ON d.site_id = s.id
+			 WHERE s.org_id = ? OR d.site_id = '' OR d.site_id IS NULL
+			 ORDER BY d.created_at DESC`, orgID)
+	} else {
+		rows, err = d.db.QueryContext(r.Context(),
+			"SELECT id, repo_id, site_id, COALESCE(branch,'main'), COALESCE(commit_sha,''), COALESCE(status,'pending'), COALESCE(url,''), COALESCE(port,0), COALESCE(app_type,''), COALESCE(error_message,''), COALESCE(passthrough_paths,''), COALESCE(manifest_path,''), COALESCE(health_summary,''), COALESCE(pipeline_timeline,''), created_at FROM deployments ORDER BY created_at DESC")
+	}
 	if err != nil {
 		d.logger.Error("list deployments", "error", err)
 		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
@@ -173,6 +249,9 @@ func (d *Deploy) handleDeployByID(w http.ResponseWriter, r *http.Request) {
 	case http.MethodDelete:
 		d.handleDeleteDeployment(w, r, id)
 	case http.MethodGet:
+		if !d.verifyDeploymentOwnership(w, r, id) {
+			return
+		}
 		var dep Deployment
 		var appType, passthroughJSON, timelineJSON string
 		err := d.db.QueryRowContext(r.Context(),
@@ -191,6 +270,9 @@ func (d *Deploy) handleDeployByID(w http.ResponseWriter, r *http.Request) {
 	}
 }
 func (d *Deploy) handleDeleteDeployment(w http.ResponseWriter, r *http.Request, id string) {
+	if !d.verifyDeploymentOwnership(w, r, id) {
+		return
+	}
 	cleanID := filepath.Clean(id)
 	if strings.Contains(cleanID, "..") || strings.Contains(cleanID, "/") {
 		http.Error(w, "invalid id", http.StatusBadRequest)
@@ -218,6 +300,9 @@ func (d *Deploy) handleDeleteDeployment(w http.ResponseWriter, r *http.Request, 
 	w.WriteHeader(http.StatusNoContent)
 }
 func (d *Deploy) handleDeployLogs(w http.ResponseWriter, r *http.Request, id string) {
+	if !d.verifyDeploymentOwnership(w, r, id) {
+		return
+	}
 	if r.Method != http.MethodGet {
 		kernel.WriteJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
 		return

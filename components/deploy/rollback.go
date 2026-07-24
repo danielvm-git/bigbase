@@ -148,6 +148,9 @@ func (d *Deploy) Rollback(ctx context.Context, currentID string) (*RollbackEvent
 }
 
 func (d *Deploy) handleRollback(w http.ResponseWriter, r *http.Request, id string) {
+	if !d.verifyDeploymentOwnership(w, r, id) {
+		return
+	}
 	if r.Method != http.MethodPost {
 		kernel.WriteJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
 		return
@@ -232,6 +235,9 @@ func (d *Deploy) updateStatusHistory(ctx context.Context, id, from, to string) {
 // handleRollbackEvents returns all rollback events for a site.
 // GET /api/deploy/{siteID}/rollback-events
 func (d *Deploy) handleRollbackEvents(w http.ResponseWriter, r *http.Request, siteID string) {
+	if !d.verifySiteOwnership(w, r, siteID) {
+		return
+	}
 	if r.Method != http.MethodGet {
 		kernel.WriteJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
 		return
