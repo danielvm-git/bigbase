@@ -1,6 +1,6 @@
 ---
 bug_id: BUG-2026-07-24-deploy-key-organization-required
-status: open
+status: in_progress
 severity: critical
 scope: auth,sites,deploy
 title: "Deploy keys (bb_dep_*) return 403 organization required on POST /api/sites/{id}/deploy"
@@ -44,14 +44,31 @@ Extend `requireSiteOwnership()` with a **site-key branch** (mirror `components/d
 ### 4. RED: JWT cross-org → 404 (BUG-136 regression guard)
 **verify:** existing org_scoping tests
 
-### 5. RED: Deploy key cannot access unrelated site via GET
-**verify:** site-key ownership tests
+### 5. RED: Deploy key cannot list sites / escalate via org_id
+**verify:** `TestSiteKeyOwnership_NoOrgEscalation`
 
-## Regression Guards
+## Acceptance
 
-- `components/sites/sitekey_ownership_test.go`
+- [x] Site deploy key can redeploy its own site (not 403 organization required)
+- [x] Site deploy key cannot access another site (404)
+- [x] Legacy org_id=0 site still accessible via its own key
+- [x] JWT cross-org isolation unchanged
+- [x] No org_id injection for bb_dep_ in middleware
+- [x] MCP ci-templates emit v3 TBR+deploy + `bigbase-deploy@v1`
+- [ ] Related GH issues #161 / #162 commented with fix PR
+
+## Resolution
+
+**SAFE fix applied** in `components/sites/sites.go` `requireSiteOwnership`: site-key branch via `kernel.SiteIDFromContext` before org path.
+
+**Tests:** `components/sites/sitekey_ownership_test.go` (own site 201, other site 404, legacy org_id=0, JWT cross-org 404, no org escalation).
+
+**Also:** MCP `ci-templates.json` → v3 TBR+deploy + `bigbase-deploy@v1`; epic seed `specs/epics/e82-artifact-deploy/`.
+
+**Evidence:** `go test ./components/sites/ ./components/auth/ ./components/mcp/ -count=1` green; `./components/deploy/` green except pre-existing `TestResumeSvelteKitStaticDeployment`; `go test ./... -skip 'TestResumeSvelteKitStaticDeployment|TestHealthCheckIntegrationFail'` green.
 
 ## Out of Scope
 
-- Multipart artifact upload (e82)
+- Multipart artifact upload (e82 — seeded under `specs/epics/e82-artifact-deploy/`)
 - Middleware org_id injection for deploy keys
+- Consumer workflow migrations
