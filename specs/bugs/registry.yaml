@@ -1631,3 +1631,29 @@ bugs:
       - components/deploy/python_test.go TestParseASGIImport
       - components/deploy/python_test.go TestIsCLIScriptEntry
       - components/deploy/manifest_test.go TestValidateManifest_ASGIImportRelaxesStartCommand
+  - id: BUG-144
+    date: "2026-07-23"
+    severity: high
+    priority: critical
+    scope: auth
+    summary: "Insecure postMessage targetOrigin '*' leaks JWT to any origin in OAuth popup flow"
+    file: specs/bugs/BUG-144-postmessage-wildcard-origin.md
+    status: fixed
+    files_changed:
+      - components/auth/anonymous.go
+      - components/auth/anonymous_test.go
+    approach: "Fail closed: return 403 error page when redirect is missing/not-allowlisted. Fix origin extraction via url.Parse. Add Cross-Origin-Opener-Policy: same-origin header."
+    risk_level: high
+    security_impact: HIGH
+    exploit_path: "Attacker page opens login popup → victim completes Google consent → postMessage(token, '*') sends JWT to attacker"
+    regression_guards:
+      - components/auth/anonymous_test.go TestPopupCallbackNoRedirect_FailsClosed
+      - components/auth/anonymous_test.go TestPopupCallbackNonAllowlistedRedirect_FailsClosed
+      - components/auth/anonymous_test.go TestPopupCallbackValidRedirect_UsesExactOrigin
+      - components/auth/anonymous_test.go TestPopupCallbackSetsCOOPHeader
+    commit_message: "fix(auth): GREEN — fail closed on popup postMessage to prevent JWT leak"
+    hardening:
+      - "Type guard: url.Parse validates redirect URL structure"
+      - "Fail closed: no postMessage when redirect is missing/invalid"
+      - "COOP header: prevents cross-origin opener interaction"
+    cwe: CWE-942
