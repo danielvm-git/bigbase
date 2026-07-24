@@ -155,6 +155,16 @@ func (s *Sites) Start(ctx *kernel.Context) error {
 	}
 	_ = s.db.Migrate(`ALTER TABLE sites ADD COLUMN auth_policy TEXT NOT NULL DEFAULT '{}'`)
 	_ = s.db.Migrate(`ALTER TABLE sites ADD COLUMN org_id INTEGER NOT NULL DEFAULT 0`)
+	// Reassign orphaned sites (org_id=0 from the DEFAULT) to the admin's
+	// default_org_id so they become visible under org-scoped queries.
+	if _, err := s.db.Exec(`
+		UPDATE sites SET org_id = (
+			SELECT default_org_id FROM users WHERE role = 'admin' AND default_org_id > 0 LIMIT 1
+		) WHERE org_id = 0 AND EXISTS (
+			SELECT 1 FROM users WHERE role = 'admin' AND default_org_id > 0
+		)`); err != nil {
+		s.logger.Warn("reassign orphaned sites to admin org", "error", err)
+	}
 	if err := s.migrateDomains(); err != nil {
 		return fmt.Errorf("migrate site_domains: %w", err)
 	}
@@ -284,14 +294,17 @@ func (s *Sites) ListSites(ctx context.Context) ([]Site, error) {
 	var rows *sql.Rows
 	var err error
 	if orgID > 0 {
-		// Filter by org_id when available (JWT/API key auth).
+		// Filter by org_id when available (JWT/API key auth). Legacy sites
+		// created before org_id scoping existed default to org_id=0 and
+		// must remain visible — org_id=0 is never a real caller's org_id,
+		// so it can never collide with an actual cross-tenant site.
 		rows, err = s.db.QueryContext(ctx, `
 			SELECT s.id, s.name, s.git_repo_id, s.production_branch, s.root_path,
 				COALESCE(NULLIF(s.github_full_name, ''), g.name, s.name),
 				s.auth_policy
 			FROM sites s
 			LEFT JOIN git_repos g ON g.id = s.git_repo_id
-			WHERE s.org_id = ?
+			WHERE s.org_id = ? OR s.org_id = 0
 			ORDER BY s.name`, orgID)
 	} else {
 		// Fallback for unauthenticated contexts (tests, site key auth).
@@ -428,8 +441,11 @@ func (s *Sites) requireSiteOwnership(ctx context.Context, w http.ResponseWriter,
 		return false
 	}
 
-	if dbOrgID != orgID {
+	if dbOrgID != orgID && dbOrgID != 0 {
 		// Return 404 (not 403) to avoid leaking site existence across orgs.
+		// dbOrgID == 0 is a legacy site predating org_id scoping — never a
+		// real org, so it's accessible to any authenticated org rather than
+		// permanently orphaned.
 		kernel.WriteJSON(w, http.StatusNotFound, map[string]string{"error": "site not found"})
 		return false
 	}
