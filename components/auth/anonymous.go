@@ -3,7 +3,7 @@ package auth
 import (
 	"fmt"
 	"net/http"
-	"strings"
+	"net/url"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -119,19 +119,46 @@ func (a *Auth) handlePopupCallback(w http.ResponseWriter, r *http.Request) {
 	// Clear state cookie.
 	a.clearOAuthStateCookie(w, r)
 
-	// Determine target origin for postMessage.
-	targetOrigin := "*"
-	if spaRedirect != "" && a.isSPAOriginAllowed(spaRedirect) {
-		targetOrigin = spaRedirect[:strings.Index(spaRedirect, "/")]
+	// SECURITY: Fail closed — if no valid redirect, show error page instead of
+	// sending JWT via postMessage("*") which would leak to any origin (CWE-942).
+	if spaRedirect == "" || !a.isSPAOriginAllowed(spaRedirect) {
+		html := `<!DOCTYPE html><html><head><title>Authentication Failed</title></head><body>
+<h1>Authentication Failed</h1>
+<p>This login popup was opened from an unauthorized origin. Please log in from the official application.</p>
+<p>You may close this window.</p>
+</body></html>`
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		w.Header().Set("Cross-Origin-Opener-Policy", "same-origin")
+		w.WriteHeader(http.StatusForbidden)
+		_, _ = w.Write([]byte(html))
+		return
 	}
 
-	// Render HTML page that does window.opener.postMessage.
+	// Extract origin (scheme + host) from the allowlisted redirect URL.
+	parsed, err := url.Parse(spaRedirect)
+	if err != nil || parsed.Scheme == "" || parsed.Host == "" {
+		a.logger.Error("popup redirect parse failed", "redirect", spaRedirect, "error", err)
+		html := `<!DOCTYPE html><html><head><title>Authentication Failed</title></head><body>
+<h1>Authentication Failed</h1>
+<p>Invalid redirect URL. Please log in from the official application.</p>
+<p>You may close this window.</p>
+</body></html>`
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		w.Header().Set("Cross-Origin-Opener-Policy", "same-origin")
+		w.WriteHeader(http.StatusForbidden)
+		_, _ = w.Write([]byte(html))
+		return
+	}
+	targetOrigin := parsed.Scheme + "://" + parsed.Host
+
+	// Render HTML page that does window.opener.postMessage to exact origin.
 	html := fmt.Sprintf(`<!DOCTYPE html><html><head><script>
 window.opener.postMessage({type:"bigbase-auth:oauth-complete",token:"%s"}, "%s");
 window.close();
 </script></head><body>Sign in complete. You may close this window.</body></html>`, jwtToken, targetOrigin)
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.Header().Set("Cross-Origin-Opener-Policy", "same-origin")
 	w.WriteHeader(http.StatusOK)
 	_, _ = w.Write([]byte(html))
 }
