@@ -1,6 +1,6 @@
 ---
 bug_id: BUG-2026-07-24-deploy-key-organization-required
-status: open
+status: fixed
 severity: critical
 scope: auth,sites,deploy
 title: "Deploy keys (bb_dep_*) return 403 organization required on POST /api/sites/{id}/deploy"
@@ -55,3 +55,8 @@ Extend `requireSiteOwnership()` with a **site-key branch** (mirror `components/d
 
 - Multipart artifact upload (e82)
 - Middleware org_id injection for deploy keys
+
+
+## Resolution
+
+Landed in #163. SAFE site-key branch in `requireSiteOwnership` via `kernel.SiteIDFromContext`. MCP v3 templates + e82 seed included. Issues #161/#162 closed.
