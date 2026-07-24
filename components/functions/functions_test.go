@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/danielvm/bigbase/components/auth"
 	"github.com/danielvm/bigbase/components/db"
 	"github.com/danielvm/bigbase/components/functions"
 	"github.com/danielvm/bigbase/kernel"
@@ -689,7 +690,7 @@ func TestRuntimeEnv(t *testing.T) {
 	h := f.Handler()
 
 	// Create a function that reads env vars
-	createBody := `{"name":"env-reader","source":"return { key: env.API_KEY, region: env.REGION };","trigger":"http","env":{"API_KEY":"sk-abc123","REGION":"us-east"}}`
+	createBody := `{"name":"env-reader","source":"return { key: env.API_KEY, region: env.REGION };","trigger":"http","env":{"API_KEY":"test-key-123","REGION":"us-east"}}`
 	req := httptest.NewRequest("POST", "/api/functions", strings.NewReader(createBody))
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
@@ -723,8 +724,8 @@ func TestRuntimeEnv(t *testing.T) {
 		t.Fatalf("expected result map, got: %T %v", runResp["result"], runResp["result"])
 	}
 
-	if key, _ := result["key"].(string); key != "sk-abc123" {
-		t.Fatalf("expected env.API_KEY='sk-abc123', got: %v", result["key"])
+	if key, _ := result["key"].(string); key != "test-key-123" {
+		t.Fatalf("expected env.API_KEY='test-key-123', got: %v", result["key"])
 	}
 	if region, _ := result["region"].(string); region != "us-east" {
 		t.Fatalf("expected env.REGION='us-east', got: %v", result["region"])
@@ -1001,5 +1002,117 @@ func TestDBCrossTenantIsolation(t *testing.T) {
 	}
 	if outGet.Result != nil {
 		t.Fatalf("cross-tenant get: expected null, got %v", outGet.Result)
+	}
+}
+
+// TestFunctionsCrossTenantIsolation verifies that functions CRUD handlers
+// are scoped by org_id — an authenticated user cannot read, update, delete,
+// execute, or read logs of another org's functions (BUG-131).
+func TestFunctionsCrossTenantIsolation(t *testing.T) {
+	logger := testLogger{}
+	k := kernel.New(logger)
+	d := db.New(db.Options{Path: ":memory:", Logger: logger})
+	f := functions.New(functions.Options{DB: d, Logger: logger})
+	k.Register(f)
+	k.Register(d)
+	if err := k.Start(); err != nil {
+		t.Fatalf("kernel start: %v", err)
+	}
+	defer func() { _ = k.Stop() }()
+
+	h := f.Handler()
+
+	// Helper: create request with org_id in context.
+	newReq := func(method, path string, body string, orgID int64) *http.Request {
+		var req *http.Request
+		if body != "" {
+			req = httptest.NewRequest(method, path, strings.NewReader(body))
+			req.Header.Set("Content-Type", "application/json")
+		} else {
+			req = httptest.NewRequest(method, path, nil)
+		}
+		return req.WithContext(auth.WithOrgID(req.Context(), orgID))
+	}
+
+	// Org 1 creates a function.
+	createBody := `{"name":"org1-fn","source":"return 42;","trigger":"http"}`
+	w := httptest.NewRecorder()
+	h.ServeHTTP(w, newReq("POST", "/api/functions", createBody, 1))
+	if w.Code != http.StatusCreated {
+		t.Fatalf("org1 create: expected 201, got %d: %s", w.Code, w.Body.String())
+	}
+	var created map[string]any
+	_ = json.NewDecoder(w.Body).Decode(&created)
+	org1FnID, _ := created["id"].(string)
+	if org1FnID == "" {
+		t.Fatal("expected function id")
+	}
+
+	// Org 2 creates a function.
+	createBody2 := `{"name":"org2-fn","source":"return 99;","trigger":"http"}`
+	w2 := httptest.NewRecorder()
+	h.ServeHTTP(w2, newReq("POST", "/api/functions", createBody2, 2))
+	if w2.Code != http.StatusCreated {
+		t.Fatalf("org2 create: expected 201, got %d: %s", w2.Code, w2.Body.String())
+	}
+
+	// --- List isolation ---
+	listW := httptest.NewRecorder()
+	h.ServeHTTP(listW, newReq("GET", "/api/functions", "", 1))
+	var listResp map[string][]map[string]any
+	_ = json.NewDecoder(listW.Body).Decode(&listResp)
+	if len(listResp["data"]) != 1 {
+		t.Fatalf("org1 list: expected 1 function, got %d", len(listResp["data"]))
+	}
+	if listResp["data"][0]["name"] != "org1-fn" {
+		t.Fatalf("org1 list: expected 'org1-fn', got %v", listResp["data"][0]["name"])
+	}
+
+	// --- GET cross-tenant ---
+	getW := httptest.NewRecorder()
+	h.ServeHTTP(getW, newReq("GET", "/api/functions/"+org1FnID, "", 2))
+	if getW.Code != http.StatusNotFound {
+		t.Fatalf("cross-tenant GET: expected 404, got %d", getW.Code)
+	}
+
+	// --- PUT cross-tenant ---
+	updateBody := `{"name":"hacked","source":"return 0;","trigger":"http"}`
+	updW := httptest.NewRecorder()
+	h.ServeHTTP(updW, newReq("PUT", "/api/functions/"+org1FnID, updateBody, 2))
+	if updW.Code != http.StatusNotFound {
+		t.Fatalf("cross-tenant PUT: expected 404, got %d", updW.Code)
+	}
+
+	// --- DELETE cross-tenant ---
+	delW := httptest.NewRecorder()
+	h.ServeHTTP(delW, newReq("DELETE", "/api/functions/"+org1FnID, "", 2))
+	if delW.Code != http.StatusNotFound {
+		t.Fatalf("cross-tenant DELETE: expected 404, got %d", delW.Code)
+	}
+
+	// --- RUN cross-tenant ---
+	runW := httptest.NewRecorder()
+	h.ServeHTTP(runW, newReq("POST", "/api/functions/"+org1FnID+"/run", "", 2))
+	if runW.Code != http.StatusNotFound {
+		t.Fatalf("cross-tenant RUN: expected 404, got %d", runW.Code)
+	}
+
+	// --- LOGS cross-tenant ---
+	logsW := httptest.NewRecorder()
+	h.ServeHTTP(logsW, newReq("GET", "/api/functions/"+org1FnID+"/logs", "", 2))
+	if logsW.Code != http.StatusNotFound {
+		t.Fatalf("cross-tenant LOGS: expected 404, got %d", logsW.Code)
+	}
+
+	// --- Verify org1's function is still intact (not hacked/deleted) ---
+	verifyW := httptest.NewRecorder()
+	h.ServeHTTP(verifyW, newReq("GET", "/api/functions/"+org1FnID, "", 1))
+	if verifyW.Code != http.StatusOK {
+		t.Fatalf("verify org1 fn: expected 200, got %d", verifyW.Code)
+	}
+	var verifyResp map[string]any
+	_ = json.NewDecoder(verifyW.Body).Decode(&verifyResp)
+	if verifyResp["name"] != "org1-fn" {
+		t.Fatalf("verify: expected name 'org1-fn', got %v", verifyResp["name"])
 	}
 }

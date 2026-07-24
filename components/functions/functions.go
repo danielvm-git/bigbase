@@ -97,6 +97,8 @@ func (f *Functions) Start(ctx *kernel.Context) error {
 	)`); err != nil {
 		return fmt.Errorf("migrate functions table: %w", err)
 	}
+	// Add org_id column for multi-tenant isolation (BUG-131).
+	_ = f.db.Migrate(`ALTER TABLE functions ADD COLUMN org_id INTEGER NOT NULL DEFAULT 0`)
 	if err := f.db.Migrate(`CREATE TABLE IF NOT EXISTS function_executions (
 		id TEXT PRIMARY KEY,
 		function_id TEXT NOT NULL,
@@ -108,6 +110,8 @@ func (f *Functions) Start(ctx *kernel.Context) error {
 	)`); err != nil {
 		return fmt.Errorf("migrate function_executions table: %w", err)
 	}
+	// Add org_id column to executions for audit trail.
+	_ = f.db.Migrate(`ALTER TABLE function_executions ADD COLUMN org_id INTEGER NOT NULL DEFAULT 0`)
 	// Start schedule loop if enabled
 	if f.scheduleEnabled {
 		if err := f.startScheduleLoop(); err != nil {
@@ -152,9 +156,11 @@ func (f *Functions) scanFunction(row interface {
 	return fn, nil
 }
 
-func (f *Functions) fetchFunctionByID(ctx context.Context, id string) (Function, error) {
+// fetchFunctionByIDForOrg fetches a function by ID, scoped to the given org_id.
+// Returns sql.ErrNoRows if the function exists but belongs to a different org.
+func (f *Functions) fetchFunctionByIDForOrg(ctx context.Context, id string, orgID int64) (Function, error) {
 	return f.scanFunction(f.db.QueryRowContext(ctx,
-		"SELECT id, name, runtime, source, trigger, schedule, env, timeout, created_at FROM functions WHERE id = ?", id))
+		"SELECT id, name, runtime, source, trigger, schedule, env, timeout, created_at FROM functions WHERE id = ? AND org_id = ?", id, orgID))
 }
 
 // startScheduleLoop initializes the cron scheduler and registers all
@@ -224,7 +230,7 @@ func (f *Functions) executeScheduled(fn Function) {
 	}
 	output, execErr := rt.Execute(fn.Source, fn.Timeout, runCtx)
 
-	execID, saveErr := f.saveExecution(context.Background(), fn.ID, output, execErr)
+	execID, saveErr := f.saveExecution(context.Background(), fn.ID, orgID, output, execErr)
 	if saveErr != nil {
 		f.logger.Error("save scheduled execution", "fn", fn.Name, "error", saveErr)
 		return

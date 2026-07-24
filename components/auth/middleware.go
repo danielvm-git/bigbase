@@ -147,8 +147,8 @@ func OrgIDFromContext(ctx context.Context) (int64, bool) {
 	return orgID, ok
 }
 
-// WithOrgID stores the org_id in the request context. Useful for
-// testing handlers that call OrgIDFromContext.
+// WithOrgID returns a new context with the given org_id value.
+// Useful for testing handlers that depend on org-scoped auth context.
 func WithOrgID(ctx context.Context, orgID int64) context.Context {
 	return context.WithValue(ctx, ctxOrgID, orgID)
 }

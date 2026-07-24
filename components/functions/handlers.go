@@ -73,10 +73,13 @@ func (f *Functions) handleCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Extract org_id for multi-tenant isolation (BUG-131).
+	orgID, _ := auth.OrgIDFromContext(r.Context())
+
 	envJSON, _ := json.Marshal(fn.Env)
 	_, err = f.db.ExecContext(r.Context(),
-		"INSERT INTO functions (id, name, runtime, source, trigger, schedule, env, timeout, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))",
-		fn.ID, fn.Name, fn.Runtime, fn.Source, fn.Trigger, fn.Schedule, string(envJSON), fn.Timeout)
+		"INSERT INTO functions (id, name, runtime, source, trigger, schedule, env, timeout, created_at, org_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), ?)",
+		fn.ID, fn.Name, fn.Runtime, fn.Source, fn.Trigger, fn.Schedule, string(envJSON), fn.Timeout, orgID)
 	if err != nil {
 		f.logger.Error("insert function", "error", err)
 		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
@@ -122,8 +125,11 @@ func (f *Functions) decodeFunction(r *http.Request) (Function, error) {
 }
 
 func (f *Functions) handleList(w http.ResponseWriter, r *http.Request) {
+	// Filter by org_id for multi-tenant isolation (BUG-131).
+	orgID, _ := auth.OrgIDFromContext(r.Context())
 	rows, err := f.db.QueryContext(r.Context(),
-		"SELECT id, name, runtime, source, trigger, schedule, env, timeout, created_at FROM functions ORDER BY created_at DESC")
+		"SELECT id, name, runtime, source, trigger, schedule, env, timeout, created_at FROM functions WHERE org_id = ? ORDER BY created_at DESC",
+		orgID)
 	if err != nil {
 		f.logger.Error("list functions", "error", err)
 		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
@@ -151,7 +157,8 @@ func (f *Functions) handleList(w http.ResponseWriter, r *http.Request) {
 }
 
 func (f *Functions) handleGet(w http.ResponseWriter, r *http.Request, id string) {
-	fn, err := f.fetchFunctionByID(r.Context(), id)
+	orgID, _ := auth.OrgIDFromContext(r.Context())
+	fn, err := f.fetchFunctionByIDForOrg(r.Context(), id, orgID)
 	if err != nil {
 		kernel.WriteJSON(w, http.StatusNotFound, map[string]string{"error": "function not found"})
 		return
@@ -167,10 +174,12 @@ func (f *Functions) handleUpdate(w http.ResponseWriter, r *http.Request, id stri
 		return
 	}
 
+	// Verify ownership before update (BUG-131).
+	orgID, _ := auth.OrgIDFromContext(r.Context())
 	envJSON, _ := json.Marshal(fn.Env)
 	result, err := f.db.ExecContext(r.Context(),
-		"UPDATE functions SET name=?, runtime=?, source=?, trigger=?, schedule=?, env=?, timeout=? WHERE id=?",
-		fn.Name, fn.Runtime, fn.Source, fn.Trigger, fn.Schedule, string(envJSON), fn.Timeout, id)
+		"UPDATE functions SET name=?, runtime=?, source=?, trigger=?, schedule=?, env=?, timeout=? WHERE id=? AND org_id=?",
+		fn.Name, fn.Runtime, fn.Source, fn.Trigger, fn.Schedule, string(envJSON), fn.Timeout, id, orgID)
 	if err != nil {
 		f.logger.Error("update function", "error", err)
 		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
@@ -183,7 +192,7 @@ func (f *Functions) handleUpdate(w http.ResponseWriter, r *http.Request, id stri
 		return
 	}
 
-	fn, err = f.fetchFunctionByID(r.Context(), id)
+	fn, err = f.fetchFunctionByIDForOrg(r.Context(), id, orgID)
 	if err != nil {
 		f.logger.Error("fetch after update", "error", err)
 		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
@@ -201,7 +210,9 @@ func (f *Functions) handleUpdate(w http.ResponseWriter, r *http.Request, id stri
 }
 
 func (f *Functions) handleDelete(w http.ResponseWriter, r *http.Request, id string) {
-	result, err := f.db.ExecContext(r.Context(), "DELETE FROM functions WHERE id = ?", id)
+	// Verify ownership before delete (BUG-131).
+	orgID, _ := auth.OrgIDFromContext(r.Context())
+	result, err := f.db.ExecContext(r.Context(), "DELETE FROM functions WHERE id = ? AND org_id = ?", id, orgID)
 	if err != nil {
 		f.logger.Error("delete function", "error", err)
 		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
@@ -225,7 +236,9 @@ func (f *Functions) handleDelete(w http.ResponseWriter, r *http.Request, id stri
 }
 
 func (f *Functions) handleRun(w http.ResponseWriter, r *http.Request, id string) {
-	fn, err := f.fetchFunctionByID(r.Context(), id)
+	// Verify ownership before run (BUG-131).
+	orgID, _ := auth.OrgIDFromContext(r.Context())
+	fn, err := f.fetchFunctionByIDForOrg(r.Context(), id, orgID)
 	if err != nil {
 		kernel.WriteJSON(w, http.StatusNotFound, map[string]string{"error": "function not found"})
 		return
@@ -237,7 +250,6 @@ func (f *Functions) handleRun(w http.ResponseWriter, r *http.Request, id string)
 		return
 	}
 
-	orgID, _ := auth.OrgIDFromContext(r.Context())
 	runCtx := RunContext{
 		Env:     fn.Env,
 		DB:      f.db,
@@ -246,8 +258,8 @@ func (f *Functions) handleRun(w http.ResponseWriter, r *http.Request, id string)
 	}
 	output, execErr := rt.Execute(fn.Source, fn.Timeout, runCtx)
 
-	// Persist execution history
-	execID, saveErr := f.saveExecution(r.Context(), fn.ID, output, execErr)
+	// Persist execution history with org_id (BUG-131).
+	execID, saveErr := f.saveExecution(r.Context(), fn.ID, orgID, output, execErr)
 	if saveErr != nil {
 		f.logger.Error("save execution", "error", saveErr)
 	}
@@ -270,7 +282,7 @@ func (f *Functions) handleRun(w http.ResponseWriter, r *http.Request, id string)
 	})
 }
 
-func (f *Functions) saveExecution(ctx context.Context, fnID string, output *RunOutput, execErr error) (string, error) {
+func (f *Functions) saveExecution(ctx context.Context, fnID string, orgID int64, output *RunOutput, execErr error) (string, error) {
 	id, err := kernel.GenerateID()
 	if err != nil {
 		return "", err
@@ -293,8 +305,8 @@ func (f *Functions) saveExecution(ctx context.Context, fnID string, output *RunO
 		return "", fmt.Errorf("marshal logs: %w", marshalErr)
 	}
 	_, dbErr := f.db.ExecContext(ctx,
-		"INSERT INTO function_executions (id, function_id, status, logs, error, created_at) VALUES (?, ?, ?, ?, ?, datetime('now'))",
-		id, fnID, status, string(logsJSON), errMsg)
+		"INSERT INTO function_executions (id, function_id, status, logs, error, created_at, org_id) VALUES (?, ?, ?, ?, ?, datetime('now'), ?)",
+		id, fnID, status, string(logsJSON), errMsg, orgID)
 	if dbErr != nil {
 		return "", dbErr
 	}
@@ -307,8 +319,9 @@ func (f *Functions) handleFunctionLogs(w http.ResponseWriter, r *http.Request, f
 		return
 	}
 
-	// Verify function exists
-	_, err := f.fetchFunctionByID(r.Context(), fnID)
+	// Verify function exists AND belongs to caller's org (BUG-131).
+	orgID, _ := auth.OrgIDFromContext(r.Context())
+	_, err := f.fetchFunctionByIDForOrg(r.Context(), fnID, orgID)
 	if err != nil {
 		kernel.WriteJSON(w, http.StatusNotFound, map[string]string{"error": "function not found"})
 		return
