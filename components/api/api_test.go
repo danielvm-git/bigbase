@@ -837,6 +837,115 @@ func TestAPIExecuteSQLSecurityChecks(t *testing.T) {
 	})
 }
 
+func TestScopeQueryForOrgParens(t *testing.T) {
+	// BUG-129: scopeQueryForOrg must parenthesize the original WHERE clause
+	// to prevent OR-based bypass: WHERE x OR 1=1 → WHERE (x OR 1=1) AND org_id = ?
+	logger := testLogger{}
+	k := kernel.New(logger)
+	d := db.New(db.Options{Path: ":memory:", Logger: logger})
+	a := api.New(api.Options{DB: d, Logger: logger})
+	k.Register(a)
+	k.Register(d)
+	if err := k.Start(); err != nil {
+		t.Fatalf("kernel start: %v", err)
+	}
+	t.Cleanup(func() { _ = k.Stop() })
+
+	base := a.Handler()
+	adminWithOrg := func(orgID int64, r *http.Request) *http.Request {
+		ctx := r.Context()
+		ctx = api.WithUserRole(ctx, "admin")
+		if orgID > 0 {
+			ctx = api.WithOrgID(ctx, orgID)
+		}
+		return r.WithContext(ctx)
+	}
+
+	// Seed: org 1 creates 2 records
+	for _, body := range []string{`{"val":"a"}`, `{"val":"b"}`} {
+		post := httptest.NewRequest("POST", "/api/collections/items",
+			strings.NewReader(body))
+		post.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+		base.ServeHTTP(w, adminWithOrg(1, post))
+		if w.Code != http.StatusCreated {
+			t.Fatalf("org1 seed: %d %s", w.Code, w.Body.String())
+		}
+	}
+
+	// Seed: org 2 creates 1 record
+	post2 := httptest.NewRequest("POST", "/api/collections/items",
+		strings.NewReader(`{"val":"secret"}`))
+	post2.Header.Set("Content-Type", "application/json")
+	w2 := httptest.NewRecorder()
+	base.ServeHTTP(w2, adminWithOrg(2, post2))
+	if w2.Code != http.StatusCreated {
+		t.Fatalf("org2 seed: %d %s", w2.Code, w2.Body.String())
+	}
+
+	// Exploit: org 1 uses OR 1=1 to bypass org_id filter
+	t.Run("OR_bypass_returns_only_org1_rows", func(t *testing.T) {
+		exploit := `{"query":"SELECT id, data FROM items WHERE id > 0 OR 1=1"}`
+		req := httptest.NewRequest("POST", "/api/sql", strings.NewReader(exploit))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+		base.ServeHTTP(w, adminWithOrg(1, req))
+
+		if w.Code != http.StatusOK {
+			t.Fatalf("exploit query: expected 200, got %d: %s", w.Code, w.Body.String())
+		}
+
+		var resp map[string]any
+		if err := json.NewDecoder(w.Body).Decode(&resp); err != nil {
+			t.Fatalf("decode: %v", err)
+		}
+		rows, _ := resp["rows"].([]any)
+		if len(rows) != 2 {
+			t.Fatalf("SECURITY: OR bypass returned %d rows (expected 2, got org2 data too)", len(rows))
+		}
+	})
+
+	// Exploit variant: OR with ORDER BY
+	t.Run("OR_bypass_with_ORDER_BY", func(t *testing.T) {
+		exploit := `{"query":"SELECT id, data FROM items WHERE id > 0 OR 1=1 ORDER BY id"}`
+		req := httptest.NewRequest("POST", "/api/sql", strings.NewReader(exploit))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+		base.ServeHTTP(w, adminWithOrg(1, req))
+
+		if w.Code != http.StatusOK {
+			t.Fatalf("exploit query: expected 200, got %d: %s", w.Code, w.Body.String())
+		}
+
+		var resp map[string]any
+		_ = json.NewDecoder(w.Body).Decode(&resp)
+		rows, _ := resp["rows"].([]any)
+		if len(rows) != 2 {
+			t.Fatalf("SECURITY: OR bypass with ORDER BY returned %d rows (expected 2)", len(rows))
+		}
+	})
+
+	// Legitimate query still works
+	t.Run("legitimate_where_still_works", func(t *testing.T) {
+		query := `{"query":"SELECT id, data FROM items WHERE id = 1"}`
+		req := httptest.NewRequest("POST", "/api/sql", strings.NewReader(query))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+		base.ServeHTTP(w, adminWithOrg(1, req))
+
+		if w.Code != http.StatusOK {
+			t.Fatalf("legit query: expected 200, got %d: %s", w.Code, w.Body.String())
+		}
+
+		var resp map[string]any
+		_ = json.NewDecoder(w.Body).Decode(&resp)
+		rows, _ := resp["rows"].([]any)
+		if len(rows) != 1 {
+			t.Fatalf("legit query: expected 1 row, got %d", len(rows))
+		}
+	})
+}
+
 func TestListRecordsFilter(t *testing.T) {
 	a, h := setupAPI(t)
 

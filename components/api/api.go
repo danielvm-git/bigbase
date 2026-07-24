@@ -697,8 +697,14 @@ func scopeQueryForOrg(q string, orgID int64) (string, []any) {
 	// Check if WHERE already exists
 	whereIdx := strings.Index(upper, " WHERE ")
 	if whereIdx >= 0 && whereIdx < insertPoint {
-		// Append AND org_id = ? before the next clause
-		return normalized[:insertPoint] + " AND org_id = ? " + normalized[insertPoint:], []any{orgID}
+		// BUG-129: Parenthesize the original WHERE clause to prevent OR-based
+		// bypass: WHERE x OR 1=1 → WHERE (x OR 1=1) AND org_id = ?
+		// Without parens, AND binds tighter than OR, so the org_id filter is
+		// effectively bypassed by any OR true condition.
+		whereContent := strings.TrimSpace(normalized[whereIdx+7 : insertPoint])
+		prefix := normalized[:whereIdx]
+		suffix := normalized[insertPoint:]
+		return prefix + " WHERE (" + whereContent + ") AND org_id = ? " + suffix, []any{orgID}
 	}
 
 	// No WHERE clause — insert one
