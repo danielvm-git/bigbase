@@ -457,11 +457,14 @@ func TestMiddlewareSetsOrgID(t *testing.T) {
 	resp := parseResponse(t, loginW.Body.Bytes())
 	token, _ := resp["token"].(string)
 
-	// Middleware should set OrgID in context
+	// Middleware should set OrgID in context (auth + kernel keys)
 	var gotOrgID int64
 	var gotOK bool
+	var kernelOrgID int64
+	var kernelOK bool
 	protected := a.Middleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		gotOrgID, gotOK = auth.OrgIDFromContext(r.Context())
+		kernelOrgID, kernelOK = kernel.OrgIDFromContext(r.Context())
 		w.WriteHeader(http.StatusOK)
 	}))
 
@@ -478,6 +481,9 @@ func TestMiddlewareSetsOrgID(t *testing.T) {
 	}
 	if gotOrgID == 0 {
 		t.Fatal("expected non-zero org_id in context")
+	}
+	if !kernelOK || kernelOrgID != gotOrgID {
+		t.Fatalf("expected kernel.OrgIDFromContext=%d, got ok=%v id=%d", gotOrgID, kernelOK, kernelOrgID)
 	}
 }
 
