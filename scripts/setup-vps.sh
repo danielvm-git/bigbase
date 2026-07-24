@@ -76,7 +76,8 @@ if [ "${NODE_MAJOR:-0}" -lt 24 ]; then
   curl -fsSL https://deb.nodesource.com/setup_24.x | bash -
   apt-get install -y -qq nodejs
 fi
-info "  Node $(node -v), npm $(npm -v)"
+corepack enable 2>/dev/null || true
+info "  Node $(node -v), npm $(npm -v), corepack $(corepack --version 2>/dev/null || echo n/a)"
 
 # ============================================================================
 # Step 2: Create bigbase user

@@ -334,6 +334,9 @@ func (d *Deploy) buildApp(ctx context.Context, deployID, siteID, repoID, branch,
 
 	// Use manifest build command if present, falling back to auto-detection.
 	if manifest != nil && manifest.Build.Command != "" {
+		if err := ensureManifestPackageManager(manifest.Build.Command); err != nil {
+			return err
+		}
 		parts := strings.Fields(manifest.Build.Command)
 		if len(parts) > 0 {
 			return d.runBuildCommand(ctx, deployID, buildDir, siteEnv, parts[0], parts[1:]...)
@@ -342,6 +345,11 @@ func (d *Deploy) buildApp(ctx context.Context, deployID, siteID, repoID, branch,
 
 	switch appType {
 	case AppNode:
+		pm := DetectNodePackageManager(buildDir)
+		if err := ensureNodePackageManager(pm); err != nil {
+			d.appendDeployLog(deployID, "✗ "+err.Error())
+			return err
+		}
 		if err := d.nodeInstall(ctx, deployID, siteID, repoID, branch, buildDir); err != nil {
 			return err
 		}
@@ -349,8 +357,9 @@ func (d *Deploy) buildApp(ctx context.Context, deployID, siteID, repoID, branch,
 			d.appendDeployLog(deployID, "✗ "+err.Error())
 			return err
 		}
-		if err := d.runBuildCommand(ctx, deployID, buildDir, siteEnv, "npm", "run", "build"); err != nil {
-			return fmt.Errorf("npm run build: %w", err)
+		name, args := NodeBuildCommand(pm)
+		if err := d.runBuildCommand(ctx, deployID, buildDir, siteEnv, name, args...); err != nil {
+			return fmt.Errorf("%s run build: %w", pm, err)
 		}
 		return nil
 	case AppGo:
@@ -381,12 +390,17 @@ func (d *Deploy) buildApp(ctx context.Context, deployID, siteID, repoID, branch,
 	return nil
 }
 func (d *Deploy) nodeInstall(ctx context.Context, deployID, siteID, repoID, branch, buildDir string) error {
+	pm := DetectNodePackageManager(buildDir)
+	if err := ensureNodePackageManager(pm); err != nil {
+		return err
+	}
 	key, keyErr := CacheKey(buildDir, repoID, branch)
 	if keyErr == nil && d.restoreNodeModules(deployID, key, buildDir) {
 		return nil
 	}
-	if err := d.runBuildCommand(ctx, deployID, buildDir, nil, "npm", "install"); err != nil {
-		return fmt.Errorf("npm install: %w", err)
+	name, args := NodeInstallCommand(pm)
+	if err := d.runBuildCommand(ctx, deployID, buildDir, nil, name, args...); err != nil {
+		return fmt.Errorf("%s install: %w", pm, err)
 	}
 	if keyErr == nil {
 		d.saveNodeModules(deployID, siteID, repoID, branch, buildDir, key)
@@ -396,7 +410,7 @@ func (d *Deploy) nodeInstall(ctx context.Context, deployID, siteID, repoID, bran
 func (d *Deploy) restoreNodeModules(deployID, key, buildDir string) bool {
 	hit, err := d.cache.Restore(key, buildDir)
 	if err != nil {
-		d.appendDeployLog(deployID, fmt.Sprintf("⚠ Cache restore failed: %v — running npm install", err))
+		d.appendDeployLog(deployID, fmt.Sprintf("⚠ Cache restore failed: %v — running install", err))
 		return false
 	}
 	if hit {
@@ -442,6 +456,11 @@ func (d *Deploy) startApp(ctx context.Context, buildDir string, deploy *Deployme
 
 	// Use manifest start command if present, falling back to auto-detection.
 	if manifest != nil && manifest.Start.Command != "" {
+		if err := ensureManifestPackageManager(manifest.Start.Command); err != nil {
+			d.logger.Error("node package manager", "error", err)
+			d.updateStatus(deploy.ID, "failed")
+			return
+		}
 		parts := strings.Fields(manifest.Start.Command)
 		if len(parts) > 0 {
 			cmd = exec.CommandContext(ctx, parts[0], parts[1:]...)
@@ -450,13 +469,14 @@ func (d *Deploy) startApp(ctx context.Context, buildDir string, deploy *Deployme
 	} else {
 		switch appType {
 		case AppNode:
-			startCmd := GetStartCommand(buildDir)
-			parts := strings.Fields(startCmd)
-			if len(parts) == 0 {
-				parts = []string{"node", "index.js"}
+			pm := DetectNodePackageManager(buildDir)
+			if err := ensureNodePackageManager(pm); err != nil {
+				d.logger.Error("node package manager", "error", err)
+				d.updateStatus(deploy.ID, "failed")
+				return
 			}
-			args := append([]string{"exec", "--"}, parts...)
-			cmd = exec.CommandContext(ctx, "npm", args...)
+			name, args := NodeStartCommand(buildDir)
+			cmd = exec.CommandContext(ctx, name, args...)
 			cmd.Dir = buildDir
 		case AppGo:
 			cmd = exec.CommandContext(ctx, filepath.Join(buildDir, "app"))

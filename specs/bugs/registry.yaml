@@ -1532,6 +1532,18 @@ bugs:
       approach: "False positive — extractEntry() in cache_archive.go already has filepath.Clean(hdr.Name) + isUnderDir() containment check on lines 121-123. No archive/zip usage in codebase; only archive/tar + compress/gzip. Same as Alert #22 in codeql-path-traversal report."
       evidence: "components/deploy/cache_archive.go:120-132; isUnderDir() at lines 150-153"
 
+  - id: BUG-2026-07-24T091500
+    date: "2026-07-24"
+    severity: high
+    priority: high
+    scope: deploy,scripts,infra
+    summary: "Node deploy hardcodes npm — pnpm projects fail with pnpm: not found"
+    file: specs/bugs/BUG-2026-07-24T091500-deploy-pnpm-not-found.md
+    status: open
+    related:
+      - BUG-2026-07-12T171000
+      - BUG-2026-06-04T120500
+      - BUG-2026-06-04T120800
   - id: BUG-2026-07-12T171000
     date: "2026-07-12"
     severity: medium
@@ -1631,3 +1643,11 @@ bugs:
       - components/deploy/python_test.go TestParseASGIImport
       - components/deploy/python_test.go TestIsCLIScriptEntry
       - components/deploy/manifest_test.go TestValidateManifest_ASGIImportRelaxesStartCommand
+  - id: BUG-2026-07-24T091500
+    date: "2026-07-24"
+    severity: high
+    priority: high
+    scope: deploy,infra
+    summary: Node deploy hardcodes npm — pnpm projects fail with pnpm not found (exit 127)
+    file: specs/bugs/BUG-2026-07-24T091500-deploy-pnpm-not-found.md
+    status: fixed

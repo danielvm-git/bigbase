@@ -51,7 +51,8 @@ func NewCache(dir string, maxBytes int64) *Cache {
 // CacheKey computes a deterministic cache key from the repository context and
 // the lockfile found in buildDir.
 //
-// Lockfile priority: package-lock.json → yarn.lock → go.sum → requirements.txt
+// Lockfile priority: bun.lockb → bun.lock → pnpm-lock.yaml → yarn.lock →
+// package-lock.json → go.sum → requirements.txt
 // Fallback manifests: package.json → go.mod
 //
 // Returns an error when no usable file is found.
@@ -69,8 +70,11 @@ func CacheKey(buildDir, repoID, branch string) (string, error) {
 // found in dir, probing in priority order.
 func findLockfileHash(dir string) (string, error) {
 	candidates := []string{
-		"package-lock.json",
+		"bun.lockb",
+		"bun.lock",
+		"pnpm-lock.yaml",
 		"yarn.lock",
+		"package-lock.json",
 		"go.sum",
 		"requirements.txt",
 		"package.json",
