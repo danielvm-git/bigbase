@@ -34,6 +34,36 @@ func TestCacheKey_NodeLockfile(t *testing.T) {
 	}
 }
 
+func TestCacheKey_PnpmLockfile(t *testing.T) {
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, "pnpm-lock.yaml"), []byte("lockfileVersion: 6\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	key, err := CacheKey(dir, "repo1", "main")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if key == "" {
+		t.Error("expected non-empty key for pnpm-lock.yaml")
+	}
+}
+
+func TestCacheKey_PnpmPreferredOverNpm(t *testing.T) {
+	dir := t.TempDir()
+	_ = os.WriteFile(filepath.Join(dir, "pnpm-lock.yaml"), []byte("lockfileVersion: 6\n"), 0644)
+	_ = os.WriteFile(filepath.Join(dir, "package-lock.json"), []byte(`{"lock":1}`), 0644)
+	keyPnpm, _ := CacheKey(dir, "r", "b")
+
+	dirNpm := t.TempDir()
+	_ = os.WriteFile(filepath.Join(dirNpm, "package-lock.json"), []byte(`{"lock":1}`), 0644)
+	keyNpm, _ := CacheKey(dirNpm, "r", "b")
+
+	if keyPnpm == keyNpm {
+		t.Error("pnpm-lock.yaml should be preferred over package-lock.json; keys should differ")
+	}
+}
+
 func TestCacheKey_YarnLockfileFallback(t *testing.T) {
 	dir := t.TempDir()
 	if err := os.WriteFile(filepath.Join(dir, "yarn.lock"), []byte("# yarn lockfile v1\n"), 0644); err != nil {
@@ -105,19 +135,18 @@ func TestCacheKey_DiffersByRepoAndBranch(t *testing.T) {
 	}
 }
 
-func TestCacheKey_PackageLockPreferredOverYarn(t *testing.T) {
+func TestCacheKey_YarnPreferredOverPackageLock(t *testing.T) {
 	dir := t.TempDir()
 	_ = os.WriteFile(filepath.Join(dir, "package-lock.json"), []byte(`{"lock":1}`), 0644)
 	_ = os.WriteFile(filepath.Join(dir, "yarn.lock"), []byte(`{"lock":2}`), 0644)
-
-	keyPL, _ := CacheKey(dir, "r", "b")
+	keyBoth, _ := CacheKey(dir, "r", "b")
 
 	dirYarn := t.TempDir()
 	_ = os.WriteFile(filepath.Join(dirYarn, "yarn.lock"), []byte(`{"lock":2}`), 0644)
 	keyYarn, _ := CacheKey(dirYarn, "r", "b")
 
-	if keyPL == keyYarn {
-		t.Error("package-lock.json should be preferred over yarn.lock; keys should differ")
+	if keyBoth != keyYarn {
+		t.Error("yarn.lock should be preferred over package-lock.json when both exist")
 	}
 }
 

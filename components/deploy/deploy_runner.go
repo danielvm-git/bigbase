@@ -85,13 +85,8 @@ func (r *deployRunner) buildCmd(ctx context.Context, spec Spec) *exec.Cmd {
 	case AppPython:
 		return pythonStartCommand(ctx, spec.Dir, spec.Port, nil) // manifest not available in resume path
 	case AppNode:
-		startCmd := GetStartCommand(spec.Dir)
-		parts := strings.Fields(startCmd)
-		if len(parts) == 0 {
-			parts = []string{"node", "index.js"}
-		}
-		args := append([]string{"exec", "--"}, parts...)
-		return exec.CommandContext(ctx, "npm", args...)
+		name, args := NodeStartCommand(spec.Dir)
+		return exec.CommandContext(ctx, name, args...)
 	}
 	return nil
 }

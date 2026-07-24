@@ -226,7 +226,7 @@ func InitManifest(dir string) error {
 
 		if isSvelteKit {
 			m.Framework = "sveltekit"
-			m.Build.Command = "npm run build"
+			m.Build.Command = NodePMRunCommand(dir, "build")
 			m.Build.Output = "build/"
 			m.Start.Command = "node build/index.js"
 			m.Start.Port = 3000
@@ -241,7 +241,7 @@ func InitManifest(dir string) error {
 			m.Build.Command = buildCmd
 			startCmd := "node index.js"
 			if pkg.Scripts != nil && pkg.Scripts["start"] != "" {
-				startCmd = "npm start"
+				startCmd = NodePMStartCommand(dir)
 			}
 			m.Start.Command = startCmd
 			m.Start.Port = 3000
