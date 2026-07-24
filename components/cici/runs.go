@@ -13,6 +13,7 @@ import (
 
 	"gopkg.in/yaml.v3"
 
+	"github.com/danielvm/bigbase/components/auth"
 	"github.com/danielvm/bigbase/kernel"
 )
 
@@ -33,6 +34,14 @@ func (c *CICI) triggerRun(w http.ResponseWriter, r *http.Request) {
 	wf, err := c.fetchWorkflow(r.Context(), workflowID)
 	if err != nil {
 		kernel.WriteJSON(w, http.StatusNotFound, map[string]string{"error": "workflow not found"})
+		return
+	}
+
+	// Verify the workflow's repo belongs to the caller's org
+	if err := c.verifyRepoOwnership(r.Context(), wf.RepoID); err != nil {
+		c.logger.Warn("triggerRun rejected: cross-tenant attempt",
+			"workflow_id", workflowID, "repo_id", wf.RepoID, "org_id", orgIDFromReq(r))
+		kernel.WriteJSON(w, http.StatusForbidden, map[string]string{"error": "access denied"})
 		return
 	}
 
@@ -93,6 +102,11 @@ func (c *CICI) executeRun(runID string, wf *WorkflowDef) {
 }
 
 func (c *CICI) executeStep(ctx context.Context, runID, name, command string) error {
+	// Defense-in-depth: validate command against dangerous patterns
+	if err := validateCommand(command); err != nil {
+		return fmt.Errorf("command validation failed: %w", err)
+	}
+
 	cmd := exec.CommandContext(ctx, "sh", "-c", command)
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout = &stdout
@@ -137,9 +151,19 @@ func (c *CICI) handleRuns(w http.ResponseWriter, r *http.Request) {
 	query := "SELECT id, workflow_id, event, status, started_at, finished_at FROM cici_runs"
 	args := make([]any, 0)
 
+	// Scope by org_id to prevent cross-tenant data leakage
+	if orgID, ok := auth.OrgIDFromContext(r.Context()); ok && orgID > 0 {
+		query += " WHERE workflow_id IN (SELECT w.id FROM cici_workflows w JOIN git_repos g ON g.id = w.repo_id WHERE g.owner_id = ?)"
+		args = append(args, orgID)
+	}
+
 	repoID := r.URL.Query().Get("repo_id")
 	if repoID != "" {
-		query += " WHERE workflow_id IN (SELECT id FROM cici_workflows WHERE repo_id = ?)"
+		if len(args) > 0 {
+			query += " AND workflow_id IN (SELECT id FROM cici_workflows WHERE repo_id = ?)"
+		} else {
+			query += " WHERE workflow_id IN (SELECT id FROM cici_workflows WHERE repo_id = ?)"
+		}
 		args = append(args, repoID)
 	}
 	query += " ORDER BY started_at DESC"
@@ -189,6 +213,27 @@ func (c *CICI) handleRuns(w http.ResponseWriter, r *http.Request) {
 
 func (c *CICI) getRunLogs(w http.ResponseWriter, r *http.Request) {
 	runID := r.PathValue("id")
+
+	// Verify the run's workflow belongs to the caller's org
+	if orgID, ok := auth.OrgIDFromContext(r.Context()); ok && orgID > 0 {
+		var runOwnerOrg int64
+		err := c.db.QueryRowContext(r.Context(),
+			`SELECT COALESCE(g.owner_id, 0)
+			 FROM cici_runs r
+			 JOIN cici_workflows w ON w.id = r.workflow_id
+			 JOIN git_repos g ON g.id = w.repo_id
+			 WHERE r.id = ?`, runID).Scan(&runOwnerOrg)
+		if err != nil {
+			kernel.WriteJSON(w, http.StatusNotFound, map[string]string{"error": "run not found"})
+			return
+		}
+		if runOwnerOrg != 0 && runOwnerOrg != orgID {
+			c.logger.Warn("getRunLogs rejected: cross-tenant attempt",
+				"run_id", runID, "caller_org", orgID, "run_org", runOwnerOrg)
+			kernel.WriteJSON(w, http.StatusForbidden, map[string]string{"error": "access denied"})
+			return
+		}
+	}
 
 	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 	defer cancel()

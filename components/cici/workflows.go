@@ -20,6 +20,18 @@ type saveWorkflowReq struct {
 func (c *CICI) saveWorkflow(w http.ResponseWriter, r *http.Request) {
 	repoID := r.PathValue("repo")
 
+	// Verify repo ownership before allowing workflow creation
+	if err := c.verifyRepoOwnership(r.Context(), repoID); err != nil {
+		if err == ErrRepoNotFound {
+			kernel.WriteJSON(w, http.StatusNotFound, map[string]string{"error": "repo not found"})
+			return
+		}
+		c.logger.Warn("saveWorkflow rejected: cross-tenant attempt",
+			"repo_id", repoID, "org_id", orgIDFromReq(r))
+		kernel.WriteJSON(w, http.StatusForbidden, map[string]string{"error": "access denied"})
+		return
+	}
+
 	var req saveWorkflowReq
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json"})
@@ -60,6 +72,16 @@ func (c *CICI) saveWorkflow(w http.ResponseWriter, r *http.Request) {
 
 func (c *CICI) listWorkflows(w http.ResponseWriter, r *http.Request) {
 	repoID := r.PathValue("repo")
+
+	// Verify repo ownership before listing workflows
+	if err := c.verifyRepoOwnership(r.Context(), repoID); err != nil {
+		if err == ErrRepoNotFound {
+			kernel.WriteJSON(w, http.StatusNotFound, map[string]string{"error": "repo not found"})
+			return
+		}
+		kernel.WriteJSON(w, http.StatusForbidden, map[string]string{"error": "access denied"})
+		return
+	}
 
 	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 	defer cancel()

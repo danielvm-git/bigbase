@@ -1,14 +1,29 @@
 package cici
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
+	"regexp"
+	"strings"
 
 	"gopkg.in/yaml.v3"
 
+	"github.com/danielvm/bigbase/components/auth"
 	"github.com/danielvm/bigbase/kernel"
 )
+
+// ErrRepoNotFound is returned when a repo_id does not exist.
+var ErrRepoNotFound = errors.New("repo not found")
+
+// ErrAccessDenied is returned when the caller does not own the repo.
+var ErrAccessDenied = errors.New("access denied")
+
+// dangerousCmdPatterns matches shell commands that enable network exfiltration,
+// reverse shells, or arbitrary code execution.
+var dangerousCmdPatterns = regexp.MustCompile(`(?i)(\bcurl\b|\bwget\b|\bnc\b|\bncat\b|\bnetcat\b|\bssh\b|\|\s*(sh|bash|zsh|dash)\b|\beval\b|\bexec\b|\$\(|\x60)`)
 
 const version = "0.1.0"
 
@@ -106,6 +121,47 @@ func (c *CICI) Start(ctx *kernel.Context) error {
 }
 
 func (c *CICI) Stop(ctx *kernel.Context) error {
+	return nil
+}
+
+// verifyRepoOwnership checks that the repo belongs to the caller's org.
+// Returns ErrRepoNotFound if the repo does not exist, ErrAccessDenied if the
+// caller's org does not match the repo's owner_id.
+func (c *CICI) verifyRepoOwnership(ctx context.Context, repoID string) error {
+	var ownerID int64
+	err := c.db.QueryRowContext(ctx,
+		"SELECT owner_id FROM git_repos WHERE id = ?", repoID).Scan(&ownerID)
+	if err != nil {
+		return ErrRepoNotFound
+	}
+	orgID, ok := auth.OrgIDFromContext(ctx)
+	if !ok {
+		return nil // no auth context (e.g., internal call) — allow
+	}
+	if ownerID != orgID {
+		return ErrAccessDenied
+	}
+	return nil
+}
+
+// orgIDFromReq extracts the org_id from the request context for logging.
+func orgIDFromReq(r *http.Request) int64 {
+	orgID, _ := auth.OrgIDFromContext(r.Context())
+	return orgID
+}
+
+// validateCommand checks a shell command for known-dangerous patterns.
+// Returns an error if the command contains patterns that could enable
+// network exfiltration, reverse shells, or arbitrary code execution.
+func validateCommand(command string) error {
+	if dangerousCmdPatterns.MatchString(command) {
+		return fmt.Errorf("command contains potentially dangerous pattern: %s", command)
+	}
+	// Block command substitution and piping to shell
+	trimmed := strings.TrimSpace(command)
+	if strings.Contains(trimmed, "| sh") || strings.Contains(trimmed, "| bash") {
+		return fmt.Errorf("command pipes to shell interpreter")
+	}
 	return nil
 }
 

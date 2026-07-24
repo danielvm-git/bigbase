@@ -147,6 +147,12 @@ func OrgIDFromContext(ctx context.Context) (int64, bool) {
 	return orgID, ok
 }
 
+// WithOrgID stores the org_id in the request context. Useful for
+// testing handlers that call OrgIDFromContext.
+func WithOrgID(ctx context.Context, orgID int64) context.Context {
+	return context.WithValue(ctx, ctxOrgID, orgID)
+}
+
 // OrgKeyScopesFromContext extracts scopes from the org API key that
 // the auth middleware injected via ResolveOrgKey. Returns an empty
 // slice and false when no scopes are present in the context.
