@@ -5,7 +5,7 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "files": ["dist"],
-  "scripts": { "build": "tsc", "test": "echo ok" },
+  "scripts": { "build": "tsc", "test": "vitest run" },
   "dependencies": { "@bigbase/auth": "*" },
-  "devDependencies": { "typescript": "^5.7" }
+  "devDependencies": { "typescript": "^5.7", "vitest": "^4.1.10" }
 }

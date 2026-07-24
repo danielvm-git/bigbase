@@ -42,14 +42,17 @@ bug_cycle:
     - "diagnose-root (root cause: SiteIDFromContext skipped for JWT/API-key auth)"
     - "develop-tdd (fix: add org_id to sites table + ownership verification in HandleCreate)"
     - "validate-fix (176s deploy tests + 4s sites tests all pass)"
+    - "release-branch (committed 60fb5066, pushed, issue #134 closed)"
     - "investigate-bug (BUG-138 auth-next bypass: missing setToken call)"
     - "develop-tdd (fix: add client.setToken(token) + null session check)"
     - "validate-fix (8/8 auth-next tests pass, TypeScript clean)"
     - "investigate-bug (BUG-132 IDOR injectDB: no org_id scoping)"
     - "develop-tdd (fix: add OrgID to RunContext, scope all queries by org_id)"
     - "validate-fix (26/26 functions tests, cross-tenant isolation verified)"
-  bug_file: specs/bugs/BUG-2026-07-13T150000-idor-injectdb.md
-  note: "BUG-132 (IDOR injectDB) fixed. RunContext.OrgID added, all db.collection() queries scoped by org_id. Cross-tenant isolation test added. All 27 packages pass. Pushed 3c4d001."
+    - "investigate-bug (BUG-2026-07-13 deploy test suite timeout: 185s > 120s CI limit)"
+    - "validate-fix (go test ./... -timeout 300s: all 27 packages pass)"
+  bug_file: specs/bugs/BUG-2026-07-13-deploy-test-suite-timeout.md
+  note: "Deploy test suite timeout fixed: CI timeout increased from 120s to 300s. Suite takes ~185s (464 subtests). All 27 packages pass. BUG-134 (cross-tenant deploy hijack) fixed and released (60fb5066). BUG-132 (IDOR injectDB) fixed. RunContext.OrgID added, all db.collection() queries scoped by org_id. Cross-tenant isolation test added. All 27 packages pass. Pushed 3c4d001."
 git:
   branch: main
   hash: null

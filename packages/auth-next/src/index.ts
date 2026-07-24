@@ -21,11 +21,15 @@ export function bigBaseAuthMiddleware(config: NextAuthConfig) {
     const token = request.cookies.get('token')?.value;
     if (token) {
       try {
-        await client.getSession();
-        return NextResponse.next();
+        client.setToken(token);
+        const session = await client.getSession();
+        if (session) {
+          return NextResponse.next();
+        }
       } catch {
-        request.cookies.delete('token');
+        // getSession threw — treat as unauthenticated
       }
+      request.cookies.delete('token');
     }
 
     return NextResponse.redirect(new URL(loginUrl, request.url));
