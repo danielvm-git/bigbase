@@ -1651,3 +1651,13 @@ bugs:
     summary: Node deploy hardcodes npm — pnpm projects fail with pnpm not found (exit 127)
     file: specs/bugs/BUG-2026-07-24T091500-deploy-pnpm-not-found.md
     status: fixed
+  - id: BUG-2026-07-24T184443
+    date: "2026-07-24"
+    severity: critical
+    priority: critical
+    scope: sites,security
+    summary: "Sites UI shows only 1 site — BUG-136's org_id scoping fix has no fallback for legacy org_id=0 rows, locking out 8 of 9 production sites (not data loss — verified all rows intact on VPS)"
+    file: specs/bugs/BUG-2026-07-24T184443-sites-invisible-legacy-org-id-zero.md
+    status: fixed
+    related:
+      - BUG-136
