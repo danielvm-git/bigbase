@@ -80,9 +80,16 @@ func (s *Storage) Start(ctx *kernel.Context) error {
 		size INTEGER NOT NULL,
 		mime_type TEXT NOT NULL,
 		path TEXT NOT NULL,
+		org_id INTEGER NOT NULL DEFAULT 0,
 		created_at TEXT NOT NULL DEFAULT (datetime('now'))
 	)`); err != nil {
 		return fmt.Errorf("migrate storage_files table: %w", err)
+	}
+	if _, err := s.db.Exec(
+		"ALTER TABLE storage_files ADD COLUMN org_id INTEGER NOT NULL DEFAULT 0"); err != nil {
+		if !strings.Contains(err.Error(), "duplicate column") {
+			s.logger.Warn("add org_id column to storage_files", "error", err)
+		}
 	}
 	s.logger.Info("storage component ready", "dir", s.dir)
 	return nil
@@ -112,9 +119,23 @@ type FileInfo struct {
 	CreatedAt string `json:"created_at"`
 }
 
+func (s *Storage) orgIDFromRequest(w http.ResponseWriter, r *http.Request) (int64, bool) {
+	orgID, ok := kernel.OrgIDFromContext(r.Context())
+	if !ok {
+		kernel.WriteJSON(w, http.StatusUnauthorized, map[string]string{"error": "org_id required"})
+		return 0, false
+	}
+	return orgID, true
+}
+
 func (s *Storage) handleUpload(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
 		kernel.WriteJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
+		return
+	}
+
+	orgID, ok := s.orgIDFromRequest(w, r)
+	if !ok {
 		return
 	}
 
@@ -146,7 +167,7 @@ func (s *Storage) handleUpload(w http.ResponseWriter, r *http.Request) {
 
 	fileSize := int64(len(content))
 	now := time.Now().UTC().Format(time.RFC3339)
-	if err := s.insertFileMeta(r.Context(), id, filename, fileSize, mimeType, fullPath, now); err != nil {
+	if err := s.insertFileMeta(r.Context(), id, filename, fileSize, mimeType, fullPath, now, orgID); err != nil {
 		s.logger.Error("insert file metadata", "id", id, "error", err)
 		_ = os.RemoveAll(filepath.Join(s.dir, id))
 		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
@@ -204,10 +225,10 @@ func (s *Storage) writeFile(id, filename string, content []byte) (string, error)
 	return filepath.Join(id, filename), nil
 }
 
-func (s *Storage) insertFileMeta(ctx context.Context, id, name string, size int64, mimeType, path, createdAt string) error {
+func (s *Storage) insertFileMeta(ctx context.Context, id, name string, size int64, mimeType, path, createdAt string, orgID int64) error {
 	_, err := s.db.ExecContext(ctx,
-		"INSERT INTO storage_files (id, name, size, mime_type, path, created_at) VALUES (?, ?, ?, ?, ?, ?)",
-		id, name, size, mimeType, path, createdAt)
+		"INSERT INTO storage_files (id, name, size, mime_type, path, org_id, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
+		id, name, size, mimeType, path, orgID, createdAt)
 	return err
 }
 
@@ -217,7 +238,12 @@ func (s *Storage) handleFileList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	files, err := s.fetchFiles(r.Context())
+	orgID, ok := s.orgIDFromRequest(w, r)
+	if !ok {
+		return
+	}
+
+	files, err := s.fetchFiles(r.Context(), orgID)
 	if err != nil {
 		s.logger.Error("list files", "error", err)
 		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
@@ -227,11 +253,13 @@ func (s *Storage) handleFileList(w http.ResponseWriter, r *http.Request) {
 	kernel.WriteJSON(w, http.StatusOK, map[string]any{"data": files})
 }
 
-func (s *Storage) fetchFiles(ctx context.Context) ([]FileInfo, error) {
+func (s *Storage) fetchFiles(ctx context.Context, orgID int64) ([]FileInfo, error) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
-	rows, err := s.db.QueryContext(ctx, "SELECT id, name, size, mime_type, created_at FROM storage_files ORDER BY created_at DESC")
+	rows, err := s.db.QueryContext(ctx,
+		"SELECT id, name, size, mime_type, created_at FROM storage_files WHERE org_id = ? ORDER BY created_at DESC",
+		orgID)
 	if err != nil {
 		return nil, err
 	}
@@ -280,12 +308,17 @@ func (s *Storage) handleThumbnail(w http.ResponseWriter, r *http.Request, id str
 		return
 	}
 
+	orgID, ok := s.orgIDFromRequest(w, r)
+	if !ok {
+		return
+	}
+
 	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 	defer cancel()
 
 	var name, mimeType, filePath string
 	err := s.db.QueryRowContext(ctx,
-		"SELECT name, mime_type, path FROM storage_files WHERE id = ?", id).Scan(&name, &mimeType, &filePath)
+		"SELECT name, mime_type, path FROM storage_files WHERE id = ? AND org_id = ?", id, orgID).Scan(&name, &mimeType, &filePath)
 	if err != nil {
 		kernel.WriteJSON(w, http.StatusNotFound, map[string]string{"error": "file not found"})
 		return
@@ -319,12 +352,17 @@ func (s *Storage) handleThumbnail(w http.ResponseWriter, r *http.Request, id str
 }
 
 func (s *Storage) handleFileDownload(w http.ResponseWriter, r *http.Request, id string) {
+	orgID, ok := s.orgIDFromRequest(w, r)
+	if !ok {
+		return
+	}
+
 	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 	defer cancel()
 
 	var name, mimeType, filePath string
 	err := s.db.QueryRowContext(ctx,
-		"SELECT name, mime_type, path FROM storage_files WHERE id = ?", id).Scan(&name, &mimeType, &filePath)
+		"SELECT name, mime_type, path FROM storage_files WHERE id = ? AND org_id = ?", id, orgID).Scan(&name, &mimeType, &filePath)
 	if err != nil {
 		kernel.WriteJSON(w, http.StatusNotFound, map[string]string{"error": "file not found"})
 		return
@@ -361,17 +399,24 @@ func (s *Storage) handleFileDownload(w http.ResponseWriter, r *http.Request, id 
 }
 
 func (s *Storage) handleFileDelete(w http.ResponseWriter, r *http.Request, id string) {
+	orgID, ok := s.orgIDFromRequest(w, r)
+	if !ok {
+		return
+	}
+
 	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 	defer cancel()
 
 	var filePath string
-	err := s.db.QueryRowContext(ctx, "SELECT path FROM storage_files WHERE id = ?", id).Scan(&filePath)
+	err := s.db.QueryRowContext(ctx,
+		"SELECT path FROM storage_files WHERE id = ? AND org_id = ?", id, orgID).Scan(&filePath)
 	if err != nil {
 		kernel.WriteJSON(w, http.StatusNotFound, map[string]string{"error": "file not found"})
 		return
 	}
 
-	if _, err := s.db.ExecContext(ctx, "DELETE FROM storage_files WHERE id = ?", id); err != nil {
+	if _, err := s.db.ExecContext(ctx,
+		"DELETE FROM storage_files WHERE id = ? AND org_id = ?", id, orgID); err != nil {
 		s.logger.Error("delete file metadata", "id", id, "error", err)
 		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return

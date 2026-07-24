@@ -23,6 +23,10 @@ func (testLogger) Warn(msg string, args ...any)  {}
 func (testLogger) Error(msg string, args ...any) {}
 func (testLogger) Debug(msg string, args ...any) {}
 
+func withOrg(orgID int64, req *http.Request) *http.Request {
+	return req.WithContext(kernel.WithOrgID(req.Context(), orgID))
+}
+
 func setupStorage(t *testing.T) (*storage.Storage, http.Handler) {
 	t.Helper()
 	logger := testLogger{}
@@ -53,7 +57,7 @@ func uploadFile(t *testing.T, handler http.Handler, filename, content string) *h
 	_, _ = fw.Write([]byte(content))
 	_ = w.Close()
 
-	req := httptest.NewRequest("POST", "/api/storage/upload", &buf)
+	req := withOrg(1, httptest.NewRequest("POST", "/api/storage/upload", &buf))
 	req.Header.Set("Content-Type", w.FormDataContentType())
 	resp := httptest.NewRecorder()
 	handler.ServeHTTP(resp, req)
@@ -94,7 +98,7 @@ func TestUploadMissingFile(t *testing.T) {
 	w := multipart.NewWriter(&buf)
 	_ = w.Close()
 
-	req := httptest.NewRequest("POST", "/api/storage/upload", &buf)
+	req := withOrg(1, httptest.NewRequest("POST", "/api/storage/upload", &buf))
 	req.Header.Set("Content-Type", w.FormDataContentType())
 	resp := httptest.NewRecorder()
 	handler.ServeHTTP(resp, req)
@@ -113,7 +117,7 @@ func TestUploadWrongFieldName(t *testing.T) {
 	_, _ = fw.Write([]byte("data"))
 	_ = w.Close()
 
-	req := httptest.NewRequest("POST", "/api/storage/upload", &buf)
+	req := withOrg(1, httptest.NewRequest("POST", "/api/storage/upload", &buf))
 	req.Header.Set("Content-Type", w.FormDataContentType())
 	resp := httptest.NewRecorder()
 	handler.ServeHTTP(resp, req)
@@ -171,7 +175,7 @@ func TestFileDownloadPathTraversal(t *testing.T) {
 
 	// Upload a normal file to confirm handler is working.
 	id := uploadAndGetID(t, handler)
-	req := httptest.NewRequest("GET", "/api/storage/files/"+id, nil)
+	req := withOrg(1, httptest.NewRequest("GET", "/api/storage/files/"+id, nil))
 	w := httptest.NewRecorder()
 	handler.ServeHTTP(w, req)
 	if w.Code != http.StatusOK {
@@ -192,13 +196,13 @@ func TestFileDownloadPathTraversal(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			db := s.DBer()
 			_, err := db.ExecContext(context.Background(),
-				"INSERT INTO storage_files (id, name, size, mime_type, path) VALUES (?, ?, ?, ?, ?)",
-				"trav-"+tt.name[:4], tt.name[:8]+".txt", 0, "text/plain", tt.path)
+				"INSERT INTO storage_files (id, name, size, mime_type, path, org_id) VALUES (?, ?, ?, ?, ?, ?)",
+				"trav-"+tt.name[:4], tt.name[:8]+".txt", 0, "text/plain", tt.path, 1)
 			if err != nil {
 				t.Fatalf("insert: %v", err)
 			}
 
-			req := httptest.NewRequest("GET", "/api/storage/files/trav-"+tt.name[:4], nil)
+			req := withOrg(1, httptest.NewRequest("GET", "/api/storage/files/trav-"+tt.name[:4], nil))
 			w := httptest.NewRecorder()
 			handler.ServeHTTP(w, req)
 
@@ -217,7 +221,7 @@ func TestDownloadSuccess(t *testing.T) {
 	_, handler := setupStorage(t)
 	id := uploadAndGetID(t, handler)
 
-	req := httptest.NewRequest("GET", "/api/storage/files/"+id, nil)
+	req := withOrg(1, httptest.NewRequest("GET", "/api/storage/files/"+id, nil))
 	w := httptest.NewRecorder()
 	handler.ServeHTTP(w, req)
 
@@ -236,7 +240,7 @@ func TestDownloadSuccess(t *testing.T) {
 func TestDownloadNotFound(t *testing.T) {
 	_, handler := setupStorage(t)
 
-	req := httptest.NewRequest("GET", "/api/storage/files/nonexistent", nil)
+	req := withOrg(1, httptest.NewRequest("GET", "/api/storage/files/nonexistent", nil))
 	w := httptest.NewRecorder()
 	handler.ServeHTTP(w, req)
 
@@ -248,7 +252,7 @@ func TestDownloadNotFound(t *testing.T) {
 func TestDownloadMissingID(t *testing.T) {
 	_, handler := setupStorage(t)
 
-	req := httptest.NewRequest("GET", "/api/storage/files/", nil)
+	req := withOrg(1, httptest.NewRequest("GET", "/api/storage/files/", nil))
 	w := httptest.NewRecorder()
 	handler.ServeHTTP(w, req)
 
@@ -260,7 +264,7 @@ func TestDownloadMissingID(t *testing.T) {
 func TestListFilesEmpty(t *testing.T) {
 	_, handler := setupStorage(t)
 
-	req := httptest.NewRequest("GET", "/api/storage/files", nil)
+	req := withOrg(1, httptest.NewRequest("GET", "/api/storage/files", nil))
 	w := httptest.NewRecorder()
 	handler.ServeHTTP(w, req)
 
@@ -280,7 +284,7 @@ func TestListFilesAfterUpload(t *testing.T) {
 	_, handler := setupStorage(t)
 	uploadAndGetID(t, handler)
 
-	req := httptest.NewRequest("GET", "/api/storage/files", nil)
+	req := withOrg(1, httptest.NewRequest("GET", "/api/storage/files", nil))
 	w := httptest.NewRecorder()
 	handler.ServeHTTP(w, req)
 
@@ -296,7 +300,7 @@ func TestDeleteSuccess(t *testing.T) {
 	_, handler := setupStorage(t)
 	id := uploadAndGetID(t, handler)
 
-	delReq := httptest.NewRequest("DELETE", "/api/storage/files/"+id, nil)
+	delReq := withOrg(1, httptest.NewRequest("DELETE", "/api/storage/files/"+id, nil))
 	delW := httptest.NewRecorder()
 	handler.ServeHTTP(delW, delReq)
 
@@ -305,7 +309,7 @@ func TestDeleteSuccess(t *testing.T) {
 	}
 
 	// Verify file is gone
-	getReq := httptest.NewRequest("GET", "/api/storage/files/"+id, nil)
+	getReq := withOrg(1, httptest.NewRequest("GET", "/api/storage/files/"+id, nil))
 	getW := httptest.NewRecorder()
 	handler.ServeHTTP(getW, getReq)
 	if getW.Code != http.StatusNotFound {
@@ -316,7 +320,7 @@ func TestDeleteSuccess(t *testing.T) {
 func TestDeleteNotFound(t *testing.T) {
 	_, handler := setupStorage(t)
 
-	req := httptest.NewRequest("DELETE", "/api/storage/files/nonexistent", nil)
+	req := withOrg(1, httptest.NewRequest("DELETE", "/api/storage/files/nonexistent", nil))
 	w := httptest.NewRecorder()
 	handler.ServeHTTP(w, req)
 
@@ -328,7 +332,7 @@ func TestDeleteNotFound(t *testing.T) {
 func TestListFilesWrongMethod(t *testing.T) {
 	_, handler := setupStorage(t)
 
-	req := httptest.NewRequest("POST", "/api/storage/files", nil)
+	req := withOrg(1, httptest.NewRequest("POST", "/api/storage/files", nil))
 	w := httptest.NewRecorder()
 	handler.ServeHTTP(w, req)
 
@@ -374,7 +378,7 @@ func TestThumbnail(t *testing.T) {
 	fileID := body["id"].(string)
 
 	// Request a thumbnail
-	req := httptest.NewRequest("GET", "/api/storage/files/"+fileID+"/thumbnail?w=100&h=100", nil)
+	req := withOrg(1, httptest.NewRequest("GET", "/api/storage/files/"+fileID+"/thumbnail?w=100&h=100", nil))
 	w := httptest.NewRecorder()
 	handler.ServeHTTP(w, req)
 
@@ -390,7 +394,7 @@ func TestThumbnail(t *testing.T) {
 	// Verify the thumbnail is smaller than original
 	origResp := uploadPNG(t, handler)
 	_ = json.NewDecoder(origResp.Body).Decode(&body)
-	fullReq := httptest.NewRequest("GET", "/api/storage/files/"+body["id"].(string), nil)
+	fullReq := withOrg(1, httptest.NewRequest("GET", "/api/storage/files/"+body["id"].(string), nil))
 	fullW := httptest.NewRecorder()
 	handler.ServeHTTP(fullW, fullReq)
 	if w.Body.Len() >= fullW.Body.Len() {
@@ -407,7 +411,7 @@ func TestThumbnailNonImage(t *testing.T) {
 	_ = json.NewDecoder(resp.Body).Decode(&body)
 	fileID := body["id"].(string)
 
-	req := httptest.NewRequest("GET", "/api/storage/files/"+fileID+"/thumbnail?w=100&h=100", nil)
+	req := withOrg(1, httptest.NewRequest("GET", "/api/storage/files/"+fileID+"/thumbnail?w=100&h=100", nil))
 	w := httptest.NewRecorder()
 	handler.ServeHTTP(w, req)
 
@@ -419,7 +423,7 @@ func TestThumbnailNonImage(t *testing.T) {
 func TestThumbnailNotFound(t *testing.T) {
 	_, handler := setupStorage(t)
 
-	req := httptest.NewRequest("GET", "/api/storage/files/nonexistent/thumbnail?w=100&h=100", nil)
+	req := withOrg(1, httptest.NewRequest("GET", "/api/storage/files/nonexistent/thumbnail?w=100&h=100", nil))
 	w := httptest.NewRecorder()
 	handler.ServeHTTP(w, req)
 
@@ -450,7 +454,7 @@ func uploadPNG(t *testing.T, handler http.Handler) *httptest.ResponseRecorder {
 	_, _ = fw.Write(minimalPNG)
 	_ = w.Close()
 
-	req := httptest.NewRequest("POST", "/api/storage/upload", &buf)
+	req := withOrg(1, httptest.NewRequest("POST", "/api/storage/upload", &buf))
 	req.Header.Set("Content-Type", w.FormDataContentType())
 	resp := httptest.NewRecorder()
 	handler.ServeHTTP(resp, req)
