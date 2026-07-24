@@ -1539,7 +1539,7 @@ bugs:
     scope: deploy,scripts,infra
     summary: "Node deploy hardcodes npm — pnpm projects fail with pnpm: not found"
     file: specs/bugs/BUG-2026-07-24T091500-deploy-pnpm-not-found.md
-    status: open
+    status: fixed
     related:
       - BUG-2026-07-12T171000
       - BUG-2026-06-04T120500
