@@ -1,6 +1,6 @@
 type: session-state
 context: infra
-active_flow: null
+active_flow: fix_bug
 active_epic_id: null
 active_story_id: null
 active_story_status: null
@@ -36,7 +36,7 @@ epic_cycle:
   note: "e80 complete — VPS hardened on vmi3338033 (89.116.26.187). 3 layers: Ubuntu (UFW+fail2ban+unattended-upgrades+SSH), BigBase (systemd+alerts+backups), Contabo (cntb+snapshots). Skill created: harden-vps."
   fast_mode: false
 bug_cycle:
-  current_step: null
+  current_step: 3
   completed_steps:
     - "investigate-bug (BUG-134 cross-tenant deploy hijack: missing org_id check)"
     - "diagnose-root (root cause: SiteIDFromContext skipped for JWT/API-key auth)"
@@ -51,7 +51,7 @@ bug_cycle:
     - "validate-fix (26/26 functions tests, cross-tenant isolation verified)"
     - "investigate-bug (BUG-2026-07-13 deploy test suite timeout: 185s > 120s CI limit)"
     - "validate-fix (go test ./... -timeout 300s: all 27 packages pass)"
-  bug_file: specs/bugs/BUG-2026-07-13-deploy-test-suite-timeout.md
+  bug_file: specs/bugs/BUG-129-sqli-org-scoping.md
   note: "Deploy test suite timeout fixed: CI timeout increased from 120s to 300s. Suite takes ~185s (464 subtests). All 27 packages pass. BUG-134 (cross-tenant deploy hijack) fixed and released (60fb5066). BUG-132 (IDOR injectDB) fixed. RunContext.OrgID added, all db.collection() queries scoped by org_id. Cross-tenant isolation test added. All 27 packages pass. Pushed 3c4d001."
 git:
   branch: main
