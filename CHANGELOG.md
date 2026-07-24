@@ -1,3 +1,10 @@
+## [2.79.10](https://github.com/danielvm-git/bigbase/compare/v2.79.9...v2.79.10) (2026-07-24)
+
+
+### Bug Fixes
+
+* **sites:** allow bb_dep_ deploy keys through requireSiteOwnership ([#163](https://github.com/danielvm-git/bigbase/issues/163)) ([62313dd](https://github.com/danielvm-git/bigbase/commit/62313dd7494bca59043c4c6938cd86112644ab12))
+
 ## [2.79.9](https://github.com/danielvm-git/bigbase/compare/v2.79.8...v2.79.9) (2026-07-24)
 
 
