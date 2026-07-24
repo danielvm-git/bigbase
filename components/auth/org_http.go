@@ -407,6 +407,17 @@ func (a *Auth) handleCreateSiteKey(w http.ResponseWriter, r *http.Request) {
 	}
 	siteID := r.PathValue("id")
 
+	// IDOR fix: verify caller owns the site's org
+	orgID, err := a.lookupSiteOrgID(r.Context(), siteID)
+	if err != nil {
+		kernel.WriteJSON(w, http.StatusNotFound, map[string]string{"error": "site not found"})
+		return
+	}
+	if _, orgErr := a.lookupOwnedOrg(r.Context(), orgID, userID); orgErr != nil {
+		kernel.WriteJSON(w, orgErr.code, map[string]string{"error": orgErr.message})
+		return
+	}
+
 	var req struct {
 		Name   string   `json:"name"`
 		Scopes []string `json:"scopes"`
@@ -463,11 +474,23 @@ func (a *Auth) handleCreateSiteKey(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *Auth) handleListSiteKeys(w http.ResponseWriter, r *http.Request) {
-	if _, ok := UserIDFromContext(r.Context()); !ok {
+	userID, ok := UserIDFromContext(r.Context())
+	if !ok {
 		kernel.WriteJSON(w, http.StatusUnauthorized, map[string]string{"error": "authorization required"})
 		return
 	}
 	siteID := r.PathValue("id")
+
+	// IDOR fix: verify caller owns the site's org
+	orgID, err := a.lookupSiteOrgID(r.Context(), siteID)
+	if err != nil {
+		kernel.WriteJSON(w, http.StatusNotFound, map[string]string{"error": "site not found"})
+		return
+	}
+	if _, orgErr := a.lookupOwnedOrg(r.Context(), orgID, userID); orgErr != nil {
+		kernel.WriteJSON(w, orgErr.code, map[string]string{"error": orgErr.message})
+		return
+	}
 
 	keys, err := a.ListSiteKeys(r.Context(), siteID)
 	if err != nil {
@@ -506,6 +529,17 @@ func (a *Auth) handleRevokeSiteKey(w http.ResponseWriter, r *http.Request) {
 	}
 	siteID := r.PathValue("id")
 	keyID := r.PathValue("keyID")
+
+	// IDOR fix: verify caller owns the site's org
+	orgID, err := a.lookupSiteOrgID(r.Context(), siteID)
+	if err != nil {
+		kernel.WriteJSON(w, http.StatusNotFound, map[string]string{"error": "site not found"})
+		return
+	}
+	if _, orgErr := a.lookupOwnedOrg(r.Context(), orgID, userID); orgErr != nil {
+		kernel.WriteJSON(w, orgErr.code, map[string]string{"error": orgErr.message})
+		return
+	}
 
 	if err := a.RevokeSiteKey(r.Context(), siteID, keyID); err != nil {
 		a.logger.Error("revoke site key", "key_id", keyID, "site_id", siteID, "error", err)

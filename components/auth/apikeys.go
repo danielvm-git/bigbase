@@ -335,6 +335,20 @@ func (a *Auth) ListSiteKeys(ctx context.Context, siteID string) ([]SiteKeyEntry,
 	return keys, rows.Err()
 }
 
+// lookupSiteOrgID returns the org_id that owns the given site.
+// Returns 0 and an error if the site doesn't exist.
+func (a *Auth) lookupSiteOrgID(ctx context.Context, siteID string) (int64, error) {
+	var orgID int64
+	err := a.db.QueryRowContext(ctx, `SELECT org_id FROM sites WHERE id = ?`, siteID).Scan(&orgID)
+	if err == sql.ErrNoRows {
+		return 0, fmt.Errorf("site %q not found", siteID)
+	}
+	if err != nil {
+		return 0, fmt.Errorf("lookup site org: %w", err)
+	}
+	return orgID, nil
+}
+
 // RevokeSiteKey marks a site-scoped deploy key as revoked.
 func (a *Auth) RevokeSiteKey(ctx context.Context, siteID, keyID string) error {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
