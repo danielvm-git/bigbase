@@ -77,6 +77,7 @@ func (a *Auth) Middleware(next http.Handler) http.Handler {
 				return
 			}
 			ctx := context.WithValue(r.Context(), ctxOrgID, orgID)
+			ctx = kernel.WithOrgID(ctx, orgID)
 			ctx = context.WithValue(ctx, ctxOrgKeyScopes, scopes)
 			next.ServeHTTP(w, r.WithContext(ctx))
 			return
@@ -92,6 +93,9 @@ func (a *Auth) Middleware(next http.Handler) http.Handler {
 		ctx = context.WithValue(ctx, ctxUserEmail, claims.Email)
 		ctx = context.WithValue(ctx, ctxUserRole, claims.Role)
 		ctx = context.WithValue(ctx, ctxOrgID, claims.OrgID)
+		if claims.OrgID != 0 {
+			ctx = kernel.WithOrgID(ctx, claims.OrgID)
+		}
 
 		// Anonymous tokens bypass org isolation and email verification
 		// but are restricted to read-only methods.
@@ -149,8 +153,11 @@ func OrgIDFromContext(ctx context.Context) (int64, bool) {
 
 // WithOrgID returns a new context with the given org_id value.
 // Useful for testing handlers that depend on org-scoped auth context.
+// Also sets kernel.WithOrgID so components that read kernel.OrgIDFromContext
+// (storage, monitoring) see the same org as auth middleware in production.
 func WithOrgID(ctx context.Context, orgID int64) context.Context {
-	return context.WithValue(ctx, ctxOrgID, orgID)
+	ctx = context.WithValue(ctx, ctxOrgID, orgID)
+	return kernel.WithOrgID(ctx, orgID)
 }
 
 // OrgKeyScopesFromContext extracts scopes from the org API key that

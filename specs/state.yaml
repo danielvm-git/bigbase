@@ -35,11 +35,7 @@ epic_cycle:
   story_complete: true
   note: "e80 complete — VPS hardened on vmi3338033 (89.116.26.187). 3 layers: Ubuntu (UFW+fail2ban+unattended-upgrades+SSH), BigBase (systemd+alerts+backups), Contabo (cntb+snapshots). Skill created: harden-vps."
   fast_mode: false
-bug_cycle:
-  current_step: 1
-  completed_steps: []
-  bug_file: specs/bugs/BUG-133-idor-storage.md
-  note: "Starting fix-bug for #133 storage IDOR"
+bug_cycle: null
 git:
   branch: main
   hash: null

@@ -4,32 +4,43 @@ status: fixed
 severity: critical
 scope: storage
 title: "IDOR on File Storage — list/download/delete any org's files"
+created: 2026-07-24
 github_issue: 133
+security_impact: CRITICAL
 ---
 
 # BUG-133: IDOR on File Storage
 
-## Summary
+## Problem
 
-`storage_files` has no `org_id` column; upload/list/download/delete handlers require only authentication. Any authenticated user can access every org's files.
+**Actual:** Authenticated users could list, download, and delete every file in `storage_files` regardless of organization. The table had no `org_id`; handlers only required auth.
 
-## Root Cause
+**Expected:** Each org only sees and mutates its own files. Cross-tenant list/get/delete must fail closed (404 / empty list).
 
-Missing tenant column and unscoped SQL in `components/storage/storage.go`:
+**Security impact: CRITICAL** — exploit path is any authenticated JWT/API key against storage endpoints.
 
-- `INSERT` omits `org_id`
-- `SELECT ... FROM storage_files` has no `WHERE org_id = ?`
-- Download/delete/thumbnail lookup by `id` only
+## Root Cause Analysis
 
-## Fix
+### Reproduce
+Upload as org A; as org B call list/download/delete on A's file id — succeeded without tenant filter.
 
-1. Add `org_id INTEGER NOT NULL DEFAULT 0` via CREATE + ALTER migration
-2. Require `kernel.OrgIDFromContext` on all handlers
-3. Set `org_id` on upload; scope list/get/delete/thumbnail by caller org
-4. Cross-tenant isolation tests
+### Isolate
+`components/storage` schema + unscoped INSERT/SELECT/DELETE. Auth wraps routes but was unused for scoping.
 
-## Verify
+### Hypothesize / Verify
+Missing `org_id` column and unscoped SQL — same class as BUG-140 / BUG-143 / sites IDOR. Confirmed by code inspection and isolation tests.
 
-- `go test ./components/storage/ -run TestStorageOrgIsolation -v`
-- `go test ./components/storage/ -v`
-- `go vet ./components/storage/...`
+**Risk level:** High (disclosure + destructive cross-tenant delete).
+
+## Fix Approach
+
+1. Add `org_id` to `storage_files` (CREATE + ALTER).
+2. Require org context on upload/list/download/delete/thumbnail via `kernel.OrgIDFromContext`.
+3. Auth middleware dual-writes `kernel.WithOrgID` so production JWT/API-key context reaches storage/monitoring.
+4. Cross-tenant isolation tests.
+
+## Resolution
+
+**Fixed:** 2026-07-24  
+**PR:** #150 (`2736ef581`) — storage org scoping  
+**Follow-up:** auth middleware bridges org into `kernel.WithOrgID` so handlers that read kernel context work behind `auth.Middleware` (storage/monitoring).
