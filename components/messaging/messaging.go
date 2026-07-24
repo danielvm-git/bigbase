@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/danielvm/bigbase/components/auth"
 	"github.com/danielvm/bigbase/kernel"
 )
 
@@ -18,6 +19,7 @@ type DBer = kernel.DBer
 
 type Message struct {
 	ID        string `json:"id"`
+	OrgID     int64  `json:"org_id"`
 	Channel   string `json:"channel"`
 	ToAddr    string `json:"to_addr"`
 	Subject   string `json:"subject,omitempty"`
@@ -107,6 +109,7 @@ func (m *Messaging) Init(ctx *kernel.Context, config json.RawMessage) error {
 func (m *Messaging) Start(ctx *kernel.Context) error {
 	if err := m.db.Migrate(`CREATE TABLE IF NOT EXISTS messages (
 		id TEXT PRIMARY KEY,
+		org_id INTEGER NOT NULL DEFAULT 0,
 		channel TEXT NOT NULL,
 		to_addr TEXT NOT NULL,
 		subject TEXT,
@@ -116,6 +119,9 @@ func (m *Messaging) Start(ctx *kernel.Context) error {
 	)`); err != nil {
 		return fmt.Errorf("migrate messages table: %w", err)
 	}
+	// Idempotent migration: add org_id to existing messages tables.
+	_ = m.db.Migrate("ALTER TABLE messages ADD COLUMN org_id INTEGER NOT NULL DEFAULT 0")
+
 	m.logger.Info("messaging component ready")
 	return nil
 }
@@ -140,9 +146,16 @@ func (m *Messaging) send(ctx context.Context, channel, toAddr, subject, body str
 		return nil, err
 	}
 
+	// Extract org_id from context (set by auth middleware)
+	var orgID int64
+	if oid, ok := auth.OrgIDFromContext(ctx); ok {
+		orgID = oid
+	}
+
 	now := time.Now().UTC().Format(time.RFC3339)
 	msg := &Message{
 		ID:        id,
+		OrgID:     orgID,
 		Channel:   channel,
 		ToAddr:    toAddr,
 		Subject:   subject,
@@ -159,8 +172,8 @@ func (m *Messaging) send(ctx context.Context, channel, toAddr, subject, body str
 	}
 
 	_, err = m.db.ExecContext(ctx,
-		"INSERT INTO messages (id, channel, to_addr, subject, body, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
-		id, channel, toAddr, subject, body, msg.Status, now)
+		"INSERT INTO messages (id, org_id, channel, to_addr, subject, body, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+		id, orgID, channel, toAddr, subject, body, msg.Status, now)
 	if err != nil {
 		return nil, fmt.Errorf("insert message: %w", err)
 	}

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/danielvm/bigbase/components/auth"
 	"github.com/danielvm/bigbase/kernel"
 )
 
@@ -112,8 +113,16 @@ func (m *Messaging) handleList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Extract org_id from context (set by auth middleware)
+	orgID, ok := auth.OrgIDFromContext(r.Context())
+	if !ok || orgID == 0 {
+		kernel.WriteJSON(w, http.StatusForbidden, map[string]string{"error": "organization required"})
+		return
+	}
+
 	rows, err := m.db.QueryContext(r.Context(),
-		"SELECT id, channel, to_addr, COALESCE(subject,''), body, status, created_at FROM messages ORDER BY created_at DESC")
+		"SELECT id, org_id, channel, to_addr, COALESCE(subject,''), body, status, created_at FROM messages WHERE org_id = ? ORDER BY created_at DESC",
+		orgID)
 	if err != nil {
 		m.logger.Error("list messages", "error", err)
 		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
@@ -124,7 +133,7 @@ func (m *Messaging) handleList(w http.ResponseWriter, r *http.Request) {
 	messages := make([]Message, 0)
 	for rows.Next() {
 		var msg Message
-		if err := rows.Scan(&msg.ID, &msg.Channel, &msg.ToAddr, &msg.Subject, &msg.Body, &msg.Status, &msg.CreatedAt); err != nil {
+		if err := rows.Scan(&msg.ID, &msg.OrgID, &msg.Channel, &msg.ToAddr, &msg.Subject, &msg.Body, &msg.Status, &msg.CreatedAt); err != nil {
 			m.logger.Error("scan message", "error", err)
 			kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 			return

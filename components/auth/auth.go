@@ -33,6 +33,10 @@ const (
 	ctxOrgKeyScopes contextKey = "org_key_scopes"
 )
 
+// CtxOrgID is the exported context key for org_id, used by tests and
+// components that need to inject org_id into a request context.
+const CtxOrgID = ctxOrgID
+
 type authRequest struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`

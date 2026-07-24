@@ -36,16 +36,9 @@ epic_cycle:
   note: "e80 complete — VPS hardened on vmi3338033 (89.116.26.187). 3 layers: Ubuntu (UFW+fail2ban+unattended-upgrades+SSH), BigBase (systemd+alerts+backups), Contabo (cntb+snapshots). Skill created: harden-vps."
   fast_mode: false
 bug_cycle:
-  current_step: 5
+  current_step: 4
   completed_steps:
-    - "investigate-bug (BUG-130 RCE via cici workflows: IDOR → unsandboxed exec.CommandContext)"
-    - "diagnose-root (5 endpoints lack org_id verification + unsandboxed shell exec)"
-    - "develop-tdd (8 new security tests: cross-tenant PUT/trigger/list/logs/runs rejected, command injection blocked)"
-    - "validate-fix (17/17 cici tests pass, 27/27 packages pass, go vet clean)"
     - "investigate-bug (BUG-134 cross-tenant deploy hijack: missing org_id check)"
-    - "investigate-bug (BUG-131 IDOR functions handlers: missing org_id on all CRUD)",
-    - "develop-tdd (fix: add org_id to functions+executions tables, scope all handlers)",
-    - "validate-fix (30/30 functions tests pass, go vet clean, go build clean)"
     - "diagnose-root (root cause: SiteIDFromContext skipped for JWT/API-key auth)"
     - "develop-tdd (fix: add org_id to sites table + ownership verification in HandleCreate)"
     - "validate-fix (176s deploy tests + 4s sites tests all pass)"
@@ -58,11 +51,7 @@ bug_cycle:
     - "validate-fix (26/26 functions tests, cross-tenant isolation verified)"
     - "investigate-bug (BUG-2026-07-13 deploy test suite timeout: 185s > 120s CI limit)"
     - "validate-fix (go test ./... -timeout 300s: all 27 packages pass)"
-<<<<<<< HEAD
-  bug_file: specs/bugs/BUG-130-rce-cici-workflows.md
-=======
-  bug_file: specs/bugs/BUG-2026-07-23-idor-functions-handlers.md
->>>>>>> 3ab22485e (fix(functions): add org_id scoping to prevent IDOR on all CRUD handlers)
+  bug_file: specs/bugs/BUG-2026-07-13-deploy-test-suite-timeout.md
   note: "Deploy test suite timeout fixed: CI timeout increased from 120s to 300s. Suite takes ~185s (464 subtests). All 27 packages pass. BUG-134 (cross-tenant deploy hijack) fixed and released (60fb5066). BUG-132 (IDOR injectDB) fixed. RunContext.OrgID added, all db.collection() queries scoped by org_id. Cross-tenant isolation test added. All 27 packages pass. Pushed 3c4d001."
 git:
   branch: main

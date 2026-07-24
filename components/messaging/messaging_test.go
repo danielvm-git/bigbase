@@ -4,12 +4,14 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 
+	"github.com/danielvm/bigbase/components/auth"
 	"github.com/danielvm/bigbase/components/db"
 	"github.com/danielvm/bigbase/components/messaging"
 	"github.com/danielvm/bigbase/kernel"
@@ -66,14 +68,6 @@ func postJSON(t *testing.T, handler http.Handler, path string, body any) *httpte
 	}
 	req := httptest.NewRequest("POST", path, &buf)
 	req.Header.Set("Content-Type", "application/json")
-	w := httptest.NewRecorder()
-	handler.ServeHTTP(w, req)
-	return w
-}
-
-func getRequest(t *testing.T, handler http.Handler, path string) *httptest.ResponseRecorder {
-	t.Helper()
-	req := httptest.NewRequest("GET", path, nil)
 	w := httptest.NewRecorder()
 	handler.ServeHTTP(w, req)
 	return w
@@ -328,7 +322,7 @@ func TestPushWrongMethod(t *testing.T) {
 func TestListMessagesEmpty(t *testing.T) {
 	_, handler := setupMessaging(t)
 
-	resp := getRequest(t, handler, "/api/messaging/messages")
+	resp := getListWithOrg(t, handler, "/api/messaging/messages", 1)
 	if resp.Code != http.StatusOK {
 		t.Fatalf("expected 200, got %d: %s", resp.Code, resp.Body.String())
 	}
@@ -346,14 +340,14 @@ func TestListMessagesEmpty(t *testing.T) {
 func TestListMessagesAfterSends(t *testing.T) {
 	_, handler := setupMessaging(t)
 
-	postJSON(t, handler, "/api/messaging/email", map[string]string{
+	postJSONWithOrg(t, handler, "/api/messaging/email", map[string]string{
 		"to": "a@b.com", "subject": "S1", "body": "B1",
-	})
-	postJSON(t, handler, "/api/messaging/sms", map[string]string{
+	}, 1)
+	postJSONWithOrg(t, handler, "/api/messaging/sms", map[string]string{
 		"to": "+1", "message": "B2",
-	})
+	}, 1)
 
-	resp := getRequest(t, handler, "/api/messaging/messages")
+	resp := getListWithOrg(t, handler, "/api/messaging/messages", 1)
 	if resp.Code != http.StatusOK {
 		t.Fatalf("expected 200, got %d: %s", resp.Code, resp.Body.String())
 	}
@@ -499,5 +493,128 @@ func TestTelegramHandler(t *testing.T) {
 	}
 	if payload["channel"] != "telegram" {
 		t.Fatalf("expected channel 'telegram', got '%v'", payload["channel"])
+	}
+}
+
+// withOrgID injects an org_id into the request context via auth.OrgIDFromContext.
+func withOrgID(r *http.Request, orgID int64) *http.Request {
+	ctx := context.WithValue(r.Context(), auth.CtxOrgID, orgID)
+	return r.WithContext(ctx)
+}
+
+func postJSONWithOrg(t *testing.T, handler http.Handler, path string, body any, orgID int64) *httptest.ResponseRecorder {
+	t.Helper()
+	var buf bytes.Buffer
+	if body != nil {
+		_ = json.NewEncoder(&buf).Encode(body)
+	}
+	req := httptest.NewRequest("POST", path, &buf)
+	req.Header.Set("Content-Type", "application/json")
+	req = withOrgID(req, orgID)
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+	return w
+}
+
+func getListWithOrg(t *testing.T, handler http.Handler, path string, orgID int64) *httptest.ResponseRecorder {
+	t.Helper()
+	req := httptest.NewRequest("GET", path, nil)
+	req = withOrgID(req, orgID)
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+	return w
+}
+
+func TestCrossTenantMessageIsolation(t *testing.T) {
+	_, handler := setupMessaging(t)
+
+	// Org A sends 2 messages
+	postJSONWithOrg(t, handler, "/api/messaging/email", map[string]string{
+		"to": "a@org-a.com", "subject": "Confidential A", "body": "Secret data for org A",
+	}, 100)
+	postJSONWithOrg(t, handler, "/api/messaging/sms", map[string]string{
+		"to": "+1111111111", "message": "OTP for org A: 123456",
+	}, 100)
+
+	// Org B sends 1 message
+	postJSONWithOrg(t, handler, "/api/messaging/email", map[string]string{
+		"to": "b@org-b.com", "subject": "Confidential B", "body": "Secret data for org B",
+	}, 200)
+
+	// Org A should only see its 2 messages
+	respA := getListWithOrg(t, handler, "/api/messaging/messages", 100)
+	if respA.Code != http.StatusOK {
+		t.Fatalf("org A list: expected 200, got %d: %s", respA.Code, respA.Body.String())
+	}
+	var bodyA map[string]any
+	if err := json.NewDecoder(respA.Body).Decode(&bodyA); err != nil {
+		t.Fatalf("org A decode: %v", err)
+	}
+	dataA, _ := bodyA["data"].([]any)
+	if len(dataA) != 2 {
+		t.Fatalf("org A: expected 2 messages, got %d", len(dataA))
+	}
+
+	// Org B should only see its 1 message
+	respB := getListWithOrg(t, handler, "/api/messaging/messages", 200)
+	if respB.Code != http.StatusOK {
+		t.Fatalf("org B list: expected 200, got %d: %s", respB.Code, respB.Body.String())
+	}
+	var bodyB map[string]any
+	if err := json.NewDecoder(respB.Body).Decode(&bodyB); err != nil {
+		t.Fatalf("org B decode: %v", err)
+	}
+	dataB, _ := bodyB["data"].([]any)
+	if len(dataB) != 1 {
+		t.Fatalf("org B: expected 1 message, got %d", len(dataB))
+	}
+
+	// Verify org B cannot see org A's confidential data
+	msgB := dataB[0].(map[string]any)
+	if msgB["body"] == "Secret data for org A" || msgB["body"] == "OTP for org A: 123456" {
+		t.Fatal("org B leaked org A message data")
+	}
+}
+
+func TestListMessagesRequiresOrgID(t *testing.T) {
+	_, handler := setupMessaging(t)
+
+	// Request without org_id in context should be rejected
+	req := httptest.NewRequest("GET", "/api/messaging/messages", nil)
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+
+	if w.Code != http.StatusForbidden {
+		t.Fatalf("expected 403, got %d: %s", w.Code, w.Body.String())
+	}
+}
+
+func TestMessageIncludesOrgID(t *testing.T) {
+	_, handler := setupMessaging(t)
+
+	resp := postJSONWithOrg(t, handler, "/api/messaging/email", map[string]string{
+		"to": "user@example.com", "subject": "Test", "body": "Hello",
+	}, 42)
+
+	if resp.Code != http.StatusCreated {
+		t.Fatalf("expected 201, got %d: %s", resp.Code, resp.Body.String())
+	}
+
+	var msg messaging.Message
+	if err := json.NewDecoder(resp.Body).Decode(&msg); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	if msg.OrgID != 42 {
+		t.Fatalf("expected org_id=42, got %d", msg.OrgID)
+	}
+
+	// Verify it's stored correctly in the list
+	listResp := getListWithOrg(t, handler, "/api/messaging/messages", 42)
+	var body map[string]any
+	_ = json.NewDecoder(listResp.Body).Decode(&body)
+	data := body["data"].([]any)
+	stored := data[0].(map[string]any)
+	if fmt.Sprintf("%v", stored["org_id"]) != "42" {
+		t.Fatalf("stored message missing org_id=42, got %v", stored["org_id"])
 	}
 }
