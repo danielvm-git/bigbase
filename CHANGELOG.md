@@ -1,3 +1,10 @@
+## [2.79.9](https://github.com/danielvm-git/bigbase/compare/v2.79.8...v2.79.9) (2026-07-24)
+
+
+### Bug Fixes
+
+* **security:** auth bypass in @bigbase/auth-next SDK middleware ([822caaa](https://github.com/danielvm-git/bigbase/commit/822caaa19eef68c0614743b92ca5686ed3b59619)), closes [#138](https://github.com/danielvm-git/bigbase/issues/138)
+
 ## [2.79.8](https://github.com/danielvm-git/bigbase/compare/v2.79.7...v2.79.8) (2026-07-23)
 
 
