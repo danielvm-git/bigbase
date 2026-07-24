@@ -36,13 +36,8 @@ epic_cycle:
   note: "e80 complete — VPS hardened on vmi3338033 (89.116.26.187). 3 layers: Ubuntu (UFW+fail2ban+unattended-upgrades+SSH), BigBase (systemd+alerts+backups), Contabo (cntb+snapshots). Skill created: harden-vps."
   fast_mode: false
 bug_cycle:
-  current_step: 4
+  current_step: 5
   completed_steps:
-    - "investigate-bug (BUG-135 IDOR site keys: missing ownership check)"
-    - "diagnose-root (root cause: no org_id lookup in site key handlers)"
-    - "develop-tdd (fix: add lookupSiteOrgID + ownership verification in all 3 handlers)"
-  bug_file: specs/bugs/BUG-135-idor-site-keys.md
-  note: "BUG-135 fixed: Added lookupSiteOrgID helper + ownership verification via lookupOwnedOrg in handleCreateSiteKey, handleListSiteKeys, handleRevokeSiteKey. Cross-tenant IDOR test added. All 69 auth tests pass."
     - "investigate-bug (BUG-134 cross-tenant deploy hijack: missing org_id check)"
     - "diagnose-root (root cause: SiteIDFromContext skipped for JWT/API-key auth)"
     - "develop-tdd (fix: add org_id to sites table + ownership verification in HandleCreate)"
@@ -56,8 +51,12 @@ bug_cycle:
     - "validate-fix (26/26 functions tests, cross-tenant isolation verified)"
     - "investigate-bug (BUG-2026-07-13 deploy test suite timeout: 185s > 120s CI limit)"
     - "validate-fix (go test ./... -timeout 300s: all 27 packages pass)"
-  bug_file: specs/bugs/BUG-2026-07-13-deploy-test-suite-timeout.md
-  note: "Deploy test suite timeout fixed: CI timeout increased from 120s to 300s. Suite takes ~185s (464 subtests). All 27 packages pass. BUG-134 (cross-tenant deploy hijack) fixed and released (60fb5066). BUG-132 (IDOR injectDB) fixed. RunContext.OrgID added, all db.collection() queries scoped by org_id. Cross-tenant isolation test added. All 27 packages pass. Pushed 3c4d001."
+    - "investigate-bug (BUG-136 IDOR sites: all site APIs lack org_id isolation)"
+    - "develop-tdd (fix: add requireSiteOwnership() + org_id filtering to all site endpoints)"
+    - "validate-fix (go test ./... all 27 packages pass, go vet clean, golangci-lint 0 issues)"
+  bug_file: specs/bugs/BUG-136-idor-sites.md
+  note: "BUG-136 IDOR sites FIXED and VALIDATED. All 27 packages pass. go vet clean. golangci-lint 0 issues. 8 new IDOR isolation tests verify cross-org access is denied. Ready for release."
+  next_skill: release-branch
 git:
   branch: main
   hash: null

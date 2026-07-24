@@ -261,6 +261,13 @@ func (s *Sites) listSites(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
 	defer cancel()
 
+	// Extract org_id for multi-tenant isolation.
+	orgID, ok := auth.OrgIDFromContext(ctx)
+	if !ok || orgID == 0 {
+		kernel.WriteJSON(w, http.StatusForbidden, map[string]string{"error": "organization required"})
+		return
+	}
+
 	sites, err := s.ListSites(ctx)
 	if err != nil {
 		s.logger.Error("list sites", "error", err)
@@ -271,13 +278,31 @@ func (s *Sites) listSites(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Sites) ListSites(ctx context.Context) ([]Site, error) {
-	rows, err := s.db.QueryContext(ctx, `
-		SELECT s.id, s.name, s.git_repo_id, s.production_branch, s.root_path,
-			COALESCE(NULLIF(s.github_full_name, ''), g.name, s.name),
-			s.auth_policy
-		FROM sites s
-		LEFT JOIN git_repos g ON g.id = s.git_repo_id
-		ORDER BY s.name`)
+	// Extract org_id for multi-tenant isolation.
+	orgID, _ := auth.OrgIDFromContext(ctx)
+
+	var rows *sql.Rows
+	var err error
+	if orgID > 0 {
+		// Filter by org_id when available (JWT/API key auth).
+		rows, err = s.db.QueryContext(ctx, `
+			SELECT s.id, s.name, s.git_repo_id, s.production_branch, s.root_path,
+				COALESCE(NULLIF(s.github_full_name, ''), g.name, s.name),
+				s.auth_policy
+			FROM sites s
+			LEFT JOIN git_repos g ON g.id = s.git_repo_id
+			WHERE s.org_id = ?
+			ORDER BY s.name`, orgID)
+	} else {
+		// Fallback for unauthenticated contexts (tests, site key auth).
+		rows, err = s.db.QueryContext(ctx, `
+			SELECT s.id, s.name, s.git_repo_id, s.production_branch, s.root_path,
+				COALESCE(NULLIF(s.github_full_name, ''), g.name, s.name),
+				s.auth_policy
+			FROM sites s
+			LEFT JOIN git_repos g ON g.id = s.git_repo_id
+			ORDER BY s.name`)
+	}
 	if err != nil {
 		return nil, fmt.Errorf("list sites: %w", err)
 	}
@@ -308,7 +333,7 @@ func (s *Sites) ListSites(ctx context.Context) ([]Site, error) {
 		sites[i].LatestDeployment = latestByRepo[sites[i].GitRepoID]
 	}
 
-	if len(sites) == 0 {
+	if len(sites) == 0 && orgID == 0 {
 		sites = s.listSitesFromRepos(ctx)
 	}
 	return sites, nil
@@ -385,9 +410,39 @@ func (s *Sites) latestDeployment(ctx context.Context, repoID string) (*Deploymen
 	return &d, nil
 }
 
+// requireSiteOwnership verifies that the caller's org owns the given site.
+// Returns true if the check passes, or writes a 404 error and returns false.
+// This prevents IDOR attacks by ensuring cross-org access is denied.
+// The siteID parameter can be either a site id or a git_repo_id (legacy alias).
+func (s *Sites) requireSiteOwnership(ctx context.Context, w http.ResponseWriter, siteID string) bool {
+	orgID, ok := auth.OrgIDFromContext(ctx)
+	if !ok || orgID == 0 {
+		kernel.WriteJSON(w, http.StatusForbidden, map[string]string{"error": "organization required"})
+		return false
+	}
+
+	var dbOrgID int64
+	err := s.db.QueryRowContext(ctx, "SELECT org_id FROM sites WHERE id = ? OR git_repo_id = ?", siteID, siteID).Scan(&dbOrgID)
+	if err != nil {
+		kernel.WriteJSON(w, http.StatusNotFound, map[string]string{"error": "site not found"})
+		return false
+	}
+
+	if dbOrgID != orgID {
+		// Return 404 (not 403) to avoid leaking site existence across orgs.
+		kernel.WriteJSON(w, http.StatusNotFound, map[string]string{"error": "site not found"})
+		return false
+	}
+	return true
+}
+
 func (s *Sites) getSite(w http.ResponseWriter, r *http.Request, id string) {
 	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 	defer cancel()
+
+	if !s.requireSiteOwnership(ctx, w, id) {
+		return
+	}
 
 	site, err := s.GetSite(ctx, id)
 	if err != nil {
@@ -557,6 +612,10 @@ func (s *Sites) deleteSite(w http.ResponseWriter, r *http.Request, id string) {
 	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
 	defer cancel()
 
+	if !s.requireSiteOwnership(ctx, w, id) {
+		return
+	}
+
 	target, err := s.siteDeleteTarget(ctx, id)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -651,6 +710,10 @@ func isMissingOptionalTable(err error) bool {
 }
 
 func (s *Sites) listSiteRequestLogs(w http.ResponseWriter, r *http.Request, siteID string) {
+	if !s.requireSiteOwnership(r.Context(), w, siteID) {
+		return
+	}
+
 	q := r.URL.Query()
 	limit, _ := strconv.Atoi(q.Get("limit"))
 	if limit < 1 || limit > 500 {
@@ -719,6 +782,10 @@ func (s *Sites) redeploySite(w http.ResponseWriter, r *http.Request, id string) 
 	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 	defer cancel()
 
+	if !s.requireSiteOwnership(ctx, w, id) {
+		return
+	}
+
 	var req struct {
 		Branch  string `json:"branch"`
 		AppType string `json:"app_type"`
@@ -754,6 +821,10 @@ func (s *Sites) redeploySite(w http.ResponseWriter, r *http.Request, id string) 
 func (s *Sites) getSiteManifest(w http.ResponseWriter, r *http.Request, id string) {
 	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
 	defer cancel()
+
+	if !s.requireSiteOwnership(ctx, w, id) {
+		return
+	}
 
 	repoID, branch, err := s.resolveRepoBranch(ctx, id)
 	if err != nil {
@@ -807,6 +878,10 @@ func (s *Sites) saveSiteManifest(w http.ResponseWriter, r *http.Request, id stri
 
 	ctx, cancel := context.WithTimeout(r.Context(), 30*time.Second)
 	defer cancel()
+
+	if !s.requireSiteOwnership(ctx, w, id) {
+		return
+	}
 
 	repoID, branch, err := s.resolveRepoBranch(ctx, id)
 	if err != nil {
@@ -920,6 +995,10 @@ func (s *Sites) getSiteAuthPolicy(w http.ResponseWriter, r *http.Request, id str
 	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 	defer cancel()
 
+	if !s.requireSiteOwnership(ctx, w, id) {
+		return
+	}
+
 	var policyStr sql.NullString
 	err := s.db.QueryRowContext(ctx, "SELECT auth_policy FROM sites WHERE id = ?", id).Scan(&policyStr)
 	if err != nil {
@@ -944,6 +1023,10 @@ func (s *Sites) getSiteAuthPolicy(w http.ResponseWriter, r *http.Request, id str
 func (s *Sites) setSiteAuthPolicy(w http.ResponseWriter, r *http.Request, id string) {
 	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 	defer cancel()
+
+	if !s.requireSiteOwnership(ctx, w, id) {
+		return
+	}
 
 	// Verify site exists first
 	var exists int

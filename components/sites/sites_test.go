@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -13,12 +14,20 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/danielvm/bigbase/components/auth"
 	"github.com/danielvm/bigbase/components/db"
 	"github.com/danielvm/bigbase/components/deploy"
 	"github.com/danielvm/bigbase/components/git"
 	"github.com/danielvm/bigbase/components/sites"
 	"github.com/danielvm/bigbase/kernel"
 )
+
+// authedRequestSite creates an HTTP request with org_id=1 in context.
+// This is used for tests that need auth context for site ownership checks.
+func authedRequestSite(method, path string, body io.Reader) *http.Request {
+	req := httptest.NewRequest(method, path, body)
+	return req.WithContext(auth.WithOrgID(req.Context(), 1))
+}
 
 type testLogger struct{}
 
@@ -80,7 +89,7 @@ func TestSitesCreateTriggersDeploy(t *testing.T) {
 	}
 
 	body := bytes.NewBufferString(`{"name":"my-site","git_repo_id":"repo-1","production_branch":"main","root_path":"./"}`)
-	req := httptest.NewRequest(http.MethodPost, "/api/sites", body)
+	req := authedRequestSite(http.MethodPost, "/api/sites", body)
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
 	s.Handler().ServeHTTP(w, req)
@@ -127,7 +136,7 @@ func TestSitesCreateTriggersDeployWithCustomName(t *testing.T) {
 		 VALUES ('repo-1', 'original-repo-name', 0, 1, 'main', '', datetime('now'))`)
 
 	body := bytes.NewBufferString(`{"name":"custom-site-name","git_repo_id":"repo-1","production_branch":"main","root_path":"./"}`)
-	req := httptest.NewRequest(http.MethodPost, "/api/sites", body)
+	req := authedRequestSite(http.MethodPost, "/api/sites", body)
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
 	s.Handler().ServeHTTP(w, req)
@@ -154,7 +163,7 @@ func TestSitesListRequestLogs(t *testing.T) {
 
 	siteID := "s1"
 	_, _ = d.ExecContext(context.Background(),
-		`INSERT INTO sites (id, name, git_repo_id) VALUES (?, 'mysite', 'r1')`, siteID)
+		`INSERT INTO sites (id, name, git_repo_id, org_id) VALUES (?, 'mysite', 'r1', 1)`, siteID)
 
 	// Create table and insert dummy logs (since deploy component owns the table but we test site component)
 	_, _ = d.ExecContext(context.Background(), `CREATE TABLE IF NOT EXISTS site_request_logs (
@@ -171,7 +180,7 @@ func TestSitesListRequestLogs(t *testing.T) {
 		`INSERT INTO site_request_logs (id, site_id, method, path, status, duration_ms, created_at)
 		 VALUES ('l1', ?, 'GET', '/test', 200, 5, '2026-06-12T15:00:00Z')`, siteID)
 
-	req := httptest.NewRequest(http.MethodGet, "/api/sites/"+siteID+"/logs", nil)
+	req := authedRequestSite(http.MethodGet, "/api/sites/"+siteID+"/logs", nil)
 	w := httptest.NewRecorder()
 	s.Handler().ServeHTTP(w, req)
 
@@ -189,7 +198,7 @@ func TestSitesListRequestLogs(t *testing.T) {
 
 func TestSitesListEmpty(t *testing.T) {
 	s := setupSites(t)
-	req := httptest.NewRequest(http.MethodGet, "/api/sites", nil)
+	req := authedRequestSite(http.MethodGet, "/api/sites", nil)
 	w := httptest.NewRecorder()
 	s.Handler().ServeHTTP(w, req)
 	if w.Code != http.StatusOK {
@@ -244,8 +253,8 @@ func TestSitesListReturnsAllSitesWithDeployments(t *testing.T) {
 			`INSERT INTO git_repos (id, name, owner_id, private, default_branch, description, created_at)
 			 VALUES (?, ?, 0, 1, 'main', '', datetime('now'))`, repoID, fmt.Sprintf("site-%d", i))
 		_, _ = d.ExecContext(context.Background(),
-			`INSERT INTO sites (id, name, git_repo_id, production_branch, root_path, github_full_name, created_at)
-			 VALUES (?, ?, ?, 'main', './', ?, datetime('now'))`,
+			`INSERT INTO sites (id, name, git_repo_id, production_branch, root_path, github_full_name, created_at, org_id)
+			 VALUES (?, ?, ?, 'main', './', ?, datetime('now'), 1)`,
 			siteID, fmt.Sprintf("site-%d", i), repoID, fmt.Sprintf("owner/site-%d", i))
 		// Older deployment
 		_, _ = d.ExecContext(context.Background(),
@@ -259,7 +268,7 @@ func TestSitesListReturnsAllSitesWithDeployments(t *testing.T) {
 			fmt.Sprintf("dep-new-%d", i), repoID)
 	}
 
-	req := httptest.NewRequest(http.MethodGet, "/api/sites", nil)
+	req := authedRequestSite(http.MethodGet, "/api/sites", nil)
 	w := httptest.NewRecorder()
 	s.Handler().ServeHTTP(w, req)
 	if w.Code != http.StatusOK {
@@ -340,8 +349,8 @@ func seedSiteForDelete(t *testing.T, d *db.DB, siteID, repoID string) {
 		`INSERT INTO git_repos (id, name, owner_id, private, default_branch, description, created_at)
 		 VALUES (?, 'delete-site-repo', 0, 1, 'main', '', datetime('now'))`, repoID)
 	_, _ = d.ExecContext(context.Background(),
-		`INSERT INTO sites (id, name, git_repo_id, production_branch, root_path, github_full_name, created_at)
-		 VALUES (?, 'delete-site', ?, 'main', './', 'owner/delete-site', datetime('now'))`, siteID, repoID)
+		`INSERT INTO sites (id, name, git_repo_id, production_branch, root_path, github_full_name, created_at, org_id)
+		 VALUES (?, 'delete-site', ?, 'main', './', 'owner/delete-site', datetime('now'), 1)`, siteID, repoID)
 	_, _ = d.ExecContext(context.Background(),
 		`INSERT INTO site_domains (id, site_id, domain, verify_token, created_at)
 		 VALUES ('dom-1', ?, 'delete-site.example.com', 'token', datetime('now'))`, siteID)
@@ -359,7 +368,7 @@ func countRows(t *testing.T, d *db.DB, query string, args ...any) int {
 
 func TestDeleteSiteNotFound(t *testing.T) {
 	_, h := setupSitesDeleteTest(t)
-	req := httptest.NewRequest(http.MethodDelete, "/api/sites/missing", nil)
+	req := authedRequestSite(http.MethodDelete, "/api/sites/missing", nil)
 	w := httptest.NewRecorder()
 	h.ServeHTTP(w, req)
 	if w.Code != http.StatusNotFound {
@@ -377,7 +386,7 @@ func TestDeleteSiteActiveDeploymentConflict(t *testing.T) {
 				`INSERT INTO deployments (id, site_id, repo_id, status) VALUES (?, ?, ?, ?)`,
 				"dep-"+status, "site-"+status, "repo-"+status, status)
 
-			req := httptest.NewRequest(http.MethodDelete, "/api/sites/site-"+status, nil)
+			req := authedRequestSite(http.MethodDelete, "/api/sites/site-"+status, nil)
 			w := httptest.NewRecorder()
 			h.ServeHTTP(w, req)
 
@@ -402,7 +411,7 @@ func TestDeleteSiteCascade(t *testing.T) {
 			 ('dep-legacy', '', 'repo-del', 'failed'),
 			 ('dep-other', 'other-site', 'repo-del', 'failed')`)
 
-		req := httptest.NewRequest(http.MethodDelete, "/api/sites/site-del", nil)
+		req := authedRequestSite(http.MethodDelete, "/api/sites/site-del", nil)
 		w := httptest.NewRecorder()
 		h.ServeHTTP(w, req)
 
@@ -438,7 +447,7 @@ func TestDeleteSiteCascade(t *testing.T) {
 			 ('dep-alias-site', 'site-alias', 'repo-alias', 'failed'),
 			 ('dep-alias-legacy', '', 'repo-alias', 'failed')`)
 
-		req := httptest.NewRequest(http.MethodDelete, "/api/sites/repo-alias", nil)
+		req := authedRequestSite(http.MethodDelete, "/api/sites/repo-alias", nil)
 		w := httptest.NewRecorder()
 		h.ServeHTTP(w, req)
 
@@ -486,7 +495,7 @@ func TestDeleteSiteCallsCleanupCallback(t *testing.T) {
 	_, _ = d.ExecContext(context.Background(),
 		`INSERT INTO deployments (id, site_id, repo_id, status) VALUES ('dep-running', 'site-cb', 'repo-cb', 'running')`)
 
-	req := httptest.NewRequest(http.MethodDelete, "/api/sites/site-cb", nil)
+	req := authedRequestSite(http.MethodDelete, "/api/sites/site-cb", nil)
 	w := httptest.NewRecorder()
 	s.Handler().ServeHTTP(w, req)
 
@@ -542,7 +551,7 @@ func TestDeleteSiteHandlesMissingColumn(t *testing.T) {
 	_, _ = d.ExecContext(context.Background(),
 		`INSERT INTO deployments (id, repo_id, status) VALUES ('dep-olddb', 'repo-olddb', 'failed')`)
 
-	req := httptest.NewRequest(http.MethodDelete, "/api/sites/site-olddb", nil)
+	req := authedRequestSite(http.MethodDelete, "/api/sites/site-olddb", nil)
 	w := httptest.NewRecorder()
 	s.Handler().ServeHTTP(w, req)
 
@@ -633,14 +642,14 @@ func TestSiteManifestGetAndSave(t *testing.T) {
 		t.Fatalf("insert git_repo: %v", err)
 	}
 	_, err = d.ExecContext(context.Background(),
-		`INSERT INTO sites (id, name, git_repo_id, production_branch, root_path, created_at)
-		 VALUES ('site-1', 'test-site', 'repo-1', 'main', './', datetime('now'))`)
+		`INSERT INTO sites (id, name, git_repo_id, production_branch, root_path, created_at, org_id)
+		 VALUES ('site-1', 'test-site', 'repo-1', 'main', './', datetime('now'), 1)`)
 	if err != nil {
 		t.Fatalf("insert site: %v", err)
 	}
 
 	// 1. GET manifest -> should return exists = false
-	req := httptest.NewRequest(http.MethodGet, "/api/sites/site-1/manifest", nil)
+	req := authedRequestSite(http.MethodGet, "/api/sites/site-1/manifest", nil)
 	w := httptest.NewRecorder()
 	s.Handler().ServeHTTP(w, req)
 	if w.Code != http.StatusOK {
@@ -663,7 +672,7 @@ version: 1
 framework: unknown-framework
 `
 	body := bytes.NewBufferString(fmt.Sprintf(`{"content": %q}`, invalidYAML))
-	req = httptest.NewRequest(http.MethodPost, "/api/sites/site-1/manifest", body)
+	req = authedRequestSite(http.MethodPost, "/api/sites/site-1/manifest", body)
 	w = httptest.NewRecorder()
 	s.Handler().ServeHTTP(w, req)
 	if w.Code != http.StatusBadRequest {
@@ -681,7 +690,7 @@ start:
   port: 8080
 `
 	body = bytes.NewBufferString(fmt.Sprintf(`{"content": %q}`, validYAML))
-	req = httptest.NewRequest(http.MethodPost, "/api/sites/site-1/manifest", body)
+	req = authedRequestSite(http.MethodPost, "/api/sites/site-1/manifest", body)
 	w = httptest.NewRecorder()
 	s.Handler().ServeHTTP(w, req)
 	if w.Code != http.StatusOK {
@@ -689,7 +698,7 @@ start:
 	}
 
 	// 4. GET manifest -> should return exists = true, content = validYAML
-	req = httptest.NewRequest(http.MethodGet, "/api/sites/site-1/manifest", nil)
+	req = authedRequestSite(http.MethodGet, "/api/sites/site-1/manifest", nil)
 	w = httptest.NewRecorder()
 	s.Handler().ServeHTTP(w, req)
 	if w.Code != http.StatusOK {
@@ -716,8 +725,8 @@ func TestSiteAuthPolicyStruct(t *testing.T) {
 	policyJSON := `{"default":"protected","protected_paths":["/secret/*"],"public_paths":["/public"],"accept":["jwt"]}`
 
 	_, err := s.DB().ExecContext(ctx,
-		`INSERT INTO sites (id, name, git_repo_id, production_branch, root_path, github_full_name, created_at, auth_policy)
-		 VALUES (?, 'test-site', 'repo-1', 'main', './', '', ?, ?)`,
+		`INSERT INTO sites (id, name, git_repo_id, production_branch, root_path, github_full_name, created_at, auth_policy, org_id)
+		 VALUES (?, 'test-site', 'repo-1', 'main', './', '', ?, ?, 1)`,
 		siteID, now, policyJSON)
 	if err != nil {
 		t.Fatalf("insert site: %v", err)
@@ -791,15 +800,15 @@ func TestSiteAuthPolicyAPI(t *testing.T) {
 	ctx := context.Background()
 	siteID := "site-auth-api-test"
 	_, err := d.ExecContext(ctx,
-		`INSERT INTO sites (id, name, git_repo_id, production_branch, root_path, github_full_name, created_at)
-		 VALUES (?, 'test-site', 'repo-1', 'main', './', '', datetime('now'))`,
+		`INSERT INTO sites (id, name, git_repo_id, production_branch, root_path, github_full_name, created_at, org_id)
+		 VALUES (?, 'test-site', 'repo-1', 'main', './', '', datetime('now'), 1)`,
 		siteID)
 	if err != nil {
 		t.Fatalf("insert site: %v", err)
 	}
 
 	// 1. GET initial auth policy (should default to public)
-	req := httptest.NewRequest(http.MethodGet, fmt.Sprintf("/api/sites/%s/auth-policy", siteID), nil)
+	req := authedRequestSite(http.MethodGet, fmt.Sprintf("/api/sites/%s/auth-policy", siteID), nil)
 	w := httptest.NewRecorder()
 	s.Handler().ServeHTTP(w, req)
 	if w.Code != http.StatusOK {
@@ -815,7 +824,7 @@ func TestSiteAuthPolicyAPI(t *testing.T) {
 
 	// 2. POST updated auth policy
 	updatedPolicyJSON := `{"default":"protected","protected_paths":["/books/*"],"public_paths":["/login"],"accept":["jwt"]}`
-	req = httptest.NewRequest(http.MethodPost, fmt.Sprintf("/api/sites/%s/auth-policy", siteID), bytes.NewBufferString(updatedPolicyJSON))
+	req = authedRequestSite(http.MethodPost, fmt.Sprintf("/api/sites/%s/auth-policy", siteID), bytes.NewBufferString(updatedPolicyJSON))
 	req.Header.Set("Content-Type", "application/json")
 	w = httptest.NewRecorder()
 	s.Handler().ServeHTTP(w, req)
@@ -835,7 +844,7 @@ func TestSiteAuthPolicyAPI(t *testing.T) {
 	}
 
 	// 3. GET again and verify updated values
-	req = httptest.NewRequest(http.MethodGet, fmt.Sprintf("/api/sites/%s/auth-policy", siteID), nil)
+	req = authedRequestSite(http.MethodGet, fmt.Sprintf("/api/sites/%s/auth-policy", siteID), nil)
 	w = httptest.NewRecorder()
 	s.Handler().ServeHTTP(w, req)
 	if w.Code != http.StatusOK {

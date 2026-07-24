@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/danielvm/bigbase/components/auth"
 	"github.com/danielvm/bigbase/components/db"
 	"github.com/danielvm/bigbase/components/git"
 	"github.com/danielvm/bigbase/components/sites"
@@ -34,6 +35,12 @@ func setupSitesWithHandler(t *testing.T) (*sites.Sites, http.Handler, *db.DB) {
 	return s, s.Handler(), d
 }
 
+// authedRequest creates an HTTP request with org_id=1 in context.
+func authedRequest(method, path string, body io.Reader) *http.Request {
+	req := httptest.NewRequest(method, path, body)
+	return req.WithContext(auth.WithOrgID(req.Context(), 1))
+}
+
 func createTestSite(t *testing.T, h http.Handler, d *db.DB) string {
 	t.Helper()
 	_, err := d.Exec(`INSERT INTO git_repos (id, name, owner_id, private, default_branch, description, created_at)
@@ -42,7 +49,7 @@ func createTestSite(t *testing.T, h http.Handler, d *db.DB) string {
 		t.Fatalf("seed git repo: %v", err)
 	}
 	body := `{"name":"testsite","git_repo_id":"repo-001"}`
-	req := httptest.NewRequest(http.MethodPost, "/api/sites", strings.NewReader(body))
+	req := authedRequest(http.MethodPost, "/api/sites", strings.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
 	h.ServeHTTP(w, req)
@@ -60,7 +67,7 @@ func TestCustomDomain(t *testing.T) {
 		siteID := createTestSite(t, h, d)
 
 		body := `{"domain":"example.com"}`
-		req := httptest.NewRequest(http.MethodPost,
+		req := authedRequest(http.MethodPost,
 			"/api/sites/"+siteID+"/domains", strings.NewReader(body))
 		req.Header.Set("Content-Type", "application/json")
 		w := httptest.NewRecorder()
@@ -89,7 +96,7 @@ func TestCustomDomain(t *testing.T) {
 		// Register two domains
 		for _, domain := range []string{"alpha.com", "beta.com"} {
 			body := `{"domain":"` + domain + `"}`
-			req := httptest.NewRequest(http.MethodPost,
+			req := authedRequest(http.MethodPost,
 				"/api/sites/"+siteID+"/domains", strings.NewReader(body))
 			req.Header.Set("Content-Type", "application/json")
 			w := httptest.NewRecorder()
@@ -99,7 +106,7 @@ func TestCustomDomain(t *testing.T) {
 			}
 		}
 
-		req := httptest.NewRequest(http.MethodGet, "/api/sites/"+siteID+"/domains", nil)
+		req := authedRequest(http.MethodGet, "/api/sites/"+siteID+"/domains", nil)
 		w := httptest.NewRecorder()
 		h.ServeHTTP(w, req)
 
@@ -120,7 +127,7 @@ func TestCustomDomain(t *testing.T) {
 
 		// Register
 		body := `{"domain":"notexist.invalid"}`
-		req := httptest.NewRequest(http.MethodPost,
+		req := authedRequest(http.MethodPost,
 			"/api/sites/"+siteID+"/domains", strings.NewReader(body))
 		req.Header.Set("Content-Type", "application/json")
 		w := httptest.NewRecorder()
@@ -130,7 +137,7 @@ func TestCustomDomain(t *testing.T) {
 		}
 
 		// Verify (POST — it mutates verified_at and triggers a DNS lookup)
-		req = httptest.NewRequest(http.MethodPost,
+		req = authedRequest(http.MethodPost,
 			"/api/sites/"+siteID+"/domains/notexist.invalid/verify", nil)
 		w = httptest.NewRecorder()
 		h.ServeHTTP(w, req)
@@ -152,7 +159,7 @@ func TestCustomDomain(t *testing.T) {
 
 		body := `{"domain":"dup.com"}`
 		for i := 0; i < 2; i++ {
-			req := httptest.NewRequest(http.MethodPost,
+			req := authedRequest(http.MethodPost,
 				"/api/sites/"+siteID+"/domains", strings.NewReader(body))
 			req.Header.Set("Content-Type", "application/json")
 			w := httptest.NewRecorder()
@@ -171,7 +178,7 @@ func TestCustomDomain(t *testing.T) {
 		siteID := createTestSite(t, h, d)
 
 		body := `{}`
-		req := httptest.NewRequest(http.MethodPost,
+		req := authedRequest(http.MethodPost,
 			"/api/sites/"+siteID+"/domains", strings.NewReader(body))
 		req.Header.Set("Content-Type", "application/json")
 		w := httptest.NewRecorder()
@@ -188,7 +195,7 @@ func TestCustomDomain(t *testing.T) {
 
 		for _, bad := range []string{"not a domain", "no-tld", "http://example.com", "exa_mple.com"} {
 			body := `{"domain":"` + bad + `"}`
-			req := httptest.NewRequest(http.MethodPost,
+			req := authedRequest(http.MethodPost,
 				"/api/sites/"+siteID+"/domains", strings.NewReader(body))
 			req.Header.Set("Content-Type", "application/json")
 			w := httptest.NewRecorder()
@@ -203,7 +210,7 @@ func TestCustomDomain(t *testing.T) {
 		_, h, _ := setupSitesWithHandler(t)
 
 		body := `{"domain":"orphan.com"}`
-		req := httptest.NewRequest(http.MethodPost,
+		req := authedRequest(http.MethodPost,
 			"/api/sites/does-not-exist/domains", strings.NewReader(body))
 		req.Header.Set("Content-Type", "application/json")
 		w := httptest.NewRecorder()
@@ -219,7 +226,7 @@ func TestCustomDomain(t *testing.T) {
 		siteID := createTestSite(t, h, d)
 
 		body := `{"domain":"gone.com"}`
-		req := httptest.NewRequest(http.MethodPost,
+		req := authedRequest(http.MethodPost,
 			"/api/sites/"+siteID+"/domains", strings.NewReader(body))
 		req.Header.Set("Content-Type", "application/json")
 		w := httptest.NewRecorder()
@@ -229,7 +236,7 @@ func TestCustomDomain(t *testing.T) {
 		}
 
 		// Delete
-		req = httptest.NewRequest(http.MethodDelete, "/api/sites/"+siteID+"/domains/gone.com", nil)
+		req = authedRequest(http.MethodDelete, "/api/sites/"+siteID+"/domains/gone.com", nil)
 		w = httptest.NewRecorder()
 		h.ServeHTTP(w, req)
 		if w.Code != http.StatusNoContent {
@@ -237,7 +244,7 @@ func TestCustomDomain(t *testing.T) {
 		}
 
 		// List is now empty
-		req = httptest.NewRequest(http.MethodGet, "/api/sites/"+siteID+"/domains", nil)
+		req = authedRequest(http.MethodGet, "/api/sites/"+siteID+"/domains", nil)
 		w = httptest.NewRecorder()
 		h.ServeHTTP(w, req)
 		var resp map[string]any
@@ -247,7 +254,7 @@ func TestCustomDomain(t *testing.T) {
 		}
 
 		// Deleting again returns 404
-		req = httptest.NewRequest(http.MethodDelete, "/api/sites/"+siteID+"/domains/gone.com", nil)
+		req = authedRequest(http.MethodDelete, "/api/sites/"+siteID+"/domains/gone.com", nil)
 		w = httptest.NewRecorder()
 		h.ServeHTTP(w, req)
 		if w.Code != http.StatusNotFound {
@@ -260,7 +267,7 @@ func TestCustomDomain(t *testing.T) {
 		siteID := createTestSite(t, h, d)
 
 		body := `{"domain":"getverify.com"}`
-		req := httptest.NewRequest(http.MethodPost,
+		req := authedRequest(http.MethodPost,
 			"/api/sites/"+siteID+"/domains", strings.NewReader(body))
 		req.Header.Set("Content-Type", "application/json")
 		w := httptest.NewRecorder()
@@ -269,7 +276,7 @@ func TestCustomDomain(t *testing.T) {
 			t.Fatalf("register: %d", w.Code)
 		}
 
-		req = httptest.NewRequest(http.MethodGet,
+		req = authedRequest(http.MethodGet,
 			"/api/sites/"+siteID+"/domains/getverify.com/verify", nil)
 		w = httptest.NewRecorder()
 		h.ServeHTTP(w, req)

@@ -44,6 +44,9 @@ func doRequest(t *testing.T, h http.Handler, method, path string, body io.Reader
 	if body != nil {
 		req.Header.Set("Content-Type", "application/json")
 	}
+	// Add org_id context for multi-tenant isolation.
+	ctx := auth.WithOrgID(req.Context(), 1)
+	req = req.WithContext(ctx)
 	w := httptest.NewRecorder()
 	h.ServeHTTP(w, req)
 	return w.Result()

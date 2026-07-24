@@ -251,3 +251,4 @@ func extractIP(r *http.Request) string {
 func WithUserID(ctx context.Context, userID int64) context.Context {
 	return context.WithValue(ctx, ctxUserID, userID)
 }
+

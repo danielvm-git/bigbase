@@ -45,6 +45,10 @@ func (s *Sites) migrateEnvVars() error {
 }
 
 func (s *Sites) handleEnvVarsRoute(w http.ResponseWriter, r *http.Request, siteID string, parts []string) {
+	if !s.requireSiteOwnership(r.Context(), w, siteID) {
+		return
+	}
+
 	if len(parts) == 2 {
 		switch r.Method {
 		case http.MethodGet:

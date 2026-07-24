@@ -41,8 +41,8 @@ func createTestSiteForEnvVars(t *testing.T, d *db.DB) string {
 		t.Fatalf("insert repo: %v", err)
 	}
 	_, err = d.ExecContext(context.Background(),
-		`INSERT INTO sites (id, name, git_repo_id, production_branch, root_path, created_at)
-		 VALUES ('site-ev-1', 'my-app', 'repo-ev-1', 'main', './', datetime('now'))`)
+		`INSERT INTO sites (id, name, git_repo_id, production_branch, root_path, org_id, created_at)
+		 VALUES ('site-ev-1', 'my-app', 'repo-ev-1', 'main', './', 1, datetime('now'))`)
 	if err != nil {
 		t.Fatalf("insert site: %v", err)
 	}
@@ -54,7 +54,7 @@ func TestEnvVarsAPI(t *testing.T) {
 	siteID := createTestSiteForEnvVars(t, d)
 
 	t.Run("list empty initially", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodGet, "/api/sites/"+siteID+"/env-vars", nil)
+		req := authedRequest(http.MethodGet, "/api/sites/"+siteID+"/env-vars", nil)
 		w := httptest.NewRecorder()
 		h.ServeHTTP(w, req)
 		if w.Code != http.StatusOK {
@@ -70,7 +70,7 @@ func TestEnvVarsAPI(t *testing.T) {
 
 	t.Run("create env var", func(t *testing.T) {
 		body := bytes.NewBufferString(`{"key":"DATABASE_URL","value":"postgres://localhost/mydb","is_build_time":false,"is_runtime":true}`)
-		req := httptest.NewRequest(http.MethodPost, "/api/sites/"+siteID+"/env-vars", body)
+		req := authedRequest(http.MethodPost, "/api/sites/"+siteID+"/env-vars", body)
 		req.Header.Set("Content-Type", "application/json")
 		w := httptest.NewRecorder()
 		h.ServeHTTP(w, req)
@@ -94,7 +94,7 @@ func TestEnvVarsAPI(t *testing.T) {
 	})
 
 	t.Run("list returns created var", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodGet, "/api/sites/"+siteID+"/env-vars", nil)
+		req := authedRequest(http.MethodGet, "/api/sites/"+siteID+"/env-vars", nil)
 		w := httptest.NewRecorder()
 		h.ServeHTTP(w, req)
 		if w.Code != http.StatusOK {
@@ -114,7 +114,7 @@ func TestEnvVarsAPI(t *testing.T) {
 
 	t.Run("reject duplicate key", func(t *testing.T) {
 		body := bytes.NewBufferString(`{"key":"DATABASE_URL","value":"other","is_build_time":false,"is_runtime":true}`)
-		req := httptest.NewRequest(http.MethodPost, "/api/sites/"+siteID+"/env-vars", body)
+		req := authedRequest(http.MethodPost, "/api/sites/"+siteID+"/env-vars", body)
 		req.Header.Set("Content-Type", "application/json")
 		w := httptest.NewRecorder()
 		h.ServeHTTP(w, req)
@@ -125,7 +125,7 @@ func TestEnvVarsAPI(t *testing.T) {
 
 	t.Run("reject invalid key format lowercase", func(t *testing.T) {
 		body := bytes.NewBufferString(`{"key":"database_url","value":"val","is_build_time":true,"is_runtime":false}`)
-		req := httptest.NewRequest(http.MethodPost, "/api/sites/"+siteID+"/env-vars", body)
+		req := authedRequest(http.MethodPost, "/api/sites/"+siteID+"/env-vars", body)
 		req.Header.Set("Content-Type", "application/json")
 		w := httptest.NewRecorder()
 		h.ServeHTTP(w, req)
@@ -136,7 +136,7 @@ func TestEnvVarsAPI(t *testing.T) {
 
 	t.Run("reject key with spaces", func(t *testing.T) {
 		body := bytes.NewBufferString(`{"key":"MY KEY","value":"val","is_build_time":true,"is_runtime":false}`)
-		req := httptest.NewRequest(http.MethodPost, "/api/sites/"+siteID+"/env-vars", body)
+		req := authedRequest(http.MethodPost, "/api/sites/"+siteID+"/env-vars", body)
 		req.Header.Set("Content-Type", "application/json")
 		w := httptest.NewRecorder()
 		h.ServeHTTP(w, req)
@@ -147,7 +147,7 @@ func TestEnvVarsAPI(t *testing.T) {
 
 	t.Run("update env var value", func(t *testing.T) {
 		body := bytes.NewBufferString(`{"value":"postgres://prod/db","is_build_time":false,"is_runtime":true}`)
-		req := httptest.NewRequest(http.MethodPut, "/api/sites/"+siteID+"/env-vars/DATABASE_URL", body)
+		req := authedRequest(http.MethodPut, "/api/sites/"+siteID+"/env-vars/DATABASE_URL", body)
 		req.Header.Set("Content-Type", "application/json")
 		w := httptest.NewRecorder()
 		h.ServeHTTP(w, req)
@@ -162,7 +162,7 @@ func TestEnvVarsAPI(t *testing.T) {
 	})
 
 	t.Run("list reflects updated value", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodGet, "/api/sites/"+siteID+"/env-vars", nil)
+		req := authedRequest(http.MethodGet, "/api/sites/"+siteID+"/env-vars", nil)
 		w := httptest.NewRecorder()
 		h.ServeHTTP(w, req)
 		var res map[string]any
@@ -178,7 +178,7 @@ func TestEnvVarsAPI(t *testing.T) {
 	})
 
 	t.Run("delete env var", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodDelete, "/api/sites/"+siteID+"/env-vars/DATABASE_URL", nil)
+		req := authedRequest(http.MethodDelete, "/api/sites/"+siteID+"/env-vars/DATABASE_URL", nil)
 		w := httptest.NewRecorder()
 		h.ServeHTTP(w, req)
 		if w.Code != http.StatusNoContent {
@@ -187,7 +187,7 @@ func TestEnvVarsAPI(t *testing.T) {
 	})
 
 	t.Run("list empty after delete", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodGet, "/api/sites/"+siteID+"/env-vars", nil)
+		req := authedRequest(http.MethodGet, "/api/sites/"+siteID+"/env-vars", nil)
 		w := httptest.NewRecorder()
 		h.ServeHTTP(w, req)
 		var res map[string]any
@@ -200,7 +200,7 @@ func TestEnvVarsAPI(t *testing.T) {
 
 	t.Run("update nonexistent key returns 404", func(t *testing.T) {
 		body := bytes.NewBufferString(`{"value":"v","is_build_time":true,"is_runtime":false}`)
-		req := httptest.NewRequest(http.MethodPut, "/api/sites/"+siteID+"/env-vars/MISSING_KEY", body)
+		req := authedRequest(http.MethodPut, "/api/sites/"+siteID+"/env-vars/MISSING_KEY", body)
 		req.Header.Set("Content-Type", "application/json")
 		w := httptest.NewRecorder()
 		h.ServeHTTP(w, req)
@@ -210,7 +210,7 @@ func TestEnvVarsAPI(t *testing.T) {
 	})
 
 	t.Run("delete nonexistent key returns 404", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodDelete, "/api/sites/"+siteID+"/env-vars/MISSING_KEY", nil)
+		req := authedRequest(http.MethodDelete, "/api/sites/"+siteID+"/env-vars/MISSING_KEY", nil)
 		w := httptest.NewRecorder()
 		h.ServeHTTP(w, req)
 		if w.Code != http.StatusNotFound {
@@ -227,7 +227,7 @@ func TestEnvVarsAPIWithEncryption(t *testing.T) {
 
 	t.Run("stores and retrieves encrypted value", func(t *testing.T) {
 		body := bytes.NewBufferString(`{"key":"API_KEY","value":"secret-token","is_build_time":true,"is_runtime":false}`)
-		req := httptest.NewRequest(http.MethodPost, "/api/sites/"+siteID+"/env-vars", body)
+		req := authedRequest(http.MethodPost, "/api/sites/"+siteID+"/env-vars", body)
 		req.Header.Set("Content-Type", "application/json")
 		w := httptest.NewRecorder()
 		h.ServeHTTP(w, req)
@@ -237,7 +237,7 @@ func TestEnvVarsAPIWithEncryption(t *testing.T) {
 
 		// List returns value_preview (server-masked), not full plaintext (F03).
 		// "secret-token" → preview "••••oken"
-		req2 := httptest.NewRequest(http.MethodGet, "/api/sites/"+siteID+"/env-vars", nil)
+		req2 := authedRequest(http.MethodGet, "/api/sites/"+siteID+"/env-vars", nil)
 		w2 := httptest.NewRecorder()
 		h.ServeHTTP(w2, req2)
 		var res map[string]any
@@ -286,7 +286,7 @@ func TestEnvVarsListDecryptFailure(t *testing.T) {
 		t.Fatalf("seed broken row: %v", err)
 	}
 
-	req := httptest.NewRequest(http.MethodGet, "/api/sites/"+siteID+"/env-vars", nil)
+	req := authedRequest(http.MethodGet, "/api/sites/"+siteID+"/env-vars", nil)
 	w := httptest.NewRecorder()
 	h.ServeHTTP(w, req)
 	if w.Code != http.StatusOK {
@@ -312,7 +312,7 @@ func TestEnvVarsListDecryptFailure(t *testing.T) {
 func TestEnvVarsSiteIsolation(t *testing.T) {
 	_, h, d := setupSitesWithKey(t, "")
 
-	// Site A
+	// Site A (org_id=1)
 	_, err := d.ExecContext(context.Background(),
 		`INSERT INTO git_repos (id, name, owner_id, private, default_branch, description, created_at)
 		 VALUES ('repo-a', 'app-a', 0, 0, 'main', '', datetime('now'))`)
@@ -320,13 +320,13 @@ func TestEnvVarsSiteIsolation(t *testing.T) {
 		t.Fatalf("insert repo a: %v", err)
 	}
 	_, err = d.ExecContext(context.Background(),
-		`INSERT INTO sites (id, name, git_repo_id, production_branch, root_path, created_at)
-		 VALUES ('site-a', 'app-a', 'repo-a', 'main', './', datetime('now'))`)
+		`INSERT INTO sites (id, name, git_repo_id, production_branch, root_path, org_id, created_at)
+		 VALUES ('site-a', 'app-a', 'repo-a', 'main', './', 1, datetime('now'))`)
 	if err != nil {
 		t.Fatalf("insert site a: %v", err)
 	}
 
-	// Site B
+	// Site B (org_id=1, same org for env var isolation test)
 	_, err = d.ExecContext(context.Background(),
 		`INSERT INTO git_repos (id, name, owner_id, private, default_branch, description, created_at)
 		 VALUES ('repo-b', 'app-b', 0, 0, 'main', '', datetime('now'))`)
@@ -334,15 +334,15 @@ func TestEnvVarsSiteIsolation(t *testing.T) {
 		t.Fatalf("insert repo b: %v", err)
 	}
 	_, err = d.ExecContext(context.Background(),
-		`INSERT INTO sites (id, name, git_repo_id, production_branch, root_path, created_at)
-		 VALUES ('site-b', 'app-b', 'repo-b', 'main', './', datetime('now'))`)
+		`INSERT INTO sites (id, name, git_repo_id, production_branch, root_path, org_id, created_at)
+		 VALUES ('site-b', 'app-b', 'repo-b', 'main', './', 1, datetime('now'))`)
 	if err != nil {
 		t.Fatalf("insert site b: %v", err)
 	}
 
 	// Add env var to site A
 	body := bytes.NewBufferString(`{"key":"SECRET_A","value":"only-for-a","is_build_time":true,"is_runtime":true}`)
-	req := httptest.NewRequest(http.MethodPost, "/api/sites/site-a/env-vars", body)
+	req := authedRequest(http.MethodPost, "/api/sites/site-a/env-vars", body)
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
 	h.ServeHTTP(w, req)
@@ -351,7 +351,7 @@ func TestEnvVarsSiteIsolation(t *testing.T) {
 	}
 
 	// List site B — must be empty
-	req2 := httptest.NewRequest(http.MethodGet, "/api/sites/site-b/env-vars", nil)
+	req2 := authedRequest(http.MethodGet, "/api/sites/site-b/env-vars", nil)
 	w2 := httptest.NewRecorder()
 	h.ServeHTTP(w2, req2)
 	var res map[string]any

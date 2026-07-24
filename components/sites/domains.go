@@ -89,6 +89,10 @@ func (s *Sites) handleDomains(w http.ResponseWriter, r *http.Request) {
 	}
 	siteID := parts[0]
 
+	if !s.requireSiteOwnership(r.Context(), w, siteID) {
+		return
+	}
+
 	switch {
 	case len(parts) == 2 && r.Method == http.MethodGet:
 		s.listDomains(w, r, siteID)
