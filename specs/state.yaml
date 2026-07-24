@@ -1,17 +1,17 @@
 type: session-state
 context: infra
-active_flow: fix_bug
+active_flow: null
 active_epic_id: null
 active_story_id: null
 active_story_status: null
-bug_id: BUG-2026-07-24-deploy-key-organization-required
+bug_id: null
 release:
-  target_version: 2.79.0
-  codename: "Python Uvicorn CLI Entry Fix + Manifest ASGI Import"
-  last_tag: v2.79.0
-  last_publish: '2026-07-12'
+  target_version: 2.79.10
+  codename: "Deploy-key site ownership fix"
+  last_tag: v2.79.10
+  last_publish: '2026-07-24'
   ci_verified: true
-  ci_verified_at: '2026-07-12T22:20:00-03:00'
+  ci_verified_at: '2026-07-24T23:01:00-03:00'
 metrics:
   session_start: '2026-07-12T16:00:00-03:00'
   session_end: '2026-07-12T18:45:00-03:00'
@@ -36,15 +36,12 @@ epic_cycle:
   story_complete: true
   note: "e80 complete — VPS hardened on vmi3338033 (89.116.26.187). 3 layers: Ubuntu (UFW+fail2ban+unattended-upgrades+SSH), BigBase (systemd+alerts+backups), Contabo (cntb+snapshots). Skill created: harden-vps."
   fast_mode: false
-bug_cycle:
-  current_step: 3
-  completed_steps: [1, 2]
-  bug_file: specs/bugs/BUG-2026-07-24-deploy-key-organization-required.md
+bug_cycle: null
 git:
-  branch: fix/deploy-key-site-ownership
-  hash: null
-  worktree: ../fix-deploy-key-site-ownership
-  ci_status: unknown
+  branch: main
+  hash: 29f8a7229
+  worktree: null
+  ci_status: success
 cleanup:
   completed_at: '2026-07-13T16:10:00-03:00'
   rerun: true
@@ -71,9 +68,10 @@ cleanup:
     - "TestResumeSvelteKitStaticDeployment — environment-dependent (deploy_test.go:1717)"
     - "TestHealthCheckIntegrationFail — git push in temp dir fails (health_integration_test.go:77)"
 handoff:
-  last_step_completed: "wt-a-spec — BUG + registry + kickoff worktree fix/deploy-key-site-ownership"
+  last_step_completed: "release-branch — Horizon A merged (#163, #165), worktrees pruned, origin clean"
   open_decisions:
-    - "Do not inject org_id for bb_dep_* in middleware (SAFE site-key branch only)"
-    - "e82-artifact-deploy seeded after P0; multipart upload not in this PR body"
-  next_skill: develop-tdd
-  summary: "Horizon A WT-A: fix requireSiteOwnership site-key branch for bb_dep_ deploy keys (403 organization required). Branch fix/deploy-key-site-ownership."
+    - "e82-artifact-deploy: multipart upload CD (next epic)"
+    - "Prod smoke: bb_dep_* deploy on VPS after v2.79.10"
+    - "Optional: move danielvm-git/.github @v1 tag to ec06cce for fail-with-body"
+  next_skill: null
+  summary: "Horizon A complete. Deploy-key ownership fix shipped v2.79.10. Consumer issues open on grimoire/big-exames/big-library."
