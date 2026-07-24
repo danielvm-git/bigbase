@@ -165,7 +165,13 @@ func setupMonitoringWithDB(t *testing.T) (*monitoring.Monitoring, http.Handler, 
 		t.Fatalf("kernel start: %v", err)
 	}
 	t.Cleanup(func() { _ = k.Stop() })
-	return m, m.Handler(), d
+	// Wrap handler to inject org_id into context (BUG-143)
+	base := m.Handler()
+	wrapped := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := kernel.WithOrgID(r.Context(), 1) // default org_id=1 for tests
+		base.ServeHTTP(w, r.WithContext(ctx))
+	})
+	return m, wrapped, d
 }
 
 func TestMonitoringLogWriteAndSearch(t *testing.T) {

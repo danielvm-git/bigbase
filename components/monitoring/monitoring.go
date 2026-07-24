@@ -168,6 +168,13 @@ func (m *Monitoring) Start(ctx *kernel.Context) error {
 				m.logger.Warn("add duration_seconds column", "error", err)
 			}
 		}
+		// Add org_id column for tenant isolation (BUG-143).
+		if _, err := m.db.Exec(
+			"ALTER TABLE monitoring_alerts ADD COLUMN org_id INTEGER NOT NULL DEFAULT 0"); err != nil {
+			if !strings.Contains(err.Error(), "duplicate column") {
+				m.logger.Warn("add org_id column to alerts", "error", err)
+			}
+		}
 		if err := m.migrateOrgUsageTable(); err != nil {
 			return err
 		}
@@ -618,6 +625,12 @@ func (m *Monitoring) handleAlertCreate(w http.ResponseWriter, r *http.Request) {
 		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "db not configured"})
 		return
 	}
+	// Require org_id for tenant isolation (BUG-143).
+	orgID, ok := kernel.OrgIDFromContext(r.Context())
+	if !ok {
+		kernel.WriteJSON(w, http.StatusUnauthorized, map[string]string{"error": "org_id required"})
+		return
+	}
 	var alert struct {
 		Name            string  `json:"name"`
 		Metric          string  `json:"metric"`
@@ -643,8 +656,8 @@ func (m *Monitoring) handleAlertCreate(w http.ResponseWriter, r *http.Request) {
 		enabled = 1
 	}
 	_, err := m.db.ExecContext(r.Context(),
-		"INSERT INTO monitoring_alerts (id, name, metric, threshold, operator, enabled, duration_seconds) VALUES (?, ?, ?, ?, ?, ?, ?)",
-		id, alert.Name, alert.Metric, alert.Threshold, alert.Operator, enabled, alert.DurationSeconds)
+		"INSERT INTO monitoring_alerts (id, name, metric, threshold, operator, enabled, duration_seconds, org_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+		id, alert.Name, alert.Metric, alert.Threshold, alert.Operator, enabled, alert.DurationSeconds, orgID)
 	if err != nil {
 		m.logger.Error("insert alert", "error", err)
 		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
@@ -658,8 +671,14 @@ func (m *Monitoring) handleAlertList(w http.ResponseWriter, r *http.Request) {
 		kernel.WriteJSON(w, http.StatusOK, map[string]any{"data": []Alert{}})
 		return
 	}
+	// Require org_id for tenant isolation (BUG-143).
+	orgID, ok := kernel.OrgIDFromContext(r.Context())
+	if !ok {
+		kernel.WriteJSON(w, http.StatusUnauthorized, map[string]string{"error": "org_id required"})
+		return
+	}
 	rows, err := m.db.QueryContext(r.Context(),
-		"SELECT id, name, metric, threshold, operator, enabled, duration_seconds FROM monitoring_alerts ORDER BY name")
+		"SELECT id, name, metric, threshold, operator, enabled, duration_seconds FROM monitoring_alerts WHERE org_id = ? ORDER BY name", orgID)
 	if err != nil {
 		m.logger.Error("list alerts", "error", err)
 		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
