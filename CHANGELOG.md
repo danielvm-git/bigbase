@@ -1,3 +1,10 @@
+## [2.81.2](https://github.com/danielvm-git/bigbase/compare/v2.81.1...v2.81.2) (2026-07-25)
+
+
+### Bug Fixes
+
+* **bugs:** repair invalid YAML in registry.yaml and add 7 missing IDOR entries (closes [#176](https://github.com/danielvm-git/bigbase/issues/176)) ([2819a30](https://github.com/danielvm-git/bigbase/commit/2819a3069e606b65ae5ab5089036442cade45615))
+
 ## [2.81.1](https://github.com/danielvm-git/bigbase/compare/v2.81.0...v2.81.1) (2026-07-25)
 
 
