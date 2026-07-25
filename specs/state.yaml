@@ -1,17 +1,17 @@
 type: session-state
 context: infra
-active_flow: fix_bug
+active_flow: null
 active_epic_id: null
 active_story_id: null
 active_story_status: null
-bug_id: BUG-2026-07-24-static-directory-listing
+bug_id: null
 release:
-  target_version: 2.79.11
-  codename: "Never-bounce deploy (404 + runtime/framework matrix)"
-  last_tag: v2.79.11
-  last_publish: '2026-07-24'
+  target_version: 2.79.14
+  codename: "Static directory listing fail-closed + SvelteKit SSR start"
+  last_tag: v2.79.14
+  last_publish: '2026-07-25'
   ci_verified: true
-  ci_verified_at: '2026-07-24T23:59:00-03:00'
+  ci_verified_at: '2026-07-25T01:48:00Z'
 metrics:
   session_start: '2026-07-12T16:00:00-03:00'
   session_end: '2026-07-12T18:45:00-03:00'
@@ -36,14 +36,10 @@ epic_cycle:
   story_complete: true
   note: "e80 complete — VPS hardened on vmi3338033 (89.116.26.187). 3 layers: Ubuntu (UFW+fail2ban+unattended-upgrades+SSH), BigBase (systemd+alerts+backups), Contabo (cntb+snapshots). Skill created: harden-vps."
   fast_mode: false
-bug_cycle:
-  current_step: 3
-  completed_steps: [1, 2]
-  handoff:
-    next_skill: develop-tdd
+bug_cycle: null
 git:
   branch: main
-  hash: d86b0d21e
+  hash: 40a03bab6
   worktree: null
   ci_status: success
 cleanup:
@@ -72,8 +68,8 @@ cleanup:
     - "TestResumeSvelteKitStaticDeployment — environment-dependent (deploy_test.go:1717)"
     - "TestHealthCheckIntegrationFail — git push in temp dir fails (health_integration_test.go:77)"
 handoff:
-  last_step_completed: "diagnose-root — VPS confirmed directory listings; platform soft serveDir + missing public/ + stale fleet"
+  last_step_completed: "fix_bug complete — static listings fixed v2.79.12–2.79.14 (#167/#168/#169); fleet curl green; consumer issues closed"
   open_decisions:
     - "e82-artifact-deploy: multipart upload CD (next epic)"
-  next_skill: develop-tdd
-  summary: "BUG-2026-07-24-static-directory-listing open. exames/library/add-tutorial/grimoire serve checkout listings. Fix fail-closed + public/ then redeploy fleet."
+  next_skill: null
+  summary: "BUG-2026-07-24-static-directory-listing fixed. Hosts library/exames/add-tutorial/grimoire serve real HTML on bigbase.click."
