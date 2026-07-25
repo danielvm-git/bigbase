@@ -363,10 +363,13 @@ jobs:
             HEALTH_PASS=false
             for i in 1 2 3 4 5 6 7 8 9 10; do
               echo "  Attempt ${i}/10..."
-              if curl -sf "${HEALTH_URL}" > /dev/null 2>&1; then
+              BODY=$(curl -sf "${HEALTH_URL}" 2>/dev/null || true)
+              if echo "${BODY}" | grep -q '"status":"ok"'; then
                 HEALTH_PASS=true
                 echo "  HEALTHY — BigBase is serving requests"
                 break
+              elif [ -n "${BODY}" ]; then
+                echo "  Got response but not healthy: ${BODY}"
               fi
               sleep 3
             done
@@ -392,7 +395,8 @@ jobs:
                 ROLLBACK_HEALTH=false
                 for j in 1 2 3 4 5; do
                   echo "  Rollback health check attempt ${j}/5..."
-                  if curl -sf "${HEALTH_URL}" > /dev/null 2>&1; then
+                  BODY=$(curl -sf "${HEALTH_URL}" 2>/dev/null || true)
+                  if echo "${BODY}" | grep -q '"status":"ok"'; then
                     ROLLBACK_HEALTH=true
                     echo "  Rollback successful — previous release is running"
                     break
