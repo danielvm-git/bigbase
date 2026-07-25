@@ -47,7 +47,10 @@ func (d *Deploy) Trigger(ctx context.Context, repoID, branch, siteName, siteID s
 	}
 
 	buildDir := filepath.Join(d.buildsDir, id)
-	port := pickPort(d.basePort)
+	port, err := pickPort(d.basePort)
+	if err != nil {
+		return nil, fmt.Errorf("allocate port: %w", err)
+	}
 
 	passthroughJSON := marshalPassthroughPaths(passthroughPaths)
 	deploy := &Deployment{
