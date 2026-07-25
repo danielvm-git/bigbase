@@ -133,15 +133,18 @@ func TestSupervisorNoRespawnAfterStop(t *testing.T) {
 	}
 }
 
-// eventually polls cond until it returns true or 2s elapses.
+// eventually polls cond until it returns true or 5s elapses. 5s (not 2s)
+// gives goroutine scheduling enough headroom on contended/shared CI runners —
+// a 2s deadline was observed to flake under CI load even though the
+// underlying behavior was correct (see BUG-2026-07-25-eventually-ci-flake).
 func eventually(t *testing.T, cond func() bool) {
 	t.Helper()
-	deadline := time.Now().Add(2 * time.Second)
+	deadline := time.Now().Add(5 * time.Second)
 	for time.Now().Before(deadline) {
 		if cond() {
 			return
 		}
 		time.Sleep(5 * time.Millisecond)
 	}
-	t.Fatal("condition not met within 2s")
+	t.Fatal("condition not met within 5s")
 }
