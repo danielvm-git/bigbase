@@ -1,3 +1,10 @@
+## [2.79.12](https://github.com/danielvm-git/bigbase/compare/v2.79.11...v2.79.12) (2026-07-25)
+
+
+### Bug Fixes
+
+* **deploy:** stop static hosts serving checkout directory listings ([#167](https://github.com/danielvm-git/bigbase/issues/167)) ([52fb9af](https://github.com/danielvm-git/bigbase/commit/52fb9affdfc6809d147bdea58f096073447ad9cd))
+
 ## [2.79.11](https://github.com/danielvm-git/bigbase/compare/v2.79.10...v2.79.11) (2026-07-24)
 
 
