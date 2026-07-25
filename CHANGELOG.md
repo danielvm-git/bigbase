@@ -1,3 +1,11 @@
+# [2.81.0](https://github.com/danielvm-git/bigbase/compare/v2.80.0...v2.81.0) (2026-07-25)
+
+
+### Features
+
+* **deploy:** implement static-sidecar app type (e70s04) ([24787ec](https://github.com/danielvm-git/bigbase/commit/24787ecf6972fdbaf2c9e8e786c3615447798706))
+* **mcp:** parameterize ci templates with site deploy defaults ([e2b3702](https://github.com/danielvm-git/bigbase/commit/e2b37023ac005a59ea8fd30de438ea41ebf1333b))
+
 # [2.80.0](https://github.com/danielvm-git/bigbase/compare/v2.79.16...v2.80.0) (2026-07-25)
 
 
