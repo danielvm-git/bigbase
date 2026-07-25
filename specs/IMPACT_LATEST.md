@@ -1,126 +1,241 @@
-# Impact Assessment — Close All Open GitHub Issues (Bands 1+2)
+# Impact Assessment — Open Issues vs Multi-Language Deploy
 
-Generated: 2026-07-10
-Scope: 10 open issues against v3.0.0 planning
+> **Context:** BigBase runs 5 app types (Node, Go, Python, PHP, Static) on a single VPS.
+> All share: `pickPort` → `startApp` → proxy routing → env injection pipeline.
+> A bug in any shared path affects ALL sites across ALL languages simultaneously.
 
-## Summary
+---
 
-| Issue | Epic/Area | Risk | Action |
-|-------|-----------|------|--------|
-| #60 | e65 WSJF rescore | Low | YAML edit only |
-| #42 | Dead onGitHubPush event | Low | 2-line removal + ADR fix |
-| #62 → e73 | Python (FastAPI) Runtime | Medium | 4 stories, 8 BCP, all in components/deploy/ |
-| #58 → e70 | Site Deploy Manifest | Medium (blocked by e57) | Plan-only, 4 stories, 7 BCP |
-| #41 → e61 | Secrets Management | Medium (blocked by e57) | Deferred — EnvResolver gap note |
-| #43 → e66 | Multi-User Platform | Medium (blocked by e57) | Deferred — PolicyGate prerequisite |
-| #44 | Auth Verifier seam | Low | Close — no forcing function |
-| #45 | ConfigSchema activation | Low | Leave open — someday-marker |
+## Issue #173 — Port Allocator (Postmortem Record)
 
-## Detailed Analysis
+### Target
+`components/deploy/utils.go::pickPort` + `portIsFree`
 
-### Issue #60 — WSJF Rescore for e65 (Preview Environments)
+### Dependents (7 confirmed)
 
-- **Target**: `specs/release-plan.yaml` — `e65.wsjf` field
-- **Dependents**: None. Pure YAML metadata. Zero code impact.
-- **Affected Stories**: None directly. Moves e65 from WSJF 2.5 → 10.5, prioritizing preview environments for big-library content review pipeline.
-- **Test Coverage**: N/A — no code change.
-- **Risk**: Low
-- **Recommended Action**: Single-line YAML edit. Verify with grep.
+| Symbol | Edge | Why it matters |
+|--------|------|----------------|
+| `engine.go::Trigger` | calls pickPort | **Every deployment** for every language goes through here |
+| `gateway.go::HandleCreate` | calls Trigger | MCP `deploy_site` tool |
+| `gateway.go::HandleDeploy` | calls Trigger | Redeploy endpoint |
+| `samples.go::handleSamples` | calls Trigger | Sample site provisioning |
+| `main.go::startProxy` | calls Trigger | Process recovery on restart |
+| `orchestrator.go` | calls startApp | Resume interrupted deploys |
+| `rollback.go` | calls startApp | Rollback for any language |
 
-### Issue #42 — Dead onGitHubPush Event
+### Blast Radius
+- **Fan-in:** 1 direct caller (Trigger), but Trigger is called by **4 different entry points**
+- **Fan-out:** 0 (pure utility function)
+- **Cross-cluster:** Deploy → Proxy (3 edges) — port assignment drives proxy routing
 
-- **Target**: `components/github/github.go` (line ~448-457), `specs/adr/0003-github-app-sites.md` (line 15)
-- **Dependents**: Zero subscribers. Verified: `rg "onGitHubPush"` across codebase shows only the emitter and the ADR reference.
-- **Affected Stories**: None. Removing dead code. ADR already documents the correct delegate-based architecture (line 16: "Sites component delegates deploy via TriggerDeploy callback injected from main.go").
-- **Test Coverage**: `go test ./components/github/...` — existing tests cover webhook handling but not the specific event emission path.
-- **Risk**: Low
-- **Recommended Action**: Remove 10-line Emit block. Fix ADR line 15. Verify no regressions.
+### Multi-Language Impact
+| Language | Affected? | How |
+|----------|-----------|-----|
+| Node | ✅ YES | `npm start` / `node app.js` on assigned port |
+| Go | ✅ YES | `./app` binary binds to assigned port |
+| Python | ✅ YES | `uvicorn` / `python -m http.server` on assigned port |
+| PHP | ✅ YES | `php -S 0.0.0.0:<port>` on assigned port |
+| Static | ✅ YES | Caddy/file server on assigned port |
 
-### Issue #62 → e73 Python (FastAPI) Runtime
+**Impact severity: 🔴 CRITICAL — already fixed**
+- Before fix: orphaned processes from ANY language could silently serve wrong site content
+- The "wrong site content served" symptom affected `python.bigbase.click`, `go.bigbase.click`, etc.
+- The fix (OS-level `net.Listen` probe) protects all 5 runtimes
 
-- **Target**: `components/deploy/deploy.go`, `deploy_runner.go`, `supervisor.go`, `manifest.go`
-- **Dependents**: All deploy callers (sites, API, admin UI). Changes are additive — new detection paths, new build steps. Existing Node.js/Go/static site flows unchanged.
-- **Affected Stories**: 4 new stories (e73s01-s04). Reference app: Grimoire (FastAPI 3.13, uv, SQLite).
-- **Test Coverage**: ~12 test references in `components/deploy/`. New tests needed for `DetectAppType`, `getStartCommand`, health polling, system deps parsing.
-- **Risk**: Medium. Four stories all touching the deploy subsystem. Key risk areas:
-  - `DetectAppType()` — must not regress existing app detection (Node, Go, static)
-  - `getStartCommand()` — uvicorn path must not override existing python3 fallback
-  - Supervisor health polling — must not interfere with crash-loop restart for non-Python apps
-  - Disk allocation — must isolate per-deployment directories
-- **Recommended Action**: Full build-epic 9-step cycle per story. Security-review (Step 0) on uv/uvicorn process execution. Enforce-first on new tests.
+### Risk: ~~High~~ → **Resolved**
+Fix is live (PR #171). The postmortem record should be **closed as completed**.
 
-### Issue #58 → e70 Site Deploy Manifest (Plan Only)
+---
 
-- **Target**: `components/sites/sites.go`, `components/deploy/manifest.go`, `go.mod`
-- **Dependents**: Blocked by e57 (Project Scoping Backend) — needs site schema with deploy_defaults field. e70s01 cannot build until e57 ships.
-- **Affected Stories**: 4 planned: e70s01 (persist defaults), e70s02 (bigbase.toml parser), e70s03 (CI templates), e70s04 (static-sidecar).
-- **Test Coverage**: Sites component has 1003 lines. Manifest parser is YAML-only (262 lines), no TOML support. New dependency: `BurntSushi/toml` or `pelletier/go-toml/v2`.
-- **Risk**: Medium (blocked). Plan-only in this execution. Hard gate: e57 must ship before e70s01.
-- **Recommended Action**: Planning spine only. Write complete capsule with epic.yaml + tasks.yaml. Register in release-plan.yaml. Do not build.
+## Issue #174 — PHP Deploy Contract Docs Gap
 
-### Issue #41 → e61 Secrets Management (Deferred)
+### Target
+Documentation surface: `.github` action descriptions + contract doc `app_type` table
 
-- **Target**: `components/deploy/env.go`, `specs/epics/e61-secrets/`
-- **Dependents**: Blocked by e57 (project-scoped secrets need project schema).
-- **Affected Stories**: 2 existing (e61s01-s02, 3 BCP). Missing: EnvResolver seam.
-- **Risk**: Medium (deferred). The EnvResolver interface (layering: platform env → user env → secrets, precedence rules, redaction) must be specified in e61s01.
-- **Recommended Action**: Add EnvResolver gap note to e61 epic.yaml. Defer build to Band 3.
+### Dependents
+| Surface | Impact |
+|---------|--------|
+| `danielvm-git/.github` `bigbase-deploy` action | `app_type` input doesn't mention `php` |
+| Contract doc `app_type` table | Lists only static/python/go/node |
+| CI templates | No `deploy-php.yml` or `test-build-release-php.yml` |
 
-### Issue #43 → e66 Multi-User Platform (Deferred)
+### Multi-Language Impact
+| Language | Has CI template? | Has contract doc entry? | Tested live? |
+|----------|-----------------|----------------------|-------------|
+| Node | ✅ Yes | ✅ Yes | ✅ Yes |
+| Go | ✅ Yes | ✅ Yes | ✅ Yes |
+| Python | ✅ Yes | ✅ Yes | ✅ Yes |
+| **PHP** | ❌ **No** | ❌ **No** | ✅ Yes (canary) |
+| Static | ✅ Yes | ✅ Yes | ✅ Yes |
 
-- **Target**: `specs/epics/e66-multi-user-platform/`
-- **Dependents**: Blocked by e57 (project-scoped roles need project schema).
-- **Affected Stories**: 3 planned (e66s01-s03, 8 BCP). Missing: PolicyGate prerequisite.
-- **Risk**: Medium (deferred). Role/invite stories need a PolicyEnforcer interface in auth/proxy layer.
-- **Recommended Action**: Add PolicyGate prerequisite story note to e66 epic.yaml. Defer build to Band 3.
+**Impact severity: 🟡 MEDIUM**
+- PHP code works in `engine.go` (build via Composer, start via `php -S`)
+- But no CI template exists → users must manually write deploy workflows
+- The canary `bigbase-canary-php` proved it works, but discovery requires reading Go source
+- **e81 (Multi-Language Deploy)** explicitly lists PHP as a supported runtime — docs must match
 
-### Issue #44 — Auth Verifier Seam
+### Risk: Medium
+Code works, but invisible features = silent user friction. Blocks e81 from shipping cleanly.
 
-- **Target**: None
-- **Dependents**: None. Issue's own recommendation: "do not schedule."
-- **Risk**: Low
-- **Recommended Action**: Close via `gh issue close 44` with note "Not planned — no forcing function."
+### Recommended action
+1. Add PHP row to contract doc
+2. Create `deploy-php.yml` + `test-build-release-php.yml` templates
+3. Add PHP to the canary test matrix
 
-### Issue #45 — ConfigSchema Activation
+---
 
-- **Target**: None
-- **Dependents**: None. Priority 6. No user-facing benefit.
-- **Risk**: Low
-- **Recommended Action**: Leave open as someday-marker. Activate only if e70 TOML parsing creates concrete need for schema validation.
+## Issue #58 — e70 Site Deploy Manifest (`bigbase.toml`)
 
-## BCP Totals
+### Target
+New feature: `bigbase.toml` manifest + deploy defaults on site record + parameterized CI templates
 
-### This Execution (Bands 1+2)
+### Status: e70s01 ✅ e70s02 ✅ — 4/7 BCPs complete
 
-| Epic | Stories | BCP | Status |
-|------|---------|-----|--------|
-| — | Issue #42 | 0 | Build (Band 1) |
-| e73 | 4 | 8 | Build (Band 1) |
-| **Total** | **4 stories** | **8 BCP** | |
+### Dependents (planned)
+| Symbol | Current state | After e70 |
+|--------|--------------|-----------|
+| `engine.go::Trigger` | reads app_type from request | reads from manifest first, falls back to request |
+| `engine.go::buildApp` | no manifest awareness | consumes `Manifest.Start`, `Manifest.Env` |
+| `engine.go::startApp` | hardcoded per-type switch | manifest-driven start command |
+| `env.go::BuildEnv` | only platform env | merges manifest env vars |
+| MCP `create_site` | no deploy defaults | ✅ persists `app_type`, `passthrough_paths`, `health_path` |
+| MCP `get_ci_template` | generic YAML | parameterized per app_type + site defaults |
 
-### Future Band 3
+### Multi-Language Impact
+| Language | Pain today | After e70 |
+|----------|-----------|-----------|
+| Node | Must repeat `app_type: node` in every workflow | Declared once in `bigbase.toml` |
+| Go | Must repeat `app_type: go` | Declared once |
+| Python | Must repeat `app_type: python` + venv setup | Manifest handles it |
+| PHP | Must repeat `app_type: php` + composer install | Manifest handles it |
+| Static | Must repeat `passthrough_paths` for SPA routing | Declared once |
 
-| Epic | Stories | BCP | Blocks |
-|------|---------|-----|--------|
-| e57 | 5 | 17 | e70, e61, e66 |
-| e61 | 2 | 3 | — |
-| e66 | 3 | 8 | — |
-| e70 | 4 | 7 | — |
-| **Total** | **14 stories** | **35 BCP** | |
+**Impact severity: 🟢 LOW (planned, not blocking)**
+- e70 is Wave 2, depends on e57 (superseded)
+- The pain is real (copy-paste across CI, redeploy.py, agent workflows) but not a bug
+- Blocks: e81 multi-language deploy polish
 
-## Files Affected (Bands 1+2)
+### Risk: Low
+Planned enhancement. No current breakage. 7 BCPs across 4 stories.
 
-| File | Band | Change |
-|------|------|--------|
-| `specs/release-plan.yaml` | 1 | #60 WSJF + e73 registration |
-| `components/github/github.go` | 1 | #42 dead event removal |
-| `specs/adr/0003-github-app-sites.md` | 1 | #42 stale claim fix |
-| `components/deploy/deploy.go` | 1 | e73s01 + e73s02 |
-| `components/deploy/deploy_runner.go` | 1 | e73s03 |
-| `components/deploy/supervisor.go` | 1 | e73s03 + e73s04 |
-| `components/deploy/manifest.go` | 1 | e73s04 |
-| `specs/state.yaml` | 2 | Handoff context |
-| `specs/product/SCOPE-e70.yaml` | 2 | #58 scope |
-| `specs/epics/e70-site-deploy-manifest/` | 2 | #58 capsule |
-| `specs/epics/e61-secrets/epic.yaml` | 2 | #41 EnvResolver note |
-| `specs/epics/e66-multi-user-platform/epic.yaml` | 2 | #43 PolicyGate note |
+---
+
+## Issue #41 — Environment/Secrets Resolution Seam (`env.go`)
+
+### Target
+`components/deploy/env.go::BuildEnv` + `FetchSiteEnvVars`
+
+### Dependents (14 confirmed — highest blast radius of all open issues)
+
+| Symbol | Depth | Edge |
+|--------|-------|------|
+| `env.go::buildCmdEnv` | 1 | calls BuildEnv |
+| `engine.go::runBuildCommand` | 2 | uses buildCmdEnv |
+| `orchestrator.go::resumeCandidates` | 2 | uses buildCmdEnv |
+| `engine.go::buildApp` | 3 | calls FetchSiteEnvVars |
+| `engine.go::nodeInstall` | 3 | uses buildCmdEnv |
+| `deploy.go::Start` | 3 | uses buildCmdEnv |
+| `engine.go::runDeployment` | 4 | calls startApp |
+| `engine.go::Trigger` | 5 | calls runDeployment |
+| `mcpDeployAdapter::Trigger` | 6 | calls Trigger |
+| `gateway.go::HandleCreate` | 6 | calls Trigger |
+| `samples.go::handleSamples` | 6 | calls Trigger |
+| `main.go::startProxy` | 6 | calls Trigger |
+| `gateway.go::handleDeploy` | 7 | calls HandleDeployByID |
+| `main.go::main` | 7 | calls startProxy |
+
+### Multi-Language Impact
+| Language | Build env needs | Runtime env needs | Secrets impact |
+|----------|----------------|-------------------|---------------|
+| Node | `NODE_ENV`, `NPM_TOKEN`, `PNPM_HOME` | Same + `PORT` | `NPM_TOKEN` leaks = supply chain attack |
+| Go | `GOROOT`, `GOPATH`, `CGO_ENABLED` | `PORT` | Less secret-heavy |
+| Python | `VIRTUAL_ENV`, `PYTHONPATH` | Same | `DATABASE_URL`, API keys |
+| PHP | `PHP_INI_DIR`, extension paths | Same | DB creds, API keys |
+| Static | None | None | None (served by proxy) |
+
+**Impact severity: 🟡 MEDIUM (design debt, not active bug)**
+- `env.go` is a shallow helper, not a proper module
+- No merge precedence (platform → user → secrets)
+- No redaction in build logs
+- `FetchSiteEnvVars` already exists but is separate from `BuildEnv`
+- e61 (Secrets Management, superseded) was supposed to own this seam
+- e81 (Multi-Language Deploy) will add more runtime-specific env needs
+
+### Risk: Medium
+Not causing active bugs today, but:
+- A secret redaction bug in `buildCmdEnv` would leak across ALL 5 runtimes
+- The split between `BuildEnv` (build time) and `FetchSiteEnvVars` (runtime) creates two code paths for precedence logic
+- e81 adds 4 new runtimes (Rust, Java, Ruby + PHP already there) — env complexity grows
+
+### Recommended action
+1. Design `EnvResolver` interface before e81 lands
+2. Single merge point: platform defaults → user env vars → secrets
+3. Redaction view consumed by both build and runtime paths
+4. Gate: must land before e81 stories that add new runtimes
+
+---
+
+## Issue #43 — Policy Gate for Route Access Control
+
+### Target
+Route registration in `main.go` + auth middleware chains
+
+### Dependents
+| Area | Count | Example |
+|------|-------|---------|
+| Deploy area | 82 symbols | All deploy routes need auth |
+| Auth area | 108 symbols | Core auth component |
+| API area | 26 symbols | CRUD routes |
+| Proxy area | 40 symbols | Routing decisions |
+| Monitoring area | 58 symbols | Metrics/logs endpoints |
+| Functions area | 24 symbols | Serverless endpoints |
+| Components (all) | 591 likely | Every component registers routes |
+
+**Total blast radius: 622 symbols across 18 clusters**
+
+### Multi-Language Impact
+| Language | Routes affected | Current auth enforcement |
+|----------|----------------|------------------------|
+| All | `/api/deploy/*` | Middleware chain in main.go |
+| All | `/api/sites/*` | Middleware chain |
+| All | `/api/env/*` | Middleware chain |
+| All | `/<hostname>/*` | Proxy-level auth policy |
+
+**Impact severity: ⚪ LOW (deferred, tier 8)**
+- The forcing function (e66 Multi-User Platform) is superseded and lowest priority
+- Current manual middleware chaining works but is fragile
+- Not blocking any current work
+
+### Risk: Low (but very high if touched carelessly)
+- 622 symbol blast radius = highest of all issues
+- Any change to the `Component` interface ripples to 18 clusters
+- Must be designed as an additive layer, not a refactor of existing wiring
+
+### Recommended action
+1. Defer until e66 (or successor) is actively planned
+2. Design as additive: `Policy` struct + central enforcer, don't refactor existing middleware
+3. Test with `BypassPolicy` injection
+
+---
+
+## Summary Matrix
+
+| Issue | Severity | Blast Radius | Multi-Language Risk | Action | Effort |
+|-------|----------|-------------|--------------------|--------|--------|
+| #173 port allocator | 🔴 CRITICAL | 7 symbols, 4 entry points | All 5 runtimes | ✅ Close (fixed) | 1 min |
+| #174 PHP docs | 🟡 MEDIUM | 3 surfaces | PHP blocked from CI | Create templates + docs | ~2 hrs |
+| #58 e70 bigbase.toml | 🟢 LOW | New code (planned) | All runtimes benefit | Build after e57 recheck | 7 BCPs |
+| #41 env/secrets seam | 🟡 MEDIUM | 14 symbols, 2 code paths | Secrets leak = all runtimes | Design before e81 | Design + impl |
+| #43 policy gate | ⚪ LOW | 622 symbols, 18 clusters | All routes | Defer to e66 | Design only |
+
+---
+
+## Critical Path for Multi-Language Support
+
+```
+#173 (CLOSED) → #174 (fix PHP docs) → #41 (env resolver) → e81 (multi-language) → #58 (bigbase.toml)
+                  ↑                                        ↑
+                  Fast win, unblocks e81                  Must land before e81 adds more runtimes
+```
+
+**#41 is the hidden blocker** — it's not a bug today, but e81 adds Rust/Java/Ruby/PHP runtimes, each with unique env needs. Without a proper `EnvResolver`, the env injection logic gets copy-pasted per runtime, creating redaction gaps and precedence bugs.

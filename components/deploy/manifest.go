@@ -7,18 +7,19 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/BurntSushi/toml"
 	"gopkg.in/yaml.v3"
 )
 
 // ManifestHealthCheck defines the health check endpoint probe configuration.
 // Zero-valued fields are replaced by defaults via WithDefaults().
 type ManifestHealthCheck struct {
-	Path                 string `yaml:"path"`
-	ExpectedStatus       int    `yaml:"expected_status"`
-	ExpectedBodyContains string `yaml:"expected_body_contains"`
-	TimeoutSeconds       int    `yaml:"timeout_seconds"`
-	IntervalSeconds      int    `yaml:"interval_seconds"`
-	MaxRetries           int    `yaml:"max_retries"`
+	Path                 string `yaml:"path"                  toml:"path"`
+	ExpectedStatus       int    `yaml:"expected_status"        toml:"expected_status"`
+	ExpectedBodyContains string `yaml:"expected_body_contains"  toml:"expected_body_contains"`
+	TimeoutSeconds       int    `yaml:"timeout_seconds"         toml:"timeout_seconds"`
+	IntervalSeconds      int    `yaml:"interval_seconds"        toml:"interval_seconds"`
+	MaxRetries           int    `yaml:"max_retries"             toml:"max_retries"`
 }
 
 // WithDefaults returns a ManifestHealthCheck with zero-valued fields filled
@@ -46,25 +47,25 @@ func (hc ManifestHealthCheck) WithDefaults() ManifestHealthCheck {
 
 // Manifest represents a bigbase.yaml configuration file in a repo root.
 type Manifest struct {
-	Version     int                 `yaml:"version"`
-	Framework   string              `yaml:"framework"`
-	Build       ManifestBuild       `yaml:"build"`
-	Start       ManifestStart       `yaml:"start"`
-	Env         map[string]string   `yaml:"env"`
-	HealthCheck ManifestHealthCheck `yaml:"health_check"`
+	Version     int                 `yaml:"version"              toml:"version"`
+	Framework   string              `yaml:"framework"            toml:"framework"`
+	Build       ManifestBuild       `yaml:"build"                toml:"build"`
+	Start       ManifestStart       `yaml:"start"                toml:"start"`
+	Env         map[string]string   `yaml:"env"                  toml:"env"`
+	HealthCheck ManifestHealthCheck `yaml:"health_check"          toml:"health_check"`
 }
 
-// ManifestBuild represents the build section of bigbase.yaml.
+// ManifestBuild represents the build section of bigbase.yaml / bigbase.toml.
 type ManifestBuild struct {
-	Command string `yaml:"command"`
-	Output  string `yaml:"output"`
+	Command string `yaml:"command"  toml:"command"`
+	Output  string `yaml:"output"   toml:"output"`
 }
 
-// ManifestStart represents the start section of bigbase.yaml.
+// ManifestStart represents the start section of bigbase.yaml / bigbase.toml.
 type ManifestStart struct {
-	Command    string `yaml:"command"`
-	Port       int    `yaml:"port"`
-	ASGIImport string `yaml:"asgi_import"`
+	Command    string `yaml:"command"     toml:"command"`
+	Port       int    `yaml:"port"        toml:"port"`
+	ASGIImport string `yaml:"asgi_import" toml:"asgi_import"`
 }
 
 // validFrameworks is the set of framework values accepted by the manifest.
@@ -104,11 +105,17 @@ func LoadManifest(dir string) (*Manifest, error) {
 }
 
 // LoadManifestPath reads and validates a manifest file from the given directory using the specified manifest filename.
-// If manifestPath is empty, defaults to "bigbase.yaml".
-// Returns nil, nil if the file does not exist.
+// If manifestPath is empty, checks for bigbase.toml first, then falls back to bigbase.yaml.
+// Returns nil, nil if neither file exists.
 func LoadManifestPath(dir, manifestPath string) (*Manifest, error) {
 	if manifestPath == "" {
-		manifestPath = "bigbase.yaml"
+		// Prefer TOML over YAML when both exist
+		tomlPath := filepath.Join(dir, "bigbase.toml")
+		if _, err := os.Stat(tomlPath); err == nil {
+			manifestPath = "bigbase.toml"
+		} else {
+			manifestPath = "bigbase.yaml"
+		}
 	}
 
 	// Prevent path traversal (CWE-22): resolve and verify path stays within dir.
@@ -138,8 +145,14 @@ func LoadManifestPath(dir, manifestPath string) (*Manifest, error) {
 	}
 
 	var m Manifest
-	if err := yaml.Unmarshal(data, &m); err != nil {
-		return nil, fmt.Errorf("parse %s: %w", manifestPath, err)
+	if strings.HasSuffix(manifestPath, ".toml") {
+		if err := toml.Unmarshal(data, &m); err != nil {
+			return nil, fmt.Errorf("parse %s: %w", manifestPath, err)
+		}
+	} else {
+		if err := yaml.Unmarshal(data, &m); err != nil {
+			return nil, fmt.Errorf("parse %s: %w", manifestPath, err)
+		}
 	}
 
 	if err := m.validate(); err != nil {
@@ -149,11 +162,15 @@ func LoadManifestPath(dir, manifestPath string) (*Manifest, error) {
 	return &m, nil
 }
 
-// ValidateManifest parses and validates manifest YAML content.
+// ValidateManifest parses and validates manifest YAML or TOML content.
 func ValidateManifest(data []byte) error {
 	var m Manifest
+	// Try TOML first (detected by key patterns), fall back to YAML
+	if err := toml.Unmarshal(data, &m); err == nil && m.Version > 0 {
+		return m.validate()
+	}
 	if err := yaml.Unmarshal(data, &m); err != nil {
-		return fmt.Errorf("parse YAML: %w", err)
+		return fmt.Errorf("parse manifest: %w", err)
 	}
 	return m.validate()
 }
@@ -181,6 +198,96 @@ func (m *Manifest) validate() error {
 		return fmt.Errorf("start.port must be between 1 and 65535, got %d", m.Start.Port)
 	}
 	return nil
+}
+
+// MergeManifests applies three-layer configuration merge: manifest (bigbase.yaml/toml)
+// → site defaults → request overrides. Non-zero values in higher-priority layers
+// override lower-priority ones. Returns a new Manifest; does not modify inputs.
+func MergeManifests(manifest *Manifest, siteDefaults *SiteDefaults, requestOverrides *Manifest) *Manifest {
+	base := Manifest{}
+	if manifest != nil {
+		base = *manifest
+	}
+
+	// Layer 2: site defaults (from deploy_defaults on site record)
+	if siteDefaults != nil {
+		if siteDefaults.AppType != "" && base.Framework == "" {
+			base.Framework = siteDefaults.AppType
+		}
+		if siteDefaults.BuildCommand != "" && base.Build.Command == "" {
+			base.Build.Command = siteDefaults.BuildCommand
+		}
+		if siteDefaults.StartCommand != "" && base.Start.Command == "" {
+			base.Start.Command = siteDefaults.StartCommand
+		}
+		if siteDefaults.HealthPath != "" && base.HealthCheck.Path == "" {
+			base.HealthCheck.Path = siteDefaults.HealthPath
+		}
+		// Merge env vars (site defaults → manifest)
+		if len(siteDefaults.Env) > 0 {
+			if base.Env == nil {
+				base.Env = make(map[string]string)
+			}
+			for k, v := range siteDefaults.Env {
+				if _, exists := base.Env[k]; !exists {
+					base.Env[k] = v
+				}
+			}
+		}
+	}
+
+	// Layer 3: request overrides (explicit values win)
+	if requestOverrides != nil {
+		if requestOverrides.Framework != "" {
+			base.Framework = requestOverrides.Framework
+		}
+		if requestOverrides.Build.Command != "" {
+			base.Build.Command = requestOverrides.Build.Command
+		}
+		if requestOverrides.Build.Output != "" {
+			base.Build.Output = requestOverrides.Build.Output
+		}
+		if requestOverrides.Start.Command != "" {
+			base.Start.Command = requestOverrides.Start.Command
+		}
+		if requestOverrides.Start.Port > 0 {
+			base.Start.Port = requestOverrides.Start.Port
+		}
+		if requestOverrides.Start.ASGIImport != "" {
+			base.Start.ASGIImport = requestOverrides.Start.ASGIImport
+		}
+		if requestOverrides.HealthCheck.Path != "" {
+			base.HealthCheck.Path = requestOverrides.HealthCheck.Path
+		}
+		if requestOverrides.HealthCheck.ExpectedStatus > 0 {
+			base.HealthCheck.ExpectedStatus = requestOverrides.HealthCheck.ExpectedStatus
+		}
+		if requestOverrides.HealthCheck.TimeoutSeconds > 0 {
+			base.HealthCheck.TimeoutSeconds = requestOverrides.HealthCheck.TimeoutSeconds
+		}
+		// Merge env vars (request overrides both)
+		if len(requestOverrides.Env) > 0 {
+			if base.Env == nil {
+				base.Env = make(map[string]string)
+			}
+			for k, v := range requestOverrides.Env {
+				base.Env[k] = v
+			}
+		}
+	}
+
+	return &base
+}
+
+// SiteDefaults is a minimal representation of deploy_defaults from the sites table,
+// used as the middle layer in three-layer merge.
+type SiteDefaults struct {
+	AppType          string            `json:"app_type,omitempty"`
+	BuildCommand     string            `json:"build_command,omitempty"`
+	StartCommand     string            `json:"start_command,omitempty"`
+	PassthroughPaths []string          `json:"passthrough_paths,omitempty"`
+	HealthPath       string            `json:"health_path,omitempty"`
+	Env              map[string]string `json:"env,omitempty"`
 }
 
 // PackageJSON is a helper struct for parsing dependencies and scripts from package.json.

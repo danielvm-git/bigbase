@@ -4,7 +4,7 @@ id: e70
 title: "Site Deploy Manifest (bigbase.toml)"
 wsjf: 6.7
 total_bcps: 7
-status: planned
+status: in_progress
 tier: 2
 depends_on: [e57, e67]
 note: "4 stories, 7 BCPs. TOML-based deploy manifest with site-level defaults and CI template integration. Blocked by e57 (site schema changes needed for deploy_defaults)."
@@ -12,17 +12,19 @@ stories:
   - id: e70s01
     title: "Persist deploy defaults on site record"
     bcps: 2
-    status: pending
+    status: done
     depends_on: [e57]
     spec: e70s01-spec.md
     tasks: e70s01-tasks.yaml
+    note: "Added deploy_defaults JSON column, DeployDefaults struct with validation, GET/PUT endpoints. Commit f3914a7ad."
   - id: e70s02
     title: "bigbase.toml manifest parsing in repository root"
     bcps: 2
-    status: pending
+    status: done
     depends_on: [e70s01]
     spec: e70s02-spec.md
     tasks: e70s02-tasks.yaml
+    note: "Added TOML support, prefers .toml over .yaml, three-layer merge (MergeManifests). Commit 8cbf69950."
   - id: e70s03
     title: "Parameterized CI templates with deploy defaults"
     bcps: 1

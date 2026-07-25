@@ -502,3 +502,190 @@ start:
 		})
 	}
 }
+
+func TestManifestParseTOML(t *testing.T) {
+	t.Run("parses valid bigbase.toml", func(t *testing.T) {
+		dir := t.TempDir()
+		tomlContent := `version = 1
+framework = "sveltekit"
+
+[build]
+command = "npm run build"
+output = "build/"
+
+[start]
+command = "node build/index.js"
+port = 3000
+
+[env]
+NODE_VERSION = "20"
+`
+		writeFile(t, filepath.Join(dir, "bigbase.toml"), tomlContent)
+
+		m, err := LoadManifest(dir)
+		if err != nil {
+			t.Fatalf("LoadManifest: unexpected error: %v", err)
+		}
+		if m == nil {
+			t.Fatal("expected manifest, got nil")
+		}
+		if m.Version != 1 {
+			t.Errorf("version = %d, want 1", m.Version)
+		}
+		if m.Framework != "sveltekit" {
+			t.Errorf("framework = %s, want sveltekit", m.Framework)
+		}
+		if m.Build.Command != "npm run build" {
+			t.Errorf("build.command = %s, want 'npm run build'", m.Build.Command)
+		}
+		if m.Start.Command != "node build/index.js" {
+			t.Errorf("start.command = %s, want 'node build/index.js'", m.Start.Command)
+		}
+		if m.Start.Port != 3000 {
+			t.Errorf("start.port = %d, want 3000", m.Start.Port)
+		}
+		if len(m.Env) != 1 || m.Env["NODE_VERSION"] != "20" {
+			t.Errorf("env = %v, want {NODE_VERSION: 20}", m.Env)
+		}
+	})
+
+	t.Run("prefers bigbase.toml over bigbase.yaml", func(t *testing.T) {
+		dir := t.TempDir()
+		tomlContent := `version = 1
+framework = "go"
+
+[build]
+command = "go build -o app ."
+
+[start]
+command = "./app"
+port = 8080
+`
+		yamlContent := `version: 1
+framework: static
+build:
+  command: echo
+start:
+  command: echo
+  port: 3000
+`
+		writeFile(t, filepath.Join(dir, "bigbase.toml"), tomlContent)
+		writeFile(t, filepath.Join(dir, "bigbase.yaml"), yamlContent)
+
+		m, err := LoadManifest(dir)
+		if err != nil {
+			t.Fatalf("LoadManifest: %v", err)
+		}
+		if m.Framework != "go" {
+			t.Errorf("framework = %s, want go (TOML should take precedence)", m.Framework)
+		}
+	})
+
+	t.Run("falls back to YAML when no TOML exists", func(t *testing.T) {
+		dir := t.TempDir()
+		yamlContent := `version: 1
+framework: python
+build:
+  command: pip install .
+start:
+  command: python app.py
+  port: 8000
+`
+		writeFile(t, filepath.Join(dir, "bigbase.yaml"), yamlContent)
+
+		m, err := LoadManifest(dir)
+		if err != nil {
+			t.Fatalf("LoadManifest: %v", err)
+		}
+		if m.Framework != "python" {
+			t.Errorf("framework = %s, want python", m.Framework)
+		}
+	})
+}
+
+func TestMergeManifests(t *testing.T) {
+	t.Run("manifest alone", func(t *testing.T) {
+		manifest := &Manifest{
+			Version:   1,
+			Framework: "node",
+			Build:     ManifestBuild{Command: "npm run build"},
+			Start:     ManifestStart{Command: "npm start", Port: 3000},
+		}
+		merged := MergeManifests(manifest, nil, nil)
+		if merged.Framework != "node" {
+			t.Errorf("framework = %s, want node", merged.Framework)
+		}
+	})
+
+	t.Run("site defaults fill gaps", func(t *testing.T) {
+		manifest := &Manifest{
+			Version:   1,
+			Framework: "node",
+			Build:     ManifestBuild{},
+			Start:     ManifestStart{Port: 3000},
+		}
+		siteDefaults := &SiteDefaults{
+			BuildCommand: "npm run build",
+			StartCommand: "npm start",
+			HealthPath:   "/api/health",
+		}
+		merged := MergeManifests(manifest, siteDefaults, nil)
+		if merged.Build.Command != "npm run build" {
+			t.Errorf("build.command = %s, want 'npm run build'", merged.Build.Command)
+		}
+		if merged.Start.Command != "npm start" {
+			t.Errorf("start.command = %s, want 'npm start'", merged.Start.Command)
+		}
+		if merged.HealthCheck.Path != "/api/health" {
+			t.Errorf("health_check.path = %s, want '/api/health'", merged.HealthCheck.Path)
+		}
+	})
+
+	t.Run("request overrides win", func(t *testing.T) {
+		manifest := &Manifest{
+			Version:   1,
+			Framework: "node",
+			Build:     ManifestBuild{Command: "npm run build"},
+			Start:     ManifestStart{Command: "npm start", Port: 3000},
+		}
+		siteDefaults := &SiteDefaults{
+			BuildCommand: "yarn build",
+			StartCommand: "yarn start",
+		}
+		overrides := &Manifest{
+			Build: ManifestBuild{Command: "pnpm run build"},
+		}
+		merged := MergeManifests(manifest, siteDefaults, overrides)
+		// Request override wins over manifest
+		if merged.Build.Command != "pnpm run build" {
+			t.Errorf("build.command = %s, want 'pnpm run build' (request override wins)", merged.Build.Command)
+		}
+		// Request override wins
+		merged2 := MergeManifests(&Manifest{Build: ManifestBuild{}}, siteDefaults, overrides)
+		if merged2.Build.Command != "pnpm run build" {
+			t.Errorf("build.command with override = %s, want 'pnpm run build'", merged2.Build.Command)
+		}
+	})
+
+	t.Run("env merge preserves manifest, adds site, overrides with request", func(t *testing.T) {
+		manifest := &Manifest{
+			Env: map[string]string{"A": "1", "B": "2"},
+		}
+		siteDefaults := &SiteDefaults{
+			Env: map[string]string{"B": "site", "C": "3"},
+		}
+		overrides := &Manifest{
+			Env: map[string]string{"C": "req"},
+		}
+		merged := MergeManifests(manifest, siteDefaults, overrides)
+		if merged.Env["A"] != "1" {
+			t.Errorf("env.A = %s, want 1", merged.Env["A"])
+		}
+		if merged.Env["B"] != "2" {
+			t.Errorf("env.B = %s, want 2 (manifest wins over site)", merged.Env["B"])
+		}
+		if merged.Env["C"] != "req" {
+			t.Errorf("env.C = %s, want req (request wins)", merged.Env["C"])
+		}
+	})
+}
