@@ -291,29 +291,16 @@ func (d *Deploy) runDeployment(deploy *Deployment, buildDir, repoName string) {
 			d.appendDeployLog(deploy.ID, fmt.Sprintf("→ Serving manifest output: %s", manifest.Build.Output))
 		}
 	} else if appType == AppNode {
-		if outDirHint != "" {
-			if _, err := os.Stat(filepath.Join(appRoot, outDirHint)); err == nil {
-				serveDir = filepath.Join(appRoot, outDirHint)
-				appType = AppStatic
-				deploy.AppType = AppStatic
-				_, _ = d.db.ExecContext(context.Background(),
-					"UPDATE deployments SET app_type = ? WHERE id = ?", string(AppStatic), deploy.ID)
-			}
-		}
-		if appType == AppNode {
-			if _, err := os.Stat(filepath.Join(appRoot, "dist")); err == nil {
-				serveDir = filepath.Join(appRoot, "dist")
-				appType = AppStatic
-				deploy.AppType = AppStatic
-				_, _ = d.db.ExecContext(context.Background(),
-					"UPDATE deployments SET app_type = ? WHERE id = ?", string(AppStatic), deploy.ID)
-			} else if _, err := os.Stat(filepath.Join(appRoot, "build")); err == nil {
-				// SvelteKit adapter-static outputs to build/ by default
-				serveDir = filepath.Join(appRoot, "build")
-				appType = AppStatic
-				deploy.AppType = AppStatic
-				_, _ = d.db.ExecContext(context.Background(),
-					"UPDATE deployments SET app_type = ? WHERE id = ?", string(AppStatic), deploy.ID)
+		// Promote to static only when the outDir has a browser entrypoint.
+		// adapter-node emits build/ without index.html — keep process AppNode.
+		if staticDir, ok := FindStaticServeDirAfterNodeBuild(appRoot, outDirHint); ok {
+			serveDir = staticDir
+			appType = AppStatic
+			deploy.AppType = AppStatic
+			_, _ = d.db.ExecContext(context.Background(),
+				"UPDATE deployments SET app_type = ? WHERE id = ?", string(AppStatic), deploy.ID)
+			if rel, relErr := filepath.Rel(appRoot, staticDir); relErr == nil {
+				d.appendDeployLog(deploy.ID, fmt.Sprintf("→ Static serve dir: %s", rel))
 			}
 		}
 	}
