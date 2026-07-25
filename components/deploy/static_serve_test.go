@@ -102,6 +102,30 @@ func TestRequireStaticIndex_OK(t *testing.T) {
 	}
 }
 
+func TestFindStaticServeDirAfterNodeBuild_RequiresIndex(t *testing.T) {
+	dir := t.TempDir()
+	// SSR adapter-node style: build/ exists but no index.html
+	if err := os.MkdirAll(filepath.Join(dir, "build"), 0755); err != nil {
+		t.Fatal(err)
+	}
+	_ = os.WriteFile(filepath.Join(dir, "build", "index.js"), []byte("export {}"), 0644)
+	if _, ok := deploy.FindStaticServeDirAfterNodeBuild(dir, "build"); ok {
+		t.Fatal("adapter-node build/ without index.html must not promote to static")
+	}
+
+	dist := filepath.Join(dir, "dist")
+	if err := os.MkdirAll(dist, 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dist, "index.html"), []byte("<h1>ok</h1>"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	got, ok := deploy.FindStaticServeDirAfterNodeBuild(dir, "build")
+	if !ok || got != dist {
+		t.Fatalf("want dist with index.html, got %q ok=%v", got, ok)
+	}
+}
+
 func TestFrameworkMode_RootPathWebNotMonorepoListing(t *testing.T) {
 	root := t.TempDir()
 	web := filepath.Join(root, "web")

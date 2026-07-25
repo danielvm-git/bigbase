@@ -39,6 +39,29 @@ func ResolvePureStaticServeDir(appRoot, outDirHint string) (string, error) {
 	return "", staticOutputMissing(tried)
 }
 
+// FindStaticServeDirAfterNodeBuild returns a static FileServer directory only when
+// a candidate output contains index.html. SvelteKit adapter-node (and similar SSR
+// adapters) also emit build/ without a browser entrypoint — those must stay AppNode.
+func FindStaticServeDirAfterNodeBuild(appRoot, outDirHint string) (string, bool) {
+	var rels []string
+	if outDirHint != "" {
+		rels = append(rels, outDirHint)
+	}
+	for _, rel := range []string{"dist", "build"} {
+		if rel == outDirHint {
+			continue
+		}
+		rels = append(rels, rel)
+	}
+	for _, rel := range rels {
+		cand := filepath.Join(appRoot, rel)
+		if fileExists(filepath.Join(cand, "index.html")) {
+			return cand, true
+		}
+	}
+	return "", false
+}
+
 // RequireStaticIndex fails closed when serveDir has no index.html.
 // triedPaths are included in the operator hint (outDir candidates already checked).
 func RequireStaticIndex(serveDir string, triedPaths ...string) error {
