@@ -107,6 +107,10 @@ func GetStartCommand(buildDir string) string {
 	if pkg.Scripts.Start != "" {
 		return pkg.Scripts.Start
 	}
+	// SvelteKit adapter-node (and similar) emit build/index.js with no start script.
+	if fileExists(filepath.Join(buildDir, "build", "index.js")) {
+		return "node build/index.js"
+	}
 	return "node index.js"
 }
 func ValidateNodeBuildScript(dir string) error {
