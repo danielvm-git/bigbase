@@ -172,7 +172,7 @@ bugs:
     severity: medium
     priority: medium
     scope: auth
-    summary: OAuth/token cookies use Secure: r.TLS != nil behind TLS proxy (CWE-319)
+    summary: "OAuth/token cookies use Secure: r.TLS != nil behind TLS proxy (CWE-319)"
     file: specs/bugs/BUG-2026-07-10T160110-oauth-cookie-secure-flag.md
     status: fixed
     audit_source: specs/audit-code-2026-07-10.md
@@ -1723,3 +1723,109 @@ bugs:
     summary: "TestTriggerRunsThroughSupervisor flakes under CI load (2s eventually() deadline too tight) + Test (sqlite) job needlessly pulls postgres:16, exposing it to unrelated Docker Hub timeouts"
     file: specs/bugs/BUG-2026-07-25T004837-eventually-ci-flake-and-sqlite-postgres-coupling.md
     status: fixed
+  - id: BUG-130
+    date: "2026-07-23"
+    severity: critical
+    priority: critical
+    scope: cici
+    summary: "RCE via cici workflows — IDOR to unsandboxed exec.CommandContext (CWE-78, CWE-639)"
+    file: specs/bugs/BUG-130-rce-cici-workflows.md
+    status: fixed
+    files_changed:
+      - components/cici/cici.go
+      - components/cici/runs.go
+      - components/cici/workflows.go
+    approach: "Layer 1: verifyRepoOwnership() checks git_repos.owner_id. Layer 2: scope run queries by org_id. Layer 3: validateCommand() blocks dangerous patterns (curl, wget, nc, ssh, eval, exec, pipe-to-shell)."
+    risk_level: low
+    regression_guards:
+      - components/cici/cici_test.go TestValidateCommand
+      - components/cici/cici_test.go TestCrossTenantWorkflowIsolation
+  - id: BUG-131
+    date: "2026-07-23"
+    severity: high
+    priority: critical
+    scope: functions
+    summary: "IDOR on all CRUD handlers — functions table had no org_id column (CWE-639)"
+    file: specs/bugs/BUG-2026-07-23-idor-functions-handlers.md
+    status: fixed
+    files_changed:
+      - components/functions/functions.go
+      - components/functions/handlers.go
+    approach: "Add org_id column to functions and function_executions tables. Stamp org_id on create, filter on list, verify ownership on get/update/delete/run/logs."
+    risk_level: low
+    regression_guards:
+      - components/functions/functions_test.go TestFunctionsCrossTenantIsolation
+  - id: BUG-133
+    date: "2026-07-24"
+    severity: high
+    priority: critical
+    scope: storage
+    summary: "IDOR on storage file handlers — no org_id scoping (CWE-639)"
+    file: specs/bugs/BUG-133-idor-storage.md
+    status: fixed
+    files_changed:
+      - components/storage/storage.go
+    approach: "Add org_id to storage_files table. Require org context on upload, list, download, delete, and thumbnail endpoints."
+    risk_level: low
+    regression_guards:
+      - components/storage/org_isolation_test.go TestCrossTenantStorageIsolation
+  - id: BUG-135
+    date: "2026-07-23"
+    severity: high
+    priority: critical
+    scope: auth,sites
+    summary: "IDOR on site deploy keys — no ownership verification (CWE-639)"
+    file: specs/bugs/BUG-135-idor-site-keys.md
+    status: fixed
+    files_changed:
+      - components/auth/apikeys.go
+      - components/auth/org_http.go
+    approach: "Add lookupSiteOrgID helper. Verify ownership via lookupOwnedOrg in create/list/revoke handlers. Return 403 on mismatch."
+    risk_level: low
+    regression_guards:
+      - components/auth/sitekey_handlers_test.go TestIDORSiteKeyCrossTenant
+  - id: BUG-136
+    date: "2026-07-23"
+    severity: high
+    priority: critical
+    scope: sites
+    summary: "IDOR on all site endpoints — no org_id multi-tenant isolation (CWE-639)"
+    file: specs/bugs/BUG-136-idor-sites.md
+    status: fixed
+    files_changed:
+      - components/sites/sites.go
+      - components/sites/domains.go
+      - components/sites/env_vars.go
+    approach: "Add requireSiteOwnership() helper. Apply ownership checks to getSite, deleteSite, redeploySite, manifest, auth policy, domains, env vars. Return 404 (not 403) to avoid leaking site existence."
+    risk_level: low
+    regression_guards:
+      - components/sites/org_scoping_test.go TestCrossOrgSiteAccessDenied
+  - id: BUG-140
+    date: "2026-07-23"
+    severity: high
+    priority: critical
+    scope: messaging
+    summary: "Cross-tenant message leak — messages table had no org_id (CWE-639)"
+    file: specs/bugs/BUG-140-cross-tenant-message-leak.md
+    status: fixed
+    files_changed:
+      - components/messaging/messaging.go
+      - components/messaging/handlers.go
+    approach: "Add org_id column to messages table. Update send() to stamp org_id from auth context. Update handleList() to filter WHERE org_id = ?."
+    risk_level: low
+    regression_guards:
+      - components/messaging/messaging_test.go TestCrossTenantMessageIsolation
+  - id: BUG-144
+    date: "2026-07-23"
+    severity: high
+    priority: critical
+    scope: auth
+    summary: "Insecure postMessage targetOrigin during OAuth popup — JWT leak to any origin (CWE-942)"
+    file: specs/bugs/BUG-144-postmessage-jwt-leak.md
+    status: fixed
+    files_changed:
+      - components/auth/anonymous.go
+    approach: "Return 403 error page when redirect is missing or not allowlisted. Fix origin extraction with url.Parse. Add Cross-Origin-Opener-Policy: same-origin header."
+    risk_level: low
+    regression_guards:
+      - components/auth/anonymous.go TestPostMessageFailClosed
