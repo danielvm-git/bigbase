@@ -1,10 +1,10 @@
 type: session-state
 context: infra
-active_flow: null
+active_flow: fix_bug
 active_epic_id: null
 active_story_id: null
 active_story_status: null
-bug_id: null
+bug_id: BUG-2026-07-24-static-directory-listing
 release:
   target_version: 2.79.11
   codename: "Never-bounce deploy (404 + runtime/framework matrix)"
@@ -36,7 +36,11 @@ epic_cycle:
   story_complete: true
   note: "e80 complete — VPS hardened on vmi3338033 (89.116.26.187). 3 layers: Ubuntu (UFW+fail2ban+unattended-upgrades+SSH), BigBase (systemd+alerts+backups), Contabo (cntb+snapshots). Skill created: harden-vps."
   fast_mode: false
-bug_cycle: null
+bug_cycle:
+  current_step: 3
+  completed_steps: [1, 2]
+  handoff:
+    next_skill: develop-tdd
 git:
   branch: main
   hash: d86b0d21e
@@ -68,9 +72,8 @@ cleanup:
     - "TestResumeSvelteKitStaticDeployment — environment-dependent (deploy_test.go:1717)"
     - "TestHealthCheckIntegrationFail — git push in temp dir fails (health_integration_test.go:77)"
 handoff:
-  last_step_completed: "release-branch — PR #166 merged, v2.79.11 on VPS, main CI green"
+  last_step_completed: "diagnose-root — VPS confirmed directory listings; platform soft serveDir + missing public/ + stale fleet"
   open_decisions:
     - "e82-artifact-deploy: multipart upload CD (next epic)"
-    - "Fleet host smoke: redeploy exames/grimoire/library; close consumer #3/#4/#5"
-  next_skill: null
-  summary: "Never-bounce deploy shipped v2.79.11 (#166). Identity/framework matrix live on bigbase.click. Consumer issues await redeploy host smoke."
+  next_skill: develop-tdd
+  summary: "BUG-2026-07-24-static-directory-listing open. exames/library/add-tutorial/grimoire serve checkout listings. Fix fail-closed + public/ then redeploy fleet."
