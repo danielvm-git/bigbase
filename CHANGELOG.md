@@ -1,3 +1,10 @@
+## [2.81.1](https://github.com/danielvm-git/bigbase/compare/v2.81.0...v2.81.1) (2026-07-25)
+
+
+### Bug Fixes
+
+* **deploy:** verify OS-level port availability before allocating ([3c8acda](https://github.com/danielvm-git/bigbase/commit/3c8acda1ae8e5949c143be5b495e3e2fa8b85cba))
+
 # [2.81.0](https://github.com/danielvm-git/bigbase/compare/v2.80.0...v2.81.0) (2026-07-25)
 
 
