@@ -1,3 +1,10 @@
+## [2.81.3](https://github.com/danielvm-git/bigbase/compare/v2.81.2...v2.81.3) (2026-07-25)
+
+
+### Bug Fixes
+
+* **ci:** verify health check response body, not just HTTP status (closes [#177](https://github.com/danielvm-git/bigbase/issues/177)) ([cedb0fc](https://github.com/danielvm-git/bigbase/commit/cedb0fc51cca0436c709295c79dd251906536513))
+
 ## [2.81.2](https://github.com/danielvm-git/bigbase/compare/v2.81.1...v2.81.2) (2026-07-25)
 
 
