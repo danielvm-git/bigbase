@@ -1,3 +1,10 @@
+# [2.80.0](https://github.com/danielvm-git/bigbase/compare/v2.79.16...v2.80.0) (2026-07-25)
+
+
+### Features
+
+* e70 — Site Deploy Manifest (bigbase.toml) ([#175](https://github.com/danielvm-git/bigbase/issues/175)) ([b7f7395](https://github.com/danielvm-git/bigbase/commit/b7f7395a6b0b033d52cac1dedc03a82e7d134a6b))
+
 ## [2.79.16](https://github.com/danielvm-git/bigbase/compare/v2.79.15...v2.79.16) (2026-07-25)
 
 
