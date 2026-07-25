@@ -1,3 +1,10 @@
+## [2.79.14](https://github.com/danielvm-git/bigbase/compare/v2.79.13...v2.79.14) (2026-07-25)
+
+
+### Bug Fixes
+
+* **deploy:** start SvelteKit adapter-node via build/index.js ([#169](https://github.com/danielvm-git/bigbase/issues/169)) ([40a03ba](https://github.com/danielvm-git/bigbase/commit/40a03bab608849b2b9728aa3c87d3312115b8980))
+
 ## [2.79.13](https://github.com/danielvm-git/bigbase/compare/v2.79.12...v2.79.13) (2026-07-25)
 
 
