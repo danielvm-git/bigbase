@@ -1,3 +1,10 @@
+## [2.79.15](https://github.com/danielvm-git/bigbase/compare/v2.79.14...v2.79.15) (2026-07-25)
+
+
+### Bug Fixes
+
+* **deploy:** verify OS-level port availability before allocating ([#171](https://github.com/danielvm-git/bigbase/issues/171)) ([de12dfd](https://github.com/danielvm-git/bigbase/commit/de12dfdabdbde4ccf9d7a1a0a30f2a21c31e330c))
+
 ## [2.79.14](https://github.com/danielvm-git/bigbase/compare/v2.79.13...v2.79.14) (2026-07-25)
 
 
