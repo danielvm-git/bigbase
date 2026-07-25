@@ -71,11 +71,19 @@ func (d *Deploy) resumeCandidates(candidates []resumeCandidate) {
 			// Node SSR apps (no dist/build) fall through to process resume below.
 		}
 		if appType == AppStatic {
-			if _, err := os.Stat(filepath.Join(buildDir, "dist")); err == nil {
-				serveDir = filepath.Join(buildDir, "dist")
-			} else if _, err := os.Stat(filepath.Join(buildDir, "build")); err == nil {
-				serveDir = filepath.Join(buildDir, "build")
+			resolved, serveErr := ResolvePureStaticServeDir(buildDir, "dist")
+			if serveErr != nil {
+				resolved, serveErr = ResolvePureStaticServeDir(buildDir, "build")
 			}
+			if serveErr != nil {
+				// Do not resume a checkout FileServer listing — leave host down until redeploy.
+				d.logger.Error("skip resume: static output missing", "id", c.id, "error", serveErr)
+				_, _ = d.db.ExecContext(context.Background(),
+					"UPDATE deployments SET status = ?, error_message = ? WHERE id = ?",
+					"failed", serveErr.Error(), c.id)
+				continue
+			}
+			serveDir = resolved
 			host := deploymentHost(d.publicDomain, c.repoName)
 			spec := Spec{
 				DeployID: c.id,

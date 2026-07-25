@@ -1696,3 +1696,22 @@ bugs:
     regression_guards:
       - components/sites/sitekey_ownership_test.go
       - components/deploy/framework_mode_test.go
+  - id: BUG-2026-07-24-static-directory-listing
+    date: "2026-07-24"
+    severity: critical
+    priority: critical
+    scope: deploy
+    summary: "Static hosts serve git checkout FileServer directory listings — soft serveDir fallback, no public/ detection, fleet not redeployed after #166"
+    file: specs/bugs/BUG-2026-07-24-static-directory-listing.md
+    status: open
+    github_issues: [155]
+    consumer_issues:
+      - danielvm-git/big-exames#3
+      - danielvm-git/big-library#4
+      - danielvm-git/grimoire#5
+    related:
+      - BUG-2026-07-24-deploy-404-site-not-found
+    approach: "Fail closed without index.html (static_output_missing); prefer public/ for Firebase static; keep root_path; redeploy fleet"
+    regression_guards:
+      - components/deploy/static_serve_test.go
+      - components/deploy/framework_mode_test.go

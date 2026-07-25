@@ -115,11 +115,15 @@ func (d *Deploy) Rollback(ctx context.Context, currentID string) (*RollbackEvent
 	// Start serving the old build artifacts (static or process app)
 	serveDir := buildDir
 	if oldDeploy.AppType == AppStatic {
-		if _, err := os.Stat(filepath.Join(buildDir, "dist")); err == nil {
-			serveDir = filepath.Join(buildDir, "dist")
-		} else if _, err := os.Stat(filepath.Join(buildDir, "build")); err == nil {
-			serveDir = filepath.Join(buildDir, "build")
+		resolved, serveErr := ResolvePureStaticServeDir(buildDir, "dist")
+		if serveErr != nil {
+			resolved, serveErr = ResolvePureStaticServeDir(buildDir, "build")
 		}
+		if serveErr != nil {
+			d.logger.Error("rollback static output missing", "id", prev.id, "error", serveErr)
+			return nil, serveErr
+		}
+		serveDir = resolved
 		go d.serveStatic(context.Background(), serveDir, oldDeploy, extractRepoName(host))
 	} else {
 		go d.startApp(context.Background(), serveDir, oldDeploy, oldDeploy.AppType, extractRepoName(host), nil)

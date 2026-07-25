@@ -241,11 +241,17 @@ func (d *Deploy) runDeployment(deploy *Deployment, buildDir, repoName string) {
 		needsNodeBuild := fileExists(filepath.Join(appRoot, "package.json")) &&
 			!fileExists(filepath.Join(appRoot, "index.html"))
 		if !needsNodeBuild {
-			serveDir := appRoot
-			if outDirHint != "" {
-				candidate := filepath.Join(appRoot, outDirHint)
-				if _, err := os.Stat(candidate); err == nil {
-					serveDir = candidate
+			serveDir, serveErr := ResolvePureStaticServeDir(appRoot, outDirHint)
+			if serveErr != nil {
+				d.logger.Error("static output missing", "error", serveErr)
+				d.appendDeployLog(deploy.ID, "✗ "+serveErr.Error())
+				d.failDeployment(deploy.ID, serveErr)
+				return
+			}
+			if serveDir != appRoot {
+				rel, relErr := filepath.Rel(appRoot, serveDir)
+				if relErr == nil {
+					d.appendDeployLog(deploy.ID, fmt.Sprintf("→ Static serve dir: %s", rel))
 				}
 			}
 			d.appendDeployLog(deploy.ID, "→ Serving static files")
@@ -313,6 +319,27 @@ func (d *Deploy) runDeployment(deploy *Deployment, buildDir, repoName string) {
 	}
 
 	if appType == AppStatic {
+		tried := []string{
+			filepath.Join(appRoot, "dist"),
+			filepath.Join(appRoot, "build"),
+			filepath.Join(appRoot, "public"),
+			appRoot,
+		}
+		if outDirHint != "" {
+			tried = append([]string{filepath.Join(appRoot, outDirHint)}, tried...)
+		}
+		if err := RequireStaticIndex(serveDir, tried...); err != nil {
+			d.logger.Error("static output missing after build", "error", err, "serveDir", serveDir)
+			d.appendDeployLog(deploy.ID, "✗ "+err.Error())
+			d.failDeployment(deploy.ID, err)
+			return
+		}
+		if serveDir != appRoot {
+			rel, relErr := filepath.Rel(appRoot, serveDir)
+			if relErr == nil {
+				d.appendDeployLog(deploy.ID, fmt.Sprintf("→ Static serve dir: %s", rel))
+			}
+		}
 		d.updateStatus(deploy.ID, "running")
 		d.finalizeDeploymentURL(deploy, repoName)
 		d.persistPipelineTimeline(deploy.ID, timeline)

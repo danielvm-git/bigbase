@@ -40,10 +40,15 @@ func TestTriggerRunsThroughSupervisor(t *testing.T) {
 		t.Fatalf("insert git_repos: %v", err)
 	}
 
-	// Build dir for "dep-1" must exist so resumeCandidates doesn't skip it.
+	// Build dir for "dep-1" must exist with an entrypoint so resumeCandidates
+	// does not skip it under fail-closed static_output_missing.
 	buildsDir := t.TempDir()
-	if err := os.MkdirAll(filepath.Join(buildsDir, "dep-1"), 0o755); err != nil {
+	depBuild := filepath.Join(buildsDir, "dep-1")
+	if err := os.MkdirAll(depBuild, 0o755); err != nil {
 		t.Fatalf("mkdirAll: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(depBuild, "index.html"), []byte("<h1>ok</h1>"), 0o644); err != nil {
+		t.Fatalf("write index.html: %v", err)
 	}
 
 	_, err = database.ExecContext(context.Background(),
