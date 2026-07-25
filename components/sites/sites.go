@@ -43,15 +43,45 @@ type AuthPolicy struct {
 }
 
 type Site struct {
-	ID               string      `json:"id"`
-	Name             string      `json:"name"`
-	FullName         string      `json:"full_name"`
-	GitRepoID        string      `json:"git_repo_id"`
-	ProductionBranch string      `json:"production_branch"`
-	RootPath         string      `json:"root_path"`
-	GitHubConnected  bool        `json:"github_connected,omitempty"`
-	LatestDeployment *Deployment `json:"latest_deployment,omitempty"`
-	AuthPolicy       *AuthPolicy `json:"auth_policy,omitempty"`
+	ID               string            `json:"id"`
+	Name             string            `json:"name"`
+	FullName         string            `json:"full_name"`
+	GitRepoID        string            `json:"git_repo_id"`
+	ProductionBranch string            `json:"production_branch"`
+	RootPath         string            `json:"root_path"`
+	DeployDefaults   *DeployDefaults   `json:"deploy_defaults,omitempty"`
+	GitHubConnected  bool              `json:"github_connected,omitempty"`
+	LatestDeployment *Deployment       `json:"latest_deployment,omitempty"`
+	AuthPolicy       *AuthPolicy       `json:"auth_policy,omitempty"`
+}
+
+// DeployDefaults holds site-level deploy configuration that serves as the
+// middle layer in the three-layer config merge: bigbase.toml → site defaults
+// → request body. All fields are optional; zero values mean "use auto-detection".
+type DeployDefaults struct {
+	AppType        string            `json:"app_type,omitempty"`
+	BuildCommand   string            `json:"build_command,omitempty"`
+	StartCommand   string            `json:"start_command,omitempty"`
+	PassthroughPaths []string        `json:"passthrough_paths,omitempty"`
+	HealthPath     string            `json:"health_path,omitempty"`
+	Env            map[string]string `json:"env,omitempty"`
+}
+
+// Validate checks that deploy_defaults has at least one non-empty field.
+func (dd *DeployDefaults) Validate() error {
+	if dd == nil {
+		return nil
+	}
+	if dd.AppType != "" {
+		valid := map[string]bool{"node": true, "go": true, "python": true, "php": true, "static": true}
+		if !valid[dd.AppType] {
+			return fmt.Errorf("invalid app_type %q: must be one of node, go, python, php, static", dd.AppType)
+		}
+	}
+	if dd.HealthPath != "" && !strings.HasPrefix(dd.HealthPath, "/") {
+		return fmt.Errorf("health_path must start with /, got %q", dd.HealthPath)
+	}
+	return nil
 }
 
 type DeployTrigger func(ctx context.Context, repoID, branch, siteName, siteID string, passthroughPaths []string, appType string) (*Deployment, error)
@@ -171,6 +201,7 @@ func (s *Sites) Start(ctx *kernel.Context) error {
 	if err := s.migrateEnvVars(); err != nil {
 		return fmt.Errorf("migrate site_env_vars: %w", err)
 	}
+	_ = s.db.Migrate(`ALTER TABLE sites ADD COLUMN deploy_defaults TEXT NOT NULL DEFAULT '{}'`)
 	s.logger.Info("sites component ready")
 	return nil
 }
@@ -237,6 +268,20 @@ func (s *Sites) handleSiteByID(w http.ResponseWriter, r *http.Request) {
 			return
 		case http.MethodPost:
 			s.setSiteAuthPolicy(w, r, id)
+			return
+		default:
+			kernel.WriteJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
+			return
+		}
+	}
+
+	if len(parts) == 2 && parts[1] == "deploy-defaults" {
+		switch r.Method {
+		case http.MethodGet:
+			s.getSiteDeployDefaults(w, r, id)
+			return
+		case http.MethodPut:
+			s.setSiteDeployDefaults(w, r, id)
 			return
 		default:
 			kernel.WriteJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
@@ -510,12 +555,13 @@ func (s *Sites) GetSite(ctx context.Context, id string) (*Site, error) {
 	var site Site
 	var repoName string
 	var authPolicyStr string
+	var deployDefaultsStr string
 	err := s.db.QueryRowContext(ctx, `
 		SELECT s.id, s.name, s.git_repo_id, s.production_branch, s.root_path, s.github_full_name,
-			COALESCE(g.name, ''), s.auth_policy
+			COALESCE(g.name, ''), s.auth_policy, s.deploy_defaults
 		FROM sites s LEFT JOIN git_repos g ON g.id = s.git_repo_id
 		WHERE s.id = ? OR s.git_repo_id = ?`, id, id).
-		Scan(&site.ID, &site.Name, &site.GitRepoID, &site.ProductionBranch, &site.RootPath, &site.FullName, &repoName, &authPolicyStr)
+		Scan(&site.ID, &site.Name, &site.GitRepoID, &site.ProductionBranch, &site.RootPath, &site.FullName, &repoName, &authPolicyStr, &deployDefaultsStr)
 	if err != nil {
 		err = s.db.QueryRowContext(ctx,
 			"SELECT id, name, default_branch FROM git_repos WHERE id = ?", id).
@@ -529,6 +575,12 @@ func (s *Sites) GetSite(ctx context.Context, id string) (*Site, error) {
 	} else {
 		if authPolicyStr != "" {
 			_ = json.Unmarshal([]byte(authPolicyStr), &site.AuthPolicy)
+		}
+		if deployDefaultsStr != "" && deployDefaultsStr != "{}" {
+			var dd DeployDefaults
+			if err := json.Unmarshal([]byte(deployDefaultsStr), &dd); err == nil {
+				site.DeployDefaults = &dd
+			}
 		}
 		if site.FullName == "" {
 			site.FullName = repoName
@@ -544,11 +596,12 @@ func (s *Sites) GetSite(ctx context.Context, id string) (*Site, error) {
 
 func (s *Sites) createSite(w http.ResponseWriter, r *http.Request) {
 	var req struct {
-		Name             string `json:"name"`
-		GitRepoID        string `json:"git_repo_id"`
-		ProductionBranch string `json:"production_branch"`
-		RootPath         string `json:"root_path"`
-		GitHubFullName   string `json:"github_full_name"`
+		Name             string           `json:"name"`
+		GitRepoID        string           `json:"git_repo_id"`
+		ProductionBranch string           `json:"production_branch"`
+		RootPath         string           `json:"root_path"`
+		GitHubFullName   string           `json:"github_full_name"`
+		DeployDefaults   *DeployDefaults  `json:"deploy_defaults"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json"})
@@ -569,7 +622,20 @@ func (s *Sites) createSite(w http.ResponseWriter, r *http.Request) {
 		req.RootPath = "./"
 	}
 
-	id, name, err := s.insertSite(r.Context(), req.GitRepoID, req.Name, req.ProductionBranch, req.RootPath, req.GitHubFullName)
+	if req.DeployDefaults != nil {
+		if err := req.DeployDefaults.Validate(); err != nil {
+			kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": fmt.Sprintf("invalid deploy_defaults: %v", err)})
+			return
+		}
+	}
+
+	var deployDefaultsJSON string
+	if req.DeployDefaults != nil {
+		b, _ := json.Marshal(req.DeployDefaults)
+		deployDefaultsJSON = string(b)
+	}
+
+	id, name, err := s.insertSite(r.Context(), req.GitRepoID, req.Name, req.ProductionBranch, req.RootPath, req.GitHubFullName, deployDefaultsJSON)
 	if err != nil {
 		if strings.Contains(err.Error(), "site name already taken") {
 			writeSiteAccessError(w, http.StatusConflict, "site_name_taken", "site name already taken",
@@ -592,6 +658,7 @@ func (s *Sites) createSite(w http.ResponseWriter, r *http.Request) {
 		GitRepoID:        req.GitRepoID,
 		ProductionBranch: req.ProductionBranch,
 		RootPath:         req.RootPath,
+		DeployDefaults:   req.DeployDefaults,
 		GitHubConnected:  req.GitHubFullName != "",
 	}
 	if site.FullName == "" {
@@ -615,11 +682,12 @@ func (s *Sites) createSite(w http.ResponseWriter, r *http.Request) {
 // CreateSite provisions a site for a git repository (MCP SiteCreator).
 // When name is empty it defaults from the git_repos name.
 func (s *Sites) CreateSite(ctx context.Context, gitRepoID, name, branch string) (id, siteName string, err error) {
-	return s.insertSite(ctx, gitRepoID, name, branch, "", "")
+	return s.insertSite(ctx, gitRepoID, name, branch, "", "", "")
 }
 
 // insertSite writes a site row; rootPath defaults to "./" when empty.
-func (s *Sites) insertSite(ctx context.Context, gitRepoID, name, branch, rootPath, githubFullName string) (id, siteName string, err error) {
+// deployDefaultsJSON is optional; empty string uses the DB default '{}'.
+func (s *Sites) insertSite(ctx context.Context, gitRepoID, name, branch, rootPath, githubFullName, deployDefaultsJSON string) (id, siteName string, err error) {
 	if gitRepoID == "" {
 		return "", "", fmt.Errorf("git_repo_id is required")
 	}
@@ -660,11 +728,14 @@ func (s *Sites) insertSite(ctx context.Context, gitRepoID, name, branch, rootPat
 	}
 
 	now := time.Now().UTC().Format(time.RFC3339)
+	if deployDefaultsJSON == "" {
+		deployDefaultsJSON = "{}"
+	}
 	_, err = s.db.ExecContext(ctx,
-		`INSERT INTO sites (id, name, git_repo_id, production_branch, root_path, github_full_name, created_at, org_id)
-		 VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+		`INSERT INTO sites (id, name, git_repo_id, production_branch, root_path, github_full_name, created_at, org_id, deploy_defaults)
+		 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
 		 ON CONFLICT(id) DO NOTHING`,
-		id, name, gitRepoID, branch, rootPath, githubFullName, now, orgID)
+		id, name, gitRepoID, branch, rootPath, githubFullName, now, orgID, deployDefaultsJSON)
 	if err != nil {
 		return "", "", fmt.Errorf("insert site: %w", err)
 	}
@@ -1142,4 +1213,71 @@ func (s *Sites) setSiteAuthPolicy(w http.ResponseWriter, r *http.Request, id str
 	}
 
 	kernel.WriteJSON(w, http.StatusOK, map[string]any{"status": "ok", "policy": policy})
+}
+
+func (s *Sites) getSiteDeployDefaults(w http.ResponseWriter, r *http.Request, id string) {
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	if !s.requireSiteOwnership(ctx, w, id) {
+		return
+	}
+
+	var ddStr sql.NullString
+	err := s.db.QueryRowContext(ctx, "SELECT deploy_defaults FROM sites WHERE id = ?", id).Scan(&ddStr)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			kernel.WriteJSON(w, http.StatusNotFound, map[string]string{"error": "site not found"})
+		} else {
+			kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		}
+		return
+	}
+
+	var dd DeployDefaults
+	if ddStr.Valid && ddStr.String != "" && ddStr.String != "{}" {
+		_ = json.Unmarshal([]byte(ddStr.String), &dd)
+	}
+	kernel.WriteJSON(w, http.StatusOK, dd)
+}
+
+func (s *Sites) setSiteDeployDefaults(w http.ResponseWriter, r *http.Request, id string) {
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	if !s.requireSiteOwnership(ctx, w, id) {
+		return
+	}
+
+	var exists int
+	err := s.db.QueryRowContext(ctx, "SELECT count(1) FROM sites WHERE id = ?", id).Scan(&exists)
+	if err != nil || exists == 0 {
+		kernel.WriteJSON(w, http.StatusNotFound, map[string]string{"error": "site not found"})
+		return
+	}
+
+	var dd DeployDefaults
+	if err := json.NewDecoder(r.Body).Decode(&dd); err != nil {
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json"})
+		return
+	}
+
+	if err := dd.Validate(); err != nil {
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": fmt.Sprintf("invalid deploy_defaults: %v", err)})
+		return
+	}
+
+	ddBytes, err := json.Marshal(dd)
+	if err != nil {
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "marshal deploy_defaults failed"})
+		return
+	}
+
+	_, err = s.db.ExecContext(ctx, "UPDATE sites SET deploy_defaults = ? WHERE id = ?", string(ddBytes), id)
+	if err != nil {
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		return
+	}
+
+	kernel.WriteJSON(w, http.StatusOK, map[string]any{"status": "ok", "deploy_defaults": dd})
 }
