@@ -11,6 +11,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/BurntSushi/toml"
 	mcpsdk "github.com/modelcontextprotocol/go-sdk/mcp"
 
 	"github.com/danielvm/bigbase/kernel"
@@ -47,6 +48,16 @@ type SiteDeployment struct {
 	Status string
 }
 
+// SiteDeployDefaults holds inferred defaults from the site config.
+type SiteDeployDefaults struct {
+	AppType          string
+	BuildCommand     string
+	StartCommand     string
+	PassthroughPaths []string
+	HealthPath       string
+	Env              map[string]string
+}
+
 // SiteInfo is the MCP-facing site catalog entry (no sites import).
 type SiteInfo struct {
 	ID               string
@@ -54,6 +65,7 @@ type SiteInfo struct {
 	GitRepoID        string
 	ProductionBranch string
 	LatestDeployment *SiteDeployment
+	DeployDefaults   *SiteDeployDefaults
 }
 
 // SiteLister returns site catalog entries for MCP discovery tools.
@@ -529,21 +541,114 @@ Port is set via ` + "`PORT`" + ` env var. Database is SQLite by default.
 	// registerGetCITemplate
 	c.registerTool(srv, tierPublic, &mcpsdk.Tool{
 		Name:        "get_ci_template",
-		Description: "Return canonical GitHub Actions deploy workflow YAML for BigBase. Omit app_type to list available templates.",
+		Description: "Return canonical GitHub Actions deploy workflow YAML for BigBase. Omit app_type to list available templates. Provide site_id and manifest (bigbase.toml string) to auto-populate defaults.",
 	}, func(ctx context.Context, req *mcpsdk.CallToolRequest, _ any) (*mcpsdk.CallToolResult, any, error) {
 		var args map[string]any
 		if req.Params.Arguments != nil {
 			_ = json.Unmarshal(req.Params.Arguments, &args)
 		}
 		appType, _ := args["app_type"].(string)
-		if appType == "" {
+		siteID, _ := args["site_id"].(string)
+		manifestStr, _ := args["manifest"].(string)
+
+		if appType == "" && siteID == "" && manifestStr == "" {
 			return textResult(formatCITemplateCatalog(ciTemplates)), nil, nil
 		}
+
+		type mcpManifest struct {
+			Framework string `toml:"framework"`
+			Build     struct {
+				Command string `toml:"command"`
+			} `toml:"build"`
+			Start struct {
+				Command string `toml:"command"`
+			} `toml:"start"`
+			HealthCheck struct {
+				Path string `toml:"health_check"`
+			} `toml:"health_check"`
+			Env map[string]string `toml:"env"`
+		}
+
+		var bCmd, sCmd, hPath string
+		envs := make(map[string]string)
+
+		if siteID != "" && c.siteLister != nil {
+			if site, err := c.siteLister.GetSite(ctx, siteID); err == nil && site != nil && site.DeployDefaults != nil {
+				if site.DeployDefaults.AppType != "" {
+					appType = site.DeployDefaults.AppType
+				}
+				bCmd = site.DeployDefaults.BuildCommand
+				sCmd = site.DeployDefaults.StartCommand
+				hPath = site.DeployDefaults.HealthPath
+				for k, v := range site.DeployDefaults.Env {
+					envs[k] = v
+				}
+			}
+		}
+
+		if manifestStr != "" {
+			var m mcpManifest
+			if err := toml.Unmarshal([]byte(manifestStr), &m); err == nil {
+				if m.Framework != "" {
+					switch m.Framework {
+					case "node", "sveltekit", "astro", "next", "vue", "react":
+						appType = "node"
+					case "go", "python", "static", "php":
+						appType = m.Framework
+					default:
+						appType = "static"
+					}
+				}
+				if m.Build.Command != "" {
+					bCmd = m.Build.Command
+				}
+				if m.Start.Command != "" {
+					sCmd = m.Start.Command
+				}
+				if m.HealthCheck.Path != "" {
+					hPath = m.HealthCheck.Path
+				}
+				for k, v := range m.Env {
+					envs[k] = v
+				}
+			}
+		}
+
+		if appType == "" {
+			appType = "static"
+		}
+
 		for _, t := range ciTemplates {
 			for _, at := range t.AppTypes {
 				if at == appType {
-					c.logger.Info("mcp tool", "tool", "get_ci_template", "app_type", appType)
-					return textResult(t.Content), nil, nil
+					c.logger.Info("mcp tool", "tool", "get_ci_template", "app_type", appType, "site_id", siteID)
+					content := t.Content
+					
+					// Auto-populate env vars
+					if len(envs) > 0 {
+						var envsStr strings.Builder
+						envsStr.WriteString("  SITE_URL: \"https://CHANGE-ME.bigbase.click\"\n")
+						for k, v := range envs {
+							fmt.Fprintf(&envsStr, "  %s: %q\n", k, v)
+						}
+						content = strings.Replace(content, "  SITE_URL: \"https://CHANGE-ME.bigbase.click\"\n", envsStr.String(), 1)
+					}
+
+					// Auto-populate with: args
+					var withArgs strings.Builder
+					withArgs.WriteString("          branch: main\n")
+					if bCmd != "" {
+						fmt.Fprintf(&withArgs, "          build_command: %q\n", bCmd)
+					}
+					if sCmd != "" {
+						fmt.Fprintf(&withArgs, "          start_command: %q\n", sCmd)
+					}
+					if hPath != "" {
+						fmt.Fprintf(&withArgs, "          health_path: %q\n", hPath)
+					}
+					content = strings.Replace(content, "          branch: main\n", withArgs.String(), 1)
+
+					return textResult(content), nil, nil
 				}
 			}
 		}

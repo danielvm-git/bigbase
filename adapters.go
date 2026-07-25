@@ -59,6 +59,16 @@ func toMCPSiteInfo(s sites.Site) mcp.SiteInfo {
 			Status: s.LatestDeployment.Status,
 		}
 	}
+	if s.DeployDefaults != nil {
+		info.DeployDefaults = &mcp.SiteDeployDefaults{
+			AppType:          s.DeployDefaults.AppType,
+			BuildCommand:     s.DeployDefaults.BuildCommand,
+			StartCommand:     s.DeployDefaults.StartCommand,
+			PassthroughPaths: s.DeployDefaults.PassthroughPaths,
+			HealthPath:       s.DeployDefaults.HealthPath,
+			Env:              s.DeployDefaults.Env,
+		}
+	}
 	return info
 }
 
