@@ -89,6 +89,8 @@ Code works, but invisible features = silent user friction. Blocks e81 from shipp
 ### Target
 New feature: `bigbase.toml` manifest + deploy defaults on site record + parameterized CI templates
 
+### Status: e70s01 ✅ e70s02 ✅ — 4/7 BCPs complete
+
 ### Dependents (planned)
 | Symbol | Current state | After e70 |
 |--------|--------------|-----------|
@@ -96,7 +98,7 @@ New feature: `bigbase.toml` manifest + deploy defaults on site record + paramete
 | `engine.go::buildApp` | no manifest awareness | consumes `Manifest.Start`, `Manifest.Env` |
 | `engine.go::startApp` | hardcoded per-type switch | manifest-driven start command |
 | `env.go::BuildEnv` | only platform env | merges manifest env vars |
-| MCP `create_site` | no deploy defaults | persists `app_type`, `passthrough_paths`, `health_path` |
+| MCP `create_site` | no deploy defaults | ✅ persists `app_type`, `passthrough_paths`, `health_path` |
 | MCP `get_ci_template` | generic YAML | parameterized per app_type + site defaults |
 
 ### Multi-Language Impact
