@@ -102,6 +102,20 @@ func TestRequireStaticIndex_OK(t *testing.T) {
 	}
 }
 
+func TestGetStartCommand_AdapterNodeBuildIndex(t *testing.T) {
+	dir := t.TempDir()
+	writePkg(t, dir, `{"name":"web","type":"module"}`)
+	if err := os.MkdirAll(filepath.Join(dir, "build"), 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "build", "index.js"), []byte("export {}"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	if got := deploy.GetStartCommand(dir); got != "node build/index.js" {
+		t.Fatalf("want node build/index.js, got %q", got)
+	}
+}
+
 func TestFindStaticServeDirAfterNodeBuild_RequiresIndex(t *testing.T) {
 	dir := t.TempDir()
 	// SSR adapter-node style: build/ exists but no index.html
