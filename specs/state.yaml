@@ -20,22 +20,21 @@ metrics:
   bcps_per_hour: 0
 epic_cycle:
   step: 8
-  story_bcps: 15
-  story: e80s01-e80s03
+  story_bcps: 0
+  story: e70s03-e70s04
   audit_result: pass
   completed_steps:
-    - "0: change-request (e80 created)"
-    - "1: survey-context (VPS audit via SSH)"
-    - "2: plan-work (3 stories)"
-    - "3: kickoff-branch (main, no branch — infra)"
-    - "4: develop-tdd (applied hardening live)"
-    - "5: verify-work (8-gate verification)"
-    - "6: audit-code (N/A — infra)"
-    - "7: commit-message (N/A — live ops)"
-    - "8: craft-skill (harden-vps)"
+    - "0: threat-model"
+    - "1: survey-context"
+    - "2: plan-work"
+    - "3: kickoff-branch"
+    - "4: develop-tdd"
+    - "5: verify-work"
+    - "6: audit-code"
+    - "7: commit-message"
   story_complete: true
-  note: "e80 complete — VPS hardened on vmi3338033 (89.116.26.187). 3 layers: Ubuntu (UFW+fail2ban+unattended-upgrades+SSH), BigBase (systemd+alerts+backups), Contabo (cntb+snapshots). Skill created: harden-vps."
-  fast_mode: false
+  note: "e70s03 and e70s04 complete. CI parameterized and static-sidecar app type added."
+  fast_mode: true
 bug_cycle: null
 git:
   branch: main

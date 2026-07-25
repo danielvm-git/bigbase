@@ -70,14 +70,15 @@ type ManifestStart struct {
 
 // validFrameworks is the set of framework values accepted by the manifest.
 var validFrameworks = map[string]bool{
-	"sveltekit": true,
-	"astro":     true,
-	"next":      true,
-	"vue":       true,
-	"react":     true,
-	"static":    true,
-	"go":        true,
-	"python":    true,
+	"sveltekit":      true,
+	"astro":          true,
+	"next":           true,
+	"vue":            true,
+	"react":          true,
+	"static":         true,
+	"static-sidecar": true,
+	"go":             true,
+	"python":         true,
 	"node":      true,
 }
 
@@ -92,6 +93,8 @@ func manifestToAppType(m *Manifest) AppType {
 		return AppPython
 	case "static":
 		return AppStatic
+	case "static-sidecar":
+		return AppStaticSidecar
 	default:
 		return AppStatic
 	}

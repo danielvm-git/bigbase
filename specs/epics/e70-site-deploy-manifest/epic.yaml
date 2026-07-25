@@ -28,7 +28,7 @@ stories:
   - id: e70s03
     title: "Parameterized CI templates with deploy defaults"
     bcps: 1
-    status: pending
+    status: done
     depends_on: [e67, e70s01]
     spec: e70s03-spec.md
     tasks: e70s03-tasks.yaml

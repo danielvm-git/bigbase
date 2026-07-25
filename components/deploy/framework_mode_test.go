@@ -141,3 +141,18 @@ func TestResolveDeployAppType_ExplicitMatches(t *testing.T) {
 		t.Fatalf("got %s out=%s", got, outDir)
 	}
 }
+
+func TestStaticSidecarAppType(t *testing.T) {
+	dir := t.TempDir()
+	writePkg(t, dir, `{"dependencies":{"svelte": "^4.0.0"}}`)
+	got, outDir, err := deploy.ResolveDeployAppType(dir, deploy.AppStaticSidecar)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got != deploy.AppStaticSidecar {
+		t.Fatalf("got %s want %s", got, deploy.AppStaticSidecar)
+	}
+	if outDir != "" {
+		t.Fatalf("outDir for sidecar should be empty, got %s", outDir)
+	}
+}

@@ -177,7 +177,10 @@ func ResolveDeployAppType(dir string, explicit AppType) (AppType, string, error)
 		if !explicit.IsValid() {
 			return "", "", codedErr("app_type_mismatch",
 				"invalid app_type",
-				"Use one of: static, node, go, python, php")
+				"Use one of: static, node, go, python, php, static-sidecar")
+		}
+		if explicit == AppStaticSidecar {
+			return explicit, "", nil
 		}
 		if fm.Framework != "" && !fm.Ambiguous && fm.AppType != "" && explicit != fm.AppType {
 			return "", "", codedErr("app_type_mismatch",
