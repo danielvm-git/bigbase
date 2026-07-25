@@ -1,3 +1,10 @@
+## [2.79.13](https://github.com/danielvm-git/bigbase/compare/v2.79.12...v2.79.13) (2026-07-25)
+
+
+### Bug Fixes
+
+* **deploy:** keep adapter-node SSR as process apps ([#168](https://github.com/danielvm-git/bigbase/issues/168)) ([7d360e4](https://github.com/danielvm-git/bigbase/commit/7d360e49a5648a2dfcfb7eca44438d6284baae79))
+
 ## [2.79.12](https://github.com/danielvm-git/bigbase/compare/v2.79.11...v2.79.12) (2026-07-25)
 
 
