@@ -1,3 +1,10 @@
+## [2.79.16](https://github.com/danielvm-git/bigbase/compare/v2.79.15...v2.79.16) (2026-07-25)
+
+
+### Bug Fixes
+
+* **deploy,ci:** fix CI flake in eventually() + decouple sqlite job from postgres ([#172](https://github.com/danielvm-git/bigbase/issues/172)) ([427417a](https://github.com/danielvm-git/bigbase/commit/427417a5d8d01faf97e2056442547a9820ba71f3))
+
 ## [2.79.15](https://github.com/danielvm-git/bigbase/compare/v2.79.14...v2.79.15) (2026-07-25)
 
 
