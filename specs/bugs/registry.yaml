@@ -1703,7 +1703,7 @@ bugs:
     scope: deploy
     summary: "Static hosts serve git checkout FileServer directory listings — soft serveDir fallback, no public/ detection, fleet not redeployed after #166"
     file: specs/bugs/BUG-2026-07-24-static-directory-listing.md
-    status: open
+    status: fixed
     github_issues: [155]
     consumer_issues:
       - danielvm-git/big-exames#3

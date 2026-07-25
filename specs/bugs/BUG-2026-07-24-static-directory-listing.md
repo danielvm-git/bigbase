@@ -1,6 +1,6 @@
 ---
 bug_id: BUG-2026-07-24-static-directory-listing
-status: open
+status: fixed
 severity: critical
 priority: critical
 scope: deploy
@@ -86,12 +86,20 @@ Working controls: bolao, docklocker, danielvm-git-clean-install-guide → real H
 
 ## Acceptance
 
-- [ ] Missing `index.html` under chosen serveDir → failed deploy (`static_output_missing`), never FileServer listing
-- [ ] `public/index.html` pure-static → served from `public/`
-- [ ] `root_path` regressions green
-- [ ] Fleet redeploy: exames, library, add-tutorial, grimoire → curl real HTML (not `<a href=".git/">`)
-- [ ] Consumer issues updated/closed from VPS evidence; bigbase#155 updated
+- [x] Missing `index.html` under chosen serveDir → failed deploy (`static_output_missing`), never FileServer listing
+- [x] `public/index.html` pure-static → served from `public/`
+- [x] `root_path` regressions green
+- [x] Fleet redeploy: exames, library, add-tutorial, grimoire → curl real HTML (not `<a href=".git/">`)
+- [x] Consumer issues updated/closed from VPS evidence; bigbase#155 updated
 
 ## Resolution
 
-_(pending)_
+Shipped in **v2.79.12–v2.79.14** via PRs #167 / #168 / #169:
+
+1. Fail-closed static serve (`static_output_missing`); prefer `public/`; skip bad static resume (#167)
+2. Do not promote AppNode→AppStatic unless outDir has `index.html` (#168) — unblocks adapter-node
+3. `GetStartCommand` → `node build/index.js` when present without `scripts.start` (#169)
+
+**Fleet curl 2026-07-25:** library, exames, add-tutorial, grimoire, bolao → HTTP 200 real HTML.
+
+Consumer: closed big-exames#3, big-library#4, grimoire#5; documented add-tutorial#2; closed bigbase#155.
