@@ -1,0 +1,47 @@
+type: epic-shard
+context: domain
+id: e83
+title: "MCP Tools — Site-Scoped Environment Variables"
+wsjf: 7.0
+wsjf_rationale: "BV=8(blocks CI/CD automation for env var management via MCP) TC=3(no urgent deadline) RR=7(unblocks fully automated deploy pipelines for encrypted-health-data apps) / JS=2(~1 day across 1 story)"
+status: open
+tier: 1
+depends_on: [e41, e38]
+covers:
+  - components/mcp/
+  - components/sites/env_vars.go
+  - adapters.go
+  - main.go
+stories:
+  - id: e83s01
+    title: "MCP tools for site-scoped env var CRUD"
+    status: open
+    bcps: 3
+    tasks:
+      - desc: "Add SiteEnvVarManager interface and adapter"
+        notes: |
+          Define SiteEnvVarManager interface in components/mcp/mcp.go with:
+          - ListSiteEnvVars(ctx, siteID) ([]SiteEnvVar, error)
+          - SetSiteEnvVars(ctx, siteID, vars map[string]string) ([]SiteEnvVar, error)
+          - DeleteSiteEnvVar(ctx, siteID, key) error
+          Add SiteEnvVar struct (ID, SiteID, Key, ValuePreview, IsBuildTime, IsRuntime, CreatedAt, UpdatedAt).
+          Add public methods to components/sites/env_vars.go on Sites type.
+          Add mcpEnvVarAdapter in adapters.go bridging sites.Sites to mcp.SiteEnvVarManager.
+          Wire in main.go: SiteEnvVarManager: mcpEnvVarAdapter{s: st}.
+        verify: "go build -o bigbase ."
+      - desc: "Register 3 MCP tools in NewMCPServer()"
+        notes: |
+          get_site_env_vars (tierRead): Input site_id, returns masked env vars list.
+          set_site_env_vars (tierWrite): Input site_id + vars map, upserts, returns masked list.
+          delete_site_env_var (tierWrite): Input site_id + key, deletes one var.
+          Keys validated: ^[A-Z][A-Z0-9_]*$.
+          Values masked server-side (last 4 chars only) in list responses.
+        verify: "go test ./components/mcp/ -run TestEnvVar -v"
+      - desc: "Write MCP integration tests"
+        notes: |
+          Test get_site_env_vars: create site + env var, verify masked response.
+          Test set_site_env_vars: set multiple vars, verify upsert behavior.
+          Test delete_site_env_var: delete existing var, verify 404 on missing.
+          Test key validation: reject lowercase keys.
+          Use connectMCPSession() helper from existing mcp_test.go.
+        verify: "go test ./components/mcp/ -run TestEnvVar -v"

@@ -758,3 +758,212 @@ func TestMCPSetSiteAuthPolicy(t *testing.T) {
 		t.Errorf("expected policy in callback, got %s", callbackPolicyJSON)
 	}
 }
+
+// mockEnvVarManager is a SiteEnvVarManager backed by an in-memory map.
+type mockEnvVarManager struct {
+	vars map[string][]mcp.SiteEnvVar // siteID -> vars
+}
+
+func newMockEnvVarManager() *mockEnvVarManager {
+	return &mockEnvVarManager{vars: make(map[string][]mcp.SiteEnvVar)}
+}
+
+func (m *mockEnvVarManager) ListSiteEnvVars(_ context.Context, siteID string) ([]mcp.SiteEnvVar, error) {
+	return m.vars[siteID], nil
+}
+
+func (m *mockEnvVarManager) SetSiteEnvVars(_ context.Context, siteID string, newVars map[string]string) ([]mcp.SiteEnvVar, error) {
+	existing := m.vars[siteID]
+	existingMap := make(map[string]int)
+	for i, v := range existing {
+		existingMap[v.Key] = i
+	}
+	var result []mcp.SiteEnvVar
+	for key, value := range newVars {
+		preview := key // simplified for testing
+		if len(value) > 4 {
+			preview = "••••" + value[len(value)-4:]
+		}
+		ev := mcp.SiteEnvVar{
+			ID:           fmt.Sprintf("ev-%s-%s", siteID, key),
+			SiteID:       siteID,
+			Key:          key,
+			ValuePreview: preview,
+			IsBuildTime:  false,
+			IsRuntime:    true,
+			CreatedAt:    time.Now().UTC().Format(time.RFC3339),
+			UpdatedAt:    time.Now().UTC().Format(time.RFC3339),
+		}
+		if idx, ok := existingMap[key]; ok {
+			existing[idx] = ev
+		} else {
+			existing = append(existing, ev)
+		}
+		result = append(result, ev)
+	}
+	m.vars[siteID] = existing
+	return result, nil
+}
+
+func (m *mockEnvVarManager) DeleteSiteEnvVar(_ context.Context, siteID, key string) error {
+	existing := m.vars[siteID]
+	for i, v := range existing {
+		if v.Key == key {
+			m.vars[siteID] = append(existing[:i], existing[i+1:]...)
+			return nil
+		}
+	}
+	return fmt.Errorf("env var %q not found", key)
+}
+
+func TestMCPGetSiteEnvVars(t *testing.T) {
+	mock := newMockEnvVarManager()
+	mock.vars["site-1"] = []mcp.SiteEnvVar{
+		{ID: "ev-1", SiteID: "site-1", Key: "DATABASE_URL", ValuePreview: "••••5432", IsRuntime: true, CreatedAt: "2026-07-28T10:00:00Z", UpdatedAt: "2026-07-28T10:00:00Z"},
+		{ID: "ev-2", SiteID: "site-1", Key: "API_KEY", ValuePreview: "••••abcd", IsBuildTime: true, CreatedAt: "2026-07-28T10:00:00Z", UpdatedAt: "2026-07-28T10:00:00Z"},
+	}
+
+	c := mcp.New(mcp.Options{Enabled: true, SiteEnvVarManager: mock})
+	ctx, session := connectMCPSession(t, c)
+
+	result, err := session.CallTool(ctx, &mcpsdk.CallToolParams{
+		Name:      "get_site_env_vars",
+		Arguments: map[string]any{"site_id": "site-1"},
+	})
+	if err != nil {
+		t.Fatalf("get_site_env_vars: %v", err)
+	}
+	tc, ok := result.Content[0].(*mcpsdk.TextContent)
+	if !ok {
+		t.Fatalf("expected *TextContent, got %T", result.Content[0])
+	}
+	if !strings.Contains(tc.Text, "DATABASE_URL") {
+		t.Error("response should contain DATABASE_URL")
+	}
+	if !strings.Contains(tc.Text, "API_KEY") {
+		t.Error("response should contain API_KEY")
+	}
+	if !strings.Contains(tc.Text, "••••") {
+		t.Error("response should contain masked values")
+	}
+	t.Logf("get_site_env_vars: %s", tc.Text)
+}
+
+func TestMCPGetSiteEnvVarsNoSiteID(t *testing.T) {
+	mock := newMockEnvVarManager()
+	c := mcp.New(mcp.Options{Enabled: true, SiteEnvVarManager: mock})
+	ctx, session := connectMCPSession(t, c)
+
+	result, err := session.CallTool(ctx, &mcpsdk.CallToolParams{
+		Name: "get_site_env_vars",
+	})
+	if err != nil {
+		t.Fatalf("get_site_env_vars (no args): %v", err)
+	}
+	tc, _ := result.Content[0].(*mcpsdk.TextContent)
+	if !strings.Contains(tc.Text, "site_id is required") {
+		t.Errorf("expected 'site_id is required', got: %s", tc.Text)
+	}
+}
+
+func TestMCPSetSiteEnvVars(t *testing.T) {
+	mock := newMockEnvVarManager()
+	c := mcp.New(mcp.Options{Enabled: true, SiteEnvVarManager: mock})
+	ctx, session := connectMCPSession(t, c)
+
+	result, err := session.CallTool(ctx, &mcpsdk.CallToolParams{
+		Name: "set_site_env_vars",
+		Arguments: map[string]any{
+			"site_id": "site-1",
+			"vars": map[string]any{
+				"DATABASE_URL": "postgres://localhost:5432/db",
+				"API_KEY":      "test-value-1234",
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("set_site_env_vars: %v", err)
+	}
+	tc, ok := result.Content[0].(*mcpsdk.TextContent)
+	if !ok {
+		t.Fatalf("expected *TextContent, got %T", result.Content[0])
+	}
+	if !strings.Contains(tc.Text, "DATABASE_URL") {
+		t.Error("response should contain DATABASE_URL")
+	}
+	if !strings.Contains(tc.Text, "API_KEY") {
+		t.Error("response should contain API_KEY")
+	}
+	t.Logf("set_site_env_vars: %s", tc.Text)
+
+	// Verify vars were stored
+	stored := mock.vars["site-1"]
+	if len(stored) != 2 {
+		t.Errorf("expected 2 stored vars, got %d", len(stored))
+	}
+}
+
+func TestMCPDeleteSiteEnvVar(t *testing.T) {
+	mock := newMockEnvVarManager()
+	mock.vars["site-1"] = []mcp.SiteEnvVar{
+		{ID: "ev-1", SiteID: "site-1", Key: "DATABASE_URL", ValuePreview: "••••5432"},
+	}
+
+	c := mcp.New(mcp.Options{Enabled: true, SiteEnvVarManager: mock})
+	ctx, session := connectMCPSession(t, c)
+
+	result, err := session.CallTool(ctx, &mcpsdk.CallToolParams{
+		Name:      "delete_site_env_var",
+		Arguments: map[string]any{"site_id": "site-1", "key": "DATABASE_URL"},
+	})
+	if err != nil {
+		t.Fatalf("delete_site_env_var: %v", err)
+	}
+	tc, ok := result.Content[0].(*mcpsdk.TextContent)
+	if !ok {
+		t.Fatalf("expected *TextContent, got %T", result.Content[0])
+	}
+	if !strings.Contains(tc.Text, "deleted") {
+		t.Errorf("expected 'deleted' in response, got: %s", tc.Text)
+	}
+
+	// Verify var was removed
+	if len(mock.vars["site-1"]) != 0 {
+		t.Errorf("expected 0 vars after delete, got %d", len(mock.vars["site-1"]))
+	}
+}
+
+func TestMCPDeleteSiteEnvVarNotFound(t *testing.T) {
+	mock := newMockEnvVarManager()
+	c := mcp.New(mcp.Options{Enabled: true, SiteEnvVarManager: mock})
+	ctx, session := connectMCPSession(t, c)
+
+	result, err := session.CallTool(ctx, &mcpsdk.CallToolParams{
+		Name:      "delete_site_env_var",
+		Arguments: map[string]any{"site_id": "site-1", "key": "NONEXISTENT"},
+	})
+	if err != nil {
+		t.Fatalf("delete_site_env_var: %v", err)
+	}
+	tc, _ := result.Content[0].(*mcpsdk.TextContent)
+	if !strings.Contains(tc.Text, "not found") {
+		t.Errorf("expected 'not found' in response, got: %s", tc.Text)
+	}
+}
+
+func TestMCPDeleteSiteEnvVarNoArgs(t *testing.T) {
+	mock := newMockEnvVarManager()
+	c := mcp.New(mcp.Options{Enabled: true, SiteEnvVarManager: mock})
+	ctx, session := connectMCPSession(t, c)
+
+	result, err := session.CallTool(ctx, &mcpsdk.CallToolParams{
+		Name: "delete_site_env_var",
+	})
+	if err != nil {
+		t.Fatalf("delete_site_env_var (no args): %v", err)
+	}
+	tc, _ := result.Content[0].(*mcpsdk.TextContent)
+	if !strings.Contains(tc.Text, "site_id is required") {
+		t.Errorf("expected 'site_id is required', got: %s", tc.Text)
+	}
+}
