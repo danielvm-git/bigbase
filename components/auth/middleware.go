@@ -160,6 +160,14 @@ func WithOrgID(ctx context.Context, orgID int64) context.Context {
 	return kernel.WithOrgID(ctx, orgID)
 }
 
+// WithUserRole returns a new context with the given user role, mirroring what
+// the JWT auth middleware sets from the token's role claim. Useful for tests
+// that exercise role-gated behaviour (e.g. the legacy org_id=0 site visibility
+// carve-out, which is now admin-only — see BUG-2026-07-28T000002).
+func WithUserRole(ctx context.Context, role string) context.Context {
+	return context.WithValue(ctx, ctxUserRole, role)
+}
+
 // OrgKeyScopesFromContext extracts scopes from the org API key that
 // the auth middleware injected via ResolveOrgKey. Returns an empty
 // slice and false when no scopes are present in the context.

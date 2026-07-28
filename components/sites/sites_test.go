@@ -29,6 +29,15 @@ func authedRequestSite(method, path string, body io.Reader) *http.Request {
 	return req.WithContext(auth.WithOrgID(req.Context(), 1))
 }
 
+// authedRequestSiteAs creates an HTTP request with org_id=1 and the given user
+// role in context. Used to exercise role-gated behaviour such as the admin-only
+// legacy org_id=0 site visibility carve-out (BUG-2026-07-28T000002).
+func authedRequestSiteAs(method, path string, body io.Reader, role string) *http.Request {
+	req := httptest.NewRequest(method, path, body)
+	ctx := auth.WithOrgID(req.Context(), 1)
+	return req.WithContext(auth.WithUserRole(ctx, role))
+}
+
 type testLogger struct{}
 
 func (testLogger) Info(msg string, args ...any)  {}
