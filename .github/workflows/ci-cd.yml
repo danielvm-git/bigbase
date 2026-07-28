@@ -222,7 +222,7 @@ jobs:
           java-version: '17'
 
       - name: Setup Node (Allure commandline)
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         if: always()
         with:
           node-version: '20'
