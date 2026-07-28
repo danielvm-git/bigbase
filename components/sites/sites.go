@@ -346,17 +346,30 @@ func (s *Sites) ListSites(ctx context.Context) ([]Site, error) {
 	var err error
 	if orgID > 0 {
 		// Filter by org_id when available (JWT/API key auth). Legacy sites
-		// created before org_id scoping existed default to org_id=0 and
-		// must remain visible — org_id=0 is never a real caller's org_id,
-		// so it can never collide with an actual cross-tenant site.
-		rows, err = s.db.QueryContext(ctx, `
-			SELECT s.id, s.name, s.git_repo_id, s.production_branch, s.root_path,
-				COALESCE(NULLIF(s.github_full_name, ''), g.name, s.name),
-				s.auth_policy
-			FROM sites s
-			LEFT JOIN git_repos g ON g.id = s.git_repo_id
-			WHERE s.org_id = ? OR s.org_id = 0
-			ORDER BY s.name`, orgID)
+		// created before org_id scoping existed default to org_id=0; those are
+		// admin-only (an admin owns the bootstrap/migration path and must be
+		// able to see and reassign them). A non-admin org MUST NOT see org_id=0
+		// rows — that was a cross-tenant leak (BUG-2026-07-28T000002).
+		role, _ := auth.UserRoleFromContext(ctx)
+		if role == "admin" {
+			rows, err = s.db.QueryContext(ctx, `
+				SELECT s.id, s.name, s.git_repo_id, s.production_branch, s.root_path,
+					COALESCE(NULLIF(s.github_full_name, ''), g.name, s.name),
+					s.auth_policy
+				FROM sites s
+				LEFT JOIN git_repos g ON g.id = s.git_repo_id
+				WHERE s.org_id = ? OR s.org_id = 0
+				ORDER BY s.name`, orgID)
+		} else {
+			rows, err = s.db.QueryContext(ctx, `
+				SELECT s.id, s.name, s.git_repo_id, s.production_branch, s.root_path,
+					COALESCE(NULLIF(s.github_full_name, ''), g.name, s.name),
+					s.auth_policy
+				FROM sites s
+				LEFT JOIN git_repos g ON g.id = s.git_repo_id
+				WHERE s.org_id = ?
+				ORDER BY s.name`, orgID)
+		}
 	} else {
 		// Fallback for unauthenticated contexts (tests, site key auth).
 		rows, err = s.db.QueryContext(ctx, `
@@ -529,11 +542,18 @@ func (s *Sites) requireSiteOwnership(ctx context.Context, w http.ResponseWriter,
 		return false
 	}
 
-	if dbOrgID != orgID && dbOrgID != 0 {
-		// Return 404 (not 403) to avoid leaking site existence across orgs.
-		// dbOrgID == 0 is a legacy site predating org_id scoping — never a
-		// real org, so it's accessible to any authenticated org rather than
-		// permanently orphaned.
+	if dbOrgID != orgID {
+		// dbOrgID == 0 is a legacy site predating org_id scoping. Such sites are
+		// admin-only: only an admin (who owns the bootstrap/migration path) may
+		// access them, so they can be seen and reassigned. A non-admin must NOT
+		// reach a legacy org_id=0 site — that was a cross-tenant leak
+		// (BUG-2026-07-28T000002). Return 404 (not 403) to avoid leaking site
+		// existence across orgs.
+		if dbOrgID == 0 {
+			if role, _ := auth.UserRoleFromContext(ctx); role == "admin" {
+				return true
+			}
+		}
 		writeSiteAccessError(w, http.StatusNotFound, "site_not_found", "site not found",
 			"No site matches this id for your organization.")
 		return false
