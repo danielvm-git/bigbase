@@ -2358,3 +2358,117 @@ func TestBuildCache_NodeInstall_HitSkipsInstall(t *testing.T) {
 		t.Errorf("second deploy should skip npm install on cache hit; logs: %v", logs2)
 	}
 }
+
+// TestResumeSvelteKitAdapterNodeKeepsProcessApp is the regression guard for issue #181:
+// a SvelteKit adapter-node deployment (build/ contains a Node server entry build/index.js
+// plus build/server/, but NO index.html) must NOT be converted to AppStatic on BigBase
+// restart. The pre-fix resumeCandidates unconditionally promoted any Node app with a
+// build/ dir to static, then ResolvePureStaticServeDir failed (no index.html) and marked
+// the deployment "failed" with static_output_missing — breaking all dynamic routes on
+// every restart even though the deploy itself succeeded.
+//
+// Discriminating assertion: error_message must NOT be the static-output-missing text,
+// because the app must be resumed as a Node process app (startApp), not mis-served as a
+// static FileServer. app_type in the DB must also stay "node".
+func TestResumeSvelteKitAdapterNodeKeepsProcessApp(t *testing.T) {
+	logger := testLogger{}
+	database := db.New(db.Options{Path: ":memory:", Logger: logger})
+	buildsDir := t.TempDir()
+
+	// dep0 starts first: creates the deployments table via real migrations.
+	dep0 := deploy.New(deploy.Options{
+		DB: database, Logger: logger, BuildsDir: buildsDir, GitDir: t.TempDir(),
+	})
+	if err := database.Start(&kernel.Context{}); err != nil {
+		t.Fatalf("db start: %v", err)
+	}
+	if err := dep0.Start(&kernel.Context{}); err != nil {
+		t.Fatalf("dep0 start: %v", err)
+	}
+
+	// git_repos is created by the git component; gitStub doesn't create it.
+	// Create it manually so loadResumeCandidates JOIN resolves.
+	_, _ = database.ExecContext(context.Background(),
+		`CREATE TABLE IF NOT EXISTS git_repos (
+			id TEXT PRIMARY KEY, name TEXT NOT NULL UNIQUE, owner_id INTEGER NOT NULL,
+			private INTEGER NOT NULL DEFAULT 1, default_branch TEXT NOT NULL DEFAULT 'main',
+			description TEXT DEFAULT '', created_at TEXT NOT NULL DEFAULT (datetime('now'))
+		)`)
+	if _, err := database.ExecContext(context.Background(),
+		`INSERT INTO git_repos (id, name, owner_id, private, default_branch, description, created_at)
+		 VALUES ('rp-node', 'adapter-node-app', 0, 0, 'main', '', datetime('now'))`); err != nil {
+		t.Fatalf("insert git_repos: %v", err)
+	}
+
+	const depID = "dep-adapter-node-resume"
+	buildDir := filepath.Join(buildsDir, depID)
+	// SvelteKit adapter-node output shape:
+	//   build/index.js  — Node server entry (the app's start target)
+	//   build/server/   — server-side code (SSR marker)
+	//   build/client/   — static client assets (no top-level index.html)
+	if err := os.MkdirAll(filepath.Join(buildDir, "build", "server"), 0755); err != nil {
+		t.Fatalf("mkdir build/server: %v", err)
+	}
+	if err := os.MkdirAll(filepath.Join(buildDir, "build", "client"), 0755); err != nil {
+		t.Fatalf("mkdir build/client: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(buildDir, "build", "index.js"), []byte("// server entry"), 0644); err != nil {
+		t.Fatalf("write build/index.js: %v", err)
+	}
+	// package.json declares the Node start command (adapter-node convention).
+	writePkg(t, buildDir, `{"name":"adapter-node-app","type":"module","scripts":{"start":"node build/index.js"}}`)
+
+	if _, err := database.ExecContext(context.Background(),
+		`INSERT INTO deployments (id, repo_id, site_id, branch, status, port, url, app_type, passthrough_paths, created_at)
+		 VALUES (?, 'rp-node', 'site-node', 'main', 'running', 19779, 'https://adapter-node-app.bigbase.click', 'node', '', datetime('now'))`,
+		depID); err != nil {
+		t.Fatalf("insert deployment: %v", err)
+	}
+
+	// dep0.Stop() clears d.apps — simulates BigBase restart wiping in-memory app state.
+	if err := dep0.Stop(&kernel.Context{}); err != nil {
+		t.Fatalf("dep0 stop: %v", err)
+	}
+
+	// Fresh Deploy — d.apps is empty, same database. Mirrors a BigBase restart.
+	dep2 := deploy.New(deploy.Options{
+		DB: database, Logger: logger, BuildsDir: buildsDir, GitDir: t.TempDir(),
+		PublicDomain: "bigbase.click",
+	})
+	if err := dep2.Start(&kernel.Context{}); err != nil {
+		t.Fatalf("dep2 start: %v", err)
+	}
+	t.Cleanup(func() { _ = dep2.Stop(&kernel.Context{}) })
+
+	// resumeCandidates is async — give it time to run (and, on the buggy path, to write
+	// the static_output_missing failure). Poll for a terminal outcome.
+	deadline := time.Now().Add(5 * time.Second)
+	var finalStatus, finalErrMsg, finalAppType string
+	for time.Now().Before(deadline) {
+		_ = database.QueryRowContext(context.Background(),
+			"SELECT status, error_message, app_type FROM deployments WHERE id = ?", depID).
+			Scan(&finalStatus, &finalErrMsg, &finalAppType)
+		// Stop once resume has produced a decisive outcome. The buggy path writes
+		// static_output_missing immediately; the fixed path either starts the process
+		// (status leaves "running") or keeps it running while startApp proceeds.
+		if strings.Contains(finalErrMsg, "index.html") ||
+			strings.Contains(finalErrMsg, "static_output_missing") ||
+			finalStatus != "running" {
+			break
+		}
+		time.Sleep(100 * time.Millisecond)
+	}
+
+	// app_type must remain "node": the build/ dir holds a server entry, not a static site.
+	if finalAppType != "node" {
+		t.Errorf("adapter-node build/ with build/index.js must stay app_type=node on resume, got %q", finalAppType)
+	}
+	// The decisive regression check: resume must NOT fail with the static-output-missing
+	// error. If it does, the build/ was misclassified as a static site (issue #181).
+	if strings.Contains(finalErrMsg, "index.html") ||
+		strings.Contains(finalErrMsg, "static_output_missing") {
+		t.Fatalf("resume misclassified adapter-node build/ as static (issue #181): "+
+			"status=%q error_message=%q — expected the Node server entry to be resumed as a process app, "+
+			"not served via http.FileServer", finalStatus, finalErrMsg)
+	}
+}
