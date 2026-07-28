@@ -1,0 +1,22 @@
+# golangci-lint v2 configuration for BigBase
+# Schema reference (matches CI version v2.11.0, .github/workflows/ci-cd.yml lint job):
+#   https://github.com/golangci/golangci-lint/blob/v2.11.0/.golangci.reference.yml
+#
+# NOTE on v2 schema: In golangci-lint v2, directory/path exclusions moved out of
+# the (v1) `issues.exclude-dirs` key. The `issues:` section in v2 no longer accepts
+# `exclude-dirs`/`exclude`. Path exclusions now live under `linters.exclusions.paths`.
+# See BUG-2026-07-28T000004.
+#
+# The primary purpose of this file is to exclude `ui/node_modules` from analysis.
+# Without it, `go list ./...` resolves the vendored
+# `ui/node_modules/flatted/golang/pkg/flatted` package, and golangci-lint reports
+# govet issues in that third-party file.
+
+version: "2"
+
+linters:
+  exclusions:
+    # Which file paths to exclude: analyzed, but issues from them won't be reported.
+    # A leading "/" is OS-separator portable; "ui/node_modules" matches as a substring.
+    paths:
+      - ui/node_modules
