@@ -1643,7 +1643,10 @@ func TestResumeSvelteKitStaticDeployment(t *testing.T) {
 	_ = gitComp.Start(&kernel.Context{})
 
 	depID := "sveltekit-resume-test"
-	port := 31999
+	port, err := deploy.PickPort(35000)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	// Seed git_repos
 	_, _ = database.ExecContext(context.Background(),
@@ -1674,7 +1677,7 @@ func TestResumeSvelteKitStaticDeployment(t *testing.T) {
 		)`)
 
 	// Seed deployment with status='running', app_type='node', port>0, and public URL
-	_, err := database.ExecContext(context.Background(),
+	_, err = database.ExecContext(context.Background(),
 		`INSERT INTO deployments (id, repo_id, branch, status, url, port, app_type, created_at)
 		 VALUES (?, 'repo-x', 'main', 'running', ?, ?, 'node', datetime('now'))`,
 		depID, "https://sveltekit-resume-name.test.click", port)
