@@ -1,0 +1,32 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "context7": {
+      "type": "remote",
+      "url": "https://mcp.context7.com/mcp",
+      "headers": {
+        "CONTEXT7_API_KEY": "ctx7sk-48280f04-455a-48f6-a412-ed7bce04d55f"
+      }
+    },
+    "bigbase": {
+      "type": "remote",
+      "url": "https://mcp.bigbase.click/mcp"
+    },
+    "sqz": {
+      "type": "local",
+      "command": ["sqz-mcp"]
+    },
+    "ctxo": {
+      "type": "local",
+      "command": ["npx", "-y", "@ctxo/cli"]
+    },
+    "filesystem": {
+      "type": "local",
+      "command": ["npx", "-y", "@modelcontextprotocol/server-filesystem", "/Users/danielvm/Developer/bigbase", "/tmp"]
+    },
+    "sequential-thinking": {
+      "type": "local",
+      "command": ["npx", "-y", "@modelcontextprotocol/server-sequential-thinking"]
+    }
+  }
+}
