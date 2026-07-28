@@ -1,3 +1,10 @@
+# [2.82.0](https://github.com/danielvm-git/bigbase/compare/v2.81.6...v2.82.0) (2026-07-28)
+
+
+### Features
+
+* **mcp:** add site-scoped environment variable tools ([#194](https://github.com/danielvm-git/bigbase/issues/194)) ([7c095d0](https://github.com/danielvm-git/bigbase/commit/7c095d000aff6475ada6b7e8db12f8cf28172dfb)), closes [#193](https://github.com/danielvm-git/bigbase/issues/193)
+
 ## [2.81.6](https://github.com/danielvm-git/bigbase/compare/v2.81.5...v2.81.6) (2026-07-28)
 
 
