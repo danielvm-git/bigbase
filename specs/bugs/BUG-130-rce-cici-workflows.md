@@ -1,6 +1,13 @@
 ---
 bug_id: BUG-130
-status: open
+status: fixed
+# Reconciled 2026-07-28: frontmatter read `open` while the registry read `fixed`.
+# Source verification confirms the fix: verifyRepoOwnership (components/cici/cici.go)
+# gates saveWorkflow/listWorkflows/triggerRun by git_repos.owner_id vs the request
+# org, and executeStep calls validateCommand before exec.CommandContext. All six
+# verify-step tests exist in components/cici/cici_test.go and pass. A live HTTP
+# probe confirmed a cross-tenant workflow write returns 404.
+# See specs/verifications/BUG-VALIDATION-2026-07-28.md
 severity: critical
 scope: cici
 title: "RCE via cici workflows: IDOR → unsandboxed exec.CommandContext"

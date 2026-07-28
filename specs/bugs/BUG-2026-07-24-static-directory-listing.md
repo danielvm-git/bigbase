@@ -103,3 +103,9 @@ Shipped in **v2.79.12–v2.79.14** via PRs #167 / #168 / #169:
 **Fleet curl 2026-07-25:** library, exames, add-tutorial, grimoire, bolao → HTTP 200 real HTML.
 
 Consumer: closed big-exames#3, big-library#4, grimoire#5; documented add-tutorial#2; closed bigbase#155.
+
+## Certification
+
+**Validated:** 2026-07-27
+**Evidence:** All regression and unit tests in `components/deploy/static_serve_test.go` and `components/deploy/` pass. `golangci-lint` passes with 0 issues. Code hardening verified (`ResolvePureStaticServeDir`, `RequireStaticIndex`, and Engine flow failing closed with `static_output_missing`).
+**Status:** PASS

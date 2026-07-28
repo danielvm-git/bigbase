@@ -17,26 +17,50 @@ bugs:
     risk_level: low
     regression_guards:
       - components/auth/auth_test.go TestOAuthPublicURLOrDefaultIgnoresHostHeader
-    note: Fix exists in orphaned git commit 8d217c9d — needs recovery
+    validated:
+      date: "2026-07-28"
+      verdict: CERTIFIED
+      baseline: cedb0fc51
+      evidence: |
+        Prior note claimed "fix exists in orphaned git commit 8d217c9d — needs
+        recovery". That note was STALE and has been removed. Commit 8d217c9d is
+        indeed unreachable from HEAD, but the fix IS present in HEAD via a later
+        refactor: components/auth/auth.go:222 panics when googleClientID is set
+        and publicURL is empty, and PublicURLOrDefault never reads r.Host. Guard
+        TestOAuthPublicURLOrDefaultIgnoresHostHeader exists (auth_test.go:1271)
+        and passes. Nothing needs recovery.
+        Note: the referenced bug doc BUG-2026-07-10T160001-*.md does not exist.
   - id: BUG-2026-07-10T160002
     date: "2026-07-10"
     severity: high
     priority: critical
     scope: auth
     summary: API key scopes not enforced in auth middleware — full org access (CWE-287)
-    file: specs/bugs/BUG-2026-07-10T160002-api-key-scope-bypass.md
-    status: fixed
-    audit_source: specs/audit-code-2026-07-10.md
+    file: null  # BUG-2026-07-10T160002-api-key-scope-bypass.md does not exist
+    status: open
+    audit_source: specs/audit-code-2026-07-10.md  # NOTE: this file does not exist in the repo or git history
     files_changed:
-      - components/auth/auth.go
-      - components/auth/auth_test.go
-      - components/auth/apikeys_test.go
+      - components/auth/middleware.go
     approach: Replaced ResolveAPIKey (org-only, no scopes) with ResolveOrgKey (returns scopes + requires site_id IS NULL) in Bearer token middleware. Added ctxOrgKeyScopes context key and OrgKeyScopesFromContext() exporter.
-    risk_level: low
+    risk_level: high
     regression_guards:
-      - components/auth/auth_test.go middleware_injects_org_key_scopes_into_context
       - components/auth/apikeys_test.go TestAPIKeys/resolve_api_key_to_org_context
-    note: Fix exists in orphaned git commit c83772f2 — needs recovery
+    validated:
+      date: "2026-07-28"
+      verdict: PARTIAL
+      baseline: cedb0fc51
+      evidence: |
+        REOPENED by the 2026-07-28 certification sweep. The middleware half is
+        present (components/auth/middleware.go:73 calls ResolveOrgKey and stores
+        scopes via ctxOrgKeyScopes), but the ENFORCEMENT half does not exist:
+        OrgKeyScopesFromContext (middleware.go:166) has ZERO callers anywhere in
+        the codebase. Scopes are resolved, stashed in the request context, and
+        never read by any handler in sites/api/deploy. A scoped org key still
+        gets unrestricted CRUD on org resources. The registry's other named guard
+        (auth_test.go middleware_injects_org_key_scopes_into_context) does not exist.
+        The prior note claiming the fix lived in orphaned commit c83772f2 was stale:
+        that commit is unreachable from HEAD, but the middleware code IS in HEAD via
+        a later refactor. See specs/verifications/BUG-VALIDATION-2026-07-28.md §4.2.
   - id: BUG-2026-07-10T160003
     date: "2026-07-10"
     severity: high
@@ -857,13 +881,24 @@ bugs:
     scope: sites
     summary: "Sites component split 1600+ lines — extract inline migration to constant"
     file: specs/bugs/BUG-2026-07-10T160102-sites-component-split.md
-    status: fixed
-    files_changed:
-      - components/sites/sites.go
+    status: open
+    files_changed: []
     approach: "Extracted inline sites table migration SQL to const sitesMigration"
     risk_level: low
-    regression_guards:
-      - components/sites/sites_test.go (all existing tests pass)
+    regression_guards: []
+    validated:
+      date: "2026-07-28"
+      verdict: REGRESSED
+      baseline: cedb0fc51
+      evidence: |
+        REOPENED by the 2026-07-28 certification sweep. The claimed fix was never
+        applied. components/sites/sites.go:175 still contains the inline
+        `CREATE TABLE IF NOT EXISTS sites (...)` statement inside Start(); no
+        `sitesMigration` const exists anywhere (`grep -rn sitesMigration` returns
+        nothing). Only domainsMigration (components/sites/domains.go:24) was ever
+        extracted. The previous guard ("all existing tests pass") could never have
+        detected this, since the refactor is behaviour-preserving by definition.
+        See specs/verifications/BUG-VALIDATION-2026-07-28.md §4.1.
 
   - id: BUG-2026-07-10T160103
     date: "2026-07-10"
@@ -1669,6 +1704,7 @@ bugs:
     summary: "bb_dep_ site deploy keys get 403 organization required on /api/sites/{id}/deploy — requireSiteOwnership requires org_id; middleware only sets SiteID"
     file: specs/bugs/BUG-2026-07-24-deploy-key-organization-required.md
     status: fixed
+    certified: true
     github_issues: [161, 162]
     approach: "SAFE: extend requireSiteOwnership with SiteIDFromContext branch (match URL site id / git_repo_id); do NOT inject org_id in middleware for bb_dep_*"
     regression_guards:
@@ -1704,6 +1740,7 @@ bugs:
     summary: "Static hosts serve git checkout FileServer directory listings — soft serveDir fallback, no public/ detection, fleet not redeployed after #166"
     file: specs/bugs/BUG-2026-07-24-static-directory-listing.md
     status: fixed
+    certified: true
     github_issues: [155]
     consumer_issues:
       - danielvm-git/big-exames#3
@@ -1768,7 +1805,9 @@ bugs:
     approach: "Add org_id to storage_files table. Require org context on upload, list, download, delete, and thumbnail endpoints."
     risk_level: low
     regression_guards:
-      - components/storage/org_isolation_test.go TestCrossTenantStorageIsolation
+      # Repaired 2026-07-28: registry named TestCrossTenantStorageIsolation, which
+      # does not exist. The real test is TestStorageOrgIsolation.
+      - components/storage/org_isolation_test.go TestStorageOrgIsolation
   - id: BUG-135
     date: "2026-07-23"
     severity: high
@@ -1799,7 +1838,10 @@ bugs:
     approach: "Add requireSiteOwnership() helper. Apply ownership checks to getSite, deleteSite, redeploySite, manifest, auth policy, domains, env vars. Return 404 (not 403) to avoid leaking site existence."
     risk_level: low
     regression_guards:
-      - components/sites/org_scoping_test.go TestCrossOrgSiteAccessDenied
+      # Repaired 2026-07-28: registry named TestCrossOrgSiteAccessDenied, which
+      # does not exist. These are the real cross-org isolation guards.
+      - components/sites/org_scoping_test.go TestRequireSiteOwnership_StillDeniesRealCrossOrgSite
+      - components/sites/org_scoping_test.go TestListSites_StillIsolatesRealCrossOrgSites
   - id: BUG-140
     date: "2026-07-23"
     severity: high
@@ -1828,4 +1870,146 @@ bugs:
     approach: "Return 403 error page when redirect is missing or not allowlisted. Fix origin extraction with url.Parse. Add Cross-Origin-Opener-Policy: same-origin header."
     risk_level: low
     regression_guards:
-      - components/auth/anonymous.go TestPostMessageFailClosed
+      # Repaired 2026-07-28: registry named a non-test file (anonymous.go) and a
+      # test function that does not exist. These are the real guards.
+      - components/auth/anonymous_test.go TestPopupCallbackNoRedirect_FailsClosed
+      - components/auth/anonymous_test.go TestPopupCallbackNonAllowlistedRedirect_FailsClosed
+      - components/auth/anonymous_test.go TestPopupCallbackValidRedirect_UsesExactOrigin
+      - components/auth/anonymous_test.go TestPopupCallbackSetsCOOPHeader
+  - id: BUG-2026-07-25-port-allocator-no-liveness-check
+    date: "2026-07-25"
+    severity: high
+    priority: high
+    scope: deploy
+    summary: "Port allocator hands out ports still held by orphaned processes"
+    file: specs/bugs/BUG-2026-07-25-port-allocator-no-liveness-check.md
+    status: fixed
+    certified: true
+    approach: "pickPort now probes each candidate with a real net.Listen/close on 127.0.0.1:<port> before returning it."
+    regression_guards:
+      - components/deploy/utils_test.go TestPickPort_SkipsOccupiedPort
+      - components/deploy/utils_test.go TestPickPort_ReturnsErrorWhenExhausted
+
+  # ---------------------------------------------------------------------------
+  # Filed 2026-07-28 by the closed-bug certification sweep.
+  # Source: specs/verifications/BUG-VALIDATION-2026-07-28.md
+  # ---------------------------------------------------------------------------
+
+  - id: BUG-2026-07-28T000001
+    date: "2026-07-28"
+    severity: high
+    priority: critical
+    scope: auth
+    summary: Org API key scopes resolved into context but never enforced by any handler (CWE-287)
+    file: null
+    status: open
+    source: specs/verifications/BUG-VALIDATION-2026-07-28.md
+    related:
+      - BUG-2026-07-10T160002
+    approach: |
+      components/auth/middleware.go:73 resolves an org API key via ResolveOrgKey and
+      stores its scopes under ctxOrgKeyScopes. The accessor OrgKeyScopesFromContext
+      (middleware.go:166) has ZERO callers: no handler in components/sites,
+      components/api or components/deploy ever reads the scopes. A scoped org key
+      therefore receives unrestricted CRUD on every org resource, which is the exact
+      vulnerability BUG-2026-07-10T160002 was closed as having fixed.
+      FIX: call OrgKeyScopesFromContext in the REST handlers and reject requests whose
+      required scope is absent. Add a regression test that mints a read-only org key
+      and asserts a write is rejected.
+    risk_level: high
+    regression_guards: []
+
+  - id: BUG-2026-07-28T000002
+    date: "2026-07-28"
+    severity: medium
+    priority: medium
+    scope: sites
+    summary: Legacy org_id=0 site rows are visible to every organization
+    file: null
+    status: open
+    source: specs/verifications/BUG-VALIDATION-2026-07-28.md
+    related:
+      - BUG-2026-07-24T184443
+    approach: |
+      components/sites/sites.go:352 lists sites with `WHERE s.org_id = ? OR s.org_id = 0`,
+      so any row with org_id=0 is returned to EVERY caller regardless of org. This is
+      deliberate (see the comment above the query) and is mitigated by a Start()
+      migration that reassigns orphaned rows to an admin org — but that migration runs
+      only at boot and only when a user with role='admin' AND default_org_id > 0 exists.
+      Nothing prevents new org_id=0 rows from appearing afterwards, and on an install
+      with no admin the orphans are never reassigned.
+      Confirmed by live probe: a site seeded with org_id=0 was listed by an unrelated org.
+      FIX: make org_id NOT NULL with no zero default, or scope the fallback to a single
+      explicitly-nominated org rather than all of them.
+    risk_level: medium
+    regression_guards: []
+
+  - id: BUG-2026-07-28T000003
+    date: "2026-07-28"
+    severity: medium
+    priority: medium
+    scope: ui,ci
+    summary: UI test suite fails on Node 26 due to experimental built-in localStorage
+    file: null
+    status: open
+    source: specs/verifications/BUG-VALIDATION-2026-07-28.md
+    approach: |
+      Under Node 26.3.0, six tests in ui/src/Layout.test.tsx and
+      ui/src/context/ThemeContext.test.tsx fail with
+      "TypeError: Cannot read properties of undefined (reading 'getItem'/'clear')".
+      Node 26 ships an experimental built-in localStorage (gated behind
+      --localstorage-file) that conflicts with the jsdom test environment, leaving
+      window.localStorage undefined. The same suite is 549/549 green on Node 22.22.3.
+      CI pins node-version 20 (ci-cd.yml) / 22 (release-deploy.yml), so CI does not see
+      this — but any developer on a current Node sees six spurious failures, and a future
+      CI Node bump would break the suite.
+      FIX: provide a localStorage stub in the vitest setup file, or pin the local Node
+      version via .nvmrc / engines so local and CI agree.
+    risk_level: low
+    regression_guards: []
+
+  - id: BUG-2026-07-28T000004
+    date: "2026-07-28"
+    severity: low
+    priority: medium
+    scope: ci,lint
+    summary: golangci-lint has no config and lints vendored Go files inside ui/node_modules
+    file: null
+    status: open
+    source: specs/verifications/BUG-VALIDATION-2026-07-28.md
+    related:
+      - BUG-2026-06-19T131025
+    approach: |
+      No .golangci.yml or .golangci.yaml exists anywhere in the repo, so the
+      "exclude dependency directories" fix recorded against BUG-2026-06-19T131025 was
+      never implemented. `go list ./...` resolves ui/node_modules/flatted/golang/pkg/flatted
+      into the module's package set, and golangci-lint reports 2 govet issues in that
+      vendored third-party file. CI avoids the symptom only because the lint job never
+      runs `npm ci` before linting — an incidental ordering dependency, not a fix.
+      FIX: add .golangci.yml with `issues.exclude-dirs: [ui/node_modules]`.
+    risk_level: low
+    regression_guards: []
+
+  - id: BUG-2026-07-28T000005
+    date: "2026-07-28"
+    severity: medium
+    priority: high
+    scope: process
+    summary: 21 closed bugs reference a BUG-*.md that does not exist; 39 have no regression guard
+    file: null
+    status: open
+    source: specs/verifications/BUG-VALIDATION-2026-07-28.md
+    approach: |
+      Registry integrity gaps found by the certification sweep:
+        - 21 of 100 closed bugs point at a BUG-*.md that does not exist (7 have no
+          `file:` field at all). Most are the BUG-2026-07-10T1600xx security batch.
+        - 39 of 100 closed bugs have no regression_guards, so a recurrence would be silent.
+        - 16 BUG-*.md files on disk are referenced by no registry entry.
+        - 12 bugs cite audit_source specs/audit-code-2026-07-10.md, which exists nowhere
+          in the repo or in git history.
+        - 6 dependency bugs were closed without recording the patched version, making
+          "fixed" unfalsifiable (see report §7).
+      FIX: backfill or null the missing file: fields, add guards to security-scoped
+      closed bugs first, and require a patched-version field on dependency bugs.
+    risk_level: medium
+    regression_guards: []

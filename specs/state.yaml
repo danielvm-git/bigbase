@@ -6,12 +6,12 @@ active_story_id: null
 active_story_status: null
 bug_id: null
 release:
-  target_version: 2.79.14
-  codename: "Static directory listing fail-closed + SvelteKit SSR start"
-  last_tag: v2.79.14
+  target_version: 2.81.2
+  codename: "Site Deploy Manifest + static-sidecar app type"
+  last_tag: v2.81.2
   last_publish: '2026-07-25'
   ci_verified: true
-  ci_verified_at: '2026-07-25T01:48:00Z'
+  ci_verified_at: '2026-07-25T08:00:00Z'
 metrics:
   session_start: '2026-07-12T16:00:00-03:00'
   session_end: '2026-07-12T18:45:00-03:00'
@@ -38,7 +38,7 @@ epic_cycle:
 bug_cycle: null
 git:
   branch: main
-  hash: 40a03bab6
+  hash: cedb0fc51
   worktree: null
   ci_status: success
 cleanup:
@@ -63,9 +63,6 @@ cleanup:
   zero_open_bugs: true
   zero_open_prs: true
   open_issues: 3 (all deferred/labeled)
-  pre_existing_failures:
-    - "TestResumeSvelteKitStaticDeployment — environment-dependent (deploy_test.go:1717)"
-    - "TestHealthCheckIntegrationFail — git push in temp dir fails (health_integration_test.go:77)"
 handoff:
   last_step_completed: "fix_bug complete — static listings fixed v2.79.12–2.79.14 (#167/#168/#169); fleet curl green; consumer issues closed"
   open_decisions:

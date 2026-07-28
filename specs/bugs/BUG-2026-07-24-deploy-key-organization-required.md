@@ -60,3 +60,9 @@ Extend `requireSiteOwnership()` with a **site-key branch** (mirror `components/d
 ## Resolution
 
 Landed in #163. SAFE site-key branch in `requireSiteOwnership` via `kernel.SiteIDFromContext`. MCP v3 templates + e82 seed included. Issues #161/#162 closed.
+
+## Certification
+
+**Validated:** 2026-07-27
+**Evidence:** All tests pass in `components/sites/...`. Linters pass with 0 issues. Code hardening verified in `requireSiteOwnership` where site existence leak is prevented (returns 404 instead of 403 on mismatch) and `org_id` escalation is correctly blocked.
+**Status:** PASS

@@ -1,5 +1,16 @@
 {
   "mcpServers": {
+    "context7": {
+      "type": "http",
+      "url": "https://mcp.context7.com/mcp",
+      "headers": {
+        "CONTEXT7_API_KEY": "ctx7sk-48280f04-455a-48f6-a412-ed7bce04d55f"
+      }
+    },
+    "bigbase": {
+      "type": "http",
+      "url": "https://mcp.bigbase.click/mcp"
+    },
     "sqz": {
       "command": "sqz-mcp",
       "args": []
@@ -8,9 +19,13 @@
       "command": "npx",
       "args": ["-y", "@ctxo/cli"]
     },
-    "context7": {
+    "filesystem": {
       "command": "npx",
-      "args": ["-y", "@upstash/context7-mcp"]
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "/Users/danielvm/Developer/bigbase", "/tmp"]
+    },
+    "sequential-thinking": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"]
     },
     "claude_design": {
       "type": "http",

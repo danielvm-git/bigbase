@@ -1,6 +1,13 @@
 ---
 bug_id: BUG-2026-07-24T091500
-status: open
+status: fixed
+# Reconciled 2026-07-28: frontmatter read `open` while the registry read `fixed`.
+# Source verification confirms the fix: DetectNodePackageManager /
+# NodeInstallCommand / NodeBuildCommand / ensureNodePackageManager exist in
+# components/deploy/node_pm.go and are wired into engine.go rather than
+# hardcoding npm; `corepack enable` is present in scripts/setup-vps.sh.
+# Guard: TestNodeInstallCommand_UsesPnpmWhenLockfilePresent.
+# See specs/verifications/BUG-VALIDATION-2026-07-28.md
 severity: high
 scope: deploy
 title: Node deploy ignores pnpm — build fails with pnpm not found

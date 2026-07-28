@@ -1,0 +1,207 @@
+[
+  {
+    "bug_id": "BUG-2026-07-10T160001",
+    "bug_file": "specs/bugs/BUG-2026-07-10T160001-oauth-host-header-poisoning.md",
+    "md_exists": false,
+    "severity": "high",
+    "scope": "auth",
+    "summary": "OAuth redirect URI uses attacker-controlled Host when publicURL unset (CWE-601)",
+    "approach": "Added isTestMode() guard in New() that panics in production when googleClientID is set but publicURL is empty, preventing attacker-controlled Host header from being used in OAuth redirect URIs. Rewrote TestOAuthPublicURLFallback as TestOAuthPublicURLOrDefaultIgnoresHostHeader.",
+    "files_changed": [
+      "components/auth/auth.go",
+      "components/auth/auth_test.go"
+    ],
+    "files_missing_from_baseline": [],
+    "regression_guards": [
+      "components/auth/auth_test.go TestOAuthPublicURLOrDefaultIgnoresHostHeader"
+    ],
+    "tier1_verdict": "SUSPECT",
+    "tier1_reason": "referenced commit 8d217c9d exists but is not an ancestor of the baseline",
+    "guard_notes": []
+  },
+  {
+    "bug_id": "BUG-2026-07-10T160002",
+    "bug_file": "specs/bugs/BUG-2026-07-10T160002-api-key-scope-bypass.md",
+    "md_exists": false,
+    "severity": "high",
+    "scope": "auth",
+    "summary": "API key scopes not enforced in auth middleware \u2014 full org access (CWE-287)",
+    "approach": "Replaced ResolveAPIKey (org-only, no scopes) with ResolveOrgKey (returns scopes + requires site_id IS NULL) in Bearer token middleware. Added ctxOrgKeyScopes context key and OrgKeyScopesFromContext() exporter.",
+    "files_changed": [
+      "components/auth/auth.go",
+      "components/auth/auth_test.go",
+      "components/auth/apikeys_test.go"
+    ],
+    "files_missing_from_baseline": [],
+    "regression_guards": [
+      "components/auth/auth_test.go middleware_injects_org_key_scopes_into_context",
+      "components/auth/apikeys_test.go TestAPIKeys/resolve_api_key_to_org_context"
+    ],
+    "tier1_verdict": "SUSPECT",
+    "tier1_reason": "referenced commit c83772f2 exists but is not an ancestor of the baseline",
+    "guard_notes": [
+      "func 'middleware_injects_org_key_scopes_into_context' not found in components/auth/auth_test.go; best candidate 'TestMiddlewareRejectsNoOrg' scored 0.45 < 0.6"
+    ]
+  },
+  {
+    "bug_id": "BUG-2026-06-29T000000",
+    "bug_file": "specs/bugs/bug-astro-sdk-stored-token-null.yaml",
+    "md_exists": true,
+    "severity": "high",
+    "scope": "sdk,auth",
+    "summary": "auth-astro middleware never sets storedToken \u2014 getSession() always returns null for authenticated SSR requests",
+    "approach": "1. Added JSDoc-documented `setToken` to `@bigbase/auth` Client to set closure-local token.\n2. Updated `createBigBaseAuth` middleware to call `setToken` before retrieving session.\n3. Typed AstroAuth session properties and requireAuth responses, and exported AstroAuthLocals.\n",
+    "files_changed": [
+      "packages/auth/src/index.ts",
+      "packages/auth/src/index.test.ts",
+      "packages/auth-astro/src/index.ts"
+    ],
+    "files_missing_from_baseline": [],
+    "regression_guards": null,
+    "tier1_verdict": "UNPROVEN",
+    "tier1_reason": "no regression guard and insufficient circumstantial evidence",
+    "guard_notes": []
+  },
+  {
+    "bug_id": "BUG-2026-07-10T160102",
+    "bug_file": "specs/bugs/BUG-2026-07-10T160102-sites-component-split.md",
+    "md_exists": false,
+    "severity": "medium",
+    "scope": "sites",
+    "summary": "Sites component split 1600+ lines \u2014 extract inline migration to constant",
+    "approach": "Extracted inline sites table migration SQL to const sitesMigration",
+    "files_changed": [
+      "components/sites/sites.go"
+    ],
+    "files_missing_from_baseline": [],
+    "regression_guards": [
+      "components/sites/sites_test.go (all existing tests pass)"
+    ],
+    "tier1_verdict": "UNPROVEN",
+    "tier1_reason": "guards listed but none resolved to an executable test",
+    "guard_notes": [
+      "registry data bug: unparseable guard"
+    ]
+  },
+  {
+    "bug_id": "BUG-2026-07-11T032535",
+    "bug_file": "specs/bugs/BUG-2026-07-11T032535-codeql-command-injection.md",
+    "md_exists": true,
+    "severity": "critical",
+    "scope": "security",
+    "summary": "3 git command injection sites (CWE-78) \u2014 git clone/fetch uses user-controlled input without -- separator or fullName validation",
+    "approach": "Added '--' separator before user-controlled git args in cloneAndCheckout (engine.go), clone --bare (github.go), and fetch --prune (github.go). Added validFullName regex (^[a-zA-Z0-9_.-]+/[a-zA-Z0-9_.-]+$) to mirrorRepository.",
+    "files_changed": [
+      "components/deploy/engine.go",
+      "components/github/github.go"
+    ],
+    "files_missing_from_baseline": [],
+    "regression_guards": null,
+    "tier1_verdict": "UNPROVEN",
+    "tier1_reason": "no regression guard and insufficient circumstantial evidence",
+    "guard_notes": []
+  },
+  {
+    "bug_id": "BUG-2026-07-11T032535",
+    "bug_file": "specs/bugs/BUG-2026-07-11T032535-codeql-sql-injection.md",
+    "md_exists": true,
+    "severity": "medium",
+    "scope": "security,api,functions,db",
+    "summary": "CodeQL SQL injection alerts #8-#15 \u2014 passthrough wrappers; tainted table-name interpolation in api.go and functions/runtime.go guarded by sanitize()",
+    "approach": "Added tableName type as defense-in-depth wrapper \u2014 only sanitize()/validateCollectionName() can produce one. All CRUD methods and SQL closures now accept tableName instead of raw string, making it impossible for unsanitized user input to reach SQL identifiers. 111 tests pass, zero linter issues.",
+    "files_changed": [
+      "components/api/api.go",
+      "components/api/scaffold.go",
+      "components/functions/runtime.go"
+    ],
+    "files_missing_from_baseline": [],
+    "regression_guards": null,
+    "tier1_verdict": "UNPROVEN",
+    "tier1_reason": "no regression guard and insufficient circumstantial evidence",
+    "guard_notes": []
+  },
+  {
+    "bug_id": "BUG-2026-07-24T184443",
+    "bug_file": "specs/bugs/BUG-2026-07-24T184443-sites-invisible-legacy-org-id-zero.md",
+    "md_exists": true,
+    "severity": "critical",
+    "scope": "sites,security",
+    "summary": "Sites UI shows only 1 site \u2014 BUG-136's org_id scoping fix has no fallback for legacy org_id=0 rows, locking out 8 of 9 production sites (not data loss \u2014 verified all rows intact on VPS)",
+    "approach": null,
+    "files_changed": [],
+    "files_missing_from_baseline": [],
+    "regression_guards": null,
+    "tier1_verdict": "UNPROVEN",
+    "tier1_reason": "no regression guard and insufficient circumstantial evidence",
+    "guard_notes": []
+  },
+  {
+    "bug_id": "BUG-130",
+    "bug_file": "specs/bugs/BUG-130-rce-cici-workflows.md",
+    "md_exists": true,
+    "severity": "critical",
+    "scope": "cici",
+    "summary": "RCE via cici workflows \u2014 IDOR to unsandboxed exec.CommandContext (CWE-78, CWE-639)",
+    "approach": "Layer 1: verifyRepoOwnership() checks git_repos.owner_id. Layer 2: scope run queries by org_id. Layer 3: validateCommand() blocks dangerous patterns (curl, wget, nc, ssh, eval, exec, pipe-to-shell).",
+    "files_changed": [
+      "components/cici/cici.go",
+      "components/cici/runs.go",
+      "components/cici/workflows.go"
+    ],
+    "files_missing_from_baseline": [],
+    "regression_guards": [
+      "components/cici/cici_test.go TestValidateCommand",
+      "components/cici/cici_test.go TestCrossTenantWorkflowIsolation"
+    ],
+    "tier1_verdict": "SUSPECT",
+    "tier1_reason": "bug file says status='open', registry says 'fixed'",
+    "guard_notes": [
+      "func 'TestValidateCommand' not found in components/cici/cici_test.go; best candidate 'TestCICICommandInjectionBlocked' scored 0.432 < 0.6",
+      "func 'TestCrossTenantWorkflowIsolation' not found in components/cici/cici_test.go; best candidate 'TestCICISaveAndListWorkflows' scored 0.57 < 0.6"
+    ]
+  },
+  {
+    "bug_id": "BUG-136",
+    "bug_file": "specs/bugs/BUG-136-idor-sites.md",
+    "md_exists": true,
+    "severity": "high",
+    "scope": "sites",
+    "summary": "IDOR on all site endpoints \u2014 no org_id multi-tenant isolation (CWE-639)",
+    "approach": "Add requireSiteOwnership() helper. Apply ownership checks to getSite, deleteSite, redeploySite, manifest, auth policy, domains, env vars. Return 404 (not 403) to avoid leaking site existence.",
+    "files_changed": [
+      "components/sites/sites.go",
+      "components/sites/domains.go",
+      "components/sites/env_vars.go"
+    ],
+    "files_missing_from_baseline": [],
+    "regression_guards": [
+      "components/sites/org_scoping_test.go TestCrossOrgSiteAccessDenied"
+    ],
+    "tier1_verdict": "UNPROVEN",
+    "tier1_reason": "guards listed but none resolved to an executable test",
+    "guard_notes": [
+      "func 'TestCrossOrgSiteAccessDenied' not found in components/sites/org_scoping_test.go; best candidate 'TestListSites_StillIsolatesRealCrossOrgSites' scored 0.425 < 0.6"
+    ]
+  },
+  {
+    "bug_id": "BUG-144",
+    "bug_file": "specs/bugs/BUG-144-postmessage-jwt-leak.md",
+    "md_exists": false,
+    "severity": "high",
+    "scope": "auth",
+    "summary": "Insecure postMessage targetOrigin during OAuth popup \u2014 JWT leak to any origin (CWE-942)",
+    "approach": "Return 403 error page when redirect is missing or not allowlisted. Fix origin extraction with url.Parse. Add Cross-Origin-Opener-Policy: same-origin header.",
+    "files_changed": [
+      "components/auth/anonymous.go"
+    ],
+    "files_missing_from_baseline": [],
+    "regression_guards": [
+      "components/auth/anonymous.go TestPostMessageFailClosed"
+    ],
+    "tier1_verdict": "UNPROVEN",
+    "tier1_reason": "guards listed but none resolved to an executable test",
+    "guard_notes": [
+      "func 'TestPostMessageFailClosed' not found in components/auth/anonymous_test.go; best candidate 'TestPopupCallbackNoRedirect_FailsClosed' scored 0.478 < 0.6"
+    ]
+  }
+]

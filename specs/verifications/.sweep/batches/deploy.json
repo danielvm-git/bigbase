@@ -1,0 +1,251 @@
+[
+  {
+    "bug_id": "BUG-2026-06-04T120800",
+    "bug_file": "specs/bugs/BUG-2026-06-04T120800-deploy-npm-eacces-node20.md",
+    "md_exists": true,
+    "severity": "high",
+    "scope": "deploy,scripts",
+    "summary": "Node deploy fails \u2014 npm EACCES (no HOME) and Node 18 too old for Vite 8",
+    "approach": null,
+    "files_changed": [],
+    "files_missing_from_baseline": [],
+    "regression_guards": null,
+    "tier1_verdict": "UNPROVEN",
+    "tier1_reason": "no regression guard and insufficient circumstantial evidence",
+    "guard_notes": []
+  },
+  {
+    "bug_id": "BUG-2026-06-04T120500",
+    "bug_file": "specs/bugs/BUG-2026-06-04T120500-deploy-node-npm-missing.md",
+    "md_exists": true,
+    "severity": "high",
+    "scope": "deploy,ui,scripts",
+    "summary": "Node deploy fails on VPS \u2014 npm not in PATH; create-site wizard shows \"Your site is live\" when failed",
+    "approach": null,
+    "files_changed": [],
+    "files_missing_from_baseline": [],
+    "regression_guards": null,
+    "tier1_verdict": "UNPROVEN",
+    "tier1_reason": "no regression guard and insufficient circumstantial evidence",
+    "guard_notes": []
+  },
+  {
+    "bug_id": "BUG-2026-06-02T211731",
+    "bug_file": "specs/bugs/BUG-2026-06-02T211731-github-app-not-configured-prod.md",
+    "md_exists": true,
+    "severity": "medium",
+    "scope": "deploy,main.go,github",
+    "summary": "Production VPS never receives GitHub App credentials \u2014 /api/github/install returns 503 on bigbase.click",
+    "approach": null,
+    "files_changed": [],
+    "files_missing_from_baseline": [],
+    "regression_guards": null,
+    "tier1_verdict": "UNPROVEN",
+    "tier1_reason": "no regression guard and insufficient circumstantial evidence",
+    "guard_notes": []
+  },
+  {
+    "bug_id": "BUG-2026-06-05T172800",
+    "bug_file": "specs/bugs/BUG-2026-06-05T172800-deploy-health-check-502.md",
+    "md_exists": true,
+    "severity": "high",
+    "scope": "deploy,scripts,infra",
+    "summary": "Deploy health check returns 502 and rollback fails with \"Text file busy\"",
+    "approach": null,
+    "files_changed": [],
+    "files_missing_from_baseline": [],
+    "regression_guards": null,
+    "tier1_verdict": "UNPROVEN",
+    "tier1_reason": "no regression guard and insufficient circumstantial evidence",
+    "guard_notes": []
+  },
+  {
+    "bug_id": "BUG-2026-07-10T160101",
+    "bug_file": "specs/bugs/BUG-2026-07-10T160101-deploy-god-object.md",
+    "md_exists": false,
+    "severity": "medium",
+    "scope": "deploy",
+    "summary": "Deploy god object 1924 lines \u2014 needs decomposition per ADR 0005",
+    "approach": "Split 1924-line deploy.go into six domain modules per ADR 0005: engine.go (build lifecycle, 637L), gateway.go (HTTP API, 269L), orchestrator.go (fleet management, 326L), schema.go (migrations, 104L), state_transitions.go (state machine, 103L), utils.go (helpers, 114L). deploy.go reduced to 334L composition root.",
+    "files_changed": [
+      "components/deploy/deploy.go",
+      "components/deploy/engine.go",
+      "components/deploy/gateway.go",
+      "components/deploy/orchestrator.go",
+      "components/deploy/schema.go",
+      "components/deploy/state_transitions.go",
+      "components/deploy/utils.go"
+    ],
+    "files_missing_from_baseline": [],
+    "regression_guards": [
+      "All 256 deploy package tests pass"
+    ],
+    "tier1_verdict": "UNPROVEN",
+    "tier1_reason": "guards listed but none resolved to an executable test",
+    "guard_notes": [
+      "free text, no locatable test; requires Tier-2"
+    ]
+  },
+  {
+    "bug_id": "BUG-2026-07-10T160105",
+    "bug_file": null,
+    "md_exists": false,
+    "severity": "medium",
+    "scope": "deploy",
+    "summary": "Error string matching instead of sentinels \u2014 fragile string comparisons in deploy handlers",
+    "approach": "Created ErrRepoNotFound and ErrDeploymentNotFound sentinel errors; added isDuplicateColumnError helper; replaced switch err.Error() and strings.Contains(err.Error(), ...) patterns with errors.Is() and the helper across 7 files.",
+    "files_changed": [
+      "components/deploy/errors.go",
+      "components/deploy/engine.go",
+      "components/deploy/gateway.go",
+      "components/deploy/rollback.go",
+      "components/deploy/schema.go",
+      "components/deploy/observability.go",
+      "components/deploy/pipeline_timeline.go"
+    ],
+    "files_missing_from_baseline": [],
+    "regression_guards": [
+      "255/256 deploy tests pass (pre-existing flaky TestDeployStopShutsDownStaticServer)"
+    ],
+    "tier1_verdict": "UNPROVEN",
+    "tier1_reason": "guards listed but none resolved to an executable test",
+    "guard_notes": [
+      "registry data bug: unparseable guard"
+    ]
+  },
+  {
+    "bug_id": "BUG-2026-07-10T160207",
+    "bug_file": null,
+    "md_exists": false,
+    "severity": "low",
+    "scope": "deploy",
+    "summary": "Manifest path traversal (CWE-22) \u2014 user-controlled manifestPath escapes build dir",
+    "approach": "Added path containment check to LoadManifestPath: reject absolute paths, resolve and verify result stays within project directory via filepath.Abs + strings.HasPrefix",
+    "files_changed": [
+      "components/deploy/manifest.go"
+    ],
+    "files_missing_from_baseline": [],
+    "regression_guards": [
+      "All 34 manifest tests pass"
+    ],
+    "tier1_verdict": "UNPROVEN",
+    "tier1_reason": "guards listed but none resolved to an executable test",
+    "guard_notes": [
+      "free text, no locatable test; requires Tier-2"
+    ]
+  },
+  {
+    "bug_id": "BUG-2026-07-10T160201",
+    "bug_file": null,
+    "md_exists": false,
+    "severity": "low",
+    "scope": "deploy",
+    "summary": "AppType enum OCP \u2014 hardcoded constants without validation or enumeration",
+    "approach": "Added AppType.IsValid() validator and AllAppTypes() enumerator for Open-Closed Principle compliance; new types can be added by updating const block and AllAppTypes()",
+    "files_changed": [
+      "components/deploy/deploy.go"
+    ],
+    "files_missing_from_baseline": [],
+    "regression_guards": [
+      "All deploy tests pass"
+    ],
+    "tier1_verdict": "UNPROVEN",
+    "tier1_reason": "guards listed but none resolved to an executable test",
+    "guard_notes": [
+      "free text, no locatable test; requires Tier-2"
+    ]
+  },
+  {
+    "bug_id": "BUG-2026-07-10T160204",
+    "bug_file": null,
+    "md_exists": false,
+    "severity": "low",
+    "scope": "deploy",
+    "summary": "Export state machine \u2014 stateMachine type and newStateMachine constructor are unexported",
+    "approach": "Renamed stateMachine \u2192 StateMachine (exported) and newStateMachine() \u2192 NewStateMachine() (exported)",
+    "files_changed": [
+      "components/deploy/state_machine.go",
+      "components/deploy/deploy.go",
+      "components/deploy/state_machine_test.go"
+    ],
+    "files_missing_from_baseline": [],
+    "regression_guards": [
+      "All 18 state machine/transition tests pass"
+    ],
+    "tier1_verdict": "UNPROVEN",
+    "tier1_reason": "guards listed but none resolved to an executable test",
+    "guard_notes": [
+      "registry data bug: unparseable guard"
+    ]
+  },
+  {
+    "bug_id": "BUG-2026-07-11T032549",
+    "bug_file": "specs/bugs/BUG-2026-07-11T032549-codeql-path-traversal.md",
+    "md_exists": true,
+    "severity": "high",
+    "scope": "deploy,git",
+    "summary": "Path traversal (CWE-22) \u2014 3 true positives: engine.go, gateway.go, git.go (alerts #17, #18, #20)",
+    "approach": "Added filepath.Clean + strings.Contains(cleanID, '..') containment checks before all filesystem path operations using user-controlled IDs. False positives (#19 manifest.go, #21 storage.go, #22 cache_archive.go) marked wontfix \u2014 guards already exist.",
+    "files_changed": [
+      "components/deploy/engine.go",
+      "components/deploy/gateway.go",
+      "components/git/git.go"
+    ],
+    "files_missing_from_baseline": [],
+    "regression_guards": [
+      "go build ./components/deploy/ ./components/git/",
+      "go test ./components/deploy/ ./components/git/ -count=1"
+    ],
+    "tier1_verdict": "UNPROVEN",
+    "tier1_reason": "guard was SKIPPED, not executed",
+    "guard_notes": [
+      "shell command replayed as package-level aggregate",
+      "shell command replayed as package-level aggregate"
+    ]
+  },
+  {
+    "bug_id": "BUG-2026-07-24T091500",
+    "bug_file": "specs/bugs/BUG-2026-07-24T091500-deploy-pnpm-not-found.md",
+    "md_exists": true,
+    "severity": "high",
+    "scope": "deploy,scripts,infra",
+    "summary": "Node deploy hardcodes npm \u2014 pnpm projects fail with pnpm: not found",
+    "approach": null,
+    "files_changed": [],
+    "files_missing_from_baseline": [],
+    "regression_guards": null,
+    "tier1_verdict": "SUSPECT",
+    "tier1_reason": "bug file says status='open', registry says 'fixed'",
+    "guard_notes": []
+  },
+  {
+    "bug_id": "BUG-2026-07-24T091500",
+    "bug_file": "specs/bugs/BUG-2026-07-24T091500-deploy-pnpm-not-found.md",
+    "md_exists": true,
+    "severity": "high",
+    "scope": "deploy,infra",
+    "summary": "Node deploy hardcodes npm \u2014 pnpm projects fail with pnpm not found (exit 127)",
+    "approach": null,
+    "files_changed": [],
+    "files_missing_from_baseline": [],
+    "regression_guards": null,
+    "tier1_verdict": "SUSPECT",
+    "tier1_reason": "bug file says status='open', registry says 'fixed'",
+    "guard_notes": []
+  },
+  {
+    "bug_id": "BUG-2026-07-25T004837",
+    "bug_file": "specs/bugs/BUG-2026-07-25T004837-eventually-ci-flake-and-sqlite-postgres-coupling.md",
+    "md_exists": true,
+    "severity": "medium",
+    "scope": "deploy,infra",
+    "summary": "TestTriggerRunsThroughSupervisor flakes under CI load (2s eventually() deadline too tight) + Test (sqlite) job needlessly pulls postgres:16, exposing it to unrelated Docker Hub timeouts",
+    "approach": null,
+    "files_changed": [],
+    "files_missing_from_baseline": [],
+    "regression_guards": null,
+    "tier1_verdict": "UNPROVEN",
+    "tier1_reason": "no regression guard and insufficient circumstantial evidence",
+    "guard_notes": []
+  }
+]

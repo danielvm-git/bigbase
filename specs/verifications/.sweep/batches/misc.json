@@ -1,0 +1,96 @@
+[
+  {
+    "bug_id": "BUG-2026-07-07T223200",
+    "bug_file": "specs/bugs/BUG-2026-07-07T223200-mcp-list-sites-missing.md",
+    "md_exists": true,
+    "severity": "medium",
+    "scope": "mcp,sites,auth",
+    "summary": "MCP references list_sites but tool missing; no site key list/revoke (issue",
+    "approach": "SiteLister + extended SiteKeyCreator interfaces; four new MCP tools wired to Sites and Auth",
+    "files_changed": [
+      "components/mcp/mcp.go",
+      "components/mcp/provisioning_test.go",
+      "components/sites/sites.go",
+      "components/auth/apikeys.go",
+      "components/auth/sitekeys_test.go",
+      "main.go"
+    ],
+    "files_missing_from_baseline": [],
+    "regression_guards": [
+      "components/mcp/provisioning_test.go TestListSites TestGetSite TestListSiteKeys TestRevokeSiteKey",
+      "components/auth/sitekeys_test.go TestListSiteKeys TestRevokeSiteKey TestSiteKeyRevoked"
+    ],
+    "tier1_verdict": "UNPROVEN",
+    "tier1_reason": "guards listed but none resolved to an executable test",
+    "guard_notes": [
+      "registry data bug: unparseable guard",
+      "registry data bug: unparseable guard"
+    ]
+  },
+  {
+    "bug_id": "BUG-2026-07-10T160103",
+    "bug_file": "specs/bugs/BUG-2026-07-10T160103-forge-component-split.md",
+    "md_exists": false,
+    "severity": "low",
+    "scope": "forge",
+    "summary": "Forge component split 536 lines \u2014 split into entity files by concern",
+    "approach": "Split 535-line forge.go into 4 files: forge.go (types/routing, 229 lines), issues.go (issue CRUD, 189 lines), labels.go (label CRUD, 79 lines), wiki.go (wiki CRUD, 56 lines)",
+    "files_changed": [
+      "components/forge/forge.go",
+      "components/forge/issues.go",
+      "components/forge/labels.go",
+      "components/forge/wiki.go"
+    ],
+    "files_missing_from_baseline": [],
+    "regression_guards": [
+      "components/forge/forge_test.go (all 8 tests pass)"
+    ],
+    "tier1_verdict": "UNPROVEN",
+    "tier1_reason": "guards listed but none resolved to an executable test",
+    "guard_notes": [
+      "registry data bug: unparseable guard"
+    ]
+  },
+  {
+    "bug_id": "BUG-2026-07-10T160107",
+    "bug_file": "specs/bugs/BUG-2026-07-10T160107-sql-endpoint-regex-blocking.md",
+    "md_exists": false,
+    "severity": "medium",
+    "scope": "api",
+    "summary": "SQL endpoint regex blocking \u2014 per-request regex compilation causing overhead",
+    "approach": "Pre-compiled regex patterns (internalTableRegexes, blockedKeywordRegexes, selectCountRegex) at init() instead of per-request regexp.Compile/regexp.MustCompile",
+    "files_changed": [
+      "components/api/api.go"
+    ],
+    "files_missing_from_baseline": [],
+    "regression_guards": [
+      "components/api/api_test.go (all 83 tests pass)"
+    ],
+    "tier1_verdict": "UNPROVEN",
+    "tier1_reason": "guards listed but none resolved to an executable test",
+    "guard_notes": [
+      "registry data bug: unparseable guard"
+    ]
+  },
+  {
+    "bug_id": "BUG-2026-07-10T160112",
+    "bug_file": "specs/bugs/BUG-2026-07-10T160112-test-coverage-sub-60.md",
+    "md_exists": false,
+    "severity": "medium",
+    "scope": "backup,github,forge,db,git,admin,monitoring",
+    "summary": "Seven components below 60% test coverage",
+    "approach": "Added unit tests for metricValue (9 metric names), evalOperator (14 operator cases), and emitAlertTriggered nil-guard; monitoring coverage from 59.7% to 62.5%. Other components require external service integration or CLI harnesses that need separate PRs.",
+    "files_changed": [
+      "components/monitoring/alert_checker_test.go"
+    ],
+    "files_missing_from_baseline": [],
+    "regression_guards": [
+      "components/monitoring/alert_checker_test.go TestMetricValue TestMetricValueEdgeCases TestEvalOperator TestEmitAlertTriggeredNilContext"
+    ],
+    "tier1_verdict": "UNPROVEN",
+    "tier1_reason": "guards listed but none resolved to an executable test",
+    "guard_notes": [
+      "registry data bug: unparseable guard"
+    ]
+  }
+]

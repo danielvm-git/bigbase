@@ -1,0 +1,125 @@
+[
+  {
+    "bug_ids": [
+      "BUG-138"
+    ],
+    "probe": "unauthenticated /api/auth/me is rejected",
+    "expectation": "401/403 without a token",
+    "result": "PASS",
+    "detail": "status=401"
+  },
+  {
+    "bug_ids": [
+      "BUG-136",
+      "BUG-135",
+      "BUG-2026-07-24T184443"
+    ],
+    "probe": "site listing is org-scoped",
+    "expectation": "org A and org B see disjoint site sets",
+    "result": "PASS",
+    "detail": "statusA=200 statusB=200 overlap=none"
+  },
+  {
+    "bug_ids": [
+      "BUG-136",
+      "BUG-135"
+    ],
+    "probe": "cross-tenant site fetch by id",
+    "expectation": "404/403 when org B requests a site it does not own",
+    "result": "PASS",
+    "detail": "status=404"
+  },
+  {
+    "bug_ids": [
+      "BUG-136",
+      "BUG-135",
+      "BUG-133"
+    ],
+    "probe": "cross-tenant IDOR on a REAL seeded site",
+    "expectation": "owner reads it (200); a different org gets 403/404 on read AND delete",
+    "result": "PASS",
+    "detail": "owner_get=200 attacker_get=404 attacker_delete=404 (owner_org=3)"
+  },
+  {
+    "bug_ids": [
+      "BUG-2026-07-24T184443"
+    ],
+    "probe": "legacy org_id=0 site visibility",
+    "expectation": "documented behaviour: org_id=0 rows are visible to EVERY org (sites.go:352 `WHERE s.org_id = ? OR s.org_id = 0`)",
+    "result": "INCONCLUSIVE",
+    "detail": "unrelated org sees legacy row = True; this is by design but depends on the startup reassignment migration having run"
+  },
+  {
+    "bug_ids": [
+      "BUG-130"
+    ],
+    "probe": "cici cross-tenant workflow write",
+    "expectation": "403/404 (never 200/201) writing a workflow to another org's repo",
+    "result": "PASS",
+    "detail": "status=404"
+  },
+  {
+    "bug_ids": [
+      "BUG-2026-07-24-deploy-404-site-not-found"
+    ],
+    "probe": "unknown deployment id",
+    "expectation": "404, not 500 or a leaked internal error",
+    "result": "PASS",
+    "detail": "status=404"
+  },
+  {
+    "bug_ids": [
+      "BUG-2026-07-24-deploy-key-organization-required"
+    ],
+    "probe": "invalid bb_dep_ key rejected",
+    "expectation": "401/403 for a forged deploy key",
+    "result": "PASS",
+    "detail": "status=401"
+  },
+  {
+    "bug_ids": [
+      "BUG-2026-06-12T150000",
+      "BUG-2026-07-11T020132"
+    ],
+    "probe": "CSP header present on HTML routes",
+    "expectation": "Content-Security-Policy header is set",
+    "result": "PASS",
+    "detail": "status=200 csp=default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://unpkg.com; connect-s"
+  },
+  {
+    "bug_ids": [
+      "BUG-2026-07-11T020149-05"
+    ],
+    "probe": "security headers present",
+    "expectation": "X-Content-Type-Options: nosniff",
+    "result": "PASS",
+    "detail": "x-content-type-options='nosniff'"
+  },
+  {
+    "bug_ids": [
+      "BUG-2026-07-10T160003"
+    ],
+    "probe": "login brute-force protection",
+    "expectation": "repeated bad logins are throttled/locked (429 or changed status)",
+    "result": "PASS",
+    "detail": "statuses=[401, 401, 401, 401, 429, 429, 429, 429, 429, 429, 429, 429]"
+  },
+  {
+    "bug_ids": [
+      "BUG-2026-07-10T160005"
+    ],
+    "probe": "internal error details not leaked",
+    "expectation": "no stack trace / SQL / filesystem path in the API error body",
+    "result": "PASS",
+    "detail": "status=404 body='{\"code\":\"site_not_found\",\"error\":\"site not found\",\"hint\":\"No site matches this id. Use list_sites or create_site, then provision_ci_credenti'"
+  },
+  {
+    "bug_ids": [
+      "BUG-2026-07-24-static-directory-listing"
+    ],
+    "probe": "no static directory listing",
+    "expectation": "directory paths do not render an index listing",
+    "result": "PASS",
+    "detail": "status=200 listing_markers=False"
+  }
+]
