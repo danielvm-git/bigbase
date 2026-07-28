@@ -2097,23 +2097,46 @@ bugs:
     scope: sites
     summary: Legacy org_id=0 site rows are visible to every organization
     file: null
-    status: open
+    status: fixed
     source: specs/verifications/BUG-VALIDATION-2026-07-28.md
     related:
       - BUG-2026-07-24T184443
+    files_changed:
+      - components/sites/sites.go
+      - components/auth/middleware.go
+      - components/sites/org_scoping_test.go
     approach: |
       components/sites/sites.go:352 lists sites with `WHERE s.org_id = ? OR s.org_id = 0`,
-      so any row with org_id=0 is returned to EVERY caller regardless of org. This is
+      so any row with org_id=0 was returned to EVERY caller regardless of org. This was
       deliberate (see the comment above the query) and is mitigated by a Start()
       migration that reassigns orphaned rows to an admin org — but that migration runs
       only at boot and only when a user with role='admin' AND default_org_id > 0 exists.
-      Nothing prevents new org_id=0 rows from appearing afterwards, and on an install
-      with no admin the orphans are never reassigned.
+      Nothing prevented new org_id=0 rows from appearing afterwards, and on an install
+      with no admin the orphans were never reassigned.
       Confirmed by live probe: a site seeded with org_id=0 was listed by an unrelated org.
-      FIX: make org_id NOT NULL with no zero default, or scope the fallback to a single
-      explicitly-nominated org rather than all of them.
+      FIX applied: scoped the org_id=0 carve-out to admin-role callers only, in both leak
+      points (ListSites query and requireSiteOwnership). A non-admin org now sees/ reaches
+      only its own org_id rows; an admin keeps the legacy fallback so the boot-migration
+      reassignment path still works. The create-time duplicate-name guard is intentionally
+      unchanged (it blocks conflicting names, exposes no data).
     risk_level: medium
-    regression_guards: []
+    regression_guards:
+      - components/sites/org_scoping_test.go TestListSites_NonAdminDoesNotSeeLegacyOrglessSites
+      - components/sites/org_scoping_test.go TestRequireSiteOwnership_NonAdminDeniesLegacyOrglessSite
+      - components/sites/org_scoping_test.go TestListSites_AdminSeesLegacyOrglessSites
+      - components/sites/org_scoping_test.go TestRequireSiteOwnership_AdminAllowsLegacyOrglessSite
+      - components/sites/org_scoping_test.go TestListSites_StillIsolatesRealCrossOrgSites
+      - components/sites/org_scoping_test.go TestRequireSiteOwnership_StillDeniesRealCrossOrgSite
+    validated:
+      date: "2026-07-28"
+      verdict: CERTIFIED
+      baseline: 4b997bcbf
+      evidence: |
+        FIXED. The two new non-admin leak guards (list + single-site) pass; the two
+        renamed admin legacy-visibility guards pass (backward-compat for single-admin
+        installs preserved); and the two pre-existing BUG-136 cross-org isolation
+        guards still pass (no regression). Full sites package 0 failures; auth and
+        deploy packages 0 failures.
 
   - id: BUG-2026-07-28T000003
     date: "2026-07-28"
