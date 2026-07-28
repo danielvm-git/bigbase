@@ -879,24 +879,31 @@ bugs:
     scope: sites
     summary: "Sites component split 1600+ lines — extract inline migration to constant"
     file: specs/bugs/BUG-2026-07-10T160102-sites-component-split.md
-    status: open
-    files_changed: []
-    approach: "Extracted inline sites table migration SQL to const sitesMigration"
+    status: fixed
+    files_changed:
+      - components/sites/sites.go
+      - components/sites/sites_migration_test.go
+    approach: |
+      Extracted the inline `CREATE TABLE IF NOT EXISTS sites (...)` SQL literal
+      from Sites.Start() into a package-level `const sitesMigration` (mirroring the
+      existing domainsMigration pattern in components/sites/domains.go:24). Start()
+      now calls `s.db.Migrate(sitesMigration)`. The two later ALTER TABLE
+      migrations are intentionally left inline (they add columns idempotently).
     risk_level: low
-    regression_guards: []
+    regression_guards:
+      - components/sites/sites_migration_test.go TestSitesMigrationConstExtracted
     validated:
       date: "2026-07-28"
-      verdict: REGRESSED
-      baseline: cedb0fc51
+      verdict: CERTIFIED
+      baseline: 6a5b266e0
       evidence: |
-        REOPENED by the 2026-07-28 certification sweep. The claimed fix was never
-        applied. components/sites/sites.go:175 still contains the inline
-        `CREATE TABLE IF NOT EXISTS sites (...)` statement inside Start(); no
-        `sitesMigration` const exists anywhere (`grep -rn sitesMigration` returns
-        nothing). Only domainsMigration (components/sites/domains.go:24) was ever
-        extracted. The previous guard ("all existing tests pass") could never have
-        detected this, since the refactor is behaviour-preserving by definition.
-        See specs/verifications/BUG-VALIDATION-2026-07-28.md §4.1.
+        FIXED. `const sitesMigration` is declared at components/sites/sites.go:27
+        and Start() references it via `s.db.Migrate(sitesMigration)` at line 189;
+        no inline CREATE TABLE remains in Start(). The structural guard
+        TestSitesMigrationConstExtracted asserts all three (const exists, Start
+        does not inline CREATE TABLE, Start references sitesMigration) and passes.
+        Full sites package: 39 PASS / 0 FAIL. Previously REGRESSED in the
+        2026-07-28 sweep because the original "fix" was never applied.
 
   - id: BUG-2026-07-10T160103
     date: "2026-07-10"
@@ -2001,8 +2008,12 @@ bugs:
     scope: ui,ci
     summary: UI test suite fails on Node 26 due to experimental built-in localStorage
     file: null
-    status: open
+    status: fixed
     source: specs/verifications/BUG-VALIDATION-2026-07-28.md
+    files_changed:
+      - ui/src/test-setup.ts
+      - .nvmrc
+      - ui/package.json
     approach: |
       Under Node 26.3.0, six tests in ui/src/Layout.test.tsx and
       ui/src/context/ThemeContext.test.tsx fail with
@@ -2013,10 +2024,22 @@ bugs:
       CI pins node-version 20 (ci-cd.yml) / 22 (release-deploy.yml), so CI does not see
       this — but any developer on a current Node sees six spurious failures, and a future
       CI Node bump would break the suite.
-      FIX: provide a localStorage stub in the vitest setup file, or pin the local Node
-      version via .nvmrc / engines so local and CI agree.
+      FIX applied: (1) added a guarded localStorage stub in ui/src/test-setup.ts that
+      activates only when globalThis.localStorage is undefined (no-op on Node versions
+      where jsdom already provides it); (2) pinned .nvmrc to 22 and added
+      engines.node ">=20" to ui/package.json so local and CI agree on a major.
     risk_level: low
-    regression_guards: []
+    regression_guards:
+      - "ui: npm run test (vitest) — 79 files / 549 tests pass on Node 22 and Node 24"
+    validated:
+      date: "2026-07-28"
+      verdict: CERTIFIED
+      baseline: 6a5b266e0
+      evidence: |
+        FIXED. vitest suite is 549/549 green on Node 22.22.3 AND Node 24.15.0 with
+        the stub in place (verified locally on both). The stub fires on Node 22+
+        where the experimental localStorage warning appears, so the fix is
+        forward-compatible with a future CI Node bump.
 
   - id: BUG-2026-07-28T000004
     date: "2026-07-28"
@@ -2025,10 +2048,12 @@ bugs:
     scope: ci,lint
     summary: golangci-lint has no config and lints vendored Go files inside ui/node_modules
     file: null
-    status: open
+    status: fixed
     source: specs/verifications/BUG-VALIDATION-2026-07-28.md
     related:
       - BUG-2026-06-19T131025
+    files_changed:
+      - .golangci.yml
     approach: |
       No .golangci.yml or .golangci.yaml exists anywhere in the repo, so the
       "exclude dependency directories" fix recorded against BUG-2026-06-19T131025 was
@@ -2036,9 +2061,23 @@ bugs:
       into the module's package set, and golangci-lint reports 2 govet issues in that
       vendored third-party file. CI avoids the symptom only because the lint job never
       runs `npm ci` before linting — an incidental ordering dependency, not a fix.
-      FIX: add .golangci.yml with `issues.exclude-dirs: [ui/node_modules]`.
+      FIX applied: added .golangci.yml (v2 schema, matching CI's golangci-lint v2.11.0)
+      with `linters.exclusions.paths: [ui/node_modules]`. NOTE: the original brief
+      proposed `issues.exclude-dirs`, but that key does NOT exist in the v2 schema
+      (verified via `golangci-lint config verify`); v2 moved path exclusions to
+      `linters.exclusions.paths`.
     risk_level: low
-    regression_guards: []
+    regression_guards:
+      - "golangci-lint run ./... returns 0 issues with ui/node_modules present"
+    validated:
+      date: "2026-07-28"
+      verdict: CERTIFIED
+      baseline: 6a5b266e0
+      evidence: |
+        FIXED. With ui/node_modules/flatted present on disk, `golangci-lint run ./...`
+        reports 0 issues (was 2 govet findings in flatted.go before). Config verified
+        via `golangci-lint config verify` (valid v2 schema). Local golangci-lint
+        2.12.2, same schema as CI's 2.11.0.
 
   - id: BUG-2026-07-28T000005
     date: "2026-07-28"
