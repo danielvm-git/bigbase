@@ -18,17 +18,17 @@ func (a *Auth) ProtectedHandler() http.Handler {
 	mux.HandleFunc("GET /api/auth/me/identities", a.handleListIdentities)
 	mux.HandleFunc("POST /api/auth/me/identities", a.handleLinkIdentity)
 	mux.HandleFunc("DELETE /api/auth/me/identities/{provider}", a.handleUnlinkIdentity)
-	mux.HandleFunc("POST /api/orgs", a.handleCreateOrg)
+	mux.Handle("POST /api/orgs", RequireScopes("orgs:write")(http.HandlerFunc(a.handleCreateOrg)))
 	mux.HandleFunc("GET /api/orgs", a.handleListOrgs)
 	mux.HandleFunc("GET /api/orgs/{id}", a.handleGetOrg)
-	mux.HandleFunc("PATCH /api/orgs/{id}", a.handleUpdateOrg)
-	mux.HandleFunc("DELETE /api/orgs/{id}", a.handleDeleteOrg)
-	mux.HandleFunc("POST /api/orgs/{id}/invites", a.handleCreateInvite)
+	mux.Handle("PATCH /api/orgs/{id}", RequireScopes("orgs:write")(http.HandlerFunc(a.handleUpdateOrg)))
+	mux.Handle("DELETE /api/orgs/{id}", RequireScopes("orgs:write")(http.HandlerFunc(a.handleDeleteOrg)))
+	mux.Handle("POST /api/orgs/{id}/invites", RequireScopes("orgs:write")(http.HandlerFunc(a.handleCreateInvite)))
 	mux.HandleFunc("POST /api/orgs/{id}/invites/{token}/accept", a.handleAcceptInvite)
 	mux.HandleFunc("GET /api/orgs/{id}/members", a.handleListMembers)
-	mux.HandleFunc("POST /api/orgs/{id}/api-keys", a.handleCreateAPIKey)
+	mux.Handle("POST /api/orgs/{id}/api-keys", RequireScopes("orgs:write")(http.HandlerFunc(a.handleCreateAPIKey)))
 	mux.HandleFunc("GET /api/orgs/{id}/api-keys", a.handleListAPIKeys)
-	mux.HandleFunc("DELETE /api/orgs/{id}/api-keys/{keyID}", a.handleDeleteAPIKey)
+	mux.Handle("DELETE /api/orgs/{id}/api-keys/{keyID}", RequireScopes("orgs:write")(http.HandlerFunc(a.handleDeleteAPIKey)))
 	// Deploy-key routes with rate-limited POST (10 per site per hour per user)
 	rl := NewRateLimiter(RateLimiterConfig{
 		IPLimit:      3,
@@ -37,9 +37,9 @@ func (a *Auth) ProtectedHandler() http.Handler {
 		UserWindow:   time.Hour,
 		CleanupEvery: 10 * time.Minute,
 	})
-	mux.Handle("POST /api/sites/{id}/deploy-keys", rl.Middleware(http.HandlerFunc(a.handleCreateSiteKey)))
+	mux.Handle("POST /api/sites/{id}/deploy-keys", rl.Middleware(RequireScopes("sites:write", "deploy")(http.HandlerFunc(a.handleCreateSiteKey))))
 	mux.HandleFunc("GET /api/sites/{id}/deploy-keys", a.handleListSiteKeys)
-	mux.HandleFunc("DELETE /api/sites/{id}/deploy-keys/{keyID}", a.handleRevokeSiteKey)
+	mux.Handle("DELETE /api/sites/{id}/deploy-keys/{keyID}", RequireScopes("sites:write")(http.HandlerFunc(a.handleRevokeSiteKey)))
 	mux.HandleFunc("POST /api/auth/logout-all", a.handleLogoutAll)
 	return a.Middleware(mux)
 }
@@ -166,6 +166,32 @@ func WithOrgID(ctx context.Context, orgID int64) context.Context {
 func OrgKeyScopesFromContext(ctx context.Context) ([]string, bool) {
 	scopes, ok := ctx.Value(ctxOrgKeyScopes).([]string)
 	return scopes, ok
+}
+
+// RequireScopes returns middleware that enforces API key scope restrictions.
+// At least one of the required scopes must be present in the request's
+// resolved API key scopes. Requests authenticated via JWT or site key
+// (no scopes in context) pass through for backward compatibility.
+// Requests from scoped API keys missing all required scopes get 403.
+func RequireScopes(required ...string) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			scopes, ok := OrgKeyScopesFromContext(r.Context())
+			if !ok || len(scopes) == 0 {
+				next.ServeHTTP(w, r)
+				return
+			}
+			for _, have := range scopes {
+				for _, need := range required {
+					if have == need {
+						next.ServeHTTP(w, r)
+						return
+					}
+				}
+			}
+			kernel.WriteJSON(w, http.StatusForbidden, map[string]string{"error": "insufficient scopes"})
+		})
+	}
 }
 
 // RequireAdmin returns middleware that rejects non-admin requests with 403.

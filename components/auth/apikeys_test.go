@@ -311,3 +311,124 @@ func TestAPIKeyOrgScoped(t *testing.T) {
 		t.Fatalf("expected org_id=%.0f, got %d", orgID, gotOrgID)
 	}
 }
+
+func TestRequireScopes_MatchingScopeAllowed(t *testing.T) {
+	a, _, prot, token, orgID := setupAPIKeys(t)
+
+	// Create API key with sites:write scope
+	req := httptest.NewRequest("POST", fmt.Sprintf("/api/orgs/%.0f/api-keys", orgID),
+		strings.NewReader(`{"name":"write-key","scopes":["sites:write"]}`))
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+token)
+	w := httptest.NewRecorder()
+	prot.ServeHTTP(w, req)
+	if w.Code != http.StatusCreated {
+		t.Fatalf("create api key: %d %s", w.Code, w.Body.String())
+	}
+	var createResp map[string]any
+	_ = json.NewDecoder(w.Body).Decode(&createResp)
+	rawKey := createResp["data"].(map[string]any)["key"].(string)
+
+	// Use RequireScopes middleware directly
+	handler := auth.RequireScopes("sites:write")(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
+	mw := a.Middleware(handler)
+
+	req2 := httptest.NewRequest("POST", "/api/sites/test-site/deploy-keys", nil)
+	req2.Header.Set("Authorization", "Bearer "+rawKey)
+	w2 := httptest.NewRecorder()
+	mw.ServeHTTP(w2, req2)
+
+	if w2.Code != http.StatusOK {
+		t.Fatalf("expected 200 with matching scope, got %d: %s", w2.Code, w2.Body.String())
+	}
+}
+
+func TestRequireScopes_MissingScopeDenied(t *testing.T) {
+	a, _, prot, token, orgID := setupAPIKeys(t)
+
+	// Create API key with read-only scope
+	req := httptest.NewRequest("POST", fmt.Sprintf("/api/orgs/%.0f/api-keys", orgID),
+		strings.NewReader(`{"name":"read-key","scopes":["sites:read"]}`))
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+token)
+	w := httptest.NewRecorder()
+	prot.ServeHTTP(w, req)
+	if w.Code != http.StatusCreated {
+		t.Fatalf("create api key: %d %s", w.Code, w.Body.String())
+	}
+	var createResp map[string]any
+	_ = json.NewDecoder(w.Body).Decode(&createResp)
+	rawKey := createResp["data"].(map[string]any)["key"].(string)
+
+	// Require sites:write — should be denied
+	handler := auth.RequireScopes("sites:write")(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
+	mw := a.Middleware(handler)
+
+	req2 := httptest.NewRequest("DELETE", "/api/sites/test-site/deploy-keys/123", nil)
+	req2.Header.Set("Authorization", "Bearer "+rawKey)
+	w2 := httptest.NewRecorder()
+	mw.ServeHTTP(w2, req2)
+
+	if w2.Code != http.StatusForbidden {
+		t.Fatalf("expected 403 with missing scope, got %d: %s", w2.Code, w2.Body.String())
+	}
+	if !strings.Contains(w2.Body.String(), "insufficient scopes") {
+		t.Fatalf("expected 'insufficient scopes' error, got: %s", w2.Body.String())
+	}
+}
+
+func TestRequireScopes_UnscopedKeyAllowed(t *testing.T) {
+	a, _, prot, token, orgID := setupAPIKeys(t)
+
+	// Create API key with no scopes
+	req := httptest.NewRequest("POST", fmt.Sprintf("/api/orgs/%.0f/api-keys", orgID),
+		strings.NewReader(`{"name":"unscoped-key"}`))
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+token)
+	w := httptest.NewRecorder()
+	prot.ServeHTTP(w, req)
+	if w.Code != http.StatusCreated {
+		t.Fatalf("create api key: %d %s", w.Code, w.Body.String())
+	}
+	var createResp map[string]any
+	_ = json.NewDecoder(w.Body).Decode(&createResp)
+	rawKey := createResp["data"].(map[string]any)["key"].(string)
+
+	// Unscoped key should pass through RequireScopes (backward compat)
+	handler := auth.RequireScopes("sites:write")(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
+	mw := a.Middleware(handler)
+
+	req2 := httptest.NewRequest("POST", "/api/sites/test-site/deploy-keys", nil)
+	req2.Header.Set("Authorization", "Bearer "+rawKey)
+	w2 := httptest.NewRecorder()
+	mw.ServeHTTP(w2, req2)
+
+	if w2.Code != http.StatusOK {
+		t.Fatalf("expected 200 for unscoped key (backward compat), got %d: %s", w2.Code, w2.Body.String())
+	}
+}
+
+func TestRequireScopes_JWTAuthBypassesScopeCheck(t *testing.T) {
+	_, _, prot, token, _ := setupAPIKeys(t)
+
+	// JWT-authenticated request (no scopes in context) should pass through.
+	// ProtectedHandler already wires RequireScopes on org write routes.
+	req := httptest.NewRequest("POST", "/api/orgs", nil)
+	req.Header.Set("Authorization", "Bearer "+token)
+	w := httptest.NewRecorder()
+	prot.ServeHTTP(w, req)
+
+	// Note: This will hit the real handler which expects JSON body,
+	// but the RequireScopes layer should let it through.
+	// The 400 from the handler body parse is expected — what matters
+	// is it didn't get 403 from RequireScopes.
+	if w.Code == http.StatusForbidden {
+		t.Fatalf("JWT auth should bypass RequireScopes, got 403")
+	}
+}

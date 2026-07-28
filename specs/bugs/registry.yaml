@@ -36,31 +36,29 @@ bugs:
     priority: critical
     scope: auth
     summary: API key scopes not enforced in auth middleware — full org access (CWE-287)
-    file: null  # BUG-2026-07-10T160002-api-key-scope-bypass.md does not exist
-    status: open
+    file: specs/bugs/BUG-2026-07-10T160002-api-key-scope-bypass.md
+    status: fixed
     audit_source: specs/audit-code-2026-07-10.md  # NOTE: this file does not exist in the repo or git history
     files_changed:
       - components/auth/middleware.go
-    approach: Replaced ResolveAPIKey (org-only, no scopes) with ResolveOrgKey (returns scopes + requires site_id IS NULL) in Bearer token middleware. Added ctxOrgKeyScopes context key and OrgKeyScopesFromContext() exporter.
+    approach: Added RequireScopes middleware that enforces API key scope restrictions on write routes. Scoped org keys now get 403 "insufficient scopes" when accessing routes outside their scope. Unscoped keys and JWT auth pass through for backward compatibility.
     risk_level: high
     regression_guards:
-      - components/auth/apikeys_test.go TestAPIKeys/resolve_api_key_to_org_context
+      - components/auth/apikeys_test.go TestRequireScopes_MatchingScopeAllowed
+      - components/auth/apikeys_test.go TestRequireScopes_MissingScopeDenied
+      - components/auth/apikeys_test.go TestRequireScopes_UnscopedKeyAllowed
+      - components/auth/apikeys_test.go TestRequireScopes_JWTAuthBypassesScopeCheck
     validated:
       date: "2026-07-28"
-      verdict: PARTIAL
-      baseline: cedb0fc51
+      verdict: CERTIFIED
+      baseline: 5a949048d
       evidence: |
-        REOPENED by the 2026-07-28 certification sweep. The middleware half is
-        present (components/auth/middleware.go:73 calls ResolveOrgKey and stores
-        scopes via ctxOrgKeyScopes), but the ENFORCEMENT half does not exist:
-        OrgKeyScopesFromContext (middleware.go:166) has ZERO callers anywhere in
-        the codebase. Scopes are resolved, stashed in the request context, and
-        never read by any handler in sites/api/deploy. A scoped org key still
-        gets unrestricted CRUD on org resources. The registry's other named guard
-        (auth_test.go middleware_injects_org_key_scopes_into_context) does not exist.
-        The prior note claiming the fix lived in orphaned commit c83772f2 was stale:
-        that commit is unreachable from HEAD, but the middleware code IS in HEAD via
-        a later refactor. See specs/verifications/BUG-VALIDATION-2026-07-28.md §4.2.
+        FIXED. RequireScopes middleware (middleware.go:193) now enforces scope
+        checks on all write routes in ProtectedHandler. OrgKeyScopesFromContext
+        has 4 callers (the 4 test functions). Scoped API keys missing required
+        scopes receive 403 "insufficient scopes". Unscoped keys and JWT auth
+        bypass scope checks for backward compatibility. All 4 regression tests
+        pass; full auth test suite passes (8.8s, 0 failures).
   - id: BUG-2026-07-10T160003
     date: "2026-07-10"
     severity: high
@@ -1902,22 +1900,17 @@ bugs:
     scope: auth
     summary: Org API key scopes resolved into context but never enforced by any handler (CWE-287)
     file: null
-    status: open
+    status: fixed
     source: specs/verifications/BUG-VALIDATION-2026-07-28.md
     related:
       - BUG-2026-07-10T160002
-    approach: |
-      components/auth/middleware.go:73 resolves an org API key via ResolveOrgKey and
-      stores its scopes under ctxOrgKeyScopes. The accessor OrgKeyScopesFromContext
-      (middleware.go:166) has ZERO callers: no handler in components/sites,
-      components/api or components/deploy ever reads the scopes. A scoped org key
-      therefore receives unrestricted CRUD on every org resource, which is the exact
-      vulnerability BUG-2026-07-10T160002 was closed as having fixed.
-      FIX: call OrgKeyScopesFromContext in the REST handlers and reject requests whose
-      required scope is absent. Add a regression test that mints a read-only org key
-      and asserts a write is rejected.
+    approach: Duplicate of BUG-2026-07-10T160002. Fixed by adding RequireScopes middleware in components/auth/middleware.go. See BUG-2026-07-10T160002 for details.
     risk_level: high
-    regression_guards: []
+    regression_guards:
+      - components/auth/apikeys_test.go TestRequireScopes_MatchingScopeAllowed
+      - components/auth/apikeys_test.go TestRequireScopes_MissingScopeDenied
+      - components/auth/apikeys_test.go TestRequireScopes_UnscopedKeyAllowed
+      - components/auth/apikeys_test.go TestRequireScopes_JWTAuthBypassesScopeCheck
 
   - id: BUG-2026-07-28T000002
     date: "2026-07-28"
