@@ -20,6 +20,20 @@ import (
 
 const version = "0.1.0"
 
+// sitesMigration is the base schema for the sites table. The two ALTER TABLE
+// statements that follow it in Start() add later columns (auth_policy, org_id,
+// deploy_defaults) idempotently, so this const intentionally holds only the
+// original CREATE TABLE. Mirrors domainsMigration in domains.go.
+const sitesMigration = `CREATE TABLE IF NOT EXISTS sites (
+	id TEXT PRIMARY KEY,
+	name TEXT NOT NULL,
+	git_repo_id TEXT NOT NULL,
+	production_branch TEXT NOT NULL DEFAULT 'main',
+	root_path TEXT NOT NULL DEFAULT './',
+	github_full_name TEXT DEFAULT '',
+	created_at TEXT NOT NULL DEFAULT (datetime('now'))
+)`
+
 // DBer is an alias for kernel.DBer — the shared database abstraction.
 type DBer = kernel.DBer
 
@@ -172,15 +186,7 @@ func (s *Sites) Init(ctx *kernel.Context, config json.RawMessage) error {
 }
 
 func (s *Sites) Start(ctx *kernel.Context) error {
-	if err := s.db.Migrate(`CREATE TABLE IF NOT EXISTS sites (
-		id TEXT PRIMARY KEY,
-		name TEXT NOT NULL,
-		git_repo_id TEXT NOT NULL,
-		production_branch TEXT NOT NULL DEFAULT 'main',
-		root_path TEXT NOT NULL DEFAULT './',
-		github_full_name TEXT DEFAULT '',
-		created_at TEXT NOT NULL DEFAULT (datetime('now'))
-	)`); err != nil {
+	if err := s.db.Migrate(sitesMigration); err != nil {
 		return fmt.Errorf("migrate sites: %w", err)
 	}
 	_ = s.db.Migrate(`ALTER TABLE sites ADD COLUMN auth_policy TEXT NOT NULL DEFAULT '{}'`)
