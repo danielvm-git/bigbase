@@ -60,15 +60,17 @@ func (d *Deploy) resumeCandidates(candidates []resumeCandidate) {
 		appType := AppType(c.appType)
 		serveDir := buildDir
 		if appType == AppNode {
-			if _, err := os.Stat(filepath.Join(buildDir, "dist")); err == nil {
-				serveDir = filepath.Join(buildDir, "dist")
-				appType = AppStatic
-			} else if _, err := os.Stat(filepath.Join(buildDir, "build")); err == nil {
-				// SvelteKit adapter-static outputs to build/ by default
-				serveDir = filepath.Join(buildDir, "build")
+			// Promote to static only when an output dir genuinely contains a browser
+			// entrypoint (index.html). SvelteKit adapter-node (and other SSR adapters)
+			// emit build/ with a Node server entry (build/index.js) and no index.html —
+			// those must be resumed as AppNode process apps, not FileServer'd as static
+			// (issue #181). Mirrors the deploy-time check in engine.go.
+			if staticDir, ok := FindStaticServeDirAfterNodeBuild(buildDir, ""); ok {
+				serveDir = staticDir
 				appType = AppStatic
 			}
-			// Node SSR apps (no dist/build) fall through to process resume below.
+			// Node SSR apps (build/ without index.html, or no dist/build) fall through to
+			// the process resume below.
 		}
 		if appType == AppStatic {
 			resolved, serveErr := ResolvePureStaticServeDir(buildDir, "dist")
