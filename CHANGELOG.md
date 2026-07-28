@@ -1,3 +1,10 @@
+## [2.81.6](https://github.com/danielvm-git/bigbase/compare/v2.81.5...v2.81.6) (2026-07-28)
+
+
+### Bug Fixes
+
+* **sites:** scope legacy org_id=0 site visibility to admins (closes BUG-2026-07-28T000002) ([4b997bc](https://github.com/danielvm-git/bigbase/commit/4b997bcbf801350ecc0da8a6f7c20e2e53966cdc))
+
 ## [2.81.5](https://github.com/danielvm-git/bigbase/compare/v2.81.4...v2.81.5) (2026-07-28)
 
 
