@@ -1,3 +1,10 @@
+## [2.81.4](https://github.com/danielvm-git/bigbase/compare/v2.81.3...v2.81.4) (2026-07-28)
+
+
+### Bug Fixes
+
+* **auth:** enforce API key scopes on write routes (CWE-287) ([6c455a4](https://github.com/danielvm-git/bigbase/commit/6c455a48a4fd143819261cd632342d42208062dc))
+
 ## [2.81.3](https://github.com/danielvm-git/bigbase/compare/v2.81.2...v2.81.3) (2026-07-25)
 
 
