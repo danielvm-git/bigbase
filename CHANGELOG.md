@@ -1,3 +1,12 @@
+## [2.81.5](https://github.com/danielvm-git/bigbase/compare/v2.81.4...v2.81.5) (2026-07-28)
+
+
+### Bug Fixes
+
+* **deploy:** check for Node server entry before AppNode→AppStatic conversion (closes [#181](https://github.com/danielvm-git/bigbase/issues/181)) ([5d2c8e5](https://github.com/danielvm-git/bigbase/commit/5d2c8e564e76b4fb61bb118d2361105bfcf7ba10))
+* **sites:** extract inline sites migration to sitesMigration const ([56ddf2c](https://github.com/danielvm-git/bigbase/commit/56ddf2cc505bf25d0e70e80250846f540b45ec2d))
+* **ui:** stub localStorage in vitest setup for Node 26 compat (BUG-000003) ([6ed015c](https://github.com/danielvm-git/bigbase/commit/6ed015ccee4ad87cbaece1af95d93f9cf00b6ecf))
+
 ## [2.81.4](https://github.com/danielvm-git/bigbase/compare/v2.81.3...v2.81.4) (2026-07-28)
 
 
