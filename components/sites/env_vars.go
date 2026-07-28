@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"regexp"
 	"strings"
@@ -290,6 +291,76 @@ func boolToInt(b bool) int {
 		return 1
 	}
 	return 0
+}
+
+// ListSiteEnvVars returns env vars for a site with masked values (for MCP tools).
+func (s *Sites) ListSiteEnvVars(ctx context.Context, siteID string) ([]EnvVar, error) {
+	rows, err := s.db.QueryContext(ctx,
+		`SELECT id, site_id, key, value_encrypted, is_build_time, is_runtime, created_at, updated_at
+		 FROM site_env_vars WHERE site_id = ? ORDER BY key`, siteID)
+	if err != nil {
+		return nil, err
+	}
+	defer func() { _ = rows.Close() }()
+	items, scanErr := s.scanEnvVarRows(rows)
+	if scanErr != nil {
+		return nil, scanErr
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+// SetSiteEnvVars upserts multiple env vars for a site (for MCP tools).
+func (s *Sites) SetSiteEnvVars(ctx context.Context, siteID string, vars map[string]string) ([]EnvVar, error) {
+	out := make([]EnvVar, 0, len(vars))
+	for key, value := range vars {
+		if !validEnvKey.MatchString(key) {
+			return nil, fmt.Errorf("invalid env var key %q: must be uppercase alphanumeric + underscore, starting with a letter", key)
+		}
+		encrypted, err := envcrypto.Encrypt(s.encryptionKey, value)
+		if err != nil {
+			return nil, fmt.Errorf("encrypt env var %s: %w", key, err)
+		}
+		existingID, lookupErr := s.lookupEnvVarID(ctx, siteID, key)
+		now := time.Now().UTC().Format(time.RFC3339)
+		if lookupErr == sql.ErrNoRows {
+			ev, insertErr := s.insertEnvVar(ctx, siteID, key, value, encrypted, false, true)
+			if insertErr != nil {
+				return nil, insertErr
+			}
+			out = append(out, ev)
+		} else if lookupErr != nil {
+			return nil, lookupErr
+		} else {
+			if err := s.execUpdateEnvVar(ctx, siteID, key, encrypted, false, true, now); err != nil {
+				return nil, err
+			}
+			out = append(out, EnvVar{
+				ID:           existingID,
+				SiteID:       siteID,
+				Key:          key,
+				ValuePreview: envcrypto.MaskValue(value),
+				IsBuildTime:  false,
+				IsRuntime:    true,
+				UpdatedAt:    now,
+			})
+		}
+	}
+	return out, nil
+}
+
+// DeleteSiteEnvVar deletes a single env var for a site (for MCP tools).
+func (s *Sites) DeleteSiteEnvVar(ctx context.Context, siteID, key string) error {
+	if _, err := s.lookupEnvVarID(ctx, siteID, key); err != nil {
+		if err == sql.ErrNoRows {
+			return fmt.Errorf("env var %q not found", key)
+		}
+		return err
+	}
+	_, err := s.db.ExecContext(ctx, "DELETE FROM site_env_vars WHERE site_id = ? AND key = ?", siteID, key)
+	return err
 }
 
 // parseEncryptionKey validates and decodes the hex env encryption key.

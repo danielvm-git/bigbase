@@ -105,6 +105,54 @@ func (a mcpSiteKeyAdapter) ResolveSiteKey(rawKey string) (string, error) {
 	return a.a.ResolveSiteKey(rawKey)
 }
 
+type mcpEnvVarAdapter struct{ s *sites.Sites }
+
+func (a mcpEnvVarAdapter) ListSiteEnvVars(ctx context.Context, siteID string) ([]mcp.SiteEnvVar, error) {
+	evs, err := a.s.ListSiteEnvVars(ctx, siteID)
+	if err != nil {
+		return nil, err
+	}
+	out := make([]mcp.SiteEnvVar, 0, len(evs))
+	for _, ev := range evs {
+		out = append(out, mcp.SiteEnvVar{
+			ID:           ev.ID,
+			SiteID:       ev.SiteID,
+			Key:          ev.Key,
+			ValuePreview: ev.ValuePreview,
+			IsBuildTime:  ev.IsBuildTime,
+			IsRuntime:    ev.IsRuntime,
+			CreatedAt:    ev.CreatedAt,
+			UpdatedAt:    ev.UpdatedAt,
+		})
+	}
+	return out, nil
+}
+
+func (a mcpEnvVarAdapter) SetSiteEnvVars(ctx context.Context, siteID string, vars map[string]string) ([]mcp.SiteEnvVar, error) {
+	evs, err := a.s.SetSiteEnvVars(ctx, siteID, vars)
+	if err != nil {
+		return nil, err
+	}
+	out := make([]mcp.SiteEnvVar, 0, len(evs))
+	for _, ev := range evs {
+		out = append(out, mcp.SiteEnvVar{
+			ID:           ev.ID,
+			SiteID:       ev.SiteID,
+			Key:          ev.Key,
+			ValuePreview: ev.ValuePreview,
+			IsBuildTime:  ev.IsBuildTime,
+			IsRuntime:    ev.IsRuntime,
+			CreatedAt:    ev.CreatedAt,
+			UpdatedAt:    ev.UpdatedAt,
+		})
+	}
+	return out, nil
+}
+
+func (a mcpEnvVarAdapter) DeleteSiteEnvVar(ctx context.Context, siteID, key string) error {
+	return a.s.DeleteSiteEnvVar(ctx, siteID, key)
+}
+
 type deployDiagnosisAdapter struct{ m *monitoring.Monitoring }
 
 func (a deployDiagnosisAdapter) GetDiagnosis(ctx context.Context, deployID string) (deploy.Diagnosis, bool, error) {

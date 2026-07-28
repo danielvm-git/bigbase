@@ -96,6 +96,25 @@ type SiteKeyResolver interface {
 	ResolveSiteKey(rawKey string) (siteID string, err error)
 }
 
+// SiteEnvVar holds MCP-facing env var metadata (no plaintext in list responses).
+type SiteEnvVar struct {
+	ID           string `json:"id"`
+	SiteID       string `json:"site_id"`
+	Key          string `json:"key"`
+	ValuePreview string `json:"value_preview"`
+	IsBuildTime  bool   `json:"is_build_time"`
+	IsRuntime    bool   `json:"is_runtime"`
+	CreatedAt    string `json:"created_at"`
+	UpdatedAt    string `json:"updated_at"`
+}
+
+// SiteEnvVarManager manages site-scoped environment variables for MCP tools.
+type SiteEnvVarManager interface {
+	ListSiteEnvVars(ctx context.Context, siteID string) ([]SiteEnvVar, error)
+	SetSiteEnvVars(ctx context.Context, siteID string, vars map[string]string) ([]SiteEnvVar, error)
+	DeleteSiteEnvVar(ctx context.Context, siteID, key string) error
+}
+
 // Options configure the MCP component.
 type Options struct {
 	// Logger is the structured logger. If nil, a no-op logger is used.
@@ -121,6 +140,8 @@ type Options struct {
 	SiteKeyCreator SiteKeyCreator
 	// SiteKeyResolver validates bb_dep_* binding for validate_ci_credentials.
 	SiteKeyResolver SiteKeyResolver
+	// SiteEnvVarManager manages site env vars for MCP env var tools.
+	SiteEnvVarManager SiteEnvVarManager
 	// OrgKeyAuthenticator validates bb_ org keys for HTTP MCP auth. Nil disables auth (stdio/tests).
 	OrgKeyAuthenticator OrgKeyAuthenticator
 	// UpdateAuthPolicy notifies the proxy when a site's auth policy changes.
@@ -143,6 +164,7 @@ type Component struct {
 	siteLister        SiteLister
 	siteKeyCreator    SiteKeyCreator
 	siteKeyResolver   SiteKeyResolver
+	siteEnvVarManager SiteEnvVarManager
 	orgKeyAuth        OrgKeyAuthenticator
 	updateAuthPolicy  func(siteID string, policyJSON string)
 	streamableHandler http.Handler // created once, reused across requests for session persistence
@@ -176,6 +198,7 @@ func New(opts Options) *Component {
 		siteLister:       opts.SiteLister,
 		siteKeyCreator:   opts.SiteKeyCreator,
 		siteKeyResolver:  opts.SiteKeyResolver,
+		siteEnvVarManager: opts.SiteEnvVarManager,
 		orgKeyAuth:       opts.OrgKeyAuthenticator,
 		updateAuthPolicy: opts.UpdateAuthPolicy,
 	}
@@ -1034,6 +1057,93 @@ Port is set via ` + "`PORT`" + ` env var. Database is SQLite by default.
 
 		c.logger.Info("mcp tool", "tool", "set_site_auth_policy", "site_id", reqArgs.SiteID, "policy", policyStr)
 		return textResult(formatJSON(map[string]any{"site_id": reqArgs.SiteID, "status": "ok", "policy": reqArgs.Policy})), nil, nil
+	})
+
+	// registerGetSiteEnvVars
+	c.registerTool(srv, tierRead, &mcpsdk.Tool{
+		Name:        "get_site_env_vars",
+		Description: "List environment variables for a site. Values are masked (last 4 chars only). Use list_sites to find site IDs.",
+	}, func(ctx context.Context, req *mcpsdk.CallToolRequest, _ any) (*mcpsdk.CallToolResult, any, error) {
+		if c.siteEnvVarManager == nil {
+			return textResult("Env var tools require a SiteEnvVarManager."), nil, nil
+		}
+		var args map[string]any
+		if req.Params.Arguments != nil {
+			_ = json.Unmarshal(req.Params.Arguments, &args)
+		}
+		siteID, _ := args["site_id"].(string)
+		if siteID == "" {
+			return textResult("site_id is required. Use list_sites to find available sites."), nil, nil
+		}
+		vars, err := c.siteEnvVarManager.ListSiteEnvVars(ctx, siteID)
+		if err != nil {
+			return textResult(fmt.Sprintf("Failed to list env vars: %v", err)), nil, nil
+		}
+		c.logger.Info("mcp tool", "tool", "get_site_env_vars", "site_id", siteID, "count", len(vars))
+		return textResult(formatJSON(map[string]any{"site_id": siteID, "vars": vars})), nil, nil
+	})
+
+	// registerSetSiteEnvVars
+	c.registerTool(srv, tierWrite, &mcpsdk.Tool{
+		Name:        "set_site_env_vars",
+		Description: "Set or update environment variables for a site. Existing keys are updated, new keys are created. Keys must be uppercase alphanumeric + underscore (e.g. DATABASE_URL). Values are encrypted at rest.",
+	}, func(ctx context.Context, req *mcpsdk.CallToolRequest, _ any) (*mcpsdk.CallToolResult, any, error) {
+		if c.siteEnvVarManager == nil {
+			return textResult("Env var tools require a SiteEnvVarManager."), nil, nil
+		}
+		var args map[string]any
+		if req.Params.Arguments != nil {
+			_ = json.Unmarshal(req.Params.Arguments, &args)
+		}
+		siteID, _ := args["site_id"].(string)
+		if siteID == "" {
+			return textResult("site_id is required. Use list_sites to find available sites."), nil, nil
+		}
+		varsRaw, ok := args["vars"]
+		if !ok || varsRaw == nil {
+			return textResult("vars is required. Provide a map of key→value pairs."), nil, nil
+		}
+		varsMap, ok := varsRaw.(map[string]any)
+		if !ok {
+			return textResult("vars must be a JSON object of key→value pairs."), nil, nil
+		}
+		vars := make(map[string]string, len(varsMap))
+		for k, v := range varsMap {
+			vars[k] = fmt.Sprintf("%v", v)
+		}
+		result, err := c.siteEnvVarManager.SetSiteEnvVars(ctx, siteID, vars)
+		if err != nil {
+			return textResult(fmt.Sprintf("Failed to set env vars: %v", err)), nil, nil
+		}
+		c.logger.Info("mcp tool", "tool", "set_site_env_vars", "site_id", siteID, "count", len(result))
+		return textResult(formatJSON(map[string]any{"site_id": siteID, "vars": result})), nil, nil
+	})
+
+	// registerDeleteSiteEnvVar
+	c.registerTool(srv, tierWrite, &mcpsdk.Tool{
+		Name:        "delete_site_env_var",
+		Description: "Delete a single environment variable from a site by key. Use get_site_env_vars to see available keys.",
+	}, func(ctx context.Context, req *mcpsdk.CallToolRequest, _ any) (*mcpsdk.CallToolResult, any, error) {
+		if c.siteEnvVarManager == nil {
+			return textResult("Env var tools require a SiteEnvVarManager."), nil, nil
+		}
+		var args map[string]any
+		if req.Params.Arguments != nil {
+			_ = json.Unmarshal(req.Params.Arguments, &args)
+		}
+		siteID, _ := args["site_id"].(string)
+		if siteID == "" {
+			return textResult("site_id is required. Use list_sites to find available sites."), nil, nil
+		}
+		key, _ := args["key"].(string)
+		if key == "" {
+			return textResult("key is required. Use get_site_env_vars to see available keys."), nil, nil
+		}
+		if err := c.siteEnvVarManager.DeleteSiteEnvVar(ctx, siteID, key); err != nil {
+			return textResult(fmt.Sprintf("Failed to delete env var: %v", err)), nil, nil
+		}
+		c.logger.Info("mcp tool", "tool", "delete_site_env_var", "site_id", siteID, "key", key)
+		return textResult(formatJSON(map[string]string{"site_id": siteID, "key": key, "status": "deleted"})), nil, nil
 	})
 
 	return srv, nil
