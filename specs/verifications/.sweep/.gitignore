@@ -1,0 +1,8 @@
+# Raw Tier-0 test dumps: large (~1.3MB) and fully regenerable by re-running the
+# commands in environment.md against the pinned baseline. The derived evidence
+# (scorecard.json, final.json, probes.json, tier2-results.ndjson) is kept.
+go-sqlite.jsonl
+go-sqlite.stderr
+ui-vitest.json
+ui-vitest-node22.json
+*.log

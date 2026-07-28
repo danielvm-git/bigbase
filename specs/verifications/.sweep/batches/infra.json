@@ -1,0 +1,159 @@
+[
+  {
+    "bug_id": "BUG-2026-06-04T152200",
+    "bug_file": "specs/bugs/BUG-2026-06-04T152200-site-subdomain-tls-wildcard.md",
+    "md_exists": true,
+    "severity": "high",
+    "scope": "infra,proxy,scripts",
+    "summary": "Site subdomain HTTPS fails \u2014 Caddy cannot obtain *.bigbase.click wildcard cert (DNS-01 required)",
+    "approach": null,
+    "files_changed": [],
+    "files_missing_from_baseline": [],
+    "regression_guards": null,
+    "tier1_verdict": "UNPROVEN",
+    "tier1_reason": "no regression guard and insufficient circumstantial evidence",
+    "guard_notes": []
+  },
+  {
+    "bug_id": "BUG-2026-06-18T174500",
+    "bug_file": "specs/bugs/BUG-2026-06-18T174500-semantic-release-changelog-missing.md",
+    "md_exists": true,
+    "severity": "medium",
+    "scope": "ci,infra",
+    "summary": "Semantic Release CI fails \u2014 npx cannot resolve @semantic-release/changelog plugin",
+    "approach": null,
+    "files_changed": [],
+    "files_missing_from_baseline": [],
+    "regression_guards": null,
+    "tier1_verdict": "UNPROVEN",
+    "tier1_reason": "no regression guard and insufficient circumstantial evidence",
+    "guard_notes": []
+  },
+  {
+    "bug_id": "BUG-2026-06-19T131025",
+    "bug_file": "specs/bugs/BUG-2026-06-19T131025-lint-baseline-blocks-verify.md",
+    "md_exists": true,
+    "severity": "high",
+    "scope": "ci,infra,lint,ui,go",
+    "summary": "Full lint baseline blocks verify-work despite story-scoped checks passing",
+    "approach": null,
+    "files_changed": [],
+    "files_missing_from_baseline": [],
+    "regression_guards": null,
+    "tier1_verdict": "UNPROVEN",
+    "tier1_reason": "no regression guard and insufficient circumstantial evidence",
+    "guard_notes": []
+  },
+  {
+    "bug_id": "BUG-2026-06-22T031000",
+    "bug_file": "specs/bugs/BUG-2026-06-22T031000-ci-failures.md",
+    "md_exists": true,
+    "severity": "low",
+    "scope": "ci,deploy,test",
+    "summary": "CI failures: TestSiteManifestGetAndSave assumes git default branch is 'main'; allure-report-action v1.7 uses removed openjdk:8-jre-alpine image",
+    "approach": null,
+    "files_changed": [],
+    "files_missing_from_baseline": [],
+    "regression_guards": null,
+    "tier1_verdict": "UNPROVEN",
+    "tier1_reason": "no regression guard and insufficient circumstantial evidence",
+    "guard_notes": []
+  },
+  {
+    "bug_id": "BUG-2026-06-23T184500",
+    "bug_file": "specs/bugs/BUG-2026-06-23T184500-newrelic-logs-not-forwarded.md",
+    "md_exists": true,
+    "severity": "medium",
+    "scope": "monitoring",
+    "summary": "BigBase app logs not forwarded to New Relic \u2014 nrslog integration missing, slog handler not wrapped through nrApp",
+    "approach": null,
+    "files_changed": [],
+    "files_missing_from_baseline": [],
+    "regression_guards": null,
+    "tier1_verdict": "UNPROVEN",
+    "tier1_reason": "no regression guard and insufficient circumstantial evidence",
+    "guard_notes": []
+  },
+  {
+    "bug_id": "BUG-2026-06-30T223500",
+    "bug_file": "specs/bugs/BUG-2026-06-30T223500-events-sidebar-missing-nav.md",
+    "md_exists": true,
+    "severity": "medium",
+    "scope": "ui,navigation",
+    "summary": "EventsPage missing from sidebar navigation \u2014 route exists but no nav item in devOpsNav",
+    "approach": "Added { to: '/events', label: 'Events', icon: 'zap' } to devOpsNav; registered 'zap' in IconName union and paths Record in Icon.tsx.",
+    "files_changed": [
+      "ui/src/Layout.tsx",
+      "ui/src/components/Icon.tsx"
+    ],
+    "files_missing_from_baseline": [],
+    "regression_guards": [
+      "ui/src/components/Icon.tsx IconName union (compile-time type guard \u2014 invalid icon name fails tsc)"
+    ],
+    "tier1_verdict": "SUSPECT",
+    "tier1_reason": "referenced commit 08f98ecf exists but is not an ancestor of the baseline",
+    "guard_notes": [
+      "registry data bug: unparseable guard"
+    ]
+  },
+  {
+    "bug_id": "BUG-2026-07-10T160209",
+    "bug_file": "specs/bugs/BUG-2026-07-10T160209-ctxo-go-tree-not-indexed.md",
+    "md_exists": false,
+    "severity": "low",
+    "scope": "infra,ctxo",
+    "summary": "ctxo indexes packages/* only \u2014 208 Go files excluded from dependency graph",
+    "approach": "Added packages/* to index.ignoreProjects so ctxo falls back to root-level indexing, covering the full Go tree (components/, kernel/, config/) instead of npm workspace-only discovery.",
+    "files_changed": [
+      ".ctxo/config.yaml"
+    ],
+    "files_missing_from_baseline": [],
+    "regression_guards": [
+      {
+        "Manual": "run ctxo reindex and verify search_symbols returns Go symbols (e.g., 'NewMCPServer')"
+      }
+    ],
+    "tier1_verdict": "UNPROVEN",
+    "tier1_reason": "guards listed but none resolved to an executable test",
+    "guard_notes": [
+      "manual instruction; requires Tier-2"
+    ]
+  },
+  {
+    "bug_id": "BUG-2026-07-10T220000",
+    "bug_file": "specs/bugs/BUG-2026-07-10T220000-deploy-keys-copy-revoke-broken.md",
+    "md_exists": true,
+    "severity": "high",
+    "scope": "ui, api",
+    "summary": "Deploy Keys \u2014 revoke and copy operations broken; missing prefix in API response",
+    "approach": "Added Prefix field to handleListSiteKeys response keyEntry struct; scoped RevokeSiteKey SQL by site_id; updated MCP adapter and interface signatures. auth: 196 pass, mcp: 76 pass, UI build: clean.",
+    "files_changed": [
+      "components/auth/org_http.go",
+      "components/auth/apikeys.go",
+      "components/mcp/mcp.go",
+      "adapters.go",
+      "components/auth/sitekeys_test.go",
+      "components/mcp/provisioning_test.go"
+    ],
+    "files_missing_from_baseline": [],
+    "regression_guards": null,
+    "tier1_verdict": "UNPROVEN",
+    "tier1_reason": "no regression guard and insufficient circumstantial evidence",
+    "guard_notes": []
+  },
+  {
+    "bug_id": "BUG-2026-07-11T020149-03",
+    "bug_file": "specs/bugs/BUG-2026-07-11T020149-dast-info-disclosure-comments.md",
+    "md_exists": true,
+    "severity": "low",
+    "scope": "ui",
+    "summary": "Information Disclosure - Suspicious Comments \u2014 HTML/JS comments in production",
+    "approach": null,
+    "files_changed": [],
+    "files_missing_from_baseline": [],
+    "regression_guards": null,
+    "tier1_verdict": "UNPROVEN",
+    "tier1_reason": "no regression guard and insufficient circumstantial evidence",
+    "guard_notes": []
+  }
+]

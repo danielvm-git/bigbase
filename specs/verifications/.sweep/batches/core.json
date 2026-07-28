@@ -1,0 +1,287 @@
+[
+  {
+    "bug_id": "BUG-2026-07-09T001200",
+    "bug_file": "specs/bugs/BUG-2026-07-09T001200-ci-proxy-auth-policy-flaky.md",
+    "md_exists": true,
+    "severity": "high",
+    "scope": "proxy,ci",
+    "summary": "CI fails on flaky TestProxyAuthPolicy \u2014 missing waitForServer after proxy Start",
+    "approach": null,
+    "files_changed": [],
+    "files_missing_from_baseline": [],
+    "regression_guards": null,
+    "tier1_verdict": "UNPROVEN",
+    "tier1_reason": "no regression guard and insufficient circumstantial evidence",
+    "guard_notes": []
+  },
+  {
+    "bug_id": "BUG-2026-06-27T131500",
+    "bug_file": "specs/bugs/BUG-2026-06-27T131500-rate-limit-bool-flag-inconsistency.md",
+    "md_exists": true,
+    "severity": "low",
+    "scope": "config,main",
+    "summary": "rate-limit-enabled bool flag uses manual os.Getenv instead of FlagOrEnv pattern",
+    "approach": "Added FlagOrEnvBool helper to config package; replaced manual os.Getenv in main.go.",
+    "files_changed": [
+      "config/serve_env.go",
+      "config/serve_env_test.go",
+      "main.go"
+    ],
+    "files_missing_from_baseline": [],
+    "regression_guards": [
+      "config/serve_env_test.go TestFlagOrEnvBool (8 cases)"
+    ],
+    "tier1_verdict": "UNPROVEN",
+    "tier1_reason": "guards listed but none resolved to an executable test",
+    "guard_notes": [
+      "registry data bug: unparseable guard"
+    ]
+  },
+  {
+    "bug_id": "BUG-2026-06-03T120000",
+    "bug_file": "specs/bugs/BUG-2026-06-03T120000-github-callback-requires-auth.md",
+    "md_exists": true,
+    "severity": "medium",
+    "scope": "main.go,auth,github",
+    "summary": "GitHub install callback and webhook behind auth middleware \u2014 returns authorization required after GitHub redirect",
+    "approach": null,
+    "files_changed": [],
+    "files_missing_from_baseline": [],
+    "regression_guards": null,
+    "tier1_verdict": "UNPROVEN",
+    "tier1_reason": "no regression guard and insufficient circumstantial evidence",
+    "guard_notes": []
+  },
+  {
+    "bug_id": "BUG-2026-06-01T182800",
+    "bug_file": "specs/bugs/BUG-2026-06-01T182800-github-app-flags-missing.md",
+    "md_exists": true,
+    "severity": "low",
+    "scope": "main.go",
+    "summary": "GitHub App config flags not registered or parsed in serve command",
+    "approach": null,
+    "files_changed": [],
+    "files_missing_from_baseline": [],
+    "regression_guards": null,
+    "tier1_verdict": "UNPROVEN",
+    "tier1_reason": "no regression guard and insufficient circumstantial evidence",
+    "guard_notes": []
+  },
+  {
+    "bug_id": "BUG-2026-06-01T193841",
+    "bug_file": "specs/bugs/BUG-2026-06-01T193841.md",
+    "md_exists": true,
+    "severity": "medium",
+    "scope": "main.go, ui/src/App.tsx",
+    "summary": "GitHub and Sites components not wired into backend registration, proxy routes, or /deploy routes",
+    "approach": null,
+    "files_changed": [],
+    "files_missing_from_baseline": [],
+    "regression_guards": null,
+    "tier1_verdict": "UNPROVEN",
+    "tier1_reason": "no regression guard and insufficient circumstantial evidence",
+    "guard_notes": []
+  },
+  {
+    "bug_id": "BUG-2026-06-02T000000",
+    "bug_file": "specs/bugs/BUG-2026-06-02T000000-github-flags-not-wired.md",
+    "md_exists": true,
+    "severity": "low",
+    "scope": "main.go",
+    "summary": "GitHub App CLI flags not registered in serve command",
+    "approach": null,
+    "files_changed": [],
+    "files_missing_from_baseline": [],
+    "regression_guards": null,
+    "tier1_verdict": "UNPROVEN",
+    "tier1_reason": "no regression guard and insufficient circumstantial evidence",
+    "guard_notes": []
+  },
+  {
+    "bug_id": "BUG-2026-07-10T160007",
+    "bug_file": "specs/bugs/BUG-2026-07-10T160007-duplicated-kernel-utilities.md",
+    "md_exists": false,
+    "severity": "high",
+    "scope": "kernel",
+    "summary": "56 duplicated writeJSON/noopLogger/generateID/DBer copies",
+    "approach": "Moved centralized WriteJSON, GenerateID, NoopLogger into kernel/utilities.go; removed 56 local duplicate definitions across all components; updated all call sites to kernel. prefix",
+    "files_changed": [
+      "kernel/utilities.go (created)",
+      "components/* (56 duplicate definitions removed)"
+    ],
+    "files_missing_from_baseline": [
+      "components/* (56 duplicate definitions removed)"
+    ],
+    "regression_guards": [
+      "go test ./... (997/998 pass)"
+    ],
+    "tier1_verdict": "UNPROVEN",
+    "tier1_reason": "guard was SKIPPED, not executed",
+    "guard_notes": [
+      "shell command replayed as package-level aggregate"
+    ]
+  },
+  {
+    "bug_id": "BUG-2026-07-10T160104",
+    "bug_file": null,
+    "md_exists": false,
+    "severity": "low",
+    "scope": "kernel",
+    "summary": "ConfigSchema dead interface \u2014 18 components implement ConfigSchema() returning nil, never called in production",
+    "approach": "Removed ConfigSchema() from kernel.Component interface; removed all 18 dead implementations; removed test assertions referencing ConfigSchema()",
+    "files_changed": [
+      "kernel/component.go",
+      "components/admin/admin.go",
+      "components/api/api.go",
+      "components/auth/auth.go",
+      "components/cici/cici.go",
+      "components/db/db.go",
+      "components/deploy/deploy.go",
+      "components/forge/forge.go",
+      "components/functions/functions.go",
+      "components/git/git.go",
+      "components/github/github.go",
+      "components/mcp/mcp.go",
+      "components/messaging/messaging.go",
+      "components/monitoring/monitoring.go",
+      "components/proxy/proxy.go",
+      "components/realtime/realtime.go",
+      "components/sites/sites.go",
+      "components/storage/storage.go",
+      "components/webhooks/webhooks.go"
+    ],
+    "files_missing_from_baseline": [],
+    "regression_guards": [
+      "go test ./... (999/1000 pass)"
+    ],
+    "tier1_verdict": "UNPROVEN",
+    "tier1_reason": "guard was SKIPPED, not executed",
+    "guard_notes": [
+      "shell command replayed as package-level aggregate"
+    ]
+  },
+  {
+    "bug_id": "BUG-2026-07-10T160113",
+    "bug_file": null,
+    "md_exists": false,
+    "severity": "low",
+    "scope": "kernel",
+    "summary": "Hooks dead interface \u2014 18 components implement Hooks() returning nil, called once for display only",
+    "approach": "Removed Hooks() from kernel.Component interface; removed ComponentStatus.Hooks field; updated proxy template and main.go table rendering; removed all 18 dead implementations",
+    "files_changed": [
+      "kernel/component.go",
+      "kernel/kernel.go",
+      "components/proxy/proxy.go",
+      "main.go",
+      "components/admin/admin.go",
+      "components/api/api.go",
+      "components/auth/auth.go",
+      "components/cici/cici.go",
+      "components/db/db.go",
+      "components/deploy/deploy.go",
+      "components/forge/forge.go",
+      "components/functions/functions.go",
+      "components/git/git.go",
+      "components/github/github.go",
+      "components/mcp/mcp.go",
+      "components/messaging/messaging.go",
+      "components/monitoring/monitoring.go",
+      "components/realtime/realtime.go",
+      "components/sites/sites.go",
+      "components/storage/storage.go",
+      "components/webhooks/webhooks.go"
+    ],
+    "files_missing_from_baseline": [],
+    "regression_guards": [
+      "go test ./... (999/1000 pass)"
+    ],
+    "tier1_verdict": "UNPROVEN",
+    "tier1_reason": "guard was SKIPPED, not executed",
+    "guard_notes": [
+      "shell command replayed as package-level aggregate"
+    ]
+  },
+  {
+    "bug_id": "BUG-2026-07-10T160205",
+    "bug_file": null,
+    "md_exists": false,
+    "severity": "low",
+    "scope": "kernel",
+    "summary": "Missing Component compile checks \u2014 no var _ kernel.Component = (*Type)(nil) assertions",
+    "approach": "Added var _ kernel.Component = (*Type)(nil) compile-time interface assertion after each struct definition in all 18 component files",
+    "files_changed": [
+      "components/admin/admin.go",
+      "components/api/api.go",
+      "components/auth/auth.go",
+      "components/cici/cici.go",
+      "components/db/db.go",
+      "components/deploy/deploy.go",
+      "components/forge/forge.go",
+      "components/functions/functions.go",
+      "components/git/git.go",
+      "components/github/github.go",
+      "components/mcp/mcp.go",
+      "components/messaging/messaging.go",
+      "components/monitoring/monitoring.go",
+      "components/proxy/proxy.go",
+      "components/realtime/realtime.go",
+      "components/sites/sites.go",
+      "components/storage/storage.go",
+      "components/webhooks/webhooks.go"
+    ],
+    "files_missing_from_baseline": [],
+    "regression_guards": [
+      "go build ./... (compiler verifies assertions)"
+    ],
+    "tier1_verdict": "UNPROVEN",
+    "tier1_reason": "guard was SKIPPED, not executed",
+    "guard_notes": [
+      "shell command replayed as package-level aggregate"
+    ]
+  },
+  {
+    "bug_id": "BUG-2026-07-11T030000",
+    "bug_file": "specs/bugs/BUG-2026-07-11T030000-csp-blocks-api-error-pages.md",
+    "md_exists": true,
+    "severity": "high",
+    "scope": "proxy, infra",
+    "summary": "v2.76.9 CSP blocks browser stylesheets on API error pages; deploy pipeline wipes GitHub credentials",
+    "approach": null,
+    "files_changed": [],
+    "files_missing_from_baseline": [],
+    "regression_guards": null,
+    "tier1_verdict": "UNPROVEN",
+    "tier1_reason": "no regression guard and insufficient circumstantial evidence",
+    "guard_notes": []
+  },
+  {
+    "bug_id": "BUG-2026-07-11T020132",
+    "bug_file": "specs/bugs/BUG-2026-07-11T020132-dast-csp-directives.md",
+    "md_exists": true,
+    "severity": "medium",
+    "scope": "proxy",
+    "summary": "CSP: Failure to Define Directive with No Fallback \u2014 missing explicit CSP directives",
+    "approach": null,
+    "files_changed": [],
+    "files_missing_from_baseline": [],
+    "regression_guards": null,
+    "tier1_verdict": "UNPROVEN",
+    "tier1_reason": "no regression guard and insufficient circumstantial evidence",
+    "guard_notes": []
+  },
+  {
+    "bug_id": "BUG-2026-07-11T020149-05",
+    "bug_file": "specs/bugs/BUG-2026-07-11T020149-dast-cache-control.md",
+    "md_exists": true,
+    "severity": "low",
+    "scope": "proxy",
+    "summary": "Re-examine Cache-control Directives \u2014 suboptimal caching headers",
+    "approach": null,
+    "files_changed": [],
+    "files_missing_from_baseline": [],
+    "regression_guards": null,
+    "tier1_verdict": "UNPROVEN",
+    "tier1_reason": "no regression guard and insufficient circumstantial evidence",
+    "guard_notes": []
+  }
+]
