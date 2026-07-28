@@ -1888,6 +1888,63 @@ bugs:
       - components/deploy/utils_test.go TestPickPort_SkipsOccupiedPort
       - components/deploy/utils_test.go TestPickPort_ReturnsErrorWhenExhausted
 
+  - id: BUG-2026-07-23-idor-deploy-lifecycle
+    date: "2026-07-23"
+    severity: high
+    priority: critical
+    scope: security,deploy
+    summary: "HIGH: IDOR on Deployment Lifecycle (list/logs/delete/rollback any deployment)"
+    file: specs/bugs/BUG-2026-07-23-idor-deploy-lifecycle.md
+    github_issue: 141
+    status: fixed
+    files_changed:
+      - components/auth/middleware.go
+      - components/deploy/gateway.go
+      - components/deploy/rollback.go
+      - components/deploy/idor_test.go
+    approach: |
+      Every non-create deployment handler accepted a deployment ID and operated on
+      it without verifying the caller's org owns that deployment (via the
+      deployments.site_id -> sites.org_id ownership chain). Added two shared
+      ownership helpers to components/deploy/gateway.go:
+        verifyDeploymentOwnership() (gateway.go:98) — walks deployments.site_id
+          -> sites.org_id and compares to auth.OrgIDFromContext.
+        verifySiteOwnership()   (gateway.go:133) — walks sites.org_id directly.
+      Wired into HandleList (org-scoped JOIN), handleDeployByID GET,
+      handleDeleteDeployment, handleDeployLogs (gateway.go), and handleRollback /
+      handleRollbackEvents (rollback.go). When no org_id is in context (e.g. a
+      site deploy key) the ownership check is skipped, preserving the deploy-key
+      path. Same per-handler ownership-check pattern as the other certified IDOR
+      fixes (BUG-130/131/133/135/136/140).
+    risk_level: high
+    regression_guards:
+      - components/deploy/idor_test.go TestIDOR_ListScopedByOrg
+      - components/deploy/idor_test.go TestIDOR_GetByIDPreventsCrossOrg
+      - components/deploy/idor_test.go TestIDOR_GetByIDAllowsSameOrg
+      - components/deploy/idor_test.go TestIDOR_DeletePreventsCrossOrg
+      - components/deploy/idor_test.go TestIDOR_DeleteAllowsSameOrg
+      - components/deploy/idor_test.go TestIDOR_LogsPreventsCrossOrg
+      - components/deploy/idor_test.go TestIDOR_LogsAllowsSameOrg
+      - components/deploy/idor_test.go TestIDOR_RollbackPreventsCrossOrg
+      - components/deploy/idor_test.go TestIDOR_RollbackEventsPreventsCrossOrg
+      - components/deploy/idor_test.go TestIDOR_NoOrgIDSkipsOwnershipCheck
+      - components/deploy/idor_test.go TestIDOR_MultipleDeploymentsSameOrg
+    validated:
+      date: "2026-07-28"
+      verdict: CERTIFIED
+      baseline: 6c455a48a
+      evidence: |
+        FIXED at HEAD. verifyDeploymentOwnership (gateway.go:98) and
+        verifySiteOwnership (gateway.go:133) are called from HandleList,
+        handleDeployByID, handleDeleteDeployment, handleDeployLogs (gateway.go),
+        handleRollback and handleRollbackEvents (rollback.go). All 11 IDOR tests
+        in components/deploy/idor_test.go pass and cover the cross-org denial
+        path (403) and same-org allow path for every affected handler. The fix
+        follows the same per-handler ownership pattern used by the other
+        certified IDOR fixes and was reconciled with the registry on 2026-07-28;
+        the bug doc frontmatter was stale (status: open) but the ## Resolution
+        block already recorded the fix as applied on 2026-07-23.
+
   # ---------------------------------------------------------------------------
   # Filed 2026-07-28 by the closed-bug certification sweep.
   # Source: specs/verifications/BUG-VALIDATION-2026-07-28.md

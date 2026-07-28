@@ -1,6 +1,6 @@
 ---
 bug_id: BUG-2026-07-23-idor-deploy-lifecycle
-status: open
+status: fixed
 severity: high
 scope: security
 title: "HIGH: IDOR on Deployment Lifecycle (list/logs/delete/rollback any deployment)"
