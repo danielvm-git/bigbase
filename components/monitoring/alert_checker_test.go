@@ -26,22 +26,28 @@ func TestMetricValue(t *testing.T) {
 	tests := []struct {
 		metric   string
 		expected float64
+		ok       bool
 	}{
-		{"cpu_percent", 45.2},
-		{"mem_used_bytes", float64(host.MemUsedBytes)},
-		{"mem_percent", float64(host.MemUsedBytes) / float64(host.MemTotalBytes) * 100},
-		{"disk_used_bytes", float64(host.DiskUsedBytes)},
-		{"disk_percent", float64(host.DiskUsedBytes) / float64(host.DiskTotalBytes) * 100},
-		{"goroutines", float64(sys.Goroutines)},
-		{"process_cpu_percent", sys.CPUPercent},
-		{"process_mem_mb", sys.MemoryMB},
-		{"unknown_metric", 0},
+		{"cpu_percent", 45.2, true},
+		{"mem_used_bytes", float64(host.MemUsedBytes), true},
+		{"mem_percent", float64(host.MemUsedBytes) / float64(host.MemTotalBytes) * 100, true},
+		{"disk_used_bytes", float64(host.DiskUsedBytes), true},
+		{"disk_percent", float64(host.DiskUsedBytes) / float64(host.DiskTotalBytes) * 100, true},
+		{"goroutines", float64(sys.Goroutines), true},
+		{"process_cpu_percent", sys.CPUPercent, true},
+		{"process_mem_mb", sys.MemoryMB, true},
+		// Unknown metric names must be distinguishable from a genuine 0 reading
+		// (Issue #178, gap #3): ok=false rather than silently returning 0.
+		{"unknown_metric", 0, false},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.metric, func(t *testing.T) {
-			got := metricValue(tt.metric, host, sys)
-			if got != tt.expected {
+			got, ok := metricValue(tt.metric, host, sys)
+			if ok != tt.ok {
+				t.Fatalf("metricValue(%q) ok = %v, want %v", tt.metric, ok, tt.ok)
+			}
+			if ok && got != tt.expected {
 				t.Fatalf("metricValue(%q) = %f, want %f", tt.metric, got, tt.expected)
 			}
 		})
@@ -53,14 +59,16 @@ func TestMetricValueEdgeCases(t *testing.T) {
 	zeroSys := SystemMetrics{}
 
 	t.Run("mem_percent with zero total returns 0", func(t *testing.T) {
-		if got := metricValue("mem_percent", zeroHost, zeroSys); got != 0 {
-			t.Fatalf("expected 0, got %f", got)
+		got, ok := metricValue("mem_percent", zeroHost, zeroSys)
+		if !ok || got != 0 {
+			t.Fatalf("expected ok=true 0, got ok=%v %f", ok, got)
 		}
 	})
 
 	t.Run("disk_percent with zero total returns 0", func(t *testing.T) {
-		if got := metricValue("disk_percent", zeroHost, zeroSys); got != 0 {
-			t.Fatalf("expected 0, got %f", got)
+		got, ok := metricValue("disk_percent", zeroHost, zeroSys)
+		if !ok || got != 0 {
+			t.Fatalf("expected ok=true 0, got ok=%v %f", ok, got)
 		}
 	})
 }

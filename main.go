@@ -375,6 +375,33 @@ func startProxy() {
 		DB:     d,
 		Logger: logger,
 	})
+	// Wire alert.triggered → SMTP email delivery (Issue #178). The notifier is
+	// only installed when SMTP host + at least one recipient are configured, so
+	// local/dev setups with no mail server are unaffected. The subscriber that
+	// forwards events to the notifier is registered inside monitoring.Start.
+	if smtpHost := config.FlagOrEnv("", "BIGBASE_SMTP_HOST"); smtpHost != "" {
+		toAddrs := strings.Split(config.FlagOrEnv("", "BIGBASE_ALERT_EMAIL_TO"), ",")
+		var recipients []string
+		for _, a := range toAddrs {
+			if a = strings.TrimSpace(a); a != "" {
+				recipients = append(recipients, a)
+			}
+		}
+		if len(recipients) > 0 {
+			alertNotifier := messaging.NewSMTPAlertNotifier(messaging.SMTPAlertNotifierOptions{
+				Host:     smtpHost,
+				Port:     config.FlagOrEnv("587", "BIGBASE_SMTP_PORT"),
+				Username: config.FlagOrEnv("", "BIGBASE_SMTP_USER"),
+				Password: config.FlagOrEnv("", "BIGBASE_SMTP_PASS"),
+				From:     config.FlagOrEnv("no-reply@bigbase.local", "BIGBASE_SMTP_FROM"),
+				To:       recipients,
+				AlertURL: config.FlagOrEnv(*publicURL, "BIGBASE_PUBLIC_URL"),
+			})
+			mComp.SetAlertNotifier(alertNotifierAdapter{m: alertNotifier})
+		} else {
+			logger.Warn("SMTP host configured but BIGBASE_ALERT_EMAIL_TO empty; alert email delivery disabled")
+		}
+	}
 	depComp.SetDiagnosisReader(deployDiagnosisAdapter{m: mComp})
 	depComp.SetRelatedEventsReader(deployRelatedEventsAdapter{m: mComp})
 	gh := github.New(github.Options{

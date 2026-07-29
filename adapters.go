@@ -6,6 +6,7 @@ import (
 	"github.com/danielvm/bigbase/components/auth"
 	"github.com/danielvm/bigbase/components/deploy"
 	"github.com/danielvm/bigbase/components/mcp"
+	"github.com/danielvm/bigbase/components/messaging"
 	"github.com/danielvm/bigbase/components/monitoring"
 	"github.com/danielvm/bigbase/components/sites"
 )
@@ -186,4 +187,21 @@ func (a deployRelatedEventsAdapter) GetRelatedEvents(ctx context.Context, deploy
 		out.Events[cat] = converted
 	}
 	return out, true, nil
+}
+
+// alertNotifierAdapter bridges monitoring.AlertNotifier (which uses the
+// monitoring.AlertEvent type) to messaging.SMTPAlertNotifier (which uses its
+// own messaging.AlertEvent to avoid an import cycle). (Issue #178.)
+type alertNotifierAdapter struct{ m *messaging.SMTPAlertNotifier }
+
+func (a alertNotifierAdapter) NotifyAlert(ctx context.Context, ev monitoring.AlertEvent) error {
+	return a.m.NotifyAlert(ctx, messaging.AlertEvent{
+		AlertID:    ev.AlertID,
+		IncidentID: ev.IncidentID,
+		Name:       ev.Name,
+		Metric:     ev.Metric,
+		Value:      ev.Value,
+		Threshold:  ev.Threshold,
+		Operator:   ev.Operator,
+	})
 }

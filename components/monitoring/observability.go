@@ -120,6 +120,10 @@ func (m *Monitoring) wireObservabilityHooks(bus *kernel.EventBus) {
 		Priority: 500,
 		Handler: func(_ *kernel.Context, ev kernel.Event) error {
 			go m.onAlertTriggered(ev.Data)
+			// Deliver to the configured notifier (SMTP email etc.) so an alert
+			// actually reaches a human instead of only landing in the dashboard.
+			// (Issue #178, gap #2.)
+			go m.deliverAlert(ev.Data)
 			return nil
 		},
 	})

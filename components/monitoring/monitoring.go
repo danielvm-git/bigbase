@@ -78,12 +78,20 @@ type Monitoring struct {
 	cpuSampleAt  time.Time
 	cpuTotalNano int64
 
-	stopHost     chan struct{}
-	stopAlerts   chan struct{}
-	kctx         *kernel.Context // set in Start; used by alert checker to emit events
-	recorder     *eventrecorder.Recorder
-	llm          *llm.Client
+	stopHost   chan struct{}
+	stopAlerts chan struct{}
+	kctx       *kernel.Context // set in Start; used by alert checker to emit events
+	recorder   *eventrecorder.Recorder
+	llm        *llm.Client
 	llmModelName string
+
+	// siteStatus feeds the site_up / site_http_status metrics (Issue #178).
+	// Optional: when nil, site metrics are treated as unknown.
+	siteStatus SiteStatusProvider
+	// alertNotifier delivers alert.triggered events to a human/channel
+	// (e.g. SMTP email). Optional: when nil, alerts only hit the dashboard +
+	// investigation pipeline. (Issue #178, gap #2.)
+	alertNotifier AlertNotifier
 }
 
 var _ kernel.Component = (*Monitoring)(nil)
