@@ -1,3 +1,10 @@
+## [2.84.1](https://github.com/danielvm-git/bigbase/compare/v2.84.0...v2.84.1) (2026-07-29)
+
+
+### Bug Fixes
+
+* **security:** add frame-ancestors 'none' to CSP policies (closes DAST findings) ([9064279](https://github.com/danielvm-git/bigbase/commit/9064279ad7908c935643cee44e98ce4b97d47e37))
+
 # [2.84.0](https://github.com/danielvm-git/bigbase/compare/v2.83.1...v2.84.0) (2026-07-29)
 
 
