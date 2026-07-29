@@ -9,7 +9,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/danielvm/bigbase/components/db"
 	"github.com/danielvm/bigbase/components/messaging"
 )
 
@@ -107,9 +106,6 @@ func (s *smtpTestServer) handle(conn net.Conn) {
 func TestSMTPAlertNotifierSendsEmail(t *testing.T) {
 	srv := newSMTPTestServer(t)
 	t.Cleanup(func() { _ = srv.ln.Close() })
-
-	d := db.New(db.Options{Path: ":memory:", Logger: testLogger{}})
-	m := messaging.New(messaging.Options{DB: d, Logger: testLogger{}, SMTPHost: "127.0.0.1"})
 
 	// Split host:port from the listener address.
 	host, port, _ := net.SplitHostPort(srv.addr())
