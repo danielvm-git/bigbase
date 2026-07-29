@@ -156,6 +156,14 @@ func (d *Deploy) handleSiteCache(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// IDOR guard (issue #180): verify the caller's org owns this site before
+	// exposing or purging its build cache. Without this, a caller in org A
+	// could read/purge org B's site cache by guessing the site id. Mirrors the
+	// verifySiteOwnership check already used by handleRollbackEvents.
+	if !d.verifySiteOwnership(w, r, siteID) {
+		return
+	}
+
 	switch r.Method {
 	case http.MethodGet:
 		entries, err := d.cache.SiteEntries(siteID)
