@@ -1,0 +1,114 @@
+# =============================================================================
+# toolchain.toml — Declared deploy-host toolchain contract (issue #179)
+#
+# This is the SINGLE SOURCE OF TRUTH for the binaries the BigBase deploy
+# runtime assumes exist on the build/VPS host. The "missing tool on deploy
+# host" defect class recurred 15 times over 51 days (#179) because each tool
+# was added as a one-off point patch in a Go code path instead of being
+# declared upfront and verified before a build starts.
+#
+# Contract rules:
+#   - Every tool the deploy runtime invokes via exec.Command/exec.LookPath
+#     MUST be declared here, or in the [tools.optional] table if it only
+#     applies to a subset of app types.
+#   - `min` is a semantic version floor (>=). Tools without a version floor
+#     set `min = ""` and are only checked for presence.
+#   - scripts/verify-toolchain.sh reads this file and fails with a clear,
+#     structured message (TOOLCHAIN_MISSING / TOOLCHAIN_VERSION_TOO_LOW) if
+#     any required tool is absent or below floor.
+#   - The `toolchain-parity` CI job (ci-cd.yml) runs the verifier in an
+#     environment that mirrors scripts/setup-vps.sh, so a tool missing in CI
+#     is a tool that would be missing on the VPS — caught pre-deploy, not at
+#     runtime.
+#
+# How to add a tool when you add a new exec.Command in components/deploy/:
+#   1. Add an entry under [tools.required] (always needed) or
+#      [tools.optional] (only for some app types).
+#   2. Set `min` to the real floor (from setup-vps.sh, .nvmrc, go.mod, or the
+#      library/framework requirement the tool satisfies). Leave "" for
+#      presence-only checks.
+#   3. `scripts/verify-toolchain.sh` and the CI parity job enforce it
+#      automatically — no other wiring needed.
+#
+# Derivation notes are inline (search "WHY:") so the floor for each tool is
+# auditable against the code that needs it.
+# =============================================================================
+
+[meta]
+# Bump when the contract changes so deploys can refuse to run against a host
+# that hasn't been re-verified against the current contract.
+version = 1
+description = "Required binaries for the BigBase deploy runtime (issue #179)"
+
+# -----------------------------------------------------------------------------
+# [tools.required] — binaries the deploy runtime ALWAYS needs.
+# Missing any of these fails EVERY deploy; they are not optional per app type.
+# -----------------------------------------------------------------------------
+[tools.required]
+
+# WHY: Vite 8 (admin UI + Node sites) requires Node >= 20.19. setup-vps.sh
+# installs Node 24 LTS; .nvmrc pins 22; CI uses 22. Floor 20.19 is the real
+# technical minimum (the June-04 "Node 18 too old for Vite 8" bug).
+[tools.required.node]
+min = "20.19"
+
+# WHY: engine.go Node default PM (npm install/run). Always ships with Node.
+# Floor comes from the Node 20.19 toolchain (npm 10.x).
+[tools.required.npm]
+min = "10"
+
+# WHY: node_pm.go DetectNodePackageManager() resolves pnpm for
+# pnpm-lock.yaml; ensureNodePackageManager() must NOT fall back to npm.
+# BUG-2026-07-24T091500: pnpm not found (exit 127) because npm was hardcoded.
+[tools.required.pnpm]
+min = "9"
+
+# WHY: engine.go AppPython + python.go resolvePythonBin(). setup-vps.sh
+# installs python3. Floor 3.11 matches uv/modern-FastAPI expectations.
+[tools.required.python3]
+min = "3.11"
+
+# WHY: engine.go fallback `pip install --break-system-packages`.
+# BUG-2026-06-19T173242: pip blocked by PEP 668 (uv is the primary path,
+# pip is the fallback — but pip must still be present).
+[tools.required.pip]
+min = "23"
+
+# WHY: engine.go AppPython `uv sync --frozen`; python.go `uv run uvicorn`.
+# BUG-2026-07-12T171000: uv not in PATH — the bug text itself flags the
+# recurrence class. uv is now the PRIMARY Python install/start path.
+[tools.required.uv]
+min = "0.5"
+
+# WHY: engine.go AppGo `go build -o app .`; go.mod requires go 1.26.
+[tools.required.go]
+min = "1.26"
+
+# WHY: engine.go `git clone` + `git checkout` for repo checkout.
+[tools.required.git]
+min = "2.30"
+
+# -----------------------------------------------------------------------------
+# [tools.optional] — binaries only required for specific app types / PMs.
+# The verifier checks these for PRESENCE but never fails the whole contract
+# if one is missing (it reports them as informational). The deploy runtime
+# itself fails per-app (codedErr "tool_missing") when an optional tool is
+# actually needed and absent — declaring them here just makes the contract
+# complete and the CI matrix aware of them.
+# -----------------------------------------------------------------------------
+[tools.optional]
+
+# WHY: node_pm.go enables corepack for pnpm/yarn when not on PATH.
+[tools.optional.corepack]
+
+# WHY: node_pm.go DetectNodePackageManager() for yarn.lock / packageManager.
+[tools.optional.yarn]
+
+# WHY: node_pm.go DetectNodePackageManager() for bun.lockb / bun.lock.
+[tools.optional.bun]
+
+# WHY: engine.go AppPHP needs php -S built-in server.
+[tools.optional.php]
+
+# WHY: engine.go AppPHP runs `composer install`.
+[tools.optional.composer]

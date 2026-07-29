@@ -17,6 +17,33 @@ Built on the **ECC pattern**: a kernel discovers, starts, and connects independe
 - **Database**: SQLite (default, zero-CGO via `modernc.org/sqlite`) or PostgreSQL
 - **Linter**: `golangci-lint` (development only)
 
+## Declared toolchain contract
+
+The deploy runtime assumes certain binaries exist on the build/VPS host
+(`node`, `npm`, `pnpm`, `python3`, `pip`, `uv`, `go`, `git`). Historically a
+"missing tool on deploy host" defect recurred repeatedly (#179) because each
+tool was added as a one-off patch in a Go code path. These tools are now
+**declared** in [`toolchain.toml`](toolchain.toml) — the single source of truth
+for the deploy-host toolchain.
+
+`scripts/verify-toolchain.sh` reads the contract and fails with a clear
+`TOOLCHAIN_MISSING:<tool>` / `TOOLCHAIN_VERSION_TOO_LOW:<tool>` message when a
+required binary is absent or below its declared minimum:
+
+```bash
+bash scripts/verify-toolchain.sh
+```
+
+The `toolchain-parity` CI job (`.github/workflows/ci-cd.yml`) provisions the
+same tools `scripts/setup-vps.sh` installs on the VPS and then runs the
+verifier — so a tool missing in CI is a tool that would be missing on the VPS,
+caught pre-deploy instead of mid-build.
+
+**Adding a tool**: when you add a new `exec.Command`/`exec.LookPath` call in
+`components/deploy/`, add an entry under `[tools.required]` (always needed) or
+`[tools.optional]` (only for some app types) in `toolchain.toml`, set `min` to
+the real floor, and CI enforces it automatically.
+
 ## Quick Start
 
 ```bash
