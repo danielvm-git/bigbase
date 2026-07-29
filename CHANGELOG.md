@@ -1,3 +1,11 @@
+# [2.83.0](https://github.com/danielvm-git/bigbase/compare/v2.82.0...v2.83.0) (2026-07-29)
+
+
+### Features
+
+* **deploy:** declared toolchain contract + CI parity check (closes [#179](https://github.com/danielvm-git/bigbase/issues/179)) ([7ca023f](https://github.com/danielvm-git/bigbase/commit/7ca023fc9424ba0d3dc849be61f72eca71cb2a51))
+* **monitoring:** add site availability metrics + wire alert subscriber (closes [#178](https://github.com/danielvm-git/bigbase/issues/178)) ([aa383b6](https://github.com/danielvm-git/bigbase/commit/aa383b64713bf21e3f35c3d406706bfdfe1787dd))
+
 # [2.82.0](https://github.com/danielvm-git/bigbase/compare/v2.81.6...v2.82.0) (2026-07-28)
 
 
