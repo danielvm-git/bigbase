@@ -400,9 +400,12 @@ func (d *Deploy) getCommitSHA(buildDir string) (string, error) {
 	return strings.TrimSpace(string(out)), nil
 }
 func (d *Deploy) buildApp(ctx context.Context, deployID, siteID, repoID, branch, buildDir string, appType AppType, manifest *Manifest) error {
-	siteEnv, err := d.FetchSiteEnvVars(ctx, siteID, true)
+	// Resolve the build environment through EnvResolver (issue #41): the
+	// single owner of precedence (platform defaults → site env vars) and of
+	// which keys are secrets (for redacting captured build output).
+	resolved, err := d.envResolver.Resolve(ctx, siteID, ScopeBuild)
 	if err != nil {
-		return fmt.Errorf("fetch build-time env vars: %w", err)
+		return fmt.Errorf("resolve build-time env vars: %w", err)
 	}
 
 	// Use manifest build command if present, falling back to auto-detection.
@@ -412,7 +415,7 @@ func (d *Deploy) buildApp(ctx context.Context, deployID, siteID, repoID, branch,
 		}
 		parts := strings.Fields(manifest.Build.Command)
 		if len(parts) > 0 {
-			return d.runBuildCommand(ctx, deployID, buildDir, siteEnv, parts[0], parts[1:]...)
+			return d.runBuildCommand(ctx, deployID, buildDir, resolved, parts[0], parts[1:]...)
 		}
 	}
 
@@ -431,7 +434,7 @@ func (d *Deploy) buildApp(ctx context.Context, deployID, siteID, repoID, branch,
 			return err
 		}
 		name, args := NodeBuildCommand(pm)
-		if err := d.runBuildCommand(ctx, deployID, buildDir, siteEnv, name, args...); err != nil {
+		if err := d.runBuildCommand(ctx, deployID, buildDir, resolved, name, args...); err != nil {
 			return fmt.Errorf("%s run build: %w", pm, err)
 		}
 		return nil
@@ -440,7 +443,7 @@ func (d *Deploy) buildApp(ctx context.Context, deployID, siteID, repoID, branch,
 			return codedErr("tool_missing", "go not found on PATH",
 				"Install Go on the deploy host (matching go.mod) before deploying AppType=go.")
 		}
-		return d.runBuildCommand(ctx, deployID, buildDir, siteEnv, "go", "build", "-o", "app", ".")
+		return d.runBuildCommand(ctx, deployID, buildDir, resolved, "go", "build", "-o", "app", ".")
 	case AppPHP:
 		if _, err := exec.LookPath("composer"); err != nil {
 			return codedErr("tool_missing", "composer not found on PATH",
@@ -450,7 +453,7 @@ func (d *Deploy) buildApp(ctx context.Context, deployID, siteID, repoID, branch,
 			return codedErr("tool_missing", "php not found on PATH",
 				"Install PHP on the deploy host before deploying AppType=php.")
 		}
-		return d.runBuildCommand(ctx, deployID, buildDir, siteEnv, "composer", "install", "--no-dev", "--optimize-autoloader")
+		return d.runBuildCommand(ctx, deployID, buildDir, resolved, "composer", "install", "--no-dev", "--optimize-autoloader")
 	case AppPython:
 		if _, err := exec.LookPath("python3"); err != nil {
 			if _, err2 := exec.LookPath("python"); err2 != nil {
@@ -463,22 +466,22 @@ func (d *Deploy) buildApp(ctx context.Context, deployID, siteID, repoID, branch,
 			if pp != nil {
 				if deps := pp.SystemDeps(); len(deps) > 0 {
 					args := append([]string{"install", "-y"}, deps...)
-					if err := d.runBuildCommand(ctx, deployID, buildDir, siteEnv, "apt-get", "update"); err != nil {
+					if err := d.runBuildCommand(ctx, deployID, buildDir, resolved, "apt-get", "update"); err != nil {
 						d.appendDeployLog(deployID, "⚠ apt-get update failed — continuing without system deps")
 					} else {
-						if err := d.runBuildCommand(ctx, deployID, buildDir, siteEnv, "apt-get", args...); err != nil {
+						if err := d.runBuildCommand(ctx, deployID, buildDir, resolved, "apt-get", args...); err != nil {
 							d.appendDeployLog(deployID, "⚠ apt-get install failed — continuing")
 						}
 					}
 				}
 			}
 			if _, lookErr := exec.LookPath("uv"); lookErr == nil {
-				return d.runBuildCommand(ctx, deployID, buildDir, siteEnv, "uv", "sync", "--frozen")
+				return d.runBuildCommand(ctx, deployID, buildDir, resolved, "uv", "sync", "--frozen")
 			}
 			d.appendDeployLog(deployID, "→ uv not found, falling back to pip install")
-			return d.runBuildCommand(ctx, deployID, buildDir, siteEnv, "pip", "install", "--break-system-packages", ".")
+			return d.runBuildCommand(ctx, deployID, buildDir, resolved, "pip", "install", "--break-system-packages", ".")
 		}
-		return d.runBuildCommand(ctx, deployID, buildDir, siteEnv, "pip", "install", "--break-system-packages", "-r", "requirements.txt")
+		return d.runBuildCommand(ctx, deployID, buildDir, resolved, "pip", "install", "--break-system-packages", "-r", "requirements.txt")
 	}
 	return nil
 }
@@ -519,13 +522,22 @@ func (d *Deploy) saveNodeModules(deployID, siteID, repoID, branch, buildDir, key
 	d.appendDeployLog(deployID, "→ Cache saved: node_modules")
 	_ = d.cache.Evict()
 }
-func (d *Deploy) runBuildCommand(ctx context.Context, deployID, dir string, extraEnv []string, name string, args ...string) error {
+func (d *Deploy) runBuildCommand(ctx context.Context, deployID, dir string, resolved *ResolvedEnv, name string, args ...string) error {
 	label := FormatBuildCommand(name, args...)
 	d.appendDeployLog(deployID, "→ Running: "+label)
 
 	var stderr, stdout bytes.Buffer
 	cmd := exec.CommandContext(ctx, name, args...)
 	cmd.Dir = dir
+	// resolved.Environ is the merged build environment from EnvResolver
+	// (platform defaults overlaid with site env vars). ResolvedEnv is also
+	// the redaction context for any captured tool output (issue #41): a build
+	// tool that echoes its own environment must not leak a secret value into
+	// the deploy log.
+	var extraEnv []string
+	if resolved != nil {
+		extraEnv = resolved.Environ
+	}
 	cmd.Env = append(d.buildCmdEnv(), extraEnv...)
 	cmd.Stderr = &stderr
 	cmd.Stdout = &stdout
@@ -533,6 +545,9 @@ func (d *Deploy) runBuildCommand(ctx context.Context, deployID, dir string, extr
 		detail := strings.TrimSpace(stderr.String())
 		if detail == "" {
 			detail = strings.TrimSpace(stdout.String())
+		}
+		if resolved != nil {
+			detail = RedactLogText(detail, resolved)
 		}
 		if detail != "" {
 			d.appendDeployLogBlock(deployID, detail)

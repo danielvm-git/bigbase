@@ -1,3 +1,10 @@
+## [2.83.1](https://github.com/danielvm-git/bigbase/compare/v2.83.0...v2.83.1) (2026-07-29)
+
+
+### Bug Fixes
+
+* **deploy:** scope site build-cache endpoint by org (refs [#180](https://github.com/danielvm-git/bigbase/issues/180)) ([78d098f](https://github.com/danielvm-git/bigbase/commit/78d098f2cf6c87b5f85522a0a88070099b946fd1))
+
 # [2.83.0](https://github.com/danielvm-git/bigbase/compare/v2.82.0...v2.83.0) (2026-07-29)
 
 

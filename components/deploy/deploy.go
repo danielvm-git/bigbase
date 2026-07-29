@@ -120,6 +120,7 @@ type Deploy struct {
 	dbDSN               string
 	diagnosisReader     DeployDiagnosisReader
 	relatedEventsReader DeployRelatedEventsReader
+	envResolver         *EnvResolver
 }
 
 var _ kernel.Component = (*Deploy)(nil)
@@ -209,6 +210,9 @@ func New(opts Options) *Deploy {
 		// Encryption disabled — warn so operators notice the misconfiguration.
 		d.logger.Warn("env encryption key invalid — env vars stored without encryption", "error", envKeyErr)
 	}
+	// Single owner of env resolution + redaction (issue #41). Both the build
+	// and runtime paths resolve through it, sharing one precedence definition.
+	d.envResolver = NewEnvResolver(d.db, d.envKey, d.logger, d.buildHome)
 	cacheDir := opts.CacheDir
 	if cacheDir == "" {
 		cacheDir = "data/cache/deploy"

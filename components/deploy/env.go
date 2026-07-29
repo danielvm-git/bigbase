@@ -44,6 +44,16 @@ func (d *Deploy) buildHomeDir() string {
 	return os.Getenv("BIGBASE_HOME")
 }
 
+// EnvResolver exposes the single env-resolution + redaction owner used by
+// the build and runtime paths (issue #41). Callers must not mutate the
+// returned resolver; it is shared.
+func (d *Deploy) EnvResolver() *EnvResolver {
+	return d.envResolver
+}
+
+// buildCmdEnv is the platform build-time baseline (layer 1 of Resolve's
+// precedence): os.Environ plus build home/cache tuning. Site env vars are
+// layered on top via EnvResolver.Resolve.
 func (d *Deploy) buildCmdEnv() []string {
 	return BuildEnv(d.buildHomeDir())
 }
