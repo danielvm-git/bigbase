@@ -9,8 +9,10 @@ const (
 	// strictCSP is for API and JSON routes.
 	// Explicit script-src and connect-src are added alongside default-src for
 	// defense-in-depth and auditability, even though default-src 'self' already
-	// covers them as the fallback.
-	strictCSP = "default-src 'self'; script-src 'self'; connect-src 'self'"
+	// covers them as the fallback. frame-ancestors 'none' is the CSP-level
+	// clickjacking guard (belt-and-suspenders with X-Frame-Options: DENY) and
+	// satisfies DAST checks that require an explicit frame-ancestors directive.
+	strictCSP = "default-src 'self'; script-src 'self'; connect-src 'self'; frame-ancestors 'none'"
 
 	// permissiveCSP is for HTML routes (home, docs, admin) and deployed static
 	// sites that need inline styles, inline scripts, Google Fonts, and common
@@ -22,7 +24,7 @@ const (
 	// CDN entries (jsdelivr, cloudflare, tailwindcss, unpkg) are needed for
 	// deployed sites that load UI frameworks from public CDNs. TODO: make CSP
 	// configurable per-site so each deployment can declare its own allowed sources.
-	permissiveCSP = "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://unpkg.com; connect-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net"
+	permissiveCSP = "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://unpkg.com; connect-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; frame-ancestors 'none'"
 
 	// restrictivePermissionsPolicy disables browser features that are not needed.
 	restrictivePermissionsPolicy = "accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()"

@@ -86,8 +86,28 @@ func TestSecurityHeaders(t *testing.T) {
 		defer func() { _ = resp.Body.Close() }()
 
 		csp := resp.Header.Get("Content-Security-Policy")
-		if csp != "default-src 'self'; script-src 'self'; connect-src 'self'" {
+		if csp != "default-src 'self'; script-src 'self'; connect-src 'self'; frame-ancestors 'none'" {
 			t.Errorf("expected strict CSP for /health, got %q", csp)
+		}
+	})
+
+	t.Run("all CSP policies include frame-ancestors none", func(t *testing.T) {
+		// CSP-level clickjacking guard (defense-in-depth with X-Frame-Options: DENY).
+		paths := []string{"/", "/docs", "/admin/", "/health"}
+		for _, path := range paths {
+			resp, err := http.Get("http://localhost:" + port + path)
+			if err != nil {
+				t.Fatalf("GET %s: %v", path, err)
+			}
+			if _, err := io.ReadAll(resp.Body); err != nil {
+				t.Fatalf("read body %s: %v", path, err)
+			}
+			_ = resp.Body.Close()
+
+			csp := resp.Header.Get("Content-Security-Policy")
+			if !strings.Contains(csp, "frame-ancestors 'none'") {
+				t.Errorf("expected CSP for %s to contain frame-ancestors 'none', got %q", path, csp)
+			}
 		}
 	})
 
