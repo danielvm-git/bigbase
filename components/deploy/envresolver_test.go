@@ -2,13 +2,45 @@ package deploy_test
 
 import (
 	"context"
+	"encoding/hex"
 	"strings"
 	"testing"
 
 	"github.com/danielvm/bigbase/components/db"
 	"github.com/danielvm/bigbase/components/deploy"
+	"github.com/danielvm/bigbase/components/internal/envcrypto"
 	"github.com/danielvm/bigbase/kernel"
 )
+
+// envcryptoHexToBytes parses a hex string into a byte slice (the form
+// parseEnvEncryptionKey expects). Kept local so the test does not depend on
+// the unexported deploy parser.
+func envcryptoHexToBytes(s string) ([]byte, error) {
+	return hex.DecodeString(s)
+}
+
+// resolveEnvEncrypted is resolveEnv for cases where the caller has already
+// encrypted the stored value (e.g. to exercise the decrypt path with a real
+// key). The value passed in vars is written verbatim to value_encrypted.
+func resolveEnvEncrypted(t *testing.T, encKey string, vars [][4]any) *deploy.EnvResolver {
+	t.Helper()
+	logger := testLogger{}
+	database := db.New(db.Options{Path: ":memory:", Logger: logger})
+	_ = database.Start(&kernel.Context{})
+	t.Cleanup(func() { _ = database.Stop(&kernel.Context{}) })
+
+	migrateEnvVarsTable(t, database)
+	for _, v := range vars {
+		key, value := v[0].(string), v[1].(string)
+		bt, rt := v[2].(bool), v[3].(bool)
+		insertEnvVar(t, database, "site-x", key, value, bt, rt)
+	}
+
+	dep := deploy.New(deploy.Options{DB: database, Logger: logger, EnvEncryptionKey: encKey})
+	_ = dep.Start(&kernel.Context{})
+	t.Cleanup(func() { _ = dep.Stop(&kernel.Context{}) })
+	return dep.EnvResolver()
+}
 
 // resolveEnv sets up an in-memory deploy + site_env_vars table and returns a
 // resolver seeded with the given env vars (key, value, buildTime, runtime).
@@ -145,12 +177,15 @@ func TestEnvResolverPrecedence(t *testing.T) {
 
 func TestEnvResolverRedaction(t *testing.T) {
 	t.Run("redact_masks_secret_sourced_values", func(t *testing.T) {
-		// Every value sourced from the secret store must be masked in any
-		// view derived from ResolvedEnv that a consumer might log. The resolver
-		// knows which keys came from the store; Redact uses that knowledge.
+		// Every value sourced from the secret store (site_env_vars) must be
+		// masked in any view derived from ResolvedEnv that a consumer might
+		// log. The resolver knows which keys came from the store; Redact uses
+		// that knowledge. A non-secret value must come from the platform
+		// baseline (os.Environ), NOT the site store — the store is the secret
+		// surface, so anything in it is treated as a secret for redaction.
+		t.Setenv("PUBLIC_VAR", "hello")
 		r := resolveEnv(t, "", [][4]any{
 			{"SECRET_KEY", "super-secret-token", true, false},
-			{"PUBLIC_VAR", "hello", true, false},
 		})
 
 		resolved, err := r.Resolve(context.Background(), "site-x", deploy.ScopeBuild)
@@ -169,20 +204,30 @@ func TestEnvResolverRedaction(t *testing.T) {
 		if strings.Contains(strings.Join(redacted, "\n"), "super-secret-token") {
 			t.Fatal("plaintext secret present in redacted env")
 		}
+		// PUBLIC_VAR comes from os.Environ (platform baseline), so it is NOT in
+		// secretKeys and must be preserved verbatim.
 		if m["PUBLIC_VAR"] != "hello" {
-			t.Fatalf("non-secret value should be preserved, got %q", m["PUBLIC_VAR"])
+			t.Fatalf("non-secret (platform) value should be preserved, got %q", m["PUBLIC_VAR"])
 		}
 	})
 
 	t.Run("redact_with_encryption_key_still_masks", func(t *testing.T) {
 		// Encryption-at-rest is orthogonal to redaction-in-logs. Even with a
 		// configured key (values decrypted at resolve time), the redacted view
-		// must still mask them.
+		// must still mask them. The stored value is encrypted with the same key
+		// the resolver decrypts with.
 		encKey := strings.Repeat("b2", 32)
-		r := resolveEnv(t, encKey, [][4]any{
-			{"DB_PASSWORD", "hunter2-hunter2", true, false},
+		keyBytes, decErr := envcryptoHexToBytes(encKey)
+		if decErr != nil {
+			t.Fatalf("parse encKey: %v", decErr)
+		}
+		encrypted, encErr := envcrypto.Encrypt(keyBytes, "hunter2-hunter2")
+		if encErr != nil {
+			t.Fatalf("encrypt test value: %v", encErr)
+		}
+		r := resolveEnvEncrypted(t, encKey, [][4]any{
+			{"DB_PASSWORD", encrypted, true, false},
 		})
-		// Re-insert with encryption since the key is set: decrypt must succeed.
 		resolved, err := r.Resolve(context.Background(), "site-x", deploy.ScopeBuild)
 		if err != nil {
 			t.Fatalf("Resolve: %v", err)
@@ -215,7 +260,7 @@ func TestSecretNeverAppearsInBuildLog(t *testing.T) {
 	// Simulate the build path capturing a tool's stderr that echoes the env
 	// (the realistic leak vector: a build script prints its own environment).
 	rawStderr := strings.Join(resolved.Environ, "\n")
-	logged := deploy.RedactLogText(rawStderr, resolved.SecretKeys())
+	logged := deploy.RedactLogText(rawStderr, resolved)
 
 	if strings.Contains(logged, secretValue) {
 		t.Fatalf("SECRET LEAKED into build log:\n%s", logged)
