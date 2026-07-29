@@ -1,3 +1,10 @@
+# [2.84.0](https://github.com/danielvm-git/bigbase/compare/v2.83.1...v2.84.0) (2026-07-29)
+
+
+### Features
+
+* **auth:** declarative Policy gate for route access control (closes [#43](https://github.com/danielvm-git/bigbase/issues/43)) ([3cb8b51](https://github.com/danielvm-git/bigbase/commit/3cb8b517306f5927d1434bcdbfc533a4eb8979a9)), closes [#180](https://github.com/danielvm-git/bigbase/issues/180) [#180](https://github.com/danielvm-git/bigbase/issues/180)
+
 ## [2.83.1](https://github.com/danielvm-git/bigbase/compare/v2.83.0...v2.83.1) (2026-07-29)
 
 
