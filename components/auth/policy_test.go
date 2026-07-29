@@ -70,7 +70,7 @@ func withContext(r *http.Request, userID int64, role string, orgID int64) *http.
 // --- RequireAuth -------------------------------------------------------------
 
 func TestPolicy_RequireAuth_AllowsAuthenticated(t *testing.T) {
-	h := auth.RequireAuth().Wrap(okHandler())
+	h := auth.PolicyAuth().Wrap(okHandler())
 
 	req := withContext(httptest.NewRequest(http.MethodGet, "/x", nil), 42, "user", 7)
 	w := httptest.NewRecorder()
@@ -85,7 +85,7 @@ func TestPolicy_RequireAuth_AllowsAuthenticated(t *testing.T) {
 }
 
 func TestPolicy_RequireAuth_RejectsUnauthenticated(t *testing.T) {
-	h := auth.RequireAuth().Wrap(okHandler())
+	h := auth.PolicyAuth().Wrap(okHandler())
 
 	req := httptest.NewRequest(http.MethodGet, "/x", nil)
 	w := httptest.NewRecorder()
@@ -102,7 +102,7 @@ func TestPolicy_RequireAuth_RejectsUnauthenticated(t *testing.T) {
 // --- RequireAdmin ------------------------------------------------------------
 
 func TestPolicy_RequireAdmin_AllowsAdmin(t *testing.T) {
-	h := auth.RequireAdmin().Wrap(okHandler())
+	h := auth.PolicyAdmin().Wrap(okHandler())
 
 	req := withContext(httptest.NewRequest(http.MethodGet, "/x", nil), 1, "admin", 1)
 	w := httptest.NewRecorder()
@@ -114,7 +114,7 @@ func TestPolicy_RequireAdmin_AllowsAdmin(t *testing.T) {
 }
 
 func TestPolicy_RequireAdmin_RejectsNonAdmin(t *testing.T) {
-	h := auth.RequireAdmin().Wrap(okHandler())
+	h := auth.PolicyAdmin().Wrap(okHandler())
 
 	req := withContext(httptest.NewRequest(http.MethodGet, "/x", nil), 2, "user", 7)
 	w := httptest.NewRecorder()
@@ -129,7 +129,7 @@ func TestPolicy_RequireAdmin_RejectsNonAdmin(t *testing.T) {
 }
 
 func TestPolicy_RequireAdmin_RejectsUnauthenticated(t *testing.T) {
-	h := auth.RequireAdmin().Wrap(okHandler())
+	h := auth.PolicyAdmin().Wrap(okHandler())
 
 	req := httptest.NewRequest(http.MethodGet, "/x", nil)
 	w := httptest.NewRecorder()
@@ -143,7 +143,7 @@ func TestPolicy_RequireAdmin_RejectsUnauthenticated(t *testing.T) {
 // --- RequireOrgScoped --------------------------------------------------------
 
 func TestPolicy_RequireOrgScoped_AllowsWithOrg(t *testing.T) {
-	h := auth.RequireOrgScoped().Wrap(okHandler())
+	h := auth.PolicyOrgScoped().Wrap(okHandler())
 
 	req := withContext(httptest.NewRequest(http.MethodGet, "/x", nil), 5, "user", 9)
 	w := httptest.NewRecorder()
@@ -155,7 +155,7 @@ func TestPolicy_RequireOrgScoped_AllowsWithOrg(t *testing.T) {
 }
 
 func TestPolicy_RequireOrgScoped_RejectsMissingOrg(t *testing.T) {
-	h := auth.RequireOrgScoped().Wrap(okHandler())
+	h := auth.PolicyOrgScoped().Wrap(okHandler())
 
 	// Authenticated (user_id + role set) but NO org_id — the IDOR precondition.
 	req := withContext(httptest.NewRequest(http.MethodGet, "/x", nil), 5, "user", 0)
@@ -171,7 +171,7 @@ func TestPolicy_RequireOrgScoped_RejectsMissingOrg(t *testing.T) {
 }
 
 func TestPolicy_RequireOrgScoped_RejectsUnauthenticated(t *testing.T) {
-	h := auth.RequireOrgScoped().Wrap(okHandler())
+	h := auth.PolicyOrgScoped().Wrap(okHandler())
 
 	req := httptest.NewRequest(http.MethodGet, "/x", nil)
 	w := httptest.NewRecorder()
@@ -185,7 +185,7 @@ func TestPolicy_RequireOrgScoped_RejectsUnauthenticated(t *testing.T) {
 // --- Composition (RequireAuth + scopes via RequireScopes) --------------------
 
 func TestPolicy_RequireScopes_AllowsMatchingScope(t *testing.T) {
-	h := auth.RequireScopes("sites:write").Wrap(okHandler())
+	h := auth.PolicyScopes("sites:write").Wrap(okHandler())
 
 	ctx := auth.WithOrgKeyScopes(context.Background(), []string{"sites:write"})
 	req := httptest.NewRequest(http.MethodPost, "/x", nil).WithContext(ctx)
@@ -198,7 +198,7 @@ func TestPolicy_RequireScopes_AllowsMatchingScope(t *testing.T) {
 }
 
 func TestPolicy_RequireScopes_RejectsMissingScope(t *testing.T) {
-	h := auth.RequireScopes("sites:write").Wrap(okHandler())
+	h := auth.PolicyScopes("sites:write").Wrap(okHandler())
 
 	ctx := auth.WithOrgKeyScopes(context.Background(), []string{"sites:read"})
 	req := httptest.NewRequest(http.MethodDelete, "/x", nil).WithContext(ctx)
@@ -216,7 +216,7 @@ func TestPolicy_RequireScopes_RejectsMissingScope(t *testing.T) {
 // Unscoped keys (no scopes in context, e.g. JWT auth) pass through for backward
 // compatibility — mirrors the legacy RequireScopes middleware contract.
 func TestPolicy_RequireScopes_UnscopedKeyPassesThrough(t *testing.T) {
-	h := auth.RequireScopes("sites:write").Wrap(okHandler())
+	h := auth.PolicyScopes("sites:write").Wrap(okHandler())
 
 	// No scopes set in context (JWT auth path).
 	req := httptest.NewRequest(http.MethodPost, "/x", nil)
@@ -233,12 +233,13 @@ func TestPolicy_RequireScopes_UnscopedKeyPassesThrough(t *testing.T) {
 // RequireOrgScoped + scopes is the realistic org write route: needs org
 // isolation AND a permitted scope. This proves the declarative model composes.
 func TestPolicy_OrgScopedWithScopes_RequiresBoth(t *testing.T) {
-	h := auth.RequireOrgScoped().
+	h := auth.PolicyOrgScoped().
 		WithScopes("orgs:write").
 		Wrap(okHandler())
 
 	t.Run("org_and_scope_ok", func(t *testing.T) {
 		ctx := context.Background()
+		ctx = auth.WithUserID(ctx, 11)
 		ctx = auth.WithOrgID(ctx, 3)
 		ctx = auth.WithOrgKeyScopes(ctx, []string{"orgs:write"})
 		req := httptest.NewRequest(http.MethodPost, "/x", nil).WithContext(ctx)
@@ -251,6 +252,7 @@ func TestPolicy_OrgScopedWithScopes_RequiresBoth(t *testing.T) {
 
 	t.Run("org_missing_scope_denied", func(t *testing.T) {
 		ctx := context.Background()
+		ctx = auth.WithUserID(ctx, 11)
 		ctx = auth.WithOrgID(ctx, 3)
 		ctx = auth.WithOrgKeyScopes(ctx, []string{"sites:read"})
 		req := httptest.NewRequest(http.MethodPost, "/x", nil).WithContext(ctx)
@@ -263,6 +265,7 @@ func TestPolicy_OrgScopedWithScopes_RequiresBoth(t *testing.T) {
 
 	t.Run("scope_but_no_org_denied", func(t *testing.T) {
 		ctx := context.Background()
+		ctx = auth.WithUserID(ctx, 11)
 		ctx = auth.WithOrgKeyScopes(ctx, []string{"orgs:write"})
 		req := httptest.NewRequest(http.MethodPost, "/x", nil).WithContext(ctx)
 		w := httptest.NewRecorder()
@@ -278,7 +281,7 @@ func TestPolicy_OrgScopedWithScopes_RequiresBoth(t *testing.T) {
 // A zero-value Policy (RequireNone) is a pass-through. This lets a registration
 // helper require a Policy for every route while still allowing public routes.
 func TestPolicy_None_AllowsAll(t *testing.T) {
-	h := auth.RequireNone().Wrap(okHandler())
+	h := auth.PolicyNone().Wrap(okHandler())
 
 	// No auth context at all.
 	req := httptest.NewRequest(http.MethodGet, "/x", nil)
