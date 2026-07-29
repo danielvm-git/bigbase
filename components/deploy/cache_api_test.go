@@ -10,6 +10,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/danielvm/bigbase/components/auth"
 	"github.com/danielvm/bigbase/components/db"
 	"github.com/danielvm/bigbase/kernel"
 )
@@ -246,5 +247,67 @@ func TestCacheAPI_SiteStatus_RequiresID(t *testing.T) {
 	d.Handler().ServeHTTP(rec, req)
 	if rec.Code != http.StatusBadRequest {
 		t.Fatalf("expected 400 for missing site id, got %d", rec.Code)
+	}
+}
+
+// TestCacheAPI_SiteCache_PreventsCrossOrgIDOR is the regression guard for the
+// fix in handleSiteCache (issue #180): a caller authenticated as org A must be
+// denied (403) when reading or purging org B's site cache. Before the fix,
+// handleSiteCache took the site_id path param straight to the cache store with
+// no ownership check, leaking build-cache contents across tenants.
+func TestCacheAPI_SiteCache_PreventsCrossOrgIDOR(t *testing.T) {
+	d, cleanup := newCacheTestDeploy(t)
+	defer cleanup()
+
+	// Seed a sites table with org_id so verifySiteOwnership has a row to check.
+	if _, err := d.db.Exec(`CREATE TABLE IF NOT EXISTS sites (
+		id TEXT PRIMARY KEY,
+		name TEXT NOT NULL,
+		git_repo_id TEXT NOT NULL DEFAULT '',
+		production_branch TEXT NOT NULL DEFAULT 'main',
+		root_path TEXT NOT NULL DEFAULT './',
+		github_full_name TEXT DEFAULT '',
+		org_id INTEGER NOT NULL DEFAULT 0,
+		created_at TEXT NOT NULL DEFAULT (datetime('now'))
+	)`); err != nil {
+		t.Fatalf("create sites table: %v", err)
+	}
+	if _, err := d.db.Exec(`INSERT INTO sites (id, name, git_repo_id, org_id) VALUES
+		('siteA', 'A', 'r', 100),
+		('siteB', 'B', 'r', 200)`); err != nil {
+		t.Fatalf("seed sites: %v", err)
+	}
+	seedCacheEntry(t, d, "a1", "siteA")
+	seedCacheEntry(t, d, "b1", "siteB")
+
+	// Org A (id=100) tries to read org B's (id=200) site cache -> 403.
+	getReq := httptest.NewRequest(http.MethodGet, "/api/deploy/cache/site/siteB", nil)
+	getReq = getReq.WithContext(auth.WithOrgID(getReq.Context(), 100))
+	getRec := httptest.NewRecorder()
+	d.Handler().ServeHTTP(getRec, getReq)
+	if getRec.Code != http.StatusForbidden {
+		t.Fatalf("cross-org GET site cache: expected 403, got %d (%s)", getRec.Code, getRec.Body.String())
+	}
+
+	// Org A tries to purge org B's site cache -> 403, and the cache is intact.
+	delReq := httptest.NewRequest(http.MethodDelete, "/api/deploy/cache/site/siteB", nil)
+	delReq = delReq.WithContext(auth.WithOrgID(delReq.Context(), 100))
+	delRec := httptest.NewRecorder()
+	d.Handler().ServeHTTP(delRec, delReq)
+	if delRec.Code != http.StatusForbidden {
+		t.Fatalf("cross-org DELETE site cache: expected 403, got %d (%s)", delRec.Code, delRec.Body.String())
+	}
+	if remaining, _ := d.cache.SiteEntries("siteB"); len(remaining) != 1 {
+		t.Errorf("org B cache should be intact after denied purge, got %d entries", len(remaining))
+	}
+
+	// Sanity: org A reading its OWN site cache still works (the denial is a real
+	// ownership check, not a blanket 403 — the deploy-key 403 regression class).
+	ownReq := httptest.NewRequest(http.MethodGet, "/api/deploy/cache/site/siteA", nil)
+	ownReq = ownReq.WithContext(auth.WithOrgID(ownReq.Context(), 100))
+	ownRec := httptest.NewRecorder()
+	d.Handler().ServeHTTP(ownRec, ownReq)
+	if ownRec.Code != http.StatusOK {
+		t.Fatalf("own-org GET site cache: expected 200, got %d (%s)", ownRec.Code, ownRec.Body.String())
 	}
 }
