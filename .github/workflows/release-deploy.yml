@@ -59,6 +59,7 @@ jobs:
     name: Release & Deploy
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    environment: production
 
     outputs:
       new_release: ${{ steps.detect-release.outputs.new_release }}

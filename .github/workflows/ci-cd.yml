@@ -5,7 +5,7 @@
 # Adapted for BigBase: PostgreSQL matrix, Allure report, Go 1.26
 #
 # Pipeline:
-#   ci (SQLite + PostgreSQL matrix) → lint → verify → allure report
+#   lint → test (SQLite + PostgreSQL) + toolchain-parity → verify → allure report
 #
 # Note: Semantic release + SSH deploy stay in release-deploy.yml
 # ============================================================================
@@ -31,8 +31,34 @@ env:
 # JOB: CI — Build, Vet, Test (SQLite)
 # ============================================================================
 jobs:
+  # ============================================================================
+  # JOB: Lint — golangci-lint (runs first for fast feedback)
+  # ============================================================================
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Setup Go ${{ env.GO_VERSION }}
+        uses: actions/setup-go@v7
+        with:
+          go-version: '${{ env.GO_VERSION }}'
+          cache: true
+
+      - name: Install golangci-lint
+        run: go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.11.0
+
+      - name: golangci-lint
+        run: golangci-lint run ./...
+
+  # ============================================================================
+  # JOB: CI — Build, Vet, Test (SQLite) — depends on lint
+  # ============================================================================
   test-sqlite:
     name: Test (sqlite)
+    needs: [lint]
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
@@ -63,10 +89,11 @@ jobs:
         run: go test ./... -count=1 -timeout 120s
 
   # ============================================================================
-  # JOB: CI — Build, Vet, Test (PostgreSQL)
+  # JOB: CI — Build, Vet, Test (PostgreSQL) — depends on lint
   # ============================================================================
   test-postgres:
     name: Test (postgres)
+    needs: [lint]
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
@@ -112,31 +139,12 @@ jobs:
         run: go test ./... -count=1 -timeout 120s
 
   # ==========================================================================
-  # JOB: Lint — golangci-lint
-  # ==========================================================================
-  lint:
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@v7
-
-      - name: Setup Go ${{ env.GO_VERSION }}
-        uses: actions/setup-go@v7
-        with:
-          go-version: '${{ env.GO_VERSION }}'
-          cache: true
-
-      - name: Install golangci-lint
-        run: go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.11.0
-
-      - name: golangci-lint
-        run: golangci-lint run ./...
-
-  # ==========================================================================
   # JOB: Verify — Preflight + Conventional Commits + No AI Attribution
+  # Depends on: lint, test-sqlite, test-postgres
   # ==========================================================================
   verify:
-    if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
+    needs: [lint, test-sqlite, test-postgres]
+    if: always() && !cancelled() && (github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/main'))
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -183,9 +191,11 @@ jobs:
   # caught pre-deploy instead of mid-build with a cryptic exit code. This is
   # the recurrence-prevention mechanism for the "missing tool on deploy host"
   # defect class (15 recurrences over 51 days).
+  # Depends on: lint
   # ==========================================================================
   toolchain-parity:
     name: Toolchain parity (VPS mirror)
+    needs: [lint]
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
@@ -236,13 +246,14 @@ jobs:
 
   # ==========================================================================
   # JOB: Report — Generate Progress Dashboard (Allure + GitHub Pages)
+  # Depends on: lint, test-sqlite, test-postgres, toolchain-parity, verify
   # ==========================================================================
   report:
     name: Generate Progress Dashboard
+    needs: [lint, test-sqlite, test-postgres, toolchain-parity, verify]
+    if: always()
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    needs: [test-sqlite, test-postgres, toolchain-parity]
-    if: always()
     concurrency:
       group: pages-deploy
       cancel-in-progress: false
