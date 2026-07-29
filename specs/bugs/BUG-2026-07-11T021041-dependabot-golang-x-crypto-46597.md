@@ -19,3 +19,7 @@ seal.github_dependabot
 
 ## Discovered
 2026-07-11
+
+## Resolution
+
+**Fixed:** Dependabot PR merged. CI green.
