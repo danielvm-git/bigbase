@@ -513,8 +513,11 @@ func startProxy() {
 	sitesHandler := mComp.Middleware(authComp.Middleware(st.Handler()))
 
 	p.Handle("/api/collections/", protectedAPI.ServeHTTP)
-	// /api/sql requires admin role — RequireAdmin runs after auth.Middleware sets the role.
-	sqlHandler := mComp.Middleware(authComp.Middleware(auth.RequireAdmin(orgBridge(publicAPI))))
+	// /api/sql requires admin role. The access rule is now declared as a Policy
+	// (issue #43) rather than a hand-threaded middleware chain: PolicyAdmin()
+	// documents the requirement at registration time and enforces it the same
+	// way the former bare auth.RequireAdmin middleware did.
+	sqlHandler := mComp.Middleware(authComp.Middleware(auth.PolicyAdmin().Middleware(orgBridge(publicAPI))))
 	p.Handle("/api/sql", sqlHandler.ServeHTTP)
 	p.Handle("/api/storage/upload", storageHandler.ServeHTTP)
 	p.Handle("/api/storage/files/", storageHandler.ServeHTTP)

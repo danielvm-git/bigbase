@@ -37,7 +37,10 @@ func (a *Auth) ProtectedHandler() http.Handler {
 		UserWindow:   time.Hour,
 		CleanupEvery: 10 * time.Minute,
 	})
-	mux.Handle("POST /api/sites/{id}/deploy-keys", rl.Middleware(RequireScopes("sites:write", "deploy")(http.HandlerFunc(a.handleCreateSiteKey))))
+	// POST deploy-keys adopts the declarative Policy gate (issue #43): the
+	// sites:write,deploy scope requirement is now a Policy declared at
+	// registration time rather than a hand-threaded RequireScopes chain.
+	mux.Handle("POST /api/sites/{id}/deploy-keys", rl.Middleware(PolicyScopes("sites:write", "deploy").Middleware(http.HandlerFunc(a.handleCreateSiteKey))))
 	mux.HandleFunc("GET /api/sites/{id}/deploy-keys", a.handleListSiteKeys)
 	mux.Handle("DELETE /api/sites/{id}/deploy-keys/{keyID}", RequireScopes("sites:write")(http.HandlerFunc(a.handleRevokeSiteKey)))
 	mux.HandleFunc("POST /api/auth/logout-all", a.handleLogoutAll)
@@ -176,6 +179,14 @@ func OrgKeyScopesFromContext(ctx context.Context) ([]string, bool) {
 	return scopes, ok
 }
 
+// WithOrgKeyScopes returns a new context carrying the given API-key scopes,
+// mirroring what auth.Middleware sets via ResolveOrgKey for a scoped org key.
+// Useful for tests that exercise scope-gated behaviour (RequireScopes and the
+// declarative Policy gate's WithScopes) without minting a real key.
+func WithOrgKeyScopes(ctx context.Context, scopes []string) context.Context {
+	return context.WithValue(ctx, ctxOrgKeyScopes, scopes)
+}
+
 // RequireScopes returns middleware that enforces API key scope restrictions.
 // At least one of the required scopes must be present in the request's
 // resolved API key scopes. Requests authenticated via JWT or site key
@@ -202,14 +213,6 @@ func RequireScopes(required ...string) func(http.Handler) http.Handler {
 	}
 }
 
-// RequireAdmin returns middleware that rejects non-admin requests with 403.
-func RequireAdmin(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		role, ok := UserRoleFromContext(r.Context())
-		if !ok || role != "admin" {
-			kernel.WriteJSON(w, http.StatusForbidden, map[string]string{"error": "forbidden"})
-			return
-		}
-		next.ServeHTTP(w, r)
-	})
-}
+// Note: the former bare RequireAdmin middleware has been superseded by the
+// declarative Policy gate (auth.PolicyAdmin, see policy.go, issue #43). Its
+// sole call site (/api/sql in main.go) now uses auth.PolicyAdmin().Middleware.
