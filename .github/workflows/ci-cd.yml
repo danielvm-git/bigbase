@@ -175,13 +175,73 @@ jobs:
           echo "PASS: No AI agent attribution"
 
   # ==========================================================================
+  # JOB: Toolchain Parity — declared-toolchain contract (issue #179)
+  #
+  # Mirrors scripts/setup-vps.sh on the runner so "what CI has" == "what the
+  # VPS has", then runs scripts/verify-toolchain.sh against toolchain.toml.
+  # A required tool missing here would be missing on the VPS at deploy time —
+  # caught pre-deploy instead of mid-build with a cryptic exit code. This is
+  # the recurrence-prevention mechanism for the "missing tool on deploy host"
+  # defect class (15 recurrences over 51 days).
+  # ==========================================================================
+  toolchain-parity:
+    name: Toolchain parity (VPS mirror)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v7
+
+      # --- Provision the SAME tools setup-vps.sh installs on the VPS ---
+      # Node 24 LTS (Vite 8 floor is Node >= 20.19; VPS standard is 24 LTS).
+      - name: Setup Node 24 (VPS parity)
+        uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+
+      # pnpm + corepack (the VPS runs `corepack enable`; pnpm is a declared
+      # required tool — BUG-2026-07-24 exit 127 was pnpm missing).
+      - name: Enable corepack + pnpm (VPS parity)
+        run: |
+          corepack enable
+          corepack prepare pnpm@latest --activate
+
+      # Python 3 + pip (VPS apt-get installs python3 + python3-pip).
+      - name: Setup Python (VPS parity)
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.13'
+
+      # uv — the PRIMARY Python install/start path. BUG-2026-07-12 was uv not
+      # in PATH. The VPS installs uv via the official standalone installer.
+      - name: Install uv (VPS parity)
+        run: curl -LsSf https://astral.sh/uv/install.sh | sh
+
+      # Go (engine.go AppGo; go.mod requires 1.26).
+      - name: Setup Go ${{ env.GO_VERSION }} (VPS parity)
+        uses: actions/setup-go@v7
+        with:
+          go-version: '${{ env.GO_VERSION }}'
+          cache: false
+
+      # ubuntu-latest ships git >= 2.30 already (declared floor).
+
+      - name: Verify declared toolchain contract
+        run: |
+          # uv's installer puts the binary in ~/.local/bin; make it discoverable
+          # (GH runners include ~/.local/bin, but be explicit for parity with the
+          # VPS, where setup-vps.sh relies on the login shell PATH).
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          bash scripts/verify-toolchain.sh
+
+  # ==========================================================================
   # JOB: Report — Generate Progress Dashboard (Allure + GitHub Pages)
   # ==========================================================================
   report:
     name: Generate Progress Dashboard
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    needs: [test-sqlite, test-postgres]
+    needs: [test-sqlite, test-postgres, toolchain-parity]
     if: always()
     concurrency:
       group: pages-deploy
