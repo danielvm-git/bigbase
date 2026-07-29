@@ -15,7 +15,11 @@ An attacker fuzzes User-Agent headers to discover device-type-specific vulnerabi
 Ensure consistent responses across all User-Agent values unless there is a deliberate feature-flag mechanism. Avoid User-Agent-based access control.
 
 ## Status
-triage
+wontfix
+
+## Resolution
+
+**Wontfix:** Informational finding. The server correctly serves different content based on User-Agent for legitimate purposes (e.g., mobile vs desktop). No security implications.
 
 ## Source
 seal.dast_http

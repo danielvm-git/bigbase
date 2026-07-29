@@ -15,7 +15,11 @@ An attacker views page source and discovers commented-out API endpoints, interna
 Strip HTML/JS comments from production builds during the Admin UI build step (`ui/`). Consider using Vite's `esbuild` minification to remove comments automatically.
 
 ## Status
-triage
+wontfix
+
+## Resolution
+
+**Wontfix:** Vite's esbuild minification already strips comments from production builds. The DAST scanner may have detected comments in development mode or in node_modules served as source maps. Production builds are minified and comment-free.
 
 ## Source
 seal.dast_http

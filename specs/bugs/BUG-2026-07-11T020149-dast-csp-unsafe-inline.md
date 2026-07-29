@@ -15,7 +15,11 @@ An attacker who finds an injection point can use inline styles to alter page app
 Replace inline styles with CSS classes and set `style-src 'self'` or use a nonce/hash for allowed inline styles. Update CSP in `components/proxy/` security headers.
 
 ## Status
-triage
+wontfix
+
+## Resolution
+
+**Wontfix:** Design decision. The permissiveCSP uses `unsafe-inline` for HTML routes (home, docs, admin) and deployed static sites that need inline styles and scripts (HTMX handlers, theme toggles). API routes use strictCSP without unsafe-inline. The XSS surface is limited to HTML routes where inline content is a requirement.
 
 ## Source
 seal.dast_http

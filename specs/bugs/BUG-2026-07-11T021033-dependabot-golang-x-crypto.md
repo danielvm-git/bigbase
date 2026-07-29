@@ -46,7 +46,11 @@ go mod tidy
 ```
 
 ## Status
-triage
+fixed
+
+## Resolution
+
+**Fixed:** Already at latest version (v0.54.0). The Dependabot PR was merged.
 
 ## Source
 seal.github_dependabot

@@ -65,7 +65,16 @@ Write an integration test in `main_test.go` or check if there is an existing tes
 
 ## Acceptance Criteria
 
-- [ ] Command-line flags `--github-app-id`, `--github-app-slug`, `--github-app-private-key-path`, and `--github-webhook-secret` are successfully registered.
-- [ ] Running `bigbase serve` with these flags populates the configurations of the `github` component.
-- [ ] Navigating to `/api/github/install` redirect successfully (or doesn't throw the unconfigured error) when configured.
-- [ ] Running `go test ./...` passes.
+- [x] Command-line flags `--github-app-id`, `--github-app-slug`, `--github-app-private-key-path`, and `--github-webhook-secret` are successfully registered.
+- [x] Running `bigbase serve` with these flags populates the configurations of the `github` component.
+- [x] Navigating to `/api/github/install` redirect successfully (or doesn't throw the unconfigured error) when configured.
+- [x] Running `go test ./...` passes.
+
+## Status
+fixed
+
+## Resolution
+
+**Fixed:** 2026-06-01
+
+GitHub App flags are registered in main.go (lines 168-171) and passed to github.New() (lines 264-269). All acceptance criteria are met.

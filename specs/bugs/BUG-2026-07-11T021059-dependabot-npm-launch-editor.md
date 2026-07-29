@@ -14,7 +14,7 @@ NTLMv2 hash disclosure via UNC path handling on Windows. This is a Windows-only 
 Update launch-editor to the latest version. Not exploitable on Linux/macOS production environment.
 
 ## Status
-triage
+fixed
 
 ## Source
 seal.github_dependabot

@@ -17,7 +17,7 @@ An attacker uploads or serves a crafted HTML page that causes the parser to hang
 Update Go to a version that patches CVE-2026-25680 (Go 1.26.x or later).
 
 ## Status
-triage
+fixed
 
 ## Source
 seal.github_dependabot

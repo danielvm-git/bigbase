@@ -14,7 +14,7 @@ When Vitest UI server is listening, arbitrary file can be read and executed. Thi
 Update vitest to the latest version. Not exploitable in production since Vitest UI is not exposed.
 
 ## Status
-triage
+fixed
 
 ## Source
 seal.github_dependabot

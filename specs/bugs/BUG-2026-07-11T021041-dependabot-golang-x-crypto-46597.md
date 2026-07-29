@@ -12,7 +12,7 @@ Byte arithmetic underflow in golang.org/x/crypto can cause a panic. This is part
 Update golang.org/x/crypto to the latest version.
 
 ## Status
-triage
+fixed
 
 ## Source
 seal.github_dependabot

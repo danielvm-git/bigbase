@@ -19,9 +19,12 @@ CodeQL alert #19 flags `components/deploy/manifest.go` for uncontrolled data use
 
 This was previously investigated and documented in `BUG-2026-07-11T032549-codeql-path-traversal.md` as alert #19 — false positive.
 
-## Decision
+## Status
+wontfix
 
-**wontfix** — containment guards already exist. No action required.
+## Resolution
+
+**Wontfix:** False positive. Containment guards already exist in manifest.go. No action required.
 
 ## Related
 

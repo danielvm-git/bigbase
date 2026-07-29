@@ -29,7 +29,7 @@
 Update undici to the latest version in ui/ package.json.
 
 ## Status
-triage
+fixed
 
 ## Source
 seal.github_dependabot

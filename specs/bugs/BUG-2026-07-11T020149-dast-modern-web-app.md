@@ -12,7 +12,11 @@ ZAP detected this is a modern web application (SPA) using JavaScript frameworks.
 No action required. This finding confirms the DAST scanner is properly mapping the application attack surface.
 
 ## Status
-triage
+wontfix
+
+## Resolution
+
+**Wontfix:** Informational finding only. No action required.
 
 ## Source
 seal.dast_http

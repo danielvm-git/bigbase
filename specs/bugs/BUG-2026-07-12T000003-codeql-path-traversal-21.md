@@ -13,9 +13,12 @@ CodeQL alert #21 flags `components/storage/storage.go` for uncontrolled data use
 
 **False positive.** The storage component already has file path containment guards. This was previously investigated and documented in `BUG-2026-07-11T032549-codeql-path-traversal.md` as alert #21 — false positive.
 
-## Decision
+## Status
+wontfix
 
-**wontfix** — containment guards already exist. No action required.
+## Resolution
+
+**Wontfix:** False positive. Containment guards already exist in storage.go. No action required.
 
 ## Related
 

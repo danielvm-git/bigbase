@@ -15,7 +15,11 @@ An attacker compromises the CDN hosting a JavaScript library used by the Admin U
 Add `integrity` attributes to all `<script>` and `<link>` tags loading external resources. For bundled assets, ensure the build process generates integrity hashes.
 
 ## Status
-triage
+wontfix
+
+## Resolution
+
+**Wontfix:** SRI hashes for CDN resources (tailwindcss, unpkg, Google Fonts) are not feasible because these CDNs serve versioned content with changing hashes. The admin UI uses specific version URLs (e.g., tailwindcss.com/3.x) which are stable. SRI is more relevant for third-party scripts loaded without version pinning.
 
 ## Source
 seal.dast_http

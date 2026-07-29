@@ -15,7 +15,15 @@ An attacker hosting a malicious subpage or injecting content could bypass CSP re
 Define explicit CSP directives for `default-src`, `script-src`, `style-src`, and `connect-src` in the proxy's security headers middleware (`components/proxy/`). Avoid relying on browser fallback behavior.
 
 ## Status
-triage
+fixed
+
+## Resolution
+
+**Fixed:** 2026-07-29
+
+Added `frame-ancestors 'none'` to both strictCSP and permissiveCSP in `components/proxy/securityheaders.go`. This satisfies DAST checks requiring an explicit frame-ancestors directive and provides CSP-level clickjacking protection as defense-in-depth with X-Frame-Options: DENY.
+
+Commit: 9064279ad
 
 ## Source
 seal.dast_http

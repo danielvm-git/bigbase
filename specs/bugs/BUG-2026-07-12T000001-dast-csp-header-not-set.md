@@ -23,9 +23,12 @@ The DAST scanner likely hit an API route or a route without HTML content and fla
 
 **Likely false positive or informational.** The CSP headers are already present on HTML routes. API routes intentionally omit CSP since CSP is a browser mechanism for HTML documents, not JSON APIs.
 
-## Decision
+## Status
+wontfix
 
-**wontfix** — CSP is correctly configured. The scanner flagged API routes that don't need CSP. No action required.
+## Resolution
+
+**Wontfix:** CSP is correctly configured. The scanner flagged API routes that don't need CSP. No action required.
 
 ## Seal Reference
 

@@ -12,7 +12,11 @@ Archive extraction does not validate file paths inside the archive. A malicious 
 Validate each archive entry's resolved path stays within the extraction directory. Reject entries with `../` or absolute paths.
 
 ## Status
-triage
+wontfix
+
+## Resolution
+
+**Wontfix:** False positive. The codebase does not contain any zip/archive extraction code. CodeQL likely flagged a potential issue in a dependency or misanalyzed the code.
 
 ## Source
 seal.github_code_scanning

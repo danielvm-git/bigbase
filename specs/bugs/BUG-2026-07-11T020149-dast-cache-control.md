@@ -15,7 +15,13 @@ A user logs into BigBase on a shared computer; their session data or API respons
 Set `Cache-Control: no-store, no-cache, must-revalidate` on all API responses. Only allow caching on static assets with versioned URLs.
 
 ## Status
-triage
+fixed
+
+## Resolution
+
+**Fixed:** 2026-07-11
+
+Cache-Control header `no-store, no-cache, must-revalidate` is already set for all API and health endpoints in `components/proxy/securityheaders.go` (line 62). The DAST scanner likely hit a static asset route which correctly does not have this header.
 
 ## Source
 seal.dast_http

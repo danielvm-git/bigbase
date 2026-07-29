@@ -13,7 +13,7 @@ Any website can send requests to the esbuild development server and read the res
 Update esbuild to the latest version. Not exploitable in production since esbuild dev server is not exposed.
 
 ## Status
-triage
+fixed
 
 ## Source
 seal.github_dependabot
