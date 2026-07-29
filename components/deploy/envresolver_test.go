@@ -1,0 +1,223 @@
+package deploy_test
+
+import (
+	"context"
+	"strings"
+	"testing"
+
+	"github.com/danielvm/bigbase/components/db"
+	"github.com/danielvm/bigbase/components/deploy"
+	"github.com/danielvm/bigbase/kernel"
+)
+
+// resolveEnv sets up an in-memory deploy + site_env_vars table and returns a
+// resolver seeded with the given env vars (key, value, buildTime, runtime).
+func resolveEnv(t *testing.T, encKey string, vars [][4]any) *deploy.EnvResolver {
+	t.Helper()
+	logger := testLogger{}
+	database := db.New(db.Options{Path: ":memory:", Logger: logger})
+	_ = database.Start(&kernel.Context{})
+	t.Cleanup(func() { _ = database.Stop(&kernel.Context{}) })
+
+	migrateEnvVarsTable(t, database)
+	for _, v := range vars {
+		key, value := v[0].(string), v[1].(string)
+		bt, rt := v[2].(bool), v[3].(bool)
+		insertEnvVar(t, database, "site-x", key, value, bt, rt)
+	}
+
+	dep := deploy.New(deploy.Options{DB: database, Logger: logger, EnvEncryptionKey: encKey})
+	_ = dep.Start(&kernel.Context{})
+	t.Cleanup(func() { _ = dep.Stop(&kernel.Context{}) })
+	return dep.EnvResolver()
+}
+
+// toMap converts a []string of "KEY=value" into a map for easy assertions.
+func toMap(env []string) map[string]string {
+	m := make(map[string]string, len(env))
+	for _, kv := range env {
+		i := strings.IndexByte(kv, '=')
+		if i < 0 {
+			m[kv] = ""
+			continue
+		}
+		m[kv[:i]] = kv[i+1:]
+	}
+	return m
+}
+
+func TestEnvResolverPrecedence(t *testing.T) {
+	t.Run("site_env_vars_override_build_defaults", func(t *testing.T) {
+		// A var present in the platform defaults (os.Environ) must yield to the
+		// site-defined value — the site is the single source of truth for what
+		// the deployment sees. This is the precedence the resolver owns.
+		t.Setenv("NODE_ENV", "development")
+		r := resolveEnv(t, "", [][4]any{
+			{"NODE_ENV", "production", true, false},
+			{"API_TOKEN", "abc123", true, false},
+		})
+
+		resolved, err := r.Resolve(context.Background(), "site-x", deploy.ScopeBuild)
+		if err != nil {
+			t.Fatalf("Resolve: %v", err)
+		}
+		m := toMap(resolved.Environ)
+		if m["NODE_ENV"] != "production" {
+			t.Fatalf("site env var NODE_ENV should override platform default, got %q", m["NODE_ENV"])
+		}
+		if m["API_TOKEN"] != "abc123" {
+			t.Fatalf("expected API_TOKEN=abc123, got %q", m["API_TOKEN"])
+		}
+	})
+
+	t.Run("scope_build_excludes_runtime_only_vars", func(t *testing.T) {
+		r := resolveEnv(t, "", [][4]any{
+			{"BUILD_VAR", "b", true, false},
+			{"RUNTIME_VAR", "r", false, true},
+			{"BOTH_VAR", "both", true, true},
+		})
+
+		resolved, err := r.Resolve(context.Background(), "site-x", deploy.ScopeBuild)
+		if err != nil {
+			t.Fatalf("Resolve build: %v", err)
+		}
+		m := toMap(resolved.Environ)
+		if _, ok := m["RUNTIME_VAR"]; ok {
+			t.Fatalf("runtime-only var leaked into build scope: %q", m["RUNTIME_VAR"])
+		}
+		if m["BUILD_VAR"] != "b" {
+			t.Fatalf("expected BUILD_VAR=b, got %q", m["BUILD_VAR"])
+		}
+		if m["BOTH_VAR"] != "both" {
+			t.Fatalf("expected BOTH_VAR in build scope, got %q", m["BOTH_VAR"])
+		}
+	})
+
+	t.Run("scope_runtime_excludes_build_only_vars", func(t *testing.T) {
+		r := resolveEnv(t, "", [][4]any{
+			{"BUILD_ONLY", "b", true, false},
+			{"RUNTIME_ONLY", "r", false, true},
+		})
+
+		resolved, err := r.Resolve(context.Background(), "site-x", deploy.ScopeRuntime)
+		if err != nil {
+			t.Fatalf("Resolve runtime: %v", err)
+		}
+		m := toMap(resolved.Environ)
+		if _, ok := m["BUILD_ONLY"]; ok {
+			t.Fatalf("build-only var leaked into runtime scope: %q", m["BUILD_ONLY"])
+		}
+		if m["RUNTIME_ONLY"] != "r" {
+			t.Fatalf("expected RUNTIME_ONLY=r, got %q", m["RUNTIME_ONLY"])
+		}
+	})
+
+	t.Run("build_and_runtime_scopes_agree_on_shared_vars", func(t *testing.T) {
+		// Both paths must resolve through the same resolver so a var flagged
+		// both build+runtime sees an identical value in each path.
+		r := resolveEnv(t, "", [][4]any{
+			{"SHARED", "same-value", true, true},
+		})
+		buildEnv, err := r.Resolve(context.Background(), "site-x", deploy.ScopeBuild)
+		if err != nil {
+			t.Fatalf("Resolve build: %v", err)
+		}
+		rtEnv, err := r.Resolve(context.Background(), "site-x", deploy.ScopeRuntime)
+		if err != nil {
+			t.Fatalf("Resolve runtime: %v", err)
+		}
+		if toMap(buildEnv.Environ)["SHARED"] != toMap(rtEnv.Environ)["SHARED"] {
+			t.Fatal("build and runtime scopes disagree on a shared var")
+		}
+	})
+
+	t.Run("empty_site_returns_empty_no_error", func(t *testing.T) {
+		r := resolveEnv(t, "", nil)
+		resolved, err := r.Resolve(context.Background(), "no-such-site", deploy.ScopeBuild)
+		if err != nil {
+			t.Fatalf("Resolve unknown site: %v", err)
+		}
+		if len(resolved.SecretKeys()) != 0 {
+			t.Fatalf("expected no secret keys for unknown site, got %v", resolved.SecretKeys())
+		}
+	})
+}
+
+func TestEnvResolverRedaction(t *testing.T) {
+	t.Run("redact_masks_secret_sourced_values", func(t *testing.T) {
+		// Every value sourced from the secret store must be masked in any
+		// view derived from ResolvedEnv that a consumer might log. The resolver
+		// knows which keys came from the store; Redact uses that knowledge.
+		r := resolveEnv(t, "", [][4]any{
+			{"SECRET_KEY", "super-secret-token", true, false},
+			{"PUBLIC_VAR", "hello", true, false},
+		})
+
+		resolved, err := r.Resolve(context.Background(), "site-x", deploy.ScopeBuild)
+		if err != nil {
+			t.Fatalf("Resolve: %v", err)
+		}
+
+		redacted := deploy.Redact(resolved.Environ, resolved.SecretKeys())
+		m := toMap(redacted)
+		if m["SECRET_KEY"] == "super-secret-token" {
+			t.Fatal("secret value appeared unmasked in redacted output")
+		}
+		if m["SECRET_KEY"] == "" {
+			t.Fatal("redacted secret key missing entirely from output")
+		}
+		if strings.Contains(strings.Join(redacted, "\n"), "super-secret-token") {
+			t.Fatal("plaintext secret present in redacted env")
+		}
+		if m["PUBLIC_VAR"] != "hello" {
+			t.Fatalf("non-secret value should be preserved, got %q", m["PUBLIC_VAR"])
+		}
+	})
+
+	t.Run("redact_with_encryption_key_still_masks", func(t *testing.T) {
+		// Encryption-at-rest is orthogonal to redaction-in-logs. Even with a
+		// configured key (values decrypted at resolve time), the redacted view
+		// must still mask them.
+		encKey := strings.Repeat("b2", 32)
+		r := resolveEnv(t, encKey, [][4]any{
+			{"DB_PASSWORD", "hunter2-hunter2", true, false},
+		})
+		// Re-insert with encryption since the key is set: decrypt must succeed.
+		resolved, err := r.Resolve(context.Background(), "site-x", deploy.ScopeBuild)
+		if err != nil {
+			t.Fatalf("Resolve: %v", err)
+		}
+		if toMap(resolved.Environ)["DB_PASSWORD"] != "hunter2-hunter2" {
+			t.Fatalf("decryption path failed: %q", toMap(resolved.Environ)["DB_PASSWORD"])
+		}
+		redacted := deploy.Redact(resolved.Environ, resolved.SecretKeys())
+		if strings.Contains(strings.Join(redacted, "\n"), "hunter2-hunter2") {
+			t.Fatal("plaintext secret present in redacted env with encryption enabled")
+		}
+	})
+}
+
+// TestSecretNeverAppearsInBuildLog is the load-bearing security property for
+// issue #41: a secret value must NEVER appear in build-log output. It runs the
+// resolved build env through the same redacting-log path the build command
+// uses and asserts the plaintext is absent from the captured log.
+func TestSecretNeverAppearsInBuildLog(t *testing.T) {
+	secretValue := "leak-me-and-you-are-fired-9f3a"
+	r := resolveEnv(t, "", [][4]any{
+		{"LEAKY_SECRET", secretValue, true, false},
+	})
+
+	resolved, err := r.Resolve(context.Background(), "site-x", deploy.ScopeBuild)
+	if err != nil {
+		t.Fatalf("Resolve: %v", err)
+	}
+
+	// Simulate the build path capturing a tool's stderr that echoes the env
+	// (the realistic leak vector: a build script prints its own environment).
+	rawStderr := strings.Join(resolved.Environ, "\n")
+	logged := deploy.RedactLogText(rawStderr, resolved.SecretKeys())
+
+	if strings.Contains(logged, secretValue) {
+		t.Fatalf("SECRET LEAKED into build log:\n%s", logged)
+	}
+}
