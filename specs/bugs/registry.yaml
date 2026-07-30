@@ -2266,3 +2266,25 @@ bugs:
         1 duplicate 091500 row removed. registry.yaml parses clean with
         117 entries (was 117; the 091500 dedup removes one row, the 032535/032549
         splits are rename-only so net count is unchanged). go build ./... passes.
+  - id: BUG-2026-07-30T000001
+    date: "2026-07-30"
+    severity: medium
+    priority: high
+    scope: security,deploy
+    summary: "Cross-tenant info disclosure in handleDeployStats — deployment stats returned without org_id filter"
+    file: null
+    status: fixed
+    github_issue: 195
+    files_changed:
+      - components/deploy/gateway.go
+      - components/deploy/idor_test.go
+    approach: |
+      handleDeployStats queried deployments without org_id scoping, allowing any
+      authenticated user to see operational metrics for all tenants. Fixed by JOINing
+      through sites table to scope by org_id, matching HandleList pattern.
+    risk_level: medium
+    regression_guards:
+      - components/deploy/idor_test.go TestIDOR_StatsScopedByOrg
+    validated:
+      date: "2026-07-30"
+      verdict: CERTIFIED

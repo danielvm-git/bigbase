@@ -38,7 +38,7 @@ epic_cycle:
 bug_cycle: null
 git:
   branch: main
-  hash: cedb0fc51
+  hash: 13dbb0acd
   worktree: null
   ci_status: success
 cleanup:
