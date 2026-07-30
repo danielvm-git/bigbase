@@ -1,3 +1,10 @@
+## [2.84.5](https://github.com/danielvm-git/bigbase/compare/v2.84.4...v2.84.5) (2026-07-30)
+
+
+### Bug Fixes
+
+* **deploy:** replace all Process.Kill() with killProcessGroup() across deploy module ([51f7858](https://github.com/danielvm-git/bigbase/commit/51f7858e2b13f3c050bfec1555ae3002ba05df77))
+
 ## [2.84.4](https://github.com/danielvm-git/bigbase/compare/v2.84.3...v2.84.4) (2026-07-30)
 
 
