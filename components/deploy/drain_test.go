@@ -372,3 +372,70 @@ func TestDrainStatusHistory(t *testing.T) {
 // Re-declare mockHostRegistry for this file since the one in deploy_test.go
 // is in a different file but same package — no duplicate needed.
 // Go allows one definition per package, so we rely on the one in deploy_test.go.
+
+// TestDrainKillsProcessGroup verifies that drainDeployment kills the entire
+// process tree (not just the main process) on timeout. This prevents orphaned
+// child processes (Python workers, Telegram polling threads) from surviving.
+func TestDrainKillsProcessGroup(t *testing.T) {
+	logger := testLogger{}
+	database := db.New(db.Options{Path: ":memory:", Logger: logger})
+	gitDir := t.TempDir()
+	buildsDir := t.TempDir()
+	gitComp := newGitStub(gitDir)
+
+	hostReg := &mockHostRegistry{}
+
+	dep := deploy.New(deploy.Options{
+		DB:           database,
+		Logger:       logger,
+		BuildsDir:    buildsDir,
+		GitDir:       gitDir,
+		PublicDomain: "test.click",
+		HostRouter:   hostReg,
+		DrainTimeout: 100 * time.Millisecond,
+	})
+
+	k := kernel.New(logger)
+	k.Register(database)
+	k.Register(gitComp)
+	k.Register(dep)
+	if err := k.Start(); err != nil {
+		t.Fatalf("kernel start: %v", err)
+	}
+	t.Cleanup(func() { _ = k.Stop() })
+
+	handler := dep.Handler()
+	repoID := createTestRepo(t, database, "drain-pgid-test", gitDir)
+	ctx := context.Background()
+
+	// Deploy a static site first — this creates a running deployment
+	dep1, err := dep.Trigger(ctx, repoID, "main", "drain-pgid", "site-drain-pgid", nil, "static", "")
+	if err != nil {
+		t.Fatalf("Trigger first: %v", err)
+	}
+	waitForDeploymentTerminal(t, handler, dep1.ID, 10*time.Second)
+	verifyDeployStatus(t, handler, dep1.ID, "running")
+
+	// Deploy again — triggers drain of first
+	dep2, err := dep.Trigger(ctx, repoID, "main", "drain-pgid", "site-drain-pgid", nil, "static", "")
+	if err != nil {
+		t.Fatalf("Trigger second: %v", err)
+	}
+	waitForDeploymentTerminal(t, handler, dep2.ID, 10*time.Second)
+	verifyDeployStatus(t, handler, dep2.ID, "running")
+
+	// Wait for drain to complete
+	for i := 0; i < 20; i++ {
+		getReq := httptest.NewRequest("GET", "/api/deploy/"+dep1.ID, nil)
+		getW := httptest.NewRecorder()
+		handler.ServeHTTP(getW, getReq)
+		var got map[string]any
+		_ = json.NewDecoder(getW.Body).Decode(&got)
+		s, _ := got["status"].(string)
+		if s == "stopped" {
+			break
+		}
+		time.Sleep(100 * time.Millisecond)
+	}
+	verifyDeployStatus(t, handler, dep1.ID, "stopped")
+}

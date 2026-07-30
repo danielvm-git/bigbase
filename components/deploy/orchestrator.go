@@ -265,9 +265,11 @@ func (d *Deploy) drainDeployment(id string) {
 		d.logger.Info("drain: completed gracefully", "id", id)
 	case <-drainCtx.Done():
 		d.logger.Warn("drain: timeout — force killing", "id", id, "timeout", d.DrainTimeout)
-		// Force kill
+		// Force kill the entire process tree, not just the main process.
+		// Process.Kill() only sends SIGKILL to the parent — child processes
+		// (Python workers, Telegram polling threads) survive as orphans.
 		if app.cmd != nil && app.cmd.Process != nil {
-			_ = app.cmd.Process.Kill()
+			killProcessGroup(app.cmd.Process.Pid)
 		}
 		if app.server != nil {
 			_ = app.server.Close()
