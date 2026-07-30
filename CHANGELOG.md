@@ -1,3 +1,10 @@
+## [2.84.2](https://github.com/danielvm-git/bigbase/compare/v2.84.1...v2.84.2) (2026-07-30)
+
+
+### Bug Fixes
+
+* **deploy:** scope handleDeployStats by org_id to prevent cross-tenant info disclosure ([#195](https://github.com/danielvm-git/bigbase/issues/195)) ([13dbb0a](https://github.com/danielvm-git/bigbase/commit/13dbb0acdde74ae07d649c4b84b8f53376312000))
+
 ## [2.84.1](https://github.com/danielvm-git/bigbase/compare/v2.84.0...v2.84.1) (2026-07-29)
 
 
