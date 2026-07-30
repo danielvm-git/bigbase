@@ -2288,3 +2288,26 @@ bugs:
     validated:
       date: "2026-07-30"
       verdict: CERTIFIED
+  - id: BUG-2026-07-30T000002
+    date: "2026-07-30"
+    severity: high
+    priority: critical
+    scope: deploy
+    summary: "Python app not restarted after deploy — drain timeout uses Process.Kill() instead of killProcessGroup(), orphaning child processes"
+    file: null
+    status: fixed
+    github_issue: 196
+    files_changed:
+      - components/deploy/orchestrator.go
+      - components/deploy/drain_test.go
+    approach: |
+      drainDeployment force-kill path used app.cmd.Process.Kill() which only
+      sends SIGKILL to the main process. Child processes (Python workers,
+      Telegram polling) survived as orphans. Fixed by using killProcessGroup()
+      which kills the entire process tree.
+    risk_level: high
+    regression_guards:
+      - components/deploy/drain_test.go TestDrainKillsProcessGroup
+    validated:
+      date: "2026-07-30"
+      verdict: CERTIFIED
