@@ -1,3 +1,10 @@
+## [2.84.4](https://github.com/danielvm-git/bigbase/compare/v2.84.3...v2.84.4) (2026-07-30)
+
+
+### Bug Fixes
+
+* **deploy:** kill entire process tree on drain timeout (closes [#196](https://github.com/danielvm-git/bigbase/issues/196)) ([d66f02c](https://github.com/danielvm-git/bigbase/commit/d66f02c95a0f7e0ebdb5ce450373355af51030a5))
+
 ## [2.84.3](https://github.com/danielvm-git/bigbase/compare/v2.84.2...v2.84.3) (2026-07-30)
 
 
