@@ -243,7 +243,7 @@ func (d *Deploy) drainDeployment(id string) {
 		d.logger.Info("drain: sending SIGTERM to process", "id", id, "pid", app.cmd.Process.Pid)
 		if err := app.cmd.Process.Signal(syscall.SIGTERM); err != nil {
 			d.logger.Warn("drain: SIGTERM failed, falling back to kill", "id", id, "error", err)
-			_ = app.cmd.Process.Kill()
+			killProcessGroup(app.cmd.Process.Pid)
 			drained <- struct{}{}
 		} else {
 			go func() {
@@ -318,7 +318,7 @@ func (d *Deploy) DeleteSiteDeployments(ctx context.Context, siteID, repoID strin
 
 		if hasApp {
 			if app.cmd != nil && app.cmd.Process != nil {
-				_ = app.cmd.Process.Kill()
+				killProcessGroup(app.cmd.Process.Pid)
 			}
 			if app.server != nil {
 				_ = app.server.Close()

@@ -72,13 +72,13 @@ func (p *processInstance) Wait() error { return p.cmd.Wait() }
 func (p *processInstance) Stop(_ time.Duration) error {
 	for _, bg := range p.bgCmds {
 		if bg.Process != nil {
-			_ = bg.Process.Kill()
+			killProcessGroup(bg.Process.Pid)
 		}
 	}
 	if p.cmd.Process == nil {
 		return nil
 	}
-	_ = p.cmd.Process.Kill()
+	killProcessGroup(p.cmd.Process.Pid)
 	return nil
 }
 

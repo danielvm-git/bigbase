@@ -189,7 +189,7 @@ func (d *Deploy) stopDeploymentWithTransition(ctx context.Context, id, newStatus
 
 	if hasApp {
 		if app.cmd != nil && app.cmd.Process != nil {
-			_ = app.cmd.Process.Kill()
+			killProcessGroup(app.cmd.Process.Pid)
 		}
 		if app.server != nil {
 			shutdownCtx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
