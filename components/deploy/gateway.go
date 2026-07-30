@@ -343,32 +343,42 @@ func (d *Deploy) handleDeployStats(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	stats := map[string]any{}
 
+	// Scope stats by caller's org_id to prevent cross-tenant info disclosure.
+	// Deployments are linked to sites via site_id; sites have org_id.
+	orgID, hasOrg := auth.OrgIDFromContext(ctx)
+	var orgFilter string
+	var orgArgs []any
+	if hasOrg && orgID > 0 {
+		orgFilter = " AND d.site_id IN (SELECT id FROM sites WHERE org_id = ?)"
+		orgArgs = append(orgArgs, orgID)
+	}
+
 	var total int
-	if err := d.db.QueryRowContext(ctx, "SELECT COUNT(*) FROM deployments").Scan(&total); err == nil {
+	if err := d.db.QueryRowContext(ctx, "SELECT COUNT(*) FROM deployments d WHERE 1=1"+orgFilter, orgArgs...).Scan(&total); err == nil {
 		stats["total"] = total
 	}
 
 	var running int
-	if err := d.db.QueryRowContext(ctx, "SELECT COUNT(*) FROM deployments WHERE status = 'running'").Scan(&running); err == nil {
+	if err := d.db.QueryRowContext(ctx, "SELECT COUNT(*) FROM deployments d WHERE status = 'running'"+orgFilter, orgArgs...).Scan(&running); err == nil {
 		stats["running"] = running
 	}
 
 	var totalFailed int
-	if err := d.db.QueryRowContext(ctx, "SELECT COUNT(*) FROM deployments WHERE status = 'failed'").Scan(&totalFailed); err == nil {
+	if err := d.db.QueryRowContext(ctx, "SELECT COUNT(*) FROM deployments d WHERE status = 'failed'"+orgFilter, orgArgs...).Scan(&totalFailed); err == nil {
 		stats["total_failed"] = totalFailed
 	}
 
 	var recentFailed int
 	if err := d.db.QueryRowContext(ctx,
-		"SELECT COUNT(*) FROM deployments WHERE status = 'failed' AND created_at > datetime('now', '-1 day')").
-		Scan(&recentFailed); err == nil {
+		"SELECT COUNT(*) FROM deployments d WHERE status = 'failed' AND created_at > datetime('now', '-1 day')"+orgFilter,
+		orgArgs...).Scan(&recentFailed); err == nil {
 		stats["failed_24h"] = recentFailed
 	}
 
 	var recentTotal int
 	if err := d.db.QueryRowContext(ctx,
-		"SELECT COUNT(*) FROM deployments WHERE created_at > datetime('now', '-1 day')").
-		Scan(&recentTotal); err == nil {
+		"SELECT COUNT(*) FROM deployments d WHERE created_at > datetime('now', '-1 day')"+orgFilter,
+		orgArgs...).Scan(&recentTotal); err == nil {
 		stats["total_24h"] = recentTotal
 		if recentTotal > 0 {
 			stats["failure_rate_24h"] = fmt.Sprintf("%.1f%%", float64(recentFailed)/float64(recentTotal)*100)
