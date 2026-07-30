@@ -290,3 +290,44 @@ func TestIDOR_MultipleDeploymentsSameOrg(t *testing.T) {
 }
 
 
+
+func TestIDOR_StatsScopedByOrg(t *testing.T) {
+	dep, handler, database, _ := setupDeploy(t)
+	_ = dep
+	setupIDORTest(t, database)
+
+	// Insert deployments for org 100 (site-org-a)
+	insertTestDeployment(t, database, "dep-stat-a1", "site-org-a", "running")
+	insertTestDeployment(t, database, "dep-stat-a2", "site-org-a", "failed")
+
+	// Insert deployments for org 200 (site-org-b)
+	insertTestDeployment(t, database, "dep-stat-b1", "site-org-b", "running")
+	insertTestDeployment(t, database, "dep-stat-b2", "site-org-b", "running")
+	insertTestDeployment(t, database, "dep-stat-b3", "site-org-b", "failed")
+
+	// Request as org 100 — should only see 2 deployments
+	req := requestWithOrg("GET", "/api/deploy/stats", nil, 100)
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+
+	var stats map[string]any
+	if err := json.NewDecoder(w.Body).Decode(&stats); err != nil {
+		t.Fatalf("decode response: %v", err)
+	}
+	if total, ok := stats["total"].(float64); !ok || total != 2 {
+		t.Fatalf("org 100 should see 2 deployments, got total=%v stats=%v", stats["total"], stats)
+	}
+
+	// Request as org 200 — should only see 3 deployments
+	req2 := requestWithOrg("GET", "/api/deploy/stats", nil, 200)
+	w2 := httptest.NewRecorder()
+	handler.ServeHTTP(w2, req2)
+
+	var stats2 map[string]any
+	if err := json.NewDecoder(w2.Body).Decode(&stats2); err != nil {
+		t.Fatalf("decode response: %v", err)
+	}
+	if total, ok := stats2["total"].(float64); !ok || total != 3 {
+		t.Fatalf("org 200 should see 3 deployments, got total=%v stats=%v", stats2["total"], stats2)
+	}
+}
