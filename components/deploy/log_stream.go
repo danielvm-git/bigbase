@@ -105,6 +105,12 @@ func (d *Deploy) closeLogStream(id string) {
 
 // handleLogsStream upgrades to WebSocket and streams log lines for a deployment.
 func (d *Deploy) handleLogsStream(w http.ResponseWriter, r *http.Request, id string) {
+	// Ownership first: live build logs carry repo layout, commit info, and
+	// redacted-but-sensitive build output. The check must run before the
+	// WebSocket upgrade, which is irreversible once the handshake starts.
+	if !d.verifyDeploymentOwnership(w, r, id) {
+		return
+	}
 	// Verify the deployment exists.
 	var exists int
 	if err := d.db.QueryRowContext(r.Context(),

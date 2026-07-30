@@ -25,6 +25,11 @@ func (d *Deploy) handleDeployDiagnosis(w http.ResponseWriter, r *http.Request, i
 		kernel.WriteJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
 		return
 	}
+	// Ownership first: diagnosis contains AI-generated analysis of the deploy
+	// and must never leak across orgs. Same guard as handleDeployLogs.
+	if !d.verifyDeploymentOwnership(w, r, id) {
+		return
+	}
 	if d.diagnosisReader == nil {
 		kernel.WriteJSON(w, http.StatusNotFound, map[string]string{"error": "no diagnosis available"})
 		return
@@ -44,6 +49,10 @@ func (d *Deploy) handleDeployDiagnosis(w http.ResponseWriter, r *http.Request, i
 func (d *Deploy) handleDeployRelatedEvents(w http.ResponseWriter, r *http.Request, id string) {
 	if r.Method != http.MethodGet {
 		kernel.WriteJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
+		return
+	}
+	// Ownership first: related events expose correlated operational data.
+	if !d.verifyDeploymentOwnership(w, r, id) {
 		return
 	}
 	if d.relatedEventsReader == nil {
