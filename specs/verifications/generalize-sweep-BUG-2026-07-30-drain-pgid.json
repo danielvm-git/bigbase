@@ -1,0 +1,12 @@
+{
+  "defect_class": "Process.Kill() instead of killProcessGroup()",
+  "grep_pattern": "app\\.cmd\\.Process\\.Kill\\(\\)|bg\\.Process\\.Kill\\(\\)|p\\.cmd\\.Process\\.Kill\\(\\)",
+  "match_count": 0,
+  "sweep_scope": "components/deploy/*.go",
+  "patched_in_pr": [
+    "components/deploy/orchestrator.go",
+    "components/deploy/rollback.go",
+    "components/deploy/runner.go"
+  ],
+  "tracked_issues": []
+}
