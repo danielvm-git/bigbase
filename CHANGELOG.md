@@ -1,3 +1,10 @@
+## [2.84.3](https://github.com/danielvm-git/bigbase/compare/v2.84.2...v2.84.3) (2026-07-30)
+
+
+### Bug Fixes
+
+* **deploy:** add ownership checks to log stream and observability handlers ([6587250](https://github.com/danielvm-git/bigbase/commit/65872509cd5edaeb18bc60cb9646fb7bfd4b4bec))
+
 ## [2.84.2](https://github.com/danielvm-git/bigbase/compare/v2.84.1...v2.84.2) (2026-07-30)
 
 
