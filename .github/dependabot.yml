@@ -8,6 +8,13 @@ updates:
     open-pull-requests-limit: 10
 
   - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 10
+
+  - package-ecosystem: "npm"
     directory: "/ui"
     schedule:
       interval: "weekly"

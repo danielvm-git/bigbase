@@ -1,15 +1,18 @@
 # ============================================================================
-# ci-cd.yml — Consolidated CI/CD Pipeline for BigBase
+# test-build-release.yml — CI pipeline for BigBase (v3 layout)
 #
-# Migrated from danielvm-git/.github ci-cd-go.yml template (v2.0.0)
-# Adapted for BigBase: PostgreSQL matrix, Allure report, Go 1.26
+# Replaces ci-cd.yml + the release half of release-deploy.yml.
 #
 # Pipeline:
 #   lint → test (SQLite + PostgreSQL) + toolchain-parity → verify → allure report
+#                                                          ↘
+#                                            (push to main only) release → build
 #
-# Note: Semantic release + SSH deploy stay in release-deploy.yml
+# The `build` job uploads a `bigbase-release` artifact (binary + deploy-meta.json).
+# deploy.yml picks it up via a `workflow_run` trigger on this workflow's name —
+# do not rename this workflow without updating deploy.yml's `workflows:` filter.
 # ============================================================================
-name: CI/CD
+name: Test, Build & Release
 
 on:
   push:
@@ -21,15 +24,13 @@ permissions:
   contents: read
 
 concurrency:
-  group: ci-cd-${{ github.workflow }}-${{ github.ref }}
+  group: test-build-release-${{ github.ref }}
   cancel-in-progress: true
 
 env:
   GO_VERSION: '1.26'
+  BINARY_PATH: 'bigbase-linux-amd64'
 
-# ============================================================================
-# JOB: CI — Build, Vet, Test (SQLite)
-# ============================================================================
 jobs:
   # ============================================================================
   # JOB: Lint — golangci-lint (runs first for fast feedback)
@@ -39,10 +40,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Setup Go ${{ env.GO_VERSION }}
-        uses: actions/setup-go@v7
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
         with:
           go-version: '${{ env.GO_VERSION }}'
           cache: true
@@ -68,10 +69,10 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Setup Go ${{ env.GO_VERSION }}
-        uses: actions/setup-go@v7
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
         with:
           go-version: '${{ env.GO_VERSION }}'
           cache: true
@@ -118,10 +119,10 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Setup Go ${{ env.GO_VERSION }}
-        uses: actions/setup-go@v7
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
         with:
           go-version: '${{ env.GO_VERSION }}'
           cache: true
@@ -139,7 +140,8 @@ jobs:
         run: go test ./... -count=1 -timeout 120s
 
   # ==========================================================================
-  # JOB: Verify — Preflight + Conventional Commits + No AI Attribution
+  # JOB: Verify — Go preflight (vet/test/gosec) + Gitleaks + Conventional
+  #       Commits + No AI Attribution
   # Depends on: lint, test-sqlite, test-postgres
   # ==========================================================================
   verify:
@@ -148,39 +150,41 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           fetch-depth: 0
 
-      - name: Preflight
+      - name: Setup Go ${{ env.GO_VERSION }}
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
+        with:
+          go-version: '${{ env.GO_VERSION }}'
+          cache: true
+
+      - name: Go preflight (vet, test, gosec)
+        run: npm run preflight:go
+
+      - name: Build preflight
+        run: npm run preflight:build
+
+      # --- Gitleaks: install a pinned release binary and scan the checkout
+      # (not git history — history predates a secret-scrubbing fix and would
+      # perpetually fail; scanning the checked-out tree catches anything
+      # newly introduced, which is what this gate is for). ---
+      - name: Install gitleaks
         run: |
-          if [ -f scripts/preflight.sh ]; then
-            bash scripts/preflight.sh
-          elif [ -f Makefile ] && grep -q '^preflight:' Makefile; then
-            make preflight
-          else
-            echo "WARN: No preflight script found — add scripts/preflight.sh"
-          fi
+          curl -sSLO https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_x64.tar.gz
+          echo "551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb  gitleaks_8.30.1_linux_x64.tar.gz" | sha256sum -c -
+          tar -xzf gitleaks_8.30.1_linux_x64.tar.gz gitleaks
+          sudo mv gitleaks /usr/local/bin/gitleaks
+
+      - name: Gitleaks scan
+        run: gitleaks detect --source . --no-git --no-banner --config .gitleaks.toml
 
       - name: Check Conventional Commits
-        run: |
-          NON_CC=$(git log origin/main..HEAD --no-merges --format="%s" | grep -v -c -E "^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\(.+\))?!?: " || true)
-          if [ "$NON_CC" -gt 0 ]; then
-            echo "FAIL: $NON_CC commits do not follow Conventional Commits"
-            git log origin/main..HEAD --no-merges --format="%s" | grep -v -E "^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\(.+\))?!?: "
-            exit 1
-          fi
-          echo "PASS: All commits follow Conventional Commits"
+        run: bash scripts/check-conventional-commits.sh
 
       - name: Check no AI agent attribution
-        run: |
-          NON_CURSOR=$(git log origin/main..HEAD --format="%B" | grep -iE '^co[- ]authored[- ]by:' | grep -v -i 'cursor' | wc -l | tr -d ' ')
-          if [ "$NON_CURSOR" -gt 0 ]; then
-            echo "FAIL: Non-Cursor Co-authored-by: footer found — blocked by CONVENTIONS.md"
-            git log origin/main..HEAD --format="%B" | grep -iE '^co[- ]authored[- ]by:' | grep -v -i 'cursor'
-            exit 1
-          fi
-          echo "PASS: No AI agent attribution"
+        run: bash scripts/check-no-ai-attribution.sh
 
   # ==========================================================================
   # JOB: Toolchain Parity — declared-toolchain contract (issue #179)
@@ -200,12 +204,12 @@ jobs:
     timeout-minutes: 10
 
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       # --- Provision the SAME tools setup-vps.sh installs on the VPS ---
       # Node 24 LTS (Vite 8 floor is Node >= 20.19; VPS standard is 24 LTS).
       - name: Setup Node 24 (VPS parity)
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version: '24'
 
@@ -218,7 +222,7 @@ jobs:
 
       # Python 3 + pip (VPS apt-get installs python3 + python3-pip).
       - name: Setup Python (VPS parity)
-        uses: actions/setup-python@v7
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
         with:
           python-version: '3.13'
 
@@ -229,7 +233,7 @@ jobs:
 
       # Go (engine.go AppGo; go.mod requires 1.26).
       - name: Setup Go ${{ env.GO_VERSION }} (VPS parity)
-        uses: actions/setup-go@v7
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
         with:
           go-version: '${{ env.GO_VERSION }}'
           cache: false
@@ -261,10 +265,10 @@ jobs:
       contents: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Setup Python
-        uses: actions/setup-python@v7
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
         with:
           python-version: '3.10'
 
@@ -278,7 +282,7 @@ jobs:
         run: python3 scripts/generate-allure-report.py
 
       - name: Get Allure history
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         if: always()
         continue-on-error: true
         with:
@@ -286,14 +290,14 @@ jobs:
           path: gh-pages
 
       - name: Setup Java (Allure commandline runtime)
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
         if: always()
         with:
           distribution: 'temurin'
           java-version: '17'
 
       - name: Setup Node (Allure commandline)
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         if: always()
         with:
           node-version: '20'
@@ -352,8 +356,141 @@ jobs:
 
       - name: Deploy report to GitHub Pages
         if: always()
-        uses: peaceiris/actions-gh-pages@84c30a85c19949d7eee79c4ff27748b70285e453
+        uses: peaceiris/actions-gh-pages@84c30a85c19949d7eee79c4ff27748b70285e453 # v4.1.0
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages
           publish_dir: allure-history
+
+  # ==========================================================================
+  # JOB: Release — semantic-release (push to main only)
+  # Depends on: verify
+  # ==========================================================================
+  release:
+    name: Release
+    needs: [verify]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+
+    outputs:
+      new_release: ${{ steps.detect-release.outputs.new_release }}
+      version: ${{ steps.detect-release.outputs.version }}
+      sha: ${{ steps.detect-release.outputs.sha }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Setup Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Save pre-release HEAD
+        id: pre-release
+        run: echo "head=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Semantic Release
+        id: semantic
+        run: npx --no-install semantic-release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Detect new release
+        id: detect-release
+        run: |
+          NEW_HEAD=$(git rev-parse HEAD)
+          echo "sha=${NEW_HEAD}" >> "$GITHUB_OUTPUT"
+          if [ "${{ steps.pre-release.outputs.head }}" != "$NEW_HEAD" ]; then
+            VERSION=$(cat VERSION)
+            echo "new_release=true" >> "$GITHUB_OUTPUT"
+            echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+            echo "New release detected: v${VERSION}"
+          else
+            echo "new_release=false" >> "$GITHUB_OUTPUT"
+            echo "No new release"
+          fi
+
+  # ==========================================================================
+  # JOB: Build — binary + Admin UI, produces the artifact deploy.yml consumes
+  # Depends on: release (only runs when a new release was actually published)
+  # ==========================================================================
+  build:
+    name: Build & Package
+    needs: [release]
+    if: needs.release.outputs.new_release == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout release commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ needs.release.outputs.sha }}
+
+      - name: Setup Go ${{ env.GO_VERSION }}
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
+        with:
+          go-version: '${{ env.GO_VERSION }}'
+          cache: true
+
+      - name: Run tests
+        run: go test ./... -count=1
+
+      - name: Build Admin UI
+        working-directory: ui
+        run: |
+          npm ci --prefer-offline --legacy-peer-deps
+          npm run build
+          echo "Admin UI built: $(ls -lh dist/ | wc -l) files"
+
+      - name: Build binary
+        run: |
+          BUILD_VERSION=${{ needs.release.outputs.version }}
+          echo "Building version: ${BUILD_VERSION}"
+          GOOS=linux GOARCH=amd64 go build \
+            -ldflags "-X github.com/danielvm/bigbase/kernel.Version=${BUILD_VERSION}" \
+            -o ${{ env.BINARY_PATH }} .
+          echo "Binary: $(file ${{ env.BINARY_PATH }})"
+          echo "Size: $(ls -lh ${{ env.BINARY_PATH }} | awk '{print $5}')"
+
+      - name: Smoke test binary
+        run: |
+          chmod +x ${{ env.BINARY_PATH }}
+          VERSION_OUTPUT=$(./${{ env.BINARY_PATH }} version 2>&1)
+          echo "Built: $VERSION_OUTPUT"
+
+      - name: Write deploy-meta.json
+        run: |
+          cat > deploy-meta.json <<EOF
+          {
+            "sha": "${{ needs.release.outputs.sha }}",
+            "ref": "${{ github.ref }}",
+            "version": "${{ needs.release.outputs.version }}",
+            "new_release": true,
+            "app_type": "bigbase-server"
+          }
+          EOF
+          cat deploy-meta.json
+
+      - name: Upload release bundle
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: bigbase-release
+          path: |
+            ${{ env.BINARY_PATH }}
+            deploy-meta.json
+          retention-days: 3
+          compression-level: 0

@@ -1,46 +1,46 @@
 # ============================================================================
-# release-deploy.yml — Release + Deploy pipeline for BigBase
+# deploy.yml — CD pipeline for BigBase (v3 layout)
 #
-# Merged workflow to fix GITHUB_TOKEN event suppression: semantic-release
-# creates the release, and deploy proceeds in the same workflow if a new
-# version was published. This avoids the issue where GITHUB_TOKEN-triggered
-# releases don't fire downstream workflow events.
+# Replaces the deploy half of release-deploy.yml.
 #
-# Triggers:
-#   - Push to main → semantic-release analyzes commits, publishes if warranted
-#   - Manual workflow_dispatch (for re-deploying an existing tag)
+# Triggers via workflow_run after "Test, Build & Release" completes on a push
+# to main (not on PRs), consuming the `bigbase-release` artifact (binary +
+# deploy-meta.json) that workflow's `build` job uploads — no rebuild here.
+# A push to main that didn't produce a new semantic-release version still
+# fires this workflow_run event (test-build-release still succeeds — release
+# and build were just skipped), but no `bigbase-release` artifact exists for
+# that run, so the download step fails gracefully and the job no-ops.
+#
+# workflow_dispatch lets a human redeploy the artifact from a specific past
+# test-build-release run without re-running lint/test/release.
 #
 # Pipeline:
-#   0. Semantic Release (determine version, publish release)
-#   1. Test & Build (Go + embedded Admin UI)
+#   1. Download bigbase-release artifact (binary + deploy-meta.json)
 #   2. Deploy to Contabo VPS via SSH
-#   3. Automatic rollback on health check failure
+#   3. Post-deploy smoke test (health check + version check)
+#   4. Automatic rollback on smoke test failure
 # ============================================================================
-name: Release (BigBase)
+name: Deploy
 
 on:
-  push:
-    branches: [main]
+  workflow_run:
+    workflows: ["Test, Build & Release"]
+    types: [completed]
   workflow_dispatch:
     inputs:
-      ref:
-        description: 'Git ref to build (tag, e.g. v1.0.0)'
-        required: true
+      run_id:
+        description: 'test-build-release run ID to redeploy (the bigbase-release artifact must still exist for it)'
+        required: false
         default: ''
 
 permissions:
-  contents: write
-  issues: write
-  pull-requests: write
+  contents: read
 
 concurrency:
-  group: release-deploy-${{ github.workflow }}-${{ github.ref }}
+  group: deploy-production
   cancel-in-progress: false
 
 env:
-  GO_VERSION: '1.26'
-  NODE_VERSION: '22'
-  BINARY_NAME: 'bigbase'
   BINARY_PATH: 'bigbase-linux-amd64'
   VPS_BIN_DIR: '/opt/bigbase/bin'
   VPS_RELEASES_DIR: '/opt/bigbase/releases'
@@ -53,141 +53,72 @@ env:
 
 jobs:
   # ==========================================================================
-  # JOB: Release + Deploy (single job chain)
+  # JOB: Deploy
   # ==========================================================================
-  release-and-deploy:
-    name: Release & Deploy
+  deploy:
+    name: Deploy
     runs-on: ubuntu-latest
     timeout-minutes: 20
     environment: production
-
-    outputs:
-      new_release: ${{ steps.detect-release.outputs.new_release }}
-      version: ${{ steps.detect-release.outputs.version }}
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.event == 'push' &&
+       github.event.workflow_run.head_branch == 'main')
+    permissions:
+      actions: read
+      contents: read
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
-          ref: ${{ github.event.inputs.ref || github.ref }}
-          persist-credentials: true
-
-      # --- Semantic Release (only on push events, not workflow_dispatch) ---
-      - name: Setup Node
-        if: github.event_name == 'push'
-        uses: actions/setup-node@v7
-        with:
-          node-version: '${{ env.NODE_VERSION }}'
-          cache: 'npm'
-
-      - name: Save pre-release HEAD
-        id: pre-release
-        if: github.event_name == 'push'
-        run: echo "head=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
-
-      - name: Install dependencies
-        if: github.event_name == 'push'
-        run: npm ci
-
-      - name: Semantic Release
-        if: github.event_name == 'push'
-        id: semantic
-        run: npx --no-install semantic-release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      # --- Detect if a release was created ---
-      - name: Detect new release
-        id: detect-release
+      - name: Resolve target run ID
+        id: target
         run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            # Manual deploy — always release
-            VERSION=$(cat VERSION 2>/dev/null || echo "0.0.0-dev")
-            echo "new_release=true" >> "$GITHUB_OUTPUT"
-            echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
-            echo "Manual deploy — version ${VERSION}"
+          RUN_ID="${{ github.event.inputs.run_id || github.event.workflow_run.id }}"
+          if [ -z "$RUN_ID" ]; then
+            echo "ERROR: no run_id available — pass workflow_dispatch input run_id when redeploying manually."
+            exit 1
+          fi
+          echo "run_id=${RUN_ID}" >> "$GITHUB_OUTPUT"
+
+      # --- Download the artifact test-build-release's build job uploaded.
+      # continue-on-error because a push to main that didn't publish a new
+      # release still triggers this workflow via workflow_run, but never
+      # produced a bigbase-release artifact for that run — that's the
+      # legitimate no-op case, not a failure. ---
+      - name: Download release bundle
+        id: download
+        continue-on-error: true
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        with:
+          name: bigbase-release
+          run-id: ${{ steps.target.outputs.run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Check for release artifact
+        id: check
+        run: |
+          if [ "${{ steps.download.outcome }}" != "success" ]; then
+            echo "No bigbase-release artifact for run ${{ steps.target.outputs.run_id }} (no new release was published) — skipping deploy."
+            echo "proceed=false" >> "$GITHUB_OUTPUT"
           else
-            # Push event — check if sem-rel created a new commit
-            NEW_HEAD=$(git rev-parse HEAD)
-            if [ "${{ steps.pre-release.outputs.head }}" != "$NEW_HEAD" ]; then
-              VERSION=$(cat VERSION)
-              echo "new_release=true" >> "$GITHUB_OUTPUT"
-              echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
-              echo "New release detected: v${VERSION}"
-            else
-              echo "new_release=false" >> "$GITHUB_OUTPUT"
-              echo "No new release"
-            fi
+            echo "proceed=true" >> "$GITHUB_OUTPUT"
           fi
 
-      # --- Setup Go ---
-      - name: Setup Go ${{ env.GO_VERSION }}
-        if: steps.detect-release.outputs.new_release == 'true'
-        uses: actions/setup-go@v7
-        with:
-          go-version: '${{ env.GO_VERSION }}'
-          cache: true
-
-      # --- Run Go unit tests ---
-      - name: Run tests
-        if: steps.detect-release.outputs.new_release == 'true'
-        run: go test ./... -count=1
-
-      # --- Build Admin UI (embedded in binary) ---
-      - name: Build Admin UI
-        if: steps.detect-release.outputs.new_release == 'true'
-        working-directory: ui
+      - name: Read deploy metadata
+        if: steps.check.outputs.proceed == 'true'
+        id: meta
         run: |
-          npm ci --prefer-offline --legacy-peer-deps
-          npm run build
-          echo "Admin UI built: $(ls -lh dist/ | wc -l) files"
-
-      # --- Build Go binary for linux/amd64 ---
-      - name: Build binary
-        if: steps.detect-release.outputs.new_release == 'true'
-        run: |
-          BUILD_VERSION=${{ steps.detect-release.outputs.version }}
-          echo "Building version: ${BUILD_VERSION}"
-          GOOS=linux GOARCH=amd64 go build \
-            -ldflags "-X github.com/danielvm/bigbase/kernel.Version=${BUILD_VERSION}" \
-            -o ${{ env.BINARY_PATH }} .
-          echo "Binary: $(file ${{ env.BINARY_PATH }})"
-          echo "Size: $(ls -lh ${{ env.BINARY_PATH }} | awk '{print $5}')"
-
-      - name: Smoke test binary
-        if: steps.detect-release.outputs.new_release == 'true'
-        run: |
-          chmod +x ${{ env.BINARY_PATH }}
-          VERSION_OUTPUT=$(./${{ env.BINARY_PATH }} version 2>&1)
-          echo "Built: $VERSION_OUTPUT"
-
-      # --- Upload binary as artifact ---
-      - name: Upload binary artifact
-        if: steps.detect-release.outputs.new_release == 'true'
-        uses: actions/upload-artifact@v7
-        with:
-          name: bigbase-linux-amd64
-          path: ${{ env.BINARY_PATH }}
-          retention-days: 3
-          compression-level: 0
-
-      # ======================================================================
-      # Deploy to Contabo VPS
-      # ======================================================================
-      - name: Download built binary
-        if: steps.detect-release.outputs.new_release == 'true'
-        uses: actions/download-artifact@v8
-        with:
-          name: bigbase-linux-amd64
+          cat deploy-meta.json
+          echo "version=$(jq -r .version deploy-meta.json)" >> "$GITHUB_OUTPUT"
+          echo "sha=$(jq -r .sha deploy-meta.json)" >> "$GITHUB_OUTPUT"
 
       - name: Make binary executable
-        if: steps.detect-release.outputs.new_release == 'true'
+        if: steps.check.outputs.proceed == 'true'
         run: chmod +x ${{ env.BINARY_PATH }}
 
       # --- Upload binary via SCP ---
       - name: Upload binary to VPS
-        if: steps.detect-release.outputs.new_release == 'true'
+        if: steps.check.outputs.proceed == 'true'
         uses: appleboy/scp-action@ff85246acaad7bdce478db94a363cd2bf7c90345 # v1.0.0
         with:
           host: ${{ secrets.CONTABO_HOST }}
@@ -200,7 +131,7 @@ jobs:
 
       # --- Deploy via SSH ---
       - name: Deploy binary and restart service
-        if: steps.detect-release.outputs.new_release == 'true'
+        if: steps.check.outputs.proceed == 'true'
         uses: appleboy/ssh-action@0ff4204d59e8e51228ff73bce53f80d53301dee2 # v1.2.5
         env:
           BINARY_PATH: ${{ env.BINARY_PATH }}
@@ -211,6 +142,7 @@ jobs:
           VPS_ENV_FILE: ${{ env.VPS_ENV_FILE }}
           HEALTH_URL: ${{ env.HEALTH_URL }}
           MAX_BACKUPS: ${{ env.MAX_BACKUPS_TO_KEEP }}
+          EXPECTED_VERSION: ${{ steps.meta.outputs.version }}
           GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
           GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
           BIGBASE_GITHUB_APP_ID: ${{ secrets.BIGBASE_GITHUB_APP_ID }}
@@ -224,7 +156,7 @@ jobs:
           envs: >-
             BINARY_PATH,VPS_BIN_DIR,VPS_RELEASES_DIR,
             VPS_BACKUPS_DIR,VPS_DATA_DIR,VPS_ENV_FILE,
-            HEALTH_URL,MAX_BACKUPS,
+            HEALTH_URL,MAX_BACKUPS,EXPECTED_VERSION,
             GOOGLE_CLIENT_ID,GOOGLE_CLIENT_SECRET,
             BIGBASE_GITHUB_APP_ID,BIGBASE_GITHUB_APP_SLUG,GITHUB_APP_PEM_PATH
           # -------- Script executed on VPS --------
@@ -355,9 +287,9 @@ jobs:
             echo "  Service restarted"
 
             # ----------------------------------------------------------------
-            # Phase 7: Health check with retry
+            # Phase 7: Post-deploy smoke test (health + version check)
             # ----------------------------------------------------------------
-            echo "=== Phase 7: Health check ==="
+            echo "=== Phase 7: Post-deploy smoke test ==="
 
             # Give service time to start before first probe
             sleep 5
@@ -375,9 +307,19 @@ jobs:
               sleep 3
             done
 
-            if [ "${HEALTH_PASS}" = false ]; then
+            SMOKE_PASS="${HEALTH_PASS}"
+            if [ "${HEALTH_PASS}" = true ] && [ -n "${EXPECTED_VERSION:-}" ]; then
+              DEPLOYED_VERSION=$(${VPS_BIN_DIR}/bigbase version 2>&1 | awk '{print $3}')
+              echo "  Deployed version: ${DEPLOYED_VERSION} (expected: ${EXPECTED_VERSION})"
+              if [ "${DEPLOYED_VERSION}" != "${EXPECTED_VERSION}" ]; then
+                echo "  VERSION MISMATCH — expected ${EXPECTED_VERSION}, running binary reports ${DEPLOYED_VERSION}"
+                SMOKE_PASS=false
+              fi
+            fi
+
+            if [ "${SMOKE_PASS}" = false ]; then
               echo ""
-              echo "=== HEALTH CHECK FAILED! Rolling back... ==="
+              echo "=== SMOKE TEST FAILED! Rolling back... ==="
               journalctl -u bigbase --no-pager -n 50 || true
               echo "--- Verbose health check response ---"
               curl -v "${HEALTH_URL}" 2>&1 || true
@@ -435,10 +377,11 @@ jobs:
 
       # --- Deployment verification ---
       - name: Deployment verification
-        if: success() && steps.detect-release.outputs.new_release == 'true'
+        if: success() && steps.check.outputs.proceed == 'true'
         run: |
           echo "✅ Deploy finished successfully"
           echo "   Server: ${{ secrets.CONTABO_HOST }}"
+          echo "   Version: ${{ steps.meta.outputs.version }}"
           echo "   Time: $(date -u)"
 
   # ==========================================================================
@@ -447,14 +390,13 @@ jobs:
   notify:
     name: Notify on failure
     runs-on: ubuntu-latest
-    needs: [release-and-deploy]
+    needs: [deploy]
     if: failure() && github.event_name != 'workflow_dispatch'
 
     steps:
       - name: Build failure summary
         run: |
-          echo "❌ BigBase release/deploy FAILED"
+          echo "❌ BigBase deploy FAILED"
           echo "   Repository: ${{ github.repository }}"
-          echo "   Commit: ${{ github.sha }}"
-          echo "   Branch: ${{ github.ref_name }}"
+          echo "   Workflow run: ${{ github.event.workflow_run.html_url }}"
           echo "   Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
