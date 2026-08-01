@@ -10,6 +10,6 @@
   },
   "files": ["dist"],
   "scripts": { "build": "svelte-package -i src/lib", "test": "echo ok" },
-  "peerDependencies": { "svelte": "^5.0" },
-  "devDependencies": { "svelte": "^5.0", "@sveltejs/package": "^2.0", "typescript": "^5.7" }
+  "peerDependencies": { "svelte": "^5.56" },
+  "devDependencies": { "svelte": "^5.56", "@sveltejs/package": "^2.0", "typescript": "^5.7" }
 }
