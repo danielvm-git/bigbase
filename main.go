@@ -439,6 +439,7 @@ func startProxy() {
 		UnregisterHost:   p.UnregisterDeploymentHost,
 		ActivateDomain:   depComp.ActivateCustomDomain,
 		UpdateAuthPolicy: p.SetSiteAuthPolicy,
+		UpdateCSP:        p.SetSiteCSP,
 		ValidateManifest: deploy.ValidateManifest,
 	})
 	rt := realtime.New(realtime.Options{

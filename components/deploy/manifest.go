@@ -45,6 +45,11 @@ func (hc ManifestHealthCheck) WithDefaults() ManifestHealthCheck {
 	return hc
 }
 
+// ManifestSecurity represents the [security] section of bigbase.yaml / bigbase.toml.
+type ManifestSecurity struct {
+	CSP string `yaml:"csp" toml:"csp"`
+}
+
 // Manifest represents a bigbase.yaml configuration file in a repo root.
 type Manifest struct {
 	Version     int                 `yaml:"version"              toml:"version"`
@@ -53,6 +58,7 @@ type Manifest struct {
 	Start       ManifestStart       `yaml:"start"                toml:"start"`
 	Env         map[string]string   `yaml:"env"                  toml:"env"`
 	HealthCheck ManifestHealthCheck `yaml:"health_check"          toml:"health_check"`
+	Security    ManifestSecurity    `yaml:"security"             toml:"security"`
 }
 
 // ManifestBuild represents the build section of bigbase.yaml / bigbase.toml.
@@ -237,6 +243,9 @@ func MergeManifests(manifest *Manifest, siteDefaults *SiteDefaults, requestOverr
 				}
 			}
 		}
+		if siteDefaults.CSPPolicy != "" && base.Security.CSP == "" {
+			base.Security.CSP = siteDefaults.CSPPolicy
+		}
 	}
 
 	// Layer 3: request overrides (explicit values win)
@@ -291,6 +300,7 @@ type SiteDefaults struct {
 	PassthroughPaths []string          `json:"passthrough_paths,omitempty"`
 	HealthPath       string            `json:"health_path,omitempty"`
 	Env              map[string]string `json:"env,omitempty"`
+	CSPPolicy        string            `json:"csp_policy,omitempty"`
 }
 
 // PackageJSON is a helper struct for parsing dependencies and scripts from package.json.

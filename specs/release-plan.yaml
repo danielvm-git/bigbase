@@ -697,3 +697,13 @@ epics:
   note: "6 stories (incl. e81s00 infra). Extends Deploy with 4 new runtimes + profiles + CI templates. Ships in Wave 1."
   file: epics/e81-multi-language-deploy.yaml
 
+- id: e84
+  title: "Per-Site CSP Configuration (Issue #197)"
+  wsjf: 6.0
+  mode: capsule
+  tier: 2
+  status: open
+  depends_on: []
+  note: "3 stories, 8 BCPs. Makes CSP configurable per deployed site via DeployDefaults and bigbase.toml [security] section."
+  capsule_dir: epics/e84-per-site-csp
+  file: epics/e84-per-site-csp/epic.yaml

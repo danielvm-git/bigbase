@@ -688,4 +688,39 @@ func TestMergeManifests(t *testing.T) {
 			t.Errorf("env.C = %s, want req (request wins)", merged.Env["C"])
 		}
 	})
+
+	t.Run("manifest security.csp wins over site default", func(t *testing.T) {
+		manifest := &Manifest{
+			Security: ManifestSecurity{CSP: "default-src 'self'"},
+		}
+		siteDefaults := &SiteDefaults{
+			CSPPolicy: "default-src 'self' https://cdn.example.com",
+		}
+		merged := MergeManifests(manifest, siteDefaults, nil)
+		if merged.Security.CSP != "default-src 'self'" {
+			t.Errorf("Security.CSP = %q, want manifest value 'default-src 'self''", merged.Security.CSP)
+		}
+	})
+
+	t.Run("site default csp fills in when manifest has none", func(t *testing.T) {
+		manifest := &Manifest{
+			Version:   1,
+			Framework: "static",
+		}
+		siteDefaults := &SiteDefaults{
+			CSPPolicy: "default-src 'self' https://cdn.example.com",
+		}
+		merged := MergeManifests(manifest, siteDefaults, nil)
+		if merged.Security.CSP != "default-src 'self' https://cdn.example.com" {
+			t.Errorf("Security.CSP = %q, want site default", merged.Security.CSP)
+		}
+	})
+
+	t.Run("no csp set — security.csp is empty", func(t *testing.T) {
+		manifest := &Manifest{Version: 1, Framework: "node"}
+		merged := MergeManifests(manifest, &SiteDefaults{}, nil)
+		if merged.Security.CSP != "" {
+			t.Errorf("Security.CSP = %q, want empty string when none configured", merged.Security.CSP)
+		}
+	})
 }

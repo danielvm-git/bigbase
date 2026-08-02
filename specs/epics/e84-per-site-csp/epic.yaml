@@ -1,0 +1,29 @@
+type: epic-shard
+context: domain
+id: e84
+title: "Per-Site CSP Configuration (Issue #197)"
+wsjf: 6.0
+total_bcps: 8
+status: open
+tier: 2
+depends_on: []
+note: "3 stories, 8 BCPs. Makes CSP configurable per deployed site via deploy_defaults and bigbase.toml manifest."
+stories:
+  - id: e84s01
+    title: "Site model + API layer — add csp_policy to DeployDefaults"
+    bcps: 3
+    status: open
+    depends_on: []
+    spec: e84s01-spec.md
+  - id: e84s02
+    title: "Proxy per-site CSP override at request time"
+    bcps: 3
+    status: open
+    depends_on: [e84s01]
+    spec: e84s02-spec.md
+  - id: e84s03
+    title: "Manifest security.csp field + deploy-time propagation"
+    bcps: 2
+    status: open
+    depends_on: [e84s02]
+    spec: e84s03-spec.md
