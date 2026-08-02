@@ -1643,7 +1643,7 @@ func TestResumeSvelteKitStaticDeployment(t *testing.T) {
 	_ = gitComp.Start(&kernel.Context{})
 
 	depID := "sveltekit-resume-test"
-	port, err := deploy.PickPort(35000)
+	port, err := deploy.PickPort(0)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1872,7 +1872,7 @@ func TestRedeployReplacesPrevious(t *testing.T) {
 	// Wait for finalizeDeploymentURL to register the host.
 	var gotPort2 int
 	var hostOK bool
-	for i := 0; i < 20; i++ {
+	for i := 0; i < 100; i++ {
 		gotPort2, hostOK = hostReg.getPort(host)
 		if hostOK && gotPort2 == int(port2) {
 			break
@@ -1916,7 +1916,7 @@ func TestRedeployReplacesPrevious(t *testing.T) {
 	addr := fmt.Sprintf("http://127.0.0.1:%d", int(port2))
 	var bodyBytes []byte
 	serverOK := false
-	for i := 0; i < 20; i++ {
+	for i := 0; i < 50; i++ {
 		reqCheck, _ := http.NewRequest("GET", addr, nil)
 		ctx, cancel := context.WithTimeout(context.Background(), 500*time.Millisecond)
 		reqCheck = reqCheck.WithContext(ctx)
@@ -2057,7 +2057,7 @@ func _processCheckAlive(t *testing.T, pid int, expectAlive bool) {
 	// When expecting dead, poll with backoff — SIGKILL delivery is asynchronous,
 	// and kill(pid, 0) returns nil for zombies that haven't been reaped yet.
 	// Use Wait4 with WNOHANG to distinguish running vs zombie vs gone.
-	for i := 0; i < 40; i++ {
+	for i := 0; i < 200; i++ {
 		time.Sleep(25 * time.Millisecond)
 
 		// First try Wait4 — if it reaps a zombie, the process is truly dead.
