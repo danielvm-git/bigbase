@@ -66,6 +66,7 @@ allure-history/
 mimocode.jsonc
 <stdin>
 .agents/mcp_config.json
+agentic-cps/
 
 # Cursor IDE local config (may contain API keys)
 .cursor/
