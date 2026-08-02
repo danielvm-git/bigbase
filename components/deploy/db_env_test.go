@@ -99,7 +99,7 @@ func TestRuntimeInjectsNativeDBEnv_sqlite(t *testing.T) {
 	for i := 0; i < 10; i++ {
 		resp, err := http.Get(fmt.Sprintf("http://localhost:%d/", deployment.Port))
 		if err != nil {
-			time.Sleep(500 * time.Millisecond)
+			time.Sleep(20 * time.Millisecond)
 			continue
 		}
 		b, _ := io.ReadAll(resp.Body)
@@ -108,7 +108,7 @@ func TestRuntimeInjectsNativeDBEnv_sqlite(t *testing.T) {
 		if body != "" {
 			break
 		}
-		time.Sleep(500 * time.Millisecond)
+		time.Sleep(20 * time.Millisecond)
 	}
 
 	absPath, err := filepath.Abs(dbPath)
@@ -174,13 +174,13 @@ func waitForDeploymentRunning(t *testing.T, database *db.DB, deployID string, ti
 		_ = database.QueryRowContext(context.Background(),
 			"SELECT status FROM deployments WHERE id = ?", deployID).Scan(&status)
 		if status == "running" {
-			time.Sleep(1 * time.Second)
+			time.Sleep(50 * time.Millisecond)
 			return
 		}
 		if status == "failed" {
 			t.Fatal("deployment failed during native DB env injection test")
 		}
-		time.Sleep(300 * time.Millisecond)
+		time.Sleep(20 * time.Millisecond)
 	}
 	t.Fatalf("deployment %s did not reach running within %s", deployID, timeout)
 }

@@ -36,6 +36,10 @@ command = "echo 'sidecar build executed'"
 [start]
 command = "echo 'sidecar start executed'"
 port = 8080
+[health_check]
+timeout_seconds = 1
+interval_seconds = 1
+max_retries = 2
 `
 	if err := os.WriteFile(filepath.Join(sourceDir, "bigbase.toml"), []byte(tomlContent), 0644); err != nil {
 		t.Fatal(err)
@@ -73,7 +77,7 @@ port = 8080
 		if status == "running" || status == "failed" {
 			break
 		}
-		time.Sleep(100 * time.Millisecond)
+		time.Sleep(10 * time.Millisecond)
 	}
 
 	if status != "failed" && status != "running" {

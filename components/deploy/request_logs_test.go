@@ -111,7 +111,7 @@ func TestSiteRequestLogsEndToEnd(t *testing.T) {
 		if count > 0 {
 			break
 		}
-		time.Sleep(50 * time.Millisecond)
+		time.Sleep(10 * time.Millisecond)
 	}
 
 	if count == 0 {
