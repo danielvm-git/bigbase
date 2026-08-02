@@ -276,11 +276,13 @@ if [ ! -f "${RELEASES_DIR}/previous/bigbase" ]; then
 fi
 
 echo "Rolling back to previous release..."
+systemctl stop bigbase 2>/dev/null || true
+sleep 1
 cp "${RELEASES_DIR}/previous/bigbase" "${BIGBASE_HOME}/bin/bigbase"
 chmod +x "${BIGBASE_HOME}/bin/bigbase"
 chown bigbase:bigbase "${BIGBASE_HOME}/bin/bigbase"
 
-systemctl restart bigbase
+systemctl start bigbase
 sleep 3
 
 # Health check

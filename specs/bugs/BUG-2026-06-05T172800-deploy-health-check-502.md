@@ -71,4 +71,6 @@ There is no Go code to fix — the bugs are in the deployment shell script in `.
 
 ## Resolution
 
-<!-- filled in by validate-fix -->
+- Modified `scripts/setup-vps.sh` to stop the `bigbase` service before attempting to copy the previous binary during rollback, avoiding `Text file busy`.
+- Modified `components/deploy/orchestrator.go` to explicitly skip `localhost` when restoring running deployment hosts from the database. This prevents `localhost` from being registered as a deployment host, which was causing the proxy to intercept health check requests and return 502 Bad Gateway.
+- Fixes applied and verified locally.

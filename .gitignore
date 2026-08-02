@@ -41,6 +41,7 @@ node_modules/
 test-results/
 playwright-report/
 
+<<<<<<< HEAD
 # Frontend build artifacts (rebuildable)
 /ui/dist/
 /packages/*/dist/
@@ -83,3 +84,7 @@ repo-*.git
 # Ctxo local cache (never committed)
 .ctxo/.cache/
 .zcode/
+
+# IDE / local workspace artifacts
+.claude/
+specs/.obsidian/

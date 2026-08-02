@@ -138,7 +138,7 @@ func (d *Deploy) restoreRunningDeploymentHosts() {
 			continue
 		}
 		host := HostFromDeploymentURL(rawURL)
-		if host == "" {
+		if host == "" || host == "localhost" {
 			continue
 		}
 		passthroughPaths := parsePassthroughPaths(passthroughJSON)
