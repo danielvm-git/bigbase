@@ -24,6 +24,7 @@ type hostInfo struct {
 	PassthroughPaths []string
 	Metadata         map[string]string // injected into __BIGBASE_METADATA__
 	AuthPolicy       *AuthPolicy
+	CSPPolicy        string
 }
 
 // RegisterDeploymentHost maps a public hostname to a local deployment port.
@@ -38,21 +39,31 @@ func (p *Proxy) RegisterDeploymentHost(host string, port int, siteID string, pas
 		return fmt.Errorf("cannot register loopback address %q as deployment host", host)
 	}
 
-	// Load auth policy if DB is available
+	// Load auth policy and CSP policy from DB if available
 	var policy *AuthPolicy
+	var cspPolicy string
 	if p.db != nil {
-		var policyStr string
+		var policyStr, ddStr string
 		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 		defer cancel()
-		_ = p.db.QueryRowContext(ctx, "SELECT auth_policy FROM sites WHERE id = ?", siteID).Scan(&policyStr)
+		row := p.db.QueryRowContext(ctx, "SELECT auth_policy, deploy_defaults FROM sites WHERE id = ?", siteID)
+		_ = row.Scan(&policyStr, &ddStr)
 		if policyStr != "" {
 			var pObj AuthPolicy
 			if err := json.Unmarshal([]byte(policyStr), &pObj); err == nil {
 				policy = &pObj
 			}
 		}
+		if ddStr != "" && ddStr != "{}" {
+			var dd struct {
+				CSPPolicy string `json:"csp_policy"`
+			}
+			if err := json.Unmarshal([]byte(ddStr), &dd); err == nil {
+				cspPolicy = dd.CSPPolicy
+			}
+		}
 	}
-	// Cache policy in memory
+	// Cache in memory
 	if policy != nil {
 		p.authPoliciesMu.Lock()
 		if p.authPolicies == nil {
@@ -60,6 +71,14 @@ func (p *Proxy) RegisterDeploymentHost(host string, port int, siteID string, pas
 		}
 		p.authPolicies[siteID] = policy
 		p.authPoliciesMu.Unlock()
+	}
+	if cspPolicy != "" {
+		p.cspPoliciesMu.Lock()
+		if p.cspPolicies == nil {
+			p.cspPolicies = make(map[string]string)
+		}
+		p.cspPolicies[siteID] = cspPolicy
+		p.cspPoliciesMu.Unlock()
 	}
 
 	p.deployHostsMu.Lock()
@@ -75,6 +94,7 @@ func (p *Proxy) RegisterDeploymentHost(host string, port int, siteID string, pas
 		PassthroughPaths: passthroughPaths,
 		Metadata:         metadata,
 		AuthPolicy:       policy,
+		CSPPolicy:        cspPolicy,
 	}
 	return nil
 }
@@ -320,6 +340,13 @@ func (p *Proxy) deploymentHostMiddleware(next http.Handler) http.Handler {
 					}
 				}
 			}
+		}
+
+		// Override with per-site CSP when configured; securityHeadersMiddleware
+		// already set permissiveCSP, but headers aren't written until the first
+		// body write, so this override takes effect before any bytes are sent.
+		if csp := p.getSiteCSP(info.SiteID); csp != "" {
+			w.Header().Set("Content-Security-Policy", csp)
 		}
 
 		target, err := url.Parse(fmt.Sprintf("http://127.0.0.1:%d", info.Port))

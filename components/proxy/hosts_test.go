@@ -687,3 +687,68 @@ func TestProxyAuthPolicy(t *testing.T) {
 		t.Errorf("expected 401 for invalid token, got %d", code)
 	}
 }
+
+func TestPerSiteCSP(t *testing.T) {
+	backend := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		_, _ = w.Write([]byte("ok"))
+	}))
+	defer backend.Close()
+
+	u, _ := url.Parse(backend.URL)
+	_, portStr, _ := net.SplitHostPort(u.Host)
+	var backendPort int
+	_, _ = fmt.Sscanf(portStr, "%d", &backendPort)
+
+	logger := testLogger{}
+	k := kernel.New(logger)
+	port := freePort(t)
+	p := proxy.New(proxy.Options{Port: port, Kernel: k, Logger: logger})
+	if err := p.Start(&kernel.Context{}); err != nil {
+		t.Fatalf("start proxy: %v", err)
+	}
+	defer func() { _ = p.Stop(&kernel.Context{}) }()
+	waitForServer(t, port, "/health")
+
+	host := "csp-site.bigbase.click"
+	if err := p.RegisterDeploymentHost(host, backendPort, "csp-site-1", nil, nil); err != nil {
+		t.Fatalf("register host: %v", err)
+	}
+
+	doReq := func() string {
+		req, _ := http.NewRequest(http.MethodGet, "http://127.0.0.1:"+port+"/", nil)
+		req.Host = host
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			t.Fatalf("request: %v", err)
+		}
+		defer func() { _ = resp.Body.Close() }()
+		return resp.Header.Get("Content-Security-Policy")
+	}
+
+	t.Run("site without custom CSP gets permissiveCSP fallback", func(t *testing.T) {
+		csp := doReq()
+		if !strings.Contains(csp, "'unsafe-inline'") {
+			t.Errorf("expected permissiveCSP fallback, got %q", csp)
+		}
+	})
+
+	t.Run("SetSiteCSP overrides the default", func(t *testing.T) {
+		customCSP := "default-src 'self'; frame-ancestors 'none'"
+		p.SetSiteCSP("csp-site-1", customCSP)
+		csp := doReq()
+		if csp != customCSP {
+			t.Errorf("expected custom CSP %q, got %q", customCSP, csp)
+		}
+		if strings.Contains(csp, "'unsafe-inline'") {
+			t.Errorf("custom CSP should not contain 'unsafe-inline', got %q", csp)
+		}
+	})
+
+	t.Run("clearing CSP restores permissiveCSP fallback", func(t *testing.T) {
+		p.SetSiteCSP("csp-site-1", "")
+		csp := doReq()
+		if !strings.Contains(csp, "'unsafe-inline'") {
+			t.Errorf("expected permissiveCSP after clear, got %q", csp)
+		}
+	})
+}

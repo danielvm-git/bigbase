@@ -73,12 +73,13 @@ type Site struct {
 // middle layer in the three-layer config merge: bigbase.toml → site defaults
 // → request body. All fields are optional; zero values mean "use auto-detection".
 type DeployDefaults struct {
-	AppType        string            `json:"app_type,omitempty"`
-	BuildCommand   string            `json:"build_command,omitempty"`
-	StartCommand   string            `json:"start_command,omitempty"`
-	PassthroughPaths []string        `json:"passthrough_paths,omitempty"`
-	HealthPath     string            `json:"health_path,omitempty"`
-	Env            map[string]string `json:"env,omitempty"`
+	AppType          string            `json:"app_type,omitempty"`
+	BuildCommand     string            `json:"build_command,omitempty"`
+	StartCommand     string            `json:"start_command,omitempty"`
+	PassthroughPaths []string          `json:"passthrough_paths,omitempty"`
+	HealthPath       string            `json:"health_path,omitempty"`
+	Env              map[string]string `json:"env,omitempty"`
+	CSPPolicy        string            `json:"csp_policy,omitempty"`
 }
 
 // Validate checks that deploy_defaults has at least one non-empty field.
@@ -120,6 +121,7 @@ type Sites struct {
 	unregisterHost    func(domain string)
 	activateDomain    ActivateDomainFunc
 	updateAuthPolicy  func(siteID string, policyJSON string)
+	updateCSP         func(siteID string, cspPolicy string)
 	verifyLim         *verifyLimiter
 	validateManifest  func([]byte) error
 }
@@ -141,6 +143,8 @@ type Options struct {
 	ActivateDomain ActivateDomainFunc
 	// UpdateAuthPolicy notifies the proxy when a site's auth policy changes.
 	UpdateAuthPolicy func(siteID string, policyJSON string)
+	// UpdateCSP notifies the proxy when a site's CSP policy changes.
+	UpdateCSP func(siteID string, cspPolicy string)
 	// ValidateManifest validates bigbase.yaml content (injected from deploy; ECC seam).
 	ValidateManifest func([]byte) error
 }
@@ -166,6 +170,7 @@ func New(opts Options) *Sites {
 		unregisterHost:    opts.UnregisterHost,
 		activateDomain:    opts.ActivateDomain,
 		updateAuthPolicy:  opts.UpdateAuthPolicy,
+		updateCSP:         opts.UpdateCSP,
 		verifyLim:         newVerifyLimiter(5 * time.Second),
 		validateManifest:  opts.ValidateManifest,
 	}
@@ -1303,6 +1308,10 @@ func (s *Sites) setSiteDeployDefaults(w http.ResponseWriter, r *http.Request, id
 	if err != nil {
 		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
 		return
+	}
+
+	if s.updateCSP != nil {
+		s.updateCSP(id, dd.CSPPolicy)
 	}
 
 	kernel.WriteJSON(w, http.StatusOK, map[string]any{"status": "ok", "deploy_defaults": dd})

@@ -237,6 +237,12 @@ func (d *Deploy) runDeployment(deploy *Deployment, buildDir, repoName string) {
 		"UPDATE deployments SET app_type = ? WHERE id = ?", string(appType), deploy.ID)
 	d.appendDeployLog(deploy.ID, fmt.Sprintf("→ Detected app type: %s", appType))
 
+	// Propagate manifest [security] csp to deploy_defaults so the proxy picks
+	// it up at RegisterDeploymentHost without needing to re-parse the manifest.
+	if manifest != nil && manifest.Security.CSP != "" {
+		d.applyManifestCSP(deploy.SiteID, manifest.Security.CSP)
+	}
+
 	// Pure static (index.html present, no package.json build) can serve immediately.
 	// Framework-static (Astro/SvelteKit) and other package.json apps still need install+build
 	// even when the host model is static — otherwise we serve a source directory listing.
@@ -760,6 +766,28 @@ func (d *Deploy) failDeployment(id string, buildErr error) {
 	_, _ = d.db.ExecContext(context.Background(),
 		"UPDATE deployments SET error_message = ? WHERE id = ?", msg, id)
 }
+// applyManifestCSP writes a manifest-declared CSP to deploy_defaults.csp_policy
+// so it persists across proxy restarts and is picked up by RegisterDeploymentHost.
+func (d *Deploy) applyManifestCSP(siteID, csp string) {
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+
+	var ddStr string
+	_ = d.db.QueryRowContext(ctx, "SELECT deploy_defaults FROM sites WHERE id = ?", siteID).Scan(&ddStr)
+
+	var dd SiteDefaults
+	if ddStr != "" && ddStr != "{}" {
+		_ = json.Unmarshal([]byte(ddStr), &dd)
+	}
+	dd.CSPPolicy = csp
+
+	ddBytes, err := json.Marshal(dd)
+	if err != nil {
+		return
+	}
+	_, _ = d.db.ExecContext(ctx, "UPDATE sites SET deploy_defaults = ? WHERE id = ?", string(ddBytes), siteID)
+}
+
 func (d *Deploy) finalizeDeploymentURL(deploy *Deployment, repoName string) {
 	url := deploymentURL(d.publicDomain, d.useHTTPS, repoName, deploy.Port)
 	host := deploymentHost(d.publicDomain, repoName)

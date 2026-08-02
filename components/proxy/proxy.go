@@ -100,6 +100,8 @@ type Proxy struct {
 	serviceHosts   map[string]int
 	authPoliciesMu sync.RWMutex
 	authPolicies   map[string]*AuthPolicy
+	cspPoliciesMu  sync.RWMutex
+	cspPolicies    map[string]string
 }
 
 var _ kernel.Component = (*Proxy)(nil)
@@ -162,6 +164,7 @@ func New(opts Options) *Proxy {
 		validateToken:      opts.ValidateToken,
 		validateSiteKey:    opts.ValidateSiteKey,
 		authPolicies:       make(map[string]*AuthPolicy),
+		cspPolicies:        make(map[string]string),
 	}
 }
 
@@ -1445,4 +1448,49 @@ func (p *Proxy) getSiteAuthPolicy(siteID string) *AuthPolicy {
 		}
 	}
 	return nil
+}
+
+func (p *Proxy) SetSiteCSP(siteID string, cspPolicy string) {
+	p.cspPoliciesMu.Lock()
+	defer p.cspPoliciesMu.Unlock()
+	if p.cspPolicies == nil {
+		p.cspPolicies = make(map[string]string)
+	}
+	if cspPolicy == "" {
+		delete(p.cspPolicies, siteID)
+		return
+	}
+	p.cspPolicies[siteID] = cspPolicy
+}
+
+func (p *Proxy) getSiteCSP(siteID string) string {
+	p.cspPoliciesMu.RLock()
+	csp, ok := p.cspPolicies[siteID]
+	p.cspPoliciesMu.RUnlock()
+	if ok {
+		return csp
+	}
+
+	// Fallback: read deploy_defaults from database
+	if p.db != nil {
+		var ddStr string
+		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+		defer cancel()
+		err := p.db.QueryRowContext(ctx, "SELECT deploy_defaults FROM sites WHERE id = ?", siteID).Scan(&ddStr)
+		if err == nil && ddStr != "" && ddStr != "{}" {
+			var dd struct {
+				CSPPolicy string `json:"csp_policy"`
+			}
+			if err := json.Unmarshal([]byte(ddStr), &dd); err == nil && dd.CSPPolicy != "" {
+				p.cspPoliciesMu.Lock()
+				if p.cspPolicies == nil {
+					p.cspPolicies = make(map[string]string)
+				}
+				p.cspPolicies[siteID] = dd.CSPPolicy
+				p.cspPoliciesMu.Unlock()
+				return dd.CSPPolicy
+			}
+		}
+	}
+	return ""
 }

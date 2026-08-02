@@ -23,8 +23,7 @@ const (
 	// strict policy above, so the XSS surface from unsafe-inline is limited.
 	// CDN entries (jsdelivr, cloudflare, tailwindcss, unpkg) are needed for
 	// deployed sites that load UI frameworks from public CDNs.
-	// TODO(issue #197): make CSP configurable per-site so each deployment
-	// can declare its own allowed sources.
+	// Per-site overrides are applied by deploymentHostMiddleware via DeployDefaults.
 	permissiveCSP = "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://unpkg.com; connect-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; frame-ancestors 'none'"
 
 	// restrictivePermissionsPolicy disables browser features that are not needed.

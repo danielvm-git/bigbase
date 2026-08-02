@@ -870,3 +870,101 @@ func TestSiteAuthPolicyAPI(t *testing.T) {
 		t.Errorf("unexpected protected paths: %v", policy2.ProtectedPaths)
 	}
 }
+
+func TestSiteCSPPolicyViaDeployDefaults(t *testing.T) {
+	logger := testLogger{}
+	k := kernel.New(logger)
+	d := db.New(db.Options{Path: ":memory:", Logger: logger})
+	g := git.New(git.Options{DB: d, Logger: logger, Dir: t.TempDir()})
+
+	var cspCallbackSiteID string
+	var cspCallbackValue string
+
+	s := sites.New(sites.Options{
+		DB:     d,
+		Logger: logger,
+		UpdateCSP: func(siteID string, cspPolicy string) {
+			cspCallbackSiteID = siteID
+			cspCallbackValue = cspPolicy
+		},
+	})
+
+	k.Register(d)
+	k.Register(g)
+	k.Register(s)
+	if err := k.Start(); err != nil {
+		t.Fatalf("kernel start: %v", err)
+	}
+	t.Cleanup(func() { _ = k.Stop() })
+
+	ctx := context.Background()
+	siteID := "site-csp-test"
+	_, err := d.ExecContext(ctx,
+		`INSERT INTO sites (id, name, git_repo_id, production_branch, root_path, github_full_name, created_at, org_id)
+		 VALUES (?, 'test-site', 'repo-1', 'main', './', '', datetime('now'), 1)`,
+		siteID)
+	if err != nil {
+		t.Fatalf("insert site: %v", err)
+	}
+
+	// 1. GET initial deploy-defaults — csp_policy should be empty
+	req := authedRequestSite(http.MethodGet, fmt.Sprintf("/api/sites/%s/deploy-defaults", siteID), nil)
+	w := httptest.NewRecorder()
+	s.Handler().ServeHTTP(w, req)
+	if w.Code != http.StatusOK {
+		t.Fatalf("GET expected 200, got %d: %s", w.Code, w.Body.String())
+	}
+	var dd sites.DeployDefaults
+	if err := json.Unmarshal(w.Body.Bytes(), &dd); err != nil {
+		t.Fatalf("unmarshal deploy_defaults: %v", err)
+	}
+	if dd.CSPPolicy != "" {
+		t.Errorf("initial csp_policy = %q, want empty", dd.CSPPolicy)
+	}
+
+	// 2. PUT deploy-defaults with csp_policy
+	customCSP := "default-src 'self'; frame-ancestors 'none'"
+	ddJSON := fmt.Sprintf(`{"csp_policy":%q}`, customCSP)
+	req = authedRequestSite(http.MethodPut, fmt.Sprintf("/api/sites/%s/deploy-defaults", siteID), bytes.NewBufferString(ddJSON))
+	req.Header.Set("Content-Type", "application/json")
+	w = httptest.NewRecorder()
+	s.Handler().ServeHTTP(w, req)
+	if w.Code != http.StatusOK {
+		t.Fatalf("PUT expected 200, got %d: %s", w.Code, w.Body.String())
+	}
+
+	// Verify UpdateCSP callback fired with correct values
+	if cspCallbackSiteID != siteID {
+		t.Errorf("callback siteID = %q, want %q", cspCallbackSiteID, siteID)
+	}
+	if cspCallbackValue != customCSP {
+		t.Errorf("callback cspPolicy = %q, want %q", cspCallbackValue, customCSP)
+	}
+
+	// 3. GET again — verify csp_policy persisted
+	req = authedRequestSite(http.MethodGet, fmt.Sprintf("/api/sites/%s/deploy-defaults", siteID), nil)
+	w = httptest.NewRecorder()
+	s.Handler().ServeHTTP(w, req)
+	if w.Code != http.StatusOK {
+		t.Fatalf("GET expected 200, got %d", w.Code)
+	}
+	var dd2 sites.DeployDefaults
+	if err := json.Unmarshal(w.Body.Bytes(), &dd2); err != nil {
+		t.Fatalf("unmarshal deploy_defaults2: %v", err)
+	}
+	if dd2.CSPPolicy != customCSP {
+		t.Errorf("persisted csp_policy = %q, want %q", dd2.CSPPolicy, customCSP)
+	}
+
+	// 4. Clear csp_policy — callback should fire with empty string
+	req = authedRequestSite(http.MethodPut, fmt.Sprintf("/api/sites/%s/deploy-defaults", siteID), bytes.NewBufferString(`{}`))
+	req.Header.Set("Content-Type", "application/json")
+	w = httptest.NewRecorder()
+	s.Handler().ServeHTTP(w, req)
+	if w.Code != http.StatusOK {
+		t.Fatalf("PUT clear expected 200, got %d: %s", w.Code, w.Body.String())
+	}
+	if cspCallbackValue != "" {
+		t.Errorf("after clear, callback cspPolicy = %q, want empty string", cspCallbackValue)
+	}
+}
