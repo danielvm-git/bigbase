@@ -53,7 +53,7 @@ func TestStreamingLogs(t *testing.T) {
 	waitForDeploymentTerminal(t, handler, depID, 10*time.Second)
 
 	// Read log lines from WebSocket (with a short timeout for last messages)
-	_ = conn.SetReadDeadline(time.Now().Add(2 * time.Second))
+	_ = conn.SetReadDeadline(time.Now().Add(100 * time.Millisecond))
 
 	var lines []string
 	for {
@@ -124,7 +124,7 @@ func TestLogLifecycle(t *testing.T) {
 	waitForDeploymentTerminal(t, handler, depID, 10*time.Second)
 
 	// Read all streaming log lines
-	_ = conn.SetReadDeadline(time.Now().Add(2 * time.Second))
+	_ = conn.SetReadDeadline(time.Now().Add(100 * time.Millisecond))
 	var lines []string
 	for {
 		_, msg, err := conn.ReadMessage()

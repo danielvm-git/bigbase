@@ -263,16 +263,16 @@ func TestEnvVarInjection(t *testing.T) {
 			if status == "failed" {
 				t.Fatal("deployment failed during runtime injection test")
 			}
-			time.Sleep(300 * time.Millisecond)
+			time.Sleep(20 * time.Millisecond)
 		}
-		time.Sleep(1 * time.Second) // allow server to bind
+		time.Sleep(50 * time.Millisecond) // allow server to bind
 
 		// Hit the app and verify it echoes the injected env var.
 		var body string
 		for i := 0; i < 10; i++ {
 			resp, err := http.Get(fmt.Sprintf("http://localhost:%d/", deployment.Port))
 			if err != nil {
-				time.Sleep(500 * time.Millisecond)
+				time.Sleep(20 * time.Millisecond)
 				continue
 			}
 			b, _ := io.ReadAll(resp.Body)
@@ -281,7 +281,7 @@ func TestEnvVarInjection(t *testing.T) {
 			if body != "" {
 				break
 			}
-			time.Sleep(500 * time.Millisecond)
+			time.Sleep(20 * time.Millisecond)
 		}
 		if body != "hello-from-env" {
 			t.Fatalf("expected response 'hello-from-env', got %q", body)

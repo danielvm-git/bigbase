@@ -85,7 +85,7 @@ import (
 
 func main() {
 	fmt.Fprintf(os.Stderr, "server failed to start intentionally\n")
-	time.Sleep(100 * time.Millisecond)
+	time.Sleep(10 * time.Millisecond)
 	os.Exit(1)
 }
 `, true)
@@ -351,9 +351,9 @@ health_check:
   path: /healthz
   expected_status: 200
   expected_body_contains: ok
-  timeout_seconds: 5
-  interval_seconds: 2
-  max_retries: 10
+  timeout_seconds: 1
+  interval_seconds: 1
+  max_retries: 2
 `
 	}
 

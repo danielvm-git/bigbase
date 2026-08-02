@@ -72,7 +72,7 @@ func TestConnectionDrainTimeout(t *testing.T) {
 		if s == "stopped" {
 			break
 		}
-		time.Sleep(100 * time.Millisecond)
+		time.Sleep(10 * time.Millisecond)
 	}
 	verifyDeployStatus(t, handler, dep1.ID, "stopped")
 }
@@ -176,7 +176,7 @@ import (
 
 func main() {
 	fmt.Fprintf(os.Stderr, "server failed to start intentionally\n")
-	time.Sleep(100 * time.Millisecond)
+	time.Sleep(10 * time.Millisecond)
 	os.Exit(1)
 }
 `, true)
@@ -325,6 +325,18 @@ func TestDrainStatusHistory(t *testing.T) {
 		t.Fatalf("Trigger second: %v", err)
 	}
 	waitForDeploymentTerminal(t, handler, dep2.ID, 10*time.Second)
+	startDrain := time.Now()
+	for time.Since(startDrain) < 5*time.Second {
+		req := httptest.NewRequest("GET", "/api/deploy/"+dep1.ID, nil)
+		w := httptest.NewRecorder()
+		handler.ServeHTTP(w, req)
+		var got map[string]any
+		_ = json.NewDecoder(w.Body).Decode(&got)
+		if st, ok := got["status"].(string); ok && st == "stopped" {
+			break
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
 	verifyDeployStatus(t, handler, dep1.ID, "stopped")
 
 	// Check status_history includes draining → stopped (read from DB directly)
@@ -435,7 +447,7 @@ func TestDrainKillsProcessGroup(t *testing.T) {
 		if s == "stopped" {
 			break
 		}
-		time.Sleep(100 * time.Millisecond)
+		time.Sleep(10 * time.Millisecond)
 	}
 	verifyDeployStatus(t, handler, dep1.ID, "stopped")
 }

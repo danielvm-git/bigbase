@@ -68,20 +68,20 @@ func waitForDeploymentTerminal(t *testing.T, handler http.Handler, depID string,
 		w := httptest.NewRecorder()
 		handler.ServeHTTP(w, req)
 		if w.Code != http.StatusOK {
-			time.Sleep(50 * time.Millisecond)
+			time.Sleep(10 * time.Millisecond)
 			continue
 		}
 		var got map[string]any
 		_ = json.NewDecoder(w.Body).Decode(&got)
 		status, ok := got["status"].(string)
 		if !ok {
-			time.Sleep(50 * time.Millisecond)
+			time.Sleep(10 * time.Millisecond)
 			continue
 		}
 		if status == "running" || status == "failed" {
 			return
 		}
-		time.Sleep(50 * time.Millisecond)
+		time.Sleep(10 * time.Millisecond)
 	}
 }
 
@@ -1275,7 +1275,7 @@ func TestRuntimeLogs(t *testing.T) {
 	}
 
 	// Wait for app to print
-	time.Sleep(3 * time.Second)
+	time.Sleep(1 * time.Second)
 
 	// Verify logs contain [runtime] lines
 	req := httptest.NewRequest("GET", "/api/deploy/"+deployment.ID+"/logs", nil)
@@ -1706,7 +1706,7 @@ func TestResumeSvelteKitStaticDeployment(t *testing.T) {
 	t.Cleanup(func() { _ = dep.Stop(&kernel.Context{}) })
 
 	// Give resume goroutine time to start serving
-	time.Sleep(1 * time.Second)
+	time.Sleep(100 * time.Millisecond)
 
 	// Verify deployment is serving from build/
 	resp, err := http.Get(fmt.Sprintf("http://localhost:%d", port))
@@ -2039,7 +2039,7 @@ func TestStopDeploymentKillsOrphanedProcess(t *testing.T) {
 
 	// Allow async stopDeployment to execute (Trigger → runDeployment goroutine →
 	// drainOldDeployments → drainDeployment goroutine → stopDeployment → killProcessGroup).
-	time.Sleep(2 * time.Second)
+	time.Sleep(100 * time.Millisecond)
 
 	// Verify orphaned process is no longer running
 	_processCheckAlive(t, pid, false)
