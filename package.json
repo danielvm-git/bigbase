@@ -15,7 +15,7 @@
     "@ctxo/lang-go": "^0.8.1",
     "@ctxo/lang-typescript": "^0.7.1",
     "@playwright/test": "^1.62.0",
-    "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/changelog": "^7.0.0",
     "@semantic-release/exec": "^7.1.0",
     "@semantic-release/git": "^10.0.1",
     "@types/node": "^26.1.2",
