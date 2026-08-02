@@ -19,6 +19,6 @@
     "@bigbase/auth": "*"
   },
   "devDependencies": {
-    "typescript": "^5.7"
+    "typescript": "^7.0"
   }
 }
