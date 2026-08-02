@@ -1,3 +1,10 @@
+# [2.85.0](https://github.com/danielvm-git/bigbase/compare/v2.84.5...v2.85.0) (2026-08-02)
+
+
+### Features
+
+* **proxy:** make CSP configurable per-site for deployed static sites (closes [#197](https://github.com/danielvm-git/bigbase/issues/197)) ([c7201d1](https://github.com/danielvm-git/bigbase/commit/c7201d17991d3408ea8060722330f75a49878bfe))
+
 ## [2.84.5](https://github.com/danielvm-git/bigbase/compare/v2.84.4...v2.84.5) (2026-07-30)
 
 
