@@ -1,3 +1,16 @@
+## [2.85.1](https://github.com/danielvm-git/bigbase/compare/v2.85.0...v2.85.1) (2026-08-02)
+
+
+### Bug Fixes
+
+* **ci:** allowlist test cache and dev config paths in gitleaks ([e6d9488](https://github.com/danielvm-git/bigbase/commit/e6d9488213719c4addc28c5269b45f8efe035a21))
+* **deploy:** increase test timeout to 180s and optimize test polling delays ([c70ddaf](https://github.com/danielvm-git/bigbase/commit/c70ddafb9a28a41c65cc6dd2186bcd003fd5885a))
+* **deploy:** increase test timeout to 180s and optimize test polling delays ([7bacc86](https://github.com/danielvm-git/bigbase/commit/7bacc8687dd0948ee1eb4e80a0a54c8a7bc5fe15))
+* **deploy:** prevent port allocation collision in concurrent integration tests ([02e766f](https://github.com/danielvm-git/bigbase/commit/02e766f3f9f6b20af75855844f0c7a66c3809997))
+* **deploy:** prevent port allocation collision in concurrent integration tests ([40c5381](https://github.com/danielvm-git/bigbase/commit/40c538119e2575f7b441c2d905c96a54b9b47644))
+* **ui:** resolve vitest jsdom configuration and build dependencies ([3ffb4f6](https://github.com/danielvm-git/bigbase/commit/3ffb4f6de82ef6e2443bd8e08007e3221dee4301))
+* **ui:** resolve vitest jsdom configuration and build dependencies ([efdbc49](https://github.com/danielvm-git/bigbase/commit/efdbc494b3ded5d20990e29f26e25be72b57e281))
+
 # [2.85.0](https://github.com/danielvm-git/bigbase/compare/v2.84.5...v2.85.0) (2026-08-02)
 
 
