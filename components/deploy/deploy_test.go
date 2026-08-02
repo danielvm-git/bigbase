@@ -85,6 +85,36 @@ func waitForDeploymentTerminal(t *testing.T, handler http.Handler, depID string,
 	}
 }
 
+// waitForDeployStatus polls until the deployment reaches wantStatus.
+// Drain runs asynchronously (go drainDeployment), so tests must synchronize
+// on the transition rather than asserting immediately after the new deploy
+// becomes "running".
+func waitForDeployStatus(t *testing.T, handler http.Handler, depID, wantStatus string, timeout time.Duration) {
+	t.Helper()
+	deadline := time.Now().Add(timeout)
+	var last string
+	for time.Now().Before(deadline) {
+		req := httptest.NewRequest("GET", "/api/deploy/"+depID, nil)
+		w := httptest.NewRecorder()
+		handler.ServeHTTP(w, req)
+		if w.Code == http.StatusOK {
+			var got map[string]any
+			_ = json.NewDecoder(w.Body).Decode(&got)
+			if s, ok := got["status"].(string); ok {
+				last = s
+				if s == wantStatus {
+					return
+				}
+				if s == "failed" && wantStatus != "failed" {
+					t.Fatalf("deployment %s reached failed while waiting for %q", depID, wantStatus)
+				}
+			}
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+	t.Fatalf("deployment %s status = %q, want %q within %v", depID, last, wantStatus, timeout)
+}
+
 type gitStub struct {
 	dir string
 }

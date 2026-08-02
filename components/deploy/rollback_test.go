@@ -56,8 +56,8 @@ func TestRollbackStaticSite(t *testing.T) {
 	waitForDeploymentTerminal(t, handler, dep2ID, 10*time.Second)
 	verifyDeployStatus(t, handler, dep2ID, "running")
 
-	// First deployment should be "stopped" (gracefully drained)
-	verifyDeployStatus(t, handler, dep1ID, "stopped")
+	// First deployment drains asynchronously after the new one is healthy.
+	waitForDeployStatus(t, handler, dep1ID, "stopped", 5*time.Second)
 
 	// WHEN: rollback the current deployment
 	rollbackReq := httptest.NewRequest("POST", "/api/deploy/"+dep2ID+"/rollback", nil)

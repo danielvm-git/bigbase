@@ -256,13 +256,14 @@ func TestDrainMultipleDeployments(t *testing.T) {
 		depIDs = append(depIDs, d.ID)
 	}
 
-	// Only the last deployment should be running
+	// Only the last deployment should be running. Drain is async
+	// (go drainDeployment), so wait for older ones to reach stopped.
 	lastID := depIDs[len(depIDs)-1]
 	for _, id := range depIDs {
 		if id == lastID {
 			verifyDeployStatus(t, handler, id, "running")
 		} else {
-			verifyDeployStatus(t, handler, id, "stopped")
+			waitForDeployStatus(t, handler, id, "stopped", 5*time.Second)
 		}
 	}
 
