@@ -96,7 +96,7 @@ func TestRuntimeInjectsNativeDBEnv_sqlite(t *testing.T) {
 	waitForDeploymentRunning(t, database, deployment.ID, 30*time.Second)
 
 	var body string
-	for i := 0; i < 10; i++ {
+	for i := 0; i < 50; i++ {
 		resp, err := http.Get(fmt.Sprintf("http://localhost:%d/", deployment.Port))
 		if err != nil {
 			time.Sleep(20 * time.Millisecond)

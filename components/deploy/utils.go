@@ -3,54 +3,12 @@ package deploy
 import (
 	"encoding/json"
 	"fmt"
-	"net"
 	"os"
 	"path/filepath"
 	"strings"
-	"sync"
 )
 
-var pickPortMu sync.Mutex
-var pickPortCounter int64
 
-const maxPickPortAttempts = 1000
-
-// pickPort returns the next port that is both unused by this process's
-// counter and currently free at the OS level. The counter alone is not
-// sufficient: it resets to 0 on every BigBase restart, so without a real
-// bind-and-release probe, a fresh deployment could be handed a port number
-// an orphaned process from before the restart is still bound to — the new
-// process fails to bind while the old, unrelated process keeps answering,
-// silently serving a completely different site's content behind the proxy
-// (see BUG-2026-07-25-port-allocator-no-liveness-check).
-func pickPort(base int) (int, error) {
-	return pickPortWithLimit(base, maxPickPortAttempts)
-}
-
-func pickPortWithLimit(base, maxAttempts int) (int, error) {
-	pickPortMu.Lock()
-	defer pickPortMu.Unlock()
-	for attempt := 0; attempt < maxAttempts; attempt++ {
-		pickPortCounter++
-		candidate := base + int(pickPortCounter)
-		if portIsFree(candidate) {
-			return candidate, nil
-		}
-	}
-	return 0, fmt.Errorf("pickPort: no free port found after %d attempts starting from base %d", maxAttempts, base)
-}
-
-// portIsFree probes a candidate port with a real listen-and-release. A bind
-// to 127.0.0.1:<port> fails with EADDRINUSE if anything — including a
-// process bound to 0.0.0.0:<port> — already holds that port.
-func portIsFree(port int) bool {
-	ln, err := net.Listen("tcp", fmt.Sprintf("127.0.0.1:%d", port))
-	if err != nil {
-		return false
-	}
-	_ = ln.Close()
-	return true
-}
 
 func marshalPassthroughPaths(paths []string) string {
 	if len(paths) == 0 {
