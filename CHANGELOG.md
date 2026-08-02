@@ -1,3 +1,11 @@
+## [2.85.2](https://github.com/danielvm-git/bigbase/compare/v2.85.1...v2.85.2) (2026-08-02)
+
+
+### Bug Fixes
+
+* **deploy:** avoid 502 on rollback and localhost host registration ([16a2bc9](https://github.com/danielvm-git/bigbase/commit/16a2bc9874258ccb52a867f4444afdd55b8ce08d))
+* **deploy:** wait for drain/rollback to reach stopped in tests ([9bfab4c](https://github.com/danielvm-git/bigbase/commit/9bfab4c89790682a509d2d42e48d1a8918867d66))
+
 ## [2.85.1](https://github.com/danielvm-git/bigbase/compare/v2.85.0...v2.85.1) (2026-08-02)
 
 
