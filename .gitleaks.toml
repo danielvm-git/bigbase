@@ -24,3 +24,17 @@ description = "archived e48 verification doc — fake HEALTH_TOKEN example value
 matchCondition = "and"
 paths = ['''specs/epics/archive/e48-live-surface-hardening/e48s01-git-health-block\.md''']
 regexes = ['''secret123''']
+
+[[allowlists]]
+description = "Test data cache and local environment/tooling configs"
+paths = [
+  '''components/deploy/data/''',
+  '''data/''',
+  '''\.agents/''',
+  '''\.cursor/''',
+  '''\.vscode/''',
+  '''\.pi/''',
+  '''\.envrc''',
+  '''mimocode\.jsonc'''
+]
+
