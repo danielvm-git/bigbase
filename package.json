@@ -19,7 +19,7 @@
     "@semantic-release/exec": "^7.1.0",
     "@semantic-release/git": "^11.0.1",
     "@types/node": "^26.1.2",
-    "semantic-release": "^25.0.8"
+    "semantic-release": "^25.0.9"
   },
   "dependencies": {
     "@ctxo/lang-csharp": "^0.7.4"
