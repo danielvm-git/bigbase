@@ -161,8 +161,9 @@
 }
 
 .stream-log-search:focus {
-  outline: none;
-  border-color: var(--fg-accent);
+  border-color: rgba(129, 140, 248, 1);
+  outline: 2px solid rgba(129, 140, 248, 1);
+  outline-offset: 2px;
 }
 
 .stream-log-search::placeholder {
@@ -207,6 +208,14 @@
   background: #0d1117;
   color: #e6edf3;
   min-height: 320px;
+}
+
+/* The log region is keyboard-focusable (tabIndex=0). Its outward ring would
+   be clipped by the container's overflow:hidden / rounded corners, so draw
+   the ring inward. Light indigo because the log surface is always dark. */
+.stream-log:focus-visible {
+  outline: 2px solid rgba(129, 140, 248, 1);
+  outline-offset: -2px;
 }
 
 .stream-log-line {
