@@ -1,0 +1,30 @@
+type: epic-shard
+context: domain
+id: e85
+title: "Unified Theming — Landing Page Parity with Admin Console"
+wsjf: 3.7
+total_bcps: 8
+status: open
+tier: 2
+depends_on: []
+note: >
+  2 stories, ~8 BCPs. The server-rendered landing page (homeTemplate in
+  components/proxy/proxy.go) gains full theme parity with the React admin
+  console: light/dark + the 13 accent colors. Transport is client-side
+  localStorage — both surfaces are same-origin (bigbase.click), so the landing
+  page reads the admin's existing `bigbase-theme` / `bigbase-accent` keys via a
+  blocking inline <head> script and applies data-theme + brand CSS custom props
+  before paint. No backend, no new endpoint, no DB migration. ADDED requirement.
+stories:
+  - id: e85s01
+    title: "Landing page theme bootstrap — inline script + accent ramp + CSS selector refactor"
+    bcps: 5
+    status: in_progress
+    depends_on: []
+    spec: e85s01-spec.md
+  - id: e85s02
+    title: "Accent ramp drift guard + cross-surface parity test"
+    bcps: 3
+    status: open
+    depends_on: [e85s01]
+    spec: e85s02-spec.md

@@ -1,0 +1,40 @@
+story_id: e85s02
+title: "Accent ramp drift guard + cross-surface parity test"
+status: pending
+bcps: 3
+tasks:
+  - id: 1
+    description: >
+      Add TestAccentRampParity to components/proxy/landing_theme_test.go. Read
+      ui/src/context/accentThemes.ts and extract the ACCENT_THEMES entries
+      (id, brand500, brand600, brand700, rainbow) via regex. Extract the same
+      fields from the ACCENTS literal embedded in homeTemplate. Assert the two
+      sets are equal (same ids in order, identical RGB triples, identical
+      rainbow flags). On mismatch, fail with a readable diff naming the
+      divergent entry. This is the canonical drift guard — it must trip if
+      either side changes without the other.
+    verify: "go test ./components/proxy/... -run TestAccentRampParity -v"
+    status: pending
+  - id: 2
+    description: >
+      Create tests/e2e/theme-parity.spec.ts. For each of three cases
+      (dark + October Pink, light + default Indigo, June rainbow):
+        1. go to /admin/ and use the sidebar appearance controls to set the
+           theme (toggle) and accent (ThemePicker);
+        2. page.goto('/');
+        3. assert document.documentElement.getAttribute('data-theme') and the
+           computed getComputedStyle(documentElement).getPropertyValue('--brand-500')
+           match the selection;
+        4. for June, also assert data-accent-rainbow="true".
+      Reuse existing selectors/patterns from tests/e2e/settings-ui.spec.ts and
+      dashboard-ui.spec.ts. The admin and landing page are same-origin, so
+      localStorage set in /admin/ persists across the page.goto('/').
+    verify: "cd tests/e2e && npx playwright test theme-parity"
+    status: pending
+  - id: 3
+    description: >
+      Smoke-check the full proxy test suite and the ui build to confirm the
+      epic introduced no regressions: landing template still renders, CSP
+      unchanged, admin bundle unaffected.
+    verify: "go test ./components/proxy/... -v && (cd ui && npm run build)"
+    status: pending

@@ -1,9 +1,9 @@
 type: session-state
 context: infra
-active_flow: null
-active_epic_id: e84
-active_story_id: e84s03
-active_story_status: done
+active_flow: build_epic
+active_epic_id: e85
+active_story_id: e85s01
+active_story_status: in_progress
 bug_id: null
 release:
   target_version: 2.81.2
@@ -19,21 +19,13 @@ metrics:
   stories_completed: 202
   bcps_per_hour: 0
 epic_cycle:
-  step: 8
-  story_bcps: 0
-  story: e70s03-e70s04
-  audit_result: pass
-  completed_steps:
-    - "0: threat-model"
-    - "1: survey-context"
-    - "2: plan-work"
-    - "3: kickoff-branch"
-    - "4: develop-tdd"
-    - "5: verify-work"
-    - "6: audit-code"
-    - "7: commit-message"
-  story_complete: true
-  note: "e70s03 and e70s04 complete. CI parameterized and static-sidecar app type added."
+  step: 0
+  story_bcps: 5
+  story: e85s01
+  audit_result: null
+  completed_steps: []
+  story_complete: false
+  note: "e85 unified theming — landing page parity with admin console. Full auto-run (yolo) mode. Client-side localStorage transport, full parity."
   fast_mode: true
 bug_cycle: null
 git:

@@ -707,3 +707,14 @@ epics:
   note: "3 stories, 8 BCPs. Makes CSP configurable per deployed site via DeployDefaults and bigbase.toml [security] section."
   capsule_dir: epics/e84-per-site-csp
   file: epics/e84-per-site-csp/epic.yaml
+
+- id: e85
+  title: "Unified Theming — Landing Page Parity with Admin Console"
+  wsjf: 3.7
+  mode: capsule
+  tier: 2
+  status: open
+  depends_on: []
+  note: "2 stories, ~8 BCPs. Landing page (server-rendered homeTemplate) reads the admin's localStorage theme/accent and applies light/dark + 13 accents. Client-side localStorage transport, same-origin, no backend changes. ADDED requirement (change-request e45s29/e20s01)."
+  capsule_dir: epics/e85-unified-theme
+  file: epics/e85-unified-theme/epic.yaml

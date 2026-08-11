@@ -1,0 +1,56 @@
+story_id: e85s01
+title: "Landing page theme bootstrap — inline script + accent ramp + CSS selector refactor"
+status: pending
+bcps: 5
+tasks:
+  - id: 1
+    description: >
+      Add a blocking inline <script> to the <head> of homeTemplate in
+      components/proxy/proxy.go, placed before <style> so it runs before first
+      paint. Embed an ACCENTS object literal carrying the 13 accent entries
+      (id, brand500, brand600, brand700, rainbow) — byte-for-byte the same
+      values as ui/src/context/accentThemes.ts. The script must:
+        1. read localStorage 'bigbase-theme' (accept only 'light'|'dark',
+           else derive from window.matchMedia('(prefers-color-scheme: dark)').matches);
+        2. read localStorage 'bigbase-accent' (accept only a key in ACCENTS, else 'default');
+        3. document.documentElement.setAttribute('data-theme', theme);
+        4. set the same brand custom props as applyAccentToDocument:
+           --brand-500/600/700, --border-accent, --bg-accent,
+           --bg-accent-hover, --bg-accent-active, --fg-accent, --brand-tint,
+           --focus-ring (rgb/rgba formulas identical to the TS source);
+        5. toggle data-accent-rainbow for the June entry.
+    verify: "go build ./components/proxy/... && grep -c 'data-theme' components/proxy/proxy.go"
+    status: pending
+  - id: 2
+    description: >
+      Refactor the landing <style> dark-mode selectors. Replace the two
+      '@media (prefers-color-scheme: dark) { :root { ... } }' blocks
+      (~lines 605 and 965) with '[data-theme="dark"] { ... }' using the
+      identical dark token values. Add a no-JS fallback:
+      '@media (prefers-color-scheme: dark) { :root:not([data-theme]) { ...same dark values... } }'.
+      Keep the :root brand defaults (--brand-500: #4f46e5, etc.) as the no-JS /
+      default-accent fallback.
+    verify: "grep -c '\\[data-theme=\"dark\"\\]' components/proxy/proxy.go"
+    status: pending
+  - id: 3
+    description: >
+      Add a rainbow CTA treatment to the landing <style> matching the admin's
+      rainbow button fill: '[data-accent-rainbow=\"true\"] .hero-cta-primary,
+      [data-accent-rainbow=\"true\"] .nav-cta { background: <gradient>; }'
+      with a text-shadow for readability. Confirm it only activates when
+      data-accent-rainbow is set.
+    verify: "grep -c 'data-accent-rainbow' components/proxy/proxy.go"
+    status: pending
+  - id: 4
+    description: >
+      Write components/proxy/landing_theme_test.go (TestLandingTheme). Render
+      homeTemplate, then for each case drive the inline script's logic against
+      a stubbed localStorage/matchMedia (extract the resolve+apply into a
+      testable helper or eval the script in a JS runtime) and assert:
+        - dark + march  -> data-theme=dark, --brand-500 = rgb(124, 58, 237)
+        - light + default -> data-theme=light, default indigo
+        - june -> data-accent-rainbow=true
+        - no localStorage, matchMedia dark -> data-theme=dark (fallback)
+        - no attribute set (no-JS path) -> :root:not([data-theme]) selector present in CSS
+    verify: "go test ./components/proxy/... -run TestLandingTheme -v"
+    status: pending
