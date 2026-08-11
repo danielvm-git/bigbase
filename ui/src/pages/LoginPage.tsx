@@ -93,7 +93,7 @@ export default function LoginPage() {
 
   if (showForgot) {
     return (
-      <div className="login-page">
+      <main className="login-page">
         <Card className="login-card">
           <div className="login-brand">
             <h1>Reset password</h1>
@@ -120,12 +120,12 @@ export default function LoginPage() {
             </button>
           </p>
         </Card>
-      </div>
+      </main>
     )
   }
 
   return (
-    <div className="login-page">
+    <main className="login-page">
       <Card className="login-card">
         <div className="login-brand">
           <div className="login-brand-logo">B</div>
@@ -180,6 +180,6 @@ export default function LoginPage() {
           </button>
         </p>
       </Card>
-    </div>
+    </main>
   )
 }

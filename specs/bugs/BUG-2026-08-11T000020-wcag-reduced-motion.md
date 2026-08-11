@@ -16,7 +16,7 @@ CSS animations (`spin` spinner, `shimmer` skeleton, `status-pulse`, `toast-in`) 
 Add `@media (prefers-reduced-motion: reduce)` rules disabling/slowing animations app-wide, and/or wire the existing `usePrefersReducedMotion` hook into components that animate. Reduce/remove the infinite `spin` for vestibular safety.
 
 ## Status
-open
+fixed
 
 ## Source
 wcag-2.2-audit-2026-08-11

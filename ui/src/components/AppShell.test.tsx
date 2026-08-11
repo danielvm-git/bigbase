@@ -69,4 +69,21 @@ describe('AppShell', () => {
     )
     expect(container.querySelector('.layout-body')).toBeInTheDocument()
   })
+
+  it('renders skip-to-content link as the first focusable element', () => {
+    const { container } = render(
+      <AppShell sidebar={<nav>Sidebar</nav>} sidebarOpen={false} onToggleSidebar={vi.fn()}>
+        <main id="main-content">Content</main>
+      </AppShell>
+    )
+    const skip = container.querySelector('.skip-link')
+    expect(skip).toBeInTheDocument()
+    expect(skip).toHaveAttribute('href', '#main-content')
+    expect(skip).toHaveTextContent('Skip to content')
+
+    const focusables = Array.from(
+      container.querySelectorAll('a[href], button:not([disabled]), input, select, textarea, [tabindex]:not([tabindex="-1"])')
+    )
+    expect(focusables[0]).toBe(skip)
+  })
 })
