@@ -8,6 +8,14 @@ interface SparklineProps {
   label?: string
 }
 
+function summarize(values: number[]): string {
+  if (values.length === 0) return 'sparkline: no data'
+  const min = Math.min(...values)
+  const max = Math.max(...values)
+  const last = values[values.length - 1]
+  return `sparkline: ${values.length} data points, min ${min}, max ${max}, last ${last}`
+}
+
 /**
  * A minimal SVG sparkline. Renders the last `values.length` data points
  * as a polyline against a transparent background.
@@ -15,7 +23,7 @@ interface SparklineProps {
 export function Sparkline({ values, width = 120, height = 40, color = '#3b82f6', label }: SparklineProps): ReactNode {
   if (values.length < 2) {
     return (
-      <svg width={width} height={height} role="img" aria-label={label ?? 'sparkline'}>
+      <svg width={width} height={height} role="img" aria-label={label ?? summarize(values)}>
         <line x1={0} y1={height / 2} x2={width} y2={height / 2} stroke={color} strokeWidth={1} opacity={0.3} />
       </svg>
     )
@@ -33,7 +41,7 @@ export function Sparkline({ values, width = 120, height = 40, color = '#3b82f6',
     .join(' ')
 
   return (
-    <svg width={width} height={height} role="img" aria-label={label ?? 'sparkline'} style={{ overflow: 'visible' }}>
+    <svg width={width} height={height} role="img" aria-label={label ?? summarize(values)} style={{ overflow: 'visible' }}>
       <polyline
         points={points}
         fill="none"

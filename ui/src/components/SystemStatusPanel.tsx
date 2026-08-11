@@ -44,9 +44,9 @@ export function SystemStatusPanel({
             <Icon name="activity" size={16} />
           </span>
           <div>
-            <div className="system-status-title">
+            <h2 className="system-status-title" style={{ fontSize: 'inherit', lineHeight: 'inherit' }}>
               {healthOk ? 'All systems operational' : 'System issues detected'}
-            </div>
+            </h2>
             <div className="dim system-status-sub">
               Live health across {componentCount} components · uptime {uptime}
             </div>
@@ -75,7 +75,14 @@ export function SystemStatusPanel({
             <div className="metric-value">
               {cpu.toFixed(1)}<span className="unit">%</span>
             </div>
-            <div className="bar-track metric-bar">
+            <div
+              className="bar-track metric-bar"
+              role="progressbar"
+              aria-label={`CPU: ${cpu.toFixed(1)} percent`}
+              aria-valuenow={Math.min(cpu, 100)}
+              aria-valuemin={0}
+              aria-valuemax={100}
+            >
               <div
                 className="bar-fill"
                 style={{
@@ -92,7 +99,14 @@ export function SystemStatusPanel({
             </div>
             <div className="metric-value">{fmtMemoryMB(memoryMB)}</div>
             <div className="dim">process heap</div>
-            <div className="bar-track metric-bar">
+            <div
+              className="bar-track metric-bar"
+              role="progressbar"
+              aria-label={`Memory: ${fmtMemoryMB(memoryMB)} (${memPct} percent of 1 GiB)`}
+              aria-valuenow={memPct}
+              aria-valuemin={0}
+              aria-valuemax={100}
+            >
               <div
                 className="bar-fill"
                 style={{ width: `${memPct}%`, background: 'var(--success)' }}

@@ -14,6 +14,7 @@ interface DonutGaugeProps {
  */
 export function DonutGauge({ used, total, label, color = '#3b82f6', size = 80 }: DonutGaugeProps): ReactNode {
   const pct = total > 0 ? Math.min(used / total, 1) : 0
+  const percent = Math.round(pct * 100)
   const r = (size - 10) / 2
   const cx = size / 2
   const cy = size / 2
@@ -29,7 +30,7 @@ export function DonutGauge({ used, total, label, color = '#3b82f6', size = 80 }:
       height={size}
       viewBox={`0 0 ${size} ${size}`}
       role="img"
-      aria-label={label ?? 'gauge'}
+      aria-label={`${label ?? 'gauge'}: ${used} of ${total} (${percent} percent)`}
       style={{ display: 'block' }}
     >
       {/* Background track */}
