@@ -1,3 +1,15 @@
+# [2.88.0](https://github.com/danielvm-git/bigbase/compare/v2.87.0...v2.88.0) (2026-08-11)
+
+
+### Bug Fixes
+
+* **ui:** accent-theme links >=7:1 (e88s01) ([8d7aff4](https://github.com/danielvm-git/bigbase/commit/8d7aff4cb0dfb44e2b12627c9b645b74b368c763))
+
+
+### Features
+
+* **epics:** e88 — AAA closing scope (3 stories, 8 BCPs) ([1f0e704](https://github.com/danielvm-git/bigbase/commit/1f0e7047aa934c71665b823fc70dd769e67fd435))
+
 # [2.87.0](https://github.com/danielvm-git/bigbase/compare/v2.86.4...v2.87.0) (2026-08-11)
 
 
