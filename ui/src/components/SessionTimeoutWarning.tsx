@@ -3,17 +3,10 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { Dialog } from './Dialog'
 import { useAuthSession } from '../hooks/useAuthSession'
 import { useToast } from '../hooks/useToast'
+import { fmtCountdown } from '../lib/countdown'
 
 const DEFAULT_THRESHOLD_MS = 5 * 60 * 1000
 const UNAUTHORIZED_EVENT = 'bigbase:unauthorized'
-
-/** mm:ss countdown label, rounded up so it never shows 0:00 while time remains. */
-export function fmtCountdown(ms: number): string {
-  const total = Math.max(0, Math.ceil(ms / 1000))
-  const minutes = Math.floor(total / 60)
-  const seconds = total % 60
-  return `${minutes}:${String(seconds).padStart(2, '0')}`
-}
 
 /**
  * Session timeout warning (e87s05, WCAG 2.2.6 / 2.2.5).
