@@ -13,6 +13,13 @@ describe('AppFooter', () => {
     expect(screen.getByRole('link', { name: 'GitHub' })).toBeInTheDocument()
   })
 
+  it('renders Glossary link to the definition mechanism', () => {
+    render(<AppFooter />)
+    const link = screen.getByRole('link', { name: 'Glossary' })
+    expect(link).toHaveAttribute('href', expect.stringContaining('GLOSSARY_LATEST.md'))
+    expect(link).toHaveAttribute('rel', 'noopener noreferrer')
+  })
+
   it('renders version when provided', () => {
     render(<AppFooter appVersion="2.5.0" />)
     expect(screen.getByText('v2.5.0')).toBeInTheDocument()

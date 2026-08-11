@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
-import { PageHeader, Button, Input, Tabs, Badge, Sparkline, DonutGauge, BarGauge } from '../components'
+import { PageHeader, Button, Input, Tabs, Badge, Sparkline, DonutGauge, BarGauge, Abbr } from '../components'
 import { fetchMonitoringMetricsWarmed } from '../lib/metrics'
 import type { HostMetricsSlice, SSEMetricsEvent } from '../lib/metrics'
 
@@ -193,22 +193,22 @@ export default function MonitoringPage() {
           <h2 className="section-title">System</h2>
           <div className="stats-grid" aria-live="polite">
             <div className="stat-card"><span className="stat-count">{metrics.system.cpu_percent.toFixed(1)}%</span><span className="stat-label">CPU</span></div>
-            <div className="stat-card"><span className="stat-count">{metrics.system.memory_mb.toFixed(1)}</span><span className="stat-label">Heap MB</span></div>
-            <div className="stat-card"><span className="stat-count">{metrics.system.goroutines}</span><span className="stat-label">Goroutines</span></div>
-            <div className="stat-card"><span className="stat-count">{fmtUptime(metrics.system.uptime_seconds)}</span><span className="stat-label">Uptime</span></div>
+            <div className="stat-card"><span className="stat-count">{metrics.system.memory_mb.toFixed(1)}</span><span className="stat-label"><abbr title="Heap memory in megabytes">Heap MB</abbr></span></div>
+            <div className="stat-card"><span className="stat-count">{metrics.system.goroutines}</span><span className="stat-label"><Abbr title="Concurrent lightweight tasks managed by the Go runtime" definition="A goroutine is a lightweight concurrent unit of execution managed by the Go runtime. The BigBase server uses goroutines to handle many requests at once on a single machine.">Goroutines</Abbr></span></div>
+            <div className="stat-card"><span className="stat-count">{fmtUptime(metrics.system.uptime_seconds)}</span><span className="stat-label"><Abbr title="Uptime" definition="The length of time the BigBase server has been running since its last restart.">Uptime</Abbr></span></div>
           </div>
 
           <h2 className="section-title">Requests</h2>
           <div className="stats-grid">
             <div className="stat-card"><span className="stat-count">{metrics.requests.total}</span><span className="stat-label">Total</span></div>
-            <div className="stat-card"><span className="stat-count">{metrics.requests.avg_latency_ms.toFixed(1)}ms</span><span className="stat-label">Avg Latency</span></div>
+            <div className="stat-card"><span className="stat-count">{metrics.requests.avg_latency_ms.toFixed(1)}ms</span><span className="stat-label"><abbr title="Average latency">Avg Latency</abbr></span></div>
           </div>
 
           {Object.keys(metrics.requests.by_endpoint).length > 0 && (
             <div className="table-wrap" style={{ marginTop: 'var(--space-8)' }}>
               <table>
                 <thead>
-                  <tr><th>Endpoint</th><th>Count</th><th>Avg Latency</th><th>Status Codes</th></tr>
+                  <tr><th>Endpoint</th><th>Count</th><th><abbr title="Average latency">Avg Latency</abbr></th><th>Status Codes</th></tr>
                 </thead>
                 <tbody>
                   {Object.entries(metrics.requests.by_endpoint).map(([path, ep]) => (
@@ -236,7 +236,7 @@ export default function MonitoringPage() {
           <div className="card" style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-6)', padding: 'var(--space-6)' }}>
             <DonutGauge used={metrics.host.cpu_percent} total={100} label="CPU Usage" color="#3b82f6" size={90} />
             <div style={{ flex: 1 }}>
-              <p className="stat-label" style={{ marginBottom: 'var(--space-2)' }}>CPU % — last {cpuHistory.length} samples</p>
+              <p className="stat-label" style={{ marginBottom: 'var(--space-2)' }}><abbr title="Central processing unit">CPU</abbr> % — last {cpuHistory.length} samples</p>
               <Sparkline values={cpuHistory} width={240} height={48} color="#3b82f6" label="CPU sparkline" />
             </div>
           </div>

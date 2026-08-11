@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Card, CardHeader, PageHeader, Badge, statusBadgeVariant, Button, OnboardingChecklist } from '../components'
 import { Icon, type IconName } from '../components/Icon'
@@ -24,13 +24,20 @@ interface StatLink {
   count: number
   icon: IconName
   link: string
+  /** Expansion for the label when it contains an abbreviation (rendered as <abbr title>). */
+  expansion?: string
 }
 
-const JUMP_LINKS: { label: string; icon: IconName; to: string }[] = [
-  { label: 'Deploy a site from GitHub', icon: 'rocket', to: '/deploy/new' },
-  { label: 'Write a SQL query', icon: 'terminal', to: '/sql' },
-  { label: 'Add a serverless function', icon: 'box', to: '/functions' },
-  { label: 'Invite a teammate', icon: 'users', to: '/users' },
+const JUMP_LINKS: { label: string; icon: IconName; to: string; text: ReactNode }[] = [
+  { label: 'Deploy a site from GitHub', icon: 'rocket', to: '/deploy/new', text: <>Deploy a site from GitHub</> },
+  {
+    label: 'Write a SQL query',
+    icon: 'terminal',
+    to: '/sql',
+    text: <>Write a <abbr title="Structured Query Language">SQL</abbr> query</>,
+  },
+  { label: 'Add a serverless function', icon: 'box', to: '/functions', text: <>Add a serverless function</> },
+  { label: 'Invite a teammate', icon: 'users', to: '/users', text: <>Invite a teammate</> },
 ]
 
 function activityStatusLabel(status: string): string {
@@ -77,7 +84,7 @@ export default function DashboardPage() {
       setStats([
         { label: 'Sites', count: sites.length, icon: 'rocket', link: '/deploy' },
         { label: 'Functions', count: ((fnR as { data: unknown[] }).data || []).length, icon: 'box', link: '/functions' },
-        { label: 'Git Repos', count: ((reposR as { data: unknown[] }).data || []).length, icon: 'git-branch', link: '/repos' },
+        { label: 'Git Repos', count: ((reposR as { data: unknown[] }).data || []).length, icon: 'git-branch', link: '/repos', expansion: 'Git repositories' },
         { label: 'Users', count: ((usersR as { data: unknown[] }).data || []).length, icon: 'users', link: '/users' },
       ])
     }).catch(() => {}).finally(() => setLoading(false))
@@ -134,7 +141,9 @@ export default function DashboardPage() {
               <span className="stat-card-chevron dim" aria-hidden>›</span>
             </div>
             <div className="stat-count">{s.count}</div>
-            <div className="stat-label">{s.label}</div>
+            <div className="stat-label">
+              {s.expansion ? <abbr title={s.expansion}>{s.label}</abbr> : s.label}
+            </div>
           </Link>
         ))}
       </div>
@@ -179,7 +188,7 @@ export default function DashboardPage() {
                 <span className="stat-icon jump-back-icon">
                   <Icon name={q.icon} size={15} />
                 </span>
-                <span className="jump-back-label">{q.label}</span>
+                <span className="jump-back-label">{q.text}</span>
                 <span className="dim" aria-hidden>›</span>
               </Link>
             ))}

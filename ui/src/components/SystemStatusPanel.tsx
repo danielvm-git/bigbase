@@ -1,4 +1,4 @@
-import { Card, Badge, statusBadgeVariant } from './index'
+import { Card, Badge, statusBadgeVariant, Abbr } from './index'
 import { Icon } from './Icon'
 import { fmtUptime, fmtMemoryMB, memoryBarPercent } from '../lib/format'
 
@@ -48,7 +48,7 @@ export function SystemStatusPanel({
               {healthOk ? 'All systems operational' : 'System issues detected'}
             </h2>
             <div className="dim system-status-sub">
-              Live health across {componentCount} components · uptime {uptime}
+              Live health across {componentCount} components · <abbr title="Time elapsed since the server last started">uptime</abbr> {uptime}
             </div>
           </div>
         </div>
@@ -69,7 +69,7 @@ export function SystemStatusPanel({
           </div>
           <div className="metric-tile">
             <div className="metric-tile-top">
-              <span className="metric-label">CPU</span>
+              <span className="metric-label"><abbr title="Central processing unit">CPU</abbr></span>
               <Icon name="activity" size={15} className="dim" />
             </div>
             <div className="metric-value">
@@ -98,7 +98,7 @@ export function SystemStatusPanel({
               <Icon name="hard-drive" size={15} className="dim" />
             </div>
             <div className="metric-value">{fmtMemoryMB(memoryMB)}</div>
-            <div className="dim">process heap</div>
+            <div className="dim"><Abbr title="Process heap" definition="The heap is the region of memory where the BigBase server process makes dynamic allocations. This figure shows the heap memory in use by the server process, in megabytes.">process heap</Abbr></div>
             <div
               className="bar-track metric-bar"
               role="progressbar"
