@@ -11,6 +11,9 @@ interface AppShellProps {
 export function AppShell({ sidebar, children, sidebarOpen, onToggleSidebar, className = '' }: AppShellProps) {
   return (
     <div className={`layout ${className}`.trim()}>
+      <a className="skip-link" href="#main-content">
+        Skip to content
+      </a>
       <button
         type="button"
         className="sidebar-toggle"

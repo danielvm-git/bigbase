@@ -19,6 +19,45 @@ body {
   min-height: 100vh;
 }
 
+/* ── Accessibility utilities (WCAG 2.4.1 bypass blocks) ─────── */
+
+/* Screen-reader-only utility — hidden from all users except
+   assistive technology (also used by other a11y fixes). */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Skip-to-content link — visually hidden until focused, then
+   rendered on top of everything with high contrast. */
+.skip-link {
+  position: absolute;
+  left: var(--space-3);
+  top: -100px;
+  z-index: 10000;
+  padding: var(--space-2) var(--space-4);
+  background: var(--bg-accent);
+  color: var(--fg-on-accent);
+  border-radius: var(--radius-s);
+  font-weight: 600;
+  text-decoration: none;
+  transition: none;
+}
+.skip-link:focus {
+  top: var(--space-3);
+  outline: 3px solid var(--border-accent);
+  outline-offset: 2px;
+  box-shadow: var(--focus-ring);
+}
+
 /* ── Shared Components ─────────────────────────────────────── */
 
 /* Upgrade for click-only div/span elements rendered as real <button>s
@@ -2105,5 +2144,32 @@ tr:hover td {
   }
   .sidebar-footer .sidebar-appearance {
     flex-direction: column;
+  }
+}
+
+/* ── Reduced Motion (WCAG 2.3.3) ──────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation: none;
+  }
+  .status-spinner {
+    animation: none;
+  }
+  .skeleton,
+  .skeleton-text,
+  .skeleton-heading,
+  .skeleton-card {
+    animation: none;
+  }
+  .toast {
+    animation: none;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

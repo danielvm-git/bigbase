@@ -132,7 +132,7 @@ export default function Layout() {
       onToggleSidebar={() => setSidebarOpen(o => !o)}
     >
       {tutorial.visible && <TutorialOverlay onClose={tutorial.close} />}
-      <main className="content">
+      <main className="content" id="main-content" tabIndex={-1}>
         <Outlet />
       </main>
       <AppFooter

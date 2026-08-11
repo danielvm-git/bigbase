@@ -17,7 +17,7 @@ No skip-to-content link exists anywhere in `ui/src/` (grep for skip-link/skip-to
 Add `<a className="skip-link" href="#main-content">Skip to content</a>` as the first focusable element, give the main landmark `id="main-content" tabIndex={-1}` (plus a `.skip-link:focus` visible style), and wrap LoginPage in `<main>`.
 
 ## Status
-open
+fixed
 
 ## Source
 wcag-2.2-audit-2026-08-11
