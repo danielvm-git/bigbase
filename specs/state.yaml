@@ -1,9 +1,9 @@
 type: session-state
 context: infra
-active_flow: null
-active_epic_id: null
-active_story_id: null
-active_story_status: null
+active_flow: build_epic
+active_epic_id: e87
+active_story_id: e87s01
+active_story_status: in_progress
 bug_id: null
 release:
   target_version: 2.86.0
@@ -47,6 +47,14 @@ bug_cycle:
   batch: "wcag-moderate-11 (T000011-T000021)"
   worktree_strategy: "8 parallel worktrees partitioned by file ownership (shared files assigned to one agent each)"
   note: "ALL 21 WCAG defects now fixed. T000011-T000021 merged via 8 branches. Full UI suite 656/656, build green, lint clean (1 ThemePicker setState-in-effect fixed post-merge). Registry 21/21 fixed. fix_bug flow complete."
+epic_cycle:
+  step: 1
+  story_bcps: 22
+  story: "e87s01..e87s07 (full-run)"
+  audit_result: pending
+  completed_steps: []
+  note: "build-epic full auto-run for e87 — 7 stories, 7 parallel worktrees with shared-file ownership contracts. Steps 0-2 (threat model, survey, plan) satisfied by e87 scope commit 335d1386b."
+  fast_mode: false
 git:
   branch: main
   hash: 13dbb0acd
