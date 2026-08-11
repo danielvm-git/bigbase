@@ -61,4 +61,22 @@ describe('Card', () => {
     expect(screen.getByText('My title')).toBeInTheDocument()
     expect(screen.getByText('extra')).toBeInTheDocument()
   })
+
+  it('renders CardHeader title as a level-2 heading by default (WCAG 1.3.1)', () => {
+    render(
+      <Card>
+        <CardHeader title="My title" />
+      </Card>
+    )
+    expect(screen.getByRole('heading', { name: 'My title', level: 2 })).toBeInTheDocument()
+  })
+
+  it('respects the headingLevel prop on CardHeader', () => {
+    render(
+      <Card>
+        <CardHeader title="My title" headingLevel={3} />
+      </Card>
+    )
+    expect(screen.getByRole('heading', { name: 'My title', level: 3 })).toBeInTheDocument()
+  })
 })

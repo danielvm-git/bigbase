@@ -118,9 +118,9 @@ export default function FunctionsPage() {
 
       {showForm && (
         <div className="card" style={{ marginBottom: 'var(--space-8)' }}>
-          <h3 style={{ marginBottom: 'var(--space-6)', fontSize: 'var(--text-m)', fontWeight: 600 }}>
+          <h2 style={{ marginBottom: 'var(--space-6)', fontSize: 'var(--text-m)', fontWeight: 600 }}>
             {editing ? 'Edit Function' : 'New Function'}
-          </h3>
+          </h2>
           <form onSubmit={handleSave} className="fn-form">
             <Input label="Name" placeholder="Name *" value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} required />
             <Input as="select" aria-label="Runtime" value={form.runtime} onChange={e => setForm(p => ({ ...p, runtime: e.target.value }))}>
@@ -169,9 +169,9 @@ export default function FunctionsPage() {
 
       {Object.entries(runResult).map(([id, result]) => (
         <div key={id} className="card" style={{ marginTop: 'var(--space-8)', maxHeight: 400, overflow: 'auto' }}>
-          <h3 style={{ marginBottom: 'var(--space-4)' }}>
+          <h2 style={{ marginBottom: 'var(--space-4)', fontSize: 'var(--text-m)', fontWeight: 600 }}>
             Run Result — <code>{fns.find(f => f.id === id)?.name || id}</code>
-          </h3>
+          </h2>
           {result.logs?.length > 0 && (
             <div className="code-output">
               {result.logs.map((l, i) => <pre key={i}>{l}</pre>)}

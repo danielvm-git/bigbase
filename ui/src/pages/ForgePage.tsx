@@ -135,7 +135,7 @@ export default function ForgePage() {
 
       {showForm && (
         <div className="card" style={{ marginBottom: 'var(--space-8)' }}>
-          <h3 style={{ marginBottom: 'var(--space-6)', fontSize: 'var(--text-m)', fontWeight: 600 }}>New Issue</h3>
+          <h2 style={{ marginBottom: 'var(--space-6)', fontSize: 'var(--text-m)', fontWeight: 600 }}>New Issue</h2>
           <form onSubmit={handleCreate} className="fn-form">
             <Input label="Title" placeholder="Title *" value={form.title} onChange={e => setForm(p => ({ ...p, title: e.target.value }))} required />
             <Input as="textarea" aria-label="Description" placeholder="Description" value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} rows={4} />
@@ -190,13 +190,13 @@ export default function ForgePage() {
           {selectedIssue && (
             <div className="card issue-detail">
               <div className="issue-detail-header">
-                <h3>{selectedIssue.title}</h3>
+                <h2 style={{ margin: 0, fontSize: 'var(--text-m)', fontWeight: 600 }}>{selectedIssue.title}</h2>
                 <Button variant="secondary" size="sm" onClick={() => setSelectedIssue(null)}>Close</Button>
               </div>
               <p className="dim">{selectedIssue.description || 'No description.'}</p>
               {comments.length > 0 && (
                 <div className="comments">
-                  <h4 style={{ marginBottom: 'var(--space-4)' }}>Comments</h4>
+                  <h3 style={{ marginBottom: 'var(--space-4)' }}>Comments</h3>
                   {comments.map(c => (
                     <div key={c.id} className="comment">
                       <p>{c.content}</p>
@@ -218,7 +218,7 @@ export default function ForgePage() {
         <div className="board">
           {(['open', 'in_progress', 'review', 'closed'] as const).map(col => (
             <div key={col} className="board-col">
-              <h3 className="board-col-title">{col.replace('_', ' ')}</h3>
+              <h2 className="board-col-title">{col.replace('_', ' ')}</h2>
               {(board[col] || []).map(issue => (
                 <button key={issue.id} type="button" className="board-card btn-reset" onClick={() => { setSelectedIssue(issue); setTab('issues'); loadComments(issue.id) }}>
                   <strong>{issue.title}</strong>

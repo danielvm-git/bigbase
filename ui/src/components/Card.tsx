@@ -52,12 +52,15 @@ export function Card({
 interface CardHeaderProps {
   title: string
   children?: ReactNode
+  /** Heading level for the title (WCAG 1.3.1). Defaults to 2. */
+  headingLevel?: 1 | 2 | 3 | 4
 }
 
-export function CardHeader({ title, children }: CardHeaderProps) {
+export function CardHeader({ title, children, headingLevel = 2 }: CardHeaderProps) {
+  const Heading = `h${headingLevel}` as 'h1' | 'h2' | 'h3' | 'h4'
   return (
     <div className="card-header">
-      <span className="card-title">{title}</span>
+      <Heading className="card-title">{title}</Heading>
       {children}
     </div>
   )
