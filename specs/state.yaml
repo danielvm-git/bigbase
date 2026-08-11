@@ -1,9 +1,9 @@
 type: session-state
 context: infra
-active_flow: build_epic
-active_epic_id: e87
-active_story_id: e87s01
-active_story_status: in_progress
+active_flow: null
+active_epic_id: null
+active_story_id: null
+active_story_status: null
 bug_id: null
 release:
   target_version: 2.86.0
@@ -48,12 +48,21 @@ bug_cycle:
   worktree_strategy: "8 parallel worktrees partitioned by file ownership (shared files assigned to one agent each)"
   note: "ALL 21 WCAG defects now fixed. T000011-T000021 merged via 8 branches. Full UI suite 656/656, build green, lint clean (1 ThemePicker setState-in-effect fixed post-merge). Registry 21/21 fixed. fix_bug flow complete."
 epic_cycle:
-  step: 1
+  step: 8
   story_bcps: 22
   story: "e87s01..e87s07 (full-run)"
-  audit_result: pending
-  completed_steps: []
-  note: "build-epic full auto-run for e87 — 7 stories, 7 parallel worktrees with shared-file ownership contracts. Steps 0-2 (threat model, survey, plan) satisfied by e87 scope commit 335d1386b."
+  audit_result: pass
+  completed_steps:
+    - "0: threat-model (LOW; s05 auth MEDIUM)"
+    - "1-2: survey + plan (scope commit 335d1386b)"
+    - "3: kickoff-branch (7 parallel worktrees)"
+    - "4: develop-tdd (GREEN — 7 stories, 707 UI tests + target-size e2e 5/5 + token-lifecycle 4/4)"
+    - "5: verify-work (build ok, lint clean, axe 17/17 zero violations)"
+    - "6: audit-code (PASS — 1 fast-refresh lint fix post-merge)"
+    - "7: commit-message (7 conventional commits + follow-ups)"
+    - "8: release-branch (8 merges to main)"
+  story_complete: true
+  note: "e87 complete — WCAG 2.2 AAA conformance built: 7:1 contrast tokens (36/36 pairs), focus 3:1, 44px targets (exception map), abbreviations+glossary, session timeout warning+re-auth, help+error prevention, rem text scaling+location indicator. Known partial: custom accent theme light-mode links (4.23-7.90:1) documented. Full UI suite 707/707, axe 17/17."
   fast_mode: false
 git:
   branch: main
