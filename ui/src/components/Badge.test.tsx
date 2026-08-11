@@ -39,6 +39,20 @@ describe('Badge', () => {
     render(<Badge variant="info">Heads up</Badge>)
     expect(screen.getByText('Heads up').className).toContain('badge-info')
   })
+
+  it.each([
+    ['neutral', '•'],
+    ['success', '✓'],
+    ['warning', '!'],
+    ['error', '✕'],
+    ['accent', '★'],
+    ['info', 'i'],
+  ] as const)('renders a distinct non-color indicator glyph for %s', (variant, glyph) => {
+    render(<Badge variant={variant}>{variant}</Badge>)
+    const indicator = screen.getByText(glyph)
+    expect(indicator).toHaveAttribute('aria-hidden', 'true')
+    expect(indicator.className).toContain('badge-indicator')
+  })
 })
 
 describe('statusBadgeVariant', () => {

@@ -47,8 +47,15 @@ export function OnboardingChecklist() {
       ) : (
         <ul className="onboarding-list" role="list">
           {steps.map(step => (
-            <li key={step.id} className={`onboarding-item${step.done ? ' onboarding-item--done' : ''}`}>
-              <span className="onboarding-check" aria-hidden>
+            <li
+              key={step.id}
+              className={`onboarding-item${step.done ? ' onboarding-item--done' : ''}`}
+              role="checkbox"
+              aria-checked={step.done}
+              aria-disabled="true"
+              aria-label={`${step.label}, ${step.done ? 'done' : 'to do'}`}
+            >
+              <span className="onboarding-check" aria-hidden="true">
                 {step.done ? '✓' : '○'}
               </span>
               <span className={step.done ? 'dim' : ''}>{step.label}</span>
