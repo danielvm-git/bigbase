@@ -27,8 +27,25 @@ describe('TOKENS', () => {
   })
 
   it('has typography tokens', () => {
-    expect(TOKENS.typography.textM).toBe('16px')
-    expect(TOKENS.typography.textS).toBe('14px')
+    expect(TOKENS.typography.textM).toBe('1rem')
+    expect(TOKENS.typography.textS).toBe('0.875rem')
+  })
+
+  it('text-size tokens are rem-based so text scales with user font settings (WCAG 1.4.8)', () => {
+    const { typography } = TOKENS
+    for (const size of [
+      typography.textXs,
+      typography.textS,
+      typography.textM,
+      typography.textL,
+      typography.textXl,
+      typography.text2xl,
+      typography.text3xl,
+    ]) {
+      expect(size).toMatch(/rem$/)
+    }
+    expect(typography.textXs).toBe('0.75rem')
+    expect(typography.text3xl).toBe('2.5rem')
   })
 
   it('has motion tokens', () => {

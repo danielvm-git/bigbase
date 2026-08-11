@@ -95,13 +95,15 @@
   --font-mono: 'Fira Code', 'SF Mono', Monaco, 'Cascadia Code',
     'Roboto Mono', Consolas, monospace;
 
-  --text-xs: 12px;
-  --text-s: 14px;
-  --text-m: 16px;
-  --text-l: 20px;
-  --text-xl: 24px;
-  --text-2xl: 32px;
-  --text-3xl: 40px;
+  /* rem-based so text scales with browser/user font-size settings (WCAG 1.4.8);
+     16px base == 1rem at default root font-size */
+  --text-xs: 0.75rem;
+  --text-s: 0.875rem;
+  --text-m: 1rem;
+  --text-l: 1.25rem;
+  --text-xl: 1.5rem;
+  --text-2xl: 2rem;
+  --text-3xl: 2.5rem;
 
   /* ── Spacing (4px base) ─────────────────────────────────── */
   --space-0: 0;
@@ -152,6 +154,9 @@
   /* ── Base defaults ──────────────────────────────────────── */
   font-family: var(--font-sans);
   font-size: var(--text-m);
+  /* WCAG 1.4.8: line spacing >= 1.5 within paragraphs — inherited by
+     body and paragraph defaults (headings keep their own spacing). */
+  line-height: 1.5;
   color: var(--fg-primary);
   background: var(--bg-default);
   -webkit-font-smoothing: antialiased;

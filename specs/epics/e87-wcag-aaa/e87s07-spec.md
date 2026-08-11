@@ -33,8 +33,32 @@ Every page shows the user's location in the app: breadcrumb on detail pages (exi
 - px→rem conversion can subtly shift layout (rem scales from the root font-size; `--text-m: 16px` → `1rem` must equal 16px at default). Verify with the e2e suite.
 - 1.4.8 full compliance (user color/spacing controls) is a product decision — this story explicitly partials it rather than gold-plating.
 
+## Conformance Note — 1.4.8 Visual Presentation (partial)
+
+1.4.8 is implemented **partially**; the feasible parts ship, the user-controlled
+parts are documented as out of scope with rationale:
+
+**Implemented**
+- Line spacing ≥1.5 within paragraphs: `line-height: 1.5` set on the base
+  defaults in `tokens.css` (inherited by body and paragraph text).
+- Text resizable to 200% without horizontal scroll: text-size tokens converted
+  px → rem (`--text-xs: 0.75rem` … `--text-3xl: 2.5rem`, `16px → 1rem`), so all
+  type scales with the browser/user root font-size; browser zoom (200%) is
+  supported and the app reflows (no horizontal scroll at 200%).
+- Text is never justified (all text flush-left).
+
+**Not implemented (recorded partial non-conformance)**
+- User-selectable foreground/background colors (1.4.8 bullet 1).
+- User-adjustable text spacing controls (line/paragraph spacing, 1.4.8
+  bullets 3–4) beyond the fixed ≥1.5 floor.
+- Rationale: this is an admin console where density is a product constraint;
+  color and zoom are covered by OS-level settings (inverted colors, contrast
+  themes) and browser text-size/zoom settings. Custom controls would add
+  per-user state and UI surface for marginal benefit in an internal tool.
+  Revisit if a public-facing surface is built on this design system.
+
 ## Acceptance Criteria
 
-- [ ] Body line-height ≥1.5; text tokens in rem
-- [ ] Location indicator on all top-level pages
-- [ ] 1.4.8 partial conformance documented with rationale
+- [x] Body line-height ≥1.5; text tokens in rem
+- [x] Location indicator on all top-level pages
+- [x] 1.4.8 partial conformance documented with rationale
