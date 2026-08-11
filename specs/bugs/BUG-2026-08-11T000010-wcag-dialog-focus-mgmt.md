@@ -17,6 +17,8 @@ Port the focus-management effect from `Modal.tsx`: capture trigger focus on open
 ## Status
 open
 
+**Fixed:** 526f0243 — add focus trap, initial focus, and focus restoration to Dialog
+
 ## Source
 wcag-2.2-audit-2026-08-11
 
