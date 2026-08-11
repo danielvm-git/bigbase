@@ -1,4 +1,4 @@
-import { useId, type ReactNode } from 'react'
+import { useEffect, useId, useRef, type ReactNode } from 'react'
 
 interface DialogProps {
   open: boolean
@@ -11,6 +11,35 @@ interface DialogProps {
   danger?: boolean
   loading?: boolean
   className?: string
+}
+
+const FOCUSABLE =
+  'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+
+function getFocusable(dialog: HTMLDivElement): HTMLElement[] {
+  return Array.from(dialog.querySelectorAll<HTMLElement>(FOCUSABLE))
+    .filter(el => !el.hasAttribute('disabled'))
+}
+
+function trapTabKey(e: KeyboardEvent, dialog: HTMLDivElement) {
+  if (e.key !== 'Tab') return
+  const focusable = getFocusable(dialog)
+  if (focusable.length === 0) return
+  const first = focusable[0]
+  const last = focusable[focusable.length - 1]
+  const active = document.activeElement
+  if (!dialog.contains(active)) {
+    e.preventDefault()
+    first.focus()
+    return
+  }
+  if (e.shiftKey && active === first) {
+    e.preventDefault()
+    last.focus()
+  } else if (!e.shiftKey && active === last) {
+    e.preventDefault()
+    first.focus()
+  }
 }
 
 export function Dialog({
@@ -26,17 +55,50 @@ export function Dialog({
   className = '',
 }: DialogProps) {
   const titleId = useId()
+  const dialogRef = useRef<HTMLDivElement>(null)
+  const triggerRef = useRef<Element | null>(null)
+  const onCloseRef = useRef(onClose)
+  useEffect(() => { onCloseRef.current = onClose })
+
+  useEffect(() => {
+    if (!open) return
+    triggerRef.current = document.activeElement
+    const dialog = dialogRef.current
+
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onCloseRef.current()
+        return
+      }
+      if (dialog) trapTabKey(e, dialog)
+    }
+
+    document.addEventListener('keydown', onKey)
+    const focusable = dialog ? getFocusable(dialog) : []
+    if (focusable.length > 0) {
+      focusable[0].focus()
+    } else {
+      dialog?.focus()
+    }
+
+    return () => {
+      document.removeEventListener('keydown', onKey)
+      if (triggerRef.current instanceof HTMLElement) {
+        triggerRef.current.focus()
+      }
+    }
+  }, [open])
 
   if (!open) return null
 
   return (
     <div className="dialog-overlay" onClick={(e) => { if (e.target === e.currentTarget) onClose() }}>
       <div
+        ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
         className={`dialog ${className}`.trim()}
-        onKeyDown={(e) => { if (e.key === 'Escape') onClose() }}
         tabIndex={-1}
       >
         <div className="dialog-header">

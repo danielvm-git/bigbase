@@ -83,4 +83,94 @@ describe('Dialog', () => {
     expect(labelledById).toBeTruthy()
     expect(document.getElementById(labelledById!)?.textContent).toBe('My Dialog')
   })
+
+  it('moves initial focus into the dialog when opened', () => {
+    render(
+      <Dialog open={true} title="Confirm" onClose={vi.fn()}>
+        <button type="button">Inside</button>
+      </Dialog>
+    )
+    const dialog = screen.getByRole('dialog')
+    expect(dialog.contains(document.activeElement)).toBe(true)
+  })
+
+  it('cycles Tab focus within the dialog without reaching background content', () => {
+    render(
+      <>
+        <button type="button">Background</button>
+        <Dialog open={true} title="Confirm" onClose={vi.fn()}>
+          <button type="button">Inside one</button>
+          <button type="button">Inside two</button>
+        </Dialog>
+      </>
+    )
+    const dialog = screen.getByRole('dialog')
+    const background = screen.getByRole('button', { name: 'Background' })
+    const close = screen.getByRole('button', { name: 'Close dialog' })
+    const cancel = screen.getByRole('button', { name: 'Cancel' })
+
+    // Tab from the last focusable wraps back to the first (the close button)
+    cancel.focus()
+    fireEvent.keyDown(document, { key: 'Tab' })
+    expect(document.activeElement).toBe(close)
+    expect(dialog.contains(document.activeElement)).toBe(true)
+    expect(document.activeElement).not.toBe(background)
+
+    // Further Tab presses stay inside the dialog
+    fireEvent.keyDown(document, { key: 'Tab' })
+    expect(dialog.contains(document.activeElement)).toBe(true)
+    expect(document.activeElement).not.toBe(background)
+
+    // Tab from background content is pulled back into the dialog
+    background.focus()
+    fireEvent.keyDown(document, { key: 'Tab' })
+    expect(document.activeElement).toBe(close)
+    expect(document.activeElement).not.toBe(background)
+  })
+
+  it('wraps Shift+Tab from the first focusable back to the last', () => {
+    render(
+      <Dialog open={true} title="Confirm" onClose={vi.fn()}>
+        <button type="button">Inside</button>
+      </Dialog>
+    )
+    const close = screen.getByRole('button', { name: 'Close dialog' })
+    const cancel = screen.getByRole('button', { name: 'Cancel' })
+
+    close.focus()
+    fireEvent.keyDown(document, { key: 'Tab', shiftKey: true })
+    expect(document.activeElement).toBe(cancel)
+  })
+
+  it('returns focus to the trigger after closing', () => {
+    const onClose = vi.fn()
+    const { rerender } = render(
+      <>
+        <button type="button">Trigger</button>
+        <Dialog open={false} title="Confirm" onClose={onClose}>
+          <button type="button">Inside</button>
+        </Dialog>
+      </>
+    )
+    const trigger = screen.getByRole('button', { name: 'Trigger' })
+    trigger.focus()
+
+    rerender(
+      <>
+        <button type="button">Trigger</button>
+        <Dialog open={true} title="Confirm" onClose={onClose}>
+          <button type="button">Inside</button>
+        </Dialog>
+      </>
+    )
+    rerender(
+      <>
+        <button type="button">Trigger</button>
+        <Dialog open={false} title="Confirm" onClose={onClose}>
+          <button type="button">Inside</button>
+        </Dialog>
+      </>
+    )
+    expect(document.activeElement).toBe(trigger)
+  })
 })
