@@ -15,8 +15,8 @@ describe('MessagingDetailPage', () => {
 
     await waitFor(() => {
       expect(screen.getByRole('heading', { name: 'Welcome email' })).toBeInTheDocument()
-      expect(screen.getByRole('button', { name: 'Editor' })).toBeInTheDocument()
-      expect(screen.getByRole('button', { name: 'Preview' })).toBeInTheDocument()
+      expect(screen.getByRole('tab', { name: 'Editor' })).toBeInTheDocument()
+      expect(screen.getByRole('tab', { name: 'Preview' })).toBeInTheDocument()
     })
   })
 

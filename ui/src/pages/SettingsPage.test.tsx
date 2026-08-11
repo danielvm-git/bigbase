@@ -41,11 +41,11 @@ describe('SettingsPage', () => {
     expect(screen.getByRole('heading', { name: 'Settings' })).toBeInTheDocument()
   })
 
-  it('renders all three tabs as buttons', () => {
+  it('renders all three tabs with the tab role', () => {
     render(<SettingsPage />)
-    expect(screen.getByRole('button', { name: 'Account' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Workspace' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Billing' })).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: 'Account' })).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: 'Workspace' })).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: 'Billing' })).toBeInTheDocument()
   })
 
   it('shows the Account tab content by default', () => {
@@ -55,14 +55,14 @@ describe('SettingsPage', () => {
 
   it('switches to the Workspace tab and shows members', () => {
     render(<SettingsPage />)
-    fireEvent.click(screen.getByRole('button', { name: 'Workspace' }))
+    fireEvent.click(screen.getByRole('tab', { name: 'Workspace' }))
     expect(screen.getByText('alice@example.com')).toBeInTheDocument()
     expect(screen.getByText('bob@example.com')).toBeInTheDocument()
   })
 
   it('switches to the Billing tab and shows plan + usage', () => {
     render(<SettingsPage />)
-    fireEvent.click(screen.getByRole('button', { name: 'Billing' }))
+    fireEvent.click(screen.getByRole('tab', { name: 'Billing' }))
     expect(screen.getByText(/pro/i)).toBeInTheDocument()
     // Functions usage (12), not the renews date (2026-12-31).
     // Use a data-testid to avoid the /12/ regex matching the date.

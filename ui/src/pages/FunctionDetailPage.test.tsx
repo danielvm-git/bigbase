@@ -36,8 +36,8 @@ describe('FunctionDetailPage', () => {
 
     await waitFor(() => {
       expect(screen.getByRole('heading', { name: 'hello' })).toBeInTheDocument()
-      expect(screen.getByRole('button', { name: 'Code' })).toBeInTheDocument()
-      expect(screen.getByRole('button', { name: 'Logs' })).toBeInTheDocument()
+      expect(screen.getByRole('tab', { name: 'Code' })).toBeInTheDocument()
+      expect(screen.getByRole('tab', { name: 'Logs' })).toBeInTheDocument()
     })
   })
 
@@ -154,7 +154,7 @@ describe('FunctionLogsRedirect', () => {
     render(<RouterProvider router={router} />)
 
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: 'Logs' })).toBeInTheDocument()
+      expect(screen.getByRole('tab', { name: 'Logs' })).toBeInTheDocument()
     })
   })
 })
