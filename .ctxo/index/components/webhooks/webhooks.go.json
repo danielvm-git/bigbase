@@ -1,0 +1,501 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/webhooks/webhooks.go::New::function"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/webhooks/webhooks.go::Component.Name::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/webhooks/webhooks.go::Component.Version::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/webhooks/webhooks.go::Component.Dependencies::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/webhooks/webhooks.go::Component.Init::method"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/webhooks/webhooks.go::Component.Start::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/webhooks/webhooks.go::Component.Stop::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/webhooks/webhooks.go::Component.Handler::method"
+    },
+    {
+      "cyclomatic": 5,
+      "symbolId": "components/webhooks/webhooks.go::Component.listWebhooks::method"
+    },
+    {
+      "cyclomatic": 6,
+      "symbolId": "components/webhooks/webhooks.go::Component.createWebhook::method"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/webhooks/webhooks.go::Component.deleteWebhook::method"
+    },
+    {
+      "cyclomatic": 5,
+      "symbolId": "components/webhooks/webhooks.go::Component.Deliver::method"
+    },
+    {
+      "cyclomatic": 7,
+      "symbolId": "components/webhooks/webhooks.go::Component.DeliverWithBackoff::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/webhooks/webhooks.go::computeHMAC::function"
+    }
+  ],
+  "contentHash": "51656f66a39c3471b3be79290f086ba852387f4afc3548ffefcc0d62a77f967b",
+  "edges": [
+    {
+      "from": "components/webhooks/webhooks.go::New::function",
+      "kind": "uses",
+      "to": "components/webhooks/webhooks.go::Options::class"
+    },
+    {
+      "from": "components/webhooks/webhooks.go::New::function",
+      "kind": "uses",
+      "to": "components/webhooks/webhooks.go::Component::class"
+    },
+    {
+      "from": "components/webhooks/webhooks.go::New::function",
+      "kind": "uses",
+      "to": "kernel/utilities.go::NoopLogger::class"
+    },
+    {
+      "from": "components/webhooks/webhooks.go::New::function",
+      "kind": "uses",
+      "to": "components/webhooks/webhooks.go::deliveryTimeout::variable"
+    },
+    {
+      "from": "components/webhooks/webhooks.go::Component.Name::method",
+      "kind": "uses",
+      "to": "components/webhooks/webhooks.go::Component::class"
+    },
+    {
+      "from": "components/webhooks/webhooks.go::Component.Version::method",
+      "kind": "uses",
+      "to": "components/webhooks/webhooks.go::Component::class"
+    },
+    {
+      "from": "components/webhooks/webhooks.go::Component.Version::method",
+      "kind": "uses",
+      "to": "components/webhooks/webhooks.go::componentVersion::variable"
+    },
+    {
+      "from": "components/webhooks/webhooks.go::Component.Dependencies::method",
+      "kind": "uses",
+      "to": "components/webhooks/webhooks.go::Component::class"
+    },
+    {
+      "from": "components/webhooks/webhooks.go::Component.Init::method",
+      "kind": "uses",
+      "to": "components/webhooks/webhooks.go::Component::class"
+    },
+    {
+      "from": "components/webhooks/webhooks.go::Component.Init::method",
+      "kind": "uses",
+      "to": "kernel/component.go::Context::class"
+    },
+    {
+      "from": "components/webhooks/webhooks.go::Component.Start::method",
+      "kind": "uses",
+      "to": "components/webhooks/webhooks.go::Component::class"
+    },
+    {
+      "from": "components/webhooks/webhooks.go::Component.Start::method",
+      "kind": "uses",
+      "to": "kernel/component.go::Context::class"
+    },
+    {
+      "from": "components/webhooks/webhooks.go::Component.Start::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::DBer.Migrate::method"
+    },
+    {
+      "from": "components/webhooks/webhooks.go::Component.Start::method",
+      "kind": "calls",
+      "to": "kernel/component.go::Logger.Info::method"
+    },
+    {
+      "from": "components/webhooks/webhooks.go::Component.Stop::method",
+      "kind": "uses",
+      "to": "components/webhooks/webhooks.go::Component::class"
+    },
+    {
+      "from": "components/webhooks/webhooks.go::Component.Stop::method",
+      "kind": "uses",
+      "to": "kernel/component.go::Context::class"
+    },
+    {
+      "from": "components/webhooks/webhooks.go::Component.Handler::method",
+      "kind": "uses",
+      "to": "components/webhooks/webhooks.go::Component::class"
+    },
+    {
+      "from": "components/webhooks/webhooks.go::Component.listWebhooks::method",
+      "kind": "uses",
+      "to": "components/webhooks/webhooks.go::Component::class"
+    },
+    {
+      "from": "components/webhooks/webhooks.go::Component.listWebhooks::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.QueryContext::method"
+    },
+    {
+      "from": "components/webhooks/webhooks.go::Component.listWebhooks::method",
+      "kind": "calls",
+      "to": "kernel/component.go::Logger.Error::method"
+    },
+    {
+      "from": "components/webhooks/webhooks.go::Component.listWebhooks::method",
+      "kind": "calls",
+      "to": "kernel/utilities.go::WriteJSON::function"
+    },
+    {
+      "from": "components/webhooks/webhooks.go::Component.listWebhooks::method",
+      "kind": "uses",
+      "to": "components/webhooks/webhooks.go::Webhook::class"
+    },
+    {
+      "from": "components/webhooks/webhooks.go::Component.createWebhook::method",
+      "kind": "uses",
+      "to": "components/webhooks/webhooks.go::Component::class"
+    },
+    {
+      "from": "components/webhooks/webhooks.go::Component.createWebhook::method",
+      "kind": "calls",
+      "to": "kernel/utilities.go::WriteJSON::function"
+    },
+    {
+      "from": "components/webhooks/webhooks.go::Component.createWebhook::method",
+      "kind": "calls",
+      "to": "kernel/utilities.go::GenerateID::function"
+    },
+    {
+      "from": "components/webhooks/webhooks.go::Component.createWebhook::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.ExecContext::method"
+    },
+    {
+      "from": "components/webhooks/webhooks.go::Component.createWebhook::method",
+      "kind": "calls",
+      "to": "kernel/component.go::Logger.Error::method"
+    },
+    {
+      "from": "components/webhooks/webhooks.go::Component.createWebhook::method",
+      "kind": "uses",
+      "to": "components/webhooks/webhooks.go::Webhook::class"
+    },
+    {
+      "from": "components/webhooks/webhooks.go::Component.deleteWebhook::method",
+      "kind": "uses",
+      "to": "components/webhooks/webhooks.go::Component::class"
+    },
+    {
+      "from": "components/webhooks/webhooks.go::Component.deleteWebhook::method",
+      "kind": "calls",
+      "to": "kernel/utilities.go::WriteJSON::function"
+    },
+    {
+      "from": "components/webhooks/webhooks.go::Component.deleteWebhook::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.ExecContext::method"
+    },
+    {
+      "from": "components/webhooks/webhooks.go::Component.deleteWebhook::method",
+      "kind": "calls",
+      "to": "kernel/component.go::Logger.Error::method"
+    },
+    {
+      "from": "components/webhooks/webhooks.go::Component.Deliver::method",
+      "kind": "uses",
+      "to": "components/webhooks/webhooks.go::Component::class"
+    },
+    {
+      "from": "components/webhooks/webhooks.go::Component.Deliver::method",
+      "kind": "uses",
+      "to": "components/webhooks/webhooks.go::Webhook::class"
+    },
+    {
+      "from": "components/webhooks/webhooks.go::Component.Deliver::method",
+      "kind": "uses",
+      "to": "components/webhooks/webhooks.go::EventPayload::class"
+    },
+    {
+      "from": "components/webhooks/webhooks.go::Component.Deliver::method",
+      "kind": "calls",
+      "to": "components/webhooks/webhooks.go::computeHMAC::function"
+    },
+    {
+      "from": "components/webhooks/webhooks.go::Component.DeliverWithBackoff::method",
+      "kind": "uses",
+      "to": "components/webhooks/webhooks.go::Component::class"
+    },
+    {
+      "from": "components/webhooks/webhooks.go::Component.DeliverWithBackoff::method",
+      "kind": "uses",
+      "to": "components/webhooks/webhooks.go::Webhook::class"
+    },
+    {
+      "from": "components/webhooks/webhooks.go::Component.DeliverWithBackoff::method",
+      "kind": "uses",
+      "to": "components/webhooks/webhooks.go::EventPayload::class"
+    },
+    {
+      "from": "components/webhooks/webhooks.go::Component.DeliverWithBackoff::method",
+      "kind": "uses",
+      "to": "components/webhooks/webhooks.go::maxAttempts::variable"
+    },
+    {
+      "from": "components/webhooks/webhooks.go::Component.DeliverWithBackoff::method",
+      "kind": "calls",
+      "to": "components/webhooks/webhooks.go::Component.Deliver::method"
+    },
+    {
+      "from": "components/webhooks/webhooks.go::Component.DeliverWithBackoff::method",
+      "kind": "calls",
+      "to": "kernel/component.go::Logger.Warn::method"
+    },
+    {
+      "from": "components/webhooks/webhooks.go::Component::class",
+      "kind": "implements",
+      "to": "kernel/component.go::Component::interface"
+    }
+  ],
+  "file": "components/webhooks/webhooks.go",
+  "intent": [
+    {
+      "date": "2026-07-10T14:58:38-03:00",
+      "hash": "34b197c676d972ef39ab3cd8fe08a320adae96e9",
+      "kind": "commit",
+      "message": "fix(kernel): remove dead ConfigSchema/Hooks interfaces, add Component compile checks"
+    },
+    {
+      "date": "2026-07-10T14:46:55-03:00",
+      "hash": "36722e3d731d1da0179c0360d677bc6bdf2b3b19",
+      "kind": "commit",
+      "message": "fix(deploy): prevent manifest path traversal (CWE-22)"
+    },
+    {
+      "date": "2026-07-07T00:13:21-03:00",
+      "hash": "bcc0b8745f57075cf71e855bc2496e4c11195708",
+      "kind": "commit",
+      "message": "refactor(kernel): hoist Logger/DBer interfaces — remove 18 duplicate definitions"
+    }
+  ],
+  "lastModified": 1786492495,
+  "symbols": [
+    {
+      "endLine": 22,
+      "endOffset": 449,
+      "kind": "variable",
+      "name": "componentVersion",
+      "startLine": 22,
+      "startOffset": 433,
+      "symbolId": "components/webhooks/webhooks.go::componentVersion::variable"
+    },
+    {
+      "endLine": 23,
+      "endOffset": 472,
+      "kind": "variable",
+      "name": "maxAttempts",
+      "startLine": 23,
+      "startOffset": 461,
+      "symbolId": "components/webhooks/webhooks.go::maxAttempts::variable"
+    },
+    {
+      "endLine": 24,
+      "endOffset": 498,
+      "kind": "variable",
+      "name": "deliveryTimeout",
+      "startLine": 24,
+      "startOffset": 483,
+      "symbolId": "components/webhooks/webhooks.go::deliveryTimeout::variable"
+    },
+    {
+      "endLine": 28,
+      "endOffset": 607,
+      "kind": "type",
+      "name": "DBer",
+      "startLine": 28,
+      "startOffset": 589,
+      "symbolId": "components/webhooks/webhooks.go::DBer::type"
+    },
+    {
+      "endLine": 34,
+      "endOffset": 712,
+      "kind": "class",
+      "name": "Options",
+      "startLine": 31,
+      "startOffset": 659,
+      "symbolId": "components/webhooks/webhooks.go::Options::class"
+    },
+    {
+      "endLine": 41,
+      "endOffset": 852,
+      "kind": "class",
+      "name": "Component",
+      "startLine": 37,
+      "startOffset": 776,
+      "symbolId": "components/webhooks/webhooks.go::Component::class"
+    },
+    {
+      "endLine": 56,
+      "endOffset": 1154,
+      "kind": "function",
+      "name": "New",
+      "startLine": 46,
+      "startOffset": 930,
+      "symbolId": "components/webhooks/webhooks.go::New::function"
+    },
+    {
+      "endLine": 58,
+      "endOffset": 1228,
+      "kind": "method",
+      "name": "Component.Name",
+      "startLine": 58,
+      "startOffset": 1156,
+      "symbolId": "components/webhooks/webhooks.go::Component.Name::method"
+    },
+    {
+      "endLine": 59,
+      "endOffset": 1307,
+      "kind": "method",
+      "name": "Component.Version",
+      "startLine": 59,
+      "startOffset": 1229,
+      "symbolId": "components/webhooks/webhooks.go::Component.Version::method"
+    },
+    {
+      "endLine": 60,
+      "endOffset": 1384,
+      "kind": "method",
+      "name": "Component.Dependencies",
+      "startLine": 60,
+      "startOffset": 1308,
+      "symbolId": "components/webhooks/webhooks.go::Component.Dependencies::method"
+    },
+    {
+      "endLine": 64,
+      "endOffset": 1477,
+      "kind": "method",
+      "name": "Component.Init",
+      "startLine": 62,
+      "startOffset": 1386,
+      "symbolId": "components/webhooks/webhooks.go::Component.Init::method"
+    },
+    {
+      "endLine": 79,
+      "endOffset": 1893,
+      "kind": "method",
+      "name": "Component.Start",
+      "startLine": 66,
+      "startOffset": 1479,
+      "symbolId": "components/webhooks/webhooks.go::Component.Start::method"
+    },
+    {
+      "endLine": 83,
+      "endOffset": 1962,
+      "kind": "method",
+      "name": "Component.Stop",
+      "startLine": 81,
+      "startOffset": 1895,
+      "symbolId": "components/webhooks/webhooks.go::Component.Stop::method"
+    },
+    {
+      "endLine": 92,
+      "endOffset": 2279,
+      "kind": "method",
+      "name": "Component.Handler",
+      "startLine": 86,
+      "startOffset": 2028,
+      "symbolId": "components/webhooks/webhooks.go::Component.Handler::method"
+    },
+    {
+      "endLine": 102,
+      "endOffset": 2590,
+      "kind": "class",
+      "name": "Webhook",
+      "startLine": 95,
+      "startOffset": 2339,
+      "symbolId": "components/webhooks/webhooks.go::Webhook::class"
+    },
+    {
+      "endLine": 109,
+      "endOffset": 2796,
+      "kind": "class",
+      "name": "EventPayload",
+      "startLine": 105,
+      "startOffset": 2653,
+      "symbolId": "components/webhooks/webhooks.go::EventPayload::class"
+    },
+    {
+      "endLine": 141,
+      "endOffset": 3888,
+      "kind": "method",
+      "name": "Component.listWebhooks",
+      "startLine": 111,
+      "startOffset": 2798,
+      "symbolId": "components/webhooks/webhooks.go::Component.listWebhooks::method"
+    },
+    {
+      "endLine": 191,
+      "endOffset": 5475,
+      "kind": "method",
+      "name": "Component.createWebhook",
+      "startLine": 143,
+      "startOffset": 3890,
+      "symbolId": "components/webhooks/webhooks.go::Component.createWebhook::method"
+    },
+    {
+      "endLine": 215,
+      "endOffset": 6298,
+      "kind": "method",
+      "name": "Component.deleteWebhook",
+      "startLine": 193,
+      "startOffset": 5477,
+      "symbolId": "components/webhooks/webhooks.go::Component.deleteWebhook::method"
+    },
+    {
+      "endLine": 245,
+      "endOffset": 7255,
+      "kind": "method",
+      "name": "Component.Deliver",
+      "startLine": 219,
+      "startOffset": 6439,
+      "symbolId": "components/webhooks/webhooks.go::Component.Deliver::method"
+    },
+    {
+      "endLine": 270,
+      "endOffset": 8108,
+      "kind": "method",
+      "name": "Component.DeliverWithBackoff",
+      "startLine": 249,
+      "startOffset": 7420,
+      "symbolId": "components/webhooks/webhooks.go::Component.DeliverWithBackoff::method"
+    },
+    {
+      "endLine": 277,
+      "endOffset": 8341,
+      "kind": "function",
+      "name": "computeHMAC",
+      "startLine": 273,
+      "startOffset": 8183,
+      "symbolId": "components/webhooks/webhooks.go::computeHMAC::function"
+    }
+  ]
+}

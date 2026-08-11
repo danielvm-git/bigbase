@@ -1,0 +1,25 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 5,
+      "symbolId": "ui/src/lib/deployWizard.ts::deployWizardTitle::function"
+    }
+  ],
+  "contentHash": "525379ce933a24a0a8658b6ea269851995d19a34e878d4f84e5806175f48dcc2",
+  "edges": [],
+  "file": "ui/src/lib/deployWizard.ts",
+  "intent": [],
+  "lastModified": 1786492495,
+  "symbols": [
+    {
+      "endLine": 9,
+      "endOffset": 333,
+      "kind": "function",
+      "name": "deployWizardTitle",
+      "startLine": 1,
+      "startOffset": 58,
+      "symbolId": "ui/src/lib/deployWizard.ts::deployWizardTitle::function"
+    }
+  ]
+}

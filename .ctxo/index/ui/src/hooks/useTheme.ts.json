@@ -1,0 +1,36 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 1,
+      "symbolId": "ui/src/hooks/useTheme.ts::useTheme::function"
+    }
+  ],
+  "contentHash": "e77df11b036bbf7a91bd9b7cdbbe310746c0a1fdc37d460d445b23ff47ab1bb4",
+  "edges": [
+    {
+      "from": "ui/src/hooks/useTheme.ts::useTheme::function",
+      "kind": "imports",
+      "to": "ui/src/context/themeState.ts::ThemeContext::variable"
+    },
+    {
+      "from": "ui/src/hooks/useTheme.ts::useTheme::function",
+      "kind": "uses",
+      "to": "ui/src/context/themeState.ts::ThemeContext::variable"
+    }
+  ],
+  "file": "ui/src/hooks/useTheme.ts",
+  "intent": [],
+  "lastModified": 1786492495,
+  "symbols": [
+    {
+      "endLine": 5,
+      "endOffset": 153,
+      "kind": "function",
+      "name": "useTheme",
+      "startLine": 3,
+      "startOffset": 89,
+      "symbolId": "ui/src/hooks/useTheme.ts::useTheme::function"
+    }
+  ]
+}

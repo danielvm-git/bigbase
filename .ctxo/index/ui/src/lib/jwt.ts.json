@@ -1,0 +1,38 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 7,
+      "symbolId": "ui/src/lib/jwt.ts::decodeJwtExp::function"
+    }
+  ],
+  "contentHash": "e8161551c540a2eac95752f4e23b5551bd6a7fd03b654a08c1f922745329fded",
+  "edges": [
+    {
+      "from": "ui/src/lib/jwt.ts::decodeJwtExp::function",
+      "kind": "calls",
+      "to": "ui/src/lib/jwt.ts::decodeBase64Url::function"
+    }
+  ],
+  "file": "ui/src/lib/jwt.ts",
+  "intent": [
+    {
+      "date": "2026-08-11T16:07:12-03:00",
+      "hash": "be5a14e5d0ad29ef9e877d39c955e8a13b797743",
+      "kind": "commit",
+      "message": "fix(ui): AAA session timeout warning + re-auth (e87s05)"
+    }
+  ],
+  "lastModified": 1786492495,
+  "symbols": [
+    {
+      "endLine": 34,
+      "endOffset": 1270,
+      "kind": "function",
+      "name": "decodeJwtExp",
+      "startLine": 21,
+      "startOffset": 830,
+      "symbolId": "ui/src/lib/jwt.ts::decodeJwtExp::function"
+    }
+  ]
+}

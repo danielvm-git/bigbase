@@ -1,0 +1,95 @@
+{
+  "antiPatterns": [
+    {
+      "date": "2026-06-26T20:20:59-03:00",
+      "hash": "b97fd9f17fe4f8f9feb34ea9d32cb2c43c5c7c8a",
+      "message": "feat(ui): add rollback button to deployment detail + rollback history timeline"
+    },
+    {
+      "date": "2026-06-21T15:03:24-03:00",
+      "hash": "c058782f95b32d8aa3a74c52ac44863ad572627b",
+      "message": "Revert \"feat(deploy): deployment state machine with validated transitions and events\""
+    }
+  ],
+  "complexity": [
+    {
+      "cyclomatic": 1,
+      "symbolId": "ui/src/components/Badge.tsx::Badge::function"
+    },
+    {
+      "cyclomatic": 16,
+      "symbolId": "ui/src/components/Badge.tsx::statusBadgeVariant::function"
+    }
+  ],
+  "contentHash": "cd250d1a26909cd73838afe6edfa00b1010e03b1e9b83604d616d872ec84b788",
+  "edges": [],
+  "file": "ui/src/components/Badge.tsx",
+  "intent": [
+    {
+      "date": "2026-08-11T13:43:52-03:00",
+      "hash": "54abc85bbaf720088d05aba09bb7c803a1bc9722",
+      "kind": "commit",
+      "message": "fix(ui): non-color status cues for Alert/Badge/MetricCard/Onboarding (T000016)"
+    },
+    {
+      "date": "2026-07-10T20:39:36-03:00",
+      "hash": "db94b7c03f56600323aff8c9132e7d98185ff8b2",
+      "kind": "commit",
+      "message": "fix(ui): CopyButton silent failure + pre-existing ESLint cleanup"
+    },
+    {
+      "date": "2026-06-26T21:55:49-03:00",
+      "hash": "40287fbc5ea901d5337adc152abe67c04b113dd1",
+      "kind": "commit",
+      "message": "feat(deploy): zero-downtime connection draining on deployment switchover (e45)"
+    },
+    {
+      "date": "2026-06-26T20:20:59-03:00",
+      "hash": "b97fd9f17fe4f8f9feb34ea9d32cb2c43c5c7c8a",
+      "kind": "commit",
+      "message": "feat(ui): add rollback button to deployment detail + rollback history timeline"
+    },
+    {
+      "date": "2026-06-21T15:03:24-03:00",
+      "hash": "c058782f95b32d8aa3a74c52ac44863ad572627b",
+      "kind": "commit",
+      "message": "Revert \"feat(deploy): deployment state machine with validated transitions and events\""
+    },
+    {
+      "date": "2026-06-21T14:55:32-03:00",
+      "hash": "6780538cdb4ea45e376bb9cdbcc9cfad563bbe19",
+      "kind": "commit",
+      "message": "feat(deploy): deployment state machine with validated transitions and events"
+    }
+  ],
+  "lastModified": 1786492495,
+  "symbols": [
+    {
+      "endLine": 37,
+      "endOffset": 1128,
+      "kind": "function",
+      "name": "Badge",
+      "startLine": 30,
+      "startOffset": 818,
+      "symbolId": "ui/src/components/Badge.tsx::Badge::function"
+    },
+    {
+      "endLine": 48,
+      "endOffset": 1705,
+      "kind": "function",
+      "name": "statusBadgeVariant",
+      "startLine": 40,
+      "startOffset": 1195,
+      "symbolId": "ui/src/components/Badge.tsx::statusBadgeVariant::function"
+    },
+    {
+      "endLine": 5,
+      "endOffset": 257,
+      "kind": "type",
+      "name": "StatusKind",
+      "startLine": 5,
+      "startOffset": 189,
+      "symbolId": "ui/src/components/Badge.tsx::StatusKind::type"
+    }
+  ]
+}

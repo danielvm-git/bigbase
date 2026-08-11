@@ -1,0 +1,34 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 10,
+      "symbolId": "components/deploy/supervisor_wire_test.go::TestTriggerRunsThroughSupervisor::function"
+    }
+  ],
+  "contentHash": "6ae6deeab40e1b6688069e6d1c64a9fd65928f1a22977afd49ee77549e0f6a8a",
+  "edges": [],
+  "file": "components/deploy/supervisor_wire_test.go",
+  "intent": [
+    {
+      "date": "2026-07-24T22:25:13-03:00",
+      "hash": "52fb9affdfc6809d147bdea58f096073447ad9cd",
+      "kind": "commit",
+      "message": "fix(deploy): stop static hosts serving checkout directory listings (#167)"
+    },
+    {
+      "date": "2026-07-10T14:46:55-03:00",
+      "hash": "36722e3d731d1da0179c0360d677bc6bdf2b3b19",
+      "kind": "commit",
+      "message": "fix(deploy): prevent manifest path traversal (CWE-22)"
+    },
+    {
+      "date": "2026-06-23T22:17:48-03:00",
+      "hash": "d195bd4ed0302937f57b00361f4e93868acd0d46",
+      "kind": "commit",
+      "message": "feat(deploy): wire Supervisor into resume path — static apps supervised on restart (e53s04)"
+    }
+  ],
+  "lastModified": 1786492494,
+  "symbols": []
+}

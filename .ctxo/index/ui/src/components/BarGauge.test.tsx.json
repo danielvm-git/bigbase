@@ -1,0 +1,29 @@
+{
+  "antiPatterns": [],
+  "complexity": [],
+  "contentHash": "7d92db97bde311d877c61161b2fc7c84cc831735414df498cc5b703833d675d4",
+  "edges": [
+    {
+      "from": "ui/src/components/BarGauge.test.tsx::BarGauge.test::variable",
+      "kind": "imports",
+      "to": "ui/src/components/BarGauge.ts::BarGauge::class"
+    }
+  ],
+  "file": "ui/src/components/BarGauge.test.tsx",
+  "intent": [
+    {
+      "date": "2026-08-11T13:43:04-03:00",
+      "hash": "0084e236186d05c7721f7141c1488b3b5cc0e355",
+      "kind": "commit",
+      "message": "fix(ui): accessible chart/gauges labels + progressbar roles (T000012)"
+    },
+    {
+      "date": "2026-06-28T17:11:02-03:00",
+      "hash": "6fb588e63f79ce75dad9a27c5cd8dc0bf796f27c",
+      "kind": "commit",
+      "message": "feat(ui): add design system foundation — tokens, 22 components, a11y audit"
+    }
+  ],
+  "lastModified": 1786492495,
+  "symbols": []
+}

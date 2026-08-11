@@ -1,0 +1,29 @@
+{
+  "antiPatterns": [],
+  "complexity": [],
+  "contentHash": "0639e349141f3298af90f8de0624b9b1985cae0106f6b9a8a59fb0fc6cf63924",
+  "edges": [
+    {
+      "from": "ui/src/components/AppShell.test.tsx::AppShell.test::variable",
+      "kind": "imports",
+      "to": "ui/src/components/AppShell.ts::AppShell::class"
+    }
+  ],
+  "file": "ui/src/components/AppShell.test.tsx",
+  "intent": [
+    {
+      "date": "2026-08-11T13:40:30-03:00",
+      "hash": "e0c6c3640a3a2f36d2d88656bbffdaa1e165a439",
+      "kind": "commit",
+      "message": "fix(ui): skip-to-content link + reduced-motion support (T000014/T000020)"
+    },
+    {
+      "date": "2026-06-28T17:11:02-03:00",
+      "hash": "6fb588e63f79ce75dad9a27c5cd8dc0bf796f27c",
+      "kind": "commit",
+      "message": "feat(ui): add design system foundation — tokens, 22 components, a11y audit"
+    }
+  ],
+  "lastModified": 1786492495,
+  "symbols": []
+}

@@ -1,0 +1,38 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 7,
+      "symbolId": "ui/src/components/CopyButton.tsx::CopyButton::function"
+    }
+  ],
+  "contentHash": "37eaab572854c0d5db6780ac866768958ed379a7a703526378b55b409341d3f2",
+  "edges": [],
+  "file": "ui/src/components/CopyButton.tsx",
+  "intent": [
+    {
+      "date": "2026-07-10T17:57:41-03:00",
+      "hash": "8a30d34191b525aaedda9cd103d5d94b9d8c50f7",
+      "kind": "commit",
+      "message": "fix(ui): add error handling to CopyButton clipboard operations"
+    },
+    {
+      "date": "2026-06-28T17:11:02-03:00",
+      "hash": "6fb588e63f79ce75dad9a27c5cd8dc0bf796f27c",
+      "kind": "commit",
+      "message": "feat(ui): add design system foundation — tokens, 22 components, a11y audit"
+    }
+  ],
+  "lastModified": 1786492495,
+  "symbols": [
+    {
+      "endLine": 36,
+      "endOffset": 1066,
+      "kind": "function",
+      "name": "CopyButton",
+      "startLine": 8,
+      "startOffset": 119,
+      "symbolId": "ui/src/components/CopyButton.tsx::CopyButton::function"
+    }
+  ]
+}

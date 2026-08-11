@@ -1,0 +1,233 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 5,
+      "symbolId": "components/messaging/handlers.go::Messaging.handleEmail::method"
+    },
+    {
+      "cyclomatic": 6,
+      "symbolId": "components/messaging/handlers.go::Messaging.handleSMS::method"
+    },
+    {
+      "cyclomatic": 6,
+      "symbolId": "components/messaging/handlers.go::Messaging.handlePush::method"
+    },
+    {
+      "cyclomatic": 7,
+      "symbolId": "components/messaging/handlers.go::Messaging.handleList::method"
+    }
+  ],
+  "contentHash": "0241592e68a60aa3f0162b6f77c63c32fe03008b18cf87ab873ccc1072cf6c64",
+  "edges": [
+    {
+      "from": "components/messaging/handlers.go::Messaging.handleEmail::method",
+      "kind": "uses",
+      "to": "components/messaging/messaging.go::Messaging::class"
+    },
+    {
+      "from": "components/messaging/handlers.go::Messaging.handleEmail::method",
+      "kind": "calls",
+      "to": "components/messaging/messaging.go::Messaging.handleMethod::method"
+    },
+    {
+      "from": "components/messaging/handlers.go::Messaging.handleEmail::method",
+      "kind": "uses",
+      "to": "components/messaging/messaging.go::sendRequest::class"
+    },
+    {
+      "from": "components/messaging/handlers.go::Messaging.handleEmail::method",
+      "kind": "calls",
+      "to": "kernel/utilities.go::WriteJSON::function"
+    },
+    {
+      "from": "components/messaging/handlers.go::Messaging.handleEmail::method",
+      "kind": "calls",
+      "to": "components/messaging/messaging.go::collectErrors::function"
+    },
+    {
+      "from": "components/messaging/handlers.go::Messaging.handleEmail::method",
+      "kind": "calls",
+      "to": "components/messaging/messaging.go::validateRequired::function"
+    },
+    {
+      "from": "components/messaging/handlers.go::Messaging.handleEmail::method",
+      "kind": "calls",
+      "to": "components/messaging/messaging.go::Messaging.send::method"
+    },
+    {
+      "from": "components/messaging/handlers.go::Messaging.handleEmail::method",
+      "kind": "calls",
+      "to": "kernel/component.go::Logger.Error::method"
+    },
+    {
+      "from": "components/messaging/handlers.go::Messaging.handleSMS::method",
+      "kind": "uses",
+      "to": "components/messaging/messaging.go::Messaging::class"
+    },
+    {
+      "from": "components/messaging/handlers.go::Messaging.handleSMS::method",
+      "kind": "calls",
+      "to": "components/messaging/messaging.go::Messaging.handleMethod::method"
+    },
+    {
+      "from": "components/messaging/handlers.go::Messaging.handleSMS::method",
+      "kind": "uses",
+      "to": "components/messaging/messaging.go::sendRequest::class"
+    },
+    {
+      "from": "components/messaging/handlers.go::Messaging.handleSMS::method",
+      "kind": "calls",
+      "to": "kernel/utilities.go::WriteJSON::function"
+    },
+    {
+      "from": "components/messaging/handlers.go::Messaging.handleSMS::method",
+      "kind": "calls",
+      "to": "components/messaging/messaging.go::collectErrors::function"
+    },
+    {
+      "from": "components/messaging/handlers.go::Messaging.handleSMS::method",
+      "kind": "calls",
+      "to": "components/messaging/messaging.go::validateRequired::function"
+    },
+    {
+      "from": "components/messaging/handlers.go::Messaging.handleSMS::method",
+      "kind": "calls",
+      "to": "components/messaging/messaging.go::Messaging.send::method"
+    },
+    {
+      "from": "components/messaging/handlers.go::Messaging.handleSMS::method",
+      "kind": "calls",
+      "to": "kernel/component.go::Logger.Error::method"
+    },
+    {
+      "from": "components/messaging/handlers.go::Messaging.handlePush::method",
+      "kind": "uses",
+      "to": "components/messaging/messaging.go::Messaging::class"
+    },
+    {
+      "from": "components/messaging/handlers.go::Messaging.handlePush::method",
+      "kind": "calls",
+      "to": "components/messaging/messaging.go::Messaging.handleMethod::method"
+    },
+    {
+      "from": "components/messaging/handlers.go::Messaging.handlePush::method",
+      "kind": "uses",
+      "to": "components/messaging/messaging.go::sendRequest::class"
+    },
+    {
+      "from": "components/messaging/handlers.go::Messaging.handlePush::method",
+      "kind": "calls",
+      "to": "kernel/utilities.go::WriteJSON::function"
+    },
+    {
+      "from": "components/messaging/handlers.go::Messaging.handlePush::method",
+      "kind": "calls",
+      "to": "components/messaging/messaging.go::collectErrors::function"
+    },
+    {
+      "from": "components/messaging/handlers.go::Messaging.handlePush::method",
+      "kind": "calls",
+      "to": "components/messaging/messaging.go::validateRequired::function"
+    },
+    {
+      "from": "components/messaging/handlers.go::Messaging.handlePush::method",
+      "kind": "calls",
+      "to": "components/messaging/messaging.go::Messaging.send::method"
+    },
+    {
+      "from": "components/messaging/handlers.go::Messaging.handlePush::method",
+      "kind": "calls",
+      "to": "kernel/component.go::Logger.Error::method"
+    },
+    {
+      "from": "components/messaging/handlers.go::Messaging.handleList::method",
+      "kind": "uses",
+      "to": "components/messaging/messaging.go::Messaging::class"
+    },
+    {
+      "from": "components/messaging/handlers.go::Messaging.handleList::method",
+      "kind": "calls",
+      "to": "components/messaging/messaging.go::Messaging.handleMethod::method"
+    },
+    {
+      "from": "components/messaging/handlers.go::Messaging.handleList::method",
+      "kind": "calls",
+      "to": "components/auth/middleware.go::OrgIDFromContext::function"
+    },
+    {
+      "from": "components/messaging/handlers.go::Messaging.handleList::method",
+      "kind": "calls",
+      "to": "kernel/utilities.go::WriteJSON::function"
+    },
+    {
+      "from": "components/messaging/handlers.go::Messaging.handleList::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.QueryContext::method"
+    },
+    {
+      "from": "components/messaging/handlers.go::Messaging.handleList::method",
+      "kind": "calls",
+      "to": "kernel/component.go::Logger.Error::method"
+    },
+    {
+      "from": "components/messaging/handlers.go::Messaging.handleList::method",
+      "kind": "uses",
+      "to": "components/messaging/messaging.go::Message::class"
+    }
+  ],
+  "file": "components/messaging/handlers.go",
+  "intent": [
+    {
+      "date": "2026-07-23T21:30:58-03:00",
+      "hash": "09de0a078b7f1ec477125ac65bf694d65870807b",
+      "kind": "commit",
+      "message": "fix(security): cross-tenant message leak — add org_id to messages table"
+    },
+    {
+      "date": "2026-07-10T14:46:55-03:00",
+      "hash": "36722e3d731d1da0179c0360d677bc6bdf2b3b19",
+      "kind": "commit",
+      "message": "fix(deploy): prevent manifest path traversal (CWE-22)"
+    }
+  ],
+  "lastModified": 1786492494,
+  "symbols": [
+    {
+      "endLine": 39,
+      "endOffset": 1006,
+      "kind": "method",
+      "name": "Messaging.handleEmail",
+      "startLine": 11,
+      "startOffset": 146,
+      "symbolId": "components/messaging/handlers.go::Messaging.handleEmail::method"
+    },
+    {
+      "endLine": 73,
+      "endOffset": 1864,
+      "kind": "method",
+      "name": "Messaging.handleSMS",
+      "startLine": 41,
+      "startOffset": 1008,
+      "symbolId": "components/messaging/handlers.go::Messaging.handleSMS::method"
+    },
+    {
+      "endLine": 109,
+      "endOffset": 2798,
+      "kind": "method",
+      "name": "Messaging.handlePush",
+      "startLine": 75,
+      "startOffset": 1866,
+      "symbolId": "components/messaging/handlers.go::Messaging.handlePush::method"
+    },
+    {
+      "endLine": 150,
+      "endOffset": 4252,
+      "kind": "method",
+      "name": "Messaging.handleList",
+      "startLine": 111,
+      "startOffset": 2800,
+      "symbolId": "components/messaging/handlers.go::Messaging.handleList::method"
+    }
+  ]
+}

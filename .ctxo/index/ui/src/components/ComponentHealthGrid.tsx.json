@@ -1,0 +1,56 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 3,
+      "symbolId": "ui/src/components/ComponentHealthGrid.tsx::ComponentHealthGrid::function"
+    }
+  ],
+  "contentHash": "d7316c61950a86b0581ab9c6668848d44d3c46c44021b8584337780ffa1fea7b",
+  "edges": [
+    {
+      "from": "ui/src/components/ComponentHealthGrid.tsx::ComponentHealthGrid::function",
+      "kind": "imports",
+      "to": "ui/src/components/index.ts::Card::class"
+    },
+    {
+      "from": "ui/src/components/ComponentHealthGrid.tsx::ComponentHealthGrid::function",
+      "kind": "imports",
+      "to": "ui/src/components/index.ts::CardHeader::class"
+    },
+    {
+      "from": "ui/src/components/ComponentHealthGrid.tsx::ComponentHealthGrid::function",
+      "kind": "imports",
+      "to": "ui/src/components/index.ts::Badge::class"
+    },
+    {
+      "from": "ui/src/components/ComponentHealthGrid.tsx::ComponentHealthGrid::function",
+      "kind": "uses",
+      "to": "ui/src/components/index.ts::Card::class"
+    },
+    {
+      "from": "ui/src/components/ComponentHealthGrid.tsx::ComponentHealthGrid::function",
+      "kind": "uses",
+      "to": "ui/src/components/index.ts::CardHeader::class"
+    },
+    {
+      "from": "ui/src/components/ComponentHealthGrid.tsx::ComponentHealthGrid::function",
+      "kind": "uses",
+      "to": "ui/src/components/index.ts::Badge::class"
+    }
+  ],
+  "file": "ui/src/components/ComponentHealthGrid.tsx",
+  "intent": [],
+  "lastModified": 1786492495,
+  "symbols": [
+    {
+      "endLine": 48,
+      "endOffset": 1512,
+      "kind": "function",
+      "name": "ComponentHealthGrid",
+      "startLine": 22,
+      "startOffset": 493,
+      "symbolId": "ui/src/components/ComponentHealthGrid.tsx::ComponentHealthGrid::function"
+    }
+  ]
+}

@@ -1,0 +1,243 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/monitoring/events.go::newEventStream::function"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/monitoring/events.go::eventStream.subscribe::method"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/monitoring/events.go::eventStream.unsubscribe::method"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/monitoring/events.go::eventStream.broadcast::method"
+    },
+    {
+      "cyclomatic": 5,
+      "symbolId": "components/monitoring/events.go::Monitoring.WithEventBus::method"
+    },
+    {
+      "cyclomatic": 10,
+      "symbolId": "components/monitoring/events.go::Monitoring.handleSSEEvents::method"
+    }
+  ],
+  "contentHash": "a45005d3b2af3571abc54fb1f208dd582f2f6646c1523f5d59ad52840d03d636",
+  "edges": [
+    {
+      "from": "components/monitoring/events.go::newEventStream::function",
+      "kind": "uses",
+      "to": "components/monitoring/events.go::eventStream::class"
+    },
+    {
+      "from": "components/monitoring/events.go::newEventStream::function",
+      "kind": "uses",
+      "to": "components/monitoring/events.go::BusEvent::class"
+    },
+    {
+      "from": "components/monitoring/events.go::eventStream.subscribe::method",
+      "kind": "uses",
+      "to": "components/monitoring/events.go::eventStream::class"
+    },
+    {
+      "from": "components/monitoring/events.go::eventStream.subscribe::method",
+      "kind": "uses",
+      "to": "components/monitoring/events.go::BusEvent::class"
+    },
+    {
+      "from": "components/monitoring/events.go::eventStream.unsubscribe::method",
+      "kind": "uses",
+      "to": "components/monitoring/events.go::eventStream::class"
+    },
+    {
+      "from": "components/monitoring/events.go::eventStream.broadcast::method",
+      "kind": "uses",
+      "to": "components/monitoring/events.go::eventStream::class"
+    },
+    {
+      "from": "components/monitoring/events.go::eventStream.broadcast::method",
+      "kind": "uses",
+      "to": "components/monitoring/events.go::BusEvent::class"
+    },
+    {
+      "from": "components/monitoring/events.go::Monitoring.WithEventBus::method",
+      "kind": "uses",
+      "to": "components/monitoring/monitoring.go::Monitoring::class"
+    },
+    {
+      "from": "components/monitoring/events.go::Monitoring.WithEventBus::method",
+      "kind": "uses",
+      "to": "kernel/eventbus.go::EventBus::class"
+    },
+    {
+      "from": "components/monitoring/events.go::Monitoring.WithEventBus::method",
+      "kind": "calls",
+      "to": "components/monitoring/events.go::newEventStream::function"
+    },
+    {
+      "from": "components/monitoring/events.go::Monitoring.WithEventBus::method",
+      "kind": "calls",
+      "to": "kernel/eventbus.go::EventBus.Subscribe::method"
+    },
+    {
+      "from": "components/monitoring/events.go::Monitoring.WithEventBus::method",
+      "kind": "uses",
+      "to": "kernel/component.go::HookDef::class"
+    },
+    {
+      "from": "components/monitoring/events.go::Monitoring.WithEventBus::method",
+      "kind": "uses",
+      "to": "kernel/component.go::Context::class"
+    },
+    {
+      "from": "components/monitoring/events.go::Monitoring.WithEventBus::method",
+      "kind": "uses",
+      "to": "kernel/component.go::Event::class"
+    },
+    {
+      "from": "components/monitoring/events.go::Monitoring.WithEventBus::method",
+      "kind": "calls",
+      "to": "components/monitoring/observability.go::eventSiteID::function"
+    },
+    {
+      "from": "components/monitoring/events.go::Monitoring.WithEventBus::method",
+      "kind": "calls",
+      "to": "components/internal/eventrecorder/eventrecorder.go::Recorder.Record::method"
+    },
+    {
+      "from": "components/monitoring/events.go::Monitoring.WithEventBus::method",
+      "kind": "calls",
+      "to": "components/monitoring/events.go::eventStream.broadcast::method"
+    },
+    {
+      "from": "components/monitoring/events.go::Monitoring.WithEventBus::method",
+      "kind": "uses",
+      "to": "components/monitoring/events.go::BusEvent::class"
+    },
+    {
+      "from": "components/monitoring/events.go::Monitoring.handleSSEEvents::method",
+      "kind": "uses",
+      "to": "components/monitoring/monitoring.go::Monitoring::class"
+    },
+    {
+      "from": "components/monitoring/events.go::Monitoring.handleSSEEvents::method",
+      "kind": "calls",
+      "to": "kernel/utilities.go::WriteJSON::function"
+    },
+    {
+      "from": "components/monitoring/events.go::Monitoring.handleSSEEvents::method",
+      "kind": "calls",
+      "to": "components/monitoring/events.go::eventStream.subscribe::method"
+    },
+    {
+      "from": "components/monitoring/events.go::Monitoring.handleSSEEvents::method",
+      "kind": "calls",
+      "to": "components/monitoring/events.go::eventStream.unsubscribe::method"
+    },
+    {
+      "from": "components/monitoring/events.go::Monitoring.handleSSEEvents::method",
+      "kind": "calls",
+      "to": "kernel/component.go::Logger.Error::method"
+    }
+  ],
+  "file": "components/monitoring/events.go",
+  "intent": [
+    {
+      "date": "2026-07-10T14:46:55-03:00",
+      "hash": "36722e3d731d1da0179c0360d677bc6bdf2b3b19",
+      "kind": "commit",
+      "message": "fix(deploy): prevent manifest path traversal (CWE-22)"
+    },
+    {
+      "date": "2026-07-09T01:44:49-03:00",
+      "hash": "82dc49874349b328be8cbd34da05d4ee4b430169",
+      "kind": "commit",
+      "message": "feat(monitoring): AI-assisted deploy observability and incident response (e72) (#64)"
+    },
+    {
+      "date": "2026-06-05T19:53:02-03:00",
+      "hash": "20014c0a4af1657cda6928192e1aa99e027a94c7",
+      "kind": "commit",
+      "message": "feat(dx): e22s03 event bus visualizer — SSE endpoint and frontend page"
+    }
+  ],
+  "lastModified": 1786492494,
+  "symbols": [
+    {
+      "endLine": 19,
+      "endOffset": 357,
+      "kind": "class",
+      "name": "BusEvent",
+      "startLine": 15,
+      "startOffset": 213,
+      "symbolId": "components/monitoring/events.go::BusEvent::class"
+    },
+    {
+      "endLine": 26,
+      "endOffset": 523,
+      "kind": "class",
+      "name": "eventStream",
+      "startLine": 22,
+      "startOffset": 429,
+      "symbolId": "components/monitoring/events.go::eventStream::class"
+    },
+    {
+      "endLine": 32,
+      "endOffset": 631,
+      "kind": "function",
+      "name": "newEventStream",
+      "startLine": 28,
+      "startOffset": 525,
+      "symbolId": "components/monitoring/events.go::newEventStream::function"
+    },
+    {
+      "endLine": 42,
+      "endOffset": 824,
+      "kind": "method",
+      "name": "eventStream.subscribe",
+      "startLine": 34,
+      "startOffset": 633,
+      "symbolId": "components/monitoring/events.go::eventStream.subscribe::method"
+    },
+    {
+      "endLine": 51,
+      "endOffset": 980,
+      "kind": "method",
+      "name": "eventStream.unsubscribe",
+      "startLine": 44,
+      "startOffset": 826,
+      "symbolId": "components/monitoring/events.go::eventStream.unsubscribe::method"
+    },
+    {
+      "endLine": 63,
+      "endOffset": 1213,
+      "kind": "method",
+      "name": "eventStream.broadcast",
+      "startLine": 53,
+      "startOffset": 982,
+      "symbolId": "components/monitoring/events.go::eventStream.broadcast::method"
+    },
+    {
+      "endLine": 93,
+      "endOffset": 2059,
+      "kind": "method",
+      "name": "Monitoring.WithEventBus",
+      "startLine": 67,
+      "startOffset": 1365,
+      "symbolId": "components/monitoring/events.go::Monitoring.WithEventBus::method"
+    },
+    {
+      "endLine": 144,
+      "endOffset": 3372,
+      "kind": "method",
+      "name": "Monitoring.handleSSEEvents",
+      "startLine": 96,
+      "startOffset": 2122,
+      "symbolId": "components/monitoring/events.go::Monitoring.handleSSEEvents::method"
+    }
+  ]
+}

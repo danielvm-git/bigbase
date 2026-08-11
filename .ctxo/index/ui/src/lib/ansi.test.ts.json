@@ -1,0 +1,23 @@
+{
+  "antiPatterns": [],
+  "complexity": [],
+  "contentHash": "05d0d7dffc1bf94a592d4339ab09bcb77960bf724c4f8c3e3dd781d8cf94cc08",
+  "edges": [
+    {
+      "from": "ui/src/lib/ansi.test.ts::ansi.test::variable",
+      "kind": "imports",
+      "to": "ui/src/lib/ansi.ts::ansiToHtml::function"
+    }
+  ],
+  "file": "ui/src/lib/ansi.test.ts",
+  "intent": [
+    {
+      "date": "2026-06-21T20:22:36-03:00",
+      "hash": "b8acd65841394e3ed2ec464a8458c39a0219e9f4",
+      "kind": "commit",
+      "message": "feat(ui): enhance StreamLog with terminal toolbar, search, copy, timestamps, and ANSI color support"
+    }
+  ],
+  "lastModified": 1786492495,
+  "symbols": []
+}

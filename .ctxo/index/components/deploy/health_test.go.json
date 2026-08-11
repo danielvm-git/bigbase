@@ -1,0 +1,26 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/deploy/health_test.go::fakeHTTPDoer.Do::method"
+    },
+    {
+      "cyclomatic": 25,
+      "symbolId": "components/deploy/health_test.go::TestProbeHealth::function"
+    }
+  ],
+  "contentHash": "d0d53167de277380b749ec78e4db3b71de932acabfddd4653c79a7c00bf7158c",
+  "edges": [],
+  "file": "components/deploy/health_test.go",
+  "intent": [
+    {
+      "date": "2026-06-26T18:34:05-03:00",
+      "hash": "9b468360a23e4f4955d9a5209e5ddf35eb8f7b82",
+      "kind": "commit",
+      "message": "feat(deploy): semantic health check — probe before marking deployment live"
+    }
+  ],
+  "lastModified": 1786492494,
+  "symbols": []
+}

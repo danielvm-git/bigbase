@@ -1,0 +1,32 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/deploy/supervisor_test.go::TestNextBackoff::function"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/deploy/supervisor_test.go::TestIsCrashLooping::function"
+    }
+  ],
+  "contentHash": "aa26395675c6cac8cc3ae159c7f5aad33398fa4065e36a8bd93ae3b8a358f100",
+  "edges": [],
+  "file": "components/deploy/supervisor_test.go",
+  "intent": [
+    {
+      "date": "2026-07-10T14:46:55-03:00",
+      "hash": "36722e3d731d1da0179c0360d677bc6bdf2b3b19",
+      "kind": "commit",
+      "message": "fix(deploy): prevent manifest path traversal (CWE-22)"
+    },
+    {
+      "date": "2026-06-23T21:52:37-03:00",
+      "hash": "a0d6bb7f6908142b34ab0158d3630aea2b321094",
+      "kind": "commit",
+      "message": "feat(deploy): introduce Supervisor seam — Runner/Instance/Spec interfaces + restart policy (e53s01-s02)"
+    }
+  ],
+  "lastModified": 1786492494,
+  "symbols": []
+}

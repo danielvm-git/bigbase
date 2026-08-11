@@ -1,0 +1,38 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 3,
+      "symbolId": "ui/src/components/Alert.tsx::Alert::function"
+    }
+  ],
+  "contentHash": "361831ca2eeb122267ba316128654d1b6e781a7957aec1187d630fd4e914c3ae",
+  "edges": [],
+  "file": "ui/src/components/Alert.tsx",
+  "intent": [
+    {
+      "date": "2026-08-11T13:43:52-03:00",
+      "hash": "54abc85bbaf720088d05aba09bb7c803a1bc9722",
+      "kind": "commit",
+      "message": "fix(ui): non-color status cues for Alert/Badge/MetricCard/Onboarding (T000016)"
+    },
+    {
+      "date": "2026-06-28T17:11:02-03:00",
+      "hash": "6fb588e63f79ce75dad9a27c5cd8dc0bf796f27c",
+      "kind": "commit",
+      "message": "feat(ui): add design system foundation — tokens, 22 components, a11y audit"
+    }
+  ],
+  "lastModified": 1786492495,
+  "symbols": [
+    {
+      "endLine": 43,
+      "endOffset": 1236,
+      "kind": "function",
+      "name": "Alert",
+      "startLine": 21,
+      "startOffset": 491,
+      "symbolId": "ui/src/components/Alert.tsx::Alert::function"
+    }
+  ]
+}

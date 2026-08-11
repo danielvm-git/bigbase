@@ -1,0 +1,238 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/mcp/mcp_test.go::TestComponentImplementsKernelComponent::function"
+    },
+    {
+      "cyclomatic": 8,
+      "symbolId": "components/mcp/mcp_test.go::TestPingTool::function"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/mcp/mcp_test.go::TestHTTPTransport::function"
+    },
+    {
+      "cyclomatic": 9,
+      "symbolId": "components/mcp/mcp_test.go::TestKnowledgeTools::function"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/mcp/mcp_test.go::deployTestDB::function"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/mcp/mcp_test.go::mockDeployer.Trigger::method"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/mcp/mcp_test.go::connectMCPSession::function"
+    },
+    {
+      "cyclomatic": 6,
+      "symbolId": "components/mcp/mcp_test.go::TestDeployGuide::function"
+    },
+    {
+      "cyclomatic": 6,
+      "symbolId": "components/mcp/mcp_test.go::TestListRepos::function"
+    },
+    {
+      "cyclomatic": 7,
+      "symbolId": "components/mcp/mcp_test.go::TestDeploySite::function"
+    },
+    {
+      "cyclomatic": 9,
+      "symbolId": "components/mcp/mcp_test.go::TestGetDeployStatus::function"
+    },
+    {
+      "cyclomatic": 8,
+      "symbolId": "components/mcp/mcp_test.go::TestGetDeployLogs::function"
+    },
+    {
+      "cyclomatic": 6,
+      "symbolId": "components/mcp/mcp_test.go::TestStdioTransport::function"
+    },
+    {
+      "cyclomatic": 6,
+      "symbolId": "components/mcp/mcp_test.go::TestListServices::function"
+    },
+    {
+      "cyclomatic": 7,
+      "symbolId": "components/mcp/mcp_test.go::TestGetServiceDocs::function"
+    },
+    {
+      "cyclomatic": 6,
+      "symbolId": "components/mcp/mcp_test.go::TestGetCodeExample::function"
+    },
+    {
+      "cyclomatic": 6,
+      "symbolId": "components/mcp/mcp_test.go::TestServerInstructions::function"
+    },
+    {
+      "cyclomatic": 6,
+      "symbolId": "components/mcp/mcp_test.go::TestListFrameworks::function"
+    },
+    {
+      "cyclomatic": 5,
+      "symbolId": "components/mcp/mcp_test.go::TestMCPGetSSE::function"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/mcp/mcp_test.go::TestMCPNonLocalhostHostHeader::function"
+    },
+    {
+      "cyclomatic": 16,
+      "symbolId": "components/mcp/mcp_test.go::TestMCPSetSiteAuthPolicy::function"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/mcp/mcp_test.go::newMockEnvVarManager::function"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/mcp/mcp_test.go::mockEnvVarManager.ListSiteEnvVars::method"
+    },
+    {
+      "cyclomatic": 5,
+      "symbolId": "components/mcp/mcp_test.go::mockEnvVarManager.SetSiteEnvVars::method"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/mcp/mcp_test.go::mockEnvVarManager.DeleteSiteEnvVar::method"
+    },
+    {
+      "cyclomatic": 6,
+      "symbolId": "components/mcp/mcp_test.go::TestMCPGetSiteEnvVars::function"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/mcp/mcp_test.go::TestMCPGetSiteEnvVarsNoSiteID::function"
+    },
+    {
+      "cyclomatic": 6,
+      "symbolId": "components/mcp/mcp_test.go::TestMCPSetSiteEnvVars::function"
+    },
+    {
+      "cyclomatic": 5,
+      "symbolId": "components/mcp/mcp_test.go::TestMCPDeleteSiteEnvVar::function"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/mcp/mcp_test.go::TestMCPDeleteSiteEnvVarNotFound::function"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/mcp/mcp_test.go::TestMCPDeleteSiteEnvVarNoArgs::function"
+    }
+  ],
+  "contentHash": "ed0b610570944cd6a8e1ac4583a5990b6f19bdbc54cdc9b114ea3701266c3ef2",
+  "edges": [],
+  "file": "components/mcp/mcp_test.go",
+  "intent": [
+    {
+      "date": "2026-07-28T17:19:21-03:00",
+      "hash": "7c095d000aff6475ada6b7e8db12f8cf28172dfb",
+      "kind": "commit",
+      "message": "feat(mcp): add site-scoped environment variable tools (#194)"
+    },
+    {
+      "date": "2026-07-10T16:10:47-03:00",
+      "hash": "ddd7efb57df839db846eb0fecb3cc3acb093d09f",
+      "kind": "commit",
+      "message": "fix(ecc): remove cross-component production imports"
+    },
+    {
+      "date": "2026-07-10T14:46:55-03:00",
+      "hash": "36722e3d731d1da0179c0360d677bc6bdf2b3b19",
+      "kind": "commit",
+      "message": "fix(deploy): prevent manifest path traversal (CWE-22)"
+    },
+    {
+      "date": "2026-07-08T21:27:08-03:00",
+      "hash": "e23603145a3cd159a674133ae51f3c1ed8ddb4a6",
+      "kind": "commit",
+      "message": "feat(proxy): implement site route auth policy, path matching, and passthrough identity header injection"
+    },
+    {
+      "date": "2026-06-21T23:08:25-03:00",
+      "hash": "7d419f0f0c3a7cb70d8be9c82a67f4043147007c",
+      "kind": "commit",
+      "message": "feat(deploy): add bigbase init CLI command and --manifest deploy flag"
+    },
+    {
+      "date": "2026-06-21T12:38:02-03:00",
+      "hash": "451ea5ec935246d3dc0c83e1d27e3ea3a09f87f2",
+      "kind": "commit",
+      "message": "feat(deploy): add app_type override to deploy API and sites trigger"
+    },
+    {
+      "date": "2026-06-21T11:31:16-03:00",
+      "hash": "d14a2250fc713c9c0a554d3d94b6e3421ba5aaed",
+      "kind": "commit",
+      "message": "fix(deploy,mcp): persist PID for orphaned process recovery; fix list_repos SQL"
+    },
+    {
+      "date": "2026-06-20T12:39:33-03:00",
+      "hash": "54d40cfca33492782ff3af4b1cbdeb1d74167d47",
+      "kind": "commit",
+      "message": "feat(deploy): passthrough paths, metadata injection, SPA fallback docs"
+    },
+    {
+      "date": "2026-06-20T10:14:26-03:00",
+      "hash": "7afffaf7b0d66afd1c99a908becefc46f4210464",
+      "kind": "commit",
+      "message": "fix(mcp): disable DNS rebinding protection for reverse-proxied MCP server"
+    },
+    {
+      "date": "2026-06-20T10:04:37-03:00",
+      "hash": "28e05ee507cedd2dda24b66c70afb9348205d401",
+      "kind": "commit",
+      "message": "fix(mcp): allow GET /mcp for SSE connections (remove 405 method guard)"
+    },
+    {
+      "date": "2026-06-20T02:06:51-03:00",
+      "hash": "7275c27f751ffa8040f620b2686788aa75272a30",
+      "kind": "commit",
+      "message": "feat(mcp): complete epic e38 — knowledge tools, deploy workflow, agent discovery"
+    },
+    {
+      "date": "2026-06-20T02:01:52-03:00",
+      "hash": "f26120dc6e922a0216a5f4782dab5c88ff3c1b4c",
+      "kind": "commit",
+      "message": "feat(mcp): add agent discovery endpoint and deploy workflow tests"
+    },
+    {
+      "date": "2026-06-20T00:16:02-03:00",
+      "hash": "01ab42437762f02884ca20ad9b0c338d2d35e409",
+      "kind": "commit",
+      "message": "feat(cli): add 'bigbase deploy' subcommand; feat(mcp): deploy_site triggers real deploys"
+    },
+    {
+      "date": "2026-06-19T13:36:38-03:00",
+      "hash": "68ccbdda6875f218a03073876da6313727694296",
+      "kind": "commit",
+      "message": "feat(mcp): register deploy workflow tools"
+    },
+    {
+      "date": "2026-06-19T13:31:29-03:00",
+      "hash": "71a23b54e5e944feeb5932b68bb9055a1ec3b6c4",
+      "kind": "commit",
+      "message": "feat(mcp): register knowledge tools — list_services, get_service_docs, get_code_example, list_frameworks"
+    },
+    {
+      "date": "2026-06-19T13:22:56-03:00",
+      "hash": "0a008720c57c132037262c1b98460c407cee4ca5",
+      "kind": "commit",
+      "message": "feat(mcp): stdio + HTTP transport, ping tool, kernel registration"
+    },
+    {
+      "date": "2026-06-19T13:19:16-03:00",
+      "hash": "a069eacf8bc473956370e406b3c6320b0122b379",
+      "kind": "commit",
+      "message": "feat(mcp): scaffold component with ping tool"
+    }
+  ],
+  "lastModified": 1786492494,
+  "symbols": []
+}

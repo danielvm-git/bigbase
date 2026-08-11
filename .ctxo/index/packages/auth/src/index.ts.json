@@ -1,0 +1,92 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 12,
+      "symbolId": "packages/auth/src/index.ts::createAuthClient::function"
+    }
+  ],
+  "contentHash": "0933371c187405c506a2129a473320cefee3c720ec8faf65cf89897e0ca7540b",
+  "edges": [],
+  "file": "packages/auth/src/index.ts",
+  "intent": [
+    {
+      "date": "2026-06-29T09:52:30-03:00",
+      "hash": "1674400089b303d53317963ac95924b6a58f7758",
+      "kind": "commit",
+      "message": "fix(sdk): pass token to AuthClient in Astro middleware"
+    },
+    {
+      "date": "2026-06-18T14:37:55-03:00",
+      "hash": "554dbe032348bf0a5af3e8b4d5bed85d5c0de699",
+      "kind": "commit",
+      "message": "feat(sdk): add multi-framework auth SDK — @bigbase/auth + 5 adapters (#32)"
+    }
+  ],
+  "lastModified": 1786492495,
+  "symbols": [
+    {
+      "endLine": 176,
+      "endOffset": 6072,
+      "kind": "function",
+      "name": "createAuthClient",
+      "startLine": 61,
+      "startOffset": 1901,
+      "symbolId": "packages/auth/src/index.ts::createAuthClient::function"
+    },
+    {
+      "endLine": 5,
+      "endOffset": 225,
+      "kind": "interface",
+      "name": "AuthClientOptions",
+      "startLine": 0,
+      "startOffset": 0,
+      "symbolId": "packages/auth/src/index.ts::AuthClientOptions::interface"
+    },
+    {
+      "endLine": 13,
+      "endOffset": 343,
+      "kind": "interface",
+      "name": "AuthUser",
+      "startLine": 7,
+      "startOffset": 227,
+      "symbolId": "packages/auth/src/index.ts::AuthUser::interface"
+    },
+    {
+      "endLine": 18,
+      "endOffset": 412,
+      "kind": "interface",
+      "name": "AuthSession",
+      "startLine": 15,
+      "startOffset": 345,
+      "symbolId": "packages/auth/src/index.ts::AuthSession::interface"
+    },
+    {
+      "endLine": 24,
+      "endOffset": 497,
+      "kind": "interface",
+      "name": "AuthError",
+      "startLine": 20,
+      "startOffset": 414,
+      "symbolId": "packages/auth/src/index.ts::AuthError::interface"
+    },
+    {
+      "endLine": 59,
+      "endOffset": 1899,
+      "kind": "interface",
+      "name": "AuthClient",
+      "startLine": 28,
+      "startOffset": 571,
+      "symbolId": "packages/auth/src/index.ts::AuthClient::interface"
+    },
+    {
+      "endLine": 26,
+      "endOffset": 569,
+      "kind": "type",
+      "name": "AuthStateCallback",
+      "startLine": 26,
+      "startOffset": 499,
+      "symbolId": "packages/auth/src/index.ts::AuthStateCallback::type"
+    }
+  ]
+}

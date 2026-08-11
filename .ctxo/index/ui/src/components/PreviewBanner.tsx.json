@@ -1,0 +1,25 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 2,
+      "symbolId": "ui/src/components/PreviewBanner.tsx::PreviewBanner::function"
+    }
+  ],
+  "contentHash": "5d94abeb3599daad804fbba427ae0c2d9c15ec8ecbe09467ffa07e3e248d6de8",
+  "edges": [],
+  "file": "ui/src/components/PreviewBanner.tsx",
+  "intent": [],
+  "lastModified": 1786492495,
+  "symbols": [
+    {
+      "endLine": 11,
+      "endOffset": 370,
+      "kind": "function",
+      "name": "PreviewBanner",
+      "startLine": 4,
+      "startOffset": 53,
+      "symbolId": "ui/src/components/PreviewBanner.tsx::PreviewBanner::function"
+    }
+  ]
+}

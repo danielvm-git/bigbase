@@ -1,0 +1,23 @@
+{
+  "antiPatterns": [],
+  "complexity": [],
+  "contentHash": "fd7294ea91e51c5c7c438c0bc1210f21e5947b9993235cf54a4763974b939549",
+  "edges": [
+    {
+      "from": "ui/src/pages/DeployPage.test.tsx::DeployPage.test::variable",
+      "kind": "imports",
+      "to": "ui/src/pages/DeployPage.ts::DeployPage::class"
+    }
+  ],
+  "file": "ui/src/pages/DeployPage.test.tsx",
+  "intent": [
+    {
+      "date": "2026-06-25T07:08:31-03:00",
+      "hash": "a173b3f7599a22033ba71537b28f17950a32a8de",
+      "kind": "commit",
+      "message": "feat(deploy): cache management UI — per-site tab + global panel (e42s02) (#48)"
+    }
+  ],
+  "lastModified": 1786492495,
+  "symbols": []
+}

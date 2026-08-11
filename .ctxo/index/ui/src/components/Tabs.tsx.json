@@ -1,0 +1,32 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 9,
+      "symbolId": "ui/src/components/Tabs.tsx::Tabs::function"
+    }
+  ],
+  "contentHash": "dd2c328cab4d73997b985e6f3a595d39c571e5ac954474f4ac6323eb41d95a61",
+  "edges": [],
+  "file": "ui/src/components/Tabs.tsx",
+  "intent": [
+    {
+      "date": "2026-08-11T00:28:51-03:00",
+      "hash": "414d30a3ef5c70370da6074a834d8683d472a41a",
+      "kind": "commit",
+      "message": "fix(ui): implement WAI-ARIA tabs pattern with roving tabindex (BUG-2026-08-11T000006)"
+    }
+  ],
+  "lastModified": 1786492495,
+  "symbols": [
+    {
+      "endLine": 53,
+      "endOffset": 1508,
+      "kind": "function",
+      "name": "Tabs",
+      "startLine": 11,
+      "startOffset": 137,
+      "symbolId": "ui/src/components/Tabs.tsx::Tabs::function"
+    }
+  ]
+}

@@ -1,0 +1,1115 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 8,
+      "symbolId": "components/deploy/engine.go::Deploy.Trigger::method"
+    },
+    {
+      "cyclomatic": 9,
+      "symbolId": "components/deploy/engine.go::Deploy.stopDeployment::method"
+    },
+    {
+      "cyclomatic": 34,
+      "symbolId": "components/deploy/engine.go::Deploy.runDeployment::method"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/deploy/engine.go::Deploy.cloneAndCheckout::method"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/deploy/engine.go::Deploy.getCommitSHA::method"
+    },
+    {
+      "cyclomatic": 25,
+      "symbolId": "components/deploy/engine.go::Deploy.buildApp::method"
+    },
+    {
+      "cyclomatic": 5,
+      "symbolId": "components/deploy/engine.go::Deploy.nodeInstall::method"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/deploy/engine.go::Deploy.restoreNodeModules::method"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/deploy/engine.go::Deploy.saveNodeModules::method"
+    },
+    {
+      "cyclomatic": 6,
+      "symbolId": "components/deploy/engine.go::Deploy.runBuildCommand::method"
+    },
+    {
+      "cyclomatic": 22,
+      "symbolId": "components/deploy/engine.go::Deploy.startApp::method"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/deploy/engine.go::Deploy.serveStatic::method"
+    },
+    {
+      "cyclomatic": 6,
+      "symbolId": "components/deploy/engine.go::Deploy.runHealthCheck::method"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/deploy/engine.go::Deploy.failDeployment::method"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/deploy/engine.go::Deploy.applyManifestCSP::method"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/deploy/engine.go::Deploy.finalizeDeploymentURL::method"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/deploy/engine.go::Deploy.buildMetadata::method"
+    }
+  ],
+  "contentHash": "7526136b7ce89abe12c011fdde07cfa76e3e3e37540865381a19f61e8978c61f",
+  "edges": [
+    {
+      "from": "components/deploy/engine.go::Deploy.Trigger::method",
+      "kind": "uses",
+      "to": "components/deploy/deploy.go::Deploy::class"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.Trigger::method",
+      "kind": "uses",
+      "to": "components/deploy/deploy.go::Deployment::class"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.Trigger::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.QueryRowContext::method"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.Trigger::method",
+      "kind": "uses",
+      "to": "components/deploy/errors.go::ErrRepoNotFound::variable"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.Trigger::method",
+      "kind": "calls",
+      "to": "components/deploy/orchestrator.go::Deploy.collectPreviousDeployments::method"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.Trigger::method",
+      "kind": "calls",
+      "to": "kernel/utilities.go::GenerateID::function"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.Trigger::method",
+      "kind": "calls",
+      "to": "components/deploy/port_allocator.go::pickPort::function"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.Trigger::method",
+      "kind": "calls",
+      "to": "components/deploy/utils.go::marshalPassthroughPaths::function"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.Trigger::method",
+      "kind": "uses",
+      "to": "components/deploy/deploy.go::AppType::type"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.Trigger::method",
+      "kind": "calls",
+      "to": "components/deploy/urls.go::deploymentURL::function"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.Trigger::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.ExecContext::method"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.Trigger::method",
+      "kind": "calls",
+      "to": "components/deploy/logs.go::Deploy.initDeployLogs::method"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.Trigger::method",
+      "kind": "calls",
+      "to": "components/deploy/logs.go::Deploy.appendDeployLog::method"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.Trigger::method",
+      "kind": "calls",
+      "to": "components/deploy/engine.go::Deploy.runDeployment::method"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.stopDeployment::method",
+      "kind": "uses",
+      "to": "components/deploy/deploy.go::Deploy::class"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.stopDeployment::method",
+      "kind": "calls",
+      "to": "components/deploy/supervisor.go::Supervisor.Stop::method"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.stopDeployment::method",
+      "kind": "calls",
+      "to": "components/deploy/deploy.go::killProcessGroup::function"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.stopDeployment::method",
+      "kind": "calls",
+      "to": "components/deploy/deploy.go::DeploymentHostRegistry.UnregisterDeploymentHost::method"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.stopDeployment::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.QueryRowContext::method"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.stopDeployment::method",
+      "kind": "calls",
+      "to": "kernel/component.go::Logger.Info::method"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.stopDeployment::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.ExecContext::method"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.runDeployment::method",
+      "kind": "uses",
+      "to": "components/deploy/deploy.go::Deploy::class"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.runDeployment::method",
+      "kind": "uses",
+      "to": "components/deploy/deploy.go::Deployment::class"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.runDeployment::method",
+      "kind": "uses",
+      "to": "components/deploy/pipeline_timeline.go::PipelineTimeline::class"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.runDeployment::method",
+      "kind": "calls",
+      "to": "components/deploy/log_stream.go::Deploy.getOrCreateHub::method"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.runDeployment::method",
+      "kind": "calls",
+      "to": "components/deploy/state_transitions.go::Deploy.updateStatus::method"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.runDeployment::method",
+      "kind": "calls",
+      "to": "components/deploy/logs.go::Deploy.appendDeployLog::method"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.runDeployment::method",
+      "kind": "calls",
+      "to": "kernel/component.go::Logger.Error::method"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.runDeployment::method",
+      "kind": "calls",
+      "to": "components/deploy/pipeline_timeline.go::timelineNow::function"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.runDeployment::method",
+      "kind": "calls",
+      "to": "components/deploy/engine.go::Deploy.cloneAndCheckout::method"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.runDeployment::method",
+      "kind": "calls",
+      "to": "components/deploy/pipeline_timeline.go::Deploy.persistPipelineTimeline::method"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.runDeployment::method",
+      "kind": "calls",
+      "to": "components/deploy/engine.go::Deploy.getCommitSHA::method"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.runDeployment::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.ExecContext::method"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.runDeployment::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.QueryRowContext::method"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.runDeployment::method",
+      "kind": "calls",
+      "to": "components/deploy/utils.go::ResolveAppRoot::function"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.runDeployment::method",
+      "kind": "calls",
+      "to": "components/deploy/manifest.go::LoadManifestPath::function"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.runDeployment::method",
+      "kind": "uses",
+      "to": "components/deploy/deploy.go::AppType::type"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.runDeployment::method",
+      "kind": "calls",
+      "to": "components/deploy/framework_mode.go::ResolveDeployAppType::function"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.runDeployment::method",
+      "kind": "calls",
+      "to": "components/deploy/engine.go::Deploy.failDeployment::method"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.runDeployment::method",
+      "kind": "calls",
+      "to": "components/deploy/manifest.go::manifestToAppType::function"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.runDeployment::method",
+      "kind": "calls",
+      "to": "components/deploy/engine.go::Deploy.applyManifestCSP::method"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.runDeployment::method",
+      "kind": "uses",
+      "to": "components/deploy/deploy.go::AppStatic::variable"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.runDeployment::method",
+      "kind": "calls",
+      "to": "components/deploy/utils.go::fileExists::function"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.runDeployment::method",
+      "kind": "calls",
+      "to": "components/deploy/static_serve.go::ResolvePureStaticServeDir::function"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.runDeployment::method",
+      "kind": "calls",
+      "to": "components/deploy/engine.go::Deploy.finalizeDeploymentURL::method"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.runDeployment::method",
+      "kind": "calls",
+      "to": "components/deploy/domain_routing.go::Deploy.RegisterCustomDomainHosts::method"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.runDeployment::method",
+      "kind": "calls",
+      "to": "components/deploy/orchestrator.go::Deploy.drainOldDeployments::method"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.runDeployment::method",
+      "kind": "calls",
+      "to": "components/deploy/engine.go::Deploy.serveStatic::method"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.runDeployment::method",
+      "kind": "uses",
+      "to": "components/deploy/deploy.go::AppNode::variable"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.runDeployment::method",
+      "kind": "calls",
+      "to": "components/deploy/engine.go::Deploy.buildApp::method"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.runDeployment::method",
+      "kind": "calls",
+      "to": "components/deploy/static_serve.go::FindStaticServeDirAfterNodeBuild::function"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.runDeployment::method",
+      "kind": "calls",
+      "to": "components/deploy/static_serve.go::RequireStaticIndex::function"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.runDeployment::method",
+      "kind": "calls",
+      "to": "components/deploy/state_transitions.go::Deploy.TransitionState::method"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.runDeployment::method",
+      "kind": "calls",
+      "to": "components/deploy/engine.go::Deploy.startApp::method"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.runDeployment::method",
+      "kind": "calls",
+      "to": "components/deploy/engine.go::Deploy.runHealthCheck::method"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.cloneAndCheckout::method",
+      "kind": "uses",
+      "to": "components/deploy/deploy.go::Deploy::class"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.getCommitSHA::method",
+      "kind": "uses",
+      "to": "components/deploy/deploy.go::Deploy::class"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.buildApp::method",
+      "kind": "uses",
+      "to": "components/deploy/deploy.go::Deploy::class"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.buildApp::method",
+      "kind": "uses",
+      "to": "components/deploy/deploy.go::AppType::type"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.buildApp::method",
+      "kind": "uses",
+      "to": "components/deploy/manifest.go::Manifest::class"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.buildApp::method",
+      "kind": "calls",
+      "to": "components/deploy/envresolver.go::EnvResolver.Resolve::method"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.buildApp::method",
+      "kind": "uses",
+      "to": "components/deploy/envresolver.go::ScopeBuild::variable"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.buildApp::method",
+      "kind": "calls",
+      "to": "components/deploy/node_pm.go::ensureManifestPackageManager::function"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.buildApp::method",
+      "kind": "calls",
+      "to": "components/deploy/engine.go::Deploy.runBuildCommand::method"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.buildApp::method",
+      "kind": "uses",
+      "to": "components/deploy/deploy.go::AppNode::variable"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.buildApp::method",
+      "kind": "calls",
+      "to": "components/deploy/node_pm.go::DetectNodePackageManager::function"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.buildApp::method",
+      "kind": "calls",
+      "to": "components/deploy/node_pm.go::ensureNodePackageManager::function"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.buildApp::method",
+      "kind": "calls",
+      "to": "components/deploy/logs.go::Deploy.appendDeployLog::method"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.buildApp::method",
+      "kind": "calls",
+      "to": "components/deploy/engine.go::Deploy.nodeInstall::method"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.buildApp::method",
+      "kind": "calls",
+      "to": "components/deploy/utils.go::ValidateNodeBuildScript::function"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.buildApp::method",
+      "kind": "calls",
+      "to": "components/deploy/node_pm.go::NodeBuildCommand::function"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.buildApp::method",
+      "kind": "uses",
+      "to": "components/deploy/deploy.go::AppGo::variable"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.buildApp::method",
+      "kind": "calls",
+      "to": "components/deploy/errors.go::codedErr::function"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.buildApp::method",
+      "kind": "uses",
+      "to": "components/deploy/deploy.go::AppPHP::variable"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.buildApp::method",
+      "kind": "uses",
+      "to": "components/deploy/deploy.go::AppPython::variable"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.buildApp::method",
+      "kind": "calls",
+      "to": "components/deploy/python.go::HasPyProjectTOML::function"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.buildApp::method",
+      "kind": "calls",
+      "to": "components/deploy/python.go::ParsePyProjectTOML::function"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.buildApp::method",
+      "kind": "calls",
+      "to": "components/deploy/python.go::PyProjectTOML.SystemDeps::method"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.nodeInstall::method",
+      "kind": "uses",
+      "to": "components/deploy/deploy.go::Deploy::class"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.nodeInstall::method",
+      "kind": "calls",
+      "to": "components/deploy/node_pm.go::DetectNodePackageManager::function"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.nodeInstall::method",
+      "kind": "calls",
+      "to": "components/deploy/node_pm.go::ensureNodePackageManager::function"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.nodeInstall::method",
+      "kind": "calls",
+      "to": "components/deploy/cache.go::CacheKey::function"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.nodeInstall::method",
+      "kind": "calls",
+      "to": "components/deploy/engine.go::Deploy.restoreNodeModules::method"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.nodeInstall::method",
+      "kind": "calls",
+      "to": "components/deploy/node_pm.go::NodeInstallCommand::function"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.nodeInstall::method",
+      "kind": "calls",
+      "to": "components/deploy/engine.go::Deploy.runBuildCommand::method"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.nodeInstall::method",
+      "kind": "calls",
+      "to": "components/deploy/engine.go::Deploy.saveNodeModules::method"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.restoreNodeModules::method",
+      "kind": "uses",
+      "to": "components/deploy/deploy.go::Deploy::class"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.restoreNodeModules::method",
+      "kind": "calls",
+      "to": "components/deploy/cache.go::Cache.Restore::method"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.restoreNodeModules::method",
+      "kind": "calls",
+      "to": "components/deploy/logs.go::Deploy.appendDeployLog::method"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.saveNodeModules::method",
+      "kind": "uses",
+      "to": "components/deploy/deploy.go::Deploy::class"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.saveNodeModules::method",
+      "kind": "calls",
+      "to": "components/deploy/cache.go::Cache.Save::method"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.saveNodeModules::method",
+      "kind": "calls",
+      "to": "components/deploy/logs.go::Deploy.appendDeployLog::method"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.saveNodeModules::method",
+      "kind": "calls",
+      "to": "components/deploy/cache.go::Cache.Evict::method"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.runBuildCommand::method",
+      "kind": "uses",
+      "to": "components/deploy/deploy.go::Deploy::class"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.runBuildCommand::method",
+      "kind": "uses",
+      "to": "components/deploy/envresolver.go::ResolvedEnv::class"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.runBuildCommand::method",
+      "kind": "calls",
+      "to": "components/deploy/utils.go::FormatBuildCommand::function"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.runBuildCommand::method",
+      "kind": "calls",
+      "to": "components/deploy/logs.go::Deploy.appendDeployLog::method"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.runBuildCommand::method",
+      "kind": "calls",
+      "to": "components/deploy/env.go::Deploy.buildCmdEnv::method"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.runBuildCommand::method",
+      "kind": "calls",
+      "to": "components/deploy/envresolver.go::RedactLogText::function"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.runBuildCommand::method",
+      "kind": "calls",
+      "to": "components/deploy/logs.go::Deploy.appendDeployLogBlock::method"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.startApp::method",
+      "kind": "uses",
+      "to": "components/deploy/deploy.go::Deploy::class"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.startApp::method",
+      "kind": "uses",
+      "to": "components/deploy/deploy.go::Deployment::class"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.startApp::method",
+      "kind": "uses",
+      "to": "components/deploy/deploy.go::AppType::type"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.startApp::method",
+      "kind": "uses",
+      "to": "components/deploy/manifest.go::Manifest::class"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.startApp::method",
+      "kind": "calls",
+      "to": "components/deploy/node_pm.go::ensureManifestPackageManager::function"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.startApp::method",
+      "kind": "calls",
+      "to": "kernel/component.go::Logger.Error::method"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.startApp::method",
+      "kind": "calls",
+      "to": "components/deploy/state_transitions.go::Deploy.updateStatus::method"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.startApp::method",
+      "kind": "uses",
+      "to": "components/deploy/deploy.go::AppNode::variable"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.startApp::method",
+      "kind": "calls",
+      "to": "components/deploy/node_pm.go::DetectNodePackageManager::function"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.startApp::method",
+      "kind": "calls",
+      "to": "components/deploy/node_pm.go::ensureNodePackageManager::function"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.startApp::method",
+      "kind": "calls",
+      "to": "components/deploy/node_pm.go::NodeStartCommand::function"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.startApp::method",
+      "kind": "uses",
+      "to": "components/deploy/deploy.go::AppGo::variable"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.startApp::method",
+      "kind": "uses",
+      "to": "components/deploy/deploy.go::AppPython::variable"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.startApp::method",
+      "kind": "calls",
+      "to": "components/deploy/python.go::pythonStartCommand::function"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.startApp::method",
+      "kind": "uses",
+      "to": "components/deploy/deploy.go::AppPHP::variable"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.startApp::method",
+      "kind": "calls",
+      "to": "kernel/component.go::Logger.Warn::method"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.startApp::method",
+      "kind": "calls",
+      "to": "components/deploy/db_env.go::Deploy.nativeDBEnv::method"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.startApp::method",
+      "kind": "calls",
+      "to": "components/deploy/env_vars.go::Deploy.FetchSiteEnvVars::method"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.startApp::method",
+      "kind": "calls",
+      "to": "components/deploy/urls.go::deploymentHost::function"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.startApp::method",
+      "kind": "uses",
+      "to": "components/deploy/deploy.go::runningApp::class"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.startApp::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.ExecContext::method"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.startApp::method",
+      "kind": "calls",
+      "to": "components/deploy/logs.go::Deploy.appendDeployLog::method"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.serveStatic::method",
+      "kind": "uses",
+      "to": "components/deploy/deploy.go::Deploy::class"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.serveStatic::method",
+      "kind": "uses",
+      "to": "components/deploy/deploy.go::Deployment::class"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.serveStatic::method",
+      "kind": "calls",
+      "to": "components/deploy/urls.go::deploymentHost::function"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.serveStatic::method",
+      "kind": "uses",
+      "to": "components/deploy/deploy.go::runningApp::class"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.serveStatic::method",
+      "kind": "calls",
+      "to": "kernel/component.go::Logger.Info::method"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.serveStatic::method",
+      "kind": "calls",
+      "to": "kernel/component.go::Logger.Error::method"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.runHealthCheck::method",
+      "kind": "uses",
+      "to": "components/deploy/deploy.go::Deploy::class"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.runHealthCheck::method",
+      "kind": "uses",
+      "to": "components/deploy/deploy.go::Deployment::class"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.runHealthCheck::method",
+      "kind": "uses",
+      "to": "components/deploy/manifest.go::Manifest::class"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.runHealthCheck::method",
+      "kind": "uses",
+      "to": "components/deploy/health.go::HealthResult::class"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.runHealthCheck::method",
+      "kind": "calls",
+      "to": "components/deploy/manifest.go::ManifestHealthCheck.WithDefaults::method"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.runHealthCheck::method",
+      "kind": "uses",
+      "to": "components/deploy/manifest.go::ManifestHealthCheck::class"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.runHealthCheck::method",
+      "kind": "calls",
+      "to": "components/deploy/health.go::probeHealth::function"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.runHealthCheck::method",
+      "kind": "uses",
+      "to": "components/deploy/deploy_runner.go::wallClock::class"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.runHealthCheck::method",
+      "kind": "calls",
+      "to": "components/deploy/logs.go::Deploy.appendDeployLog::method"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.runHealthCheck::method",
+      "kind": "uses",
+      "to": "components/deploy/health.go::HealthSummary::class"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.runHealthCheck::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.ExecContext::method"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.failDeployment::method",
+      "kind": "uses",
+      "to": "components/deploy/deploy.go::Deploy::class"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.failDeployment::method",
+      "kind": "calls",
+      "to": "components/deploy/logs.go::Deploy.appendDeployLog::method"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.failDeployment::method",
+      "kind": "calls",
+      "to": "components/deploy/log_stream.go::Deploy.closeLogStream::method"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.failDeployment::method",
+      "kind": "calls",
+      "to": "components/deploy/state_transitions.go::Deploy.TransitionState::method"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.failDeployment::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.ExecContext::method"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.applyManifestCSP::method",
+      "kind": "uses",
+      "to": "components/deploy/deploy.go::Deploy::class"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.applyManifestCSP::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.QueryRowContext::method"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.applyManifestCSP::method",
+      "kind": "uses",
+      "to": "components/deploy/manifest.go::SiteDefaults::class"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.applyManifestCSP::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.ExecContext::method"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.finalizeDeploymentURL::method",
+      "kind": "uses",
+      "to": "components/deploy/deploy.go::Deploy::class"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.finalizeDeploymentURL::method",
+      "kind": "uses",
+      "to": "components/deploy/deploy.go::Deployment::class"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.finalizeDeploymentURL::method",
+      "kind": "calls",
+      "to": "components/deploy/urls.go::deploymentURL::function"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.finalizeDeploymentURL::method",
+      "kind": "calls",
+      "to": "components/deploy/urls.go::deploymentHost::function"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.finalizeDeploymentURL::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.ExecContext::method"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.finalizeDeploymentURL::method",
+      "kind": "calls",
+      "to": "components/deploy/engine.go::Deploy.buildMetadata::method"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.finalizeDeploymentURL::method",
+      "kind": "calls",
+      "to": "components/deploy/deploy.go::DeploymentHostRegistry.RegisterDeploymentHost::method"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.finalizeDeploymentURL::method",
+      "kind": "calls",
+      "to": "kernel/component.go::Logger.Warn::method"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.buildMetadata::method",
+      "kind": "uses",
+      "to": "components/deploy/deploy.go::Deploy::class"
+    },
+    {
+      "from": "components/deploy/engine.go::Deploy.buildMetadata::method",
+      "kind": "uses",
+      "to": "components/deploy/deploy.go::Deployment::class"
+    }
+  ],
+  "file": "components/deploy/engine.go",
+  "intent": [
+    {
+      "date": "2026-08-01T21:23:24-03:00",
+      "hash": "c7201d17991d3408ea8060722330f75a49878bfe",
+      "kind": "commit",
+      "message": "feat(proxy): make CSP configurable per-site for deployed static sites (closes #197)"
+    },
+    {
+      "date": "2026-07-29T14:39:40-03:00",
+      "hash": "3276f4c9e1e21baa8d0e901d003fbc15a02b9f86",
+      "kind": "commit",
+      "message": "refactor(deploy): introduce EnvResolver seam with precedence + redaction (closes #41)"
+    },
+    {
+      "date": "2026-07-25T00:32:50-03:00",
+      "hash": "de12dfdabdbde4ccf9d7a1a0a30f2a21c31e330c",
+      "kind": "commit",
+      "message": "fix(deploy): verify OS-level port availability before allocating (#171)"
+    },
+    {
+      "date": "2026-07-25T00:25:58-03:00",
+      "hash": "3c8acda1ae8e5949c143be5b495e3e2fa8b85cba",
+      "kind": "commit",
+      "message": "fix(deploy): verify OS-level port availability before allocating"
+    },
+    {
+      "date": "2026-07-24T22:36:52-03:00",
+      "hash": "7d360e49a5648a2dfcfb7eca44438d6284baae79",
+      "kind": "commit",
+      "message": "fix(deploy): keep adapter-node SSR as process apps (#168)"
+    },
+    {
+      "date": "2026-07-24T22:25:13-03:00",
+      "hash": "52fb9affdfc6809d147bdea58f096073447ad9cd",
+      "kind": "commit",
+      "message": "fix(deploy): stop static hosts serving checkout directory listings (#167)"
+    },
+    {
+      "date": "2026-07-24T20:56:01-03:00",
+      "hash": "e77fd137a0fcdc1a7521123153d8c065f11bafca",
+      "kind": "commit",
+      "message": "fix(deploy): never-bounce identity and framework deploy matrix (#166)"
+    },
+    {
+      "date": "2026-07-24T09:26:26-03:00",
+      "hash": "129143f684326a0c3a525f9ab64667b4c9368fd0",
+      "kind": "commit",
+      "message": "fix(deploy): detect pnpm/yarn/bun for Node site builds"
+    },
+    {
+      "date": "2026-07-12T22:10:28-03:00",
+      "hash": "014e7d60478293303dfbc89cd3a2acbbcaec570e",
+      "kind": "commit",
+      "message": "feat(deploy): add asgi_import to bigbase.yaml manifest for Python apps"
+    },
+    {
+      "date": "2026-07-12T19:53:20-03:00",
+      "hash": "2b1553148fcf82c596326ad6508cf0cd61861957",
+      "kind": "commit",
+      "message": "fix(deploy): set cmd.Dir and replace literal $PORT in pythonStartCommand"
+    },
+    {
+      "date": "2026-07-12T17:38:28-03:00",
+      "hash": "fcabcf643f7e959c3dd8b721cdd923db4f2f77b5",
+      "kind": "commit",
+      "message": "fix(deploy): fall back to pip/python3 when uv is not on PATH"
+    },
+    {
+      "date": "2026-07-12T17:01:28-03:00",
+      "hash": "fd0cc74985ba2d877a3ce8828396533d7037110a",
+      "kind": "commit",
+      "message": "fix(deploy): kill process group to clean up orphaned child processes (#107)"
+    },
+    {
+      "date": "2026-07-11T12:42:19-03:00",
+      "hash": "cc05b2d25009da9844dc9e02fd722b1c92afbe9f",
+      "kind": "commit",
+      "message": "chore: integrate E2E testing epics and update specifications"
+    },
+    {
+      "date": "2026-07-10T14:43:09-03:00",
+      "hash": "4ca826f62a212cff9a287041a38dc164205e676b",
+      "kind": "commit",
+      "message": "fix(deploy): replace error string matching with sentinel errors"
+    },
+    {
+      "date": "2026-07-10T14:36:34-03:00",
+      "hash": "f96d11862e15cc5c35fdc11981527ad23cc8f80c",
+      "kind": "commit",
+      "message": "refactor(deploy): decompose 1924-line god object into domain modules"
+    }
+  ],
+  "lastModified": 1786492494,
+  "symbols": [
+    {
+      "endLine": 83,
+      "endOffset": 2446,
+      "kind": "method",
+      "name": "Deploy.Trigger",
+      "startLine": 20,
+      "startOffset": 196,
+      "symbolId": "components/deploy/engine.go::Deploy.Trigger::method"
+    },
+    {
+      "endLine": 126,
+      "endOffset": 3684,
+      "kind": "method",
+      "name": "Deploy.stopDeployment",
+      "startLine": 84,
+      "startOffset": 2447,
+      "symbolId": "components/deploy/engine.go::Deploy.stopDeployment::method"
+    },
+    {
+      "endLine": 380,
+      "endOffset": 13870,
+      "kind": "method",
+      "name": "Deploy.runDeployment",
+      "startLine": 127,
+      "startOffset": 3685,
+      "symbolId": "components/deploy/engine.go::Deploy.runDeployment::method"
+    },
+    {
+      "endLine": 398,
+      "endOffset": 14402,
+      "kind": "method",
+      "name": "Deploy.cloneAndCheckout",
+      "startLine": 381,
+      "startOffset": 13871,
+      "symbolId": "components/deploy/engine.go::Deploy.cloneAndCheckout::method"
+    },
+    {
+      "endLine": 407,
+      "endOffset": 14645,
+      "kind": "method",
+      "name": "Deploy.getCommitSHA",
+      "startLine": 399,
+      "startOffset": 14403,
+      "symbolId": "components/deploy/engine.go::Deploy.getCommitSHA::method"
+    },
+    {
+      "endLine": 493,
+      "endOffset": 18399,
+      "kind": "method",
+      "name": "Deploy.buildApp",
+      "startLine": 408,
+      "startOffset": 14646,
+      "symbolId": "components/deploy/engine.go::Deploy.buildApp::method"
+    },
+    {
+      "endLine": 511,
+      "endOffset": 19038,
+      "kind": "method",
+      "name": "Deploy.nodeInstall",
+      "startLine": 494,
+      "startOffset": 18400,
+      "symbolId": "components/deploy/engine.go::Deploy.nodeInstall::method"
+    },
+    {
+      "endLine": 522,
+      "endOffset": 19389,
+      "kind": "method",
+      "name": "Deploy.restoreNodeModules",
+      "startLine": 512,
+      "startOffset": 19039,
+      "symbolId": "components/deploy/engine.go::Deploy.restoreNodeModules::method"
+    },
+    {
+      "endLine": 530,
+      "endOffset": 19757,
+      "kind": "method",
+      "name": "Deploy.saveNodeModules",
+      "startLine": 523,
+      "startOffset": 19390,
+      "symbolId": "components/deploy/engine.go::Deploy.saveNodeModules::method"
+    },
+    {
+      "endLine": 567,
+      "endOffset": 21065,
+      "kind": "method",
+      "name": "Deploy.runBuildCommand",
+      "startLine": 531,
+      "startOffset": 19758,
+      "symbolId": "components/deploy/engine.go::Deploy.runBuildCommand::method"
+    },
+    {
+      "endLine": 691,
+      "endOffset": 25375,
+      "kind": "method",
+      "name": "Deploy.startApp",
+      "startLine": 568,
+      "startOffset": 21066,
+      "symbolId": "components/deploy/engine.go::Deploy.startApp::method"
+    },
+    {
+      "endLine": 709,
+      "endOffset": 26081,
+      "kind": "method",
+      "name": "Deploy.serveStatic",
+      "startLine": 692,
+      "startOffset": 25376,
+      "symbolId": "components/deploy/engine.go::Deploy.serveStatic::method"
+    },
+    {
+      "endLine": 749,
+      "endOffset": 27568,
+      "kind": "method",
+      "name": "Deploy.runHealthCheck",
+      "startLine": 710,
+      "startOffset": 26082,
+      "symbolId": "components/deploy/engine.go::Deploy.runHealthCheck::method"
+    },
+    {
+      "endLine": 768,
+      "endOffset": 28223,
+      "kind": "method",
+      "name": "Deploy.failDeployment",
+      "startLine": 750,
+      "startOffset": 27569,
+      "symbolId": "components/deploy/engine.go::Deploy.failDeployment::method"
+    },
+    {
+      "endLine": 789,
+      "endOffset": 28949,
+      "kind": "method",
+      "name": "Deploy.applyManifestCSP",
+      "startLine": 771,
+      "startOffset": 28389,
+      "symbolId": "components/deploy/engine.go::Deploy.applyManifestCSP::method"
+    },
+    {
+      "endLine": 806,
+      "endOffset": 29599,
+      "kind": "method",
+      "name": "Deploy.finalizeDeploymentURL",
+      "startLine": 791,
+      "startOffset": 28951,
+      "symbolId": "components/deploy/engine.go::Deploy.finalizeDeploymentURL::method"
+    },
+    {
+      "endLine": 815,
+      "endOffset": 29831,
+      "kind": "method",
+      "name": "Deploy.buildMetadata",
+      "startLine": 807,
+      "startOffset": 29600,
+      "symbolId": "components/deploy/engine.go::Deploy.buildMetadata::method"
+    }
+  ]
+}

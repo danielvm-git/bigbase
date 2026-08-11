@@ -1,0 +1,158 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 4,
+      "symbolId": "scripts/verifytoolchain/cmd/verifytoolchain/main.go::main::function"
+    },
+    {
+      "cyclomatic": 7,
+      "symbolId": "scripts/verifytoolchain/cmd/verifytoolchain/main.go::printReport::function"
+    },
+    {
+      "cyclomatic": 6,
+      "symbolId": "scripts/verifytoolchain/cmd/verifytoolchain/main.go::statusLabel::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "scripts/verifytoolchain/cmd/verifytoolchain/main.go::orDash::function"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "scripts/verifytoolchain/cmd/verifytoolchain/main.go::parsedStringDisplay::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "scripts/verifytoolchain/cmd/verifytoolchain/main.go::patchSuffix::function"
+    }
+  ],
+  "contentHash": "82a12c43552bc3658b7f0e3c8890dc9e8b5a68476b1e4850953ea1057100ff78",
+  "edges": [
+    {
+      "from": "scripts/verifytoolchain/cmd/verifytoolchain/main.go::main::function",
+      "kind": "calls",
+      "to": "scripts/verifytoolchain/contract.go::LoadContract::function"
+    },
+    {
+      "from": "scripts/verifytoolchain/cmd/verifytoolchain/main.go::main::function",
+      "kind": "calls",
+      "to": "scripts/verifytoolchain/verify.go::Verify::function"
+    },
+    {
+      "from": "scripts/verifytoolchain/cmd/verifytoolchain/main.go::main::function",
+      "kind": "calls",
+      "to": "scripts/verifytoolchain/cmd/verifytoolchain/main.go::printReport::function"
+    },
+    {
+      "from": "scripts/verifytoolchain/cmd/verifytoolchain/main.go::printReport::function",
+      "kind": "uses",
+      "to": "scripts/verifytoolchain/contract.go::Contract::class"
+    },
+    {
+      "from": "scripts/verifytoolchain/cmd/verifytoolchain/main.go::printReport::function",
+      "kind": "uses",
+      "to": "scripts/verifytoolchain/verify.go::Result::class"
+    },
+    {
+      "from": "scripts/verifytoolchain/cmd/verifytoolchain/main.go::printReport::function",
+      "kind": "calls",
+      "to": "scripts/verifytoolchain/cmd/verifytoolchain/main.go::statusLabel::function"
+    },
+    {
+      "from": "scripts/verifytoolchain/cmd/verifytoolchain/main.go::printReport::function",
+      "kind": "calls",
+      "to": "scripts/verifytoolchain/cmd/verifytoolchain/main.go::parsedStringDisplay::function"
+    },
+    {
+      "from": "scripts/verifytoolchain/cmd/verifytoolchain/main.go::printReport::function",
+      "kind": "calls",
+      "to": "scripts/verifytoolchain/cmd/verifytoolchain/main.go::orDash::function"
+    },
+    {
+      "from": "scripts/verifytoolchain/cmd/verifytoolchain/main.go::statusLabel::function",
+      "kind": "uses",
+      "to": "scripts/verifytoolchain/verify.go::Result::class"
+    },
+    {
+      "from": "scripts/verifytoolchain/cmd/verifytoolchain/main.go::parsedStringDisplay::function",
+      "kind": "uses",
+      "to": "scripts/verifytoolchain/version.go::Version::class"
+    },
+    {
+      "from": "scripts/verifytoolchain/cmd/verifytoolchain/main.go::parsedStringDisplay::function",
+      "kind": "calls",
+      "to": "scripts/verifytoolchain/cmd/verifytoolchain/main.go::patchSuffix::function"
+    },
+    {
+      "from": "scripts/verifytoolchain/cmd/verifytoolchain/main.go::patchSuffix::function",
+      "kind": "uses",
+      "to": "scripts/verifytoolchain/version.go::Version::class"
+    }
+  ],
+  "file": "scripts/verifytoolchain/cmd/verifytoolchain/main.go",
+  "intent": [
+    {
+      "date": "2026-07-29T00:02:07-03:00",
+      "hash": "7ca023fc9424ba0d3dc849be61f72eca71cb2a51",
+      "kind": "commit",
+      "message": "feat(deploy): declared toolchain contract + CI parity check (closes #179)"
+    }
+  ],
+  "lastModified": 1786492495,
+  "symbols": [
+    {
+      "endLine": 56,
+      "endOffset": 1719,
+      "kind": "function",
+      "name": "main",
+      "startLine": 25,
+      "startOffset": 656,
+      "symbolId": "scripts/verifytoolchain/cmd/verifytoolchain/main.go::main::function"
+    },
+    {
+      "endLine": 83,
+      "endOffset": 2555,
+      "kind": "function",
+      "name": "printReport",
+      "startLine": 58,
+      "startOffset": 1721,
+      "symbolId": "scripts/verifytoolchain/cmd/verifytoolchain/main.go::printReport::function"
+    },
+    {
+      "endLine": 98,
+      "endOffset": 2798,
+      "kind": "function",
+      "name": "statusLabel",
+      "startLine": 85,
+      "startOffset": 2557,
+      "symbolId": "scripts/verifytoolchain/cmd/verifytoolchain/main.go::statusLabel::function"
+    },
+    {
+      "endLine": 105,
+      "endOffset": 2872,
+      "kind": "function",
+      "name": "orDash",
+      "startLine": 100,
+      "startOffset": 2800,
+      "symbolId": "scripts/verifytoolchain/cmd/verifytoolchain/main.go::orDash::function"
+    },
+    {
+      "endLine": 110,
+      "endOffset": 3060,
+      "kind": "function",
+      "name": "parsedStringDisplay",
+      "startLine": 107,
+      "startOffset": 2874,
+      "symbolId": "scripts/verifytoolchain/cmd/verifytoolchain/main.go::parsedStringDisplay::function"
+    },
+    {
+      "endLine": 117,
+      "endOffset": 3184,
+      "kind": "function",
+      "name": "patchSuffix",
+      "startLine": 112,
+      "startOffset": 3062,
+      "symbolId": "scripts/verifytoolchain/cmd/verifytoolchain/main.go::patchSuffix::function"
+    }
+  ]
+}

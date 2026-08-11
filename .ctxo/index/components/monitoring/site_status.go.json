@@ -1,0 +1,153 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/monitoring/site_status.go::Monitoring.SetSiteStatusProvider::method"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/monitoring/site_status.go::Monitoring.SetAlertNotifier::method"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/monitoring/site_status.go::Monitoring.deliverAlert::method"
+    },
+    {
+      "cyclomatic": 6,
+      "symbolId": "components/monitoring/site_status.go::alertEventFromData::function"
+    }
+  ],
+  "contentHash": "c4b481d3fafd1a856df2c326262dc97a49b3054659bf2c89ef7ce6d5486cfe9d",
+  "edges": [
+    {
+      "from": "components/monitoring/site_status.go::Monitoring.SetSiteStatusProvider::method",
+      "kind": "uses",
+      "to": "components/monitoring/monitoring.go::Monitoring::class"
+    },
+    {
+      "from": "components/monitoring/site_status.go::Monitoring.SetSiteStatusProvider::method",
+      "kind": "uses",
+      "to": "components/monitoring/site_status.go::SiteStatusProvider::type"
+    },
+    {
+      "from": "components/monitoring/site_status.go::Monitoring.SetAlertNotifier::method",
+      "kind": "uses",
+      "to": "components/monitoring/monitoring.go::Monitoring::class"
+    },
+    {
+      "from": "components/monitoring/site_status.go::Monitoring.SetAlertNotifier::method",
+      "kind": "uses",
+      "to": "components/monitoring/site_status.go::AlertNotifier::interface"
+    },
+    {
+      "from": "components/monitoring/site_status.go::Monitoring.deliverAlert::method",
+      "kind": "uses",
+      "to": "components/monitoring/monitoring.go::Monitoring::class"
+    },
+    {
+      "from": "components/monitoring/site_status.go::Monitoring.deliverAlert::method",
+      "kind": "calls",
+      "to": "components/monitoring/site_status.go::alertEventFromData::function"
+    },
+    {
+      "from": "components/monitoring/site_status.go::Monitoring.deliverAlert::method",
+      "kind": "calls",
+      "to": "components/monitoring/site_status.go::AlertNotifier.NotifyAlert::method"
+    },
+    {
+      "from": "components/monitoring/site_status.go::Monitoring.deliverAlert::method",
+      "kind": "calls",
+      "to": "kernel/component.go::Logger.Error::method"
+    },
+    {
+      "from": "components/monitoring/site_status.go::alertEventFromData::function",
+      "kind": "uses",
+      "to": "components/monitoring/site_status.go::AlertEvent::class"
+    }
+  ],
+  "file": "components/monitoring/site_status.go",
+  "intent": [
+    {
+      "date": "2026-07-29T00:01:45-03:00",
+      "hash": "aa383b64713bf21e3f35c3d406706bfdfe1787dd",
+      "kind": "commit",
+      "message": "feat(monitoring): add site availability metrics + wire alert subscriber (closes #178)"
+    }
+  ],
+  "lastModified": 1786492494,
+  "symbols": [
+    {
+      "endLine": 21,
+      "endOffset": 689,
+      "kind": "class",
+      "name": "SiteStatus",
+      "startLine": 12,
+      "startOffset": 291,
+      "symbolId": "components/monitoring/site_status.go::SiteStatus::class"
+    },
+    {
+      "endLine": 34,
+      "endOffset": 1414,
+      "kind": "type",
+      "name": "SiteStatusProvider",
+      "startLine": 34,
+      "startOffset": 1378,
+      "symbolId": "components/monitoring/site_status.go::SiteStatusProvider::type"
+    },
+    {
+      "endLine": 44,
+      "endOffset": 1737,
+      "kind": "method",
+      "name": "Monitoring.SetSiteStatusProvider",
+      "startLine": 39,
+      "startOffset": 1624,
+      "symbolId": "components/monitoring/site_status.go::Monitoring.SetSiteStatusProvider::method"
+    },
+    {
+      "endLine": 56,
+      "endOffset": 2181,
+      "kind": "class",
+      "name": "AlertEvent",
+      "startLine": 48,
+      "startOffset": 1899,
+      "symbolId": "components/monitoring/site_status.go::AlertEvent::class"
+    },
+    {
+      "endLine": 63,
+      "endOffset": 2490,
+      "kind": "interface",
+      "name": "AlertNotifier",
+      "startLine": 61,
+      "startOffset": 2408,
+      "symbolId": "components/monitoring/site_status.go::AlertNotifier::interface"
+    },
+    {
+      "endLine": 73,
+      "endOffset": 2825,
+      "kind": "method",
+      "name": "Monitoring.SetAlertNotifier",
+      "startLine": 68,
+      "startOffset": 2719,
+      "symbolId": "components/monitoring/site_status.go::Monitoring.SetAlertNotifier::method"
+    },
+    {
+      "endLine": 90,
+      "endOffset": 3546,
+      "kind": "method",
+      "name": "Monitoring.deliverAlert",
+      "startLine": 79,
+      "startOffset": 3130,
+      "symbolId": "components/monitoring/site_status.go::Monitoring.deliverAlert::method"
+    },
+    {
+      "endLine": 122,
+      "endOffset": 4310,
+      "kind": "function",
+      "name": "alertEventFromData",
+      "startLine": 94,
+      "startOffset": 3678,
+      "symbolId": "components/monitoring/site_status.go::alertEventFromData::function"
+    }
+  ]
+}

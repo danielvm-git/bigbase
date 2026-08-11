@@ -1,0 +1,477 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 5,
+      "symbolId": "components/messaging/messaging.go::New::function"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/messaging/messaging.go::Messaging.RegisterProvider::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/messaging/messaging.go::Messaging.Provider::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/messaging/messaging.go::Messaging.Name::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/messaging/messaging.go::Messaging.Version::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/messaging/messaging.go::Messaging.Dependencies::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/messaging/messaging.go::Messaging.Init::method"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/messaging/messaging.go::Messaging.Start::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/messaging/messaging.go::Messaging.Stop::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/messaging/messaging.go::Messaging.Handler::method"
+    },
+    {
+      "cyclomatic": 6,
+      "symbolId": "components/messaging/messaging.go::Messaging.send::method"
+    },
+    {
+      "cyclomatic": 6,
+      "symbolId": "components/messaging/messaging.go::Messaging.handleTelegram::method"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/messaging/messaging.go::Messaging.handleMethod::method"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/messaging/messaging.go::validateRequired::function"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/messaging/messaging.go::collectErrors::function"
+    }
+  ],
+  "contentHash": "4f014eb996bc184b43a867b82cb50c059c000a13ab4f3aa2618eeaeb26821aff",
+  "edges": [
+    {
+      "from": "components/messaging/messaging.go::New::function",
+      "kind": "uses",
+      "to": "components/messaging/messaging.go::Options::class"
+    },
+    {
+      "from": "components/messaging/messaging.go::New::function",
+      "kind": "uses",
+      "to": "components/messaging/messaging.go::Messaging::class"
+    },
+    {
+      "from": "components/messaging/messaging.go::New::function",
+      "kind": "uses",
+      "to": "kernel/utilities.go::NoopLogger::class"
+    },
+    {
+      "from": "components/messaging/messaging.go::New::function",
+      "kind": "uses",
+      "to": "components/messaging/messaging.go::Provider::interface"
+    },
+    {
+      "from": "components/messaging/messaging.go::Messaging.RegisterProvider::method",
+      "kind": "uses",
+      "to": "components/messaging/messaging.go::Messaging::class"
+    },
+    {
+      "from": "components/messaging/messaging.go::Messaging.RegisterProvider::method",
+      "kind": "uses",
+      "to": "components/messaging/messaging.go::Provider::interface"
+    },
+    {
+      "from": "components/messaging/messaging.go::Messaging.Provider::method",
+      "kind": "uses",
+      "to": "components/messaging/messaging.go::Messaging::class"
+    },
+    {
+      "from": "components/messaging/messaging.go::Messaging.Provider::method",
+      "kind": "uses",
+      "to": "components/messaging/messaging.go::Provider::interface"
+    },
+    {
+      "from": "components/messaging/messaging.go::Messaging.Name::method",
+      "kind": "uses",
+      "to": "components/messaging/messaging.go::Messaging::class"
+    },
+    {
+      "from": "components/messaging/messaging.go::Messaging.Version::method",
+      "kind": "uses",
+      "to": "components/messaging/messaging.go::Messaging::class"
+    },
+    {
+      "from": "components/messaging/messaging.go::Messaging.Version::method",
+      "kind": "uses",
+      "to": "components/messaging/messaging.go::version::variable"
+    },
+    {
+      "from": "components/messaging/messaging.go::Messaging.Dependencies::method",
+      "kind": "uses",
+      "to": "components/messaging/messaging.go::Messaging::class"
+    },
+    {
+      "from": "components/messaging/messaging.go::Messaging.Init::method",
+      "kind": "uses",
+      "to": "components/messaging/messaging.go::Messaging::class"
+    },
+    {
+      "from": "components/messaging/messaging.go::Messaging.Init::method",
+      "kind": "uses",
+      "to": "kernel/component.go::Context::class"
+    },
+    {
+      "from": "components/messaging/messaging.go::Messaging.Start::method",
+      "kind": "uses",
+      "to": "components/messaging/messaging.go::Messaging::class"
+    },
+    {
+      "from": "components/messaging/messaging.go::Messaging.Start::method",
+      "kind": "uses",
+      "to": "kernel/component.go::Context::class"
+    },
+    {
+      "from": "components/messaging/messaging.go::Messaging.Start::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::DBer.Migrate::method"
+    },
+    {
+      "from": "components/messaging/messaging.go::Messaging.Start::method",
+      "kind": "calls",
+      "to": "kernel/component.go::Logger.Info::method"
+    },
+    {
+      "from": "components/messaging/messaging.go::Messaging.Stop::method",
+      "kind": "uses",
+      "to": "components/messaging/messaging.go::Messaging::class"
+    },
+    {
+      "from": "components/messaging/messaging.go::Messaging.Stop::method",
+      "kind": "uses",
+      "to": "kernel/component.go::Context::class"
+    },
+    {
+      "from": "components/messaging/messaging.go::Messaging.Handler::method",
+      "kind": "uses",
+      "to": "components/messaging/messaging.go::Messaging::class"
+    },
+    {
+      "from": "components/messaging/messaging.go::Messaging.send::method",
+      "kind": "uses",
+      "to": "components/messaging/messaging.go::Messaging::class"
+    },
+    {
+      "from": "components/messaging/messaging.go::Messaging.send::method",
+      "kind": "uses",
+      "to": "components/messaging/messaging.go::Message::class"
+    },
+    {
+      "from": "components/messaging/messaging.go::Messaging.send::method",
+      "kind": "calls",
+      "to": "kernel/utilities.go::GenerateID::function"
+    },
+    {
+      "from": "components/messaging/messaging.go::Messaging.send::method",
+      "kind": "calls",
+      "to": "components/auth/middleware.go::OrgIDFromContext::function"
+    },
+    {
+      "from": "components/messaging/messaging.go::Messaging.send::method",
+      "kind": "calls",
+      "to": "components/messaging/messaging.go::Provider.Send::method"
+    },
+    {
+      "from": "components/messaging/messaging.go::Messaging.send::method",
+      "kind": "calls",
+      "to": "kernel/component.go::Logger.Error::method"
+    },
+    {
+      "from": "components/messaging/messaging.go::Messaging.send::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.ExecContext::method"
+    },
+    {
+      "from": "components/messaging/messaging.go::Messaging.handleTelegram::method",
+      "kind": "uses",
+      "to": "components/messaging/messaging.go::Messaging::class"
+    },
+    {
+      "from": "components/messaging/messaging.go::Messaging.handleTelegram::method",
+      "kind": "calls",
+      "to": "kernel/utilities.go::WriteJSON::function"
+    },
+    {
+      "from": "components/messaging/messaging.go::Messaging.handleTelegram::method",
+      "kind": "calls",
+      "to": "components/messaging/messaging.go::Messaging.send::method"
+    },
+    {
+      "from": "components/messaging/messaging.go::Messaging.handleTelegram::method",
+      "kind": "calls",
+      "to": "kernel/component.go::Logger.Error::method"
+    },
+    {
+      "from": "components/messaging/messaging.go::Messaging.handleMethod::method",
+      "kind": "uses",
+      "to": "components/messaging/messaging.go::Messaging::class"
+    },
+    {
+      "from": "components/messaging/messaging.go::Messaging.handleMethod::method",
+      "kind": "calls",
+      "to": "kernel/utilities.go::WriteJSON::function"
+    },
+    {
+      "from": "components/messaging/messaging.go::Messaging::class",
+      "kind": "implements",
+      "to": "kernel/component.go::Component::interface"
+    }
+  ],
+  "file": "components/messaging/messaging.go",
+  "intent": [
+    {
+      "date": "2026-07-23T21:30:58-03:00",
+      "hash": "09de0a078b7f1ec477125ac65bf694d65870807b",
+      "kind": "commit",
+      "message": "fix(security): cross-tenant message leak — add org_id to messages table"
+    },
+    {
+      "date": "2026-07-10T14:58:38-03:00",
+      "hash": "34b197c676d972ef39ab3cd8fe08a320adae96e9",
+      "kind": "commit",
+      "message": "fix(kernel): remove dead ConfigSchema/Hooks interfaces, add Component compile checks"
+    },
+    {
+      "date": "2026-07-10T14:46:55-03:00",
+      "hash": "36722e3d731d1da0179c0360d677bc6bdf2b3b19",
+      "kind": "commit",
+      "message": "fix(deploy): prevent manifest path traversal (CWE-22)"
+    },
+    {
+      "date": "2026-07-07T00:13:21-03:00",
+      "hash": "bcc0b8745f57075cf71e855bc2496e4c11195708",
+      "kind": "commit",
+      "message": "refactor(kernel): hoist Logger/DBer interfaces — remove 18 duplicate definitions"
+    },
+    {
+      "date": "2026-06-18T09:46:46-03:00",
+      "hash": "0728992bc65e1ebb1bfe4743249713b6ae2a2633",
+      "kind": "commit",
+      "message": "feat(messaging): add WebhookProvider and telegram messaging endpoint (#26)"
+    }
+  ],
+  "lastModified": 1786492494,
+  "symbols": [
+    {
+      "endLine": 15,
+      "endOffset": 196,
+      "kind": "variable",
+      "name": "version",
+      "startLine": 15,
+      "startOffset": 189,
+      "symbolId": "components/messaging/messaging.go::version::variable"
+    },
+    {
+      "endLine": 18,
+      "endOffset": 304,
+      "kind": "type",
+      "name": "DBer",
+      "startLine": 18,
+      "startOffset": 286,
+      "symbolId": "components/messaging/messaging.go::DBer::type"
+    },
+    {
+      "endLine": 29,
+      "endOffset": 612,
+      "kind": "class",
+      "name": "Message",
+      "startLine": 20,
+      "startOffset": 311,
+      "symbolId": "components/messaging/messaging.go::Message::class"
+    },
+    {
+      "endLine": 38,
+      "endOffset": 867,
+      "kind": "class",
+      "name": "sendRequest",
+      "startLine": 31,
+      "startOffset": 619,
+      "symbolId": "components/messaging/messaging.go::sendRequest::class"
+    },
+    {
+      "endLine": 42,
+      "endOffset": 942,
+      "kind": "interface",
+      "name": "Provider",
+      "startLine": 40,
+      "startOffset": 874,
+      "symbolId": "components/messaging/messaging.go::Provider::interface"
+    },
+    {
+      "endLine": 53,
+      "endOffset": 1128,
+      "kind": "class",
+      "name": "Messaging",
+      "startLine": 44,
+      "startOffset": 949,
+      "symbolId": "components/messaging/messaging.go::Messaging::class"
+    },
+    {
+      "endLine": 65,
+      "endOffset": 1318,
+      "kind": "class",
+      "name": "Options",
+      "startLine": 57,
+      "startOffset": 1179,
+      "symbolId": "components/messaging/messaging.go::Options::class"
+    },
+    {
+      "endLine": 91,
+      "endOffset": 1862,
+      "kind": "function",
+      "name": "New",
+      "startLine": 67,
+      "startOffset": 1320,
+      "symbolId": "components/messaging/messaging.go::New::function"
+    },
+    {
+      "endLine": 95,
+      "endOffset": 1958,
+      "kind": "method",
+      "name": "Messaging.RegisterProvider",
+      "startLine": 93,
+      "startOffset": 1864,
+      "symbolId": "components/messaging/messaging.go::Messaging.RegisterProvider::method"
+    },
+    {
+      "endLine": 99,
+      "endOffset": 2046,
+      "kind": "method",
+      "name": "Messaging.Provider",
+      "startLine": 97,
+      "startOffset": 1960,
+      "symbolId": "components/messaging/messaging.go::Messaging.Provider::method"
+    },
+    {
+      "endLine": 101,
+      "endOffset": 2121,
+      "kind": "method",
+      "name": "Messaging.Name",
+      "startLine": 101,
+      "startOffset": 2048,
+      "symbolId": "components/messaging/messaging.go::Messaging.Name::method"
+    },
+    {
+      "endLine": 102,
+      "endOffset": 2191,
+      "kind": "method",
+      "name": "Messaging.Version",
+      "startLine": 102,
+      "startOffset": 2122,
+      "symbolId": "components/messaging/messaging.go::Messaging.Version::method"
+    },
+    {
+      "endLine": 103,
+      "endOffset": 2268,
+      "kind": "method",
+      "name": "Messaging.Dependencies",
+      "startLine": 103,
+      "startOffset": 2192,
+      "symbolId": "components/messaging/messaging.go::Messaging.Dependencies::method"
+    },
+    {
+      "endLine": 107,
+      "endOffset": 2361,
+      "kind": "method",
+      "name": "Messaging.Init",
+      "startLine": 105,
+      "startOffset": 2270,
+      "symbolId": "components/messaging/messaging.go::Messaging.Init::method"
+    },
+    {
+      "endLine": 127,
+      "endOffset": 3009,
+      "kind": "method",
+      "name": "Messaging.Start",
+      "startLine": 109,
+      "startOffset": 2363,
+      "symbolId": "components/messaging/messaging.go::Messaging.Start::method"
+    },
+    {
+      "endLine": 131,
+      "endOffset": 3078,
+      "kind": "method",
+      "name": "Messaging.Stop",
+      "startLine": 129,
+      "startOffset": 3011,
+      "symbolId": "components/messaging/messaging.go::Messaging.Stop::method"
+    },
+    {
+      "endLine": 141,
+      "endOffset": 3442,
+      "kind": "method",
+      "name": "Messaging.Handler",
+      "startLine": 133,
+      "startOffset": 3080,
+      "symbolId": "components/messaging/messaging.go::Messaging.Handler::method"
+    },
+    {
+      "endLine": 182,
+      "endOffset": 4492,
+      "kind": "method",
+      "name": "Messaging.send",
+      "startLine": 143,
+      "startOffset": 3444,
+      "symbolId": "components/messaging/messaging.go::Messaging.send::method"
+    },
+    {
+      "endLine": 220,
+      "endOffset": 5778,
+      "kind": "method",
+      "name": "Messaging.handleTelegram",
+      "startLine": 186,
+      "startOffset": 4660,
+      "symbolId": "components/messaging/messaging.go::Messaging.handleTelegram::method"
+    },
+    {
+      "endLine": 228,
+      "endOffset": 6033,
+      "kind": "method",
+      "name": "Messaging.handleMethod",
+      "startLine": 222,
+      "startOffset": 5780,
+      "symbolId": "components/messaging/messaging.go::Messaging.handleMethod::method"
+    },
+    {
+      "endLine": 235,
+      "endOffset": 6171,
+      "kind": "function",
+      "name": "validateRequired",
+      "startLine": 230,
+      "startOffset": 6035,
+      "symbolId": "components/messaging/messaging.go::validateRequired::function"
+    },
+    {
+      "endLine": 248,
+      "endOffset": 6379,
+      "kind": "function",
+      "name": "collectErrors",
+      "startLine": 237,
+      "startOffset": 6173,
+      "symbolId": "components/messaging/messaging.go::collectErrors::function"
+    }
+  ]
+}

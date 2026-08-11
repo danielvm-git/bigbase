@@ -1,0 +1,38 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 5,
+      "symbolId": "ui/src/components/Button.tsx::Button::function"
+    }
+  ],
+  "contentHash": "0ed4443f830c11094fa379f78e4d1715889eb7425a237391f8df0b3b4e86a9e6",
+  "edges": [],
+  "file": "ui/src/components/Button.tsx",
+  "intent": [
+    {
+      "date": "2026-08-11T16:11:51-03:00",
+      "hash": "0613fd1496ac09565ea6c7ff71efbe6efb88433c",
+      "kind": "commit",
+      "message": "fix(ui): AAA target size 44px (e87s03)"
+    },
+    {
+      "date": "2026-07-10T20:39:36-03:00",
+      "hash": "db94b7c03f56600323aff8c9132e7d98185ff8b2",
+      "kind": "commit",
+      "message": "fix(ui): CopyButton silent failure + pre-existing ESLint cleanup"
+    }
+  ],
+  "lastModified": 1786492495,
+  "symbols": [
+    {
+      "endLine": 51,
+      "endOffset": 1814,
+      "kind": "function",
+      "name": "Button",
+      "startLine": 28,
+      "startOffset": 982,
+      "symbolId": "ui/src/components/Button.tsx::Button::function"
+    }
+  ]
+}

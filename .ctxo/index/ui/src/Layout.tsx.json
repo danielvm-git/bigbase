@@ -1,0 +1,169 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 9,
+      "symbolId": "ui/src/Layout.tsx::Layout::function"
+    }
+  ],
+  "contentHash": "10a07d26a79318da26123feb4de451e8627223d00c404f303d1559a8739d0900",
+  "edges": [
+    {
+      "from": "ui/src/Layout.tsx::Layout::function",
+      "kind": "imports",
+      "to": "ui/src/components/Icon.ts::Icon::class"
+    },
+    {
+      "from": "ui/src/Layout.tsx::Layout::function",
+      "kind": "imports",
+      "to": "ui/src/components/Icon.ts::IconName::class",
+      "typeOnly": true
+    },
+    {
+      "from": "ui/src/Layout.tsx::Layout::function",
+      "kind": "imports",
+      "to": "ui/src/components/ThemePicker.ts::ThemePicker::class"
+    },
+    {
+      "from": "ui/src/Layout.tsx::Layout::function",
+      "kind": "imports",
+      "to": "ui/src/components/TutorialOverlay.ts::TutorialOverlay::class"
+    },
+    {
+      "from": "ui/src/Layout.tsx::Layout::function",
+      "kind": "imports",
+      "to": "ui/src/components/TutorialOverlay.ts::useTutorialTrigger::function"
+    },
+    {
+      "from": "ui/src/Layout.tsx::Layout::function",
+      "kind": "imports",
+      "to": "ui/src/components/AppShell.ts::AppShell::class"
+    },
+    {
+      "from": "ui/src/Layout.tsx::Layout::function",
+      "kind": "imports",
+      "to": "ui/src/components/Sidebar.ts::Sidebar::class"
+    },
+    {
+      "from": "ui/src/Layout.tsx::Layout::function",
+      "kind": "imports",
+      "to": "ui/src/components/Sidebar.ts::SidebarSection::class"
+    },
+    {
+      "from": "ui/src/Layout.tsx::Layout::function",
+      "kind": "imports",
+      "to": "ui/src/components/AppFooter.ts::AppFooter::class"
+    },
+    {
+      "from": "ui/src/Layout.tsx::Layout::function",
+      "kind": "imports",
+      "to": "ui/src/hooks/useTheme.ts::useTheme::function"
+    },
+    {
+      "from": "ui/src/Layout.tsx::Layout::function",
+      "kind": "calls",
+      "to": "ui/src/hooks/useTheme.ts::useTheme::function"
+    },
+    {
+      "from": "ui/src/Layout.tsx::Layout::function",
+      "kind": "calls",
+      "to": "ui/src/components/TutorialOverlay.ts::useTutorialTrigger::function"
+    },
+    {
+      "from": "ui/src/Layout.tsx::Layout::function",
+      "kind": "uses",
+      "to": "ui/src/hooks/useTheme.ts::useTheme::function"
+    },
+    {
+      "from": "ui/src/Layout.tsx::Layout::function",
+      "kind": "uses",
+      "to": "ui/src/components/TutorialOverlay.ts::useTutorialTrigger::function"
+    },
+    {
+      "from": "ui/src/Layout.tsx::Layout::function",
+      "kind": "uses",
+      "to": "ui/src/components/Icon.ts::Icon::class"
+    },
+    {
+      "from": "ui/src/Layout.tsx::Layout::function",
+      "kind": "uses",
+      "to": "ui/src/components/ThemePicker.ts::ThemePicker::class"
+    },
+    {
+      "from": "ui/src/Layout.tsx::Layout::function",
+      "kind": "uses",
+      "to": "ui/src/components/Sidebar.ts::Sidebar::class"
+    },
+    {
+      "from": "ui/src/Layout.tsx::Layout::function",
+      "kind": "uses",
+      "to": "ui/src/components/Sidebar.ts::SidebarSection::class"
+    },
+    {
+      "from": "ui/src/Layout.tsx::Layout::function",
+      "kind": "uses",
+      "to": "ui/src/components/AppShell.ts::AppShell::class"
+    },
+    {
+      "from": "ui/src/Layout.tsx::Layout::function",
+      "kind": "uses",
+      "to": "ui/src/components/TutorialOverlay.ts::TutorialOverlay::class"
+    },
+    {
+      "from": "ui/src/Layout.tsx::Layout::function",
+      "kind": "uses",
+      "to": "ui/src/components/AppFooter.ts::AppFooter::class"
+    }
+  ],
+  "file": "ui/src/Layout.tsx",
+  "intent": [
+    {
+      "date": "2026-08-11T13:40:30-03:00",
+      "hash": "e0c6c3640a3a2f36d2d88656bbffdaa1e165a439",
+      "kind": "commit",
+      "message": "fix(ui): skip-to-content link + reduced-motion support (T000014/T000020)"
+    },
+    {
+      "date": "2026-08-11T00:08:14-03:00",
+      "hash": "12fec11c50334efc84f6c85db0efed4ea6464ed4",
+      "kind": "commit",
+      "message": "fix(ui): logout redirects to the landing page instead of /login"
+    },
+    {
+      "date": "2026-07-12T15:49:11-03:00",
+      "hash": "e673ed0de59a6208c913f403c15718aec00d2aaa",
+      "kind": "commit",
+      "message": "chore: align local state, cleanup dead code, fix logout flow"
+    },
+    {
+      "date": "2026-06-30T19:34:19-03:00",
+      "hash": "4fc4c7531fdb9e506546c5ca895ac4ab7f7bdf6d",
+      "kind": "commit",
+      "message": "feat(ui): add Events nav item to sidebar DevOps section"
+    },
+    {
+      "date": "2026-06-28T17:11:02-03:00",
+      "hash": "6fb588e63f79ce75dad9a27c5cd8dc0bf796f27c",
+      "kind": "commit",
+      "message": "feat(ui): add design system foundation — tokens, 22 components, a11y audit"
+    },
+    {
+      "date": "2026-06-05T19:56:48-03:00",
+      "hash": "9b883aaaebef3f0b112a5d67236b9110086d9b4c",
+      "kind": "commit",
+      "message": "feat(dx): e22s05 interactive tutorial overlay"
+    }
+  ],
+  "lastModified": 1786492495,
+  "symbols": [
+    {
+      "endLine": 144,
+      "endOffset": 5146,
+      "kind": "function",
+      "name": "Layout",
+      "startLine": 19,
+      "startOffset": 642,
+      "symbolId": "ui/src/Layout.tsx::Layout::function"
+    }
+  ]
+}

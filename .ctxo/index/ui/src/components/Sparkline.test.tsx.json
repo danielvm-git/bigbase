@@ -1,0 +1,23 @@
+{
+  "antiPatterns": [],
+  "complexity": [],
+  "contentHash": "0a85ae3c56274ecfe352600248ba5b179f58eff5b9948de0b17f2acfa9e09b6c",
+  "edges": [
+    {
+      "from": "ui/src/components/Sparkline.test.tsx::Sparkline.test::variable",
+      "kind": "imports",
+      "to": "ui/src/components/Sparkline.ts::Sparkline::class"
+    }
+  ],
+  "file": "ui/src/components/Sparkline.test.tsx",
+  "intent": [
+    {
+      "date": "2026-08-11T13:43:04-03:00",
+      "hash": "0084e236186d05c7721f7141c1488b3b5cc0e355",
+      "kind": "commit",
+      "message": "fix(ui): accessible chart/gauges labels + progressbar roles (T000012)"
+    }
+  ],
+  "lastModified": 1786492495,
+  "symbols": []
+}

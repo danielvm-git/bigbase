@@ -1,0 +1,128 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 31,
+      "symbolId": "ui/src/pages/FunctionsPage.tsx::FunctionsPage::function"
+    }
+  ],
+  "contentHash": "cd5db932944851239a8157328fa02406e9b5f2d5dea6afaccc23591ccc74d9e7",
+  "edges": [
+    {
+      "from": "ui/src/pages/FunctionsPage.tsx::FunctionsPage::function",
+      "kind": "imports",
+      "to": "ui/src/components.ts::PageHeader::class"
+    },
+    {
+      "from": "ui/src/pages/FunctionsPage.tsx::FunctionsPage::function",
+      "kind": "imports",
+      "to": "ui/src/components.ts::Button::class"
+    },
+    {
+      "from": "ui/src/pages/FunctionsPage.tsx::FunctionsPage::function",
+      "kind": "imports",
+      "to": "ui/src/components.ts::Input::class"
+    },
+    {
+      "from": "ui/src/pages/FunctionsPage.tsx::FunctionsPage::function",
+      "kind": "imports",
+      "to": "ui/src/lib/functionEnv.ts::FunctionRecord::interface",
+      "typeOnly": true
+    },
+    {
+      "from": "ui/src/pages/FunctionsPage.tsx::FunctionsPage::function",
+      "kind": "imports",
+      "to": "ui/src/lib/functionEnv.ts::FunctionFormFields::interface",
+      "typeOnly": true
+    },
+    {
+      "from": "ui/src/pages/FunctionsPage.tsx::FunctionsPage::function",
+      "kind": "imports",
+      "to": "ui/src/lib/functionEnv.ts::formEnvFromRecord::function"
+    },
+    {
+      "from": "ui/src/pages/FunctionsPage.tsx::FunctionsPage::function",
+      "kind": "imports",
+      "to": "ui/src/lib/functionEnv.ts::functionPayloadFromForm::function"
+    },
+    {
+      "from": "ui/src/pages/FunctionsPage.tsx::FunctionsPage::function",
+      "kind": "calls",
+      "to": "ui/src/lib/functionEnv.ts::formEnvFromRecord::function"
+    },
+    {
+      "from": "ui/src/pages/FunctionsPage.tsx::FunctionsPage::function",
+      "kind": "calls",
+      "to": "ui/src/lib/functionEnv.ts::functionPayloadFromForm::function"
+    },
+    {
+      "from": "ui/src/pages/FunctionsPage.tsx::FunctionsPage::function",
+      "kind": "uses",
+      "to": "ui/src/lib/functionEnv.ts::FunctionRecord::interface"
+    },
+    {
+      "from": "ui/src/pages/FunctionsPage.tsx::FunctionsPage::function",
+      "kind": "uses",
+      "to": "ui/src/lib/functionEnv.ts::formEnvFromRecord::function"
+    },
+    {
+      "from": "ui/src/pages/FunctionsPage.tsx::FunctionsPage::function",
+      "kind": "uses",
+      "to": "ui/src/lib/functionEnv.ts::functionPayloadFromForm::function"
+    },
+    {
+      "from": "ui/src/pages/FunctionsPage.tsx::FunctionsPage::function",
+      "kind": "uses",
+      "to": "ui/src/components.ts::PageHeader::class"
+    },
+    {
+      "from": "ui/src/pages/FunctionsPage.tsx::FunctionsPage::function",
+      "kind": "uses",
+      "to": "ui/src/components.ts::Button::class"
+    },
+    {
+      "from": "ui/src/pages/FunctionsPage.tsx::FunctionsPage::function",
+      "kind": "uses",
+      "to": "ui/src/components.ts::Input::class"
+    }
+  ],
+  "file": "ui/src/pages/FunctionsPage.tsx",
+  "intent": [
+    {
+      "date": "2026-08-11T16:01:21-03:00",
+      "hash": "ae55271ccc35d42c3c9cd1bf907b6fd627c494f2",
+      "kind": "commit",
+      "message": "fix(ui): AAA help text + error prevention (e87s06)"
+    },
+    {
+      "date": "2026-08-11T13:42:44-03:00",
+      "hash": "6541bd284832987cb1b361f461b5ea86abccf31f",
+      "kind": "commit",
+      "message": "fix(ui): heading hierarchy + glyph aria-hidden (T000018)"
+    },
+    {
+      "date": "2026-08-11T00:35:18-03:00",
+      "hash": "9848ced3fc0d2e6aef8ef47c1d78c4e4107f3b9a",
+      "kind": "commit",
+      "message": "fix(ui): give placeholder-only form controls accessible names (BUG-2026-08-11T000007)"
+    },
+    {
+      "date": "2026-07-10T20:39:36-03:00",
+      "hash": "db94b7c03f56600323aff8c9132e7d98185ff8b2",
+      "kind": "commit",
+      "message": "fix(ui): CopyButton silent failure + pre-existing ESLint cleanup"
+    }
+  ],
+  "lastModified": 1786492495,
+  "symbols": [
+    {
+      "endLine": 246,
+      "endOffset": 9266,
+      "kind": "function",
+      "name": "FunctionsPage",
+      "startLine": 26,
+      "startOffset": 527,
+      "symbolId": "ui/src/pages/FunctionsPage.tsx::FunctionsPage::function"
+    }
+  ]
+}

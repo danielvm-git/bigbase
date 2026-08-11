@@ -1,0 +1,183 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/deploy/samples.go::sampleByName::function"
+    },
+    {
+      "cyclomatic": 8,
+      "symbolId": "components/deploy/samples.go::Deploy.handleSamples::method"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/deploy/samples.go::Deploy.ensureSampleRepo::method"
+    }
+  ],
+  "contentHash": "6fcab2562f12405f5af0b21b899611ea321ac801e8e297262b7ed01725480089",
+  "edges": [
+    {
+      "from": "components/deploy/samples.go::sampleByName::function",
+      "kind": "uses",
+      "to": "components/deploy/samples.go::SampleApp::class"
+    },
+    {
+      "from": "components/deploy/samples.go::sampleByName::function",
+      "kind": "uses",
+      "to": "components/deploy/samples.go::catalogSamples::variable"
+    },
+    {
+      "from": "components/deploy/samples.go::Deploy.handleSamples::method",
+      "kind": "uses",
+      "to": "components/deploy/deploy.go::Deploy::class"
+    },
+    {
+      "from": "components/deploy/samples.go::Deploy.handleSamples::method",
+      "kind": "calls",
+      "to": "kernel/utilities.go::WriteJSON::function"
+    },
+    {
+      "from": "components/deploy/samples.go::Deploy.handleSamples::method",
+      "kind": "uses",
+      "to": "components/deploy/samples.go::catalogSamples::variable"
+    },
+    {
+      "from": "components/deploy/samples.go::Deploy.handleSamples::method",
+      "kind": "calls",
+      "to": "components/deploy/samples.go::sampleByName::function"
+    },
+    {
+      "from": "components/deploy/samples.go::Deploy.handleSamples::method",
+      "kind": "calls",
+      "to": "components/deploy/samples.go::Deploy.ensureSampleRepo::method"
+    },
+    {
+      "from": "components/deploy/samples.go::Deploy.handleSamples::method",
+      "kind": "calls",
+      "to": "kernel/component.go::Logger.Error::method"
+    },
+    {
+      "from": "components/deploy/samples.go::Deploy.handleSamples::method",
+      "kind": "calls",
+      "to": "components/deploy/engine.go::Deploy.Trigger::method"
+    },
+    {
+      "from": "components/deploy/samples.go::Deploy.ensureSampleRepo::method",
+      "kind": "uses",
+      "to": "components/deploy/deploy.go::Deploy::class"
+    },
+    {
+      "from": "components/deploy/samples.go::Deploy.ensureSampleRepo::method",
+      "kind": "uses",
+      "to": "components/deploy/samples.go::SampleApp::class"
+    },
+    {
+      "from": "components/deploy/samples.go::Deploy.ensureSampleRepo::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.QueryRowContext::method"
+    },
+    {
+      "from": "components/deploy/samples.go::Deploy.ensureSampleRepo::method",
+      "kind": "calls",
+      "to": "kernel/utilities.go::GenerateID::function"
+    },
+    {
+      "from": "components/deploy/samples.go::Deploy.ensureSampleRepo::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.ExecContext::method"
+    }
+  ],
+  "file": "components/deploy/samples.go",
+  "intent": [
+    {
+      "date": "2026-07-10T14:46:55-03:00",
+      "hash": "36722e3d731d1da0179c0360d677bc6bdf2b3b19",
+      "kind": "commit",
+      "message": "fix(deploy): prevent manifest path traversal (CWE-22)"
+    },
+    {
+      "date": "2026-06-21T23:08:25-03:00",
+      "hash": "7d419f0f0c3a7cb70d8be9c82a67f4043147007c",
+      "kind": "commit",
+      "message": "feat(deploy): add bigbase init CLI command and --manifest deploy flag"
+    },
+    {
+      "date": "2026-06-21T12:38:02-03:00",
+      "hash": "451ea5ec935246d3dc0c83e1d27e3ea3a09f87f2",
+      "kind": "commit",
+      "message": "feat(deploy): add app_type override to deploy API and sites trigger"
+    },
+    {
+      "date": "2026-06-20T12:39:33-03:00",
+      "hash": "54d40cfca33492782ff3af4b1cbdeb1d74167d47",
+      "kind": "commit",
+      "message": "feat(deploy): passthrough paths, metadata injection, SPA fallback docs"
+    },
+    {
+      "date": "2026-06-12T19:40:09-03:00",
+      "hash": "670460601bdcbd5a72dfb21f475ab3b1f336a58a",
+      "kind": "commit",
+      "message": "feat(deploy,sites,proxy): implement site build and request logs"
+    },
+    {
+      "date": "2026-06-12T17:59:29-03:00",
+      "hash": "69ad4830a7572e436f5cb965824ea57f49270422",
+      "kind": "commit",
+      "message": "fix(deploy): use site name for deployment subdomain (#24)"
+    },
+    {
+      "date": "2026-06-05T19:55:44-03:00",
+      "hash": "8f23903bab803eec339a27bb41452b11e17e0272",
+      "kind": "commit",
+      "message": "feat(dx): e22s04 sample apps with deploy buttons"
+    }
+  ],
+  "lastModified": 1786492494,
+  "symbols": [
+    {
+      "endLine": 16,
+      "endOffset": 324,
+      "kind": "class",
+      "name": "SampleApp",
+      "startLine": 12,
+      "startOffset": 191,
+      "symbolId": "components/deploy/samples.go::SampleApp::class"
+    },
+    {
+      "endLine": 19,
+      "endOffset": 428,
+      "kind": "variable",
+      "name": "catalogSamples",
+      "startLine": 19,
+      "startOffset": 414,
+      "symbolId": "components/deploy/samples.go::catalogSamples::variable"
+    },
+    {
+      "endLine": 45,
+      "endOffset": 1191,
+      "kind": "function",
+      "name": "sampleByName",
+      "startLine": 38,
+      "startOffset": 1027,
+      "symbolId": "components/deploy/samples.go::sampleByName::function"
+    },
+    {
+      "endLine": 95,
+      "endOffset": 2792,
+      "kind": "method",
+      "name": "Deploy.handleSamples",
+      "startLine": 48,
+      "startOffset": 1261,
+      "symbolId": "components/deploy/samples.go::Deploy.handleSamples::method"
+    },
+    {
+      "endLine": 119,
+      "endOffset": 3630,
+      "kind": "method",
+      "name": "Deploy.ensureSampleRepo",
+      "startLine": 98,
+      "startOffset": 2886,
+      "symbolId": "components/deploy/samples.go::Deploy.ensureSampleRepo::method"
+    }
+  ]
+}

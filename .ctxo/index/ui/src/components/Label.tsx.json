@@ -1,0 +1,32 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 2,
+      "symbolId": "ui/src/components/Label.tsx::Label::function"
+    }
+  ],
+  "contentHash": "a07c3d209edf3ec03521cf9577b2b2bbca25b058f09f204703ae07578996656a",
+  "edges": [],
+  "file": "ui/src/components/Label.tsx",
+  "intent": [
+    {
+      "date": "2026-06-28T17:11:02-03:00",
+      "hash": "6fb588e63f79ce75dad9a27c5cd8dc0bf796f27c",
+      "kind": "commit",
+      "message": "feat(ui): add design system foundation — tokens, 22 components, a11y audit"
+    }
+  ],
+  "lastModified": 1786492495,
+  "symbols": [
+    {
+      "endLine": 14,
+      "endOffset": 457,
+      "kind": "function",
+      "name": "Label",
+      "startLine": 7,
+      "startOffset": 176,
+      "symbolId": "ui/src/components/Label.tsx::Label::function"
+    }
+  ]
+}

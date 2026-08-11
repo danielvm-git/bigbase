@@ -1,0 +1,71 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/internal/envcrypto/envcrypto.go::ParseKey::function"
+    },
+    {
+      "cyclomatic": 5,
+      "symbolId": "components/internal/envcrypto/envcrypto.go::Encrypt::function"
+    },
+    {
+      "cyclomatic": 7,
+      "symbolId": "components/internal/envcrypto/envcrypto.go::Decrypt::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/internal/envcrypto/envcrypto.go::MaskValue::function"
+    }
+  ],
+  "contentHash": "133c09143517e0e006c5152670d4b5ee130b0d63509ba43f6961cc3a533d1432",
+  "edges": [],
+  "file": "components/internal/envcrypto/envcrypto.go",
+  "intent": [
+    {
+      "date": "2026-06-25T05:18:42-03:00",
+      "hash": "d62388d7459e1269381963269d5b9a1e202b2e40",
+      "kind": "commit",
+      "message": "fix(env-vars): harden secret storage — server-side masking, shared crypto, and error propagation"
+    }
+  ],
+  "lastModified": 1786492494,
+  "symbols": [
+    {
+      "endLine": 36,
+      "endOffset": 1186,
+      "kind": "function",
+      "name": "ParseKey",
+      "startLine": 24,
+      "startOffset": 849,
+      "symbolId": "components/internal/envcrypto/envcrypto.go::ParseKey::function"
+    },
+    {
+      "endLine": 58,
+      "endOffset": 1923,
+      "kind": "function",
+      "name": "Encrypt",
+      "startLine": 40,
+      "startOffset": 1343,
+      "symbolId": "components/internal/envcrypto/envcrypto.go::Encrypt::function"
+    },
+    {
+      "endLine": 87,
+      "endOffset": 2727,
+      "kind": "function",
+      "name": "Decrypt",
+      "startLine": 62,
+      "startOffset": 2026,
+      "symbolId": "components/internal/envcrypto/envcrypto.go::Decrypt::function"
+    },
+    {
+      "endLine": 99,
+      "endOffset": 3171,
+      "kind": "function",
+      "name": "MaskValue",
+      "startLine": 93,
+      "startOffset": 3029,
+      "symbolId": "components/internal/envcrypto/envcrypto.go::MaskValue::function"
+    }
+  ]
+}

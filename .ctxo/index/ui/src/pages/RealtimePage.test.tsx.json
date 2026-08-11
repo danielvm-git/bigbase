@@ -1,0 +1,16 @@
+{
+  "antiPatterns": [],
+  "complexity": [],
+  "contentHash": "dfe6df22a6e15b39fdd4d6acb1db9d635caf821909387d21466d0c891d3d57e8",
+  "edges": [
+    {
+      "from": "ui/src/pages/RealtimePage.test.tsx::RealtimePage.test::variable",
+      "kind": "imports",
+      "to": "ui/src/pages/RealtimePage.ts::RealtimePage::class"
+    }
+  ],
+  "file": "ui/src/pages/RealtimePage.test.tsx",
+  "intent": [],
+  "lastModified": 1786492495,
+  "symbols": []
+}

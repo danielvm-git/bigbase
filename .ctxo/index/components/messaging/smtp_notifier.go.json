@@ -1,0 +1,134 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/messaging/smtp_notifier.go::NewSMTPAlertNotifier::function"
+    },
+    {
+      "cyclomatic": 6,
+      "symbolId": "components/messaging/smtp_notifier.go::SMTPAlertNotifier.NotifyAlert::method"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/messaging/smtp_notifier.go::buildAlertEmail::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/messaging/smtp_notifier.go::fallback::function"
+    }
+  ],
+  "contentHash": "2866cd6859d162275972aa1fd4d717b234d24922786fa28d196419727c7dd389",
+  "edges": [
+    {
+      "from": "components/messaging/smtp_notifier.go::NewSMTPAlertNotifier::function",
+      "kind": "uses",
+      "to": "components/messaging/smtp_notifier.go::SMTPAlertNotifierOptions::class"
+    },
+    {
+      "from": "components/messaging/smtp_notifier.go::NewSMTPAlertNotifier::function",
+      "kind": "uses",
+      "to": "components/messaging/smtp_notifier.go::SMTPAlertNotifier::class"
+    },
+    {
+      "from": "components/messaging/smtp_notifier.go::SMTPAlertNotifier.NotifyAlert::method",
+      "kind": "uses",
+      "to": "components/messaging/smtp_notifier.go::SMTPAlertNotifier::class"
+    },
+    {
+      "from": "components/messaging/smtp_notifier.go::SMTPAlertNotifier.NotifyAlert::method",
+      "kind": "uses",
+      "to": "components/messaging/smtp_notifier.go::AlertEvent::class"
+    },
+    {
+      "from": "components/messaging/smtp_notifier.go::SMTPAlertNotifier.NotifyAlert::method",
+      "kind": "calls",
+      "to": "components/messaging/smtp_notifier.go::buildAlertEmail::function"
+    },
+    {
+      "from": "components/messaging/smtp_notifier.go::buildAlertEmail::function",
+      "kind": "uses",
+      "to": "components/messaging/smtp_notifier.go::AlertEvent::class"
+    },
+    {
+      "from": "components/messaging/smtp_notifier.go::buildAlertEmail::function",
+      "kind": "calls",
+      "to": "components/messaging/smtp_notifier.go::fallback::function"
+    }
+  ],
+  "file": "components/messaging/smtp_notifier.go",
+  "intent": [
+    {
+      "date": "2026-07-29T00:01:45-03:00",
+      "hash": "aa383b64713bf21e3f35c3d406706bfdfe1787dd",
+      "kind": "commit",
+      "message": "feat(monitoring): add site availability metrics + wire alert subscriber (closes #178)"
+    }
+  ],
+  "lastModified": 1786492494,
+  "symbols": [
+    {
+      "endLine": 22,
+      "endOffset": 598,
+      "kind": "class",
+      "name": "AlertEvent",
+      "startLine": 14,
+      "startOffset": 316,
+      "symbolId": "components/messaging/smtp_notifier.go::AlertEvent::class"
+    },
+    {
+      "endLine": 41,
+      "endOffset": 1331,
+      "kind": "class",
+      "name": "SMTPAlertNotifierOptions",
+      "startLine": 25,
+      "startOffset": 676,
+      "symbolId": "components/messaging/smtp_notifier.go::SMTPAlertNotifierOptions::class"
+    },
+    {
+      "endLine": 50,
+      "endOffset": 1686,
+      "kind": "class",
+      "name": "SMTPAlertNotifier",
+      "startLine": 45,
+      "startOffset": 1484,
+      "symbolId": "components/messaging/smtp_notifier.go::SMTPAlertNotifier::class"
+    },
+    {
+      "endLine": 66,
+      "endOffset": 2275,
+      "kind": "function",
+      "name": "NewSMTPAlertNotifier",
+      "startLine": 53,
+      "startOffset": 1750,
+      "symbolId": "components/messaging/smtp_notifier.go::NewSMTPAlertNotifier::function"
+    },
+    {
+      "endLine": 91,
+      "endOffset": 3170,
+      "kind": "method",
+      "name": "SMTPAlertNotifier.NotifyAlert",
+      "startLine": 70,
+      "startOffset": 2411,
+      "symbolId": "components/messaging/smtp_notifier.go::SMTPAlertNotifier.NotifyAlert::method"
+    },
+    {
+      "endLine": 121,
+      "endOffset": 4360,
+      "kind": "function",
+      "name": "buildAlertEmail",
+      "startLine": 94,
+      "startOffset": 3243,
+      "symbolId": "components/messaging/smtp_notifier.go::buildAlertEmail::function"
+    },
+    {
+      "endLine": 128,
+      "endOffset": 4460,
+      "kind": "function",
+      "name": "fallback",
+      "startLine": 123,
+      "startOffset": 4362,
+      "symbolId": "components/messaging/smtp_notifier.go::fallback::function"
+    }
+  ]
+}

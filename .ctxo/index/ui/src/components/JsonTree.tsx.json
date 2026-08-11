@@ -1,0 +1,38 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 1,
+      "symbolId": "ui/src/components/JsonTree.tsx::JsonTree::function"
+    }
+  ],
+  "contentHash": "81e0d10ba4818d5a02bf3c078f13c304491eda47255d10bae3c4069940358c31",
+  "edges": [],
+  "file": "ui/src/components/JsonTree.tsx",
+  "intent": [
+    {
+      "date": "2026-08-11T13:43:58-03:00",
+      "hash": "b48a9e9efdf6a6eb00fef735b18752a057ba7f70",
+      "kind": "commit",
+      "message": "fix(ui): a11y for JsonTree, ThemePicker, Input (T000011/T000013/T000015)"
+    },
+    {
+      "date": "2026-06-28T17:11:02-03:00",
+      "hash": "6fb588e63f79ce75dad9a27c5cd8dc0bf796f27c",
+      "kind": "commit",
+      "message": "feat(ui): add design system foundation — tokens, 22 components, a11y audit"
+    }
+  ],
+  "lastModified": 1786492495,
+  "symbols": [
+    {
+      "endLine": 94,
+      "endOffset": 2924,
+      "kind": "function",
+      "name": "JsonTree",
+      "startLine": 88,
+      "startOffset": 2693,
+      "symbolId": "ui/src/components/JsonTree.tsx::JsonTree::function"
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 26,
+      "symbolId": "components/monitoring/alert_rules_test.go::TestAlertRules::function"
+    }
+  ],
+  "contentHash": "ba42cbb539506f42c7871ab840042e2683189874a79a047ae07aefcb29661e00",
+  "edges": [],
+  "file": "components/monitoring/alert_rules_test.go",
+  "intent": [],
+  "lastModified": 1786492494,
+  "symbols": []
+}

@@ -1,0 +1,90 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 2,
+      "symbolId": "ui/src/tokens/tokens.ts::cssVar::function"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "ui/src/tokens/tokens.ts::token::function"
+    }
+  ],
+  "contentHash": "dce2a1b01566ac1d92f37f0b4355a325ca168575efc148566515fb942255e9a7",
+  "edges": [
+    {
+      "from": "ui/src/tokens/tokens.ts::cssVar::function",
+      "kind": "imports",
+      "to": "ui/src/tokens/types.ts::DesignTokens::interface",
+      "typeOnly": true
+    },
+    {
+      "from": "ui/src/tokens/tokens.ts::token::function",
+      "kind": "uses",
+      "to": "ui/src/tokens/types.ts::DesignTokens::interface"
+    }
+  ],
+  "file": "ui/src/tokens/tokens.ts",
+  "intent": [
+    {
+      "date": "2026-08-11T16:07:12-03:00",
+      "hash": "314e870a962a01a694f12b68a7747e244ca51258",
+      "kind": "commit",
+      "message": "fix(ui): AAA contrast tokens 7:1 (e87s01)"
+    },
+    {
+      "date": "2026-08-11T15:58:34-03:00",
+      "hash": "852d5789a30bd36718e3ee83acc50de19c78029c",
+      "kind": "commit",
+      "message": "fix(ui): AAA focus appearance 3:1 (e87s02)"
+    },
+    {
+      "date": "2026-08-11T15:55:35-03:00",
+      "hash": "f80cb4472e6258ee7a0355f6e0b9ded00cf3fac0",
+      "kind": "commit",
+      "message": "fix(ui): AAA text scaling + location indicator (e87s07)"
+    },
+    {
+      "date": "2026-08-11T00:23:34-03:00",
+      "hash": "7d9ef63c1c9149930ef9db8b6cd45aa2a246c787",
+      "kind": "commit",
+      "message": "fix(ui): raise fg-tertiary contrast to WCAG 1.4.3 AA (4.5:1)"
+    },
+    {
+      "date": "2026-06-28T17:11:02-03:00",
+      "hash": "6fb588e63f79ce75dad9a27c5cd8dc0bf796f27c",
+      "kind": "commit",
+      "message": "feat(ui): add design system foundation — tokens, 22 components, a11y audit"
+    }
+  ],
+  "lastModified": 1786492495,
+  "symbols": [
+    {
+      "endLine": 125,
+      "endOffset": 3621,
+      "kind": "function",
+      "name": "cssVar",
+      "startLine": 123,
+      "startOffset": 3511,
+      "symbolId": "ui/src/tokens/tokens.ts::cssVar::function"
+    },
+    {
+      "endLine": 130,
+      "endOffset": 3761,
+      "kind": "function",
+      "name": "token",
+      "startLine": 128,
+      "startOffset": 3674,
+      "symbolId": "ui/src/tokens/tokens.ts::token::function"
+    },
+    {
+      "endLine": 120,
+      "endOffset": 3431,
+      "kind": "variable",
+      "name": "TOKENS",
+      "startLine": 2,
+      "startOffset": 58,
+      "symbolId": "ui/src/tokens/tokens.ts::TOKENS::variable"
+    }
+  ]
+}

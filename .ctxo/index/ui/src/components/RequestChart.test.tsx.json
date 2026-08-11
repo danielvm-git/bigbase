@@ -1,0 +1,23 @@
+{
+  "antiPatterns": [],
+  "complexity": [],
+  "contentHash": "61e93a3686cc2311a8558d1c6cfb5ca11edba91c116a216421930d94f712df33",
+  "edges": [
+    {
+      "from": "ui/src/components/RequestChart.test.tsx::RequestChart.test::variable",
+      "kind": "imports",
+      "to": "ui/src/components/RequestChart.ts::RequestChart::class"
+    }
+  ],
+  "file": "ui/src/components/RequestChart.test.tsx",
+  "intent": [
+    {
+      "date": "2026-08-11T13:43:04-03:00",
+      "hash": "0084e236186d05c7721f7141c1488b3b5cc0e355",
+      "kind": "commit",
+      "message": "fix(ui): accessible chart/gauges labels + progressbar roles (T000012)"
+    }
+  ],
+  "lastModified": 1786492495,
+  "symbols": []
+}

@@ -1,0 +1,23 @@
+{
+  "antiPatterns": [],
+  "complexity": [],
+  "contentHash": "c48986144da16dd0750eee76f2774af11e2c58efd95d98cfbd8d5b4be14c10a6",
+  "edges": [],
+  "file": "tests/e2e/axe-scan.spec.ts",
+  "intent": [
+    {
+      "date": "2026-08-11T20:30:16-03:00",
+      "hash": "b535145d15272091559cfdf2e2c58cadb7e884a9",
+      "kind": "commit",
+      "message": "test(e2e): axe-scan covers public / and /docs routes (19 total)"
+    },
+    {
+      "date": "2026-08-11T14:02:32-03:00",
+      "hash": "f46fe6327b86929daba64af8791897e3928ed3f6",
+      "kind": "commit",
+      "message": "test(e2e): axe-core conformance scan across all 17 routes"
+    }
+  ],
+  "lastModified": 1786492495,
+  "symbols": []
+}

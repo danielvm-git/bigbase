@@ -1,0 +1,110 @@
+{
+  "antiPatterns": [],
+  "complexity": [],
+  "contentHash": "08aa69bcac7ff0eb28cfef0b7eade81363b9d991bee301e27246a6304dee20bd",
+  "edges": [],
+  "file": "specs/archive/prototype/project/react-stubs/tokens.ts",
+  "intent": [],
+  "lastModified": 1786492495,
+  "symbols": [
+    {
+      "endLine": 36,
+      "endOffset": 1136,
+      "kind": "interface",
+      "name": "ThemeMeta",
+      "startLine": 31,
+      "startOffset": 1001,
+      "symbolId": "specs/archive/prototype/project/react-stubs/tokens.ts::ThemeMeta::interface"
+    },
+    {
+      "endLine": 9,
+      "endOffset": 365,
+      "kind": "type",
+      "name": "AccentTheme",
+      "startLine": 6,
+      "startOffset": 187,
+      "symbolId": "specs/archive/prototype/project/react-stubs/tokens.ts::AccentTheme::type"
+    },
+    {
+      "endLine": 11,
+      "endOffset": 410,
+      "kind": "type",
+      "name": "ColorScheme",
+      "startLine": 11,
+      "startOffset": 367,
+      "symbolId": "specs/archive/prototype/project/react-stubs/tokens.ts::ColorScheme::type"
+    },
+    {
+      "endLine": 13,
+      "endOffset": 481,
+      "kind": "type",
+      "name": "StatusKind",
+      "startLine": 13,
+      "startOffset": 412,
+      "symbolId": "specs/archive/prototype/project/react-stubs/tokens.ts::StatusKind::type"
+    },
+    {
+      "endLine": 16,
+      "endOffset": 578,
+      "kind": "type",
+      "name": "BadgeVariant",
+      "startLine": 15,
+      "startOffset": 483,
+      "symbolId": "specs/archive/prototype/project/react-stubs/tokens.ts::BadgeVariant::type"
+    },
+    {
+      "endLine": 19,
+      "endOffset": 666,
+      "kind": "type",
+      "name": "ButtonVariant",
+      "startLine": 18,
+      "startOffset": 580,
+      "symbolId": "specs/archive/prototype/project/react-stubs/tokens.ts::ButtonVariant::type"
+    },
+    {
+      "endLine": 21,
+      "endOffset": 715,
+      "kind": "type",
+      "name": "ButtonSize",
+      "startLine": 21,
+      "startOffset": 668,
+      "symbolId": "specs/archive/prototype/project/react-stubs/tokens.ts::ButtonSize::type"
+    },
+    {
+      "endLine": 24,
+      "endOffset": 806,
+      "kind": "type",
+      "name": "SpaceToken",
+      "startLine": 23,
+      "startOffset": 717,
+      "symbolId": "specs/archive/prototype/project/react-stubs/tokens.ts::SpaceToken::type"
+    },
+    {
+      "endLine": 26,
+      "endOffset": 866,
+      "kind": "type",
+      "name": "RadiusToken",
+      "startLine": 26,
+      "startOffset": 808,
+      "symbolId": "specs/archive/prototype/project/react-stubs/tokens.ts::RadiusToken::type"
+    },
+    {
+      "endLine": 28,
+      "endOffset": 924,
+      "kind": "type",
+      "name": "ShadowToken",
+      "startLine": 28,
+      "startOffset": 868,
+      "symbolId": "specs/archive/prototype/project/react-stubs/tokens.ts::ShadowToken::type"
+    },
+    {
+      "endLine": 52,
+      "endOffset": 2268,
+      "kind": "variable",
+      "name": "THEME_META",
+      "startLine": 38,
+      "startOffset": 1151,
+      "symbolId": "specs/archive/prototype/project/react-stubs/tokens.ts::THEME_META::variable"
+    }
+  ]
+}

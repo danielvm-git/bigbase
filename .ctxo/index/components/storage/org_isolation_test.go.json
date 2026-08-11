@@ -1,0 +1,22 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 16,
+      "symbolId": "components/storage/org_isolation_test.go::TestStorageOrgIsolation::function"
+    }
+  ],
+  "contentHash": "e23fec2ade19053042b1723da5484449e7cfb21904dbac8793bd9b799cf34bce",
+  "edges": [],
+  "file": "components/storage/org_isolation_test.go",
+  "intent": [
+    {
+      "date": "2026-07-24T09:10:02-03:00",
+      "hash": "2736ef5814c11a4e0317bcbcbc47e7fa14c970ef",
+      "kind": "commit",
+      "message": "fix(security): scope storage file handlers by org_id (BUG-133)"
+    }
+  ],
+  "lastModified": 1786492495,
+  "symbols": []
+}

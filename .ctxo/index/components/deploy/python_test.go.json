@@ -1,0 +1,140 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/deploy/python_test.go::TestHasPyProjectTOML_Valid::function"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/deploy/python_test.go::TestHasPyProjectTOML_NoProjectSection::function"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/deploy/python_test.go::TestHasPyProjectTOML_ToolUVOnly::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/deploy/python_test.go::TestHasPyProjectTOML_NoFile::function"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/deploy/python_test.go::TestDetectAppType_PyProject::function"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/deploy/python_test.go::TestDetectAppType_PyProjectOverNode::function"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/deploy/python_test.go::TestDetectAppType_LegacyPython::function"
+    },
+    {
+      "cyclomatic": 5,
+      "symbolId": "components/deploy/python_test.go::TestParsePyProjectTOML_EntryPoint::function"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/deploy/python_test.go::TestIsUvicornDep::function"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/deploy/python_test.go::TestSplitEntryPoint::function"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/deploy/python_test.go::TestPyProjectTOML_HasUvicorn::function"
+    },
+    {
+      "cyclomatic": 7,
+      "symbolId": "components/deploy/python_test.go::TestPythonStartCommand_Uvicorn::function"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/deploy/python_test.go::TestPythonStartCommand_Fallback::function"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/deploy/python_test.go::TestPythonStartCommand_Uvicorn_Path::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/deploy/python_test.go::TestResolvePythonBin::function"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/deploy/python_test.go::TestPythonStartCommand_PyProject_NoUv::function"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/deploy/python_test.go::TestPythonStartCommand_SetsDir::function"
+    },
+    {
+      "cyclomatic": 9,
+      "symbolId": "components/deploy/python_test.go::TestPythonStartCommand_UvicornDefaultsAppApp::function"
+    },
+    {
+      "cyclomatic": 7,
+      "symbolId": "components/deploy/python_test.go::TestPythonStartCommand_CLIScriptFallsBackToAppApp::function"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/deploy/python_test.go::TestIsCLIScriptEntry::function"
+    },
+    {
+      "cyclomatic": 6,
+      "symbolId": "components/deploy/python_test.go::TestParseASGIImport::function"
+    },
+    {
+      "cyclomatic": 10,
+      "symbolId": "components/deploy/python_test.go::TestPythonStartCommand_ManifestASGIImport::function"
+    },
+    {
+      "cyclomatic": 8,
+      "symbolId": "components/deploy/python_test.go::TestPythonStartCommand_ManifestASGIImportSimple::function"
+    }
+  ],
+  "contentHash": "732153a1b176bc24377576f2bfbf5a9b9d2a063ef3eb60f7d47e17ce24705de2",
+  "edges": [],
+  "file": "components/deploy/python_test.go",
+  "intent": [
+    {
+      "date": "2026-07-12T22:10:28-03:00",
+      "hash": "014e7d60478293303dfbc89cd3a2acbbcaec570e",
+      "kind": "commit",
+      "message": "feat(deploy): add asgi_import to bigbase.yaml manifest for Python apps"
+    },
+    {
+      "date": "2026-07-12T22:00:39-03:00",
+      "hash": "c94cd2162021c7dfd185891bd494f1fcfd9078a7",
+      "kind": "commit",
+      "message": "fix(deploy): fall back to app:app when entry point is a CLI script"
+    },
+    {
+      "date": "2026-07-12T20:02:42-03:00",
+      "hash": "d10da5278a63aadf0ee386afbe8aa4d7e5f5c293",
+      "kind": "commit",
+      "message": "fix(deploy): default ASGI import string to app:app when no entry point declared"
+    },
+    {
+      "date": "2026-07-12T19:53:20-03:00",
+      "hash": "2b1553148fcf82c596326ad6508cf0cd61861957",
+      "kind": "commit",
+      "message": "fix(deploy): set cmd.Dir and replace literal $PORT in pythonStartCommand"
+    },
+    {
+      "date": "2026-07-12T17:38:20-03:00",
+      "hash": "645d8b213e8957f774694b2b4c9bd2fe2aae3c5d",
+      "kind": "commit",
+      "message": "test(deploy): add tests for uv-not-available fallback"
+    },
+    {
+      "date": "2026-07-10T11:11:06-03:00",
+      "hash": "92edecd4dc1523c77f1bf33eb8a20d9f41beb8ca",
+      "kind": "commit",
+      "message": "feat(e73s01): add pyproject.toml detection and uv package manager"
+    }
+  ],
+  "lastModified": 1786492494,
+  "symbols": []
+}

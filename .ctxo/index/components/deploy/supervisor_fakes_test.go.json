@@ -1,0 +1,50 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/deploy/supervisor_fakes_test.go::newFakeInstance::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/deploy/supervisor_fakes_test.go::FakeInstance.Wait::method"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/deploy/supervisor_fakes_test.go::FakeInstance.Stop::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/deploy/supervisor_fakes_test.go::FakeInstance.Health::method"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/deploy/supervisor_fakes_test.go::FakeRunner.Spawn::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/deploy/supervisor_fakes_test.go::FakeClock.Now::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/deploy/supervisor_fakes_test.go::FakeClock.Sleep::method"
+    },
+    {
+      "cyclomatic": 9,
+      "symbolId": "components/deploy/supervisor_fakes_test.go::TestFakeRunnerSpawnsScriptedInstances::function"
+    }
+  ],
+  "contentHash": "98e6511ee58d5fd967ae20a37cb85c925f78565885824448768de3f0a16705e9",
+  "edges": [],
+  "file": "components/deploy/supervisor_fakes_test.go",
+  "intent": [
+    {
+      "date": "2026-06-23T21:52:37-03:00",
+      "hash": "a0d6bb7f6908142b34ab0158d3630aea2b321094",
+      "kind": "commit",
+      "message": "feat(deploy): introduce Supervisor seam — Runner/Instance/Spec interfaces + restart policy (e53s01-s02)"
+    }
+  ],
+  "lastModified": 1786492494,
+  "symbols": []
+}

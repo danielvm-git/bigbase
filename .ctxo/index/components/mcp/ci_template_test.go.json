@@ -1,0 +1,30 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/mcp/ci_template_test.go::mockSiteListerForCI.ListSites::method"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/mcp/ci_template_test.go::mockSiteListerForCI.GetSite::method"
+    },
+    {
+      "cyclomatic": 6,
+      "symbolId": "components/mcp/ci_template_test.go::TestCITemplateWithDefaults::function"
+    }
+  ],
+  "contentHash": "173da5fbf53ea5e8ad42d2712f174974b60ab10986328a50f18c1cad0b756f10",
+  "edges": [],
+  "file": "components/mcp/ci_template_test.go",
+  "intent": [
+    {
+      "date": "2026-07-25T15:24:38-03:00",
+      "hash": "e2b37023ac005a59ea8fd30de438ea41ebf1333b",
+      "kind": "commit",
+      "message": "feat(mcp): parameterize ci templates with site deploy defaults"
+    }
+  ],
+  "lastModified": 1786492494,
+  "symbols": []
+}

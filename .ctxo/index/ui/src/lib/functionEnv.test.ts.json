@@ -1,0 +1,26 @@
+{
+  "antiPatterns": [],
+  "complexity": [],
+  "contentHash": "583434ee5d34703d69e49a4d4cfd358f7109e146ee10f26f1bc971d87630116e",
+  "edges": [
+    {
+      "from": "ui/src/lib/functionEnv.test.ts::functionEnv.test::variable",
+      "kind": "imports",
+      "to": "ui/src/lib/functionEnv.ts::formatFunctionEnv::function"
+    },
+    {
+      "from": "ui/src/lib/functionEnv.test.ts::functionEnv.test::variable",
+      "kind": "imports",
+      "to": "ui/src/lib/functionEnv.ts::parseFunctionEnv::function"
+    },
+    {
+      "from": "ui/src/lib/functionEnv.test.ts::functionEnv.test::variable",
+      "kind": "imports",
+      "to": "ui/src/lib/functionEnv.ts::functionPayloadFromForm::function"
+    }
+  ],
+  "file": "ui/src/lib/functionEnv.test.ts",
+  "intent": [],
+  "lastModified": 1786492495,
+  "symbols": []
+}

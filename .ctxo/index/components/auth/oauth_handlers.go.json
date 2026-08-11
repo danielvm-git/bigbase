@@ -1,0 +1,554 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 5,
+      "symbolId": "components/auth/oauth_handlers.go::Auth.handleGoogleOAuth::method"
+    },
+    {
+      "cyclomatic": 13,
+      "symbolId": "components/auth/oauth_handlers.go::Auth.handleGoogleCallback::method"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/auth/oauth_handlers.go::Auth.handleLogout::method"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/auth/oauth_handlers.go::Auth.handleLogoutAll::method"
+    },
+    {
+      "cyclomatic": 5,
+      "symbolId": "components/auth/oauth_handlers.go::Auth.findOrCreatePhoneUser::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/auth/oauth_handlers.go::Auth.clearOAuthStateCookie::method"
+    },
+    {
+      "cyclomatic": 9,
+      "symbolId": "components/auth/oauth_handlers.go::Auth.findOrCreateGoogleUser::method"
+    },
+    {
+      "cyclomatic": 5,
+      "symbolId": "components/auth/oauth_handlers.go::Auth.findOrCreateEmailUser::method"
+    },
+    {
+      "cyclomatic": 6,
+      "symbolId": "components/auth/oauth_handlers.go::realGoogleVerifier.Verify::method"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/auth/oauth_handlers.go::decodeGoogleIDToken::function"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/auth/oauth_handlers.go::jwtDecodePart::function"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/auth/oauth_handlers.go::SignSPAState::function"
+    },
+    {
+      "cyclomatic": 5,
+      "symbolId": "components/auth/oauth_handlers.go::VerifySPAState::function"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/auth/oauth_handlers.go::SignState::function"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/auth/oauth_handlers.go::VerifyState::function"
+    }
+  ],
+  "contentHash": "15b0932a22ea67ea3d2af3498bd866e5426e94b02148a8bbd43ffebac98d703b",
+  "edges": [
+    {
+      "from": "components/auth/oauth_handlers.go::Auth.handleGoogleOAuth::method",
+      "kind": "uses",
+      "to": "components/auth/auth.go::Auth::class"
+    },
+    {
+      "from": "components/auth/oauth_handlers.go::Auth.handleGoogleOAuth::method",
+      "kind": "calls",
+      "to": "kernel/utilities.go::WriteJSON::function"
+    },
+    {
+      "from": "components/auth/oauth_handlers.go::Auth.handleGoogleOAuth::method",
+      "kind": "calls",
+      "to": "kernel/utilities.go::GenerateID::function"
+    },
+    {
+      "from": "components/auth/oauth_handlers.go::Auth.handleGoogleOAuth::method",
+      "kind": "calls",
+      "to": "components/auth/auth.go::Auth.isSPAOriginAllowed::method"
+    },
+    {
+      "from": "components/auth/oauth_handlers.go::Auth.handleGoogleOAuth::method",
+      "kind": "calls",
+      "to": "components/auth/oauth_handlers.go::SignSPAState::function"
+    },
+    {
+      "from": "components/auth/oauth_handlers.go::Auth.handleGoogleOAuth::method",
+      "kind": "calls",
+      "to": "components/auth/oauth_handlers.go::SignState::function"
+    },
+    {
+      "from": "components/auth/oauth_handlers.go::Auth.handleGoogleOAuth::method",
+      "kind": "calls",
+      "to": "components/auth/auth.go::Auth.cookieSecure::method"
+    },
+    {
+      "from": "components/auth/oauth_handlers.go::Auth.handleGoogleOAuth::method",
+      "kind": "calls",
+      "to": "components/auth/auth.go::Auth.oauthCallbackRedirectURI::method"
+    },
+    {
+      "from": "components/auth/oauth_handlers.go::Auth.handleGoogleCallback::method",
+      "kind": "uses",
+      "to": "components/auth/auth.go::Auth::class"
+    },
+    {
+      "from": "components/auth/oauth_handlers.go::Auth.handleGoogleCallback::method",
+      "kind": "calls",
+      "to": "kernel/utilities.go::WriteJSON::function"
+    },
+    {
+      "from": "components/auth/oauth_handlers.go::Auth.handleGoogleCallback::method",
+      "kind": "calls",
+      "to": "components/auth/oauth_handlers.go::VerifySPAState::function"
+    },
+    {
+      "from": "components/auth/oauth_handlers.go::Auth.handleGoogleCallback::method",
+      "kind": "calls",
+      "to": "components/auth/oauth_handlers.go::VerifyState::function"
+    },
+    {
+      "from": "components/auth/oauth_handlers.go::Auth.handleGoogleCallback::method",
+      "kind": "calls",
+      "to": "components/auth/oauth_handlers.go::Auth.clearOAuthStateCookie::method"
+    },
+    {
+      "from": "components/auth/oauth_handlers.go::Auth.handleGoogleCallback::method",
+      "kind": "calls",
+      "to": "components/auth/auth.go::Auth.oauthCallbackRedirectURI::method"
+    },
+    {
+      "from": "components/auth/oauth_handlers.go::Auth.handleGoogleCallback::method",
+      "kind": "uses",
+      "to": "components/auth/oauth_handlers.go::realGoogleVerifier::class"
+    },
+    {
+      "from": "components/auth/oauth_handlers.go::Auth.handleGoogleCallback::method",
+      "kind": "calls",
+      "to": "components/auth/auth.go::GoogleVerifier.Verify::method"
+    },
+    {
+      "from": "components/auth/oauth_handlers.go::Auth.handleGoogleCallback::method",
+      "kind": "calls",
+      "to": "kernel/component.go::Logger.Error::method"
+    },
+    {
+      "from": "components/auth/oauth_handlers.go::Auth.handleGoogleCallback::method",
+      "kind": "calls",
+      "to": "components/auth/oauth_handlers.go::Auth.findOrCreateGoogleUser::method"
+    },
+    {
+      "from": "components/auth/oauth_handlers.go::Auth.handleGoogleCallback::method",
+      "kind": "calls",
+      "to": "components/auth/jwt.go::createJWT::function"
+    },
+    {
+      "from": "components/auth/oauth_handlers.go::Auth.handleGoogleCallback::method",
+      "kind": "calls",
+      "to": "components/auth/auth.go::Auth.isSPAOriginAllowed::method"
+    },
+    {
+      "from": "components/auth/oauth_handlers.go::Auth.handleGoogleCallback::method",
+      "kind": "calls",
+      "to": "components/auth/auth.go::Auth.recordAudit::method"
+    },
+    {
+      "from": "components/auth/oauth_handlers.go::Auth.handleGoogleCallback::method",
+      "kind": "calls",
+      "to": "components/auth/auth.go::getIP::function"
+    },
+    {
+      "from": "components/auth/oauth_handlers.go::Auth.handleLogout::method",
+      "kind": "uses",
+      "to": "components/auth/auth.go::Auth::class"
+    },
+    {
+      "from": "components/auth/oauth_handlers.go::Auth.handleLogout::method",
+      "kind": "calls",
+      "to": "kernel/utilities.go::WriteJSON::function"
+    },
+    {
+      "from": "components/auth/oauth_handlers.go::Auth.handleLogout::method",
+      "kind": "calls",
+      "to": "components/auth/middleware.go::UserIDFromContext::function"
+    },
+    {
+      "from": "components/auth/oauth_handlers.go::Auth.handleLogout::method",
+      "kind": "calls",
+      "to": "components/auth/middleware.go::UserEmailFromContext::function"
+    },
+    {
+      "from": "components/auth/oauth_handlers.go::Auth.handleLogout::method",
+      "kind": "calls",
+      "to": "components/auth/auth.go::Auth.recordAudit::method"
+    },
+    {
+      "from": "components/auth/oauth_handlers.go::Auth.handleLogout::method",
+      "kind": "calls",
+      "to": "components/auth/auth.go::getIP::function"
+    },
+    {
+      "from": "components/auth/oauth_handlers.go::Auth.handleLogoutAll::method",
+      "kind": "uses",
+      "to": "components/auth/auth.go::Auth::class"
+    },
+    {
+      "from": "components/auth/oauth_handlers.go::Auth.handleLogoutAll::method",
+      "kind": "calls",
+      "to": "kernel/utilities.go::WriteJSON::function"
+    },
+    {
+      "from": "components/auth/oauth_handlers.go::Auth.handleLogoutAll::method",
+      "kind": "calls",
+      "to": "components/auth/middleware.go::UserIDFromContext::function"
+    },
+    {
+      "from": "components/auth/oauth_handlers.go::Auth.handleLogoutAll::method",
+      "kind": "calls",
+      "to": "components/auth/refreshtoken.go::Auth.invalidateAllUserTokens::method"
+    },
+    {
+      "from": "components/auth/oauth_handlers.go::Auth.handleLogoutAll::method",
+      "kind": "calls",
+      "to": "kernel/component.go::Logger.Error::method"
+    },
+    {
+      "from": "components/auth/oauth_handlers.go::Auth.findOrCreatePhoneUser::method",
+      "kind": "uses",
+      "to": "components/auth/auth.go::Auth::class"
+    },
+    {
+      "from": "components/auth/oauth_handlers.go::Auth.findOrCreatePhoneUser::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.QueryRowContext::method"
+    },
+    {
+      "from": "components/auth/oauth_handlers.go::Auth.findOrCreatePhoneUser::method",
+      "kind": "calls",
+      "to": "components/auth/credentials.go::hashPassword::function"
+    },
+    {
+      "from": "components/auth/oauth_handlers.go::Auth.findOrCreatePhoneUser::method",
+      "kind": "calls",
+      "to": "components/auth/org_http.go::generateTempPass::function"
+    },
+    {
+      "from": "components/auth/oauth_handlers.go::Auth.findOrCreatePhoneUser::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.ExecContext::method"
+    },
+    {
+      "from": "components/auth/oauth_handlers.go::Auth.findOrCreatePhoneUser::method",
+      "kind": "calls",
+      "to": "components/auth/orgs.go::Auth.CreateOrg::method"
+    },
+    {
+      "from": "components/auth/oauth_handlers.go::Auth.findOrCreatePhoneUser::method",
+      "kind": "calls",
+      "to": "kernel/component.go::Logger.Error::method"
+    },
+    {
+      "from": "components/auth/oauth_handlers.go::Auth.clearOAuthStateCookie::method",
+      "kind": "uses",
+      "to": "components/auth/auth.go::Auth::class"
+    },
+    {
+      "from": "components/auth/oauth_handlers.go::Auth.clearOAuthStateCookie::method",
+      "kind": "calls",
+      "to": "components/auth/auth.go::Auth.cookieSecure::method"
+    },
+    {
+      "from": "components/auth/oauth_handlers.go::Auth.findOrCreateGoogleUser::method",
+      "kind": "uses",
+      "to": "components/auth/auth.go::Auth::class"
+    },
+    {
+      "from": "components/auth/oauth_handlers.go::Auth.findOrCreateGoogleUser::method",
+      "kind": "uses",
+      "to": "components/auth/auth.go::GoogleUser::class"
+    },
+    {
+      "from": "components/auth/oauth_handlers.go::Auth.findOrCreateGoogleUser::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.QueryRowContext::method"
+    },
+    {
+      "from": "components/auth/oauth_handlers.go::Auth.findOrCreateGoogleUser::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.ExecContext::method"
+    },
+    {
+      "from": "components/auth/oauth_handlers.go::Auth.findOrCreateGoogleUser::method",
+      "kind": "calls",
+      "to": "components/auth/credentials.go::hashPassword::function"
+    },
+    {
+      "from": "components/auth/oauth_handlers.go::Auth.findOrCreateGoogleUser::method",
+      "kind": "calls",
+      "to": "components/auth/org_http.go::generateTempPass::function"
+    },
+    {
+      "from": "components/auth/oauth_handlers.go::Auth.findOrCreateGoogleUser::method",
+      "kind": "calls",
+      "to": "components/auth/orgs.go::Auth.CreateOrg::method"
+    },
+    {
+      "from": "components/auth/oauth_handlers.go::Auth.findOrCreateGoogleUser::method",
+      "kind": "calls",
+      "to": "kernel/component.go::Logger.Error::method"
+    },
+    {
+      "from": "components/auth/oauth_handlers.go::Auth.findOrCreateEmailUser::method",
+      "kind": "uses",
+      "to": "components/auth/auth.go::Auth::class"
+    },
+    {
+      "from": "components/auth/oauth_handlers.go::Auth.findOrCreateEmailUser::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.QueryRowContext::method"
+    },
+    {
+      "from": "components/auth/oauth_handlers.go::Auth.findOrCreateEmailUser::method",
+      "kind": "calls",
+      "to": "components/auth/credentials.go::hashPassword::function"
+    },
+    {
+      "from": "components/auth/oauth_handlers.go::Auth.findOrCreateEmailUser::method",
+      "kind": "calls",
+      "to": "components/auth/org_http.go::generateTempPass::function"
+    },
+    {
+      "from": "components/auth/oauth_handlers.go::Auth.findOrCreateEmailUser::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.ExecContext::method"
+    },
+    {
+      "from": "components/auth/oauth_handlers.go::Auth.findOrCreateEmailUser::method",
+      "kind": "calls",
+      "to": "components/auth/orgs.go::Auth.CreateOrg::method"
+    },
+    {
+      "from": "components/auth/oauth_handlers.go::Auth.findOrCreateEmailUser::method",
+      "kind": "calls",
+      "to": "kernel/component.go::Logger.Error::method"
+    },
+    {
+      "from": "components/auth/oauth_handlers.go::realGoogleVerifier.Verify::method",
+      "kind": "uses",
+      "to": "components/auth/oauth_handlers.go::realGoogleVerifier::class"
+    },
+    {
+      "from": "components/auth/oauth_handlers.go::realGoogleVerifier.Verify::method",
+      "kind": "uses",
+      "to": "components/auth/auth.go::GoogleUser::class"
+    },
+    {
+      "from": "components/auth/oauth_handlers.go::realGoogleVerifier.Verify::method",
+      "kind": "calls",
+      "to": "components/auth/oauth_handlers.go::decodeGoogleIDToken::function"
+    },
+    {
+      "from": "components/auth/oauth_handlers.go::decodeGoogleIDToken::function",
+      "kind": "uses",
+      "to": "components/auth/oauth_handlers.go::googleIDClaims::class"
+    },
+    {
+      "from": "components/auth/oauth_handlers.go::decodeGoogleIDToken::function",
+      "kind": "calls",
+      "to": "components/auth/oauth_handlers.go::jwtDecodePart::function"
+    },
+    {
+      "from": "components/auth/oauth_handlers.go::realGoogleVerifier::class",
+      "kind": "implements",
+      "to": "components/auth/auth.go::GoogleVerifier::interface"
+    }
+  ],
+  "file": "components/auth/oauth_handlers.go",
+  "intent": [
+    {
+      "date": "2026-07-11T12:42:19-03:00",
+      "hash": "cc05b2d25009da9844dc9e02fd722b1c92afbe9f",
+      "kind": "commit",
+      "message": "chore: integrate E2E testing epics and update specifications"
+    },
+    {
+      "date": "2026-07-10T16:12:22-03:00",
+      "hash": "81b7fea85a9beda9f198d12c7ba3ca81fcad829b",
+      "kind": "commit",
+      "message": "refactor(auth): split auth.go handlers by concern"
+    }
+  ],
+  "lastModified": 1786492494,
+  "symbols": [
+    {
+      "endLine": 65,
+      "endOffset": 1835,
+      "kind": "method",
+      "name": "Auth.handleGoogleOAuth",
+      "startLine": 19,
+      "startOffset": 209,
+      "symbolId": "components/auth/oauth_handlers.go::Auth.handleGoogleOAuth::method"
+    },
+    {
+      "endLine": 162,
+      "endOffset": 4984,
+      "kind": "method",
+      "name": "Auth.handleGoogleCallback",
+      "startLine": 67,
+      "startOffset": 1837,
+      "symbolId": "components/auth/oauth_handlers.go::Auth.handleGoogleCallback::method"
+    },
+    {
+      "endLine": 184,
+      "endOffset": 5783,
+      "kind": "method",
+      "name": "Auth.handleLogout",
+      "startLine": 167,
+      "startOffset": 5214,
+      "symbolId": "components/auth/oauth_handlers.go::Auth.handleLogout::method"
+    },
+    {
+      "endLine": 203,
+      "endOffset": 6566,
+      "kind": "method",
+      "name": "Auth.handleLogoutAll",
+      "startLine": 187,
+      "startOffset": 5863,
+      "symbolId": "components/auth/oauth_handlers.go::Auth.handleLogoutAll::method"
+    },
+    {
+      "endLine": 236,
+      "endOffset": 7782,
+      "kind": "method",
+      "name": "Auth.findOrCreatePhoneUser",
+      "startLine": 206,
+      "startOffset": 6634,
+      "symbolId": "components/auth/oauth_handlers.go::Auth.findOrCreatePhoneUser::method"
+    },
+    {
+      "endLine": 248,
+      "endOffset": 8060,
+      "kind": "method",
+      "name": "Auth.clearOAuthStateCookie",
+      "startLine": 238,
+      "startOffset": 7784,
+      "symbolId": "components/auth/oauth_handlers.go::Auth.clearOAuthStateCookie::method"
+    },
+    {
+      "endLine": 294,
+      "endOffset": 9847,
+      "kind": "method",
+      "name": "Auth.findOrCreateGoogleUser",
+      "startLine": 250,
+      "startOffset": 8062,
+      "symbolId": "components/auth/oauth_handlers.go::Auth.findOrCreateGoogleUser::method"
+    },
+    {
+      "endLine": 327,
+      "endOffset": 11033,
+      "kind": "method",
+      "name": "Auth.findOrCreateEmailUser",
+      "startLine": 297,
+      "startOffset": 9938,
+      "symbolId": "components/auth/oauth_handlers.go::Auth.findOrCreateEmailUser::method"
+    },
+    {
+      "endLine": 333,
+      "endOffset": 11132,
+      "kind": "class",
+      "name": "realGoogleVerifier",
+      "startLine": 329,
+      "startOffset": 11040,
+      "symbolId": "components/auth/oauth_handlers.go::realGoogleVerifier::class"
+    },
+    {
+      "endLine": 372,
+      "endOffset": 12314,
+      "kind": "method",
+      "name": "realGoogleVerifier.Verify",
+      "startLine": 335,
+      "startOffset": 11134,
+      "symbolId": "components/auth/oauth_handlers.go::realGoogleVerifier.Verify::method"
+    },
+    {
+      "endLine": 379,
+      "endOffset": 12469,
+      "kind": "class",
+      "name": "googleIDClaims",
+      "startLine": 374,
+      "startOffset": 12321,
+      "symbolId": "components/auth/oauth_handlers.go::googleIDClaims::class"
+    },
+    {
+      "endLine": 397,
+      "endOffset": 12974,
+      "kind": "function",
+      "name": "decodeGoogleIDToken",
+      "startLine": 381,
+      "startOffset": 12471,
+      "symbolId": "components/auth/oauth_handlers.go::decodeGoogleIDToken::function"
+    },
+    {
+      "endLine": 409,
+      "endOffset": 13246,
+      "kind": "function",
+      "name": "jwtDecodePart",
+      "startLine": 400,
+      "startOffset": 13046,
+      "symbolId": "components/auth/oauth_handlers.go::jwtDecodePart::function"
+    },
+    {
+      "endLine": 418,
+      "endOffset": 13654,
+      "kind": "function",
+      "name": "SignSPAState",
+      "startLine": 413,
+      "startOffset": 13378,
+      "symbolId": "components/auth/oauth_handlers.go::SignSPAState::function"
+    },
+    {
+      "endLine": 443,
+      "endOffset": 14455,
+      "kind": "function",
+      "name": "VerifySPAState",
+      "startLine": 421,
+      "startOffset": 13748,
+      "symbolId": "components/auth/oauth_handlers.go::VerifySPAState::function"
+    },
+    {
+      "endLine": 451,
+      "endOffset": 14804,
+      "kind": "function",
+      "name": "SignState",
+      "startLine": 447,
+      "startOffset": 14632,
+      "symbolId": "components/auth/oauth_handlers.go::SignState::function"
+    },
+    {
+      "endLine": 469,
+      "endOffset": 15408,
+      "kind": "function",
+      "name": "VerifyState",
+      "startLine": 455,
+      "startOffset": 14970,
+      "symbolId": "components/auth/oauth_handlers.go::VerifyState::function"
+    }
+  ]
+}

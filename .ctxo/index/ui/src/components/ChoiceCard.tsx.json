@@ -1,0 +1,36 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 6,
+      "symbolId": "ui/src/components/ChoiceCard.tsx::ChoiceCard::function"
+    }
+  ],
+  "contentHash": "4ddf11630adf1f9260dacc0c22be57fa8a10585fae3122025ae7049bf4a04924",
+  "edges": [
+    {
+      "from": "ui/src/components/ChoiceCard.tsx::ChoiceCard::function",
+      "kind": "imports",
+      "to": "ui/src/components/Icon.ts::Icon::class"
+    },
+    {
+      "from": "ui/src/components/ChoiceCard.tsx::ChoiceCard::function",
+      "kind": "uses",
+      "to": "ui/src/components/Icon.ts::Icon::class"
+    }
+  ],
+  "file": "ui/src/components/ChoiceCard.tsx",
+  "intent": [],
+  "lastModified": 1786492495,
+  "symbols": [
+    {
+      "endLine": 40,
+      "endOffset": 1183,
+      "kind": "function",
+      "name": "ChoiceCard",
+      "startLine": 13,
+      "startOffset": 239,
+      "symbolId": "ui/src/components/ChoiceCard.tsx::ChoiceCard::function"
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "antiPatterns": [],
+  "complexity": [],
+  "contentHash": "bf52fb3a3cc16e369a45b9d51393ce76d9ccdf21d32dfd31a488c21fc61ea868",
+  "edges": [],
+  "file": "tests/e2e/target-size.spec.ts",
+  "intent": [
+    {
+      "date": "2026-08-11T16:11:51-03:00",
+      "hash": "0613fd1496ac09565ea6c7ff71efbe6efb88433c",
+      "kind": "commit",
+      "message": "fix(ui): AAA target size 44px (e87s03)"
+    }
+  ],
+  "lastModified": 1786492495,
+  "symbols": []
+}

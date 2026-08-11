@@ -1,0 +1,93 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 6,
+      "symbolId": "packages/auth-astro/src/index.ts::createBigBaseAuth::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "packages/auth-astro/src/index.ts::getSession::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "packages/auth-astro/src/index.ts::requireAuth::function"
+    }
+  ],
+  "contentHash": "a5452b2c0e3c01ac550b5c0c88965f3138168c28fd944f3dda754398bd3f2482",
+  "edges": [
+    {
+      "from": "packages/auth-astro/src/index.ts::createBigBaseAuth::function",
+      "kind": "calls",
+      "to": "packages/auth-astro/src/index.ts::getSession::function"
+    },
+    {
+      "from": "packages/auth-astro/src/index.ts::requireAuth::function",
+      "kind": "calls",
+      "to": "packages/auth-astro/src/index.ts::getSession::function"
+    }
+  ],
+  "file": "packages/auth-astro/src/index.ts",
+  "intent": [
+    {
+      "date": "2026-06-29T09:52:30-03:00",
+      "hash": "1674400089b303d53317963ac95924b6a58f7758",
+      "kind": "commit",
+      "message": "fix(sdk): pass token to AuthClient in Astro middleware"
+    },
+    {
+      "date": "2026-06-18T14:37:55-03:00",
+      "hash": "554dbe032348bf0a5af3e8b4d5bed85d5c0de699",
+      "kind": "commit",
+      "message": "feat(sdk): add multi-framework auth SDK — @bigbase/auth + 5 adapters (#32)"
+    }
+  ],
+  "lastModified": 1786492495,
+  "symbols": [
+    {
+      "endLine": 38,
+      "endOffset": 1061,
+      "kind": "function",
+      "name": "createBigBaseAuth",
+      "startLine": 13,
+      "startOffset": 299,
+      "symbolId": "packages/auth-astro/src/index.ts::createBigBaseAuth::function"
+    },
+    {
+      "endLine": 42,
+      "endOffset": 1160,
+      "kind": "function",
+      "name": "getSession",
+      "startLine": 40,
+      "startOffset": 1063,
+      "symbolId": "packages/auth-astro/src/index.ts::getSession::function"
+    },
+    {
+      "endLine": 50,
+      "endOffset": 1332,
+      "kind": "function",
+      "name": "requireAuth",
+      "startLine": 44,
+      "startOffset": 1162,
+      "symbolId": "packages/auth-astro/src/index.ts::requireAuth::function"
+    },
+    {
+      "endLine": 7,
+      "endOffset": 233,
+      "kind": "interface",
+      "name": "AstroAuth",
+      "startLine": 3,
+      "startOffset": 123,
+      "symbolId": "packages/auth-astro/src/index.ts::AstroAuth::interface"
+    },
+    {
+      "endLine": 11,
+      "endOffset": 297,
+      "kind": "interface",
+      "name": "AstroAuthLocals",
+      "startLine": 9,
+      "startOffset": 235,
+      "symbolId": "packages/auth-astro/src/index.ts::AstroAuthLocals::interface"
+    }
+  ]
+}

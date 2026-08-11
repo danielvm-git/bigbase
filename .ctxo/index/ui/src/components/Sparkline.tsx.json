@@ -1,0 +1,43 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 4,
+      "symbolId": "ui/src/components/Sparkline.tsx::Sparkline::function"
+    }
+  ],
+  "contentHash": "3dd0e2807a1a1c9733be328d010f3e4d87e82549f4d87a181eedc69dd6a13812",
+  "edges": [
+    {
+      "from": "ui/src/components/Sparkline.tsx::Sparkline::function",
+      "kind": "calls",
+      "to": "ui/src/components/Sparkline.tsx::summarize::function"
+    },
+    {
+      "from": "ui/src/components/Sparkline.tsx::Sparkline::function",
+      "kind": "calls",
+      "to": "ui/src/components/Sparkline.tsx::summarize::function"
+    }
+  ],
+  "file": "ui/src/components/Sparkline.tsx",
+  "intent": [
+    {
+      "date": "2026-08-11T13:43:04-03:00",
+      "hash": "0084e236186d05c7721f7141c1488b3b5cc0e355",
+      "kind": "commit",
+      "message": "fix(ui): accessible chart/gauges labels + progressbar roles (T000012)"
+    }
+  ],
+  "lastModified": 1786492495,
+  "symbols": [
+    {
+      "endLine": 54,
+      "endOffset": 1585,
+      "kind": "function",
+      "name": "Sparkline",
+      "startLine": 22,
+      "startOffset": 593,
+      "symbolId": "ui/src/components/Sparkline.tsx::Sparkline::function"
+    }
+  ]
+}

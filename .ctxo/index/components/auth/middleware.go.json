@@ -1,0 +1,375 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/auth/middleware.go::Auth.ProtectedHandler::method"
+    },
+    {
+      "cyclomatic": 16,
+      "symbolId": "components/auth/middleware.go::Auth.Middleware::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/auth/middleware.go::UserIDFromContext::function"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/auth/middleware.go::UserEmailFromContext::function"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/auth/middleware.go::UserRoleFromContext::function"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/auth/middleware.go::OrgIDFromContext::function"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/auth/middleware.go::WithOrgID::function"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/auth/middleware.go::WithUserRole::function"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/auth/middleware.go::OrgKeyScopesFromContext::function"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/auth/middleware.go::WithOrgKeyScopes::function"
+    },
+    {
+      "cyclomatic": 5,
+      "symbolId": "components/auth/middleware.go::RequireScopes::function"
+    }
+  ],
+  "contentHash": "f090e6f152b3a31bf8a64ce12ffaaabdc7f66c425906a42687925ba1d4bc645a",
+  "edges": [
+    {
+      "from": "components/auth/middleware.go::Auth.ProtectedHandler::method",
+      "kind": "uses",
+      "to": "components/auth/auth.go::Auth::class"
+    },
+    {
+      "from": "components/auth/middleware.go::Auth.ProtectedHandler::method",
+      "kind": "calls",
+      "to": "components/auth/middleware.go::RequireScopes::function"
+    },
+    {
+      "from": "components/auth/middleware.go::Auth.ProtectedHandler::method",
+      "kind": "calls",
+      "to": "components/auth/ratelimit.go::NewRateLimiter::function"
+    },
+    {
+      "from": "components/auth/middleware.go::Auth.ProtectedHandler::method",
+      "kind": "uses",
+      "to": "components/auth/ratelimit.go::RateLimiterConfig::class"
+    },
+    {
+      "from": "components/auth/middleware.go::Auth.ProtectedHandler::method",
+      "kind": "calls",
+      "to": "components/auth/ratelimit.go::RateLimiter.Middleware::method"
+    },
+    {
+      "from": "components/auth/middleware.go::Auth.ProtectedHandler::method",
+      "kind": "calls",
+      "to": "components/auth/policy.go::Policy.Middleware::method"
+    },
+    {
+      "from": "components/auth/middleware.go::Auth.ProtectedHandler::method",
+      "kind": "calls",
+      "to": "components/auth/policy.go::PolicyScopes::function"
+    },
+    {
+      "from": "components/auth/middleware.go::Auth.ProtectedHandler::method",
+      "kind": "calls",
+      "to": "components/auth/middleware.go::Auth.Middleware::method"
+    },
+    {
+      "from": "components/auth/middleware.go::Auth.Middleware::method",
+      "kind": "uses",
+      "to": "components/auth/auth.go::Auth::class"
+    },
+    {
+      "from": "components/auth/middleware.go::Auth.Middleware::method",
+      "kind": "calls",
+      "to": "components/auth/jwt.go::extractBearerToken::function"
+    },
+    {
+      "from": "components/auth/middleware.go::Auth.Middleware::method",
+      "kind": "calls",
+      "to": "kernel/utilities.go::WriteJSON::function"
+    },
+    {
+      "from": "components/auth/middleware.go::Auth.Middleware::method",
+      "kind": "calls",
+      "to": "components/auth/apikeys.go::Auth.ResolveSiteKey::method"
+    },
+    {
+      "from": "components/auth/middleware.go::Auth.Middleware::method",
+      "kind": "calls",
+      "to": "kernel/component.go::Logger.Error::method"
+    },
+    {
+      "from": "components/auth/middleware.go::Auth.Middleware::method",
+      "kind": "calls",
+      "to": "kernel/scope.go::WithSiteID::function"
+    },
+    {
+      "from": "components/auth/middleware.go::Auth.Middleware::method",
+      "kind": "calls",
+      "to": "components/auth/apikeys.go::Auth.ResolveOrgKey::method"
+    },
+    {
+      "from": "components/auth/middleware.go::Auth.Middleware::method",
+      "kind": "uses",
+      "to": "components/auth/auth.go::ctxOrgID::variable"
+    },
+    {
+      "from": "components/auth/middleware.go::Auth.Middleware::method",
+      "kind": "calls",
+      "to": "kernel/scope.go::WithOrgID::function"
+    },
+    {
+      "from": "components/auth/middleware.go::Auth.Middleware::method",
+      "kind": "uses",
+      "to": "components/auth/auth.go::ctxOrgKeyScopes::variable"
+    },
+    {
+      "from": "components/auth/middleware.go::Auth.Middleware::method",
+      "kind": "calls",
+      "to": "components/auth/jwt.go::verifyJWT::function"
+    },
+    {
+      "from": "components/auth/middleware.go::Auth.Middleware::method",
+      "kind": "uses",
+      "to": "components/auth/auth.go::ctxUserID::variable"
+    },
+    {
+      "from": "components/auth/middleware.go::Auth.Middleware::method",
+      "kind": "uses",
+      "to": "components/auth/auth.go::ctxUserEmail::variable"
+    },
+    {
+      "from": "components/auth/middleware.go::Auth.Middleware::method",
+      "kind": "uses",
+      "to": "components/auth/auth.go::ctxUserRole::variable"
+    },
+    {
+      "from": "components/auth/middleware.go::Auth.Middleware::method",
+      "kind": "calls",
+      "to": "components/auth/emailverify.go::Auth.isEmailVerified::method"
+    },
+    {
+      "from": "components/auth/middleware.go::UserIDFromContext::function",
+      "kind": "uses",
+      "to": "components/auth/auth.go::ctxUserID::variable"
+    },
+    {
+      "from": "components/auth/middleware.go::UserEmailFromContext::function",
+      "kind": "uses",
+      "to": "components/auth/auth.go::ctxUserEmail::variable"
+    },
+    {
+      "from": "components/auth/middleware.go::UserRoleFromContext::function",
+      "kind": "uses",
+      "to": "components/auth/auth.go::ctxUserRole::variable"
+    },
+    {
+      "from": "components/auth/middleware.go::OrgIDFromContext::function",
+      "kind": "uses",
+      "to": "components/auth/auth.go::ctxOrgID::variable"
+    },
+    {
+      "from": "components/auth/middleware.go::WithOrgID::function",
+      "kind": "uses",
+      "to": "components/auth/auth.go::ctxOrgID::variable"
+    },
+    {
+      "from": "components/auth/middleware.go::WithOrgID::function",
+      "kind": "calls",
+      "to": "kernel/scope.go::WithOrgID::function"
+    },
+    {
+      "from": "components/auth/middleware.go::WithUserRole::function",
+      "kind": "uses",
+      "to": "components/auth/auth.go::ctxUserRole::variable"
+    },
+    {
+      "from": "components/auth/middleware.go::OrgKeyScopesFromContext::function",
+      "kind": "uses",
+      "to": "components/auth/auth.go::ctxOrgKeyScopes::variable"
+    },
+    {
+      "from": "components/auth/middleware.go::WithOrgKeyScopes::function",
+      "kind": "uses",
+      "to": "components/auth/auth.go::ctxOrgKeyScopes::variable"
+    },
+    {
+      "from": "components/auth/middleware.go::RequireScopes::function",
+      "kind": "calls",
+      "to": "components/auth/middleware.go::OrgKeyScopesFromContext::function"
+    },
+    {
+      "from": "components/auth/middleware.go::RequireScopes::function",
+      "kind": "calls",
+      "to": "kernel/utilities.go::WriteJSON::function"
+    }
+  ],
+  "file": "components/auth/middleware.go",
+  "intent": [
+    {
+      "date": "2026-07-29T17:53:22-03:00",
+      "hash": "3cb8b517306f5927d1434bcdbfc533a4eb8979a9",
+      "kind": "commit",
+      "message": "feat(auth): declarative Policy gate for route access control (closes #43)"
+    },
+    {
+      "date": "2026-07-28T14:50:58-03:00",
+      "hash": "65d9e399749e89cf52d1b2069a977542f79a0d6b",
+      "kind": "commit",
+      "message": "test(sites): assert non-admin orgs cannot see legacy org_id=0 sites"
+    },
+    {
+      "date": "2026-07-28T09:56:58-03:00",
+      "hash": "6c455a48a4fd143819261cd632342d42208062dc",
+      "kind": "commit",
+      "message": "fix(auth): enforce API key scopes on write routes (CWE-287)"
+    },
+    {
+      "date": "2026-07-24T09:14:21-03:00",
+      "hash": "c306687ab7ba10f7648821011c68c067b30fa7b2",
+      "kind": "commit",
+      "message": "fix(auth): bridge org_id into kernel context for storage/monitoring (#151)"
+    },
+    {
+      "date": "2026-07-23T21:35:35-03:00",
+      "hash": "827b41e960588bc862fbc680630af2ac96912507",
+      "kind": "commit",
+      "message": "fix(functions): add org_id scoping to prevent IDOR on all CRUD handlers"
+    },
+    {
+      "date": "2026-07-23T21:35:24-03:00",
+      "hash": "50c1459961b52541657b515759d3c54b99252000",
+      "kind": "commit",
+      "message": "fix(security): RCE via cici workflows — IDOR to unsandboxed exec.CommandContext"
+    },
+    {
+      "date": "2026-07-10T16:45:34-03:00",
+      "hash": "2a935df77be6c14dbf7170411e17ce405333991f",
+      "kind": "commit",
+      "message": "feat(auth): implement site deploy key REST handlers"
+    },
+    {
+      "date": "2026-07-10T16:12:22-03:00",
+      "hash": "81b7fea85a9beda9f198d12c7ba3ca81fcad829b",
+      "kind": "commit",
+      "message": "refactor(auth): split auth.go handlers by concern"
+    }
+  ],
+  "lastModified": 1786492494,
+  "symbols": [
+    {
+      "endLine": 48,
+      "endOffset": 2516,
+      "kind": "method",
+      "name": "Auth.ProtectedHandler",
+      "startLine": 12,
+      "startOffset": 107,
+      "symbolId": "components/auth/middleware.go::Auth.ProtectedHandler::method"
+    },
+    {
+      "endLine": 135,
+      "endOffset": 5528,
+      "kind": "method",
+      "name": "Auth.Middleware",
+      "startLine": 50,
+      "startOffset": 2518,
+      "symbolId": "components/auth/middleware.go::Auth.Middleware::method"
+    },
+    {
+      "endLine": 140,
+      "endOffset": 5646,
+      "kind": "function",
+      "name": "UserIDFromContext",
+      "startLine": 137,
+      "startOffset": 5530,
+      "symbolId": "components/auth/middleware.go::UserIDFromContext::function"
+    },
+    {
+      "endLine": 145,
+      "endOffset": 5778,
+      "kind": "function",
+      "name": "UserEmailFromContext",
+      "startLine": 142,
+      "startOffset": 5648,
+      "symbolId": "components/auth/middleware.go::UserEmailFromContext::function"
+    },
+    {
+      "endLine": 150,
+      "endOffset": 5906,
+      "kind": "function",
+      "name": "UserRoleFromContext",
+      "startLine": 147,
+      "startOffset": 5780,
+      "symbolId": "components/auth/middleware.go::UserRoleFromContext::function"
+    },
+    {
+      "endLine": 155,
+      "endOffset": 6028,
+      "kind": "function",
+      "name": "OrgIDFromContext",
+      "startLine": 152,
+      "startOffset": 5908,
+      "symbolId": "components/auth/middleware.go::OrgIDFromContext::function"
+    },
+    {
+      "endLine": 164,
+      "endOffset": 6471,
+      "kind": "function",
+      "name": "WithOrgID",
+      "startLine": 161,
+      "startOffset": 6319,
+      "symbolId": "components/auth/middleware.go::WithOrgID::function"
+    },
+    {
+      "endLine": 172,
+      "endOffset": 6901,
+      "kind": "function",
+      "name": "WithUserRole",
+      "startLine": 170,
+      "startOffset": 6780,
+      "symbolId": "components/auth/middleware.go::WithUserRole::function"
+    },
+    {
+      "endLine": 180,
+      "endOffset": 7244,
+      "kind": "function",
+      "name": "OrgKeyScopesFromContext",
+      "startLine": 177,
+      "startOffset": 7102,
+      "symbolId": "components/auth/middleware.go::OrgKeyScopesFromContext::function"
+    },
+    {
+      "endLine": 188,
+      "endOffset": 7685,
+      "kind": "function",
+      "name": "WithOrgKeyScopes",
+      "startLine": 186,
+      "startOffset": 7550,
+      "symbolId": "components/auth/middleware.go::WithOrgKeyScopes::function"
+    },
+    {
+      "endLine": 214,
+      "endOffset": 8620,
+      "kind": "function",
+      "name": "RequireScopes",
+      "startLine": 195,
+      "startOffset": 8045,
+      "symbolId": "components/auth/middleware.go::RequireScopes::function"
+    }
+  ]
+}

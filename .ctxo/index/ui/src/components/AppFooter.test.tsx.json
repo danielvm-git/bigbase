@@ -1,0 +1,29 @@
+{
+  "antiPatterns": [],
+  "complexity": [],
+  "contentHash": "3811f56adbcda1ea5090c09f96545bb8a582dc1e920a3d9333b8e95dfed6d89b",
+  "edges": [
+    {
+      "from": "ui/src/components/AppFooter.test.tsx::AppFooter.test::variable",
+      "kind": "imports",
+      "to": "ui/src/components/AppFooter.ts::AppFooter::class"
+    }
+  ],
+  "file": "ui/src/components/AppFooter.test.tsx",
+  "intent": [
+    {
+      "date": "2026-08-11T15:58:15-03:00",
+      "hash": "4cf60c0162260bba12b4c7cb271b08857ac7d6f9",
+      "kind": "commit",
+      "message": "fix(ui): AAA abbreviation expansions + glossary (e87s04)"
+    },
+    {
+      "date": "2026-06-28T17:11:02-03:00",
+      "hash": "6fb588e63f79ce75dad9a27c5cd8dc0bf796f27c",
+      "kind": "commit",
+      "message": "feat(ui): add design system foundation — tokens, 22 components, a11y audit"
+    }
+  ],
+  "lastModified": 1786492495,
+  "symbols": []
+}

@@ -1,0 +1,42 @@
+{
+  "antiPatterns": [],
+  "complexity": [],
+  "contentHash": "64c618d8671b3f989a4bd2a9b460386032ae6ee3be06174983be363251ff5b98",
+  "edges": [
+    {
+      "from": "kernel/dber.go::DBer::interface",
+      "kind": "extends",
+      "to": "kernel/dber.go::QueryExecDBer::interface"
+    }
+  ],
+  "file": "kernel/dber.go",
+  "intent": [
+    {
+      "date": "2026-07-10T14:29:28-03:00",
+      "hash": "e47c703b4061f0a64cd606b037575e8b1b0da31a",
+      "kind": "commit",
+      "message": "fix(mcp,backup,proxy): unify custom DBer interfaces with kernel.QueryExecDBer"
+    }
+  ],
+  "lastModified": 1786492495,
+  "symbols": [
+    {
+      "endLine": 15,
+      "endOffset": 524,
+      "kind": "interface",
+      "name": "QueryExecDBer",
+      "startLine": 11,
+      "startOffset": 261,
+      "symbolId": "kernel/dber.go::QueryExecDBer::interface"
+    },
+    {
+      "endLine": 25,
+      "endOffset": 879,
+      "kind": "interface",
+      "name": "DBer",
+      "startLine": 19,
+      "startOffset": 661,
+      "symbolId": "kernel/dber.go::DBer::interface"
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "antiPatterns": [],
+  "complexity": [],
+  "contentHash": "acef4cc03d1f8df57e754fa8afcbd5029bf816c2f8c4fd26edfa7740b76a5553",
+  "edges": [],
+  "file": "ui/src/test-setup.ts",
+  "intent": [
+    {
+      "date": "2026-07-28T12:24:08-03:00",
+      "hash": "6ed015ccee4ad87cbaece1af95d93f9cf00b6ecf",
+      "kind": "commit",
+      "message": "fix(ui): stub localStorage in vitest setup for Node 26 compat (BUG-000003)"
+    }
+  ],
+  "lastModified": 1786492495,
+  "symbols": []
+}

@@ -1,0 +1,22 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 12,
+      "symbolId": "components/api/onboarding_test.go::TestGetOnboarding::function"
+    }
+  ],
+  "contentHash": "af100ffa41770ba908c0d64059dadc21ceb929532bfdeb7df61a5b451312427f",
+  "edges": [],
+  "file": "components/api/onboarding_test.go",
+  "intent": [
+    {
+      "date": "2026-06-05T19:51:11-03:00",
+      "hash": "5dc3011a8bf1a23d5532faff56612e14cee9710b",
+      "kind": "commit",
+      "message": "feat(dx): e22s01+e22s02 onboarding checklist UI and 1-click scaffold API"
+    }
+  ],
+  "lastModified": 1786492494,
+  "symbols": []
+}

@@ -1,0 +1,30 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 10,
+      "symbolId": "components/deploy/fleet_resume_test.go::TestRestoreFleetHostsOnRestart::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/deploy/fleet_resume_test.go::insertRunningDeployment::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/deploy/fleet_resume_test.go::mustExec::function"
+    }
+  ],
+  "contentHash": "da040d65d8e931dbc6cc60629e838ab0d25840064133175b5b25baf8368f920a",
+  "edges": [],
+  "file": "components/deploy/fleet_resume_test.go",
+  "intent": [
+    {
+      "date": "2026-06-23T21:52:37-03:00",
+      "hash": "a0d6bb7f6908142b34ab0158d3630aea2b321094",
+      "kind": "commit",
+      "message": "feat(deploy): introduce Supervisor seam — Runner/Instance/Spec interfaces + restart policy (e53s01-s02)"
+    }
+  ],
+  "lastModified": 1786492494,
+  "symbols": []
+}

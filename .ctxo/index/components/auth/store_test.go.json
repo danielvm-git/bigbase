@@ -1,0 +1,36 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 12,
+      "symbolId": "components/auth/store_test.go::TestOTPStore::function"
+    },
+    {
+      "cyclomatic": 14,
+      "symbolId": "components/auth/store_test.go::TestRateLimitStore::function"
+    },
+    {
+      "cyclomatic": 11,
+      "symbolId": "components/auth/store_test.go::TestOTPPersistenceAcrossRestart::function"
+    }
+  ],
+  "contentHash": "091d2829d6c3a1a019e4eff2eed2034fb0956413083d027c622cf85e4533fc26",
+  "edges": [],
+  "file": "components/auth/store_test.go",
+  "intent": [
+    {
+      "date": "2026-07-10T14:46:55-03:00",
+      "hash": "36722e3d731d1da0179c0360d677bc6bdf2b3b19",
+      "kind": "commit",
+      "message": "fix(deploy): prevent manifest path traversal (CWE-22)"
+    },
+    {
+      "date": "2026-07-08T16:08:02-03:00",
+      "hash": "b0c3e43108d3183b177f1206c67572b5076d4696",
+      "kind": "commit",
+      "message": "feat(auth): DB-backed OTP store & rate limiting with audit logging"
+    }
+  ],
+  "lastModified": 1786492494,
+  "symbols": []
+}

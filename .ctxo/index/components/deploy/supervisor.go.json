@@ -1,0 +1,423 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/deploy/supervisor.go::NewSupervisor::function"
+    },
+    {
+      "cyclomatic": 10,
+      "symbolId": "components/deploy/supervisor.go::Supervisor.Run::method"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/deploy/supervisor.go::Supervisor.Stop::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/deploy/supervisor.go::Supervisor.isStopping::method"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/deploy/supervisor.go::Supervisor.setInstance::method"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/deploy/supervisor.go::Supervisor.tripCrashLoop::method"
+    },
+    {
+      "cyclomatic": 10,
+      "symbolId": "components/deploy/supervisor.go::Supervisor.healthLoop::method"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/deploy/supervisor.go::nextBackoff::function"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/deploy/supervisor.go::isCrashLooping::function"
+    }
+  ],
+  "contentHash": "db55c6b688edf48864619f16335b5b15ccae0ba08dff81578e9d9651931c13f0",
+  "edges": [
+    {
+      "from": "components/deploy/supervisor.go::NewSupervisor::function",
+      "kind": "uses",
+      "to": "components/deploy/runner.go::Runner::interface"
+    },
+    {
+      "from": "components/deploy/supervisor.go::NewSupervisor::function",
+      "kind": "uses",
+      "to": "components/deploy/runner.go::Clock::interface"
+    },
+    {
+      "from": "components/deploy/supervisor.go::NewSupervisor::function",
+      "kind": "uses",
+      "to": "components/deploy/deploy.go::DeploymentHostRegistry::interface"
+    },
+    {
+      "from": "components/deploy/supervisor.go::NewSupervisor::function",
+      "kind": "uses",
+      "to": "components/deploy/runner.go::Spec::class"
+    },
+    {
+      "from": "components/deploy/supervisor.go::NewSupervisor::function",
+      "kind": "uses",
+      "to": "components/deploy/supervisor.go::Supervisor::class"
+    },
+    {
+      "from": "components/deploy/supervisor.go::NewSupervisor::function",
+      "kind": "uses",
+      "to": "components/deploy/runner.go::Instance::interface"
+    },
+    {
+      "from": "components/deploy/supervisor.go::Supervisor.Run::method",
+      "kind": "uses",
+      "to": "components/deploy/supervisor.go::Supervisor::class"
+    },
+    {
+      "from": "components/deploy/supervisor.go::Supervisor.Run::method",
+      "kind": "uses",
+      "to": "components/deploy/runner.go::Spec::class"
+    },
+    {
+      "from": "components/deploy/supervisor.go::Supervisor.Run::method",
+      "kind": "calls",
+      "to": "components/deploy/supervisor.go::Supervisor.isStopping::method"
+    },
+    {
+      "from": "components/deploy/supervisor.go::Supervisor.Run::method",
+      "kind": "calls",
+      "to": "components/deploy/runner.go::Runner.Spawn::method"
+    },
+    {
+      "from": "components/deploy/supervisor.go::Supervisor.Run::method",
+      "kind": "calls",
+      "to": "components/deploy/runner.go::Clock.Now::method"
+    },
+    {
+      "from": "components/deploy/supervisor.go::Supervisor.Run::method",
+      "kind": "calls",
+      "to": "components/deploy/supervisor.go::isCrashLooping::function"
+    },
+    {
+      "from": "components/deploy/supervisor.go::Supervisor.Run::method",
+      "kind": "calls",
+      "to": "components/deploy/supervisor.go::Supervisor.tripCrashLoop::method"
+    },
+    {
+      "from": "components/deploy/supervisor.go::Supervisor.Run::method",
+      "kind": "calls",
+      "to": "components/deploy/runner.go::Clock.Sleep::method"
+    },
+    {
+      "from": "components/deploy/supervisor.go::Supervisor.Run::method",
+      "kind": "calls",
+      "to": "components/deploy/supervisor.go::nextBackoff::function"
+    },
+    {
+      "from": "components/deploy/supervisor.go::Supervisor.Run::method",
+      "kind": "calls",
+      "to": "components/deploy/deploy.go::DeploymentHostRegistry.RegisterDeploymentHost::method"
+    },
+    {
+      "from": "components/deploy/supervisor.go::Supervisor.Run::method",
+      "kind": "calls",
+      "to": "components/deploy/supervisor.go::Supervisor.setInstance::method"
+    },
+    {
+      "from": "components/deploy/supervisor.go::Supervisor.Run::method",
+      "kind": "calls",
+      "to": "components/deploy/supervisor.go::Supervisor.healthLoop::method"
+    },
+    {
+      "from": "components/deploy/supervisor.go::Supervisor.Run::method",
+      "kind": "calls",
+      "to": "components/deploy/runner.go::Instance.Wait::method"
+    },
+    {
+      "from": "components/deploy/supervisor.go::Supervisor.Stop::method",
+      "kind": "uses",
+      "to": "components/deploy/supervisor.go::Supervisor::class"
+    },
+    {
+      "from": "components/deploy/supervisor.go::Supervisor.Stop::method",
+      "kind": "calls",
+      "to": "components/deploy/runner.go::Instance.Stop::method"
+    },
+    {
+      "from": "components/deploy/supervisor.go::Supervisor.isStopping::method",
+      "kind": "uses",
+      "to": "components/deploy/supervisor.go::Supervisor::class"
+    },
+    {
+      "from": "components/deploy/supervisor.go::Supervisor.setInstance::method",
+      "kind": "uses",
+      "to": "components/deploy/supervisor.go::Supervisor::class"
+    },
+    {
+      "from": "components/deploy/supervisor.go::Supervisor.setInstance::method",
+      "kind": "uses",
+      "to": "components/deploy/runner.go::Instance::interface"
+    },
+    {
+      "from": "components/deploy/supervisor.go::Supervisor.tripCrashLoop::method",
+      "kind": "uses",
+      "to": "components/deploy/supervisor.go::Supervisor::class"
+    },
+    {
+      "from": "components/deploy/supervisor.go::Supervisor.tripCrashLoop::method",
+      "kind": "uses",
+      "to": "components/deploy/runner.go::Spec::class"
+    },
+    {
+      "from": "components/deploy/supervisor.go::Supervisor.tripCrashLoop::method",
+      "kind": "calls",
+      "to": "components/deploy/deploy.go::DeploymentHostRegistry.UnregisterDeploymentHost::method"
+    },
+    {
+      "from": "components/deploy/supervisor.go::Supervisor.healthLoop::method",
+      "kind": "uses",
+      "to": "components/deploy/supervisor.go::Supervisor::class"
+    },
+    {
+      "from": "components/deploy/supervisor.go::Supervisor.healthLoop::method",
+      "kind": "uses",
+      "to": "components/deploy/runner.go::Spec::class"
+    },
+    {
+      "from": "components/deploy/supervisor.go::Supervisor.healthLoop::method",
+      "kind": "uses",
+      "to": "components/deploy/runner.go::Instance::interface"
+    },
+    {
+      "from": "components/deploy/supervisor.go::Supervisor.healthLoop::method",
+      "kind": "uses",
+      "to": "components/deploy/supervisor.go::healthPollInterval::variable"
+    },
+    {
+      "from": "components/deploy/supervisor.go::Supervisor.healthLoop::method",
+      "kind": "uses",
+      "to": "components/deploy/supervisor.go::healthFailureThreshold::variable"
+    },
+    {
+      "from": "components/deploy/supervisor.go::Supervisor.healthLoop::method",
+      "kind": "calls",
+      "to": "components/deploy/runner.go::Instance.Stop::method"
+    },
+    {
+      "from": "components/deploy/supervisor.go::nextBackoff::function",
+      "kind": "uses",
+      "to": "components/deploy/supervisor.go::backoffBase::variable"
+    },
+    {
+      "from": "components/deploy/supervisor.go::nextBackoff::function",
+      "kind": "uses",
+      "to": "components/deploy/supervisor.go::backoffFactor::variable"
+    },
+    {
+      "from": "components/deploy/supervisor.go::nextBackoff::function",
+      "kind": "uses",
+      "to": "components/deploy/supervisor.go::backoffCap::variable"
+    },
+    {
+      "from": "components/deploy/supervisor.go::isCrashLooping::function",
+      "kind": "uses",
+      "to": "components/deploy/supervisor.go::crashLoopWindow::variable"
+    },
+    {
+      "from": "components/deploy/supervisor.go::isCrashLooping::function",
+      "kind": "uses",
+      "to": "components/deploy/supervisor.go::crashLoopBurst::variable"
+    }
+  ],
+  "file": "components/deploy/supervisor.go",
+  "intent": [
+    {
+      "date": "2026-07-10T14:46:55-03:00",
+      "hash": "36722e3d731d1da0179c0360d677bc6bdf2b3b19",
+      "kind": "commit",
+      "message": "fix(deploy): prevent manifest path traversal (CWE-22)"
+    },
+    {
+      "date": "2026-07-10T11:14:32-03:00",
+      "hash": "248172c98589f51939c68bf7ad5dd084be02aaae",
+      "kind": "commit",
+      "message": "feat(e73s03): add writable disk and health check polling to Supervisor"
+    },
+    {
+      "date": "2026-06-23T22:17:48-03:00",
+      "hash": "d195bd4ed0302937f57b00361f4e93868acd0d46",
+      "kind": "commit",
+      "message": "feat(deploy): wire Supervisor into resume path — static apps supervised on restart (e53s04)"
+    },
+    {
+      "date": "2026-06-23T22:02:03-03:00",
+      "hash": "5a9dd7718233a72467f14dec300ed08168df619e",
+      "kind": "commit",
+      "message": "feat(deploy): Supervisor restart loop with crash-loop detection (e53s03)"
+    },
+    {
+      "date": "2026-06-23T21:52:37-03:00",
+      "hash": "a0d6bb7f6908142b34ab0158d3630aea2b321094",
+      "kind": "commit",
+      "message": "feat(deploy): introduce Supervisor seam — Runner/Instance/Spec interfaces + restart policy (e53s01-s02)"
+    }
+  ],
+  "lastModified": 1786492494,
+  "symbols": [
+    {
+      "endLine": 16,
+      "endOffset": 269,
+      "kind": "variable",
+      "name": "backoffBase",
+      "startLine": 16,
+      "startOffset": 258,
+      "symbolId": "components/deploy/supervisor.go::backoffBase::variable"
+    },
+    {
+      "endLine": 17,
+      "endOffset": 304,
+      "kind": "variable",
+      "name": "backoffFactor",
+      "startLine": 17,
+      "startOffset": 291,
+      "symbolId": "components/deploy/supervisor.go::backoffFactor::variable"
+    },
+    {
+      "endLine": 18,
+      "endOffset": 322,
+      "kind": "variable",
+      "name": "backoffCap",
+      "startLine": 18,
+      "startOffset": 312,
+      "symbolId": "components/deploy/supervisor.go::backoffCap::variable"
+    },
+    {
+      "endLine": 20,
+      "endOffset": 361,
+      "kind": "variable",
+      "name": "crashLoopBurst",
+      "startLine": 20,
+      "startOffset": 347,
+      "symbolId": "components/deploy/supervisor.go::crashLoopBurst::variable"
+    },
+    {
+      "endLine": 21,
+      "endOffset": 383,
+      "kind": "variable",
+      "name": "crashLoopWindow",
+      "startLine": 21,
+      "startOffset": 368,
+      "symbolId": "components/deploy/supervisor.go::crashLoopWindow::variable"
+    },
+    {
+      "endLine": 25,
+      "endOffset": 533,
+      "kind": "variable",
+      "name": "healthPollInterval",
+      "startLine": 25,
+      "startOffset": 515,
+      "symbolId": "components/deploy/supervisor.go::healthPollInterval::variable"
+    },
+    {
+      "endLine": 29,
+      "endOffset": 686,
+      "kind": "variable",
+      "name": "healthFailureThreshold",
+      "startLine": 29,
+      "startOffset": 664,
+      "symbolId": "components/deploy/supervisor.go::healthFailureThreshold::variable"
+    },
+    {
+      "endLine": 46,
+      "endOffset": 1290,
+      "kind": "class",
+      "name": "Supervisor",
+      "startLine": 36,
+      "startOffset": 958,
+      "symbolId": "components/deploy/supervisor.go::Supervisor::class"
+    },
+    {
+      "endLine": 61,
+      "endOffset": 1850,
+      "kind": "function",
+      "name": "NewSupervisor",
+      "startLine": 51,
+      "startOffset": 1523,
+      "symbolId": "components/deploy/supervisor.go::NewSupervisor::function"
+    },
+    {
+      "endLine": 116,
+      "endOffset": 3432,
+      "kind": "method",
+      "name": "Supervisor.Run",
+      "startLine": 66,
+      "startOffset": 2089,
+      "symbolId": "components/deploy/supervisor.go::Supervisor.Run::method"
+    },
+    {
+      "endLine": 128,
+      "endOffset": 3765,
+      "kind": "method",
+      "name": "Supervisor.Stop",
+      "startLine": 120,
+      "startOffset": 3577,
+      "symbolId": "components/deploy/supervisor.go::Supervisor.Stop::method"
+    },
+    {
+      "endLine": 134,
+      "endOffset": 3887,
+      "kind": "method",
+      "name": "Supervisor.isStopping",
+      "startLine": 130,
+      "startOffset": 3767,
+      "symbolId": "components/deploy/supervisor.go::Supervisor.isStopping::method"
+    },
+    {
+      "endLine": 144,
+      "endOffset": 4079,
+      "kind": "method",
+      "name": "Supervisor.setInstance",
+      "startLine": 136,
+      "startOffset": 3889,
+      "symbolId": "components/deploy/supervisor.go::Supervisor.setInstance::method"
+    },
+    {
+      "endLine": 156,
+      "endOffset": 4347,
+      "kind": "method",
+      "name": "Supervisor.tripCrashLoop",
+      "startLine": 146,
+      "startOffset": 4081,
+      "symbolId": "components/deploy/supervisor.go::Supervisor.tripCrashLoop::method"
+    },
+    {
+      "endLine": 198,
+      "endOffset": 5403,
+      "kind": "method",
+      "name": "Supervisor.healthLoop",
+      "startLine": 161,
+      "startOffset": 4558,
+      "symbolId": "components/deploy/supervisor.go::Supervisor.healthLoop::method"
+    },
+    {
+      "endLine": 214,
+      "endOffset": 6186,
+      "kind": "function",
+      "name": "nextBackoff",
+      "startLine": 208,
+      "startOffset": 5939,
+      "symbolId": "components/deploy/supervisor.go::nextBackoff::function"
+    },
+    {
+      "endLine": 230,
+      "endOffset": 6782,
+      "kind": "function",
+      "name": "isCrashLooping",
+      "startLine": 221,
+      "startOffset": 6548,
+      "symbolId": "components/deploy/supervisor.go::isCrashLooping::function"
+    }
+  ]
+}

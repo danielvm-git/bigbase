@@ -1,0 +1,29 @@
+{
+  "antiPatterns": [],
+  "complexity": [],
+  "contentHash": "72befcae1e6ac8ad41eb529c8d28ca0b6e38ca935c443b4b93bde0cd4b9dabd7",
+  "edges": [
+    {
+      "from": "ui/src/components/BuildCachePanel.test.tsx::BuildCachePanel.test::variable",
+      "kind": "imports",
+      "to": "ui/src/components/BuildCachePanel.ts::BuildCachePanel::class"
+    }
+  ],
+  "file": "ui/src/components/BuildCachePanel.test.tsx",
+  "intent": [
+    {
+      "date": "2026-07-10T20:39:36-03:00",
+      "hash": "db94b7c03f56600323aff8c9132e7d98185ff8b2",
+      "kind": "commit",
+      "message": "fix(ui): CopyButton silent failure + pre-existing ESLint cleanup"
+    },
+    {
+      "date": "2026-06-25T07:08:31-03:00",
+      "hash": "a173b3f7599a22033ba71537b28f17950a32a8de",
+      "kind": "commit",
+      "message": "feat(deploy): cache management UI — per-site tab + global panel (e42s02) (#48)"
+    }
+  ],
+  "lastModified": 1786492495,
+  "symbols": []
+}

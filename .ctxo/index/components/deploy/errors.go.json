@@ -1,0 +1,102 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/deploy/errors.go::CodedError.Error::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/deploy/errors.go::codedErr::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/deploy/errors.go::isDuplicateColumnError::function"
+    }
+  ],
+  "contentHash": "19101203f191a4241143df909b1eabdd80713dd0b019fe6d9d5de554b1ea3f0e",
+  "edges": [
+    {
+      "from": "components/deploy/errors.go::CodedError.Error::method",
+      "kind": "uses",
+      "to": "components/deploy/errors.go::CodedError::class"
+    },
+    {
+      "from": "components/deploy/errors.go::codedErr::function",
+      "kind": "uses",
+      "to": "components/deploy/errors.go::CodedError::class"
+    }
+  ],
+  "file": "components/deploy/errors.go",
+  "intent": [
+    {
+      "date": "2026-07-24T20:56:01-03:00",
+      "hash": "e77fd137a0fcdc1a7521123153d8c065f11bafca",
+      "kind": "commit",
+      "message": "fix(deploy): never-bounce identity and framework deploy matrix (#166)"
+    },
+    {
+      "date": "2026-07-10T14:43:09-03:00",
+      "hash": "4ca826f62a212cff9a287041a38dc164205e676b",
+      "kind": "commit",
+      "message": "fix(deploy): replace error string matching with sentinel errors"
+    }
+  ],
+  "lastModified": 1786492494,
+  "symbols": [
+    {
+      "endLine": 12,
+      "endOffset": 197,
+      "kind": "variable",
+      "name": "ErrRepoNotFound",
+      "startLine": 12,
+      "startOffset": 182,
+      "symbolId": "components/deploy/errors.go::ErrRepoNotFound::variable"
+    },
+    {
+      "endLine": 13,
+      "endOffset": 257,
+      "kind": "variable",
+      "name": "ErrDeploymentNotFound",
+      "startLine": 13,
+      "startOffset": 236,
+      "symbolId": "components/deploy/errors.go::ErrDeploymentNotFound::variable"
+    },
+    {
+      "endLine": 21,
+      "endOffset": 452,
+      "kind": "class",
+      "name": "CodedError",
+      "startLine": 17,
+      "startOffset": 383,
+      "symbolId": "components/deploy/errors.go::CodedError::class"
+    },
+    {
+      "endLine": 28,
+      "endOffset": 628,
+      "kind": "method",
+      "name": "CodedError.Error",
+      "startLine": 23,
+      "startOffset": 454,
+      "symbolId": "components/deploy/errors.go::CodedError.Error::method"
+    },
+    {
+      "endLine": 32,
+      "endOffset": 743,
+      "kind": "function",
+      "name": "codedErr",
+      "startLine": 30,
+      "startOffset": 630,
+      "symbolId": "components/deploy/errors.go::codedErr::function"
+    },
+    {
+      "endLine": 42,
+      "endOffset": 1069,
+      "kind": "function",
+      "name": "isDuplicateColumnError",
+      "startLine": 36,
+      "startOffset": 900,
+      "symbolId": "components/deploy/errors.go::isDuplicateColumnError::function"
+    }
+  ]
+}

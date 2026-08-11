@@ -1,0 +1,550 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 2,
+      "symbolId": "adapters.go::mcpDeployAdapter.Trigger::method"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "adapters.go::mcpSiteListerAdapter.ListSites::method"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "adapters.go::mcpSiteListerAdapter.GetSite::method"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "adapters.go::toMCPSiteInfo::function"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "adapters.go::mcpSiteKeyAdapter.CreateSiteKey::method"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "adapters.go::mcpSiteKeyAdapter.ListSiteKeys::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "adapters.go::mcpSiteKeyAdapter.RevokeSiteKey::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "adapters.go::mcpSiteKeyAdapter.ResolveSiteKey::method"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "adapters.go::mcpEnvVarAdapter.ListSiteEnvVars::method"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "adapters.go::mcpEnvVarAdapter.SetSiteEnvVars::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "adapters.go::mcpEnvVarAdapter.DeleteSiteEnvVar::method"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "adapters.go::deployDiagnosisAdapter.GetDiagnosis::method"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "adapters.go::deployRelatedEventsAdapter.GetRelatedEvents::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "adapters.go::alertNotifierAdapter.NotifyAlert::method"
+    }
+  ],
+  "contentHash": "4cb7217281c4d96b20be709b02ca415f8a7dd4fed72c18ea1553867813495a79",
+  "edges": [
+    {
+      "from": "adapters.go::mcpDeployAdapter.Trigger::method",
+      "kind": "uses",
+      "to": "adapters.go::mcpDeployAdapter::class"
+    },
+    {
+      "from": "adapters.go::mcpDeployAdapter.Trigger::method",
+      "kind": "uses",
+      "to": "components/mcp/mcp.go::DeploymentResult::class"
+    },
+    {
+      "from": "adapters.go::mcpDeployAdapter.Trigger::method",
+      "kind": "calls",
+      "to": "components/deploy/engine.go::Deploy.Trigger::method"
+    },
+    {
+      "from": "adapters.go::mcpSiteListerAdapter.ListSites::method",
+      "kind": "uses",
+      "to": "adapters.go::mcpSiteListerAdapter::class"
+    },
+    {
+      "from": "adapters.go::mcpSiteListerAdapter.ListSites::method",
+      "kind": "uses",
+      "to": "components/mcp/mcp.go::SiteInfo::class"
+    },
+    {
+      "from": "adapters.go::mcpSiteListerAdapter.ListSites::method",
+      "kind": "calls",
+      "to": "components/sites/sites.go::Sites.ListSites::method"
+    },
+    {
+      "from": "adapters.go::mcpSiteListerAdapter.ListSites::method",
+      "kind": "calls",
+      "to": "adapters.go::toMCPSiteInfo::function"
+    },
+    {
+      "from": "adapters.go::mcpSiteListerAdapter.GetSite::method",
+      "kind": "uses",
+      "to": "adapters.go::mcpSiteListerAdapter::class"
+    },
+    {
+      "from": "adapters.go::mcpSiteListerAdapter.GetSite::method",
+      "kind": "uses",
+      "to": "components/mcp/mcp.go::SiteInfo::class"
+    },
+    {
+      "from": "adapters.go::mcpSiteListerAdapter.GetSite::method",
+      "kind": "calls",
+      "to": "components/sites/sites.go::Sites.GetSite::method"
+    },
+    {
+      "from": "adapters.go::mcpSiteListerAdapter.GetSite::method",
+      "kind": "calls",
+      "to": "adapters.go::toMCPSiteInfo::function"
+    },
+    {
+      "from": "adapters.go::toMCPSiteInfo::function",
+      "kind": "uses",
+      "to": "components/sites/sites.go::Site::class"
+    },
+    {
+      "from": "adapters.go::toMCPSiteInfo::function",
+      "kind": "uses",
+      "to": "components/mcp/mcp.go::SiteInfo::class"
+    },
+    {
+      "from": "adapters.go::toMCPSiteInfo::function",
+      "kind": "uses",
+      "to": "components/mcp/mcp.go::SiteDeployment::class"
+    },
+    {
+      "from": "adapters.go::toMCPSiteInfo::function",
+      "kind": "uses",
+      "to": "components/mcp/mcp.go::SiteDeployDefaults::class"
+    },
+    {
+      "from": "adapters.go::mcpSiteKeyAdapter.CreateSiteKey::method",
+      "kind": "uses",
+      "to": "adapters.go::mcpSiteKeyAdapter::class"
+    },
+    {
+      "from": "adapters.go::mcpSiteKeyAdapter.CreateSiteKey::method",
+      "kind": "calls",
+      "to": "components/auth/apikeys.go::Auth.CreateSiteKey::method"
+    },
+    {
+      "from": "adapters.go::mcpSiteKeyAdapter.ListSiteKeys::method",
+      "kind": "uses",
+      "to": "adapters.go::mcpSiteKeyAdapter::class"
+    },
+    {
+      "from": "adapters.go::mcpSiteKeyAdapter.ListSiteKeys::method",
+      "kind": "uses",
+      "to": "components/mcp/mcp.go::SiteKeyEntry::class"
+    },
+    {
+      "from": "adapters.go::mcpSiteKeyAdapter.ListSiteKeys::method",
+      "kind": "calls",
+      "to": "components/auth/apikeys.go::Auth.ListSiteKeys::method"
+    },
+    {
+      "from": "adapters.go::mcpSiteKeyAdapter.RevokeSiteKey::method",
+      "kind": "uses",
+      "to": "adapters.go::mcpSiteKeyAdapter::class"
+    },
+    {
+      "from": "adapters.go::mcpSiteKeyAdapter.RevokeSiteKey::method",
+      "kind": "calls",
+      "to": "components/auth/apikeys.go::Auth.RevokeSiteKey::method"
+    },
+    {
+      "from": "adapters.go::mcpSiteKeyAdapter.ResolveSiteKey::method",
+      "kind": "uses",
+      "to": "adapters.go::mcpSiteKeyAdapter::class"
+    },
+    {
+      "from": "adapters.go::mcpSiteKeyAdapter.ResolveSiteKey::method",
+      "kind": "calls",
+      "to": "components/auth/apikeys.go::Auth.ResolveSiteKey::method"
+    },
+    {
+      "from": "adapters.go::mcpEnvVarAdapter.ListSiteEnvVars::method",
+      "kind": "uses",
+      "to": "adapters.go::mcpEnvVarAdapter::class"
+    },
+    {
+      "from": "adapters.go::mcpEnvVarAdapter.ListSiteEnvVars::method",
+      "kind": "uses",
+      "to": "components/mcp/mcp.go::SiteEnvVar::class"
+    },
+    {
+      "from": "adapters.go::mcpEnvVarAdapter.ListSiteEnvVars::method",
+      "kind": "calls",
+      "to": "components/sites/env_vars.go::Sites.ListSiteEnvVars::method"
+    },
+    {
+      "from": "adapters.go::mcpEnvVarAdapter.SetSiteEnvVars::method",
+      "kind": "uses",
+      "to": "adapters.go::mcpEnvVarAdapter::class"
+    },
+    {
+      "from": "adapters.go::mcpEnvVarAdapter.SetSiteEnvVars::method",
+      "kind": "uses",
+      "to": "components/mcp/mcp.go::SiteEnvVar::class"
+    },
+    {
+      "from": "adapters.go::mcpEnvVarAdapter.SetSiteEnvVars::method",
+      "kind": "calls",
+      "to": "components/sites/env_vars.go::Sites.SetSiteEnvVars::method"
+    },
+    {
+      "from": "adapters.go::mcpEnvVarAdapter.DeleteSiteEnvVar::method",
+      "kind": "uses",
+      "to": "adapters.go::mcpEnvVarAdapter::class"
+    },
+    {
+      "from": "adapters.go::mcpEnvVarAdapter.DeleteSiteEnvVar::method",
+      "kind": "calls",
+      "to": "components/sites/env_vars.go::Sites.DeleteSiteEnvVar::method"
+    },
+    {
+      "from": "adapters.go::deployDiagnosisAdapter.GetDiagnosis::method",
+      "kind": "uses",
+      "to": "adapters.go::deployDiagnosisAdapter::class"
+    },
+    {
+      "from": "adapters.go::deployDiagnosisAdapter.GetDiagnosis::method",
+      "kind": "uses",
+      "to": "components/deploy/seams.go::Diagnosis::class"
+    },
+    {
+      "from": "adapters.go::deployDiagnosisAdapter.GetDiagnosis::method",
+      "kind": "calls",
+      "to": "components/monitoring/observability.go::Monitoring.GetDiagnosis::method"
+    },
+    {
+      "from": "adapters.go::deployRelatedEventsAdapter.GetRelatedEvents::method",
+      "kind": "uses",
+      "to": "adapters.go::deployRelatedEventsAdapter::class"
+    },
+    {
+      "from": "adapters.go::deployRelatedEventsAdapter.GetRelatedEvents::method",
+      "kind": "uses",
+      "to": "components/deploy/seams.go::RelatedEvents::class"
+    },
+    {
+      "from": "adapters.go::deployRelatedEventsAdapter.GetRelatedEvents::method",
+      "kind": "calls",
+      "to": "components/monitoring/observability.go::Monitoring.GetRelatedEvents::method"
+    },
+    {
+      "from": "adapters.go::deployRelatedEventsAdapter.GetRelatedEvents::method",
+      "kind": "uses",
+      "to": "components/deploy/seams.go::CorrelatedEvent::class"
+    },
+    {
+      "from": "adapters.go::alertNotifierAdapter.NotifyAlert::method",
+      "kind": "uses",
+      "to": "adapters.go::alertNotifierAdapter::class"
+    },
+    {
+      "from": "adapters.go::alertNotifierAdapter.NotifyAlert::method",
+      "kind": "uses",
+      "to": "components/monitoring/site_status.go::AlertEvent::class"
+    },
+    {
+      "from": "adapters.go::alertNotifierAdapter.NotifyAlert::method",
+      "kind": "calls",
+      "to": "components/messaging/smtp_notifier.go::SMTPAlertNotifier.NotifyAlert::method"
+    },
+    {
+      "from": "adapters.go::alertNotifierAdapter.NotifyAlert::method",
+      "kind": "uses",
+      "to": "components/messaging/smtp_notifier.go::AlertEvent::class"
+    },
+    {
+      "from": "adapters.go::deployDiagnosisAdapter::class",
+      "kind": "implements",
+      "to": "components/deploy/seams.go::DeployDiagnosisReader::interface"
+    },
+    {
+      "from": "adapters.go::deployRelatedEventsAdapter::class",
+      "kind": "implements",
+      "to": "components/deploy/seams.go::DeployRelatedEventsReader::interface"
+    },
+    {
+      "from": "adapters.go::mcpDeployAdapter::class",
+      "kind": "implements",
+      "to": "components/mcp/mcp.go::DeployTrigger::interface"
+    },
+    {
+      "from": "adapters.go::mcpEnvVarAdapter::class",
+      "kind": "implements",
+      "to": "components/mcp/mcp.go::SiteEnvVarManager::interface"
+    },
+    {
+      "from": "adapters.go::mcpSiteKeyAdapter::class",
+      "kind": "implements",
+      "to": "components/mcp/mcp.go::SiteKeyCreator::interface"
+    },
+    {
+      "from": "adapters.go::mcpSiteKeyAdapter::class",
+      "kind": "implements",
+      "to": "components/mcp/mcp.go::SiteKeyResolver::interface"
+    },
+    {
+      "from": "adapters.go::mcpSiteListerAdapter::class",
+      "kind": "implements",
+      "to": "components/mcp/mcp.go::SiteLister::interface"
+    },
+    {
+      "from": "adapters.go::alertNotifierAdapter::class",
+      "kind": "implements",
+      "to": "components/monitoring/site_status.go::AlertNotifier::interface"
+    }
+  ],
+  "file": "adapters.go",
+  "intent": [
+    {
+      "date": "2026-07-29T00:01:45-03:00",
+      "hash": "aa383b64713bf21e3f35c3d406706bfdfe1787dd",
+      "kind": "commit",
+      "message": "feat(monitoring): add site availability metrics + wire alert subscriber (closes #178)"
+    },
+    {
+      "date": "2026-07-28T17:19:21-03:00",
+      "hash": "7c095d000aff6475ada6b7e8db12f8cf28172dfb",
+      "kind": "commit",
+      "message": "feat(mcp): add site-scoped environment variable tools (#194)"
+    },
+    {
+      "date": "2026-07-25T15:24:38-03:00",
+      "hash": "e2b37023ac005a59ea8fd30de438ea41ebf1333b",
+      "kind": "commit",
+      "message": "feat(mcp): parameterize ci templates with site deploy defaults"
+    },
+    {
+      "date": "2026-07-24T20:56:01-03:00",
+      "hash": "e77fd137a0fcdc1a7521123153d8c065f11bafca",
+      "kind": "commit",
+      "message": "fix(deploy): never-bounce identity and framework deploy matrix (#166)"
+    },
+    {
+      "date": "2026-07-10T23:31:10-03:00",
+      "hash": "3dca1ba879ac84d04c0badacca3cd4eb5c3f6d9d",
+      "kind": "commit",
+      "message": "fix(auth,proxy,deps): fix deploy keys prefix, scope RevokeSiteKey, harden CSP, update deps"
+    },
+    {
+      "date": "2026-07-10T16:10:47-03:00",
+      "hash": "ddd7efb57df839db846eb0fecb3cc3acb093d09f",
+      "kind": "commit",
+      "message": "fix(ecc): remove cross-component production imports"
+    }
+  ],
+  "lastModified": 1786492490,
+  "symbols": [
+    {
+      "endLine": 16,
+      "endOffset": 456,
+      "kind": "class",
+      "name": "mcpDeployAdapter",
+      "startLine": 16,
+      "startOffset": 413,
+      "symbolId": "adapters.go::mcpDeployAdapter::class"
+    },
+    {
+      "endLine": 24,
+      "endOffset": 869,
+      "kind": "method",
+      "name": "mcpDeployAdapter.Trigger",
+      "startLine": 18,
+      "startOffset": 458,
+      "symbolId": "adapters.go::mcpDeployAdapter.Trigger::method"
+    },
+    {
+      "endLine": 26,
+      "endOffset": 921,
+      "kind": "class",
+      "name": "mcpSiteListerAdapter",
+      "startLine": 26,
+      "startOffset": 876,
+      "symbolId": "adapters.go::mcpSiteListerAdapter::class"
+    },
+    {
+      "endLine": 38,
+      "endOffset": 1209,
+      "kind": "method",
+      "name": "mcpSiteListerAdapter.ListSites",
+      "startLine": 28,
+      "startOffset": 923,
+      "symbolId": "adapters.go::mcpSiteListerAdapter.ListSites::method"
+    },
+    {
+      "endLine": 47,
+      "endOffset": 1431,
+      "kind": "method",
+      "name": "mcpSiteListerAdapter.GetSite",
+      "startLine": 40,
+      "startOffset": 1211,
+      "symbolId": "adapters.go::mcpSiteListerAdapter.GetSite::method"
+    },
+    {
+      "endLine": 74,
+      "endOffset": 2227,
+      "kind": "function",
+      "name": "toMCPSiteInfo",
+      "startLine": 49,
+      "startOffset": 1433,
+      "symbolId": "adapters.go::toMCPSiteInfo::function"
+    },
+    {
+      "endLine": 76,
+      "endOffset": 2274,
+      "kind": "class",
+      "name": "mcpSiteKeyAdapter",
+      "startLine": 76,
+      "startOffset": 2234,
+      "symbolId": "adapters.go::mcpSiteKeyAdapter::class"
+    },
+    {
+      "endLine": 80,
+      "endOffset": 2456,
+      "kind": "method",
+      "name": "mcpSiteKeyAdapter.CreateSiteKey",
+      "startLine": 78,
+      "startOffset": 2276,
+      "symbolId": "adapters.go::mcpSiteKeyAdapter.CreateSiteKey::method"
+    },
+    {
+      "endLine": 99,
+      "endOffset": 2938,
+      "kind": "method",
+      "name": "mcpSiteKeyAdapter.ListSiteKeys",
+      "startLine": 82,
+      "startOffset": 2458,
+      "symbolId": "adapters.go::mcpSiteKeyAdapter.ListSiteKeys::method"
+    },
+    {
+      "endLine": 103,
+      "endOffset": 3079,
+      "kind": "method",
+      "name": "mcpSiteKeyAdapter.RevokeSiteKey",
+      "startLine": 101,
+      "startOffset": 2940,
+      "symbolId": "adapters.go::mcpSiteKeyAdapter.RevokeSiteKey::method"
+    },
+    {
+      "endLine": 107,
+      "endOffset": 3192,
+      "kind": "method",
+      "name": "mcpSiteKeyAdapter.ResolveSiteKey",
+      "startLine": 105,
+      "startOffset": 3081,
+      "symbolId": "adapters.go::mcpSiteKeyAdapter.ResolveSiteKey::method"
+    },
+    {
+      "endLine": 109,
+      "endOffset": 3240,
+      "kind": "class",
+      "name": "mcpEnvVarAdapter",
+      "startLine": 109,
+      "startOffset": 3199,
+      "symbolId": "adapters.go::mcpEnvVarAdapter::class"
+    },
+    {
+      "endLine": 130,
+      "endOffset": 3801,
+      "kind": "method",
+      "name": "mcpEnvVarAdapter.ListSiteEnvVars",
+      "startLine": 111,
+      "startOffset": 3242,
+      "symbolId": "adapters.go::mcpEnvVarAdapter.ListSiteEnvVars::method"
+    },
+    {
+      "endLine": 151,
+      "endOffset": 4390,
+      "kind": "method",
+      "name": "mcpEnvVarAdapter.SetSiteEnvVars",
+      "startLine": 132,
+      "startOffset": 3803,
+      "symbolId": "adapters.go::mcpEnvVarAdapter.SetSiteEnvVars::method"
+    },
+    {
+      "endLine": 155,
+      "endOffset": 4532,
+      "kind": "method",
+      "name": "mcpEnvVarAdapter.DeleteSiteEnvVar",
+      "startLine": 153,
+      "startOffset": 4392,
+      "symbolId": "adapters.go::mcpEnvVarAdapter.DeleteSiteEnvVar::method"
+    },
+    {
+      "endLine": 157,
+      "endOffset": 4596,
+      "kind": "class",
+      "name": "deployDiagnosisAdapter",
+      "startLine": 157,
+      "startOffset": 4539,
+      "symbolId": "adapters.go::deployDiagnosisAdapter::class"
+    },
+    {
+      "endLine": 165,
+      "endOffset": 4927,
+      "kind": "method",
+      "name": "deployDiagnosisAdapter.GetDiagnosis",
+      "startLine": 159,
+      "startOffset": 4598,
+      "symbolId": "adapters.go::deployDiagnosisAdapter.GetDiagnosis::method"
+    },
+    {
+      "endLine": 167,
+      "endOffset": 4995,
+      "kind": "class",
+      "name": "deployRelatedEventsAdapter",
+      "startLine": 167,
+      "startOffset": 4934,
+      "symbolId": "adapters.go::deployRelatedEventsAdapter::class"
+    },
+    {
+      "endLine": 190,
+      "endOffset": 5726,
+      "kind": "method",
+      "name": "deployRelatedEventsAdapter.GetRelatedEvents",
+      "startLine": 169,
+      "startOffset": 4997,
+      "symbolId": "adapters.go::deployRelatedEventsAdapter.GetRelatedEvents::method"
+    },
+    {
+      "endLine": 195,
+      "endOffset": 6014,
+      "kind": "class",
+      "name": "alertNotifierAdapter",
+      "startLine": 195,
+      "startOffset": 5953,
+      "symbolId": "adapters.go::alertNotifierAdapter::class"
+    },
+    {
+      "endLine": 207,
+      "endOffset": 6351,
+      "kind": "method",
+      "name": "alertNotifierAdapter.NotifyAlert",
+      "startLine": 197,
+      "startOffset": 6016,
+      "symbolId": "adapters.go::alertNotifierAdapter.NotifyAlert::method"
+    }
+  ]
+}

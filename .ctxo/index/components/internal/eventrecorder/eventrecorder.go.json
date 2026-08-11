@@ -1,0 +1,196 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/internal/eventrecorder/eventrecorder.go::New::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/internal/eventrecorder/eventrecorder.go::Recorder.migrate::method"
+    },
+    {
+      "cyclomatic": 7,
+      "symbolId": "components/internal/eventrecorder/eventrecorder.go::Recorder.Record::method"
+    },
+    {
+      "cyclomatic": 8,
+      "symbolId": "components/internal/eventrecorder/eventrecorder.go::Recorder.Query::method"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/internal/eventrecorder/eventrecorder.go::newID::function"
+    }
+  ],
+  "contentHash": "54b129276532026170d8bf05697c1d02acfcf30364e4a7ce8f8cba04f1ad86f9",
+  "edges": [
+    {
+      "from": "components/internal/eventrecorder/eventrecorder.go::New::function",
+      "kind": "uses",
+      "to": "kernel/dber.go::DBer::interface"
+    },
+    {
+      "from": "components/internal/eventrecorder/eventrecorder.go::New::function",
+      "kind": "uses",
+      "to": "components/internal/eventrecorder/eventrecorder.go::Recorder::class"
+    },
+    {
+      "from": "components/internal/eventrecorder/eventrecorder.go::New::function",
+      "kind": "calls",
+      "to": "components/internal/eventrecorder/eventrecorder.go::Recorder.migrate::method"
+    },
+    {
+      "from": "components/internal/eventrecorder/eventrecorder.go::Recorder.migrate::method",
+      "kind": "uses",
+      "to": "components/internal/eventrecorder/eventrecorder.go::Recorder::class"
+    },
+    {
+      "from": "components/internal/eventrecorder/eventrecorder.go::Recorder.migrate::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::DBer.Migrate::method"
+    },
+    {
+      "from": "components/internal/eventrecorder/eventrecorder.go::Recorder.migrate::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.ExecContext::method"
+    },
+    {
+      "from": "components/internal/eventrecorder/eventrecorder.go::Recorder.Record::method",
+      "kind": "uses",
+      "to": "components/internal/eventrecorder/eventrecorder.go::Recorder::class"
+    },
+    {
+      "from": "components/internal/eventrecorder/eventrecorder.go::Recorder.Record::method",
+      "kind": "calls",
+      "to": "components/internal/eventrecorder/eventrecorder.go::newID::function"
+    },
+    {
+      "from": "components/internal/eventrecorder/eventrecorder.go::Recorder.Record::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.ExecContext::method"
+    },
+    {
+      "from": "components/internal/eventrecorder/eventrecorder.go::Recorder.Record::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.QueryRowContext::method"
+    },
+    {
+      "from": "components/internal/eventrecorder/eventrecorder.go::Recorder.Record::method",
+      "kind": "uses",
+      "to": "components/internal/eventrecorder/eventrecorder.go::maxEvents::variable"
+    },
+    {
+      "from": "components/internal/eventrecorder/eventrecorder.go::Recorder.Query::method",
+      "kind": "uses",
+      "to": "components/internal/eventrecorder/eventrecorder.go::Recorder::class"
+    },
+    {
+      "from": "components/internal/eventrecorder/eventrecorder.go::Recorder.Query::method",
+      "kind": "uses",
+      "to": "components/internal/eventrecorder/eventrecorder.go::Filter::class"
+    },
+    {
+      "from": "components/internal/eventrecorder/eventrecorder.go::Recorder.Query::method",
+      "kind": "uses",
+      "to": "components/internal/eventrecorder/eventrecorder.go::RecordedEvent::class"
+    },
+    {
+      "from": "components/internal/eventrecorder/eventrecorder.go::Recorder.Query::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.QueryContext::method"
+    }
+  ],
+  "file": "components/internal/eventrecorder/eventrecorder.go",
+  "intent": [
+    {
+      "date": "2026-07-09T01:44:49-03:00",
+      "hash": "82dc49874349b328be8cbd34da05d4ee4b430169",
+      "kind": "commit",
+      "message": "feat(monitoring): AI-assisted deploy observability and incident response (e72) (#64)"
+    }
+  ],
+  "lastModified": 1786492494,
+  "symbols": [
+    {
+      "endLine": 15,
+      "endOffset": 174,
+      "kind": "variable",
+      "name": "maxEvents",
+      "startLine": 15,
+      "startOffset": 165,
+      "symbolId": "components/internal/eventrecorder/eventrecorder.go::maxEvents::variable"
+    },
+    {
+      "endLine": 24,
+      "endOffset": 471,
+      "kind": "class",
+      "name": "RecordedEvent",
+      "startLine": 18,
+      "startOffset": 231,
+      "symbolId": "components/internal/eventrecorder/eventrecorder.go::RecordedEvent::class"
+    },
+    {
+      "endLine": 33,
+      "endOffset": 635,
+      "kind": "class",
+      "name": "Filter",
+      "startLine": 27,
+      "startOffset": 513,
+      "symbolId": "components/internal/eventrecorder/eventrecorder.go::Filter::class"
+    },
+    {
+      "endLine": 38,
+      "endOffset": 724,
+      "kind": "class",
+      "name": "Recorder",
+      "startLine": 36,
+      "startOffset": 689,
+      "symbolId": "components/internal/eventrecorder/eventrecorder.go::Recorder::class"
+    },
+    {
+      "endLine": 46,
+      "endOffset": 870,
+      "kind": "function",
+      "name": "New",
+      "startLine": 40,
+      "startOffset": 726,
+      "symbolId": "components/internal/eventrecorder/eventrecorder.go::New::function"
+    },
+    {
+      "endLine": 61,
+      "endOffset": 1404,
+      "kind": "method",
+      "name": "Recorder.migrate",
+      "startLine": 48,
+      "startOffset": 872,
+      "symbolId": "components/internal/eventrecorder/eventrecorder.go::Recorder.migrate::method"
+    },
+    {
+      "endLine": 93,
+      "endOffset": 2364,
+      "kind": "method",
+      "name": "Recorder.Record",
+      "startLine": 63,
+      "startOffset": 1406,
+      "symbolId": "components/internal/eventrecorder/eventrecorder.go::Recorder.Record::method"
+    },
+    {
+      "endLine": 134,
+      "endOffset": 3565,
+      "kind": "method",
+      "name": "Recorder.Query",
+      "startLine": 95,
+      "startOffset": 2366,
+      "symbolId": "components/internal/eventrecorder/eventrecorder.go::Recorder.Query::method"
+    },
+    {
+      "endLine": 142,
+      "endOffset": 3717,
+      "kind": "function",
+      "name": "newID",
+      "startLine": 136,
+      "startOffset": 3567,
+      "symbolId": "components/internal/eventrecorder/eventrecorder.go::newID::function"
+    }
+  ]
+}

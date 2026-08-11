@@ -1,0 +1,60 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 5,
+      "symbolId": "packages/auth-next/src/index.ts::bigBaseAuthMiddleware::function"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "packages/auth-next/src/index.ts::authApiHandler::function"
+    }
+  ],
+  "contentHash": "f56f19a9e56ea60679487d05a49a3575f07761e4ab2855b0cf547b8129c88236",
+  "edges": [],
+  "file": "packages/auth-next/src/index.ts",
+  "intent": [
+    {
+      "date": "2026-07-23T21:10:36-03:00",
+      "hash": "822caaa19eef68c0614743b92ca5686ed3b59619",
+      "kind": "commit",
+      "message": "fix(security): auth bypass in @bigbase/auth-next SDK middleware"
+    },
+    {
+      "date": "2026-06-18T14:37:55-03:00",
+      "hash": "554dbe032348bf0a5af3e8b4d5bed85d5c0de699",
+      "kind": "commit",
+      "message": "feat(sdk): add multi-framework auth SDK — @bigbase/auth + 5 adapters (#32)"
+    }
+  ],
+  "lastModified": 1786492495,
+  "symbols": [
+    {
+      "endLine": 36,
+      "endOffset": 1058,
+      "kind": "function",
+      "name": "bigBaseAuthMiddleware",
+      "startLine": 9,
+      "startOffset": 214,
+      "symbolId": "packages/auth-next/src/index.ts::bigBaseAuthMiddleware::function"
+    },
+    {
+      "endLine": 66,
+      "endOffset": 1991,
+      "kind": "function",
+      "name": "authApiHandler",
+      "startLine": 38,
+      "startOffset": 1060,
+      "symbolId": "packages/auth-next/src/index.ts::authApiHandler::function"
+    },
+    {
+      "endLine": 7,
+      "endOffset": 212,
+      "kind": "interface",
+      "name": "NextAuthConfig",
+      "startLine": 3,
+      "startOffset": 113,
+      "symbolId": "packages/auth-next/src/index.ts::NextAuthConfig::interface"
+    }
+  ]
+}

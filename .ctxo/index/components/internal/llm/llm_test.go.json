@@ -1,0 +1,30 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 6,
+      "symbolId": "components/internal/llm/llm_test.go::TestComplete::function"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/internal/llm/llm_test.go::TestStripSecretLines::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/internal/llm/llm_test.go::TestCompleteNotConfigured::function"
+    }
+  ],
+  "contentHash": "4c6e958127c73171e281948ae8c2175593d1494663f426c270176f2d05145b78",
+  "edges": [],
+  "file": "components/internal/llm/llm_test.go",
+  "intent": [
+    {
+      "date": "2026-07-09T01:44:49-03:00",
+      "hash": "82dc49874349b328be8cbd34da05d4ee4b430169",
+      "kind": "commit",
+      "message": "feat(monitoring): AI-assisted deploy observability and incident response (e72) (#64)"
+    }
+  ],
+  "lastModified": 1786492494,
+  "symbols": []
+}

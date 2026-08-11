@@ -1,0 +1,82 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/admin/admin_test.go::testLogger.Info::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/admin/admin_test.go::testLogger.Error::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/admin/admin_test.go::testLogger.Debug::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/admin/admin_test.go::testLogger.Warn::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/admin/admin_test.go::TestAdminImplementsComponent::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/admin/admin_test.go::TestAdminName::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/admin/admin_test.go::TestAdminVersion::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/admin/admin_test.go::TestAdminDependencies::function"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/admin/admin_test.go::TestAdminServesIndexHTML::function"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/admin/admin_test.go::TestAdminServesAssets::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/admin/admin_test.go::TestAdminReturns404::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/admin/admin_test.go::TestAdminHandler::function"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/admin/admin_test.go::contains::function"
+    }
+  ],
+  "contentHash": "bad10c37e9e9045a8ef821cbbc38bbf9bfe92da9566e212c75b005f124129d83",
+  "edges": [],
+  "file": "components/admin/admin_test.go",
+  "intent": [
+    {
+      "date": "2026-07-10T14:58:38-03:00",
+      "hash": "34b197c676d972ef39ab3cd8fe08a320adae96e9",
+      "kind": "commit",
+      "message": "fix(kernel): remove dead ConfigSchema/Hooks interfaces, add Component compile checks"
+    },
+    {
+      "date": "2026-07-10T14:46:55-03:00",
+      "hash": "36722e3d731d1da0179c0360d677bc6bdf2b3b19",
+      "kind": "commit",
+      "message": "fix(deploy): prevent manifest path traversal (CWE-22)"
+    },
+    {
+      "date": "2026-07-07T00:13:21-03:00",
+      "hash": "bcc0b8745f57075cf71e855bc2496e4c11195708",
+      "kind": "commit",
+      "message": "refactor(kernel): hoist Logger/DBer interfaces — remove 18 duplicate definitions"
+    }
+  ],
+  "lastModified": 1786492494,
+  "symbols": []
+}

@@ -1,0 +1,26 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/sites/domains_internal_test.go::TestCertStatus::function"
+    },
+    {
+      "cyclomatic": 5,
+      "symbolId": "components/sites/domains_internal_test.go::TestVerifyLimiter::function"
+    }
+  ],
+  "contentHash": "85010e1c0b5a8cec64e34d61fda77dc314cb7471b223934c585d04dba27fcbdb",
+  "edges": [],
+  "file": "components/sites/domains_internal_test.go",
+  "intent": [
+    {
+      "date": "2026-06-27T08:07:49-03:00",
+      "hash": "781e4e9f60a3c6496b91f4a5ddca9c7613518469",
+      "kind": "commit",
+      "message": "fix(e46): address 10 post-review findings on custom domains"
+    }
+  ],
+  "lastModified": 1786492494,
+  "symbols": []
+}

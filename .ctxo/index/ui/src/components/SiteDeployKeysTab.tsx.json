@@ -1,0 +1,157 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 14,
+      "symbolId": "ui/src/components/SiteDeployKeysTab.tsx::SiteDeployKeysTab::function"
+    }
+  ],
+  "contentHash": "90fcdd57f1d87e84548d414e1b366d3e87687c9d4b96d08724456725f66f8183",
+  "edges": [
+    {
+      "from": "ui/src/components/SiteDeployKeysTab.tsx::SiteDeployKeysTab::function",
+      "kind": "imports",
+      "to": "ui/src/components.ts::Button::class"
+    },
+    {
+      "from": "ui/src/components/SiteDeployKeysTab.tsx::SiteDeployKeysTab::function",
+      "kind": "imports",
+      "to": "ui/src/components.ts::Modal::class"
+    },
+    {
+      "from": "ui/src/components/SiteDeployKeysTab.tsx::SiteDeployKeysTab::function",
+      "kind": "imports",
+      "to": "ui/src/components.ts::CopyButton::class"
+    },
+    {
+      "from": "ui/src/components/SiteDeployKeysTab.tsx::SiteDeployKeysTab::function",
+      "kind": "imports",
+      "to": "ui/src/components.ts::EmptyState::class"
+    },
+    {
+      "from": "ui/src/components/SiteDeployKeysTab.tsx::SiteDeployKeysTab::function",
+      "kind": "imports",
+      "to": "ui/src/lib/sitesData.ts::getDeployKeys::function"
+    },
+    {
+      "from": "ui/src/components/SiteDeployKeysTab.tsx::SiteDeployKeysTab::function",
+      "kind": "imports",
+      "to": "ui/src/lib/sitesData.ts::createDeployKey::function"
+    },
+    {
+      "from": "ui/src/components/SiteDeployKeysTab.tsx::SiteDeployKeysTab::function",
+      "kind": "imports",
+      "to": "ui/src/lib/sitesData.ts::revokeDeployKey::function"
+    },
+    {
+      "from": "ui/src/components/SiteDeployKeysTab.tsx::SiteDeployKeysTab::function",
+      "kind": "imports",
+      "to": "ui/src/types/sites.ts::SiteDeployKey::interface",
+      "typeOnly": true
+    },
+    {
+      "from": "ui/src/components/SiteDeployKeysTab.tsx::SiteDeployKeysTab::function",
+      "kind": "calls",
+      "to": "ui/src/lib/sitesData.ts::getDeployKeys::function"
+    },
+    {
+      "from": "ui/src/components/SiteDeployKeysTab.tsx::SiteDeployKeysTab::function",
+      "kind": "calls",
+      "to": "ui/src/lib/sitesData.ts::revokeDeployKey::function"
+    },
+    {
+      "from": "ui/src/components/SiteDeployKeysTab.tsx::SiteDeployKeysTab::function",
+      "kind": "uses",
+      "to": "ui/src/types/sites.ts::SiteDeployKey::interface"
+    },
+    {
+      "from": "ui/src/components/SiteDeployKeysTab.tsx::SiteDeployKeysTab::function",
+      "kind": "uses",
+      "to": "ui/src/lib/sitesData.ts::getDeployKeys::function"
+    },
+    {
+      "from": "ui/src/components/SiteDeployKeysTab.tsx::SiteDeployKeysTab::function",
+      "kind": "uses",
+      "to": "ui/src/lib/sitesData.ts::revokeDeployKey::function"
+    },
+    {
+      "from": "ui/src/components/SiteDeployKeysTab.tsx::SiteDeployKeysTab::function",
+      "kind": "uses",
+      "to": "ui/src/components.ts::Button::class"
+    },
+    {
+      "from": "ui/src/components/SiteDeployKeysTab.tsx::SiteDeployKeysTab::function",
+      "kind": "uses",
+      "to": "ui/src/components.ts::EmptyState::class"
+    }
+  ],
+  "file": "ui/src/components/SiteDeployKeysTab.tsx",
+  "intent": [
+    {
+      "date": "2026-08-11T16:07:12-03:00",
+      "hash": "314e870a962a01a694f12b68a7747e244ca51258",
+      "kind": "commit",
+      "message": "fix(ui): AAA contrast tokens 7:1 (e87s01)"
+    },
+    {
+      "date": "2026-08-11T13:43:14-03:00",
+      "hash": "23c10a8edc11e8765d5f695aef9e37c7b6e33280",
+      "kind": "commit",
+      "message": "fix(ui): table scope/caption + decorative glyph aria-hidden (T000021)"
+    },
+    {
+      "date": "2026-08-11T00:35:18-03:00",
+      "hash": "9848ced3fc0d2e6aef8ef47c1d78c4e4107f3b9a",
+      "kind": "commit",
+      "message": "fix(ui): give placeholder-only form controls accessible names (BUG-2026-08-11T000007)"
+    },
+    {
+      "date": "2026-08-11T00:28:51-03:00",
+      "hash": "414d30a3ef5c70370da6074a834d8683d472a41a",
+      "kind": "commit",
+      "message": "fix(ui): implement WAI-ARIA tabs pattern with roving tabindex (BUG-2026-08-11T000006)"
+    },
+    {
+      "date": "2026-07-12T13:18:49-03:00",
+      "hash": "18b9c80345f11e1c0c5469ae6ee1fce74f8b3d6d",
+      "kind": "commit",
+      "message": "fix(ui): deploy key copy button copies displayed prefix, not internal id (#97)"
+    },
+    {
+      "date": "2026-07-10T23:02:33-03:00",
+      "hash": "d06af5ef93d9f5031bffe267c1bb87e2784d483d",
+      "kind": "commit",
+      "message": "fix(security): register 7 seal DAST findings as bugs in bug registry"
+    },
+    {
+      "date": "2026-07-10T20:39:36-03:00",
+      "hash": "db94b7c03f56600323aff8c9132e7d98185ff8b2",
+      "kind": "commit",
+      "message": "fix(ui): CopyButton silent failure + pre-existing ESLint cleanup"
+    },
+    {
+      "date": "2026-07-10T17:18:42-03:00",
+      "hash": "929beee072f28739181c4150f870f4ff812e3ff6",
+      "kind": "commit",
+      "message": "fix(ui): correct CopyButton prop name in SiteDeployKeysTab"
+    },
+    {
+      "date": "2026-07-10T16:54:20-03:00",
+      "hash": "68d9f6aef3667d3b652daf61f08a2cb5f905809a",
+      "kind": "commit",
+      "message": "feat(ui): add Deploy Keys tab to Site Detail page"
+    }
+  ],
+  "lastModified": 1786492495,
+  "symbols": [
+    {
+      "endLine": 334,
+      "endOffset": 10955,
+      "kind": "function",
+      "name": "SiteDeployKeysTab",
+      "startLine": 209,
+      "startOffset": 6726,
+      "symbolId": "ui/src/components/SiteDeployKeysTab.tsx::SiteDeployKeysTab::function"
+    }
+  ]
+}

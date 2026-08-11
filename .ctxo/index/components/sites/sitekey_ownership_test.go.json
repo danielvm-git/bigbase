@@ -1,0 +1,46 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/sites/sitekey_ownership_test.go::siteKeyRequest::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/sites/sitekey_ownership_test.go::setupSitesWithDeploy::function"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/sites/sitekey_ownership_test.go::TestSiteKeyOwnership_OwnSiteAllowed::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/sites/sitekey_ownership_test.go::TestSiteKeyOwnership_OtherSite404::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/sites/sitekey_ownership_test.go::TestSiteKeyOwnership_LegacyOrgIDZero::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/sites/sitekey_ownership_test.go::TestSiteKeyOwnership_JWTCrossOrgStill404::function"
+    },
+    {
+      "cyclomatic": 5,
+      "symbolId": "components/sites/sitekey_ownership_test.go::TestSiteKeyOwnership_NoOrgEscalation::function"
+    }
+  ],
+  "contentHash": "da276561731928861aa99da540ae0198672031b6078548c6f10b12da2c0a1643",
+  "edges": [],
+  "file": "components/sites/sitekey_ownership_test.go",
+  "intent": [
+    {
+      "date": "2026-07-24T19:56:59-03:00",
+      "hash": "62313dd7494bca59043c4c6938cd86112644ab12",
+      "kind": "commit",
+      "message": "fix(sites): allow bb_dep_ deploy keys through requireSiteOwnership (#163)"
+    }
+  ],
+  "lastModified": 1786492494,
+  "symbols": []
+}

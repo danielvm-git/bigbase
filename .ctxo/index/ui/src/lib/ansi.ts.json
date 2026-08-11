@@ -1,0 +1,64 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 23,
+      "symbolId": "ui/src/lib/ansi.ts::ansiToHtml::function"
+    }
+  ],
+  "contentHash": "059be4efa9ff0ae050515588f9df37b7b1ca4384768f5117ca35f03cfa0028ab",
+  "edges": [
+    {
+      "from": "ui/src/lib/ansi.ts::ansiToHtml::function",
+      "kind": "calls",
+      "to": "ui/src/lib/ansi.ts::styleToString::function"
+    },
+    {
+      "from": "ui/src/lib/ansi.ts::ansiToHtml::function",
+      "kind": "calls",
+      "to": "ui/src/lib/ansi.ts::escapeHtml::function"
+    },
+    {
+      "from": "ui/src/lib/ansi.ts::ansiToHtml::function",
+      "kind": "calls",
+      "to": "ui/src/lib/ansi.ts::styleToString::function"
+    },
+    {
+      "from": "ui/src/lib/ansi.ts::ansiToHtml::function",
+      "kind": "calls",
+      "to": "ui/src/lib/ansi.ts::styleToString::function"
+    },
+    {
+      "from": "ui/src/lib/ansi.ts::ansiToHtml::function",
+      "kind": "calls",
+      "to": "ui/src/lib/ansi.ts::escapeHtml::function"
+    }
+  ],
+  "file": "ui/src/lib/ansi.ts",
+  "intent": [
+    {
+      "date": "2026-07-10T20:39:36-03:00",
+      "hash": "db94b7c03f56600323aff8c9132e7d98185ff8b2",
+      "kind": "commit",
+      "message": "fix(ui): CopyButton silent failure + pre-existing ESLint cleanup"
+    },
+    {
+      "date": "2026-06-21T20:22:36-03:00",
+      "hash": "b8acd65841394e3ed2ec464a8458c39a0219e9f4",
+      "kind": "commit",
+      "message": "feat(ui): enhance StreamLog with terminal toolbar, search, copy, timestamps, and ANSI color support"
+    }
+  ],
+  "lastModified": 1786492495,
+  "symbols": [
+    {
+      "endLine": 131,
+      "endOffset": 3403,
+      "kind": "function",
+      "name": "ansiToHtml",
+      "startLine": 51,
+      "startOffset": 1318,
+      "symbolId": "ui/src/lib/ansi.ts::ansiToHtml::function"
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "antiPatterns": [],
+  "complexity": [],
+  "contentHash": "eec5f739602ceb8f851b9355f6ab9424ea39d823f80a6382e5799734825bb4a6",
+  "edges": [
+    {
+      "from": "packages/auth-next/src/index.test.ts::index.test::variable",
+      "kind": "imports",
+      "to": "packages/auth-next/src/index.ts::bigBaseAuthMiddleware::function"
+    }
+  ],
+  "file": "packages/auth-next/src/index.test.ts",
+  "intent": [
+    {
+      "date": "2026-07-23T21:10:36-03:00",
+      "hash": "822caaa19eef68c0614743b92ca5686ed3b59619",
+      "kind": "commit",
+      "message": "fix(security): auth bypass in @bigbase/auth-next SDK middleware"
+    }
+  ],
+  "lastModified": 1786492495,
+  "symbols": []
+}

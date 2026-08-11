@@ -1,0 +1,16 @@
+{
+  "antiPatterns": [],
+  "complexity": [],
+  "contentHash": "88721f807b4559051e5661603aa77c85f1c21354539868e77cfd78a6d8ec8835",
+  "edges": [
+    {
+      "from": "ui/src/pages/UsersPage.test.tsx::UsersPage.test::variable",
+      "kind": "imports",
+      "to": "ui/src/pages/UsersPage.ts::UsersPage::class"
+    }
+  ],
+  "file": "ui/src/pages/UsersPage.test.tsx",
+  "intent": [],
+  "lastModified": 1786492495,
+  "symbols": []
+}

@@ -1,0 +1,58 @@
+{
+  "antiPatterns": [
+    {
+      "date": "2026-08-11T00:20:44-03:00",
+      "hash": "b60daca67a24d4020d0e16536bef4921ba7a644b",
+      "message": "fix(ui): replace rollback overlay with accessible Modal (WCAG 2.1.2)"
+    },
+    {
+      "date": "2026-06-26T20:49:30-03:00",
+      "hash": "a0e8852094a08009ba368066d9b5636e49448b05",
+      "message": "fix(ui): add missing tests for e44s02 rollback functions"
+    }
+  ],
+  "complexity": [],
+  "contentHash": "f6a40d5d12a276a2ac2ba064a2ac4558a63e38e3dcf74c370a2876f87b84d4fb",
+  "edges": [
+    {
+      "from": "ui/src/pages/SiteDetailPage.test.tsx::SiteDetailPage.test::variable",
+      "kind": "imports",
+      "to": "ui/src/pages/SiteDetailPage.ts::SiteDetailPage::class"
+    }
+  ],
+  "file": "ui/src/pages/SiteDetailPage.test.tsx",
+  "intent": [
+    {
+      "date": "2026-08-11T13:43:14-03:00",
+      "hash": "23c10a8edc11e8765d5f695aef9e37c7b6e33280",
+      "kind": "commit",
+      "message": "fix(ui): table scope/caption + decorative glyph aria-hidden (T000021)"
+    },
+    {
+      "date": "2026-08-11T00:20:44-03:00",
+      "hash": "b60daca67a24d4020d0e16536bef4921ba7a644b",
+      "kind": "commit",
+      "message": "fix(ui): replace rollback overlay with accessible Modal (WCAG 2.1.2)"
+    },
+    {
+      "date": "2026-06-26T21:55:49-03:00",
+      "hash": "40287fbc5ea901d5337adc152abe67c04b113dd1",
+      "kind": "commit",
+      "message": "feat(deploy): zero-downtime connection draining on deployment switchover (e45)"
+    },
+    {
+      "date": "2026-06-26T20:49:30-03:00",
+      "hash": "a0e8852094a08009ba368066d9b5636e49448b05",
+      "kind": "commit",
+      "message": "fix(ui): add missing tests for e44s02 rollback functions"
+    },
+    {
+      "date": "2026-06-21T23:17:46-03:00",
+      "hash": "03a01e23c47d24f03f45e60c952a9e64a8e3f780",
+      "kind": "commit",
+      "message": "feat(e40s03): implement Admin UI manifest view and editor"
+    }
+  ],
+  "lastModified": 1786492495,
+  "symbols": []
+}

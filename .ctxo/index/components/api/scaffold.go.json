@@ -1,0 +1,213 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/api/scaffold.go::kernelEvent::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/api/scaffold.go::generateScaffoldID::function"
+    },
+    {
+      "cyclomatic": 7,
+      "symbolId": "components/api/scaffold.go::API.handleScaffoldDB::method"
+    },
+    {
+      "cyclomatic": 5,
+      "symbolId": "components/api/scaffold.go::API.handleScaffoldRepo::method"
+    },
+    {
+      "cyclomatic": 5,
+      "symbolId": "components/api/scaffold.go::API.handleScaffoldFunction::method"
+    }
+  ],
+  "contentHash": "f31f7923e0c6a1dbfff02869982cb3e40f6062c3e31f9aa3ce3ddecac96d926a",
+  "edges": [
+    {
+      "from": "components/api/scaffold.go::kernelEvent::function",
+      "kind": "uses",
+      "to": "kernel/component.go::Event::class"
+    },
+    {
+      "from": "components/api/scaffold.go::API.handleScaffoldDB::method",
+      "kind": "uses",
+      "to": "components/api/api.go::API::class"
+    },
+    {
+      "from": "components/api/scaffold.go::API.handleScaffoldDB::method",
+      "kind": "calls",
+      "to": "kernel/utilities.go::WriteJSON::function"
+    },
+    {
+      "from": "components/api/scaffold.go::API.handleScaffoldDB::method",
+      "kind": "calls",
+      "to": "components/api/api.go::sanitize::function"
+    },
+    {
+      "from": "components/api/scaffold.go::API.handleScaffoldDB::method",
+      "kind": "uses",
+      "to": "components/api/api.go::internalTables::variable"
+    },
+    {
+      "from": "components/api/scaffold.go::API.handleScaffoldDB::method",
+      "kind": "calls",
+      "to": "components/api/api.go::API.ensureTable::method"
+    },
+    {
+      "from": "components/api/scaffold.go::API.handleScaffoldDB::method",
+      "kind": "calls",
+      "to": "kernel/component.go::Logger.Error::method"
+    },
+    {
+      "from": "components/api/scaffold.go::API.handleScaffoldDB::method",
+      "kind": "calls",
+      "to": "components/api/api.go::API.emitMutation::method"
+    },
+    {
+      "from": "components/api/scaffold.go::API.handleScaffoldDB::method",
+      "kind": "calls",
+      "to": "components/api/api.go::siteIDFromRequest::function"
+    },
+    {
+      "from": "components/api/scaffold.go::API.handleScaffoldRepo::method",
+      "kind": "uses",
+      "to": "components/api/api.go::API::class"
+    },
+    {
+      "from": "components/api/scaffold.go::API.handleScaffoldRepo::method",
+      "kind": "calls",
+      "to": "kernel/utilities.go::WriteJSON::function"
+    },
+    {
+      "from": "components/api/scaffold.go::API.handleScaffoldRepo::method",
+      "kind": "calls",
+      "to": "kernel/eventbus.go::EventBus.Emit::method"
+    },
+    {
+      "from": "components/api/scaffold.go::API.handleScaffoldRepo::method",
+      "kind": "calls",
+      "to": "components/api/scaffold.go::kernelEvent::function"
+    },
+    {
+      "from": "components/api/scaffold.go::API.handleScaffoldFunction::method",
+      "kind": "uses",
+      "to": "components/api/api.go::API::class"
+    },
+    {
+      "from": "components/api/scaffold.go::API.handleScaffoldFunction::method",
+      "kind": "calls",
+      "to": "kernel/utilities.go::WriteJSON::function"
+    },
+    {
+      "from": "components/api/scaffold.go::API.handleScaffoldFunction::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::DBer.Migrate::method"
+    },
+    {
+      "from": "components/api/scaffold.go::API.handleScaffoldFunction::method",
+      "kind": "calls",
+      "to": "components/api/scaffold.go::generateScaffoldID::function"
+    },
+    {
+      "from": "components/api/scaffold.go::API.handleScaffoldFunction::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.ExecContext::method"
+    },
+    {
+      "from": "components/api/scaffold.go::API.handleScaffoldFunction::method",
+      "kind": "calls",
+      "to": "kernel/component.go::Logger.Error::method"
+    },
+    {
+      "from": "components/api/scaffold.go::API.handleScaffoldFunction::method",
+      "kind": "calls",
+      "to": "components/api/api.go::API.emitMutation::method"
+    },
+    {
+      "from": "components/api/scaffold.go::API.handleScaffoldFunction::method",
+      "kind": "uses",
+      "to": "components/api/api.go::tableName::type"
+    },
+    {
+      "from": "components/api/scaffold.go::API.handleScaffoldFunction::method",
+      "kind": "calls",
+      "to": "components/api/api.go::siteIDFromRequest::function"
+    }
+  ],
+  "file": "components/api/scaffold.go",
+  "intent": [
+    {
+      "date": "2026-07-12T12:54:14-03:00",
+      "hash": "cfa81db5aa2ce3412afbc1cb63c366ef58fc9e17",
+      "kind": "commit",
+      "message": "fix(api,functions): add tableName type for defense-in-depth SQL injection hardening"
+    },
+    {
+      "date": "2026-07-10T14:46:55-03:00",
+      "hash": "36722e3d731d1da0179c0360d677bc6bdf2b3b19",
+      "kind": "commit",
+      "message": "fix(deploy): prevent manifest path traversal (CWE-22)"
+    },
+    {
+      "date": "2026-07-09T01:44:49-03:00",
+      "hash": "82dc49874349b328be8cbd34da05d4ee4b430169",
+      "kind": "commit",
+      "message": "feat(monitoring): AI-assisted deploy observability and incident response (e72) (#64)"
+    },
+    {
+      "date": "2026-06-05T19:51:11-03:00",
+      "hash": "5dc3011a8bf1a23d5532faff56612e14cee9710b",
+      "kind": "commit",
+      "message": "feat(dx): e22s01+e22s02 onboarding checklist UI and 1-click scaffold API"
+    }
+  ],
+  "lastModified": 1786492494,
+  "symbols": [
+    {
+      "endLine": 19,
+      "endOffset": 345,
+      "kind": "function",
+      "name": "kernelEvent",
+      "startLine": 17,
+      "startOffset": 233,
+      "symbolId": "components/api/scaffold.go::kernelEvent::function"
+    },
+    {
+      "endLine": 28,
+      "endOffset": 600,
+      "kind": "function",
+      "name": "generateScaffoldID",
+      "startLine": 22,
+      "startOffset": 418,
+      "symbolId": "components/api/scaffold.go::generateScaffoldID::function"
+    },
+    {
+      "endLine": 77,
+      "endOffset": 2110,
+      "kind": "method",
+      "name": "API.handleScaffoldDB",
+      "startLine": 32,
+      "startOffset": 714,
+      "symbolId": "components/api/scaffold.go::API.handleScaffoldDB::method"
+    },
+    {
+      "endLine": 107,
+      "endOffset": 3080,
+      "kind": "method",
+      "name": "API.handleScaffoldRepo",
+      "startLine": 81,
+      "startOffset": 2240,
+      "symbolId": "components/api/scaffold.go::API.handleScaffoldRepo::method"
+    },
+    {
+      "endLine": 156,
+      "endOffset": 4877,
+      "kind": "method",
+      "name": "API.handleScaffoldFunction",
+      "startLine": 111,
+      "startOffset": 3203,
+      "symbolId": "components/api/scaffold.go::API.handleScaffoldFunction::method"
+    }
+  ]
+}

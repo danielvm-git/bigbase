@@ -1,0 +1,98 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 7,
+      "symbolId": "ui/src/pages/MessagingDetailPage.tsx::MessagingDetailPage::function"
+    }
+  ],
+  "contentHash": "3b74d40d507d64bb91f1c7160647f0d1e0d7beb35af0a2e60224ea5ec2a31294",
+  "edges": [
+    {
+      "from": "ui/src/pages/MessagingDetailPage.tsx::MessagingDetailPage::function",
+      "kind": "imports",
+      "to": "ui/src/components.ts::PageHeader::class"
+    },
+    {
+      "from": "ui/src/pages/MessagingDetailPage.tsx::MessagingDetailPage::function",
+      "kind": "imports",
+      "to": "ui/src/components.ts::Button::class"
+    },
+    {
+      "from": "ui/src/pages/MessagingDetailPage.tsx::MessagingDetailPage::function",
+      "kind": "imports",
+      "to": "ui/src/components.ts::Input::class"
+    },
+    {
+      "from": "ui/src/pages/MessagingDetailPage.tsx::MessagingDetailPage::function",
+      "kind": "imports",
+      "to": "ui/src/components.ts::Breadcrumb::class"
+    },
+    {
+      "from": "ui/src/pages/MessagingDetailPage.tsx::MessagingDetailPage::function",
+      "kind": "imports",
+      "to": "ui/src/components.ts::Tabs::class"
+    },
+    {
+      "from": "ui/src/pages/MessagingDetailPage.tsx::MessagingDetailPage::function",
+      "kind": "imports",
+      "to": "ui/src/mocks/templates.ts::getTemplate::function"
+    },
+    {
+      "from": "ui/src/pages/MessagingDetailPage.tsx::MessagingDetailPage::function",
+      "kind": "calls",
+      "to": "ui/src/mocks/templates.ts::getTemplate::function"
+    },
+    {
+      "from": "ui/src/pages/MessagingDetailPage.tsx::MessagingDetailPage::function",
+      "kind": "uses",
+      "to": "ui/src/mocks/templates.ts::getTemplate::function"
+    },
+    {
+      "from": "ui/src/pages/MessagingDetailPage.tsx::MessagingDetailPage::function",
+      "kind": "uses",
+      "to": "ui/src/components.ts::PageHeader::class"
+    },
+    {
+      "from": "ui/src/pages/MessagingDetailPage.tsx::MessagingDetailPage::function",
+      "kind": "uses",
+      "to": "ui/src/components.ts::Button::class"
+    },
+    {
+      "from": "ui/src/pages/MessagingDetailPage.tsx::MessagingDetailPage::function",
+      "kind": "uses",
+      "to": "ui/src/components.ts::Breadcrumb::class"
+    },
+    {
+      "from": "ui/src/pages/MessagingDetailPage.tsx::MessagingDetailPage::function",
+      "kind": "uses",
+      "to": "ui/src/components.ts::Tabs::class"
+    },
+    {
+      "from": "ui/src/pages/MessagingDetailPage.tsx::MessagingDetailPage::function",
+      "kind": "uses",
+      "to": "ui/src/components.ts::Input::class"
+    }
+  ],
+  "file": "ui/src/pages/MessagingDetailPage.tsx",
+  "intent": [
+    {
+      "date": "2026-07-10T20:39:36-03:00",
+      "hash": "db94b7c03f56600323aff8c9132e7d98185ff8b2",
+      "kind": "commit",
+      "message": "fix(ui): CopyButton silent failure + pre-existing ESLint cleanup"
+    }
+  ],
+  "lastModified": 1786492495,
+  "symbols": [
+    {
+      "endLine": 90,
+      "endOffset": 3507,
+      "kind": "function",
+      "name": "MessagingDetailPage",
+      "startLine": 10,
+      "startOffset": 328,
+      "symbolId": "ui/src/pages/MessagingDetailPage.tsx::MessagingDetailPage::function"
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/messaging/smtp_notifier_test.go::newSMTPTestServer::function"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/messaging/smtp_notifier_test.go::smtpTestServer.addr::method"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/messaging/smtp_notifier_test.go::smtpTestServer.serve::method"
+    },
+    {
+      "cyclomatic": 12,
+      "symbolId": "components/messaging/smtp_notifier_test.go::smtpTestServer.handle::method"
+    },
+    {
+      "cyclomatic": 10,
+      "symbolId": "components/messaging/smtp_notifier_test.go::TestSMTPAlertNotifierSendsEmail::function"
+    }
+  ],
+  "contentHash": "2d61e5811a686a13f81eb958e340f414e9c2689135c08dd813cceb678eaada82",
+  "edges": [],
+  "file": "components/messaging/smtp_notifier_test.go",
+  "intent": [
+    {
+      "date": "2026-07-29T00:01:45-03:00",
+      "hash": "aa383b64713bf21e3f35c3d406706bfdfe1787dd",
+      "kind": "commit",
+      "message": "feat(monitoring): add site availability metrics + wire alert subscriber (closes #178)"
+    },
+    {
+      "date": "2026-07-28T23:52:47-03:00",
+      "hash": "0ff245d048821ee3239a30c5c0c41416d6f31c99",
+      "kind": "commit",
+      "message": "test(monitoring): add red tests for site metrics, alert notifier, metricValue"
+    }
+  ],
+  "lastModified": 1786492494,
+  "symbols": []
+}

@@ -1,0 +1,26 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 16,
+      "symbolId": "components/monitoring/org_isolation_test.go::TestMonitoringAlertOrgIsolation::function"
+    },
+    {
+      "cyclomatic": 16,
+      "symbolId": "components/monitoring/org_isolation_test.go::TestMonitoringIncidentOrgIsolation::function"
+    }
+  ],
+  "contentHash": "e2ecbb4aabbb836e48e0a46e2e2f52703db2e360f1de759fde61a1137942b37a",
+  "edges": [],
+  "file": "components/monitoring/org_isolation_test.go",
+  "intent": [
+    {
+      "date": "2026-07-23T21:33:56-03:00",
+      "hash": "9d1e0e5795c9439f06e37e01b9ec9dfdb1f27cb5",
+      "kind": "commit",
+      "message": "fix(security): cross-tenant operational data exposure in monitoring endpoints"
+    }
+  ],
+  "lastModified": 1786492494,
+  "symbols": []
+}

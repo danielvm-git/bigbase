@@ -1,0 +1,240 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/sites/sites_test.go::authedRequestSite::function"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/sites/sites_test.go::authedRequestSiteAs::function"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/sites/sites_test.go::testLogger.Info::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/sites/sites_test.go::testLogger.Warn::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/sites/sites_test.go::testLogger.Error::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/sites/sites_test.go::testLogger.Debug::method"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/sites/sites_test.go::setupSites::function"
+    },
+    {
+      "cyclomatic": 7,
+      "symbolId": "components/sites/sites_test.go::TestSitesCreateTriggersDeploy::function"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/sites/sites_test.go::TestSitesCreateTriggersDeployWithCustomName::function"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/sites/sites_test.go::TestSitesListRequestLogs::function"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/sites/sites_test.go::TestSitesListEmpty::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/sites/sites_test.go::seedDeploymentsTable::function"
+    },
+    {
+      "cyclomatic": 10,
+      "symbolId": "components/sites/sites_test.go::TestSitesListReturnsAllSitesWithDeployments::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/sites/sites_test.go::setupSitesDeleteTest::function"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/sites/sites_test.go::createSiteDeleteSupportTables::function"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/sites/sites_test.go::seedSiteForDelete::function"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/sites/sites_test.go::countRows::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/sites/sites_test.go::TestDeleteSiteNotFound::function"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/sites/sites_test.go::TestDeleteSiteActiveDeploymentConflict::function"
+    },
+    {
+      "cyclomatic": 11,
+      "symbolId": "components/sites/sites_test.go::TestDeleteSiteCascade::function"
+    },
+    {
+      "cyclomatic": 7,
+      "symbolId": "components/sites/sites_test.go::TestDeleteSiteCallsCleanupCallback::function"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/sites/sites_test.go::TestDeleteSiteHandlesMissingColumn::function"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/sites/sites_test.go::debugLoggerForTest.Info::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/sites/sites_test.go::debugLoggerForTest.Warn::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/sites/sites_test.go::debugLoggerForTest.Error::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/sites/sites_test.go::debugLoggerForTest.Debug::method"
+    },
+    {
+      "cyclomatic": 17,
+      "symbolId": "components/sites/sites_test.go::TestSiteManifestGetAndSave::function"
+    },
+    {
+      "cyclomatic": 12,
+      "symbolId": "components/sites/sites_test.go::TestSiteAuthPolicyStruct::function"
+    },
+    {
+      "cyclomatic": 14,
+      "symbolId": "components/sites/sites_test.go::TestSiteAuthPolicyAPI::function"
+    },
+    {
+      "cyclomatic": 14,
+      "symbolId": "components/sites/sites_test.go::TestSiteCSPPolicyViaDeployDefaults::function"
+    }
+  ],
+  "contentHash": "540ac3828f7b97e25a1b2bf0f18072b22429169de0ef6bbc8b688cbd836a2c61",
+  "edges": [],
+  "file": "components/sites/sites_test.go",
+  "intent": [
+    {
+      "date": "2026-08-01T21:23:24-03:00",
+      "hash": "c7201d17991d3408ea8060722330f75a49878bfe",
+      "kind": "commit",
+      "message": "feat(proxy): make CSP configurable per-site for deployed static sites (closes #197)"
+    },
+    {
+      "date": "2026-07-28T14:50:58-03:00",
+      "hash": "65d9e399749e89cf52d1b2069a977542f79a0d6b",
+      "kind": "commit",
+      "message": "test(sites): assert non-admin orgs cannot see legacy org_id=0 sites"
+    },
+    {
+      "date": "2026-07-23T21:40:28-03:00",
+      "hash": "5527bebf25e56cadc764a8e2878b115e2ad097dd",
+      "kind": "commit",
+      "message": "fix(security): add org_id multi-tenant isolation to all site endpoints"
+    },
+    {
+      "date": "2026-07-10T16:10:47-03:00",
+      "hash": "ddd7efb57df839db846eb0fecb3cc3acb093d09f",
+      "kind": "commit",
+      "message": "fix(ecc): remove cross-component production imports"
+    },
+    {
+      "date": "2026-07-10T14:46:55-03:00",
+      "hash": "36722e3d731d1da0179c0360d677bc6bdf2b3b19",
+      "kind": "commit",
+      "message": "fix(deploy): prevent manifest path traversal (CWE-22)"
+    },
+    {
+      "date": "2026-07-08T21:27:08-03:00",
+      "hash": "e23603145a3cd159a674133ae51f3c1ed8ddb4a6",
+      "kind": "commit",
+      "message": "feat(proxy): implement site route auth policy, path matching, and passthrough identity header injection"
+    },
+    {
+      "date": "2026-07-06T21:55:09-03:00",
+      "hash": "34d6c51d46680c3abe813b7ff1346d8bc8037a12",
+      "kind": "commit",
+      "message": "fix(sites): batch latest deployment lookup to fix slow incomplete list"
+    },
+    {
+      "date": "2026-06-22T10:19:10-03:00",
+      "hash": "31d67b716184459907623f7654f68d00ffd59fe8",
+      "kind": "commit",
+      "message": "test(sites): add debug logger to TestSiteManifestGetAndSave for CI error visibility"
+    },
+    {
+      "date": "2026-06-22T10:13:37-03:00",
+      "hash": "55b6dd20d589be1f1f29e0216485f938a2136051",
+      "kind": "commit",
+      "message": "fix(ci): resolve CI failures — test branch assumption + stale allure action SHA"
+    },
+    {
+      "date": "2026-06-21T23:17:46-03:00",
+      "hash": "03a01e23c47d24f03f45e60c952a9e64a8e3f780",
+      "kind": "commit",
+      "message": "feat(e40s03): implement Admin UI manifest view and editor"
+    },
+    {
+      "date": "2026-06-21T12:38:02-03:00",
+      "hash": "451ea5ec935246d3dc0c83e1d27e3ea3a09f87f2",
+      "kind": "commit",
+      "message": "feat(deploy): add app_type override to deploy API and sites trigger"
+    },
+    {
+      "date": "2026-06-20T12:39:33-03:00",
+      "hash": "54d40cfca33492782ff3af4b1cbdeb1d74167d47",
+      "kind": "commit",
+      "message": "feat(deploy): passthrough paths, metadata injection, SPA fallback docs"
+    },
+    {
+      "date": "2026-06-19T13:35:14-03:00",
+      "hash": "90c4aac4db7030ef8e6047b315daf11224ad0bef",
+      "kind": "commit",
+      "message": "fix(sites): handle missing columns gracefully in site deletion"
+    },
+    {
+      "date": "2026-06-19T12:55:56-03:00",
+      "hash": "a24fbeeac9587733e366b763677377cf8791254d",
+      "kind": "commit",
+      "message": "feat(sites,deploy): add deploy cleanup hook for site deletion"
+    },
+    {
+      "date": "2026-06-19T12:34:07-03:00",
+      "hash": "ae23e3f29c78f9b4b9f1f5199516cc8b9905f4b0",
+      "kind": "commit",
+      "message": "feat(sites): add DELETE /api/sites/:id with safe cascade cleanup"
+    },
+    {
+      "date": "2026-06-19T12:01:13-03:00",
+      "hash": "010b90814b05f46334bb4f807aa05b190ec48c53",
+      "kind": "commit",
+      "message": "fix(lint): Add missing script to ui/package.json for typecheck, adjust lint scope for baseline"
+    },
+    {
+      "date": "2026-06-12T19:40:09-03:00",
+      "hash": "670460601bdcbd5a72dfb21f475ab3b1f336a58a",
+      "kind": "commit",
+      "message": "feat(deploy,sites,proxy): implement site build and request logs"
+    },
+    {
+      "date": "2026-06-12T17:59:29-03:00",
+      "hash": "69ad4830a7572e436f5cb965824ea57f49270422",
+      "kind": "commit",
+      "message": "fix(deploy): use site name for deployment subdomain (#24)"
+    }
+  ],
+  "lastModified": 1786492495,
+  "symbols": []
+}

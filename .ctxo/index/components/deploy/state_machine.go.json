@@ -1,0 +1,278 @@
+{
+  "antiPatterns": [
+    {
+      "date": "2026-06-26T20:10:31-03:00",
+      "hash": "77132c782be2345c6e399456065d8e129419e6e1",
+      "message": "feat(deploy): add one-click rollback endpoint + artifact reuse (#49)"
+    },
+    {
+      "date": "2026-06-21T15:03:24-03:00",
+      "hash": "c058782f95b32d8aa3a74c52ac44863ad572627b",
+      "message": "Revert \"feat(deploy): deployment state machine with validated transitions and events\""
+    }
+  ],
+  "complexity": [
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/deploy/state_machine.go::NewStateMachine::function"
+    },
+    {
+      "cyclomatic": 5,
+      "symbolId": "components/deploy/state_machine.go::StateMachine.CanTransition::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/deploy/state_machine.go::StateMachine.ValidTransitions::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/deploy/state_machine.go::StateMachine.IsValidState::method"
+    }
+  ],
+  "contentHash": "386f3606eeea446a11ed71c7a282655b8426c5c5da276ce640aad3fc4dca29bc",
+  "edges": [
+    {
+      "from": "components/deploy/state_machine.go::NewStateMachine::function",
+      "kind": "uses",
+      "to": "components/deploy/state_machine.go::StateMachine::class"
+    },
+    {
+      "from": "components/deploy/state_machine.go::NewStateMachine::function",
+      "kind": "uses",
+      "to": "components/deploy/state_machine.go::StatePending::variable"
+    },
+    {
+      "from": "components/deploy/state_machine.go::NewStateMachine::function",
+      "kind": "uses",
+      "to": "components/deploy/state_machine.go::StateBuilding::variable"
+    },
+    {
+      "from": "components/deploy/state_machine.go::NewStateMachine::function",
+      "kind": "uses",
+      "to": "components/deploy/state_machine.go::StateDeploying::variable"
+    },
+    {
+      "from": "components/deploy/state_machine.go::NewStateMachine::function",
+      "kind": "uses",
+      "to": "components/deploy/state_machine.go::StateRunning::variable"
+    },
+    {
+      "from": "components/deploy/state_machine.go::NewStateMachine::function",
+      "kind": "uses",
+      "to": "components/deploy/state_machine.go::StateFailed::variable"
+    },
+    {
+      "from": "components/deploy/state_machine.go::NewStateMachine::function",
+      "kind": "uses",
+      "to": "components/deploy/state_machine.go::StateRolledBack::variable"
+    },
+    {
+      "from": "components/deploy/state_machine.go::NewStateMachine::function",
+      "kind": "uses",
+      "to": "components/deploy/state_machine.go::StateDraining::variable"
+    },
+    {
+      "from": "components/deploy/state_machine.go::NewStateMachine::function",
+      "kind": "uses",
+      "to": "components/deploy/state_machine.go::StateStopped::variable"
+    },
+    {
+      "from": "components/deploy/state_machine.go::StateMachine.CanTransition::method",
+      "kind": "uses",
+      "to": "components/deploy/state_machine.go::StateMachine::class"
+    },
+    {
+      "from": "components/deploy/state_machine.go::StateMachine.ValidTransitions::method",
+      "kind": "uses",
+      "to": "components/deploy/state_machine.go::StateMachine::class"
+    },
+    {
+      "from": "components/deploy/state_machine.go::StateMachine.IsValidState::method",
+      "kind": "uses",
+      "to": "components/deploy/state_machine.go::StateMachine::class"
+    }
+  ],
+  "file": "components/deploy/state_machine.go",
+  "intent": [
+    {
+      "date": "2026-07-10T14:51:15-03:00",
+      "hash": "0c2fd4e7c3822f6059c957fb4f8317f51b55ecea",
+      "kind": "commit",
+      "message": "fix(deploy): export state machine and harden AppType enum (OCP)"
+    },
+    {
+      "date": "2026-07-10T14:46:55-03:00",
+      "hash": "36722e3d731d1da0179c0360d677bc6bdf2b3b19",
+      "kind": "commit",
+      "message": "fix(deploy): prevent manifest path traversal (CWE-22)"
+    },
+    {
+      "date": "2026-06-26T21:55:49-03:00",
+      "hash": "40287fbc5ea901d5337adc152abe67c04b113dd1",
+      "kind": "commit",
+      "message": "feat(deploy): zero-downtime connection draining on deployment switchover (e45)"
+    },
+    {
+      "date": "2026-06-26T20:10:31-03:00",
+      "hash": "77132c782be2345c6e399456065d8e129419e6e1",
+      "kind": "commit",
+      "message": "feat(deploy): add one-click rollback endpoint + artifact reuse (#49)"
+    },
+    {
+      "date": "2026-06-21T19:21:24-03:00",
+      "hash": "64ac6c5235062f7f2676f09439ba029bd20f1c4b",
+      "kind": "commit",
+      "message": "feat(deploy): deployment state machine with validated transitions and events"
+    },
+    {
+      "date": "2026-06-21T15:03:24-03:00",
+      "hash": "c058782f95b32d8aa3a74c52ac44863ad572627b",
+      "kind": "commit",
+      "message": "Revert \"feat(deploy): deployment state machine with validated transitions and events\""
+    },
+    {
+      "date": "2026-06-21T14:55:32-03:00",
+      "hash": "6780538cdb4ea45e376bb9cdbcc9cfad563bbe19",
+      "kind": "commit",
+      "message": "feat(deploy): deployment state machine with validated transitions and events"
+    }
+  ],
+  "lastModified": 1786492494,
+  "symbols": [
+    {
+      "endLine": 4,
+      "endOffset": 110,
+      "kind": "type",
+      "name": "DeploymentState",
+      "startLine": 4,
+      "startOffset": 88,
+      "symbolId": "components/deploy/state_machine.go::DeploymentState::type"
+    },
+    {
+      "endLine": 7,
+      "endOffset": 133,
+      "kind": "variable",
+      "name": "StatePending",
+      "startLine": 7,
+      "startOffset": 121,
+      "symbolId": "components/deploy/state_machine.go::StatePending::variable"
+    },
+    {
+      "endLine": 8,
+      "endOffset": 179,
+      "kind": "variable",
+      "name": "StateBuilding",
+      "startLine": 8,
+      "startOffset": 166,
+      "symbolId": "components/deploy/state_machine.go::StateBuilding::variable"
+    },
+    {
+      "endLine": 9,
+      "endOffset": 226,
+      "kind": "variable",
+      "name": "StateDeploying",
+      "startLine": 9,
+      "startOffset": 212,
+      "symbolId": "components/deploy/state_machine.go::StateDeploying::variable"
+    },
+    {
+      "endLine": 10,
+      "endOffset": 271,
+      "kind": "variable",
+      "name": "StateRunning",
+      "startLine": 10,
+      "startOffset": 259,
+      "symbolId": "components/deploy/state_machine.go::StateRunning::variable"
+    },
+    {
+      "endLine": 11,
+      "endOffset": 317,
+      "kind": "variable",
+      "name": "StateDraining",
+      "startLine": 11,
+      "startOffset": 304,
+      "symbolId": "components/deploy/state_machine.go::StateDraining::variable"
+    },
+    {
+      "endLine": 12,
+      "endOffset": 362,
+      "kind": "variable",
+      "name": "StateStopped",
+      "startLine": 12,
+      "startOffset": 350,
+      "symbolId": "components/deploy/state_machine.go::StateStopped::variable"
+    },
+    {
+      "endLine": 13,
+      "endOffset": 406,
+      "kind": "variable",
+      "name": "StateFailed",
+      "startLine": 13,
+      "startOffset": 395,
+      "symbolId": "components/deploy/state_machine.go::StateFailed::variable"
+    },
+    {
+      "endLine": 14,
+      "endOffset": 454,
+      "kind": "variable",
+      "name": "StateRolledBack",
+      "startLine": 14,
+      "startOffset": 439,
+      "symbolId": "components/deploy/state_machine.go::StateRolledBack::variable"
+    },
+    {
+      "endLine": 22,
+      "endOffset": 700,
+      "kind": "class",
+      "name": "StatusTransition",
+      "startLine": 18,
+      "startOffset": 574,
+      "symbolId": "components/deploy/state_machine.go::StatusTransition::class"
+    },
+    {
+      "endLine": 30,
+      "endOffset": 1048,
+      "kind": "class",
+      "name": "StateMachine",
+      "startLine": 28,
+      "startOffset": 998,
+      "symbolId": "components/deploy/state_machine.go::StateMachine::class"
+    },
+    {
+      "endLine": 45,
+      "endOffset": 1684,
+      "kind": "function",
+      "name": "NewStateMachine",
+      "startLine": 32,
+      "startOffset": 1050,
+      "symbolId": "components/deploy/state_machine.go::NewStateMachine::function"
+    },
+    {
+      "endLine": 62,
+      "endOffset": 2067,
+      "kind": "method",
+      "name": "StateMachine.CanTransition",
+      "startLine": 48,
+      "startOffset": 1762,
+      "symbolId": "components/deploy/state_machine.go::StateMachine.CanTransition::method"
+    },
+    {
+      "endLine": 67,
+      "endOffset": 2229,
+      "kind": "method",
+      "name": "StateMachine.ValidTransitions",
+      "startLine": 65,
+      "startOffset": 2140,
+      "symbolId": "components/deploy/state_machine.go::StateMachine.ValidTransitions::method"
+    },
+    {
+      "endLine": 73,
+      "endOffset": 2406,
+      "kind": "method",
+      "name": "StateMachine.IsValidState",
+      "startLine": 70,
+      "startOffset": 2308,
+      "symbolId": "components/deploy/state_machine.go::StateMachine.IsValidState::method"
+    }
+  ]
+}

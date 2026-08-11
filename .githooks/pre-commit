@@ -25,4 +25,19 @@ if [ -n "$STAGED_FILES" ]; then
     fi
 fi
 
+# Refresh the ctxo codebase index when source files changed, so MCP
+# queries never serve stale symbol data (e89: landing/docs drift guard).
+STAGED_SRC=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(go|ts|tsx|js|jsx)$' || true)
+if [ -n "$STAGED_SRC" ]; then
+    echo "   ctxo index..."
+    if command -v ctxo >/dev/null 2>&1; then
+        ctxo index >/dev/null 2>&1 || echo "   ⚠ ctxo index failed (check .ctxo config)"
+        # The index is tracked (verify-index baseline) — re-stage the rebuild
+        # so the commit carries the fresh symbols.
+        git add .ctxo/index/ 2>/dev/null || true
+    else
+        echo "   ⚠ ctxo not installed — index not refreshed"
+    fi
+fi
+
 echo "✅ Pre-commit checks passed"

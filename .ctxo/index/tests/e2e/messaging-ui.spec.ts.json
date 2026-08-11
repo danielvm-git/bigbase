@@ -1,0 +1,17 @@
+{
+  "antiPatterns": [],
+  "complexity": [],
+  "contentHash": "289ee607e97e083a84a6a12272b9b5329e94a2fa87a545e08a1083e7b43dfb05",
+  "edges": [],
+  "file": "tests/e2e/messaging-ui.spec.ts",
+  "intent": [
+    {
+      "date": "2026-07-11T22:16:50-03:00",
+      "hash": "27bffe302e8dd41263e2a02de23884a2af58ef05",
+      "kind": "commit",
+      "message": "test(browser-e2e): add browser-level UI E2E coverage for all 22 SPA routes"
+    }
+  ],
+  "lastModified": 1786492495,
+  "symbols": []
+}

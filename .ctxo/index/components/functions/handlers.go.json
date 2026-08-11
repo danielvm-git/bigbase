@@ -1,0 +1,516 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/functions/handlers.go::Functions.handleFunctions::method"
+    },
+    {
+      "cyclomatic": 9,
+      "symbolId": "components/functions/handlers.go::Functions.handleFunctionByID::method"
+    },
+    {
+      "cyclomatic": 6,
+      "symbolId": "components/functions/handlers.go::Functions.handleCreate::method"
+    },
+    {
+      "cyclomatic": 8,
+      "symbolId": "components/functions/handlers.go::Functions.decodeFunction::method"
+    },
+    {
+      "cyclomatic": 5,
+      "symbolId": "components/functions/handlers.go::Functions.handleList::method"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/functions/handlers.go::Functions.handleGet::method"
+    },
+    {
+      "cyclomatic": 7,
+      "symbolId": "components/functions/handlers.go::Functions.handleUpdate::method"
+    },
+    {
+      "cyclomatic": 5,
+      "symbolId": "components/functions/handlers.go::Functions.handleDelete::method"
+    },
+    {
+      "cyclomatic": 5,
+      "symbolId": "components/functions/handlers.go::Functions.handleRun::method"
+    },
+    {
+      "cyclomatic": 6,
+      "symbolId": "components/functions/handlers.go::Functions.saveExecution::method"
+    },
+    {
+      "cyclomatic": 9,
+      "symbolId": "components/functions/handlers.go::Functions.handleFunctionLogs::method"
+    }
+  ],
+  "contentHash": "0b8629445f018b5216de8a6bb1764225a732da810c891af9200a4cdf6e517646",
+  "edges": [
+    {
+      "from": "components/functions/handlers.go::Functions.handleFunctions::method",
+      "kind": "uses",
+      "to": "components/functions/functions.go::Functions::class"
+    },
+    {
+      "from": "components/functions/handlers.go::Functions.handleFunctions::method",
+      "kind": "calls",
+      "to": "components/functions/handlers.go::Functions.handleCreate::method"
+    },
+    {
+      "from": "components/functions/handlers.go::Functions.handleFunctions::method",
+      "kind": "calls",
+      "to": "components/functions/handlers.go::Functions.handleList::method"
+    },
+    {
+      "from": "components/functions/handlers.go::Functions.handleFunctions::method",
+      "kind": "calls",
+      "to": "kernel/utilities.go::WriteJSON::function"
+    },
+    {
+      "from": "components/functions/handlers.go::Functions.handleFunctionByID::method",
+      "kind": "uses",
+      "to": "components/functions/functions.go::Functions::class"
+    },
+    {
+      "from": "components/functions/handlers.go::Functions.handleFunctionByID::method",
+      "kind": "calls",
+      "to": "kernel/utilities.go::WriteJSON::function"
+    },
+    {
+      "from": "components/functions/handlers.go::Functions.handleFunctionByID::method",
+      "kind": "calls",
+      "to": "components/functions/handlers.go::Functions.handleRun::method"
+    },
+    {
+      "from": "components/functions/handlers.go::Functions.handleFunctionByID::method",
+      "kind": "calls",
+      "to": "components/functions/handlers.go::Functions.handleFunctionLogs::method"
+    },
+    {
+      "from": "components/functions/handlers.go::Functions.handleFunctionByID::method",
+      "kind": "calls",
+      "to": "components/functions/handlers.go::Functions.handleGet::method"
+    },
+    {
+      "from": "components/functions/handlers.go::Functions.handleFunctionByID::method",
+      "kind": "calls",
+      "to": "components/functions/handlers.go::Functions.handleUpdate::method"
+    },
+    {
+      "from": "components/functions/handlers.go::Functions.handleFunctionByID::method",
+      "kind": "calls",
+      "to": "components/functions/handlers.go::Functions.handleDelete::method"
+    },
+    {
+      "from": "components/functions/handlers.go::Functions.handleCreate::method",
+      "kind": "uses",
+      "to": "components/functions/functions.go::Functions::class"
+    },
+    {
+      "from": "components/functions/handlers.go::Functions.handleCreate::method",
+      "kind": "calls",
+      "to": "components/functions/handlers.go::Functions.decodeFunction::method"
+    },
+    {
+      "from": "components/functions/handlers.go::Functions.handleCreate::method",
+      "kind": "calls",
+      "to": "kernel/utilities.go::WriteJSON::function"
+    },
+    {
+      "from": "components/functions/handlers.go::Functions.handleCreate::method",
+      "kind": "calls",
+      "to": "kernel/utilities.go::GenerateID::function"
+    },
+    {
+      "from": "components/functions/handlers.go::Functions.handleCreate::method",
+      "kind": "calls",
+      "to": "kernel/component.go::Logger.Error::method"
+    },
+    {
+      "from": "components/functions/handlers.go::Functions.handleCreate::method",
+      "kind": "calls",
+      "to": "components/auth/middleware.go::OrgIDFromContext::function"
+    },
+    {
+      "from": "components/functions/handlers.go::Functions.handleCreate::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.ExecContext::method"
+    },
+    {
+      "from": "components/functions/handlers.go::Functions.handleCreate::method",
+      "kind": "calls",
+      "to": "components/functions/functions.go::Functions.reloadSchedule::method"
+    },
+    {
+      "from": "components/functions/handlers.go::Functions.decodeFunction::method",
+      "kind": "uses",
+      "to": "components/functions/functions.go::Functions::class"
+    },
+    {
+      "from": "components/functions/handlers.go::Functions.decodeFunction::method",
+      "kind": "uses",
+      "to": "components/functions/functions.go::Function::class"
+    },
+    {
+      "from": "components/functions/handlers.go::Functions.decodeFunction::method",
+      "kind": "uses",
+      "to": "components/functions/functions.go::errMissingName::variable"
+    },
+    {
+      "from": "components/functions/handlers.go::Functions.decodeFunction::method",
+      "kind": "uses",
+      "to": "components/functions/functions.go::errMissingSource::variable"
+    },
+    {
+      "from": "components/functions/handlers.go::Functions.handleList::method",
+      "kind": "uses",
+      "to": "components/functions/functions.go::Functions::class"
+    },
+    {
+      "from": "components/functions/handlers.go::Functions.handleList::method",
+      "kind": "calls",
+      "to": "components/auth/middleware.go::OrgIDFromContext::function"
+    },
+    {
+      "from": "components/functions/handlers.go::Functions.handleList::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.QueryContext::method"
+    },
+    {
+      "from": "components/functions/handlers.go::Functions.handleList::method",
+      "kind": "calls",
+      "to": "kernel/component.go::Logger.Error::method"
+    },
+    {
+      "from": "components/functions/handlers.go::Functions.handleList::method",
+      "kind": "calls",
+      "to": "kernel/utilities.go::WriteJSON::function"
+    },
+    {
+      "from": "components/functions/handlers.go::Functions.handleList::method",
+      "kind": "uses",
+      "to": "components/functions/functions.go::Function::class"
+    },
+    {
+      "from": "components/functions/handlers.go::Functions.handleList::method",
+      "kind": "calls",
+      "to": "components/functions/functions.go::Functions.scanFunction::method"
+    },
+    {
+      "from": "components/functions/handlers.go::Functions.handleGet::method",
+      "kind": "uses",
+      "to": "components/functions/functions.go::Functions::class"
+    },
+    {
+      "from": "components/functions/handlers.go::Functions.handleGet::method",
+      "kind": "calls",
+      "to": "components/auth/middleware.go::OrgIDFromContext::function"
+    },
+    {
+      "from": "components/functions/handlers.go::Functions.handleGet::method",
+      "kind": "calls",
+      "to": "components/functions/functions.go::Functions.fetchFunctionByIDForOrg::method"
+    },
+    {
+      "from": "components/functions/handlers.go::Functions.handleGet::method",
+      "kind": "calls",
+      "to": "kernel/utilities.go::WriteJSON::function"
+    },
+    {
+      "from": "components/functions/handlers.go::Functions.handleUpdate::method",
+      "kind": "uses",
+      "to": "components/functions/functions.go::Functions::class"
+    },
+    {
+      "from": "components/functions/handlers.go::Functions.handleUpdate::method",
+      "kind": "calls",
+      "to": "components/functions/handlers.go::Functions.decodeFunction::method"
+    },
+    {
+      "from": "components/functions/handlers.go::Functions.handleUpdate::method",
+      "kind": "calls",
+      "to": "kernel/utilities.go::WriteJSON::function"
+    },
+    {
+      "from": "components/functions/handlers.go::Functions.handleUpdate::method",
+      "kind": "calls",
+      "to": "components/auth/middleware.go::OrgIDFromContext::function"
+    },
+    {
+      "from": "components/functions/handlers.go::Functions.handleUpdate::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.ExecContext::method"
+    },
+    {
+      "from": "components/functions/handlers.go::Functions.handleUpdate::method",
+      "kind": "calls",
+      "to": "kernel/component.go::Logger.Error::method"
+    },
+    {
+      "from": "components/functions/handlers.go::Functions.handleUpdate::method",
+      "kind": "calls",
+      "to": "components/functions/functions.go::Functions.fetchFunctionByIDForOrg::method"
+    },
+    {
+      "from": "components/functions/handlers.go::Functions.handleUpdate::method",
+      "kind": "calls",
+      "to": "components/functions/functions.go::Functions.reloadSchedule::method"
+    },
+    {
+      "from": "components/functions/handlers.go::Functions.handleDelete::method",
+      "kind": "uses",
+      "to": "components/functions/functions.go::Functions::class"
+    },
+    {
+      "from": "components/functions/handlers.go::Functions.handleDelete::method",
+      "kind": "calls",
+      "to": "components/auth/middleware.go::OrgIDFromContext::function"
+    },
+    {
+      "from": "components/functions/handlers.go::Functions.handleDelete::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.ExecContext::method"
+    },
+    {
+      "from": "components/functions/handlers.go::Functions.handleDelete::method",
+      "kind": "calls",
+      "to": "kernel/component.go::Logger.Error::method"
+    },
+    {
+      "from": "components/functions/handlers.go::Functions.handleDelete::method",
+      "kind": "calls",
+      "to": "kernel/utilities.go::WriteJSON::function"
+    },
+    {
+      "from": "components/functions/handlers.go::Functions.handleDelete::method",
+      "kind": "calls",
+      "to": "components/functions/functions.go::Functions.reloadSchedule::method"
+    },
+    {
+      "from": "components/functions/handlers.go::Functions.handleRun::method",
+      "kind": "uses",
+      "to": "components/functions/functions.go::Functions::class"
+    },
+    {
+      "from": "components/functions/handlers.go::Functions.handleRun::method",
+      "kind": "calls",
+      "to": "components/auth/middleware.go::OrgIDFromContext::function"
+    },
+    {
+      "from": "components/functions/handlers.go::Functions.handleRun::method",
+      "kind": "calls",
+      "to": "components/functions/functions.go::Functions.fetchFunctionByIDForOrg::method"
+    },
+    {
+      "from": "components/functions/handlers.go::Functions.handleRun::method",
+      "kind": "calls",
+      "to": "kernel/utilities.go::WriteJSON::function"
+    },
+    {
+      "from": "components/functions/handlers.go::Functions.handleRun::method",
+      "kind": "uses",
+      "to": "components/functions/runtime.go::RunContext::class"
+    },
+    {
+      "from": "components/functions/handlers.go::Functions.handleRun::method",
+      "kind": "calls",
+      "to": "components/functions/runtime.go::Runtime.Execute::method"
+    },
+    {
+      "from": "components/functions/handlers.go::Functions.handleRun::method",
+      "kind": "calls",
+      "to": "components/functions/handlers.go::Functions.saveExecution::method"
+    },
+    {
+      "from": "components/functions/handlers.go::Functions.handleRun::method",
+      "kind": "calls",
+      "to": "kernel/component.go::Logger.Error::method"
+    },
+    {
+      "from": "components/functions/handlers.go::Functions.saveExecution::method",
+      "kind": "uses",
+      "to": "components/functions/functions.go::Functions::class"
+    },
+    {
+      "from": "components/functions/handlers.go::Functions.saveExecution::method",
+      "kind": "uses",
+      "to": "components/functions/runtime.go::RunOutput::class"
+    },
+    {
+      "from": "components/functions/handlers.go::Functions.saveExecution::method",
+      "kind": "calls",
+      "to": "kernel/utilities.go::GenerateID::function"
+    },
+    {
+      "from": "components/functions/handlers.go::Functions.saveExecution::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.ExecContext::method"
+    },
+    {
+      "from": "components/functions/handlers.go::Functions.handleFunctionLogs::method",
+      "kind": "uses",
+      "to": "components/functions/functions.go::Functions::class"
+    },
+    {
+      "from": "components/functions/handlers.go::Functions.handleFunctionLogs::method",
+      "kind": "calls",
+      "to": "kernel/utilities.go::WriteJSON::function"
+    },
+    {
+      "from": "components/functions/handlers.go::Functions.handleFunctionLogs::method",
+      "kind": "calls",
+      "to": "components/auth/middleware.go::OrgIDFromContext::function"
+    },
+    {
+      "from": "components/functions/handlers.go::Functions.handleFunctionLogs::method",
+      "kind": "calls",
+      "to": "components/functions/functions.go::Functions.fetchFunctionByIDForOrg::method"
+    },
+    {
+      "from": "components/functions/handlers.go::Functions.handleFunctionLogs::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.QueryContext::method"
+    },
+    {
+      "from": "components/functions/handlers.go::Functions.handleFunctionLogs::method",
+      "kind": "calls",
+      "to": "kernel/component.go::Logger.Error::method"
+    },
+    {
+      "from": "components/functions/handlers.go::Functions.handleFunctionLogs::method",
+      "kind": "uses",
+      "to": "components/functions/handlers.go::executionEntry::class"
+    }
+  ],
+  "file": "components/functions/handlers.go",
+  "intent": [
+    {
+      "date": "2026-07-23T21:35:35-03:00",
+      "hash": "827b41e960588bc862fbc680630af2ac96912507",
+      "kind": "commit",
+      "message": "fix(functions): add org_id scoping to prevent IDOR on all CRUD handlers"
+    },
+    {
+      "date": "2026-07-23T18:56:07-03:00",
+      "hash": "3c4d0016700e6d5b8c8cd904cd980f5ef94526cd",
+      "kind": "commit",
+      "message": "fix(functions): scope db.collection() queries by org_id to prevent IDOR"
+    },
+    {
+      "date": "2026-07-10T14:46:55-03:00",
+      "hash": "36722e3d731d1da0179c0360d677bc6bdf2b3b19",
+      "kind": "commit",
+      "message": "fix(deploy): prevent manifest path traversal (CWE-22)"
+    },
+    {
+      "date": "2026-06-18T09:46:38-03:00",
+      "hash": "afce751379e3b94a667cb7d258e94a4bde7c7d30",
+      "kind": "commit",
+      "message": "feat(functions): inject env, fetch, db, request context, and schedule loop into jsRuntime (#25)"
+    }
+  ],
+  "lastModified": 1786492494,
+  "symbols": [
+    {
+      "endLine": 24,
+      "endOffset": 466,
+      "kind": "method",
+      "name": "Functions.handleFunctions",
+      "startLine": 15,
+      "startOffset": 183,
+      "symbolId": "components/functions/handlers.go::Functions.handleFunctions::method"
+    },
+    {
+      "endLine": 59,
+      "endOffset": 1345,
+      "kind": "method",
+      "name": "Functions.handleFunctionByID",
+      "startLine": 26,
+      "startOffset": 468,
+      "symbolId": "components/functions/handlers.go::Functions.handleFunctionByID::method"
+    },
+    {
+      "endLine": 99,
+      "endOffset": 2801,
+      "kind": "method",
+      "name": "Functions.handleCreate",
+      "startLine": 61,
+      "startOffset": 1347,
+      "symbolId": "components/functions/handlers.go::Functions.handleCreate::method"
+    },
+    {
+      "endLine": 125,
+      "endOffset": 3302,
+      "kind": "method",
+      "name": "Functions.decodeFunction",
+      "startLine": 101,
+      "startOffset": 2803,
+      "symbolId": "components/functions/handlers.go::Functions.decodeFunction::method"
+    },
+    {
+      "endLine": 157,
+      "endOffset": 4373,
+      "kind": "method",
+      "name": "Functions.handleList",
+      "startLine": 127,
+      "startOffset": 3304,
+      "symbolId": "components/functions/handlers.go::Functions.handleList::method"
+    },
+    {
+      "endLine": 167,
+      "endOffset": 4731,
+      "kind": "method",
+      "name": "Functions.handleGet",
+      "startLine": 159,
+      "startOffset": 4375,
+      "symbolId": "components/functions/handlers.go::Functions.handleGet::method"
+    },
+    {
+      "endLine": 210,
+      "endOffset": 6224,
+      "kind": "method",
+      "name": "Functions.handleUpdate",
+      "startLine": 169,
+      "startOffset": 4733,
+      "symbolId": "components/functions/handlers.go::Functions.handleUpdate::method"
+    },
+    {
+      "endLine": 236,
+      "endOffset": 7131,
+      "kind": "method",
+      "name": "Functions.handleDelete",
+      "startLine": 212,
+      "startOffset": 6226,
+      "symbolId": "components/functions/handlers.go::Functions.handleDelete::method"
+    },
+    {
+      "endLine": 283,
+      "endOffset": 8409,
+      "kind": "method",
+      "name": "Functions.handleRun",
+      "startLine": 238,
+      "startOffset": 7133,
+      "symbolId": "components/functions/handlers.go::Functions.handleRun::method"
+    },
+    {
+      "endLine": 314,
+      "endOffset": 9258,
+      "kind": "method",
+      "name": "Functions.saveExecution",
+      "startLine": 285,
+      "startOffset": 8411,
+      "symbolId": "components/functions/handlers.go::Functions.saveExecution::method"
+    },
+    {
+      "endLine": 372,
+      "endOffset": 11123,
+      "kind": "method",
+      "name": "Functions.handleFunctionLogs",
+      "startLine": 316,
+      "startOffset": 9260,
+      "symbolId": "components/functions/handlers.go::Functions.handleFunctionLogs::method"
+    }
+  ]
+}

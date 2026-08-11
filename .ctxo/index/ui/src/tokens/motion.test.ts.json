@@ -1,0 +1,28 @@
+{
+  "antiPatterns": [],
+  "complexity": [],
+  "contentHash": "077bce947a4d946152ee6df76e145f8ebe0750a0b96b542e3546f5aa41982fb7",
+  "edges": [
+    {
+      "from": "ui/src/tokens/motion.test.ts::motion.test::variable",
+      "kind": "imports",
+      "to": "ui/src/tokens/motion.ts::MOTION_TOKENS::variable"
+    },
+    {
+      "from": "ui/src/tokens/motion.test.ts::motion.test::variable",
+      "kind": "imports",
+      "to": "ui/src/tokens/motion.ts::usePrefersReducedMotion::function"
+    }
+  ],
+  "file": "ui/src/tokens/motion.test.ts",
+  "intent": [
+    {
+      "date": "2026-06-28T17:11:02-03:00",
+      "hash": "6fb588e63f79ce75dad9a27c5cd8dc0bf796f27c",
+      "kind": "commit",
+      "message": "feat(ui): add design system foundation — tokens, 22 components, a11y audit"
+    }
+  ],
+  "lastModified": 1786492495,
+  "symbols": []
+}

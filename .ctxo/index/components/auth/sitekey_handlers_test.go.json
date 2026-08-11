@@ -1,0 +1,56 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 9,
+      "symbolId": "components/auth/sitekey_handlers_test.go::setupAuthWithSite::function"
+    },
+    {
+      "cyclomatic": 22,
+      "symbolId": "components/auth/sitekey_handlers_test.go::TestSiteKeyHandlers::function"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/auth/sitekey_handlers_test.go::TestSiteKeyInputValidation::function"
+    },
+    {
+      "cyclomatic": 6,
+      "symbolId": "components/auth/sitekey_handlers_test.go::TestSiteKeyListNoTokens::function"
+    },
+    {
+      "cyclomatic": 13,
+      "symbolId": "components/auth/sitekey_handlers_test.go::TestIDORSiteKeyCrossTenant::function"
+    }
+  ],
+  "contentHash": "eed8b1d4e364938ee29b494fc3518d79f43557f273e5c64da917b7d98d413a03",
+  "edges": [],
+  "file": "components/auth/sitekey_handlers_test.go",
+  "intent": [
+    {
+      "date": "2026-07-23T21:29:14-03:00",
+      "hash": "1c13e7c393cbf42dc8238c2d3eaeeec77030f5d5",
+      "kind": "commit",
+      "message": "fix(security): IDOR on site deploy keys — add ownership verification"
+    },
+    {
+      "date": "2026-07-10T23:31:10-03:00",
+      "hash": "3dca1ba879ac84d04c0badacca3cd4eb5c3f6d9d",
+      "kind": "commit",
+      "message": "fix(auth,proxy,deps): fix deploy keys prefix, scope RevokeSiteKey, harden CSP, update deps"
+    },
+    {
+      "date": "2026-07-10T23:04:55-03:00",
+      "hash": "4b010f2c7b3a3991467a7d4a5621fa85484e34b7",
+      "kind": "commit",
+      "message": "chore: resolve merge conflicts in auth/org_http.go and sitekey_handlers_test.go"
+    },
+    {
+      "date": "2026-07-10T16:43:52-03:00",
+      "hash": "a5882b391753351179a29a60c57b38d9b0f818a3",
+      "kind": "commit",
+      "message": "test(auth): add site key handler tests — red"
+    }
+  ],
+  "lastModified": 1786492494,
+  "symbols": []
+}

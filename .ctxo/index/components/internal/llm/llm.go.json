@@ -1,0 +1,153 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/internal/llm/llm.go::New::function"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/internal/llm/llm.go::ConfigFromEnv::function"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/internal/llm/llm.go::Client.Enabled::method"
+    },
+    {
+      "cyclomatic": 11,
+      "symbolId": "components/internal/llm/llm.go::Client.Complete::method"
+    },
+    {
+      "cyclomatic": 5,
+      "symbolId": "components/internal/llm/llm.go::StripSecretLines::function"
+    }
+  ],
+  "contentHash": "356975f258f0c61ffaba3b69e810fa025ce70ecc1c9c5748bc06b036143153b9",
+  "edges": [
+    {
+      "from": "components/internal/llm/llm.go::New::function",
+      "kind": "uses",
+      "to": "components/internal/llm/llm.go::Config::class"
+    },
+    {
+      "from": "components/internal/llm/llm.go::New::function",
+      "kind": "uses",
+      "to": "components/internal/llm/llm.go::Client::class"
+    },
+    {
+      "from": "components/internal/llm/llm.go::ConfigFromEnv::function",
+      "kind": "uses",
+      "to": "components/internal/llm/llm.go::Config::class"
+    },
+    {
+      "from": "components/internal/llm/llm.go::Client.Enabled::method",
+      "kind": "uses",
+      "to": "components/internal/llm/llm.go::Client::class"
+    },
+    {
+      "from": "components/internal/llm/llm.go::Client.Complete::method",
+      "kind": "uses",
+      "to": "components/internal/llm/llm.go::Client::class"
+    },
+    {
+      "from": "components/internal/llm/llm.go::Client.Complete::method",
+      "kind": "calls",
+      "to": "components/internal/llm/llm.go::StripSecretLines::function"
+    },
+    {
+      "from": "components/internal/llm/llm.go::StripSecretLines::function",
+      "kind": "uses",
+      "to": "components/internal/llm/llm.go::secretPatterns::variable"
+    }
+  ],
+  "file": "components/internal/llm/llm.go",
+  "intent": [
+    {
+      "date": "2026-07-10T14:46:55-03:00",
+      "hash": "36722e3d731d1da0179c0360d677bc6bdf2b3b19",
+      "kind": "commit",
+      "message": "fix(deploy): prevent manifest path traversal (CWE-22)"
+    },
+    {
+      "date": "2026-07-09T01:44:49-03:00",
+      "hash": "82dc49874349b328be8cbd34da05d4ee4b430169",
+      "kind": "commit",
+      "message": "feat(monitoring): AI-assisted deploy observability and incident response (e72) (#64)"
+    }
+  ],
+  "lastModified": 1786492494,
+  "symbols": [
+    {
+      "endLine": 20,
+      "endOffset": 230,
+      "kind": "class",
+      "name": "Config",
+      "startLine": 16,
+      "startOffset": 165,
+      "symbolId": "components/internal/llm/llm.go::Config::class"
+    },
+    {
+      "endLine": 26,
+      "endOffset": 328,
+      "kind": "class",
+      "name": "Client",
+      "startLine": 23,
+      "startOffset": 275,
+      "symbolId": "components/internal/llm/llm.go::Client::class"
+    },
+    {
+      "endLine": 41,
+      "endOffset": 668,
+      "kind": "function",
+      "name": "New",
+      "startLine": 28,
+      "startOffset": 330,
+      "symbolId": "components/internal/llm/llm.go::New::function"
+    },
+    {
+      "endLine": 57,
+      "endOffset": 1043,
+      "kind": "function",
+      "name": "ConfigFromEnv",
+      "startLine": 43,
+      "startOffset": 670,
+      "symbolId": "components/internal/llm/llm.go::ConfigFromEnv::function"
+    },
+    {
+      "endLine": 61,
+      "endOffset": 1119,
+      "kind": "method",
+      "name": "Client.Enabled",
+      "startLine": 59,
+      "startOffset": 1045,
+      "symbolId": "components/internal/llm/llm.go::Client.Enabled::method"
+    },
+    {
+      "endLine": 122,
+      "endOffset": 2880,
+      "kind": "method",
+      "name": "Client.Complete",
+      "startLine": 64,
+      "startOffset": 1190,
+      "symbolId": "components/internal/llm/llm.go::Client.Complete::method"
+    },
+    {
+      "endLine": 124,
+      "endOffset": 2900,
+      "kind": "variable",
+      "name": "secretPatterns",
+      "startLine": 124,
+      "startOffset": 2886,
+      "symbolId": "components/internal/llm/llm.go::secretPatterns::variable"
+    },
+    {
+      "endLine": 143,
+      "endOffset": 3438,
+      "kind": "function",
+      "name": "StripSecretLines",
+      "startLine": 127,
+      "startOffset": 3052,
+      "symbolId": "components/internal/llm/llm.go::StripSecretLines::function"
+    }
+  ]
+}

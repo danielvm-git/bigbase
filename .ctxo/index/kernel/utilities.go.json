@@ -1,0 +1,132 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 1,
+      "symbolId": "kernel/utilities.go::WriteJSON::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "kernel/utilities.go::GenerateID::function"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "kernel/utilities.go::NoopLogger.Info::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "kernel/utilities.go::NoopLogger.Warn::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "kernel/utilities.go::NoopLogger.Error::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "kernel/utilities.go::NoopLogger.Debug::method"
+    }
+  ],
+  "contentHash": "23efe4be532bc4736f6401d15673f483b4f23954da6d92364ce1fbcd5e749d6e",
+  "edges": [
+    {
+      "from": "kernel/utilities.go::NoopLogger.Info::method",
+      "kind": "uses",
+      "to": "kernel/utilities.go::NoopLogger::class"
+    },
+    {
+      "from": "kernel/utilities.go::NoopLogger.Warn::method",
+      "kind": "uses",
+      "to": "kernel/utilities.go::NoopLogger::class"
+    },
+    {
+      "from": "kernel/utilities.go::NoopLogger.Error::method",
+      "kind": "uses",
+      "to": "kernel/utilities.go::NoopLogger::class"
+    },
+    {
+      "from": "kernel/utilities.go::NoopLogger.Debug::method",
+      "kind": "uses",
+      "to": "kernel/utilities.go::NoopLogger::class"
+    },
+    {
+      "from": "kernel/utilities.go::NoopLogger::class",
+      "kind": "implements",
+      "to": "kernel/component.go::Logger::interface"
+    }
+  ],
+  "file": "kernel/utilities.go",
+  "intent": [
+    {
+      "date": "2026-07-10T14:46:55-03:00",
+      "hash": "36722e3d731d1da0179c0360d677bc6bdf2b3b19",
+      "kind": "commit",
+      "message": "fix(deploy): prevent manifest path traversal (CWE-22)"
+    }
+  ],
+  "lastModified": 1786492495,
+  "symbols": [
+    {
+      "endLine": 16,
+      "endOffset": 365,
+      "kind": "function",
+      "name": "WriteJSON",
+      "startLine": 12,
+      "startOffset": 190,
+      "symbolId": "kernel/utilities.go::WriteJSON::function"
+    },
+    {
+      "endLine": 25,
+      "endOffset": 641,
+      "kind": "function",
+      "name": "GenerateID",
+      "startLine": 19,
+      "startOffset": 454,
+      "symbolId": "kernel/utilities.go::GenerateID::function"
+    },
+    {
+      "endLine": 29,
+      "endOffset": 814,
+      "kind": "class",
+      "name": "NoopLogger",
+      "startLine": 29,
+      "startOffset": 795,
+      "symbolId": "kernel/utilities.go::NoopLogger::class"
+    },
+    {
+      "endLine": 31,
+      "endOffset": 867,
+      "kind": "method",
+      "name": "NoopLogger.Info",
+      "startLine": 31,
+      "startOffset": 816,
+      "symbolId": "kernel/utilities.go::NoopLogger.Info::method"
+    },
+    {
+      "endLine": 32,
+      "endOffset": 919,
+      "kind": "method",
+      "name": "NoopLogger.Warn",
+      "startLine": 32,
+      "startOffset": 868,
+      "symbolId": "kernel/utilities.go::NoopLogger.Warn::method"
+    },
+    {
+      "endLine": 33,
+      "endOffset": 971,
+      "kind": "method",
+      "name": "NoopLogger.Error",
+      "startLine": 33,
+      "startOffset": 920,
+      "symbolId": "kernel/utilities.go::NoopLogger.Error::method"
+    },
+    {
+      "endLine": 34,
+      "endOffset": 1023,
+      "kind": "method",
+      "name": "NoopLogger.Debug",
+      "startLine": 34,
+      "startOffset": 972,
+      "symbolId": "kernel/utilities.go::NoopLogger.Debug::method"
+    }
+  ]
+}

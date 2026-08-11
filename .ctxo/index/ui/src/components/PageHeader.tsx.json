@@ -1,0 +1,32 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 5,
+      "symbolId": "ui/src/components/PageHeader.tsx::PageHeader::function"
+    }
+  ],
+  "contentHash": "faeb7f0ffe9bcaa51936cbbb69659795c1a3b53203f0519113d27efd53361e83",
+  "edges": [],
+  "file": "ui/src/components/PageHeader.tsx",
+  "intent": [
+    {
+      "date": "2026-08-11T15:55:35-03:00",
+      "hash": "f80cb4472e6258ee7a0355f6e0b9ded00cf3fac0",
+      "kind": "commit",
+      "message": "fix(ui): AAA text scaling + location indicator (e87s07)"
+    }
+  ],
+  "lastModified": 1786492495,
+  "symbols": [
+    {
+      "endLine": 55,
+      "endOffset": 2049,
+      "kind": "function",
+      "name": "PageHeader",
+      "startLine": 32,
+      "startOffset": 1243,
+      "symbolId": "ui/src/components/PageHeader.tsx::PageHeader::function"
+    }
+  ]
+}

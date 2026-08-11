@@ -1,0 +1,209 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 9,
+      "symbolId": "components/auth/phone.go::Auth.handleSendPhoneOTP::method"
+    },
+    {
+      "cyclomatic": 9,
+      "symbolId": "components/auth/phone.go::Auth.handleVerifyPhoneOTP::method"
+    }
+  ],
+  "contentHash": "2e9b489f1c641b729108367417f851ba8436db7d23b28a8f7af5c72c7139595a",
+  "edges": [
+    {
+      "from": "components/auth/phone.go::Auth.handleSendPhoneOTP::method",
+      "kind": "uses",
+      "to": "components/auth/auth.go::Auth::class"
+    },
+    {
+      "from": "components/auth/phone.go::Auth.handleSendPhoneOTP::method",
+      "kind": "calls",
+      "to": "kernel/utilities.go::WriteJSON::function"
+    },
+    {
+      "from": "components/auth/phone.go::Auth.handleSendPhoneOTP::method",
+      "kind": "calls",
+      "to": "components/auth/store.go::RateLimitStore.Increment::method"
+    },
+    {
+      "from": "components/auth/phone.go::Auth.handleSendPhoneOTP::method",
+      "kind": "uses",
+      "to": "components/auth/otp.go::maxOTPsPerHour::variable"
+    },
+    {
+      "from": "components/auth/phone.go::Auth.handleSendPhoneOTP::method",
+      "kind": "calls",
+      "to": "kernel/component.go::Logger.Error::method"
+    },
+    {
+      "from": "components/auth/phone.go::Auth.handleSendPhoneOTP::method",
+      "kind": "calls",
+      "to": "components/auth/otp.go::generateOTP::function"
+    },
+    {
+      "from": "components/auth/phone.go::Auth.handleSendPhoneOTP::method",
+      "kind": "calls",
+      "to": "components/auth/otp.go::hashCode::function"
+    },
+    {
+      "from": "components/auth/phone.go::Auth.handleSendPhoneOTP::method",
+      "kind": "calls",
+      "to": "components/auth/store.go::OTPStore.Store::method"
+    },
+    {
+      "from": "components/auth/phone.go::Auth.handleSendPhoneOTP::method",
+      "kind": "uses",
+      "to": "components/auth/otp.go::otpTTL::variable"
+    },
+    {
+      "from": "components/auth/phone.go::Auth.handleSendPhoneOTP::method",
+      "kind": "calls",
+      "to": "components/auth/phone.go::PhoneSender.SendSMS::method"
+    },
+    {
+      "from": "components/auth/phone.go::Auth.handleSendPhoneOTP::method",
+      "kind": "calls",
+      "to": "kernel/component.go::Logger.Info::method"
+    },
+    {
+      "from": "components/auth/phone.go::Auth.handleSendPhoneOTP::method",
+      "kind": "calls",
+      "to": "components/auth/auth.go::Auth.recordAudit::method"
+    },
+    {
+      "from": "components/auth/phone.go::Auth.handleSendPhoneOTP::method",
+      "kind": "calls",
+      "to": "components/auth/auth.go::getIP::function"
+    },
+    {
+      "from": "components/auth/phone.go::Auth.handleVerifyPhoneOTP::method",
+      "kind": "uses",
+      "to": "components/auth/auth.go::Auth::class"
+    },
+    {
+      "from": "components/auth/phone.go::Auth.handleVerifyPhoneOTP::method",
+      "kind": "calls",
+      "to": "kernel/utilities.go::WriteJSON::function"
+    },
+    {
+      "from": "components/auth/phone.go::Auth.handleVerifyPhoneOTP::method",
+      "kind": "calls",
+      "to": "components/auth/store.go::OTPStore.Get::method"
+    },
+    {
+      "from": "components/auth/phone.go::Auth.handleVerifyPhoneOTP::method",
+      "kind": "calls",
+      "to": "kernel/component.go::Logger.Error::method"
+    },
+    {
+      "from": "components/auth/phone.go::Auth.handleVerifyPhoneOTP::method",
+      "kind": "uses",
+      "to": "components/auth/otp.go::maxOTPAttempts::variable"
+    },
+    {
+      "from": "components/auth/phone.go::Auth.handleVerifyPhoneOTP::method",
+      "kind": "calls",
+      "to": "components/auth/store.go::OTPStore.Delete::method"
+    },
+    {
+      "from": "components/auth/phone.go::Auth.handleVerifyPhoneOTP::method",
+      "kind": "calls",
+      "to": "components/auth/otp.go::hashCode::function"
+    },
+    {
+      "from": "components/auth/phone.go::Auth.handleVerifyPhoneOTP::method",
+      "kind": "calls",
+      "to": "components/auth/store.go::OTPStore.RecordAttempt::method"
+    },
+    {
+      "from": "components/auth/phone.go::Auth.handleVerifyPhoneOTP::method",
+      "kind": "calls",
+      "to": "components/auth/auth.go::Auth.recordAudit::method"
+    },
+    {
+      "from": "components/auth/phone.go::Auth.handleVerifyPhoneOTP::method",
+      "kind": "calls",
+      "to": "components/auth/auth.go::getIP::function"
+    },
+    {
+      "from": "components/auth/phone.go::Auth.handleVerifyPhoneOTP::method",
+      "kind": "calls",
+      "to": "components/auth/oauth_handlers.go::Auth.findOrCreatePhoneUser::method"
+    },
+    {
+      "from": "components/auth/phone.go::Auth.handleVerifyPhoneOTP::method",
+      "kind": "calls",
+      "to": "components/auth/jwt.go::createJWT::function"
+    },
+    {
+      "from": "components/auth/phone.go::Auth.handleVerifyPhoneOTP::method",
+      "kind": "calls",
+      "to": "components/auth/credentials.go::Auth.writeAuthResponse::method"
+    }
+  ],
+  "file": "components/auth/phone.go",
+  "intent": [
+    {
+      "date": "2026-07-10T14:46:55-03:00",
+      "hash": "36722e3d731d1da0179c0360d677bc6bdf2b3b19",
+      "kind": "commit",
+      "message": "fix(deploy): prevent manifest path traversal (CWE-22)"
+    },
+    {
+      "date": "2026-07-08T16:55:36-03:00",
+      "hash": "6c369f00e06957990f1a58a99d33d00a771e81b1",
+      "kind": "commit",
+      "message": "chore(auth): address review findings for e56 OTP & audit log"
+    },
+    {
+      "date": "2026-07-08T16:08:02-03:00",
+      "hash": "b0c3e43108d3183b177f1206c67572b5076d4696",
+      "kind": "commit",
+      "message": "feat(auth): DB-backed OTP store & rate limiting with audit logging"
+    },
+    {
+      "date": "2026-06-28T12:50:44-03:00",
+      "hash": "cd72c6a2b3fa3f9bcc5c4c967f06cb8b6c817abd",
+      "kind": "commit",
+      "message": "feat(auth): e50 JWT secret persistence, configurable lifetimes, refresh token revocation"
+    },
+    {
+      "date": "2026-06-18T16:49:48-03:00",
+      "hash": "2af8713fffb089b189341f0ae319a91536e7c12f",
+      "kind": "commit",
+      "message": "feat(auth): add phone auth, anonymous token, OAuth popup (#34)"
+    }
+  ],
+  "lastModified": 1786492494,
+  "symbols": [
+    {
+      "endLine": 16,
+      "endOffset": 205,
+      "kind": "interface",
+      "name": "PhoneSender",
+      "startLine": 14,
+      "startOffset": 142,
+      "symbolId": "components/auth/phone.go::PhoneSender::interface"
+    },
+    {
+      "endLine": 72,
+      "endOffset": 2148,
+      "kind": "method",
+      "name": "Auth.handleSendPhoneOTP",
+      "startLine": 18,
+      "startOffset": 207,
+      "symbolId": "components/auth/phone.go::Auth.handleSendPhoneOTP::method"
+    },
+    {
+      "endLine": 133,
+      "endOffset": 4405,
+      "kind": "method",
+      "name": "Auth.handleVerifyPhoneOTP",
+      "startLine": 74,
+      "startOffset": 2150,
+      "symbolId": "components/auth/phone.go::Auth.handleVerifyPhoneOTP::method"
+    }
+  ]
+}

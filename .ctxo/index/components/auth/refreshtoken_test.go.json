@@ -1,0 +1,36 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/auth/refreshtoken_test.go::setupAuthFresh::function"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/auth/refreshtoken_test.go::registerAndLogin::function"
+    },
+    {
+      "cyclomatic": 18,
+      "symbolId": "components/auth/refreshtoken_test.go::TestRefreshToken::function"
+    }
+  ],
+  "contentHash": "a3ecfffa63d1191f2c9ee66981b9c5dae8492f0ee8ed565c9fb8b0b615080efe",
+  "edges": [],
+  "file": "components/auth/refreshtoken_test.go",
+  "intent": [
+    {
+      "date": "2026-07-10T16:04:05-03:00",
+      "hash": "95019ddc2ecec4042f2897967528c9d9b0c40d64",
+      "kind": "commit",
+      "message": "test(auth): assert full refresh-token family invalidation on replay"
+    },
+    {
+      "date": "2026-06-06T11:02:01-03:00",
+      "hash": "0627b371271ce39bdd125034d6ba43f4c9a08ef8",
+      "kind": "commit",
+      "message": "feat(security): e19s04 refresh token store, handler, and tests"
+    }
+  ],
+  "lastModified": 1786492494,
+  "symbols": []
+}

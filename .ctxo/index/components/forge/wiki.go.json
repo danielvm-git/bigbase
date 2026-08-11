@@ -1,0 +1,97 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/forge/wiki.go::Forge.getWiki::method"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/forge/wiki.go::Forge.saveWiki::method"
+    }
+  ],
+  "contentHash": "c5e7b822bfa9bbc689062d69f1c6bac809a838eb3c2f98c340f16386ef23635f",
+  "edges": [
+    {
+      "from": "components/forge/wiki.go::Forge.getWiki::method",
+      "kind": "uses",
+      "to": "components/forge/forge.go::Forge::class"
+    },
+    {
+      "from": "components/forge/wiki.go::Forge.getWiki::method",
+      "kind": "calls",
+      "to": "kernel/utilities.go::WriteJSON::function"
+    },
+    {
+      "from": "components/forge/wiki.go::Forge.getWiki::method",
+      "kind": "uses",
+      "to": "components/forge/forge.go::WikiPage::class"
+    },
+    {
+      "from": "components/forge/wiki.go::Forge.getWiki::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.QueryRowContext::method"
+    },
+    {
+      "from": "components/forge/wiki.go::Forge.saveWiki::method",
+      "kind": "uses",
+      "to": "components/forge/forge.go::Forge::class"
+    },
+    {
+      "from": "components/forge/wiki.go::Forge.saveWiki::method",
+      "kind": "calls",
+      "to": "kernel/utilities.go::WriteJSON::function"
+    },
+    {
+      "from": "components/forge/wiki.go::Forge.saveWiki::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.ExecContext::method"
+    },
+    {
+      "from": "components/forge/wiki.go::Forge.saveWiki::method",
+      "kind": "calls",
+      "to": "kernel/component.go::Logger.Error::method"
+    },
+    {
+      "from": "components/forge/wiki.go::Forge.saveWiki::method",
+      "kind": "uses",
+      "to": "components/forge/forge.go::WikiPage::class"
+    }
+  ],
+  "file": "components/forge/wiki.go",
+  "intent": [
+    {
+      "date": "2026-07-10T14:46:55-03:00",
+      "hash": "36722e3d731d1da0179c0360d677bc6bdf2b3b19",
+      "kind": "commit",
+      "message": "fix(deploy): prevent manifest path traversal (CWE-22)"
+    },
+    {
+      "date": "2026-07-10T14:32:07-03:00",
+      "hash": "0fe629ed484fbde9f0f07d5544bf571305330e84",
+      "kind": "commit",
+      "message": "refactor(forge): split forge.go into entity files"
+    }
+  ],
+  "lastModified": 1786492494,
+  "symbols": [
+    {
+      "endLine": 31,
+      "endOffset": 832,
+      "kind": "method",
+      "name": "Forge.getWiki",
+      "startLine": 12,
+      "startOffset": 114,
+      "symbolId": "components/forge/wiki.go::Forge.getWiki::method"
+    },
+    {
+      "endLine": 58,
+      "endOffset": 1930,
+      "kind": "method",
+      "name": "Forge.saveWiki",
+      "startLine": 33,
+      "startOffset": 834,
+      "symbolId": "components/forge/wiki.go::Forge.saveWiki::method"
+    }
+  ]
+}

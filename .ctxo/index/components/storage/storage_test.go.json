@@ -1,0 +1,150 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/storage/storage_test.go::testLogger.Info::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/storage/storage_test.go::testLogger.Warn::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/storage/storage_test.go::testLogger.Error::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/storage/storage_test.go::testLogger.Debug::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/storage/storage_test.go::withOrg::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/storage/storage_test.go::setupStorage::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/storage/storage_test.go::uploadFile::function"
+    },
+    {
+      "cyclomatic": 7,
+      "symbolId": "components/storage/storage_test.go::TestUploadSuccess::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/storage/storage_test.go::TestUploadMissingFile::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/storage/storage_test.go::TestUploadWrongFieldName::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/storage/storage_test.go::TestUploadWrongMethod::function"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/storage/storage_test.go::TestUploadFileWrittenToDisk::function"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/storage/storage_test.go::uploadAndGetID::function"
+    },
+    {
+      "cyclomatic": 6,
+      "symbolId": "components/storage/storage_test.go::TestFileDownloadPathTraversal::function"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/storage/storage_test.go::TestDownloadSuccess::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/storage/storage_test.go::TestDownloadNotFound::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/storage/storage_test.go::TestDownloadMissingID::function"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/storage/storage_test.go::TestListFilesEmpty::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/storage/storage_test.go::TestListFilesAfterUpload::function"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/storage/storage_test.go::TestDeleteSuccess::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/storage/storage_test.go::TestDeleteNotFound::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/storage/storage_test.go::TestListFilesWrongMethod::function"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/storage/storage_test.go::TestStorageImplementsComponent::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/storage/storage_test.go::TestStorageName::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/storage/storage_test.go::TestStorageVersion::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/storage/storage_test.go::TestStorageDependencies::function"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/storage/storage_test.go::TestThumbnail::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/storage/storage_test.go::TestThumbnailNonImage::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/storage/storage_test.go::TestThumbnailNotFound::function"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/storage/storage_test.go::uploadPNG::function"
+    }
+  ],
+  "contentHash": "0a92e16954ece536c0afa2164b829b319a877a71398d16093dee275b008cc395",
+  "edges": [],
+  "file": "components/storage/storage_test.go",
+  "intent": [
+    {
+      "date": "2026-07-24T09:10:02-03:00",
+      "hash": "2736ef5814c11a4e0317bcbcbc47e7fa14c970ef",
+      "kind": "commit",
+      "message": "fix(security): scope storage file handlers by org_id (BUG-133)"
+    },
+    {
+      "date": "2026-07-10T14:58:38-03:00",
+      "hash": "34b197c676d972ef39ab3cd8fe08a320adae96e9",
+      "kind": "commit",
+      "message": "fix(kernel): remove dead ConfigSchema/Hooks interfaces, add Component compile checks"
+    },
+    {
+      "date": "2026-06-28T11:03:40-03:00",
+      "hash": "41dd50b430e6abbf1740c58c794911155965526d",
+      "kind": "commit",
+      "message": "fix(storage): add path traversal defense to file downloads"
+    }
+  ],
+  "lastModified": 1786492495,
+  "symbols": []
+}

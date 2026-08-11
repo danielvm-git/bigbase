@@ -1,0 +1,322 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 7,
+      "symbolId": "components/cici/runs.go::CICI.triggerRun::method"
+    },
+    {
+      "cyclomatic": 7,
+      "symbolId": "components/cici/runs.go::CICI.executeRun::method"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/cici/runs.go::CICI.executeStep::method"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/cici/runs.go::CICI.appendLog::method"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/cici/runs.go::CICI.finishRun::method"
+    },
+    {
+      "cyclomatic": 12,
+      "symbolId": "components/cici/runs.go::CICI.handleRuns::method"
+    },
+    {
+      "cyclomatic": 8,
+      "symbolId": "components/cici/runs.go::CICI.getRunLogs::method"
+    }
+  ],
+  "contentHash": "719f77830a01f9e093230cd192f82d4c11070ab8251c539e2043cc8e1662a381",
+  "edges": [
+    {
+      "from": "components/cici/runs.go::CICI.triggerRun::method",
+      "kind": "uses",
+      "to": "components/cici/cici.go::CICI::class"
+    },
+    {
+      "from": "components/cici/runs.go::CICI.triggerRun::method",
+      "kind": "calls",
+      "to": "kernel/utilities.go::WriteJSON::function"
+    },
+    {
+      "from": "components/cici/runs.go::CICI.triggerRun::method",
+      "kind": "calls",
+      "to": "components/cici/workflows.go::CICI.fetchWorkflow::method"
+    },
+    {
+      "from": "components/cici/runs.go::CICI.triggerRun::method",
+      "kind": "calls",
+      "to": "components/cici/cici.go::CICI.verifyRepoOwnership::method"
+    },
+    {
+      "from": "components/cici/runs.go::CICI.triggerRun::method",
+      "kind": "calls",
+      "to": "kernel/component.go::Logger.Warn::method"
+    },
+    {
+      "from": "components/cici/runs.go::CICI.triggerRun::method",
+      "kind": "calls",
+      "to": "components/cici/cici.go::orgIDFromReq::function"
+    },
+    {
+      "from": "components/cici/runs.go::CICI.triggerRun::method",
+      "kind": "calls",
+      "to": "kernel/utilities.go::GenerateID::function"
+    },
+    {
+      "from": "components/cici/runs.go::CICI.triggerRun::method",
+      "kind": "calls",
+      "to": "kernel/component.go::Logger.Error::method"
+    },
+    {
+      "from": "components/cici/runs.go::CICI.triggerRun::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.ExecContext::method"
+    },
+    {
+      "from": "components/cici/runs.go::CICI.triggerRun::method",
+      "kind": "calls",
+      "to": "components/cici/runs.go::CICI.executeRun::method"
+    },
+    {
+      "from": "components/cici/runs.go::CICI.triggerRun::method",
+      "kind": "uses",
+      "to": "components/cici/cici.go::PipelineRun::class"
+    },
+    {
+      "from": "components/cici/runs.go::CICI.executeRun::method",
+      "kind": "uses",
+      "to": "components/cici/cici.go::CICI::class"
+    },
+    {
+      "from": "components/cici/runs.go::CICI.executeRun::method",
+      "kind": "uses",
+      "to": "components/cici/cici.go::WorkflowDef::class"
+    },
+    {
+      "from": "components/cici/runs.go::CICI.executeRun::method",
+      "kind": "uses",
+      "to": "components/cici/cici.go::workflowYAML::class"
+    },
+    {
+      "from": "components/cici/runs.go::CICI.executeRun::method",
+      "kind": "calls",
+      "to": "components/cici/runs.go::CICI.finishRun::method"
+    },
+    {
+      "from": "components/cici/runs.go::CICI.executeRun::method",
+      "kind": "calls",
+      "to": "components/cici/runs.go::CICI.executeStep::method"
+    },
+    {
+      "from": "components/cici/runs.go::CICI.executeRun::method",
+      "kind": "calls",
+      "to": "kernel/component.go::Logger.Error::method"
+    },
+    {
+      "from": "components/cici/runs.go::CICI.executeRun::method",
+      "kind": "calls",
+      "to": "components/cici/runs.go::CICI.appendLog::method"
+    },
+    {
+      "from": "components/cici/runs.go::CICI.executeStep::method",
+      "kind": "uses",
+      "to": "components/cici/cici.go::CICI::class"
+    },
+    {
+      "from": "components/cici/runs.go::CICI.executeStep::method",
+      "kind": "calls",
+      "to": "components/cici/cici.go::validateCommand::function"
+    },
+    {
+      "from": "components/cici/runs.go::CICI.executeStep::method",
+      "kind": "calls",
+      "to": "components/cici/runs.go::CICI.appendLog::method"
+    },
+    {
+      "from": "components/cici/runs.go::CICI.appendLog::method",
+      "kind": "uses",
+      "to": "components/cici/cici.go::CICI::class"
+    },
+    {
+      "from": "components/cici/runs.go::CICI.appendLog::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.ExecContext::method"
+    },
+    {
+      "from": "components/cici/runs.go::CICI.appendLog::method",
+      "kind": "calls",
+      "to": "kernel/component.go::Logger.Error::method"
+    },
+    {
+      "from": "components/cici/runs.go::CICI.finishRun::method",
+      "kind": "uses",
+      "to": "components/cici/cici.go::CICI::class"
+    },
+    {
+      "from": "components/cici/runs.go::CICI.finishRun::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.ExecContext::method"
+    },
+    {
+      "from": "components/cici/runs.go::CICI.finishRun::method",
+      "kind": "calls",
+      "to": "kernel/component.go::Logger.Error::method"
+    },
+    {
+      "from": "components/cici/runs.go::CICI.handleRuns::method",
+      "kind": "uses",
+      "to": "components/cici/cici.go::CICI::class"
+    },
+    {
+      "from": "components/cici/runs.go::CICI.handleRuns::method",
+      "kind": "calls",
+      "to": "components/auth/middleware.go::OrgIDFromContext::function"
+    },
+    {
+      "from": "components/cici/runs.go::CICI.handleRuns::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.QueryContext::method"
+    },
+    {
+      "from": "components/cici/runs.go::CICI.handleRuns::method",
+      "kind": "calls",
+      "to": "kernel/component.go::Logger.Error::method"
+    },
+    {
+      "from": "components/cici/runs.go::CICI.handleRuns::method",
+      "kind": "calls",
+      "to": "kernel/utilities.go::WriteJSON::function"
+    },
+    {
+      "from": "components/cici/runs.go::CICI.handleRuns::method",
+      "kind": "uses",
+      "to": "components/cici/cici.go::PipelineRun::class"
+    },
+    {
+      "from": "components/cici/runs.go::CICI.getRunLogs::method",
+      "kind": "uses",
+      "to": "components/cici/cici.go::CICI::class"
+    },
+    {
+      "from": "components/cici/runs.go::CICI.getRunLogs::method",
+      "kind": "calls",
+      "to": "components/auth/middleware.go::OrgIDFromContext::function"
+    },
+    {
+      "from": "components/cici/runs.go::CICI.getRunLogs::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.QueryRowContext::method"
+    },
+    {
+      "from": "components/cici/runs.go::CICI.getRunLogs::method",
+      "kind": "calls",
+      "to": "kernel/utilities.go::WriteJSON::function"
+    },
+    {
+      "from": "components/cici/runs.go::CICI.getRunLogs::method",
+      "kind": "calls",
+      "to": "kernel/component.go::Logger.Warn::method"
+    },
+    {
+      "from": "components/cici/runs.go::CICI.getRunLogs::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.QueryContext::method"
+    },
+    {
+      "from": "components/cici/runs.go::CICI.getRunLogs::method",
+      "kind": "calls",
+      "to": "kernel/component.go::Logger.Error::method"
+    },
+    {
+      "from": "components/cici/runs.go::CICI.getRunLogs::method",
+      "kind": "uses",
+      "to": "components/cici/cici.go::LogEntry::class"
+    }
+  ],
+  "file": "components/cici/runs.go",
+  "intent": [
+    {
+      "date": "2026-07-23T21:35:24-03:00",
+      "hash": "50c1459961b52541657b515759d3c54b99252000",
+      "kind": "commit",
+      "message": "fix(security): RCE via cici workflows — IDOR to unsandboxed exec.CommandContext"
+    },
+    {
+      "date": "2026-07-10T14:46:55-03:00",
+      "hash": "36722e3d731d1da0179c0360d677bc6bdf2b3b19",
+      "kind": "commit",
+      "message": "fix(deploy): prevent manifest path traversal (CWE-22)"
+    }
+  ],
+  "lastModified": 1786492494,
+  "symbols": [
+    {
+      "endLine": 70,
+      "endOffset": 1941,
+      "kind": "method",
+      "name": "CICI.triggerRun",
+      "startLine": 20,
+      "startOffset": 230,
+      "symbolId": "components/cici/runs.go::CICI.triggerRun::method"
+    },
+    {
+      "endLine": 102,
+      "endOffset": 2776,
+      "kind": "method",
+      "name": "CICI.executeRun",
+      "startLine": 72,
+      "startOffset": 1943,
+      "symbolId": "components/cici/runs.go::CICI.executeRun::method"
+    },
+    {
+      "endLine": 126,
+      "endOffset": 3405,
+      "kind": "method",
+      "name": "CICI.executeStep",
+      "startLine": 104,
+      "startOffset": 2778,
+      "symbolId": "components/cici/runs.go::CICI.executeStep::method"
+    },
+    {
+      "endLine": 135,
+      "endOffset": 3689,
+      "kind": "method",
+      "name": "CICI.appendLog",
+      "startLine": 128,
+      "startOffset": 3407,
+      "symbolId": "components/cici/runs.go::CICI.appendLog::method"
+    },
+    {
+      "endLine": 145,
+      "endOffset": 4012,
+      "kind": "method",
+      "name": "CICI.finishRun",
+      "startLine": 137,
+      "startOffset": 3691,
+      "symbolId": "components/cici/runs.go::CICI.finishRun::method"
+    },
+    {
+      "endLine": 212,
+      "endOffset": 6084,
+      "kind": "method",
+      "name": "CICI.handleRuns",
+      "startLine": 147,
+      "startOffset": 4014,
+      "symbolId": "components/cici/runs.go::CICI.handleRuns::method"
+    },
+    {
+      "endLine": 265,
+      "endOffset": 7899,
+      "kind": "method",
+      "name": "CICI.getRunLogs",
+      "startLine": 214,
+      "startOffset": 6086,
+      "symbolId": "components/cici/runs.go::CICI.getRunLogs::method"
+    }
+  ]
+}

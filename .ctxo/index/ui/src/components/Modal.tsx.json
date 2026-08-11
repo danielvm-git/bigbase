@@ -1,0 +1,49 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 8,
+      "symbolId": "ui/src/components/Modal.tsx::Modal::function"
+    }
+  ],
+  "contentHash": "ae799e6e9dc3724ad70350796205add2f8aef0de6d7c7fe87250fc82f77b3bbc",
+  "edges": [
+    {
+      "from": "ui/src/components/Modal.tsx::Modal::function",
+      "kind": "calls",
+      "to": "ui/src/components/Modal.tsx::trapTabKey::function"
+    },
+    {
+      "from": "ui/src/components/Modal.tsx::Modal::function",
+      "kind": "calls",
+      "to": "ui/src/components/Modal.tsx::getFocusable::function"
+    }
+  ],
+  "file": "ui/src/components/Modal.tsx",
+  "intent": [
+    {
+      "date": "2026-07-10T20:39:36-03:00",
+      "hash": "db94b7c03f56600323aff8c9132e7d98185ff8b2",
+      "kind": "commit",
+      "message": "fix(ui): CopyButton silent failure + pre-existing ESLint cleanup"
+    },
+    {
+      "date": "2026-07-10T17:30:20-03:00",
+      "hash": "78bd984f9b66daf341e182f2166eeb8699176337",
+      "kind": "commit",
+      "message": "fix(auth,ui): register site deploy-key routes; stop modal focus theft"
+    }
+  ],
+  "lastModified": 1786492495,
+  "symbols": [
+    {
+      "endLine": 101,
+      "endOffset": 2878,
+      "kind": "function",
+      "name": "Modal",
+      "startLine": 39,
+      "startOffset": 1034,
+      "symbolId": "ui/src/components/Modal.tsx::Modal::function"
+    }
+  ]
+}

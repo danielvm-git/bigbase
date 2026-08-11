@@ -1,0 +1,108 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/monitoring/monitoring_test.go::testLogger.Info::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/monitoring/monitoring_test.go::testLogger.Warn::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/monitoring/monitoring_test.go::testLogger.Error::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/monitoring/monitoring_test.go::testLogger.Debug::method"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/monitoring/monitoring_test.go::setupMonitoring::function"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/monitoring/monitoring_test.go::TestMonitoringImplementsComponent::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/monitoring/monitoring_test.go::TestMonitoringName::function"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/monitoring/monitoring_test.go::TestMonitoringHealthEndpoint::function"
+    },
+    {
+      "cyclomatic": 9,
+      "symbolId": "components/monitoring/monitoring_test.go::TestMonitoringMetricsEndpoint::function"
+    },
+    {
+      "cyclomatic": 6,
+      "symbolId": "components/monitoring/monitoring_test.go::TestMonitoringMiddlewareRecordsMetrics::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/monitoring/monitoring_test.go::setupMonitoringWithDB::function"
+    },
+    {
+      "cyclomatic": 5,
+      "symbolId": "components/monitoring/monitoring_test.go::TestMonitoringLogWriteAndSearch::function"
+    },
+    {
+      "cyclomatic": 6,
+      "symbolId": "components/monitoring/monitoring_test.go::TestMonitoringLogByID::function"
+    },
+    {
+      "cyclomatic": 6,
+      "symbolId": "components/monitoring/monitoring_test.go::TestMonitoringLogSearchByQuery::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/monitoring/monitoring_test.go::TestMonitoringAlertCreateMissingFields::function"
+    },
+    {
+      "cyclomatic": 5,
+      "symbolId": "components/monitoring/monitoring_test.go::TestMonitoringAlertCreateAndList::function"
+    },
+    {
+      "cyclomatic": 6,
+      "symbolId": "components/monitoring/monitoring_test.go::TestMonitoringDurationColumnMigrationIsIdempotent::function"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/monitoring/monitoring_test.go::TestMonitoringDependenciesIncludeDB::function"
+    },
+    {
+      "cyclomatic": 5,
+      "symbolId": "components/monitoring/monitoring_test.go::TestMonitoringSystemMetrics::function"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/monitoring/monitoring_test.go::TestSystemMetricsCPUPercentAfterSecondSample::function"
+    },
+    {
+      "cyclomatic": 8,
+      "symbolId": "components/monitoring/monitoring_test.go::TestPrometheusMetricsEndpoint::function"
+    }
+  ],
+  "contentHash": "fc3d5098bc5cb39db86159f5e0b0505956b51b6c1f4da17b99cc5d6f09d438fb",
+  "edges": [],
+  "file": "components/monitoring/monitoring_test.go",
+  "intent": [
+    {
+      "date": "2026-07-23T21:33:56-03:00",
+      "hash": "9d1e0e5795c9439f06e37e01b9ec9dfdb1f27cb5",
+      "kind": "commit",
+      "message": "fix(security): cross-tenant operational data exposure in monitoring endpoints"
+    },
+    {
+      "date": "2026-06-21T13:48:43-03:00",
+      "hash": "673a92e76f033a4ef16cc6439216f16d4a824431",
+      "kind": "commit",
+      "message": "fix(deploy,monitoring): harden PEP 668 fix and duration_seconds migration"
+    }
+  ],
+  "lastModified": 1786492494,
+  "symbols": []
+}

@@ -1,0 +1,59 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/git/git_test.go::testLogger.Info::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/git/git_test.go::testLogger.Warn::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/git/git_test.go::testLogger.Error::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/git/git_test.go::testLogger.Debug::method"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/git/git_test.go::setupGit::function"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/git/git_test.go::TestGitImplementsComponent::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/git/git_test.go::TestGitName::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/git/git_test.go::TestGitVersion::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/git/git_test.go::TestGitDependencies::function"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/git/git_test.go::TestGitCreateRepo::function"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/git/git_test.go::TestGitCreateDuplicateRepo::function"
+    },
+    {
+      "cyclomatic": 5,
+      "symbolId": "components/git/git_test.go::TestGitListRepos::function"
+    }
+  ],
+  "contentHash": "961e43f7208417b91fbe9fccedc8e63f1a878591d34ef21a8c9966b5ba6ad402",
+  "edges": [],
+  "file": "components/git/git_test.go",
+  "intent": [],
+  "lastModified": 1786492494,
+  "symbols": []
+}

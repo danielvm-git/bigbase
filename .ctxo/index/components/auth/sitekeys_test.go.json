@@ -1,0 +1,66 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/auth/sitekeys_test.go::setupSiteKeys::function"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/auth/sitekeys_test.go::TestSiteKeyCreate::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/auth/sitekeys_test.go::TestSiteKeyCreateMissingSite::function"
+    },
+    {
+      "cyclomatic": 7,
+      "symbolId": "components/auth/sitekeys_test.go::TestSiteKeyResolve::function"
+    },
+    {
+      "cyclomatic": 5,
+      "symbolId": "components/auth/sitekeys_test.go::TestSiteKeyMiddleware::function"
+    },
+    {
+      "cyclomatic": 6,
+      "symbolId": "components/auth/sitekeys_test.go::TestSiteKeyRevoked::function"
+    },
+    {
+      "cyclomatic": 6,
+      "symbolId": "components/auth/sitekeys_test.go::TestListSiteKeys::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/auth/sitekeys_test.go::TestListSiteKeysMissingSite::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/auth/sitekeys_test.go::TestRevokeSiteKeyNotFound::function"
+    }
+  ],
+  "contentHash": "b49db4c33ae35b33feca9ffa8c202308bf2574bc8dcceb58a30594f9832923b6",
+  "edges": [],
+  "file": "components/auth/sitekeys_test.go",
+  "intent": [
+    {
+      "date": "2026-07-10T23:31:10-03:00",
+      "hash": "3dca1ba879ac84d04c0badacca3cd4eb5c3f6d9d",
+      "kind": "commit",
+      "message": "fix(auth,proxy,deps): fix deploy keys prefix, scope RevokeSiteKey, harden CSP, update deps"
+    },
+    {
+      "date": "2026-07-07T19:39:36-03:00",
+      "hash": "890a5e7ab67398002355cbd51e727dd55bb2aef5",
+      "kind": "commit",
+      "message": "feat(mcp): add site discovery and deploy key lifecycle tools"
+    },
+    {
+      "date": "2026-07-07T17:55:13-03:00",
+      "hash": "6ba8ea4a275faa75c9a55c1fdfaf6dc2494cadac",
+      "kind": "commit",
+      "message": "feat(mcp): add provisioning toolchain — create_repo, create_site, provision_ci_credentials, get_ci_template"
+    }
+  ],
+  "lastModified": 1786492494,
+  "symbols": []
+}

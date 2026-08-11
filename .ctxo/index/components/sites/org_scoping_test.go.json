@@ -1,0 +1,56 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/sites/org_scoping_test.go::insertRawSite::function"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/sites/org_scoping_test.go::TestListSites_AdminSeesLegacyOrglessSites::function"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/sites/org_scoping_test.go::TestListSites_NonAdminDoesNotSeeLegacyOrglessSites::function"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/sites/org_scoping_test.go::TestListSites_StillIsolatesRealCrossOrgSites::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/sites/org_scoping_test.go::TestRequireSiteOwnership_AdminAllowsLegacyOrglessSite::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/sites/org_scoping_test.go::TestRequireSiteOwnership_NonAdminDeniesLegacyOrglessSite::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/sites/org_scoping_test.go::TestRequireSiteOwnership_StillDeniesRealCrossOrgSite::function"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/sites/org_scoping_test.go::siteNamesFromList::function"
+    }
+  ],
+  "contentHash": "278bb8af544e781a9e4e3dfed539dbecbf788aca0f0f030d7e658bfaf1850beb",
+  "edges": [],
+  "file": "components/sites/org_scoping_test.go",
+  "intent": [
+    {
+      "date": "2026-07-28T14:50:58-03:00",
+      "hash": "65d9e399749e89cf52d1b2069a977542f79a0d6b",
+      "kind": "commit",
+      "message": "test(sites): assert non-admin orgs cannot see legacy org_id=0 sites"
+    },
+    {
+      "date": "2026-07-24T18:59:41-03:00",
+      "hash": "d663f5848d17b7a97ed1e3a09f158f1de62c6b48",
+      "kind": "commit",
+      "message": "fix(sites): restore access to legacy sites locked out by org_id scoping (#159)"
+    }
+  ],
+  "lastModified": 1786492494,
+  "symbols": []
+}

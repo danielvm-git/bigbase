@@ -1,0 +1,23 @@
+{
+  "antiPatterns": [],
+  "complexity": [],
+  "contentHash": "1a8a62d0c73669dd8f7c5a7daeccc7cdbbf6952ee592c1835dd2d550b8125c44",
+  "edges": [
+    {
+      "from": "ui/src/lib/jwt.test.ts::jwt.test::variable",
+      "kind": "imports",
+      "to": "ui/src/lib/jwt.ts::decodeJwtExp::function"
+    }
+  ],
+  "file": "ui/src/lib/jwt.test.ts",
+  "intent": [
+    {
+      "date": "2026-08-11T16:07:12-03:00",
+      "hash": "be5a14e5d0ad29ef9e877d39c955e8a13b797743",
+      "kind": "commit",
+      "message": "fix(ui): AAA session timeout warning + re-auth (e87s05)"
+    }
+  ],
+  "lastModified": 1786492495,
+  "symbols": []
+}

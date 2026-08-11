@@ -1,0 +1,91 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 36,
+      "symbolId": "ui/src/pages/ForgePage.tsx::ForgePage::function"
+    }
+  ],
+  "contentHash": "3aeffb292d593e609803aac57284586cbe2f7bc551883fdfe03d547167be04e0",
+  "edges": [
+    {
+      "from": "ui/src/pages/ForgePage.tsx::ForgePage::function",
+      "kind": "imports",
+      "to": "ui/src/components.ts::PageHeader::class"
+    },
+    {
+      "from": "ui/src/pages/ForgePage.tsx::ForgePage::function",
+      "kind": "imports",
+      "to": "ui/src/components.ts::Button::class"
+    },
+    {
+      "from": "ui/src/pages/ForgePage.tsx::ForgePage::function",
+      "kind": "imports",
+      "to": "ui/src/components.ts::Input::class"
+    },
+    {
+      "from": "ui/src/pages/ForgePage.tsx::ForgePage::function",
+      "kind": "imports",
+      "to": "ui/src/components.ts::Tabs::class"
+    },
+    {
+      "from": "ui/src/pages/ForgePage.tsx::ForgePage::function",
+      "kind": "uses",
+      "to": "ui/src/components.ts::PageHeader::class"
+    },
+    {
+      "from": "ui/src/pages/ForgePage.tsx::ForgePage::function",
+      "kind": "uses",
+      "to": "ui/src/components.ts::Button::class"
+    },
+    {
+      "from": "ui/src/pages/ForgePage.tsx::ForgePage::function",
+      "kind": "uses",
+      "to": "ui/src/components.ts::Tabs::class"
+    },
+    {
+      "from": "ui/src/pages/ForgePage.tsx::ForgePage::function",
+      "kind": "uses",
+      "to": "ui/src/components.ts::Input::class"
+    }
+  ],
+  "file": "ui/src/pages/ForgePage.tsx",
+  "intent": [
+    {
+      "date": "2026-08-11T13:42:44-03:00",
+      "hash": "6541bd284832987cb1b361f461b5ea86abccf31f",
+      "kind": "commit",
+      "message": "fix(ui): heading hierarchy + glyph aria-hidden (T000018)"
+    },
+    {
+      "date": "2026-08-11T00:35:18-03:00",
+      "hash": "9848ced3fc0d2e6aef8ef47c1d78c4e4107f3b9a",
+      "kind": "commit",
+      "message": "fix(ui): give placeholder-only form controls accessible names (BUG-2026-08-11T000007)"
+    },
+    {
+      "date": "2026-08-11T00:32:26-03:00",
+      "hash": "607fcf087b580974b5acf50a6499221c0850bb96",
+      "kind": "commit",
+      "message": "fix(ui): make click-only div/span elements keyboard-accessible (BUG-2026-08-11T000009)"
+    },
+    {
+      "date": "2026-07-10T20:39:36-03:00",
+      "hash": "db94b7c03f56600323aff8c9132e7d98185ff8b2",
+      "kind": "commit",
+      "message": "fix(ui): CopyButton silent failure + pre-existing ESLint cleanup"
+    }
+  ],
+  "lastModified": 1786492495,
+  "symbols": [
+    {
+      "endLine": 233,
+      "endOffset": 10565,
+      "kind": "function",
+      "name": "ForgePage",
+      "startLine": 9,
+      "startOffset": 565,
+      "symbolId": "ui/src/pages/ForgePage.tsx::ForgePage::function"
+    }
+  ]
+}

@@ -1,0 +1,512 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/mcp/auth.go::toolTierFor::function"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/mcp/auth.go::WithOrgAuth::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/mcp/auth.go::OrgAuthFromContext::function"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/mcp/auth.go::bearerToken::function"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/mcp/auth.go::hasScope::function"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/mcp/auth.go::authToolError::function"
+    },
+    {
+      "cyclomatic": 7,
+      "symbolId": "components/mcp/auth.go::Component.enforceToolAuth::method"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/mcp/auth.go::Component.registerTool::method"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/mcp/auth.go::parseToolCall::function"
+    },
+    {
+      "cyclomatic": 5,
+      "symbolId": "components/mcp/auth.go::Component.authenticatePost::method"
+    },
+    {
+      "cyclomatic": 6,
+      "symbolId": "components/mcp/auth.go::Component.bearerAuthMiddleware::method"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/mcp/auth.go::truncPrefix::function"
+    }
+  ],
+  "contentHash": "f437f9e522af3959f7dbc359c40b9107d19e6e406dced6f76972578a542e4bbf",
+  "edges": [
+    {
+      "from": "components/mcp/auth.go::toolTierFor::function",
+      "kind": "uses",
+      "to": "components/mcp/auth.go::toolTier::type"
+    },
+    {
+      "from": "components/mcp/auth.go::toolTierFor::function",
+      "kind": "uses",
+      "to": "components/mcp/auth.go::publicTools::variable"
+    },
+    {
+      "from": "components/mcp/auth.go::toolTierFor::function",
+      "kind": "uses",
+      "to": "components/mcp/auth.go::tierPublic::variable"
+    },
+    {
+      "from": "components/mcp/auth.go::toolTierFor::function",
+      "kind": "uses",
+      "to": "components/mcp/auth.go::writeTools::variable"
+    },
+    {
+      "from": "components/mcp/auth.go::toolTierFor::function",
+      "kind": "uses",
+      "to": "components/mcp/auth.go::tierWrite::variable"
+    },
+    {
+      "from": "components/mcp/auth.go::toolTierFor::function",
+      "kind": "uses",
+      "to": "components/mcp/auth.go::tierRead::variable"
+    },
+    {
+      "from": "components/mcp/auth.go::WithOrgAuth::function",
+      "kind": "uses",
+      "to": "components/mcp/auth.go::orgAuthKey::variable"
+    },
+    {
+      "from": "components/mcp/auth.go::WithOrgAuth::function",
+      "kind": "uses",
+      "to": "components/mcp/auth.go::orgAuth::class"
+    },
+    {
+      "from": "components/mcp/auth.go::OrgAuthFromContext::function",
+      "kind": "uses",
+      "to": "components/mcp/auth.go::orgAuthKey::variable"
+    },
+    {
+      "from": "components/mcp/auth.go::OrgAuthFromContext::function",
+      "kind": "uses",
+      "to": "components/mcp/auth.go::orgAuth::class"
+    },
+    {
+      "from": "components/mcp/auth.go::Component.enforceToolAuth::method",
+      "kind": "uses",
+      "to": "components/mcp/mcp.go::Component::class"
+    },
+    {
+      "from": "components/mcp/auth.go::Component.enforceToolAuth::method",
+      "kind": "uses",
+      "to": "components/mcp/auth.go::toolTier::type"
+    },
+    {
+      "from": "components/mcp/auth.go::Component.enforceToolAuth::method",
+      "kind": "uses",
+      "to": "components/mcp/auth.go::tierPublic::variable"
+    },
+    {
+      "from": "components/mcp/auth.go::Component.enforceToolAuth::method",
+      "kind": "calls",
+      "to": "components/mcp/auth.go::OrgAuthFromContext::function"
+    },
+    {
+      "from": "components/mcp/auth.go::Component.enforceToolAuth::method",
+      "kind": "calls",
+      "to": "components/mcp/auth.go::bearerToken::function"
+    },
+    {
+      "from": "components/mcp/auth.go::Component.enforceToolAuth::method",
+      "kind": "calls",
+      "to": "components/mcp/auth.go::OrgKeyAuthenticator.ResolveOrgKey::method"
+    },
+    {
+      "from": "components/mcp/auth.go::Component.enforceToolAuth::method",
+      "kind": "calls",
+      "to": "components/mcp/auth.go::authToolError::function"
+    },
+    {
+      "from": "components/mcp/auth.go::Component.enforceToolAuth::method",
+      "kind": "calls",
+      "to": "components/mcp/auth.go::WithOrgAuth::function"
+    },
+    {
+      "from": "components/mcp/auth.go::Component.enforceToolAuth::method",
+      "kind": "uses",
+      "to": "components/mcp/auth.go::tierWrite::variable"
+    },
+    {
+      "from": "components/mcp/auth.go::Component.enforceToolAuth::method",
+      "kind": "calls",
+      "to": "components/mcp/auth.go::hasScope::function"
+    },
+    {
+      "from": "components/mcp/auth.go::Component.enforceToolAuth::method",
+      "kind": "uses",
+      "to": "components/mcp/auth.go::ScopeProvision::variable"
+    },
+    {
+      "from": "components/mcp/auth.go::Component.registerTool::method",
+      "kind": "uses",
+      "to": "components/mcp/mcp.go::Component::class"
+    },
+    {
+      "from": "components/mcp/auth.go::Component.registerTool::method",
+      "kind": "uses",
+      "to": "components/mcp/auth.go::toolTier::type"
+    },
+    {
+      "from": "components/mcp/auth.go::Component.registerTool::method",
+      "kind": "uses",
+      "to": "components/mcp/auth.go::toolHandler::type"
+    },
+    {
+      "from": "components/mcp/auth.go::Component.registerTool::method",
+      "kind": "calls",
+      "to": "components/mcp/auth.go::Component.enforceToolAuth::method"
+    },
+    {
+      "from": "components/mcp/auth.go::parseToolCall::function",
+      "kind": "uses",
+      "to": "components/mcp/auth.go::toolCallParams::class"
+    },
+    {
+      "from": "components/mcp/auth.go::Component.authenticatePost::method",
+      "kind": "uses",
+      "to": "components/mcp/mcp.go::Component::class"
+    },
+    {
+      "from": "components/mcp/auth.go::Component.authenticatePost::method",
+      "kind": "calls",
+      "to": "components/mcp/auth.go::toolTierFor::function"
+    },
+    {
+      "from": "components/mcp/auth.go::Component.authenticatePost::method",
+      "kind": "uses",
+      "to": "components/mcp/auth.go::tierPublic::variable"
+    },
+    {
+      "from": "components/mcp/auth.go::Component.authenticatePost::method",
+      "kind": "calls",
+      "to": "components/mcp/auth.go::bearerToken::function"
+    },
+    {
+      "from": "components/mcp/auth.go::Component.authenticatePost::method",
+      "kind": "calls",
+      "to": "kernel/component.go::Logger.Warn::method"
+    },
+    {
+      "from": "components/mcp/auth.go::Component.authenticatePost::method",
+      "kind": "calls",
+      "to": "components/mcp/auth.go::OrgKeyAuthenticator.ResolveOrgKey::method"
+    },
+    {
+      "from": "components/mcp/auth.go::Component.authenticatePost::method",
+      "kind": "uses",
+      "to": "components/mcp/auth.go::tierWrite::variable"
+    },
+    {
+      "from": "components/mcp/auth.go::Component.authenticatePost::method",
+      "kind": "calls",
+      "to": "components/mcp/auth.go::hasScope::function"
+    },
+    {
+      "from": "components/mcp/auth.go::Component.authenticatePost::method",
+      "kind": "uses",
+      "to": "components/mcp/auth.go::ScopeProvision::variable"
+    },
+    {
+      "from": "components/mcp/auth.go::Component.authenticatePost::method",
+      "kind": "calls",
+      "to": "components/mcp/auth.go::WithOrgAuth::function"
+    },
+    {
+      "from": "components/mcp/auth.go::Component.bearerAuthMiddleware::method",
+      "kind": "uses",
+      "to": "components/mcp/mcp.go::Component::class"
+    },
+    {
+      "from": "components/mcp/auth.go::Component.bearerAuthMiddleware::method",
+      "kind": "calls",
+      "to": "components/mcp/auth.go::parseToolCall::function"
+    },
+    {
+      "from": "components/mcp/auth.go::Component.bearerAuthMiddleware::method",
+      "kind": "calls",
+      "to": "components/mcp/auth.go::Component.authenticatePost::method"
+    }
+  ],
+  "file": "components/mcp/auth.go",
+  "intent": [
+    {
+      "date": "2026-07-24T20:56:01-03:00",
+      "hash": "e77fd137a0fcdc1a7521123153d8c065f11bafca",
+      "kind": "commit",
+      "message": "fix(deploy): never-bounce identity and framework deploy matrix (#166)"
+    },
+    {
+      "date": "2026-07-11T20:20:47-03:00",
+      "hash": "d6d93dcad14a75a8d627505bb9f8499ba284da4c",
+      "kind": "commit",
+      "message": "fix(mcp): move list_site_keys from writeTools to tierRead"
+    },
+    {
+      "date": "2026-07-11T20:20:47-03:00",
+      "hash": "787ec3844272cfe0c562dd86b27418e2566dc57d",
+      "kind": "commit",
+      "message": "fix(mcp): move list_site_keys from writeTools to tierRead"
+    },
+    {
+      "date": "2026-07-10T14:46:55-03:00",
+      "hash": "36722e3d731d1da0179c0360d677bc6bdf2b3b19",
+      "kind": "commit",
+      "message": "fix(deploy): prevent manifest path traversal (CWE-22)"
+    },
+    {
+      "date": "2026-07-08T13:49:04-03:00",
+      "hash": "642e3db2070618b0007af46d84f5bda541db92e6",
+      "kind": "commit",
+      "message": "feat(mcp): implement MCP bearer authentication and scope verification"
+    }
+  ],
+  "lastModified": 1786492494,
+  "symbols": [
+    {
+      "endLine": 21,
+      "endOffset": 376,
+      "kind": "variable",
+      "name": "ScopeProvision",
+      "startLine": 21,
+      "startOffset": 362,
+      "symbolId": "components/mcp/auth.go::ScopeProvision::variable"
+    },
+    {
+      "endLine": 27,
+      "endOffset": 667,
+      "kind": "interface",
+      "name": "OrgKeyAuthenticator",
+      "startLine": 25,
+      "startOffset": 562,
+      "symbolId": "components/mcp/auth.go::OrgKeyAuthenticator::interface"
+    },
+    {
+      "endLine": 29,
+      "endOffset": 686,
+      "kind": "type",
+      "name": "toolTier",
+      "startLine": 29,
+      "startOffset": 674,
+      "symbolId": "components/mcp/auth.go::toolTier::type"
+    },
+    {
+      "endLine": 32,
+      "endOffset": 707,
+      "kind": "variable",
+      "name": "tierPublic",
+      "startLine": 32,
+      "startOffset": 697,
+      "symbolId": "components/mcp/auth.go::tierPublic::variable"
+    },
+    {
+      "endLine": 33,
+      "endOffset": 733,
+      "kind": "variable",
+      "name": "tierRead",
+      "startLine": 33,
+      "startOffset": 725,
+      "symbolId": "components/mcp/auth.go::tierRead::variable"
+    },
+    {
+      "endLine": 34,
+      "endOffset": 744,
+      "kind": "variable",
+      "name": "tierWrite",
+      "startLine": 34,
+      "startOffset": 735,
+      "symbolId": "components/mcp/auth.go::tierWrite::variable"
+    },
+    {
+      "endLine": 37,
+      "endOffset": 763,
+      "kind": "variable",
+      "name": "publicTools",
+      "startLine": 37,
+      "startOffset": 752,
+      "symbolId": "components/mcp/auth.go::publicTools::variable"
+    },
+    {
+      "endLine": 48,
+      "endOffset": 1060,
+      "kind": "variable",
+      "name": "writeTools",
+      "startLine": 48,
+      "startOffset": 1050,
+      "symbolId": "components/mcp/auth.go::writeTools::variable"
+    },
+    {
+      "endLine": 64,
+      "endOffset": 1429,
+      "kind": "function",
+      "name": "toolTierFor",
+      "startLine": 56,
+      "startOffset": 1252,
+      "symbolId": "components/mcp/auth.go::toolTierFor::function"
+    },
+    {
+      "endLine": 66,
+      "endOffset": 1459,
+      "kind": "class",
+      "name": "orgAuthKeyType",
+      "startLine": 66,
+      "startOffset": 1436,
+      "symbolId": "components/mcp/auth.go::orgAuthKeyType::class"
+    },
+    {
+      "endLine": 68,
+      "endOffset": 1475,
+      "kind": "variable",
+      "name": "orgAuthKey",
+      "startLine": 68,
+      "startOffset": 1465,
+      "symbolId": "components/mcp/auth.go::orgAuthKey::variable"
+    },
+    {
+      "endLine": 73,
+      "endOffset": 1546,
+      "kind": "class",
+      "name": "orgAuth",
+      "startLine": 70,
+      "startOffset": 1497,
+      "symbolId": "components/mcp/auth.go::orgAuth::class"
+    },
+    {
+      "endLine": 78,
+      "endOffset": 1809,
+      "kind": "function",
+      "name": "WithOrgAuth",
+      "startLine": 76,
+      "startOffset": 1640,
+      "symbolId": "components/mcp/auth.go::WithOrgAuth::function"
+    },
+    {
+      "endLine": 87,
+      "endOffset": 2083,
+      "kind": "function",
+      "name": "OrgAuthFromContext",
+      "startLine": 81,
+      "startOffset": 1885,
+      "symbolId": "components/mcp/auth.go::OrgAuthFromContext::function"
+    },
+    {
+      "endLine": 102,
+      "endOffset": 2398,
+      "kind": "function",
+      "name": "bearerToken",
+      "startLine": 89,
+      "startOffset": 2085,
+      "symbolId": "components/mcp/auth.go::bearerToken::function"
+    },
+    {
+      "endLine": 111,
+      "endOffset": 2533,
+      "kind": "function",
+      "name": "hasScope",
+      "startLine": 104,
+      "startOffset": 2400,
+      "symbolId": "components/mcp/auth.go::hasScope::function"
+    },
+    {
+      "endLine": 118,
+      "endOffset": 2705,
+      "kind": "function",
+      "name": "authToolError",
+      "startLine": 113,
+      "startOffset": 2535,
+      "symbolId": "components/mcp/auth.go::authToolError::function"
+    },
+    {
+      "endLine": 150,
+      "endOffset": 3773,
+      "kind": "method",
+      "name": "Component.enforceToolAuth",
+      "startLine": 120,
+      "startOffset": 2707,
+      "symbolId": "components/mcp/auth.go::Component.enforceToolAuth::method"
+    },
+    {
+      "endLine": 152,
+      "endOffset": 3880,
+      "kind": "type",
+      "name": "toolHandler",
+      "startLine": 152,
+      "startOffset": 3780,
+      "symbolId": "components/mcp/auth.go::toolHandler::type"
+    },
+    {
+      "endLine": 162,
+      "endOffset": 4269,
+      "kind": "method",
+      "name": "Component.registerTool",
+      "startLine": 154,
+      "startOffset": 3882,
+      "symbolId": "components/mcp/auth.go::Component.registerTool::method"
+    },
+    {
+      "endLine": 166,
+      "endOffset": 4328,
+      "kind": "class",
+      "name": "toolCallParams",
+      "startLine": 164,
+      "startOffset": 4276,
+      "symbolId": "components/mcp/auth.go::toolCallParams::class"
+    },
+    {
+      "endLine": 181,
+      "endOffset": 4744,
+      "kind": "function",
+      "name": "parseToolCall",
+      "startLine": 168,
+      "startOffset": 4330,
+      "symbolId": "components/mcp/auth.go::parseToolCall::function"
+    },
+    {
+      "endLine": 211,
+      "endOffset": 5805,
+      "kind": "method",
+      "name": "Component.authenticatePost",
+      "startLine": 185,
+      "startOffset": 4878,
+      "symbolId": "components/mcp/auth.go::Component.authenticatePost::method"
+    },
+    {
+      "endLine": 242,
+      "endOffset": 6489,
+      "kind": "method",
+      "name": "Component.bearerAuthMiddleware",
+      "startLine": 213,
+      "startOffset": 5807,
+      "symbolId": "components/mcp/auth.go::Component.bearerAuthMiddleware::method"
+    },
+    {
+      "endLine": 249,
+      "endOffset": 6581,
+      "kind": "function",
+      "name": "truncPrefix",
+      "startLine": 244,
+      "startOffset": 6491,
+      "symbolId": "components/mcp/auth.go::truncPrefix::function"
+    }
+  ]
+}

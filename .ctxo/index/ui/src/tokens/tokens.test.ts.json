@@ -1,0 +1,39 @@
+{
+  "antiPatterns": [],
+  "complexity": [],
+  "contentHash": "12a0dd19b886ba2a561ee56a9d57c9a843d86273c126c32811ca61a87396cee4",
+  "edges": [
+    {
+      "from": "ui/src/tokens/tokens.test.ts::tokens.test::variable",
+      "kind": "imports",
+      "to": "ui/src/tokens/tokens.ts::TOKENS::variable"
+    },
+    {
+      "from": "ui/src/tokens/tokens.test.ts::tokens.test::variable",
+      "kind": "imports",
+      "to": "ui/src/tokens/tokens.ts::token::function"
+    },
+    {
+      "from": "ui/src/tokens/tokens.test.ts::tokens.test::variable",
+      "kind": "imports",
+      "to": "ui/src/tokens/tokens.ts::cssVar::function"
+    }
+  ],
+  "file": "ui/src/tokens/tokens.test.ts",
+  "intent": [
+    {
+      "date": "2026-08-11T15:55:35-03:00",
+      "hash": "f80cb4472e6258ee7a0355f6e0b9ded00cf3fac0",
+      "kind": "commit",
+      "message": "fix(ui): AAA text scaling + location indicator (e87s07)"
+    },
+    {
+      "date": "2026-06-28T17:11:02-03:00",
+      "hash": "6fb588e63f79ce75dad9a27c5cd8dc0bf796f27c",
+      "kind": "commit",
+      "message": "feat(ui): add design system foundation — tokens, 22 components, a11y audit"
+    }
+  ],
+  "lastModified": 1786492495,
+  "symbols": []
+}

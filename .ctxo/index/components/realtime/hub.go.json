@@ -1,0 +1,303 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/realtime/hub.go::NewHub::function"
+    },
+    {
+      "cyclomatic": 20,
+      "symbolId": "components/realtime/hub.go::Hub.Run::method"
+    },
+    {
+      "cyclomatic": 5,
+      "symbolId": "components/realtime/hub.go::Hub.unregisterClient::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/realtime/hub.go::Hub.Stop::method"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/realtime/hub.go::Hub.Broadcast::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/realtime/hub.go::Hub.Subscribe::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/realtime/hub.go::Hub.Unsubscribe::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/realtime/hub.go::Hub.Stats::method"
+    }
+  ],
+  "contentHash": "2c6c1d4ce94572bae8e1c5ebe8e4707f8b0f93be4d31f8f42e99fc5c001635d6",
+  "edges": [
+    {
+      "from": "components/realtime/hub.go::NewHub::function",
+      "kind": "uses",
+      "to": "components/realtime/hub.go::Hub::class"
+    },
+    {
+      "from": "components/realtime/hub.go::NewHub::function",
+      "kind": "uses",
+      "to": "components/realtime/client.go::Client::class"
+    },
+    {
+      "from": "components/realtime/hub.go::NewHub::function",
+      "kind": "uses",
+      "to": "components/realtime/hub.go::subRequest::class"
+    },
+    {
+      "from": "components/realtime/hub.go::NewHub::function",
+      "kind": "uses",
+      "to": "components/realtime/hub.go::broadcastMsg::class"
+    },
+    {
+      "from": "components/realtime/hub.go::NewHub::function",
+      "kind": "uses",
+      "to": "components/realtime/hub.go::statsReq::class"
+    },
+    {
+      "from": "components/realtime/hub.go::Hub.Run::method",
+      "kind": "uses",
+      "to": "components/realtime/hub.go::Hub::class"
+    },
+    {
+      "from": "components/realtime/hub.go::Hub.Run::method",
+      "kind": "calls",
+      "to": "components/realtime/hub.go::Hub.unregisterClient::method"
+    },
+    {
+      "from": "components/realtime/hub.go::Hub.Run::method",
+      "kind": "uses",
+      "to": "components/realtime/client.go::Client::class"
+    },
+    {
+      "from": "components/realtime/hub.go::Hub.Run::method",
+      "kind": "uses",
+      "to": "components/realtime/hub.go::HubStats::class"
+    },
+    {
+      "from": "components/realtime/hub.go::Hub.Run::method",
+      "kind": "uses",
+      "to": "components/realtime/hub.go::ConnectionInfo::class"
+    },
+    {
+      "from": "components/realtime/hub.go::Hub.unregisterClient::method",
+      "kind": "uses",
+      "to": "components/realtime/hub.go::Hub::class"
+    },
+    {
+      "from": "components/realtime/hub.go::Hub.unregisterClient::method",
+      "kind": "uses",
+      "to": "components/realtime/client.go::Client::class"
+    },
+    {
+      "from": "components/realtime/hub.go::Hub.Stop::method",
+      "kind": "uses",
+      "to": "components/realtime/hub.go::Hub::class"
+    },
+    {
+      "from": "components/realtime/hub.go::Hub.Broadcast::method",
+      "kind": "uses",
+      "to": "components/realtime/hub.go::Hub::class"
+    },
+    {
+      "from": "components/realtime/hub.go::Hub.Broadcast::method",
+      "kind": "uses",
+      "to": "components/realtime/realtime.go::channelPrefix::variable"
+    },
+    {
+      "from": "components/realtime/hub.go::Hub.Broadcast::method",
+      "kind": "uses",
+      "to": "components/realtime/hub.go::broadcastMsg::class"
+    },
+    {
+      "from": "components/realtime/hub.go::Hub.Subscribe::method",
+      "kind": "uses",
+      "to": "components/realtime/hub.go::Hub::class"
+    },
+    {
+      "from": "components/realtime/hub.go::Hub.Subscribe::method",
+      "kind": "uses",
+      "to": "components/realtime/client.go::Client::class"
+    },
+    {
+      "from": "components/realtime/hub.go::Hub.Subscribe::method",
+      "kind": "uses",
+      "to": "components/realtime/hub.go::subRequest::class"
+    },
+    {
+      "from": "components/realtime/hub.go::Hub.Unsubscribe::method",
+      "kind": "uses",
+      "to": "components/realtime/hub.go::Hub::class"
+    },
+    {
+      "from": "components/realtime/hub.go::Hub.Unsubscribe::method",
+      "kind": "uses",
+      "to": "components/realtime/client.go::Client::class"
+    },
+    {
+      "from": "components/realtime/hub.go::Hub.Unsubscribe::method",
+      "kind": "uses",
+      "to": "components/realtime/hub.go::subRequest::class"
+    },
+    {
+      "from": "components/realtime/hub.go::Hub.Stats::method",
+      "kind": "uses",
+      "to": "components/realtime/hub.go::Hub::class"
+    },
+    {
+      "from": "components/realtime/hub.go::Hub.Stats::method",
+      "kind": "uses",
+      "to": "components/realtime/hub.go::HubStats::class"
+    },
+    {
+      "from": "components/realtime/hub.go::Hub.Stats::method",
+      "kind": "uses",
+      "to": "components/realtime/hub.go::statsReq::class"
+    }
+  ],
+  "file": "components/realtime/hub.go",
+  "intent": [
+    {
+      "date": "2026-07-10T14:46:55-03:00",
+      "hash": "36722e3d731d1da0179c0360d677bc6bdf2b3b19",
+      "kind": "commit",
+      "message": "fix(deploy): prevent manifest path traversal (CWE-22)"
+    }
+  ],
+  "lastModified": 1786492494,
+  "symbols": [
+    {
+      "endLine": 11,
+      "endOffset": 109,
+      "kind": "class",
+      "name": "broadcastMsg",
+      "startLine": 8,
+      "startOffset": 60,
+      "symbolId": "components/realtime/hub.go::broadcastMsg::class"
+    },
+    {
+      "endLine": 16,
+      "endOffset": 168,
+      "kind": "class",
+      "name": "subRequest",
+      "startLine": 13,
+      "startOffset": 116,
+      "symbolId": "components/realtime/hub.go::subRequest::class"
+    },
+    {
+      "endLine": 23,
+      "endOffset": 433,
+      "kind": "class",
+      "name": "HubStats",
+      "startLine": 19,
+      "startOffset": 240,
+      "symbolId": "components/realtime/hub.go::HubStats::class"
+    },
+    {
+      "endLine": 29,
+      "endOffset": 597,
+      "kind": "class",
+      "name": "ConnectionInfo",
+      "startLine": 26,
+      "startOffset": 506,
+      "symbolId": "components/realtime/hub.go::ConnectionInfo::class"
+    },
+    {
+      "endLine": 33,
+      "endOffset": 645,
+      "kind": "class",
+      "name": "statsReq",
+      "startLine": 31,
+      "startOffset": 604,
+      "symbolId": "components/realtime/hub.go::statsReq::class"
+    },
+    {
+      "endLine": 47,
+      "endOffset": 948,
+      "kind": "class",
+      "name": "Hub",
+      "startLine": 35,
+      "startOffset": 652,
+      "symbolId": "components/realtime/hub.go::Hub::class"
+    },
+    {
+      "endLine": 61,
+      "endOffset": 1361,
+      "kind": "function",
+      "name": "NewHub",
+      "startLine": 49,
+      "startOffset": 950,
+      "symbolId": "components/realtime/hub.go::NewHub::function"
+    },
+    {
+      "endLine": 126,
+      "endOffset": 2778,
+      "kind": "method",
+      "name": "Hub.Run",
+      "startLine": 63,
+      "startOffset": 1363,
+      "symbolId": "components/realtime/hub.go::Hub.Run::method"
+    },
+    {
+      "endLine": 142,
+      "endOffset": 3092,
+      "kind": "method",
+      "name": "Hub.unregisterClient",
+      "startLine": 128,
+      "startOffset": 2780,
+      "symbolId": "components/realtime/hub.go::Hub.unregisterClient::method"
+    },
+    {
+      "endLine": 148,
+      "endOffset": 3162,
+      "kind": "method",
+      "name": "Hub.Stop",
+      "startLine": 144,
+      "startOffset": 3094,
+      "symbolId": "components/realtime/hub.go::Hub.Stop::method"
+    },
+    {
+      "endLine": 160,
+      "endOffset": 3403,
+      "kind": "method",
+      "name": "Hub.Broadcast",
+      "startLine": 150,
+      "startOffset": 3164,
+      "symbolId": "components/realtime/hub.go::Hub.Broadcast::method"
+    },
+    {
+      "endLine": 164,
+      "endOffset": 3516,
+      "kind": "method",
+      "name": "Hub.Subscribe",
+      "startLine": 162,
+      "startOffset": 3405,
+      "symbolId": "components/realtime/hub.go::Hub.Subscribe::method"
+    },
+    {
+      "endLine": 168,
+      "endOffset": 3633,
+      "kind": "method",
+      "name": "Hub.Unsubscribe",
+      "startLine": 166,
+      "startOffset": 3518,
+      "symbolId": "components/realtime/hub.go::Hub.Unsubscribe::method"
+    },
+    {
+      "endLine": 176,
+      "endOffset": 3873,
+      "kind": "method",
+      "name": "Hub.Stats",
+      "startLine": 172,
+      "startOffset": 3756,
+      "symbolId": "components/realtime/hub.go::Hub.Stats::method"
+    }
+  ]
+}

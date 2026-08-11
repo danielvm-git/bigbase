@@ -1,0 +1,32 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 18,
+      "symbolId": "components/deploy/manifest_integration_test.go::TestManifestIntegration::function"
+    },
+    {
+      "cyclomatic": 9,
+      "symbolId": "components/deploy/manifest_integration_test.go::TestManifestFlags::function"
+    }
+  ],
+  "contentHash": "985337339fe1495370013ada16ff3a02e9b617982809d7188b811e6e00841eee",
+  "edges": [],
+  "file": "components/deploy/manifest_integration_test.go",
+  "intent": [
+    {
+      "date": "2026-06-21T23:08:25-03:00",
+      "hash": "7d419f0f0c3a7cb70d8be9c82a67f4043147007c",
+      "kind": "commit",
+      "message": "feat(deploy): add bigbase init CLI command and --manifest deploy flag"
+    },
+    {
+      "date": "2026-06-21T22:47:02-03:00",
+      "hash": "0598726c16b04d9ebe952d9ee373c7b950994098",
+      "kind": "commit",
+      "message": "feat(deploy): integrate bigbase.yaml manifest into deploy flow"
+    }
+  ],
+  "lastModified": 1786492494,
+  "symbols": []
+}

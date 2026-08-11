@@ -1,0 +1,51 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 3,
+      "symbolId": "ui/src/components/Card.tsx::Card::function"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "ui/src/components/Card.tsx::CardHeader::function"
+    }
+  ],
+  "contentHash": "f5a3e36af8613117a9d82b9dba244baa1d9a40ec354f91e6edf1951e5d147cec",
+  "edges": [],
+  "file": "ui/src/components/Card.tsx",
+  "intent": [
+    {
+      "date": "2026-08-11T13:42:44-03:00",
+      "hash": "6541bd284832987cb1b361f461b5ea86abccf31f",
+      "kind": "commit",
+      "message": "fix(ui): heading hierarchy + glyph aria-hidden (T000018)"
+    },
+    {
+      "date": "2026-08-11T00:32:26-03:00",
+      "hash": "607fcf087b580974b5acf50a6499221c0850bb96",
+      "kind": "commit",
+      "message": "fix(ui): make click-only div/span elements keyboard-accessible (BUG-2026-08-11T000009)"
+    }
+  ],
+  "lastModified": 1786492495,
+  "symbols": [
+    {
+      "endLine": 49,
+      "endOffset": 1395,
+      "kind": "function",
+      "name": "Card",
+      "startLine": 21,
+      "startOffset": 622,
+      "symbolId": "ui/src/components/Card.tsx::Card::function"
+    },
+    {
+      "endLine": 66,
+      "endOffset": 1849,
+      "kind": "function",
+      "name": "CardHeader",
+      "startLine": 58,
+      "startOffset": 1564,
+      "symbolId": "ui/src/components/Card.tsx::CardHeader::function"
+    }
+  ]
+}

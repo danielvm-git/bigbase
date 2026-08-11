@@ -1,0 +1,204 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 7,
+      "symbolId": "components/deploy/log_stream.go::logHub.subscribe::method"
+    },
+    {
+      "cyclomatic": 5,
+      "symbolId": "components/deploy/log_stream.go::logHub.broadcast::method"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/deploy/log_stream.go::logHub.close::method"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/deploy/log_stream.go::Deploy.getOrCreateHub::method"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/deploy/log_stream.go::Deploy.closeLogStream::method"
+    },
+    {
+      "cyclomatic": 6,
+      "symbolId": "components/deploy/log_stream.go::Deploy.handleLogsStream::method"
+    }
+  ],
+  "contentHash": "dedad24715d359fc178a961c0ccbdc8c294adffce0a4c8ccc7f32098771a4f7c",
+  "edges": [
+    {
+      "from": "components/deploy/log_stream.go::logHub.subscribe::method",
+      "kind": "uses",
+      "to": "components/deploy/log_stream.go::logHub::class"
+    },
+    {
+      "from": "components/deploy/log_stream.go::logHub.broadcast::method",
+      "kind": "uses",
+      "to": "components/deploy/log_stream.go::logHub::class"
+    },
+    {
+      "from": "components/deploy/log_stream.go::logHub.close::method",
+      "kind": "uses",
+      "to": "components/deploy/log_stream.go::logHub::class"
+    },
+    {
+      "from": "components/deploy/log_stream.go::Deploy.getOrCreateHub::method",
+      "kind": "uses",
+      "to": "components/deploy/deploy.go::Deploy::class"
+    },
+    {
+      "from": "components/deploy/log_stream.go::Deploy.getOrCreateHub::method",
+      "kind": "uses",
+      "to": "components/deploy/log_stream.go::logHub::class"
+    },
+    {
+      "from": "components/deploy/log_stream.go::Deploy.closeLogStream::method",
+      "kind": "uses",
+      "to": "components/deploy/deploy.go::Deploy::class"
+    },
+    {
+      "from": "components/deploy/log_stream.go::Deploy.closeLogStream::method",
+      "kind": "calls",
+      "to": "components/deploy/log_stream.go::logHub.close::method"
+    },
+    {
+      "from": "components/deploy/log_stream.go::Deploy.handleLogsStream::method",
+      "kind": "uses",
+      "to": "components/deploy/deploy.go::Deploy::class"
+    },
+    {
+      "from": "components/deploy/log_stream.go::Deploy.handleLogsStream::method",
+      "kind": "calls",
+      "to": "components/deploy/gateway.go::Deploy.verifyDeploymentOwnership::method"
+    },
+    {
+      "from": "components/deploy/log_stream.go::Deploy.handleLogsStream::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.QueryRowContext::method"
+    },
+    {
+      "from": "components/deploy/log_stream.go::Deploy.handleLogsStream::method",
+      "kind": "calls",
+      "to": "kernel/utilities.go::WriteJSON::function"
+    },
+    {
+      "from": "components/deploy/log_stream.go::Deploy.handleLogsStream::method",
+      "kind": "uses",
+      "to": "components/deploy/log_stream.go::wsUpgrader::variable"
+    },
+    {
+      "from": "components/deploy/log_stream.go::Deploy.handleLogsStream::method",
+      "kind": "calls",
+      "to": "components/deploy/log_stream.go::Deploy.getOrCreateHub::method"
+    },
+    {
+      "from": "components/deploy/log_stream.go::Deploy.handleLogsStream::method",
+      "kind": "calls",
+      "to": "components/deploy/log_stream.go::logHub.subscribe::method"
+    }
+  ],
+  "file": "components/deploy/log_stream.go",
+  "intent": [
+    {
+      "date": "2026-07-30T10:57:00-03:00",
+      "hash": "65872509cd5edaeb18bc60cb9646fb7bfd4b4bec",
+      "kind": "commit",
+      "message": "fix(deploy): add ownership checks to log stream and observability handlers"
+    },
+    {
+      "date": "2026-07-10T14:46:55-03:00",
+      "hash": "36722e3d731d1da0179c0360d677bc6bdf2b3b19",
+      "kind": "commit",
+      "message": "fix(deploy): prevent manifest path traversal (CWE-22)"
+    },
+    {
+      "date": "2026-06-21T14:01:03-03:00",
+      "hash": "56cf3e1a91e0172c0df7461538b815848c0aa0e3",
+      "kind": "commit",
+      "message": "feat(deploy): real-time WebSocket log streaming with lifecycle integration"
+    },
+    {
+      "date": "2026-06-21T13:58:16-03:00",
+      "hash": "4d03bb4ee489440414f88a069e8709467847135e",
+      "kind": "commit",
+      "message": "test(deploy): add TestStreamingLogs for WebSocket log streaming endpoint"
+    }
+  ],
+  "lastModified": 1786492494,
+  "symbols": [
+    {
+      "endLine": 12,
+      "endOffset": 134,
+      "kind": "variable",
+      "name": "wsUpgrader",
+      "startLine": 12,
+      "startOffset": 124,
+      "symbolId": "components/deploy/log_stream.go::wsUpgrader::variable"
+    },
+    {
+      "endLine": 23,
+      "endOffset": 455,
+      "kind": "class",
+      "name": "logHub",
+      "startLine": 18,
+      "startOffset": 375,
+      "symbolId": "components/deploy/log_stream.go::logHub::class"
+    },
+    {
+      "endLine": 54,
+      "endOffset": 993,
+      "kind": "method",
+      "name": "logHub.subscribe",
+      "startLine": 25,
+      "startOffset": 457,
+      "symbolId": "components/deploy/log_stream.go::logHub.subscribe::method"
+    },
+    {
+      "endLine": 69,
+      "endOffset": 1205,
+      "kind": "method",
+      "name": "logHub.broadcast",
+      "startLine": 56,
+      "startOffset": 995,
+      "symbolId": "components/deploy/log_stream.go::logHub.broadcast::method"
+    },
+    {
+      "endLine": 82,
+      "endOffset": 1367,
+      "kind": "method",
+      "name": "logHub.close",
+      "startLine": 71,
+      "startOffset": 1207,
+      "symbolId": "components/deploy/log_stream.go::logHub.close::method"
+    },
+    {
+      "endLine": 94,
+      "endOffset": 1641,
+      "kind": "method",
+      "name": "Deploy.getOrCreateHub",
+      "startLine": 85,
+      "startOffset": 1447,
+      "symbolId": "components/deploy/log_stream.go::Deploy.getOrCreateHub::method"
+    },
+    {
+      "endLine": 104,
+      "endOffset": 1865,
+      "kind": "method",
+      "name": "Deploy.closeLogStream",
+      "startLine": 97,
+      "startOffset": 1725,
+      "symbolId": "components/deploy/log_stream.go::Deploy.closeLogStream::method"
+    },
+    {
+      "endLine": 139,
+      "endOffset": 3032,
+      "kind": "method",
+      "name": "Deploy.handleLogsStream",
+      "startLine": 107,
+      "startOffset": 1949,
+      "symbolId": "components/deploy/log_stream.go::Deploy.handleLogsStream::method"
+    }
+  ]
+}

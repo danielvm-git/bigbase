@@ -1,0 +1,367 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/deploy/envresolver.go::EnvScope.column::method"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/deploy/envresolver.go::NewEnvResolver::function"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/deploy/envresolver.go::ResolvedEnv.SecretKeys::method"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/deploy/envresolver.go::ResolvedEnv.IsSecret::method"
+    },
+    {
+      "cyclomatic": 8,
+      "symbolId": "components/deploy/envresolver.go::EnvResolver.Resolve::method"
+    },
+    {
+      "cyclomatic": 5,
+      "symbolId": "components/deploy/envresolver.go::Redact::function"
+    },
+    {
+      "cyclomatic": 9,
+      "symbolId": "components/deploy/envresolver.go::RedactLogText::function"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/deploy/envresolver.go::sortPairsByLenDesc::function"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/deploy/envresolver.go::EnvResolver.defaultEnviron::method"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/deploy/envresolver.go::keyValueMap::function"
+    },
+    {
+      "cyclomatic": 5,
+      "symbolId": "components/deploy/envresolver.go::mapToEnviron::function"
+    }
+  ],
+  "contentHash": "578d2afe06252ec6417deb02c76830477836f1e08a4a129803d8303272887a53",
+  "edges": [
+    {
+      "from": "components/deploy/envresolver.go::EnvScope.column::method",
+      "kind": "uses",
+      "to": "components/deploy/envresolver.go::EnvScope::type"
+    },
+    {
+      "from": "components/deploy/envresolver.go::EnvScope.column::method",
+      "kind": "uses",
+      "to": "components/deploy/envresolver.go::ScopeBuild::variable"
+    },
+    {
+      "from": "components/deploy/envresolver.go::NewEnvResolver::function",
+      "kind": "uses",
+      "to": "kernel/dber.go::DBer::interface"
+    },
+    {
+      "from": "components/deploy/envresolver.go::NewEnvResolver::function",
+      "kind": "uses",
+      "to": "kernel/component.go::Logger::interface"
+    },
+    {
+      "from": "components/deploy/envresolver.go::NewEnvResolver::function",
+      "kind": "uses",
+      "to": "components/deploy/envresolver.go::EnvResolver::class"
+    },
+    {
+      "from": "components/deploy/envresolver.go::NewEnvResolver::function",
+      "kind": "uses",
+      "to": "kernel/utilities.go::NoopLogger::class"
+    },
+    {
+      "from": "components/deploy/envresolver.go::ResolvedEnv.SecretKeys::method",
+      "kind": "uses",
+      "to": "components/deploy/envresolver.go::ResolvedEnv::class"
+    },
+    {
+      "from": "components/deploy/envresolver.go::ResolvedEnv.IsSecret::method",
+      "kind": "uses",
+      "to": "components/deploy/envresolver.go::ResolvedEnv::class"
+    },
+    {
+      "from": "components/deploy/envresolver.go::EnvResolver.Resolve::method",
+      "kind": "uses",
+      "to": "components/deploy/envresolver.go::EnvResolver::class"
+    },
+    {
+      "from": "components/deploy/envresolver.go::EnvResolver.Resolve::method",
+      "kind": "uses",
+      "to": "components/deploy/envresolver.go::EnvScope::type"
+    },
+    {
+      "from": "components/deploy/envresolver.go::EnvResolver.Resolve::method",
+      "kind": "uses",
+      "to": "components/deploy/envresolver.go::ResolvedEnv::class"
+    },
+    {
+      "from": "components/deploy/envresolver.go::EnvResolver.Resolve::method",
+      "kind": "calls",
+      "to": "components/deploy/envresolver.go::EnvResolver.defaultEnviron::method"
+    },
+    {
+      "from": "components/deploy/envresolver.go::EnvResolver.Resolve::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.QueryContext::method"
+    },
+    {
+      "from": "components/deploy/envresolver.go::EnvResolver.Resolve::method",
+      "kind": "calls",
+      "to": "components/deploy/envresolver.go::EnvScope.column::method"
+    },
+    {
+      "from": "components/deploy/envresolver.go::EnvResolver.Resolve::method",
+      "kind": "calls",
+      "to": "components/deploy/env_vars.go::isNoSuchTable::function"
+    },
+    {
+      "from": "components/deploy/envresolver.go::EnvResolver.Resolve::method",
+      "kind": "calls",
+      "to": "components/deploy/envresolver.go::keyValueMap::function"
+    },
+    {
+      "from": "components/deploy/envresolver.go::EnvResolver.Resolve::method",
+      "kind": "calls",
+      "to": "kernel/component.go::Logger.Warn::method"
+    },
+    {
+      "from": "components/deploy/envresolver.go::EnvResolver.Resolve::method",
+      "kind": "calls",
+      "to": "components/internal/envcrypto/envcrypto.go::Decrypt::function"
+    },
+    {
+      "from": "components/deploy/envresolver.go::EnvResolver.Resolve::method",
+      "kind": "calls",
+      "to": "components/deploy/envresolver.go::mapToEnviron::function"
+    },
+    {
+      "from": "components/deploy/envresolver.go::Redact::function",
+      "kind": "calls",
+      "to": "components/internal/envcrypto/envcrypto.go::MaskValue::function"
+    },
+    {
+      "from": "components/deploy/envresolver.go::RedactLogText::function",
+      "kind": "uses",
+      "to": "components/deploy/envresolver.go::ResolvedEnv::class"
+    },
+    {
+      "from": "components/deploy/envresolver.go::RedactLogText::function",
+      "kind": "uses",
+      "to": "components/deploy/envresolver.go::maskPair::class"
+    },
+    {
+      "from": "components/deploy/envresolver.go::RedactLogText::function",
+      "kind": "calls",
+      "to": "components/deploy/envresolver.go::ResolvedEnv.IsSecret::method"
+    },
+    {
+      "from": "components/deploy/envresolver.go::RedactLogText::function",
+      "kind": "calls",
+      "to": "components/internal/envcrypto/envcrypto.go::MaskValue::function"
+    },
+    {
+      "from": "components/deploy/envresolver.go::RedactLogText::function",
+      "kind": "calls",
+      "to": "components/deploy/envresolver.go::sortPairsByLenDesc::function"
+    },
+    {
+      "from": "components/deploy/envresolver.go::sortPairsByLenDesc::function",
+      "kind": "uses",
+      "to": "components/deploy/envresolver.go::maskPair::class"
+    },
+    {
+      "from": "components/deploy/envresolver.go::EnvResolver.defaultEnviron::method",
+      "kind": "uses",
+      "to": "components/deploy/envresolver.go::EnvResolver::class"
+    },
+    {
+      "from": "components/deploy/envresolver.go::EnvResolver.defaultEnviron::method",
+      "kind": "uses",
+      "to": "components/deploy/envresolver.go::EnvScope::type"
+    },
+    {
+      "from": "components/deploy/envresolver.go::EnvResolver.defaultEnviron::method",
+      "kind": "uses",
+      "to": "components/deploy/envresolver.go::ScopeBuild::variable"
+    },
+    {
+      "from": "components/deploy/envresolver.go::EnvResolver.defaultEnviron::method",
+      "kind": "calls",
+      "to": "components/deploy/env.go::BuildEnv::function"
+    }
+  ],
+  "file": "components/deploy/envresolver.go",
+  "intent": [
+    {
+      "date": "2026-07-29T14:39:40-03:00",
+      "hash": "3276f4c9e1e21baa8d0e901d003fbc15a02b9f86",
+      "kind": "commit",
+      "message": "refactor(deploy): introduce EnvResolver seam with precedence + redaction (closes #41)"
+    }
+  ],
+  "lastModified": 1786492494,
+  "symbols": [
+    {
+      "endLine": 17,
+      "endOffset": 412,
+      "kind": "type",
+      "name": "EnvScope",
+      "startLine": 17,
+      "startOffset": 400,
+      "symbolId": "components/deploy/envresolver.go::EnvScope::type"
+    },
+    {
+      "endLine": 21,
+      "endOffset": 509,
+      "kind": "variable",
+      "name": "ScopeBuild",
+      "startLine": 21,
+      "startOffset": 499,
+      "symbolId": "components/deploy/envresolver.go::ScopeBuild::variable"
+    },
+    {
+      "endLine": 23,
+      "endOffset": 616,
+      "kind": "variable",
+      "name": "ScopeRuntime",
+      "startLine": 23,
+      "startOffset": 604,
+      "symbolId": "components/deploy/envresolver.go::ScopeRuntime::variable"
+    },
+    {
+      "endLine": 32,
+      "endOffset": 799,
+      "kind": "method",
+      "name": "EnvScope.column",
+      "startLine": 27,
+      "startOffset": 691,
+      "symbolId": "components/deploy/envresolver.go::EnvScope.column::method"
+    },
+    {
+      "endLine": 46,
+      "endOffset": 1355,
+      "kind": "class",
+      "name": "EnvResolver",
+      "startLine": 41,
+      "startOffset": 1249,
+      "symbolId": "components/deploy/envresolver.go::EnvResolver::class"
+    },
+    {
+      "endLine": 60,
+      "endOffset": 2120,
+      "kind": "function",
+      "name": "NewEnvResolver",
+      "startLine": 55,
+      "startOffset": 1857,
+      "symbolId": "components/deploy/envresolver.go::NewEnvResolver::function"
+    },
+    {
+      "endLine": 73,
+      "endOffset": 2709,
+      "kind": "class",
+      "name": "ResolvedEnv",
+      "startLine": 65,
+      "startOffset": 2351,
+      "symbolId": "components/deploy/envresolver.go::ResolvedEnv::class"
+    },
+    {
+      "endLine": 87,
+      "endOffset": 3127,
+      "kind": "method",
+      "name": "ResolvedEnv.SecretKeys",
+      "startLine": 78,
+      "startOffset": 2876,
+      "symbolId": "components/deploy/envresolver.go::ResolvedEnv.SecretKeys::method"
+    },
+    {
+      "endLine": 96,
+      "endOffset": 3352,
+      "kind": "method",
+      "name": "ResolvedEnv.IsSecret",
+      "startLine": 90,
+      "startOffset": 3206,
+      "symbolId": "components/deploy/envresolver.go::ResolvedEnv.IsSecret::method"
+    },
+    {
+      "endLine": 161,
+      "endOffset": 5674,
+      "kind": "method",
+      "name": "EnvResolver.Resolve",
+      "startLine": 117,
+      "startOffset": 4371,
+      "symbolId": "components/deploy/envresolver.go::EnvResolver.Resolve::method"
+    },
+    {
+      "endLine": 193,
+      "endOffset": 6737,
+      "kind": "function",
+      "name": "Redact",
+      "startLine": 171,
+      "startOffset": 6179,
+      "symbolId": "components/deploy/envresolver.go::Redact::function"
+    },
+    {
+      "endLine": 244,
+      "endOffset": 8468,
+      "kind": "function",
+      "name": "RedactLogText",
+      "startLine": 206,
+      "startOffset": 7492,
+      "symbolId": "components/deploy/envresolver.go::RedactLogText::function"
+    },
+    {
+      "endLine": 247,
+      "endOffset": 8587,
+      "kind": "class",
+      "name": "maskPair",
+      "startLine": 247,
+      "startOffset": 8548,
+      "symbolId": "components/deploy/envresolver.go::maskPair::class"
+    },
+    {
+      "endLine": 257,
+      "endOffset": 8894,
+      "kind": "function",
+      "name": "sortPairsByLenDesc",
+      "startLine": 251,
+      "startOffset": 8718,
+      "symbolId": "components/deploy/envresolver.go::sortPairsByLenDesc::function"
+    },
+    {
+      "endLine": 271,
+      "endOffset": 9312,
+      "kind": "method",
+      "name": "EnvResolver.defaultEnviron",
+      "startLine": 262,
+      "startOffset": 9093,
+      "symbolId": "components/deploy/envresolver.go::EnvResolver.defaultEnviron::method"
+    },
+    {
+      "endLine": 285,
+      "endOffset": 9605,
+      "kind": "function",
+      "name": "keyValueMap",
+      "startLine": 274,
+      "startOffset": 9366,
+      "symbolId": "components/deploy/envresolver.go::keyValueMap::function"
+    },
+    {
+      "endLine": 305,
+      "endOffset": 10209,
+      "kind": "function",
+      "name": "mapToEnviron",
+      "startLine": 289,
+      "startOffset": 9755,
+      "symbolId": "components/deploy/envresolver.go::mapToEnviron::function"
+    }
+  ]
+}

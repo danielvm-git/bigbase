@@ -1,0 +1,26 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 9,
+      "symbolId": "components/monitoring/events_test.go::TestSSEEventsEndpoint::function"
+    },
+    {
+      "cyclomatic": 9,
+      "symbolId": "components/monitoring/events_test.go::TestSSEEventsBroadcast::function"
+    }
+  ],
+  "contentHash": "a54a56a8047fa0e8b62a9475d9f53b9d4524348f4011ce6cd9497d067b6c8e1c",
+  "edges": [],
+  "file": "components/monitoring/events_test.go",
+  "intent": [
+    {
+      "date": "2026-06-05T19:53:02-03:00",
+      "hash": "20014c0a4af1657cda6928192e1aa99e027a94c7",
+      "kind": "commit",
+      "message": "feat(dx): e22s03 event bus visualizer — SSE endpoint and frontend page"
+    }
+  ],
+  "lastModified": 1786492494,
+  "symbols": []
+}

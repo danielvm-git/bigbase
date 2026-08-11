@@ -1,0 +1,169 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 10,
+      "symbolId": "components/deploy/state_transitions.go::Deploy.TransitionState::method"
+    },
+    {
+      "cyclomatic": 5,
+      "symbolId": "components/deploy/state_transitions.go::Deploy.appendStatusHistory::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/deploy/state_transitions.go::Deploy.updateStatus::method"
+    }
+  ],
+  "contentHash": "3ae0db29420fdc44820009964e98437cb08c21da782fe3c000df1250f888738a",
+  "edges": [
+    {
+      "from": "components/deploy/state_transitions.go::Deploy.TransitionState::method",
+      "kind": "uses",
+      "to": "components/deploy/deploy.go::Deploy::class"
+    },
+    {
+      "from": "components/deploy/state_transitions.go::Deploy.TransitionState::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.QueryRowContext::method"
+    },
+    {
+      "from": "components/deploy/state_transitions.go::Deploy.TransitionState::method",
+      "kind": "calls",
+      "to": "components/deploy/state_machine.go::StateMachine.IsValidState::method"
+    },
+    {
+      "from": "components/deploy/state_transitions.go::Deploy.TransitionState::method",
+      "kind": "calls",
+      "to": "kernel/component.go::Logger.Warn::method"
+    },
+    {
+      "from": "components/deploy/state_transitions.go::Deploy.TransitionState::method",
+      "kind": "calls",
+      "to": "components/deploy/state_machine.go::StateMachine.CanTransition::method"
+    },
+    {
+      "from": "components/deploy/state_transitions.go::Deploy.TransitionState::method",
+      "kind": "calls",
+      "to": "components/deploy/state_machine.go::StateMachine.ValidTransitions::method"
+    },
+    {
+      "from": "components/deploy/state_transitions.go::Deploy.TransitionState::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.ExecContext::method"
+    },
+    {
+      "from": "components/deploy/state_transitions.go::Deploy.TransitionState::method",
+      "kind": "uses",
+      "to": "components/deploy/state_machine.go::StatusTransition::class"
+    },
+    {
+      "from": "components/deploy/state_transitions.go::Deploy.TransitionState::method",
+      "kind": "calls",
+      "to": "components/deploy/state_transitions.go::Deploy.appendStatusHistory::method"
+    },
+    {
+      "from": "components/deploy/state_transitions.go::Deploy.TransitionState::method",
+      "kind": "calls",
+      "to": "kernel/eventbus.go::EventBus.Emit::method"
+    },
+    {
+      "from": "components/deploy/state_transitions.go::Deploy.TransitionState::method",
+      "kind": "uses",
+      "to": "kernel/component.go::Event::class"
+    },
+    {
+      "from": "components/deploy/state_transitions.go::Deploy.TransitionState::method",
+      "kind": "uses",
+      "to": "kernel/component.go::Context::class"
+    },
+    {
+      "from": "components/deploy/state_transitions.go::Deploy.TransitionState::method",
+      "kind": "uses",
+      "to": "components/deploy/state_machine.go::StateFailed::variable"
+    },
+    {
+      "from": "components/deploy/state_transitions.go::Deploy.TransitionState::method",
+      "kind": "calls",
+      "to": "components/deploy/observability.go::Deploy.emitDeployFailed::method"
+    },
+    {
+      "from": "components/deploy/state_transitions.go::Deploy.TransitionState::method",
+      "kind": "uses",
+      "to": "components/deploy/state_machine.go::StateRunning::variable"
+    },
+    {
+      "from": "components/deploy/state_transitions.go::Deploy.TransitionState::method",
+      "kind": "calls",
+      "to": "components/deploy/logs.go::Deploy.getDeployLogs::method"
+    },
+    {
+      "from": "components/deploy/state_transitions.go::Deploy.appendStatusHistory::method",
+      "kind": "uses",
+      "to": "components/deploy/deploy.go::Deploy::class"
+    },
+    {
+      "from": "components/deploy/state_transitions.go::Deploy.appendStatusHistory::method",
+      "kind": "uses",
+      "to": "components/deploy/state_machine.go::StatusTransition::class"
+    },
+    {
+      "from": "components/deploy/state_transitions.go::Deploy.appendStatusHistory::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.QueryRowContext::method"
+    },
+    {
+      "from": "components/deploy/state_transitions.go::Deploy.appendStatusHistory::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.ExecContext::method"
+    },
+    {
+      "from": "components/deploy/state_transitions.go::Deploy.updateStatus::method",
+      "kind": "uses",
+      "to": "components/deploy/deploy.go::Deploy::class"
+    },
+    {
+      "from": "components/deploy/state_transitions.go::Deploy.updateStatus::method",
+      "kind": "calls",
+      "to": "components/deploy/state_transitions.go::Deploy.TransitionState::method"
+    }
+  ],
+  "file": "components/deploy/state_transitions.go",
+  "intent": [
+    {
+      "date": "2026-07-10T14:36:34-03:00",
+      "hash": "f96d11862e15cc5c35fdc11981527ad23cc8f80c",
+      "kind": "commit",
+      "message": "refactor(deploy): decompose 1924-line god object into domain modules"
+    }
+  ],
+  "lastModified": 1786492494,
+  "symbols": [
+    {
+      "endLine": 79,
+      "endOffset": 2106,
+      "kind": "method",
+      "name": "Deploy.TransitionState",
+      "startLine": 13,
+      "startOffset": 121,
+      "symbolId": "components/deploy/state_transitions.go::Deploy.TransitionState::method"
+    },
+    {
+      "endLine": 100,
+      "endOffset": 2721,
+      "kind": "method",
+      "name": "Deploy.appendStatusHistory",
+      "startLine": 80,
+      "startOffset": 2107,
+      "symbolId": "components/deploy/state_transitions.go::Deploy.appendStatusHistory::method"
+    },
+    {
+      "endLine": 103,
+      "endOffset": 2831,
+      "kind": "method",
+      "name": "Deploy.updateStatus",
+      "startLine": 101,
+      "startOffset": 2722,
+      "symbolId": "components/deploy/state_transitions.go::Deploy.updateStatus::method"
+    }
+  ]
+}

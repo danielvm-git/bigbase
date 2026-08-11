@@ -1,0 +1,65 @@
+{
+  "antiPatterns": [],
+  "complexity": [],
+  "contentHash": "78af8303695c3ec17345ab4e450cb8d7cb907eaae19f53e08e35387d9e14e3f1",
+  "edges": [],
+  "file": "ui/src/context/tokens.ts",
+  "intent": [],
+  "lastModified": 1786492495,
+  "symbols": [
+    {
+      "endLine": 15,
+      "endOffset": 636,
+      "kind": "type",
+      "name": "SpaceToken",
+      "startLine": 15,
+      "startOffset": 582,
+      "symbolId": "ui/src/context/tokens.ts::SpaceToken::type"
+    },
+    {
+      "endLine": 18,
+      "endOffset": 762,
+      "kind": "type",
+      "name": "RadiusToken",
+      "startLine": 18,
+      "startOffset": 706,
+      "symbolId": "ui/src/context/tokens.ts::RadiusToken::type"
+    },
+    {
+      "endLine": 21,
+      "endOffset": 886,
+      "kind": "type",
+      "name": "ShadowToken",
+      "startLine": 21,
+      "startOffset": 830,
+      "symbolId": "ui/src/context/tokens.ts::ShadowToken::type"
+    },
+    {
+      "endLine": 14,
+      "endOffset": 581,
+      "kind": "variable",
+      "name": "SPACE_TOKENS",
+      "startLine": 14,
+      "startOffset": 513,
+      "symbolId": "ui/src/context/tokens.ts::SPACE_TOKENS::variable"
+    },
+    {
+      "endLine": 17,
+      "endOffset": 705,
+      "kind": "variable",
+      "name": "RADIUS_TOKENS",
+      "startLine": 17,
+      "startOffset": 651,
+      "symbolId": "ui/src/context/tokens.ts::RADIUS_TOKENS::variable"
+    },
+    {
+      "endLine": 20,
+      "endOffset": 829,
+      "kind": "variable",
+      "name": "SHADOW_TOKENS",
+      "startLine": 20,
+      "startOffset": 777,
+      "symbolId": "ui/src/context/tokens.ts::SHADOW_TOKENS::variable"
+    }
+  ]
+}

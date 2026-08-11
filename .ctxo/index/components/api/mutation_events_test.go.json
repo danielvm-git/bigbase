@@ -1,0 +1,22 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 5,
+      "symbolId": "components/api/mutation_events_test.go::TestMutationEventSiteID::function"
+    }
+  ],
+  "contentHash": "30004937969306ab59285368f3bb0973bdc061d55cb10f53a3728c2f4a523a5b",
+  "edges": [],
+  "file": "components/api/mutation_events_test.go",
+  "intent": [
+    {
+      "date": "2026-07-09T01:44:49-03:00",
+      "hash": "82dc49874349b328be8cbd34da05d4ee4b430169",
+      "kind": "commit",
+      "message": "feat(monitoring): AI-assisted deploy observability and incident response (e72) (#64)"
+    }
+  ],
+  "lastModified": 1786492494,
+  "symbols": []
+}

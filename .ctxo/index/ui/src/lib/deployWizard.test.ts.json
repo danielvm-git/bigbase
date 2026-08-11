@@ -1,0 +1,16 @@
+{
+  "antiPatterns": [],
+  "complexity": [],
+  "contentHash": "848609468f29826da02742667409134d9c3701f6f611165d91da9f48aa58a747",
+  "edges": [
+    {
+      "from": "ui/src/lib/deployWizard.test.ts::deployWizard.test::variable",
+      "kind": "imports",
+      "to": "ui/src/lib/deployWizard.ts::deployWizardTitle::function"
+    }
+  ],
+  "file": "ui/src/lib/deployWizard.test.ts",
+  "intent": [],
+  "lastModified": 1786492495,
+  "symbols": []
+}

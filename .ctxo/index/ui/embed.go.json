@@ -1,0 +1,54 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 2,
+      "symbolId": "ui/embed.go::init::function"
+    }
+  ],
+  "contentHash": "9bb7df2f8cc7d7aabaf125f6c69b660d7ada092ec9e297ba100710514e3d550e",
+  "edges": [
+    {
+      "from": "ui/embed.go::init::function",
+      "kind": "uses",
+      "to": "ui/embed.go::DistFS::variable"
+    },
+    {
+      "from": "ui/embed.go::init::function",
+      "kind": "uses",
+      "to": "ui/embed.go::distFS::variable"
+    }
+  ],
+  "file": "ui/embed.go",
+  "intent": [],
+  "lastModified": 1786492495,
+  "symbols": [
+    {
+      "endLine": 9,
+      "endOffset": 72,
+      "kind": "variable",
+      "name": "distFS",
+      "startLine": 9,
+      "startOffset": 66,
+      "symbolId": "ui/embed.go::distFS::variable"
+    },
+    {
+      "endLine": 11,
+      "endOffset": 93,
+      "kind": "variable",
+      "name": "DistFS",
+      "startLine": 11,
+      "startOffset": 87,
+      "symbolId": "ui/embed.go::DistFS::variable"
+    },
+    {
+      "endLine": 19,
+      "endOffset": 228,
+      "kind": "function",
+      "name": "init",
+      "startLine": 13,
+      "startOffset": 101,
+      "symbolId": "ui/embed.go::init::function"
+    }
+  ]
+}

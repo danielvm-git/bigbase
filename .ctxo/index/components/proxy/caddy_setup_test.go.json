@@ -1,0 +1,15 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/proxy/caddy_setup_test.go::TestSetupVPSUsesOnDemandTLS::function"
+    }
+  ],
+  "contentHash": "8f215e26a367f6acf56988abc392eed043bb9f7d6e0e32156a5c531508edd7a1",
+  "edges": [],
+  "file": "components/proxy/caddy_setup_test.go",
+  "intent": [],
+  "lastModified": 1786492494,
+  "symbols": []
+}

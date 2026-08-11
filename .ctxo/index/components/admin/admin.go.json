@@ -1,0 +1,243 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/admin/admin.go::New::function"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/admin/admin.go::Admin.Name::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/admin/admin.go::Admin.Version::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/admin/admin.go::Admin.Dependencies::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/admin/admin.go::Admin.Init::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/admin/admin.go::Admin.Start::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/admin/admin.go::Admin.Stop::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/admin/admin.go::Admin.Handler::method"
+    }
+  ],
+  "contentHash": "89c7a70cd175b5e7823c138df7c55262a3553094904f7adf832cdf92c84f2eaa",
+  "edges": [
+    {
+      "from": "components/admin/admin.go::New::function",
+      "kind": "uses",
+      "to": "components/admin/admin.go::Options::class"
+    },
+    {
+      "from": "components/admin/admin.go::New::function",
+      "kind": "uses",
+      "to": "components/admin/admin.go::Admin::class"
+    },
+    {
+      "from": "components/admin/admin.go::Admin.Name::method",
+      "kind": "uses",
+      "to": "components/admin/admin.go::Admin::class"
+    },
+    {
+      "from": "components/admin/admin.go::Admin.Version::method",
+      "kind": "uses",
+      "to": "components/admin/admin.go::Admin::class"
+    },
+    {
+      "from": "components/admin/admin.go::Admin.Version::method",
+      "kind": "uses",
+      "to": "components/admin/admin.go::version::variable"
+    },
+    {
+      "from": "components/admin/admin.go::Admin.Dependencies::method",
+      "kind": "uses",
+      "to": "components/admin/admin.go::Admin::class"
+    },
+    {
+      "from": "components/admin/admin.go::Admin.Init::method",
+      "kind": "uses",
+      "to": "components/admin/admin.go::Admin::class"
+    },
+    {
+      "from": "components/admin/admin.go::Admin.Init::method",
+      "kind": "uses",
+      "to": "kernel/component.go::Context::class"
+    },
+    {
+      "from": "components/admin/admin.go::Admin.Start::method",
+      "kind": "uses",
+      "to": "components/admin/admin.go::Admin::class"
+    },
+    {
+      "from": "components/admin/admin.go::Admin.Start::method",
+      "kind": "uses",
+      "to": "kernel/component.go::Context::class"
+    },
+    {
+      "from": "components/admin/admin.go::Admin.Start::method",
+      "kind": "calls",
+      "to": "kernel/component.go::Logger.Info::method"
+    },
+    {
+      "from": "components/admin/admin.go::Admin.Stop::method",
+      "kind": "uses",
+      "to": "components/admin/admin.go::Admin::class"
+    },
+    {
+      "from": "components/admin/admin.go::Admin.Stop::method",
+      "kind": "uses",
+      "to": "kernel/component.go::Context::class"
+    },
+    {
+      "from": "components/admin/admin.go::Admin.Handler::method",
+      "kind": "uses",
+      "to": "components/admin/admin.go::Admin::class"
+    },
+    {
+      "from": "components/admin/admin.go::Admin.Handler::method",
+      "kind": "uses",
+      "to": "ui/embed.go::DistFS::variable"
+    },
+    {
+      "from": "components/admin/admin.go::Admin::class",
+      "kind": "implements",
+      "to": "kernel/component.go::Component::interface"
+    }
+  ],
+  "file": "components/admin/admin.go",
+  "intent": [
+    {
+      "date": "2026-07-10T14:58:38-03:00",
+      "hash": "34b197c676d972ef39ab3cd8fe08a320adae96e9",
+      "kind": "commit",
+      "message": "fix(kernel): remove dead ConfigSchema/Hooks interfaces, add Component compile checks"
+    },
+    {
+      "date": "2026-07-10T14:46:55-03:00",
+      "hash": "36722e3d731d1da0179c0360d677bc6bdf2b3b19",
+      "kind": "commit",
+      "message": "fix(deploy): prevent manifest path traversal (CWE-22)"
+    },
+    {
+      "date": "2026-07-07T00:13:21-03:00",
+      "hash": "bcc0b8745f57075cf71e855bc2496e4c11195708",
+      "kind": "commit",
+      "message": "refactor(kernel): hoist Logger/DBer interfaces — remove 18 duplicate definitions"
+    }
+  ],
+  "lastModified": 1786492494,
+  "symbols": [
+    {
+      "endLine": 11,
+      "endOffset": 142,
+      "kind": "variable",
+      "name": "version",
+      "startLine": 11,
+      "startOffset": 135,
+      "symbolId": "components/admin/admin.go::version::variable"
+    },
+    {
+      "endLine": 15,
+      "endOffset": 197,
+      "kind": "class",
+      "name": "Admin",
+      "startLine": 13,
+      "startOffset": 159,
+      "symbolId": "components/admin/admin.go::Admin::class"
+    },
+    {
+      "endLine": 21,
+      "endOffset": 284,
+      "kind": "class",
+      "name": "Options",
+      "startLine": 19,
+      "startOffset": 244,
+      "symbolId": "components/admin/admin.go::Options::class"
+    },
+    {
+      "endLine": 25,
+      "endOffset": 355,
+      "kind": "function",
+      "name": "New",
+      "startLine": 23,
+      "startOffset": 286,
+      "symbolId": "components/admin/admin.go::New::function"
+    },
+    {
+      "endLine": 27,
+      "endOffset": 423,
+      "kind": "method",
+      "name": "Admin.Name",
+      "startLine": 27,
+      "startOffset": 357,
+      "symbolId": "components/admin/admin.go::Admin.Name::method"
+    },
+    {
+      "endLine": 28,
+      "endOffset": 490,
+      "kind": "method",
+      "name": "Admin.Version",
+      "startLine": 28,
+      "startOffset": 424,
+      "symbolId": "components/admin/admin.go::Admin.Version::method"
+    },
+    {
+      "endLine": 29,
+      "endOffset": 553,
+      "kind": "method",
+      "name": "Admin.Dependencies",
+      "startLine": 29,
+      "startOffset": 491,
+      "symbolId": "components/admin/admin.go::Admin.Dependencies::method"
+    },
+    {
+      "endLine": 33,
+      "endOffset": 643,
+      "kind": "method",
+      "name": "Admin.Init",
+      "startLine": 31,
+      "startOffset": 555,
+      "symbolId": "components/admin/admin.go::Admin.Init::method"
+    },
+    {
+      "endLine": 38,
+      "endOffset": 751,
+      "kind": "method",
+      "name": "Admin.Start",
+      "startLine": 35,
+      "startOffset": 645,
+      "symbolId": "components/admin/admin.go::Admin.Start::method"
+    },
+    {
+      "endLine": 42,
+      "endOffset": 817,
+      "kind": "method",
+      "name": "Admin.Stop",
+      "startLine": 40,
+      "startOffset": 753,
+      "symbolId": "components/admin/admin.go::Admin.Stop::method"
+    },
+    {
+      "endLine": 46,
+      "endOffset": 906,
+      "kind": "method",
+      "name": "Admin.Handler",
+      "startLine": 44,
+      "startOffset": 819,
+      "symbolId": "components/admin/admin.go::Admin.Handler::method"
+    }
+  ]
+}

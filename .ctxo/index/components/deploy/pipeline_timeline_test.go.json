@@ -1,0 +1,30 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 10,
+      "symbolId": "components/deploy/pipeline_timeline_test.go::TestPipelineTimelineSchema::function"
+    },
+    {
+      "cyclomatic": 19,
+      "symbolId": "components/deploy/pipeline_timeline_test.go::TestPipelineTimelineInstrumentation::function"
+    },
+    {
+      "cyclomatic": 7,
+      "symbolId": "components/deploy/pipeline_timeline_test.go::assertTimelineOrder::function"
+    }
+  ],
+  "contentHash": "d60314175d8948f0180cac7bd3bdb62898b5592ab9ec1a725ac8b118eee3a015",
+  "edges": [],
+  "file": "components/deploy/pipeline_timeline_test.go",
+  "intent": [
+    {
+      "date": "2026-07-09T01:44:49-03:00",
+      "hash": "82dc49874349b328be8cbd34da05d4ee4b430169",
+      "kind": "commit",
+      "message": "feat(monitoring): AI-assisted deploy observability and incident response (e72) (#64)"
+    }
+  ],
+  "lastModified": 1786492494,
+  "symbols": []
+}

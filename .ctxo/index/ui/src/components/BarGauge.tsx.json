@@ -1,0 +1,47 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 5,
+      "symbolId": "ui/src/components/BarGauge.tsx::BarGauge::function"
+    }
+  ],
+  "contentHash": "392163bff60504bb308e58cf774b44709deac7d41c6ee891f273dca82e7327c8",
+  "edges": [],
+  "file": "ui/src/components/BarGauge.tsx",
+  "intent": [
+    {
+      "date": "2026-08-11T13:43:04-03:00",
+      "hash": "0084e236186d05c7721f7141c1488b3b5cc0e355",
+      "kind": "commit",
+      "message": "fix(ui): accessible chart/gauges labels + progressbar roles (T000012)"
+    },
+    {
+      "date": "2026-06-28T17:11:02-03:00",
+      "hash": "6fb588e63f79ce75dad9a27c5cd8dc0bf796f27c",
+      "kind": "commit",
+      "message": "feat(ui): add design system foundation — tokens, 22 components, a11y audit"
+    }
+  ],
+  "lastModified": 1786492495,
+  "symbols": [
+    {
+      "endLine": 133,
+      "endOffset": 4766,
+      "kind": "function",
+      "name": "BarGauge",
+      "startLine": 125,
+      "startOffset": 4266,
+      "symbolId": "ui/src/components/BarGauge.tsx::BarGauge::function"
+    },
+    {
+      "endLine": 6,
+      "endOffset": 119,
+      "kind": "interface",
+      "name": "BarSegment",
+      "startLine": 2,
+      "startOffset": 40,
+      "symbolId": "ui/src/components/BarGauge.tsx::BarSegment::interface"
+    }
+  ]
+}

@@ -1,0 +1,70 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/auth/route_matrix_test.go::routeMatrixCases::function"
+    },
+    {
+      "cyclomatic": 5,
+      "symbolId": "components/auth/route_matrix_test.go::matrixEnv.handlerFor::method"
+    },
+    {
+      "cyclomatic": 5,
+      "symbolId": "components/auth/route_matrix_test.go::matrixEnv.targetID::method"
+    },
+    {
+      "cyclomatic": 12,
+      "symbolId": "components/auth/route_matrix_test.go::setupRouteMatrix::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/auth/route_matrix_test.go::matrixRequest::function"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/auth/route_matrix_test.go::resolveMatrixPath::function"
+    },
+    {
+      "cyclomatic": 7,
+      "symbolId": "components/auth/route_matrix_test.go::TestRouteMatrix_CrossTenantDenial::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/auth/route_matrix_test.go::TestRouteMatrix_DeployListScopedByOrg::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/auth/route_matrix_test.go::TestRouteMatrix_SitesListScopedByOrg::function"
+    },
+    {
+      "cyclomatic": 5,
+      "symbolId": "components/auth/route_matrix_test.go::assertDeployListScoped::function"
+    },
+    {
+      "cyclomatic": 5,
+      "symbolId": "components/auth/route_matrix_test.go::assertSitesListScoped::function"
+    },
+    {
+      "cyclomatic": 5,
+      "symbolId": "components/auth/route_matrix_test.go::seedBareRepoForMatrix::function"
+    },
+    {
+      "cyclomatic": 5,
+      "symbolId": "components/auth/route_matrix_test.go::strconvI64::function"
+    }
+  ],
+  "contentHash": "3a74a2d5b69128a0c1f875d8abec3342e040be3403db3fc1dad1aa43a4de38cc",
+  "edges": [],
+  "file": "components/auth/route_matrix_test.go",
+  "intent": [
+    {
+      "date": "2026-07-29T00:11:35-03:00",
+      "hash": "d771e6086cfc0b4eb023161528e7d4f03b85f054",
+      "kind": "commit",
+      "message": "test(auth): add cross-tenant route matrix IDOR guard (refs #180)"
+    }
+  ],
+  "lastModified": 1786492494,
+  "symbols": []
+}

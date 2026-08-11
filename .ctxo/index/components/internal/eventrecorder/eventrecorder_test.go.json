@@ -1,0 +1,42 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/internal/eventrecorder/eventrecorder_test.go::testLogger.Info::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/internal/eventrecorder/eventrecorder_test.go::testLogger.Warn::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/internal/eventrecorder/eventrecorder_test.go::testLogger.Error::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/internal/eventrecorder/eventrecorder_test.go::testLogger.Debug::method"
+    },
+    {
+      "cyclomatic": 8,
+      "symbolId": "components/internal/eventrecorder/eventrecorder_test.go::TestEventRecorder::function"
+    },
+    {
+      "cyclomatic": 7,
+      "symbolId": "components/internal/eventrecorder/eventrecorder_test.go::TestEventRecorderFIFOCap::function"
+    }
+  ],
+  "contentHash": "0a0001739b8ed20206e0de1a62c1087355518ced73984467f8215446a48bb90d",
+  "edges": [],
+  "file": "components/internal/eventrecorder/eventrecorder_test.go",
+  "intent": [
+    {
+      "date": "2026-07-09T01:44:49-03:00",
+      "hash": "82dc49874349b328be8cbd34da05d4ee4b430169",
+      "kind": "commit",
+      "message": "feat(monitoring): AI-assisted deploy observability and incident response (e72) (#64)"
+    }
+  ],
+  "lastModified": 1786492494,
+  "symbols": []
+}

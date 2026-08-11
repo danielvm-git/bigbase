@@ -1,0 +1,44 @@
+{
+  "antiPatterns": [
+    {
+      "date": "2026-06-21T15:03:24-03:00",
+      "hash": "c058782f95b32d8aa3a74c52ac44863ad572627b",
+      "message": "Revert \"feat(deploy): deployment state machine with validated transitions and events\""
+    }
+  ],
+  "complexity": [
+    {
+      "cyclomatic": 21,
+      "symbolId": "components/deploy/state_lifecycle_test.go::TestStateLifecycle::function"
+    },
+    {
+      "cyclomatic": 7,
+      "symbolId": "components/deploy/state_lifecycle_test.go::TestStateLifecycleRestart::function"
+    }
+  ],
+  "contentHash": "6caa9ec81de9b0a3e7f992d91621c3ad2216fb787330881f1118cb59f7c8df12",
+  "edges": [],
+  "file": "components/deploy/state_lifecycle_test.go",
+  "intent": [
+    {
+      "date": "2026-06-24T11:25:39-03:00",
+      "hash": "68e7ea92e12312f5f1acf0c83d9cab59fd1b137a",
+      "kind": "commit",
+      "message": "test(deploy): add lifecycle integration tests — full state transitions, invalid transitions, restart safety"
+    },
+    {
+      "date": "2026-06-21T15:03:24-03:00",
+      "hash": "c058782f95b32d8aa3a74c52ac44863ad572627b",
+      "kind": "commit",
+      "message": "Revert \"feat(deploy): deployment state machine with validated transitions and events\""
+    },
+    {
+      "date": "2026-06-21T14:55:32-03:00",
+      "hash": "6780538cdb4ea45e376bb9cdbcc9cfad563bbe19",
+      "kind": "commit",
+      "message": "feat(deploy): deployment state machine with validated transitions and events"
+    }
+  ],
+  "lastModified": 1786492494,
+  "symbols": []
+}

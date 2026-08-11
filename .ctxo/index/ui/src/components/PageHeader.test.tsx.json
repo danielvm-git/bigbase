@@ -1,0 +1,23 @@
+{
+  "antiPatterns": [],
+  "complexity": [],
+  "contentHash": "38f9a1e59a9d1fc9da4506bed344a08740f5da9e6bc2a0d4e7f1958aa40f8f63",
+  "edges": [
+    {
+      "from": "ui/src/components/PageHeader.test.tsx::PageHeader.test::variable",
+      "kind": "imports",
+      "to": "ui/src/components/PageHeader.ts::PageHeader::class"
+    }
+  ],
+  "file": "ui/src/components/PageHeader.test.tsx",
+  "intent": [
+    {
+      "date": "2026-08-11T15:55:35-03:00",
+      "hash": "f80cb4472e6258ee7a0355f6e0b9ded00cf3fac0",
+      "kind": "commit",
+      "message": "fix(ui): AAA text scaling + location indicator (e87s07)"
+    }
+  ],
+  "lastModified": 1786492495,
+  "symbols": []
+}

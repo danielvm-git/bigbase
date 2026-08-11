@@ -1,0 +1,56 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 1,
+      "symbolId": "ui/src/hooks/useWorkspace.ts::useWorkspace::function"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "ui/src/hooks/useWorkspace.ts::useMembers::function"
+    }
+  ],
+  "contentHash": "6103b8f951d128be8efc486fe320f8b274a112a38a0d297ee2887b07455def9c",
+  "edges": [],
+  "file": "ui/src/hooks/useWorkspace.ts",
+  "intent": [],
+  "lastModified": 1786492495,
+  "symbols": [
+    {
+      "endLine": 27,
+      "endOffset": 726,
+      "kind": "function",
+      "name": "useWorkspace",
+      "startLine": 22,
+      "startOffset": 594,
+      "symbolId": "ui/src/hooks/useWorkspace.ts::useWorkspace::function"
+    },
+    {
+      "endLine": 34,
+      "endOffset": 848,
+      "kind": "function",
+      "name": "useMembers",
+      "startLine": 29,
+      "startOffset": 728,
+      "symbolId": "ui/src/hooks/useWorkspace.ts::useMembers::function"
+    },
+    {
+      "endLine": 8,
+      "endOffset": 285,
+      "kind": "interface",
+      "name": "Workspace",
+      "startLine": 5,
+      "startOffset": 227,
+      "symbolId": "ui/src/hooks/useWorkspace.ts::Workspace::interface"
+    },
+    {
+      "endLine": 14,
+      "endOffset": 380,
+      "kind": "interface",
+      "name": "Member",
+      "startLine": 10,
+      "startOffset": 287,
+      "symbolId": "ui/src/hooks/useWorkspace.ts::Member::interface"
+    }
+  ]
+}

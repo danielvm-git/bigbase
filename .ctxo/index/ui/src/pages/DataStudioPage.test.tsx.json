@@ -1,0 +1,21 @@
+{
+  "antiPatterns": [],
+  "complexity": [],
+  "contentHash": "8c0c5842798d1e609106b7ba6cdb758333952c2448387f4bc857664461f8ae08",
+  "edges": [
+    {
+      "from": "ui/src/pages/DataStudioPage.test.tsx::DataStudioPage.test::variable",
+      "kind": "imports",
+      "to": "ui/src/context/ToastContext.ts::ToastProvider::class"
+    },
+    {
+      "from": "ui/src/pages/DataStudioPage.test.tsx::DataStudioPage.test::variable",
+      "kind": "imports",
+      "to": "ui/src/pages/DataStudioPage.ts::DataStudioPage::class"
+    }
+  ],
+  "file": "ui/src/pages/DataStudioPage.test.tsx",
+  "intent": [],
+  "lastModified": 1786492495,
+  "symbols": []
+}

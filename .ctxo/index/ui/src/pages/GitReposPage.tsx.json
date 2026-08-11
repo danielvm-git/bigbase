@@ -1,0 +1,63 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 20,
+      "symbolId": "ui/src/pages/GitReposPage.tsx::GitReposPage::function"
+    }
+  ],
+  "contentHash": "5e721a4b661bed59cde21ebf1c751ff20d82683e062c9d9cc3e1930b1aa9fdbc",
+  "edges": [
+    {
+      "from": "ui/src/pages/GitReposPage.tsx::GitReposPage::function",
+      "kind": "imports",
+      "to": "ui/src/components.ts::PageHeader::class"
+    },
+    {
+      "from": "ui/src/pages/GitReposPage.tsx::GitReposPage::function",
+      "kind": "imports",
+      "to": "ui/src/components.ts::Button::class"
+    },
+    {
+      "from": "ui/src/pages/GitReposPage.tsx::GitReposPage::function",
+      "kind": "imports",
+      "to": "ui/src/components.ts::Input::class"
+    },
+    {
+      "from": "ui/src/pages/GitReposPage.tsx::GitReposPage::function",
+      "kind": "uses",
+      "to": "ui/src/components.ts::PageHeader::class"
+    },
+    {
+      "from": "ui/src/pages/GitReposPage.tsx::GitReposPage::function",
+      "kind": "uses",
+      "to": "ui/src/components.ts::Button::class"
+    },
+    {
+      "from": "ui/src/pages/GitReposPage.tsx::GitReposPage::function",
+      "kind": "uses",
+      "to": "ui/src/components.ts::Input::class"
+    }
+  ],
+  "file": "ui/src/pages/GitReposPage.tsx",
+  "intent": [
+    {
+      "date": "2026-07-10T20:39:36-03:00",
+      "hash": "db94b7c03f56600323aff8c9132e7d98185ff8b2",
+      "kind": "commit",
+      "message": "fix(ui): CopyButton silent failure + pre-existing ESLint cleanup"
+    }
+  ],
+  "lastModified": 1786492495,
+  "symbols": [
+    {
+      "endLine": 116,
+      "endOffset": 4137,
+      "kind": "function",
+      "name": "GitReposPage",
+      "startLine": 13,
+      "startOffset": 257,
+      "symbolId": "ui/src/pages/GitReposPage.tsx::GitReposPage::function"
+    }
+  ]
+}

@@ -1,0 +1,50 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/internal/envcrypto/envcrypto_test.go::mustKey::function"
+    },
+    {
+      "cyclomatic": 7,
+      "symbolId": "components/internal/envcrypto/envcrypto_test.go::TestParseKey::function"
+    },
+    {
+      "cyclomatic": 6,
+      "symbolId": "components/internal/envcrypto/envcrypto_test.go::TestEncryptDecryptRoundTrip::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/internal/envcrypto/envcrypto_test.go::TestEncryptNonceIsRandom::function"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/internal/envcrypto/envcrypto_test.go::TestNoOpModeWhenKeyNil::function"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/internal/envcrypto/envcrypto_test.go::TestDecryptFailures::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/internal/envcrypto/envcrypto_test.go::TestDecryptWithWrongKey::function"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/internal/envcrypto/envcrypto_test.go::TestMaskValue::function"
+    }
+  ],
+  "contentHash": "5bee745009e7f0d9b618b38610072e63e7f27c9ff2a9d48d314d616fb744a051",
+  "edges": [],
+  "file": "components/internal/envcrypto/envcrypto_test.go",
+  "intent": [
+    {
+      "date": "2026-06-25T05:18:42-03:00",
+      "hash": "d62388d7459e1269381963269d5b9a1e202b2e40",
+      "kind": "commit",
+      "message": "fix(env-vars): harden secret storage — server-side masking, shared crypto, and error propagation"
+    }
+  ],
+  "lastModified": 1786492494,
+  "symbols": []
+}

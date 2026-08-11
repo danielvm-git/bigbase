@@ -1,0 +1,126 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/mcp/provisioning_test.go::mockGitCreator.CreateRepo::method"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/mcp/provisioning_test.go::mockSiteCreator.CreateSite::method"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/mcp/provisioning_test.go::mockSiteKeyCreator.CreateSiteKey::method"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/mcp/provisioning_test.go::mockSiteKeyCreator.ListSiteKeys::method"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/mcp/provisioning_test.go::mockSiteKeyCreator.RevokeSiteKey::method"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/mcp/provisioning_test.go::mockSiteKeyResolver.ResolveSiteKey::method"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/mcp/provisioning_test.go::mockSiteLister.ListSites::method"
+    },
+    {
+      "cyclomatic": 5,
+      "symbolId": "components/mcp/provisioning_test.go::mockSiteLister.GetSite::method"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/mcp/provisioning_test.go::callToolText::function"
+    },
+    {
+      "cyclomatic": 5,
+      "symbolId": "components/mcp/provisioning_test.go::TestCreateRepo::function"
+    },
+    {
+      "cyclomatic": 5,
+      "symbolId": "components/mcp/provisioning_test.go::TestCreateSite::function"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/mcp/provisioning_test.go::TestProvisionCICredentials::function"
+    },
+    {
+      "cyclomatic": 8,
+      "symbolId": "components/mcp/provisioning_test.go::TestGetCITemplate::function"
+    },
+    {
+      "cyclomatic": 5,
+      "symbolId": "components/mcp/provisioning_test.go::TestValidateCICredentials::function"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/mcp/provisioning_test.go::TestListSites::function"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/mcp/provisioning_test.go::TestGetSite::function"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/mcp/provisioning_test.go::TestListSiteKeys::function"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/mcp/provisioning_test.go::TestRevokeSiteKey::function"
+    }
+  ],
+  "contentHash": "9c20ac40e89cf6d31ffae499e7a032ce266dec2312cae00952e1f9522df5e3a3",
+  "edges": [],
+  "file": "components/mcp/provisioning_test.go",
+  "intent": [
+    {
+      "date": "2026-07-24T20:56:01-03:00",
+      "hash": "e77fd137a0fcdc1a7521123153d8c065f11bafca",
+      "kind": "commit",
+      "message": "fix(deploy): never-bounce identity and framework deploy matrix (#166)"
+    },
+    {
+      "date": "2026-07-24T19:56:59-03:00",
+      "hash": "62313dd7494bca59043c4c6938cd86112644ab12",
+      "kind": "commit",
+      "message": "fix(sites): allow bb_dep_ deploy keys through requireSiteOwnership (#163)"
+    },
+    {
+      "date": "2026-07-10T23:31:10-03:00",
+      "hash": "3dca1ba879ac84d04c0badacca3cd4eb5c3f6d9d",
+      "kind": "commit",
+      "message": "fix(auth,proxy,deps): fix deploy keys prefix, scope RevokeSiteKey, harden CSP, update deps"
+    },
+    {
+      "date": "2026-07-10T16:10:47-03:00",
+      "hash": "ddd7efb57df839db846eb0fecb3cc3acb093d09f",
+      "kind": "commit",
+      "message": "fix(ecc): remove cross-component production imports"
+    },
+    {
+      "date": "2026-07-10T14:46:55-03:00",
+      "hash": "36722e3d731d1da0179c0360d677bc6bdf2b3b19",
+      "kind": "commit",
+      "message": "fix(deploy): prevent manifest path traversal (CWE-22)"
+    },
+    {
+      "date": "2026-07-07T19:39:36-03:00",
+      "hash": "890a5e7ab67398002355cbd51e727dd55bb2aef5",
+      "kind": "commit",
+      "message": "feat(mcp): add site discovery and deploy key lifecycle tools"
+    },
+    {
+      "date": "2026-07-07T17:55:13-03:00",
+      "hash": "6ba8ea4a275faa75c9a55c1fdfaf6dc2494cadac",
+      "kind": "commit",
+      "message": "feat(mcp): add provisioning toolchain — create_repo, create_site, provision_ci_credentials, get_ci_template"
+    }
+  ],
+  "lastModified": 1786492494,
+  "symbols": []
+}

@@ -1,0 +1,108 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 6,
+      "symbolId": "components/deploy/db_env.go::NativeDBEnv::function"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/deploy/db_env.go::Deploy.nativeDBEnv::method"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/deploy/db_env.go::normalizeDBDriver::function"
+    }
+  ],
+  "contentHash": "982c585b1f4868383d8dbd9ab3b43370caffc87b0c2435bd9c459b63a06a9056",
+  "edges": [
+    {
+      "from": "components/deploy/db_env.go::NativeDBEnv::function",
+      "kind": "calls",
+      "to": "components/deploy/db_env.go::normalizeDBDriver::function"
+    },
+    {
+      "from": "components/deploy/db_env.go::NativeDBEnv::function",
+      "kind": "uses",
+      "to": "components/deploy/db_env.go::driverPostgres::variable"
+    },
+    {
+      "from": "components/deploy/db_env.go::Deploy.nativeDBEnv::method",
+      "kind": "uses",
+      "to": "components/deploy/deploy.go::Deploy::class"
+    },
+    {
+      "from": "components/deploy/db_env.go::Deploy.nativeDBEnv::method",
+      "kind": "calls",
+      "to": "components/deploy/db_env.go::NativeDBEnv::function"
+    },
+    {
+      "from": "components/deploy/db_env.go::normalizeDBDriver::function",
+      "kind": "uses",
+      "to": "components/deploy/db_env.go::driverSQLite::variable"
+    }
+  ],
+  "file": "components/deploy/db_env.go",
+  "intent": [
+    {
+      "date": "2026-07-10T14:46:55-03:00",
+      "hash": "36722e3d731d1da0179c0360d677bc6bdf2b3b19",
+      "kind": "commit",
+      "message": "fix(deploy): prevent manifest path traversal (CWE-22)"
+    },
+    {
+      "date": "2026-07-07T18:14:45-03:00",
+      "hash": "6d31b46384aecb7293b76655863ab1623bfa6c46",
+      "kind": "commit",
+      "message": "feat(deploy): inject native DB connection string into app env"
+    }
+  ],
+  "lastModified": 1786492494,
+  "symbols": [
+    {
+      "endLine": 9,
+      "endOffset": 77,
+      "kind": "variable",
+      "name": "driverSQLite",
+      "startLine": 9,
+      "startOffset": 65,
+      "symbolId": "components/deploy/db_env.go::driverSQLite::variable"
+    },
+    {
+      "endLine": 10,
+      "endOffset": 106,
+      "kind": "variable",
+      "name": "driverPostgres",
+      "startLine": 10,
+      "startOffset": 92,
+      "symbolId": "components/deploy/db_env.go::driverPostgres::variable"
+    },
+    {
+      "endLine": 31,
+      "endOffset": 641,
+      "kind": "function",
+      "name": "NativeDBEnv",
+      "startLine": 15,
+      "startOffset": 296,
+      "symbolId": "components/deploy/db_env.go::NativeDBEnv::function"
+    },
+    {
+      "endLine": 35,
+      "endOffset": 727,
+      "kind": "method",
+      "name": "Deploy.nativeDBEnv",
+      "startLine": 33,
+      "startOffset": 643,
+      "symbolId": "components/deploy/db_env.go::Deploy.nativeDBEnv::method"
+    },
+    {
+      "endLine": 43,
+      "endOffset": 875,
+      "kind": "function",
+      "name": "normalizeDBDriver",
+      "startLine": 37,
+      "startOffset": 729,
+      "symbolId": "components/deploy/db_env.go::normalizeDBDriver::function"
+    }
+  ]
+}

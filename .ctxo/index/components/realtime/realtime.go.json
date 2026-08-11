@@ -1,0 +1,478 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/realtime/realtime.go::New::function"
+    },
+    {
+      "cyclomatic": 5,
+      "symbolId": "components/realtime/realtime.go::Realtime.checkOrigin::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/realtime/realtime.go::Realtime.Name::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/realtime/realtime.go::Realtime.Version::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/realtime/realtime.go::Realtime.Dependencies::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/realtime/realtime.go::Realtime.Init::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/realtime/realtime.go::Realtime.Start::method"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/realtime/realtime.go::Realtime.Stop::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/realtime/realtime.go::Realtime.Hub::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/realtime/realtime.go::Realtime.Handler::method"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/realtime/realtime.go::Realtime.handleStatus::method"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/realtime/realtime.go::Realtime.serveWS::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/realtime/realtime.go::newClient::function"
+    }
+  ],
+  "contentHash": "5a58d5d54d20a8898f141f72d5f1391c922d7422f41bd089e65497152157f848",
+  "edges": [
+    {
+      "from": "components/realtime/realtime.go::New::function",
+      "kind": "uses",
+      "to": "components/realtime/realtime.go::Options::class"
+    },
+    {
+      "from": "components/realtime/realtime.go::New::function",
+      "kind": "uses",
+      "to": "components/realtime/realtime.go::Realtime::class"
+    },
+    {
+      "from": "components/realtime/realtime.go::New::function",
+      "kind": "uses",
+      "to": "kernel/utilities.go::NoopLogger::class"
+    },
+    {
+      "from": "components/realtime/realtime.go::New::function",
+      "kind": "calls",
+      "to": "components/realtime/hub.go::NewHub::function"
+    },
+    {
+      "from": "components/realtime/realtime.go::New::function",
+      "kind": "calls",
+      "to": "components/realtime/hub.go::Hub.Run::method"
+    },
+    {
+      "from": "components/realtime/realtime.go::Realtime.checkOrigin::method",
+      "kind": "uses",
+      "to": "components/realtime/realtime.go::Realtime::class"
+    },
+    {
+      "from": "components/realtime/realtime.go::Realtime.Name::method",
+      "kind": "uses",
+      "to": "components/realtime/realtime.go::Realtime::class"
+    },
+    {
+      "from": "components/realtime/realtime.go::Realtime.Version::method",
+      "kind": "uses",
+      "to": "components/realtime/realtime.go::Realtime::class"
+    },
+    {
+      "from": "components/realtime/realtime.go::Realtime.Version::method",
+      "kind": "uses",
+      "to": "components/realtime/realtime.go::version::variable"
+    },
+    {
+      "from": "components/realtime/realtime.go::Realtime.Dependencies::method",
+      "kind": "uses",
+      "to": "components/realtime/realtime.go::Realtime::class"
+    },
+    {
+      "from": "components/realtime/realtime.go::Realtime.Init::method",
+      "kind": "uses",
+      "to": "components/realtime/realtime.go::Realtime::class"
+    },
+    {
+      "from": "components/realtime/realtime.go::Realtime.Init::method",
+      "kind": "uses",
+      "to": "kernel/component.go::Context::class"
+    },
+    {
+      "from": "components/realtime/realtime.go::Realtime.Start::method",
+      "kind": "uses",
+      "to": "components/realtime/realtime.go::Realtime::class"
+    },
+    {
+      "from": "components/realtime/realtime.go::Realtime.Start::method",
+      "kind": "uses",
+      "to": "kernel/component.go::Context::class"
+    },
+    {
+      "from": "components/realtime/realtime.go::Realtime.Start::method",
+      "kind": "calls",
+      "to": "kernel/kernel.go::Kernel.EventBus::method"
+    },
+    {
+      "from": "components/realtime/realtime.go::Realtime.Start::method",
+      "kind": "calls",
+      "to": "kernel/eventbus.go::EventBus.Subscribe::method"
+    },
+    {
+      "from": "components/realtime/realtime.go::Realtime.Start::method",
+      "kind": "uses",
+      "to": "kernel/component.go::HookDef::class"
+    },
+    {
+      "from": "components/realtime/realtime.go::Realtime.Start::method",
+      "kind": "uses",
+      "to": "kernel/component.go::Event::class"
+    },
+    {
+      "from": "components/realtime/realtime.go::Realtime.Start::method",
+      "kind": "calls",
+      "to": "components/realtime/hub.go::Hub.Broadcast::method"
+    },
+    {
+      "from": "components/realtime/realtime.go::Realtime.Start::method",
+      "kind": "uses",
+      "to": "components/realtime/realtime.go::channelPrefix::variable"
+    },
+    {
+      "from": "components/realtime/realtime.go::Realtime.Start::method",
+      "kind": "calls",
+      "to": "kernel/component.go::Logger.Info::method"
+    },
+    {
+      "from": "components/realtime/realtime.go::Realtime.Stop::method",
+      "kind": "uses",
+      "to": "components/realtime/realtime.go::Realtime::class"
+    },
+    {
+      "from": "components/realtime/realtime.go::Realtime.Stop::method",
+      "kind": "uses",
+      "to": "kernel/component.go::Context::class"
+    },
+    {
+      "from": "components/realtime/realtime.go::Realtime.Stop::method",
+      "kind": "calls",
+      "to": "components/realtime/hub.go::Hub.Stop::method"
+    },
+    {
+      "from": "components/realtime/realtime.go::Realtime.Hub::method",
+      "kind": "uses",
+      "to": "components/realtime/realtime.go::Realtime::class"
+    },
+    {
+      "from": "components/realtime/realtime.go::Realtime.Hub::method",
+      "kind": "uses",
+      "to": "components/realtime/hub.go::Hub::class"
+    },
+    {
+      "from": "components/realtime/realtime.go::Realtime.Handler::method",
+      "kind": "uses",
+      "to": "components/realtime/realtime.go::Realtime::class"
+    },
+    {
+      "from": "components/realtime/realtime.go::Realtime.handleStatus::method",
+      "kind": "uses",
+      "to": "components/realtime/realtime.go::Realtime::class"
+    },
+    {
+      "from": "components/realtime/realtime.go::Realtime.handleStatus::method",
+      "kind": "calls",
+      "to": "components/realtime/hub.go::Hub.Stats::method"
+    },
+    {
+      "from": "components/realtime/realtime.go::Realtime.serveWS::method",
+      "kind": "uses",
+      "to": "components/realtime/realtime.go::Realtime::class"
+    },
+    {
+      "from": "components/realtime/realtime.go::Realtime.serveWS::method",
+      "kind": "calls",
+      "to": "kernel/component.go::Logger.Error::method"
+    },
+    {
+      "from": "components/realtime/realtime.go::Realtime.serveWS::method",
+      "kind": "calls",
+      "to": "components/realtime/realtime.go::newClient::function"
+    },
+    {
+      "from": "components/realtime/realtime.go::Realtime.serveWS::method",
+      "kind": "calls",
+      "to": "components/realtime/client.go::Client.writePump::method"
+    },
+    {
+      "from": "components/realtime/realtime.go::Realtime.serveWS::method",
+      "kind": "calls",
+      "to": "components/realtime/client.go::Client.readPump::method"
+    },
+    {
+      "from": "components/realtime/realtime.go::newClient::function",
+      "kind": "uses",
+      "to": "components/realtime/hub.go::Hub::class"
+    },
+    {
+      "from": "components/realtime/realtime.go::newClient::function",
+      "kind": "uses",
+      "to": "components/realtime/client.go::Client::class"
+    },
+    {
+      "from": "components/realtime/realtime.go::newClient::function",
+      "kind": "uses",
+      "to": "components/realtime/realtime.go::sendBufSize::variable"
+    },
+    {
+      "from": "components/realtime/realtime.go::Realtime::class",
+      "kind": "implements",
+      "to": "kernel/component.go::Component::interface"
+    }
+  ],
+  "file": "components/realtime/realtime.go",
+  "intent": [
+    {
+      "date": "2026-07-10T16:03:34-03:00",
+      "hash": "9f6a6df73344b8352287f61ce2caa5e7d455d7f1",
+      "kind": "commit",
+      "message": "fix(realtime): restrict WebSocket CheckOrigin to allowlist"
+    },
+    {
+      "date": "2026-07-10T14:58:38-03:00",
+      "hash": "34b197c676d972ef39ab3cd8fe08a320adae96e9",
+      "kind": "commit",
+      "message": "fix(kernel): remove dead ConfigSchema/Hooks interfaces, add Component compile checks"
+    },
+    {
+      "date": "2026-07-10T14:46:55-03:00",
+      "hash": "36722e3d731d1da0179c0360d677bc6bdf2b3b19",
+      "kind": "commit",
+      "message": "fix(deploy): prevent manifest path traversal (CWE-22)"
+    },
+    {
+      "date": "2026-07-07T00:13:21-03:00",
+      "hash": "bcc0b8745f57075cf71e855bc2496e4c11195708",
+      "kind": "commit",
+      "message": "refactor(kernel): hoist Logger/DBer interfaces — remove 18 duplicate definitions"
+    }
+  ],
+  "lastModified": 1786492494,
+  "symbols": [
+    {
+      "endLine": 14,
+      "endOffset": 155,
+      "kind": "variable",
+      "name": "version",
+      "startLine": 14,
+      "startOffset": 148,
+      "symbolId": "components/realtime/realtime.go::version::variable"
+    },
+    {
+      "endLine": 15,
+      "endOffset": 183,
+      "kind": "variable",
+      "name": "writeWait",
+      "startLine": 15,
+      "startOffset": 174,
+      "symbolId": "components/realtime/realtime.go::writeWait::variable"
+    },
+    {
+      "endLine": 16,
+      "endOffset": 217,
+      "kind": "variable",
+      "name": "pongWait",
+      "startLine": 16,
+      "startOffset": 209,
+      "symbolId": "components/realtime/realtime.go::pongWait::variable"
+    },
+    {
+      "endLine": 17,
+      "endOffset": 254,
+      "kind": "variable",
+      "name": "pingPeriod",
+      "startLine": 17,
+      "startOffset": 244,
+      "symbolId": "components/realtime/realtime.go::pingPeriod::variable"
+    },
+    {
+      "endLine": 18,
+      "endOffset": 296,
+      "kind": "variable",
+      "name": "maxMessageSize",
+      "startLine": 18,
+      "startOffset": 282,
+      "symbolId": "components/realtime/realtime.go::maxMessageSize::variable"
+    },
+    {
+      "endLine": 19,
+      "endOffset": 316,
+      "kind": "variable",
+      "name": "sendBufSize",
+      "startLine": 19,
+      "startOffset": 305,
+      "symbolId": "components/realtime/realtime.go::sendBufSize::variable"
+    },
+    {
+      "endLine": 20,
+      "endOffset": 340,
+      "kind": "variable",
+      "name": "channelPrefix",
+      "startLine": 20,
+      "startOffset": 327,
+      "symbolId": "components/realtime/realtime.go::channelPrefix::variable"
+    },
+    {
+      "endLine": 27,
+      "endOffset": 535,
+      "kind": "class",
+      "name": "Options",
+      "startLine": 23,
+      "startOffset": 366,
+      "symbolId": "components/realtime/realtime.go::Options::class"
+    },
+    {
+      "endLine": 36,
+      "endOffset": 751,
+      "kind": "class",
+      "name": "Realtime",
+      "startLine": 29,
+      "startOffset": 542,
+      "symbolId": "components/realtime/realtime.go::Realtime::class"
+    },
+    {
+      "endLine": 65,
+      "endOffset": 1359,
+      "kind": "function",
+      "name": "New",
+      "startLine": 40,
+      "startOffset": 796,
+      "symbolId": "components/realtime/realtime.go::New::function"
+    },
+    {
+      "endLine": 84,
+      "endOffset": 1823,
+      "kind": "method",
+      "name": "Realtime.checkOrigin",
+      "startLine": 69,
+      "startOffset": 1513,
+      "symbolId": "components/realtime/realtime.go::Realtime.checkOrigin::method"
+    },
+    {
+      "endLine": 86,
+      "endOffset": 1896,
+      "kind": "method",
+      "name": "Realtime.Name",
+      "startLine": 86,
+      "startOffset": 1825,
+      "symbolId": "components/realtime/realtime.go::Realtime.Name::method"
+    },
+    {
+      "endLine": 87,
+      "endOffset": 1965,
+      "kind": "method",
+      "name": "Realtime.Version",
+      "startLine": 87,
+      "startOffset": 1897,
+      "symbolId": "components/realtime/realtime.go::Realtime.Version::method"
+    },
+    {
+      "endLine": 88,
+      "endOffset": 2050,
+      "kind": "method",
+      "name": "Realtime.Dependencies",
+      "startLine": 88,
+      "startOffset": 1966,
+      "symbolId": "components/realtime/realtime.go::Realtime.Dependencies::method"
+    },
+    {
+      "endLine": 92,
+      "endOffset": 2142,
+      "kind": "method",
+      "name": "Realtime.Init",
+      "startLine": 90,
+      "startOffset": 2052,
+      "symbolId": "components/realtime/realtime.go::Realtime.Init::method"
+    },
+    {
+      "endLine": 112,
+      "endOffset": 2693,
+      "kind": "method",
+      "name": "Realtime.Start",
+      "startLine": 94,
+      "startOffset": 2144,
+      "symbolId": "components/realtime/realtime.go::Realtime.Start::method"
+    },
+    {
+      "endLine": 120,
+      "endOffset": 2823,
+      "kind": "method",
+      "name": "Realtime.Stop",
+      "startLine": 114,
+      "startOffset": 2695,
+      "symbolId": "components/realtime/realtime.go::Realtime.Stop::method"
+    },
+    {
+      "endLine": 124,
+      "endOffset": 2872,
+      "kind": "method",
+      "name": "Realtime.Hub",
+      "startLine": 122,
+      "startOffset": 2825,
+      "symbolId": "components/realtime/realtime.go::Realtime.Hub::method"
+    },
+    {
+      "endLine": 131,
+      "endOffset": 3054,
+      "kind": "method",
+      "name": "Realtime.Handler",
+      "startLine": 126,
+      "startOffset": 2874,
+      "symbolId": "components/realtime/realtime.go::Realtime.Handler::method"
+    },
+    {
+      "endLine": 141,
+      "endOffset": 3339,
+      "kind": "method",
+      "name": "Realtime.handleStatus",
+      "startLine": 133,
+      "startOffset": 3056,
+      "symbolId": "components/realtime/realtime.go::Realtime.handleStatus::method"
+    },
+    {
+      "endLine": 166,
+      "endOffset": 3905,
+      "kind": "method",
+      "name": "Realtime.serveWS",
+      "startLine": 143,
+      "startOffset": 3341,
+      "symbolId": "components/realtime/realtime.go::Realtime.serveWS::method"
+    },
+    {
+      "endLine": 176,
+      "endOffset": 4123,
+      "kind": "function",
+      "name": "newClient",
+      "startLine": 168,
+      "startOffset": 3907,
+      "symbolId": "components/realtime/realtime.go::newClient::function"
+    }
+  ]
+}

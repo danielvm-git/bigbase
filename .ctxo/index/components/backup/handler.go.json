@@ -1,0 +1,104 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/backup/handler.go::Handler::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/backup/handler.go::handleBackup::function"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/backup/handler.go::handleRestore::function"
+    }
+  ],
+  "contentHash": "aa5237faf238d8363fa85593b74a7cec3909c2e70ea9e1d1fd88c9046d101ca8",
+  "edges": [
+    {
+      "from": "components/backup/handler.go::Handler::function",
+      "kind": "uses",
+      "to": "components/backup/backup.go::SQLiteDB::type"
+    },
+    {
+      "from": "components/backup/handler.go::Handler::function",
+      "kind": "calls",
+      "to": "components/backup/handler.go::handleBackup::function"
+    },
+    {
+      "from": "components/backup/handler.go::Handler::function",
+      "kind": "calls",
+      "to": "components/backup/handler.go::handleRestore::function"
+    },
+    {
+      "from": "components/backup/handler.go::handleBackup::function",
+      "kind": "uses",
+      "to": "components/backup/backup.go::SQLiteDB::type"
+    },
+    {
+      "from": "components/backup/handler.go::handleBackup::function",
+      "kind": "calls",
+      "to": "components/backup/backup.go::Dump::function"
+    },
+    {
+      "from": "components/backup/handler.go::handleBackup::function",
+      "kind": "calls",
+      "to": "kernel/utilities.go::WriteJSON::function"
+    },
+    {
+      "from": "components/backup/handler.go::handleRestore::function",
+      "kind": "uses",
+      "to": "components/backup/backup.go::SQLiteDB::type"
+    },
+    {
+      "from": "components/backup/handler.go::handleRestore::function",
+      "kind": "calls",
+      "to": "kernel/utilities.go::WriteJSON::function"
+    },
+    {
+      "from": "components/backup/handler.go::handleRestore::function",
+      "kind": "calls",
+      "to": "components/backup/backup.go::Restore::function"
+    }
+  ],
+  "file": "components/backup/handler.go",
+  "intent": [
+    {
+      "date": "2026-07-10T14:46:55-03:00",
+      "hash": "36722e3d731d1da0179c0360d677bc6bdf2b3b19",
+      "kind": "commit",
+      "message": "fix(deploy): prevent manifest path traversal (CWE-22)"
+    }
+  ],
+  "lastModified": 1786492494,
+  "symbols": [
+    {
+      "endLine": 17,
+      "endOffset": 389,
+      "kind": "function",
+      "name": "Handler",
+      "startLine": 12,
+      "startOffset": 198,
+      "symbolId": "components/backup/handler.go::Handler::function"
+    },
+    {
+      "endLine": 31,
+      "endOffset": 881,
+      "kind": "function",
+      "name": "handleBackup",
+      "startLine": 19,
+      "startOffset": 391,
+      "symbolId": "components/backup/handler.go::handleBackup::function"
+    },
+    {
+      "endLine": 47,
+      "endOffset": 1502,
+      "kind": "function",
+      "name": "handleRestore",
+      "startLine": 33,
+      "startOffset": 883,
+      "symbolId": "components/backup/handler.go::handleRestore::function"
+    }
+  ]
+}

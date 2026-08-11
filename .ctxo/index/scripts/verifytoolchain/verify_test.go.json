@@ -1,0 +1,46 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 9,
+      "symbolId": "scripts/verifytoolchain/verify_test.go::TestVerifyRequiredMissingFails::function"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "scripts/verifytoolchain/verify_test.go::TestVerifyVersionTooLowFails::function"
+    },
+    {
+      "cyclomatic": 6,
+      "symbolId": "scripts/verifytoolchain/verify_test.go::TestVerifyOptionalMissingIsOK::function"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "scripts/verifytoolchain/verify_test.go::TestVerifyPresenceOnlyContract::function"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "scripts/verifytoolchain/verify_test.go::TestVerifyPresentButVersionCmdErrorsStillCountsAsPresent::function"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "scripts/verifytoolchain/verify_test.go::TestVersionArgsRegistry::function"
+    },
+    {
+      "cyclomatic": 5,
+      "symbolId": "scripts/verifytoolchain/verify_test.go::TestLoadContractRealFile::function"
+    }
+  ],
+  "contentHash": "029eab69edea8bc1b2295a4360bc70e6568aac692e452185814a45ff9bf9f0fd",
+  "edges": [],
+  "file": "scripts/verifytoolchain/verify_test.go",
+  "intent": [
+    {
+      "date": "2026-07-29T00:02:18-03:00",
+      "hash": "3a251704d233dd81746d3eb522b691df962fd988",
+      "kind": "commit",
+      "message": "test(deploy): unit tests for toolchain verifier version parsing and comparison"
+    }
+  ],
+  "lastModified": 1786492495,
+  "symbols": []
+}

@@ -1,0 +1,22 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 3,
+      "symbolId": "tests/bench/bench_storage_test.go::BenchmarkStorageUpload::function"
+    }
+  ],
+  "contentHash": "5379b4def38ba1c100ca6cb08ca04eafc43ed6cfdebddf94dd7c2e3811c3e6f2",
+  "edges": [],
+  "file": "tests/bench/bench_storage_test.go",
+  "intent": [
+    {
+      "date": "2026-07-10T14:46:55-03:00",
+      "hash": "36722e3d731d1da0179c0360d677bc6bdf2b3b19",
+      "kind": "commit",
+      "message": "fix(deploy): prevent manifest path traversal (CWE-22)"
+    }
+  ],
+  "lastModified": 1786492495,
+  "symbols": []
+}

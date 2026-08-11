@@ -1,0 +1,43 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 1,
+      "symbolId": "ui/src/hooks/useAuthSession.ts::useAuthSession::function"
+    }
+  ],
+  "contentHash": "5b92180595ef664d8fa5a03c44f98916841fa0e300cbf2dbc54a7407dab576e2",
+  "edges": [
+    {
+      "from": "ui/src/hooks/useAuthSession.ts::useAuthSession::function",
+      "kind": "imports",
+      "to": "ui/src/context/authState.ts::AuthContext::variable"
+    },
+    {
+      "from": "ui/src/hooks/useAuthSession.ts::useAuthSession::function",
+      "kind": "uses",
+      "to": "ui/src/context/authState.ts::AuthContext::variable"
+    }
+  ],
+  "file": "ui/src/hooks/useAuthSession.ts",
+  "intent": [
+    {
+      "date": "2026-08-11T16:07:12-03:00",
+      "hash": "be5a14e5d0ad29ef9e877d39c955e8a13b797743",
+      "kind": "commit",
+      "message": "fix(ui): AAA session timeout warning + re-auth (e87s05)"
+    }
+  ],
+  "lastModified": 1786492495,
+  "symbols": [
+    {
+      "endLine": 6,
+      "endOffset": 231,
+      "kind": "function",
+      "name": "useAuthSession",
+      "startLine": 4,
+      "startOffset": 162,
+      "symbolId": "ui/src/hooks/useAuthSession.ts::useAuthSession::function"
+    }
+  ]
+}

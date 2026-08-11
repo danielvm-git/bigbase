@@ -1,0 +1,47 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 21,
+      "symbolId": "ui/src/components/DropdownMenu.tsx::DropdownMenu::function"
+    }
+  ],
+  "contentHash": "0f3e355e350e7e52895e0ca3e5fdfdecf484957b0a62c1af6eb4505181baa735",
+  "edges": [],
+  "file": "ui/src/components/DropdownMenu.tsx",
+  "intent": [
+    {
+      "date": "2026-08-11T00:32:26-03:00",
+      "hash": "607fcf087b580974b5acf50a6499221c0850bb96",
+      "kind": "commit",
+      "message": "fix(ui): make click-only div/span elements keyboard-accessible (BUG-2026-08-11T000009)"
+    },
+    {
+      "date": "2026-06-28T17:11:02-03:00",
+      "hash": "6fb588e63f79ce75dad9a27c5cd8dc0bf796f27c",
+      "kind": "commit",
+      "message": "feat(ui): add design system foundation — tokens, 22 components, a11y audit"
+    }
+  ],
+  "lastModified": 1786492495,
+  "symbols": [
+    {
+      "endLine": 111,
+      "endOffset": 3385,
+      "kind": "function",
+      "name": "DropdownMenu",
+      "startLine": 18,
+      "startOffset": 379,
+      "symbolId": "ui/src/components/DropdownMenu.tsx::DropdownMenu::function"
+    },
+    {
+      "endLine": 9,
+      "endOffset": 244,
+      "kind": "interface",
+      "name": "DropdownItem",
+      "startLine": 2,
+      "startOffset": 105,
+      "symbolId": "ui/src/components/DropdownMenu.tsx::DropdownItem::interface"
+    }
+  ]
+}

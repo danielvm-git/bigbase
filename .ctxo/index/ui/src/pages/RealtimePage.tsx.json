@@ -1,0 +1,32 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 7,
+      "symbolId": "ui/src/pages/RealtimePage.tsx::RealtimePage::function"
+    }
+  ],
+  "contentHash": "250e91f9f3cc7bea651b804d2370501ca1d365817a7311cb570d0dbdad04d569",
+  "edges": [],
+  "file": "ui/src/pages/RealtimePage.tsx",
+  "intent": [
+    {
+      "date": "2026-08-11T13:42:44-03:00",
+      "hash": "6541bd284832987cb1b361f461b5ea86abccf31f",
+      "kind": "commit",
+      "message": "fix(ui): heading hierarchy + glyph aria-hidden (T000018)"
+    }
+  ],
+  "lastModified": 1786492495,
+  "symbols": [
+    {
+      "endLine": 131,
+      "endOffset": 5481,
+      "kind": "function",
+      "name": "RealtimePage",
+      "startLine": 13,
+      "startOffset": 218,
+      "symbolId": "ui/src/pages/RealtimePage.tsx::RealtimePage::function"
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "antiPatterns": [],
+  "complexity": [],
+  "contentHash": "9643efc1d76fba280140547387edf3ca813a4da171907a3494a77dc18dcb26e6",
+  "edges": [],
+  "file": "tests/e2e/storage-ui.spec.ts",
+  "intent": [
+    {
+      "date": "2026-07-11T22:16:50-03:00",
+      "hash": "27bffe302e8dd41263e2a02de23884a2af58ef05",
+      "kind": "commit",
+      "message": "test(browser-e2e): add browser-level UI E2E coverage for all 22 SPA routes"
+    }
+  ],
+  "lastModified": 1786492495,
+  "symbols": []
+}

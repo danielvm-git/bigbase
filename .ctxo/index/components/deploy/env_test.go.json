@@ -1,0 +1,30 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 6,
+      "symbolId": "components/deploy/env_test.go::TestBuildEnvSetsHomeAndNpmCache::function"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/deploy/env_test.go::TestBuildEnvSkipsPuppeteerDownload::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/deploy/env_test.go::TestBuildEnvEmptyHomePreservesEnviron::function"
+    }
+  ],
+  "contentHash": "97e33b846d7f12adc6a0f31bfaaf6533b6be0fb522731cf0d86198ca6c633b47",
+  "edges": [],
+  "file": "components/deploy/env_test.go",
+  "intent": [
+    {
+      "date": "2026-06-20T11:58:40-03:00",
+      "hash": "9e87f6fe8ecb7542397f77341841109dbf5752a0",
+      "kind": "commit",
+      "message": "feat(deploy): build resilience — Puppeteer skip, build script validation, stdout capture, failure stats"
+    }
+  ],
+  "lastModified": 1786492494,
+  "symbols": []
+}

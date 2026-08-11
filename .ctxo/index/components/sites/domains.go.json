@@ -1,0 +1,467 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/sites/domains.go::newVerifyLimiter::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/sites/domains.go::verifyLimiter.allow::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/sites/domains.go::Sites.migrateDomains::method"
+    },
+    {
+      "cyclomatic": 8,
+      "symbolId": "components/sites/domains.go::Sites.handleDomains::method"
+    },
+    {
+      "cyclomatic": 7,
+      "symbolId": "components/sites/domains.go::Sites.listDomains::method"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/sites/domains.go::Sites.certStatusFor::method"
+    },
+    {
+      "cyclomatic": 5,
+      "symbolId": "components/sites/domains.go::certStatus::function"
+    },
+    {
+      "cyclomatic": 9,
+      "symbolId": "components/sites/domains.go::Sites.registerDomain::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/sites/domains.go::Sites.siteExists::method"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/sites/domains.go::Sites.deleteDomain::method"
+    },
+    {
+      "cyclomatic": 6,
+      "symbolId": "components/sites/domains.go::Sites.verifyDomain::method"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/sites/domains.go::checkDNSTXT::function"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/sites/domains.go::isUniqueViolation::function"
+    }
+  ],
+  "contentHash": "96b459572eddb35f7811e00ae5f2b89e13e8395b46177fab17e67f24cd53df19",
+  "edges": [
+    {
+      "from": "components/sites/domains.go::newVerifyLimiter::function",
+      "kind": "uses",
+      "to": "components/sites/domains.go::verifyLimiter::class"
+    },
+    {
+      "from": "components/sites/domains.go::verifyLimiter.allow::method",
+      "kind": "uses",
+      "to": "components/sites/domains.go::verifyLimiter::class"
+    },
+    {
+      "from": "components/sites/domains.go::Sites.migrateDomains::method",
+      "kind": "uses",
+      "to": "components/sites/sites.go::Sites::class"
+    },
+    {
+      "from": "components/sites/domains.go::Sites.migrateDomains::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::DBer.Migrate::method"
+    },
+    {
+      "from": "components/sites/domains.go::Sites.migrateDomains::method",
+      "kind": "uses",
+      "to": "components/sites/domains.go::domainsMigration::variable"
+    },
+    {
+      "from": "components/sites/domains.go::Sites.handleDomains::method",
+      "kind": "uses",
+      "to": "components/sites/sites.go::Sites::class"
+    },
+    {
+      "from": "components/sites/domains.go::Sites.handleDomains::method",
+      "kind": "calls",
+      "to": "kernel/utilities.go::WriteJSON::function"
+    },
+    {
+      "from": "components/sites/domains.go::Sites.handleDomains::method",
+      "kind": "calls",
+      "to": "components/sites/sites.go::Sites.requireSiteOwnership::method"
+    },
+    {
+      "from": "components/sites/domains.go::Sites.handleDomains::method",
+      "kind": "calls",
+      "to": "components/sites/domains.go::Sites.listDomains::method"
+    },
+    {
+      "from": "components/sites/domains.go::Sites.handleDomains::method",
+      "kind": "calls",
+      "to": "components/sites/domains.go::Sites.registerDomain::method"
+    },
+    {
+      "from": "components/sites/domains.go::Sites.handleDomains::method",
+      "kind": "calls",
+      "to": "components/sites/domains.go::Sites.deleteDomain::method"
+    },
+    {
+      "from": "components/sites/domains.go::Sites.handleDomains::method",
+      "kind": "calls",
+      "to": "components/sites/domains.go::Sites.verifyDomain::method"
+    },
+    {
+      "from": "components/sites/domains.go::Sites.listDomains::method",
+      "kind": "uses",
+      "to": "components/sites/sites.go::Sites::class"
+    },
+    {
+      "from": "components/sites/domains.go::Sites.listDomains::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.QueryContext::method"
+    },
+    {
+      "from": "components/sites/domains.go::Sites.listDomains::method",
+      "kind": "calls",
+      "to": "kernel/component.go::Logger.Error::method"
+    },
+    {
+      "from": "components/sites/domains.go::Sites.listDomains::method",
+      "kind": "calls",
+      "to": "kernel/utilities.go::WriteJSON::function"
+    },
+    {
+      "from": "components/sites/domains.go::Sites.listDomains::method",
+      "kind": "uses",
+      "to": "components/sites/domains.go::SiteDomain::class"
+    },
+    {
+      "from": "components/sites/domains.go::Sites.listDomains::method",
+      "kind": "calls",
+      "to": "components/sites/domains.go::Sites.certStatusFor::method"
+    },
+    {
+      "from": "components/sites/domains.go::Sites.certStatusFor::method",
+      "kind": "uses",
+      "to": "components/sites/sites.go::Sites::class"
+    },
+    {
+      "from": "components/sites/domains.go::Sites.certStatusFor::method",
+      "kind": "calls",
+      "to": "components/sites/domains.go::certStatus::function"
+    },
+    {
+      "from": "components/sites/domains.go::certStatus::function",
+      "kind": "uses",
+      "to": "components/sites/domains.go::certWarnWindow::variable"
+    },
+    {
+      "from": "components/sites/domains.go::Sites.registerDomain::method",
+      "kind": "uses",
+      "to": "components/sites/sites.go::Sites::class"
+    },
+    {
+      "from": "components/sites/domains.go::Sites.registerDomain::method",
+      "kind": "calls",
+      "to": "kernel/utilities.go::WriteJSON::function"
+    },
+    {
+      "from": "components/sites/domains.go::Sites.registerDomain::method",
+      "kind": "uses",
+      "to": "components/sites/domains.go::domainRE::variable"
+    },
+    {
+      "from": "components/sites/domains.go::Sites.registerDomain::method",
+      "kind": "calls",
+      "to": "components/sites/domains.go::Sites.siteExists::method"
+    },
+    {
+      "from": "components/sites/domains.go::Sites.registerDomain::method",
+      "kind": "calls",
+      "to": "kernel/utilities.go::GenerateID::function"
+    },
+    {
+      "from": "components/sites/domains.go::Sites.registerDomain::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.ExecContext::method"
+    },
+    {
+      "from": "components/sites/domains.go::Sites.registerDomain::method",
+      "kind": "calls",
+      "to": "components/sites/domains.go::isUniqueViolation::function"
+    },
+    {
+      "from": "components/sites/domains.go::Sites.registerDomain::method",
+      "kind": "calls",
+      "to": "kernel/component.go::Logger.Error::method"
+    },
+    {
+      "from": "components/sites/domains.go::Sites.registerDomain::method",
+      "kind": "uses",
+      "to": "components/sites/domains.go::SiteDomain::class"
+    },
+    {
+      "from": "components/sites/domains.go::Sites.siteExists::method",
+      "kind": "uses",
+      "to": "components/sites/sites.go::Sites::class"
+    },
+    {
+      "from": "components/sites/domains.go::Sites.siteExists::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.QueryRowContext::method"
+    },
+    {
+      "from": "components/sites/domains.go::Sites.deleteDomain::method",
+      "kind": "uses",
+      "to": "components/sites/sites.go::Sites::class"
+    },
+    {
+      "from": "components/sites/domains.go::Sites.deleteDomain::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.ExecContext::method"
+    },
+    {
+      "from": "components/sites/domains.go::Sites.deleteDomain::method",
+      "kind": "calls",
+      "to": "kernel/component.go::Logger.Error::method"
+    },
+    {
+      "from": "components/sites/domains.go::Sites.deleteDomain::method",
+      "kind": "calls",
+      "to": "kernel/utilities.go::WriteJSON::function"
+    },
+    {
+      "from": "components/sites/domains.go::Sites.verifyDomain::method",
+      "kind": "uses",
+      "to": "components/sites/sites.go::Sites::class"
+    },
+    {
+      "from": "components/sites/domains.go::Sites.verifyDomain::method",
+      "kind": "calls",
+      "to": "components/sites/domains.go::verifyLimiter.allow::method"
+    },
+    {
+      "from": "components/sites/domains.go::Sites.verifyDomain::method",
+      "kind": "calls",
+      "to": "kernel/utilities.go::WriteJSON::function"
+    },
+    {
+      "from": "components/sites/domains.go::Sites.verifyDomain::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.QueryRowContext::method"
+    },
+    {
+      "from": "components/sites/domains.go::Sites.verifyDomain::method",
+      "kind": "calls",
+      "to": "components/sites/domains.go::checkDNSTXT::function"
+    },
+    {
+      "from": "components/sites/domains.go::Sites.verifyDomain::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.ExecContext::method"
+    },
+    {
+      "from": "components/sites/domains.go::Sites.verifyDomain::method",
+      "kind": "calls",
+      "to": "kernel/component.go::Logger.Warn::method"
+    }
+  ],
+  "file": "components/sites/domains.go",
+  "intent": [
+    {
+      "date": "2026-07-23T21:40:28-03:00",
+      "hash": "5527bebf25e56cadc764a8e2878b115e2ad097dd",
+      "kind": "commit",
+      "message": "fix(security): add org_id multi-tenant isolation to all site endpoints"
+    },
+    {
+      "date": "2026-07-10T14:46:55-03:00",
+      "hash": "36722e3d731d1da0179c0360d677bc6bdf2b3b19",
+      "kind": "commit",
+      "message": "fix(deploy): prevent manifest path traversal (CWE-22)"
+    },
+    {
+      "date": "2026-06-27T08:07:49-03:00",
+      "hash": "781e4e9f60a3c6496b91f4a5ddca9c7613518469",
+      "kind": "commit",
+      "message": "fix(e46): address 10 post-review findings on custom domains"
+    },
+    {
+      "date": "2026-06-27T00:52:49-03:00",
+      "hash": "cad59563567bd3e00e0d07c353ba6d216ebb3fbd",
+      "kind": "commit",
+      "message": "feat(ui): add custom domain management tab to SiteDetailPage (e46s03)"
+    }
+  ],
+  "lastModified": 1786492494,
+  "symbols": [
+    {
+      "endLine": 24,
+      "endOffset": 605,
+      "kind": "variable",
+      "name": "domainsMigration",
+      "startLine": 24,
+      "startOffset": 589,
+      "symbolId": "components/sites/domains.go::domainsMigration::variable"
+    },
+    {
+      "endLine": 37,
+      "endOffset": 1054,
+      "kind": "variable",
+      "name": "domainRE",
+      "startLine": 37,
+      "startOffset": 1046,
+      "symbolId": "components/sites/domains.go::domainRE::variable"
+    },
+    {
+      "endLine": 40,
+      "endOffset": 1262,
+      "kind": "variable",
+      "name": "certWarnWindow",
+      "startLine": 40,
+      "startOffset": 1248,
+      "symbolId": "components/sites/domains.go::certWarnWindow::variable"
+    },
+    {
+      "endLine": 53,
+      "endOffset": 1822,
+      "kind": "class",
+      "name": "SiteDomain",
+      "startLine": 42,
+      "startOffset": 1291,
+      "symbolId": "components/sites/domains.go::SiteDomain::class"
+    },
+    {
+      "endLine": 61,
+      "endOffset": 2087,
+      "kind": "class",
+      "name": "verifyLimiter",
+      "startLine": 57,
+      "startOffset": 1987,
+      "symbolId": "components/sites/domains.go::verifyLimiter::class"
+    },
+    {
+      "endLine": 65,
+      "endOffset": 2230,
+      "kind": "function",
+      "name": "newVerifyLimiter",
+      "startLine": 63,
+      "startOffset": 2089,
+      "symbolId": "components/sites/domains.go::newVerifyLimiter::function"
+    },
+    {
+      "endLine": 75,
+      "endOffset": 2439,
+      "kind": "method",
+      "name": "verifyLimiter.allow",
+      "startLine": 67,
+      "startOffset": 2232,
+      "symbolId": "components/sites/domains.go::verifyLimiter.allow::method"
+    },
+    {
+      "endLine": 79,
+      "endOffset": 2522,
+      "kind": "method",
+      "name": "Sites.migrateDomains",
+      "startLine": 77,
+      "startOffset": 2441,
+      "symbolId": "components/sites/domains.go::Sites.migrateDomains::method"
+    },
+    {
+      "endLine": 108,
+      "endOffset": 3585,
+      "kind": "method",
+      "name": "Sites.handleDomains",
+      "startLine": 81,
+      "startOffset": 2524,
+      "symbolId": "components/sites/domains.go::Sites.handleDomains::method"
+    },
+    {
+      "endLine": 152,
+      "endOffset": 5052,
+      "kind": "method",
+      "name": "Sites.listDomains",
+      "startLine": 110,
+      "startOffset": 3587,
+      "symbolId": "components/sites/domains.go::Sites.listDomains::method"
+    },
+    {
+      "endLine": 162,
+      "endOffset": 5428,
+      "kind": "method",
+      "name": "Sites.certStatusFor",
+      "startLine": 156,
+      "startOffset": 5211,
+      "symbolId": "components/sites/domains.go::Sites.certStatusFor::method"
+    },
+    {
+      "endLine": 178,
+      "endOffset": 5861,
+      "kind": "function",
+      "name": "certStatus",
+      "startLine": 165,
+      "startOffset": 5511,
+      "symbolId": "components/sites/domains.go::certStatus::function"
+    },
+    {
+      "endLine": 241,
+      "endOffset": 7972,
+      "kind": "method",
+      "name": "Sites.registerDomain",
+      "startLine": 180,
+      "startOffset": 5863,
+      "symbolId": "components/sites/domains.go::Sites.registerDomain::method"
+    },
+    {
+      "endLine": 247,
+      "endOffset": 8166,
+      "kind": "method",
+      "name": "Sites.siteExists",
+      "startLine": 243,
+      "startOffset": 7974,
+      "symbolId": "components/sites/domains.go::Sites.siteExists::method"
+    },
+    {
+      "endLine": 274,
+      "endOffset": 9049,
+      "kind": "method",
+      "name": "Sites.deleteDomain",
+      "startLine": 249,
+      "startOffset": 8168,
+      "symbolId": "components/sites/domains.go::Sites.deleteDomain::method"
+    },
+    {
+      "endLine": 317,
+      "endOffset": 10495,
+      "kind": "method",
+      "name": "Sites.verifyDomain",
+      "startLine": 276,
+      "startOffset": 9051,
+      "symbolId": "components/sites/domains.go::Sites.verifyDomain::method"
+    },
+    {
+      "endLine": 331,
+      "endOffset": 10839,
+      "kind": "function",
+      "name": "checkDNSTXT",
+      "startLine": 320,
+      "startOffset": 10587,
+      "symbolId": "components/sites/domains.go::checkDNSTXT::function"
+    },
+    {
+      "endLine": 336,
+      "endOffset": 11041,
+      "kind": "function",
+      "name": "isUniqueViolation",
+      "startLine": 334,
+      "startOffset": 10919,
+      "symbolId": "components/sites/domains.go::isUniqueViolation::function"
+    }
+  ]
+}

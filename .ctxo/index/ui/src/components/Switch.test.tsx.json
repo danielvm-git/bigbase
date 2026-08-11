@@ -1,0 +1,23 @@
+{
+  "antiPatterns": [],
+  "complexity": [],
+  "contentHash": "5b7ba6489d33cd0beb0e927899e6c03caaacbdd1df6a1148375c80203ffd3358",
+  "edges": [
+    {
+      "from": "ui/src/components/Switch.test.tsx::Switch.test::variable",
+      "kind": "imports",
+      "to": "ui/src/components/Switch.ts::Switch::class"
+    }
+  ],
+  "file": "ui/src/components/Switch.test.tsx",
+  "intent": [
+    {
+      "date": "2026-06-28T17:11:02-03:00",
+      "hash": "6fb588e63f79ce75dad9a27c5cd8dc0bf796f27c",
+      "kind": "commit",
+      "message": "feat(ui): add design system foundation — tokens, 22 components, a11y audit"
+    }
+  ],
+  "lastModified": 1786492495,
+  "symbols": []
+}

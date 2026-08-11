@@ -1,0 +1,102 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 9,
+      "symbolId": "components/deploy/domain_routing.go::Deploy.RegisterCustomDomainHosts::method"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/deploy/domain_routing.go::Deploy.ActivateCustomDomain::method"
+    }
+  ],
+  "contentHash": "fc2f619ea54749de64e565e05f3d6a112dee8c280ed581252a9fd00731eae131",
+  "edges": [
+    {
+      "from": "components/deploy/domain_routing.go::Deploy.RegisterCustomDomainHosts::method",
+      "kind": "uses",
+      "to": "components/deploy/deploy.go::Deploy::class"
+    },
+    {
+      "from": "components/deploy/domain_routing.go::Deploy.RegisterCustomDomainHosts::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.QueryContext::method"
+    },
+    {
+      "from": "components/deploy/domain_routing.go::Deploy.RegisterCustomDomainHosts::method",
+      "kind": "calls",
+      "to": "components/deploy/env_vars.go::isNoSuchTable::function"
+    },
+    {
+      "from": "components/deploy/domain_routing.go::Deploy.RegisterCustomDomainHosts::method",
+      "kind": "calls",
+      "to": "kernel/component.go::Logger.Warn::method"
+    },
+    {
+      "from": "components/deploy/domain_routing.go::Deploy.RegisterCustomDomainHosts::method",
+      "kind": "calls",
+      "to": "components/deploy/deploy.go::DeploymentHostRegistry.RegisterDeploymentHost::method"
+    },
+    {
+      "from": "components/deploy/domain_routing.go::Deploy.RegisterCustomDomainHosts::method",
+      "kind": "calls",
+      "to": "kernel/component.go::Logger.Info::method"
+    },
+    {
+      "from": "components/deploy/domain_routing.go::Deploy.ActivateCustomDomain::method",
+      "kind": "uses",
+      "to": "components/deploy/deploy.go::Deploy::class"
+    },
+    {
+      "from": "components/deploy/domain_routing.go::Deploy.ActivateCustomDomain::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.QueryRowContext::method"
+    },
+    {
+      "from": "components/deploy/domain_routing.go::Deploy.ActivateCustomDomain::method",
+      "kind": "calls",
+      "to": "components/deploy/deploy.go::DeploymentHostRegistry.RegisterDeploymentHost::method"
+    },
+    {
+      "from": "components/deploy/domain_routing.go::Deploy.ActivateCustomDomain::method",
+      "kind": "calls",
+      "to": "kernel/component.go::Logger.Info::method"
+    }
+  ],
+  "file": "components/deploy/domain_routing.go",
+  "intent": [
+    {
+      "date": "2026-06-27T08:07:49-03:00",
+      "hash": "781e4e9f60a3c6496b91f4a5ddca9c7613518469",
+      "kind": "commit",
+      "message": "fix(e46): address 10 post-review findings on custom domains"
+    },
+    {
+      "date": "2026-06-26T22:06:15-03:00",
+      "hash": "e84c60aed6a16d7b02beafd4a9a7da9e3934a5c6",
+      "kind": "commit",
+      "message": "feat(deploy): custom domain proxy routing for deployments (e46s01)"
+    }
+  ],
+  "lastModified": 1786492494,
+  "symbols": [
+    {
+      "endLine": 60,
+      "endOffset": 1775,
+      "kind": "method",
+      "name": "Deploy.RegisterCustomDomainHosts",
+      "startLine": 19,
+      "startOffset": 642,
+      "symbolId": "components/deploy/domain_routing.go::Deploy.RegisterCustomDomainHosts::method"
+    },
+    {
+      "endLine": 89,
+      "endOffset": 2931,
+      "kind": "method",
+      "name": "Deploy.ActivateCustomDomain",
+      "startLine": 67,
+      "startOffset": 2122,
+      "symbolId": "components/deploy/domain_routing.go::Deploy.ActivateCustomDomain::method"
+    }
+  ]
+}

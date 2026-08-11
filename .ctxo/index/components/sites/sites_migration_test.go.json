@@ -1,0 +1,26 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/sites/sites_migration_test.go::sourceFile::function"
+    },
+    {
+      "cyclomatic": 6,
+      "symbolId": "components/sites/sites_migration_test.go::TestSitesMigrationConstExtracted::function"
+    }
+  ],
+  "contentHash": "6d59bbf463757132c02d4d6cfd2950cb8f2b035fafa3c37f8046c8c46d6fe88a",
+  "edges": [],
+  "file": "components/sites/sites_migration_test.go",
+  "intent": [
+    {
+      "date": "2026-07-28T12:30:43-03:00",
+      "hash": "53ce677e204356ac44103f8ca0dbe67b00e098b8",
+      "kind": "commit",
+      "message": "test(sites): assert sitesMigration const is used by Start()"
+    }
+  ],
+  "lastModified": 1786492495,
+  "symbols": []
+}

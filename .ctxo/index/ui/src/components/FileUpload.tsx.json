@@ -1,0 +1,32 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 11,
+      "symbolId": "ui/src/components/FileUpload.tsx::FileUpload::function"
+    }
+  ],
+  "contentHash": "0e19a1ee37edcab0023bb3b768f6d4dd9c8e20396b8142396292b9a5aa6bcbc0",
+  "edges": [],
+  "file": "ui/src/components/FileUpload.tsx",
+  "intent": [
+    {
+      "date": "2026-06-28T17:11:02-03:00",
+      "hash": "6fb588e63f79ce75dad9a27c5cd8dc0bf796f27c",
+      "kind": "commit",
+      "message": "feat(ui): add design system foundation — tokens, 22 components, a11y audit"
+    }
+  ],
+  "lastModified": 1786492495,
+  "symbols": [
+    {
+      "endLine": 76,
+      "endOffset": 2384,
+      "kind": "function",
+      "name": "FileUpload",
+      "startLine": 11,
+      "startOffset": 222,
+      "symbolId": "ui/src/components/FileUpload.tsx::FileUpload::function"
+    }
+  ]
+}

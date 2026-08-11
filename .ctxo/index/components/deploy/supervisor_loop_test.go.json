@@ -1,0 +1,52 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/deploy/supervisor_loop_test.go::supervisorRegistry.RegisterDeploymentHost::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/deploy/supervisor_loop_test.go::supervisorRegistry.UnregisterDeploymentHost::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/deploy/supervisor_loop_test.go::newHarness::function"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/deploy/supervisor_loop_test.go::TestSupervisorRespawnsAfterBackoff::function"
+    },
+    {
+      "cyclomatic": 5,
+      "symbolId": "components/deploy/supervisor_loop_test.go::TestSupervisorCrashLoopDeregistersHost::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/deploy/supervisor_loop_test.go::TestSupervisorNoRespawnAfterStop::function"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/deploy/supervisor_loop_test.go::eventually::function"
+    }
+  ],
+  "contentHash": "f60910f4ac3462e89b34960ac63e392f144fdfe8e6acbd0e5ddaa01fafbcc60b",
+  "edges": [],
+  "file": "components/deploy/supervisor_loop_test.go",
+  "intent": [
+    {
+      "date": "2026-07-25T00:52:39-03:00",
+      "hash": "427417a5d8d01faf97e2056442547a9820ba71f3",
+      "kind": "commit",
+      "message": "fix(deploy,ci): fix CI flake in eventually() + decouple sqlite job from postgres (#172)"
+    },
+    {
+      "date": "2026-06-23T22:02:03-03:00",
+      "hash": "5a9dd7718233a72467f14dec300ed08168df619e",
+      "kind": "commit",
+      "message": "feat(deploy): Supervisor restart loop with crash-loop detection (e53s03)"
+    }
+  ],
+  "lastModified": 1786492494,
+  "symbols": []
+}

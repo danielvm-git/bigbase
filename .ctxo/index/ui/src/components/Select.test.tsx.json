@@ -1,0 +1,23 @@
+{
+  "antiPatterns": [],
+  "complexity": [],
+  "contentHash": "8f1642248b61a14df099a8a6f2cc51ee83c1c7068d1fb5c2159faa7163a113e2",
+  "edges": [
+    {
+      "from": "ui/src/components/Select.test.tsx::Select.test::variable",
+      "kind": "imports",
+      "to": "ui/src/components/Select.ts::Select::class"
+    }
+  ],
+  "file": "ui/src/components/Select.test.tsx",
+  "intent": [
+    {
+      "date": "2026-06-28T17:11:02-03:00",
+      "hash": "6fb588e63f79ce75dad9a27c5cd8dc0bf796f27c",
+      "kind": "commit",
+      "message": "feat(ui): add design system foundation — tokens, 22 components, a11y audit"
+    }
+  ],
+  "lastModified": 1786492495,
+  "symbols": []
+}

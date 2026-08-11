@@ -1,0 +1,38 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 20,
+      "symbolId": "ui/src/components/Input.tsx::Input::function"
+    }
+  ],
+  "contentHash": "f08e6abd01f4759849d3cd5d9c03fa248127f2d4da829caf263906f14bcd9ca1",
+  "edges": [],
+  "file": "ui/src/components/Input.tsx",
+  "intent": [
+    {
+      "date": "2026-08-11T13:43:58-03:00",
+      "hash": "b48a9e9efdf6a6eb00fef735b18752a057ba7f70",
+      "kind": "commit",
+      "message": "fix(ui): a11y for JsonTree, ThemePicker, Input (T000011/T000013/T000015)"
+    },
+    {
+      "date": "2026-07-10T20:39:36-03:00",
+      "hash": "db94b7c03f56600323aff8c9132e7d98185ff8b2",
+      "kind": "commit",
+      "message": "fix(ui): CopyButton silent failure + pre-existing ESLint cleanup"
+    }
+  ],
+  "lastModified": 1786492495,
+  "symbols": [
+    {
+      "endLine": 115,
+      "endOffset": 3653,
+      "kind": "function",
+      "name": "Input",
+      "startLine": 30,
+      "startOffset": 797,
+      "symbolId": "ui/src/components/Input.tsx::Input::function"
+    }
+  ]
+}

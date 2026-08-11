@@ -1,0 +1,30 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 8,
+      "symbolId": "components/api/scaffold_test.go::TestScaffoldDB::function"
+    },
+    {
+      "cyclomatic": 6,
+      "symbolId": "components/api/scaffold_test.go::TestScaffoldRepo::function"
+    },
+    {
+      "cyclomatic": 7,
+      "symbolId": "components/api/scaffold_test.go::TestScaffoldFunction::function"
+    }
+  ],
+  "contentHash": "01180fdeba598b0d312a69058e4cab2103b06ab4f2ce1784b0612996cd850495",
+  "edges": [],
+  "file": "components/api/scaffold_test.go",
+  "intent": [
+    {
+      "date": "2026-06-05T19:51:11-03:00",
+      "hash": "5dc3011a8bf1a23d5532faff56612e14cee9710b",
+      "kind": "commit",
+      "message": "feat(dx): e22s01+e22s02 onboarding checklist UI and 1-click scaffold API"
+    }
+  ],
+  "lastModified": 1786492494,
+  "symbols": []
+}

@@ -1,0 +1,23 @@
+{
+  "antiPatterns": [],
+  "complexity": [],
+  "contentHash": "ea5ef4bb80d2182cb6f6e719dd5a03f93f0298e98dd2fdc47f7f76bf5d01296b",
+  "edges": [
+    {
+      "from": "ui/src/components/CopyButton.test.tsx::CopyButton.test::variable",
+      "kind": "imports",
+      "to": "ui/src/components/CopyButton.ts::CopyButton::class"
+    }
+  ],
+  "file": "ui/src/components/CopyButton.test.tsx",
+  "intent": [
+    {
+      "date": "2026-06-28T17:11:02-03:00",
+      "hash": "6fb588e63f79ce75dad9a27c5cd8dc0bf796f27c",
+      "kind": "commit",
+      "message": "feat(ui): add design system foundation — tokens, 22 components, a11y audit"
+    }
+  ],
+  "lastModified": 1786492495,
+  "symbols": []
+}

@@ -1,0 +1,74 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/auth/store_inmemory_test.go::NewMapOTPStore::function"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/auth/store_inmemory_test.go::MapOTPStore.Store::method"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/auth/store_inmemory_test.go::MapOTPStore.Get::method"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/auth/store_inmemory_test.go::MapOTPStore.RecordAttempt::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/auth/store_inmemory_test.go::MapOTPStore.Delete::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/auth/store_inmemory_test.go::NewMapRateLimitStore::function"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/auth/store_inmemory_test.go::MapRateLimitStore.Increment::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/auth/store_inmemory_test.go::NewMapLoginLockoutStore::function"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/auth/store_inmemory_test.go::MapLoginLockoutStore.CheckLocked::method"
+    },
+    {
+      "cyclomatic": 5,
+      "symbolId": "components/auth/store_inmemory_test.go::MapLoginLockoutStore.RecordFailure::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/auth/store_inmemory_test.go::MapLoginLockoutStore.ClearFailures::method"
+    }
+  ],
+  "contentHash": "801ca8d6bcc621e58a1ae5b0e428bb0f62c856491ddc56a5e64e472d41f6a46f",
+  "edges": [],
+  "file": "components/auth/store_inmemory_test.go",
+  "intent": [
+    {
+      "date": "2026-07-10T15:57:21-03:00",
+      "hash": "15be74d6fcf308e44be1ade7549a379a2960a10e",
+      "kind": "commit",
+      "message": "fix(auth): add per-email login lockout after failed attempts (CWE-307)"
+    },
+    {
+      "date": "2026-07-08T16:55:36-03:00",
+      "hash": "6c369f00e06957990f1a58a99d33d00a771e81b1",
+      "kind": "commit",
+      "message": "chore(auth): address review findings for e56 OTP & audit log"
+    },
+    {
+      "date": "2026-07-08T16:08:02-03:00",
+      "hash": "b0c3e43108d3183b177f1206c67572b5076d4696",
+      "kind": "commit",
+      "message": "feat(auth): DB-backed OTP store & rate limiting with audit logging"
+    }
+  ],
+  "lastModified": 1786492494,
+  "symbols": []
+}

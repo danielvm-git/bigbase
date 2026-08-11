@@ -1,0 +1,32 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 12,
+      "symbolId": "ui/src/components/TagInput.tsx::TagInput::function"
+    }
+  ],
+  "contentHash": "d3f244fbaf2f8bbb94e5affe80793756abc2e1ddaa57bd1de5c0ae951ca4ac29",
+  "edges": [],
+  "file": "ui/src/components/TagInput.tsx",
+  "intent": [
+    {
+      "date": "2026-06-28T17:11:02-03:00",
+      "hash": "6fb588e63f79ce75dad9a27c5cd8dc0bf796f27c",
+      "kind": "commit",
+      "message": "feat(ui): add design system foundation — tokens, 22 components, a11y audit"
+    }
+  ],
+  "lastModified": 1786492495,
+  "symbols": [
+    {
+      "endLine": 66,
+      "endOffset": 1797,
+      "kind": "function",
+      "name": "TagInput",
+      "startLine": 10,
+      "startOffset": 200,
+      "symbolId": "ui/src/components/TagInput.tsx::TagInput::function"
+    }
+  ]
+}

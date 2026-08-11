@@ -1,0 +1,291 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/deploy/cache_api.go::Deploy.ensureCacheConfigTable::method"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/deploy/cache_api.go::Deploy.loadCacheConfig::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/deploy/cache_api.go::Deploy.registerCacheRoutes::method"
+    },
+    {
+      "cyclomatic": 6,
+      "symbolId": "components/deploy/cache_api.go::Deploy.handleCache::method"
+    },
+    {
+      "cyclomatic": 6,
+      "symbolId": "components/deploy/cache_api.go::Deploy.handleCachePrune::method"
+    },
+    {
+      "cyclomatic": 6,
+      "symbolId": "components/deploy/cache_api.go::Deploy.handleCacheConfig::method"
+    },
+    {
+      "cyclomatic": 9,
+      "symbolId": "components/deploy/cache_api.go::Deploy.handleSiteCache::method"
+    }
+  ],
+  "contentHash": "2a853a3d216ac7a382454914bee8a7c4eb8f1e22f7e7d9814598d22c6222911a",
+  "edges": [
+    {
+      "from": "components/deploy/cache_api.go::Deploy.ensureCacheConfigTable::method",
+      "kind": "uses",
+      "to": "components/deploy/deploy.go::Deploy::class"
+    },
+    {
+      "from": "components/deploy/cache_api.go::Deploy.ensureCacheConfigTable::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::DBer.Migrate::method"
+    },
+    {
+      "from": "components/deploy/cache_api.go::Deploy.ensureCacheConfigTable::method",
+      "kind": "uses",
+      "to": "components/deploy/cache_api.go::cacheConfigMigration::variable"
+    },
+    {
+      "from": "components/deploy/cache_api.go::Deploy.loadCacheConfig::method",
+      "kind": "uses",
+      "to": "components/deploy/deploy.go::Deploy::class"
+    },
+    {
+      "from": "components/deploy/cache_api.go::Deploy.loadCacheConfig::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.QueryRowContext::method"
+    },
+    {
+      "from": "components/deploy/cache_api.go::Deploy.loadCacheConfig::method",
+      "kind": "calls",
+      "to": "components/deploy/cache.go::Cache.SetMaxBytes::method"
+    },
+    {
+      "from": "components/deploy/cache_api.go::Deploy.registerCacheRoutes::method",
+      "kind": "uses",
+      "to": "components/deploy/deploy.go::Deploy::class"
+    },
+    {
+      "from": "components/deploy/cache_api.go::Deploy.handleCache::method",
+      "kind": "uses",
+      "to": "components/deploy/deploy.go::Deploy::class"
+    },
+    {
+      "from": "components/deploy/cache_api.go::Deploy.handleCache::method",
+      "kind": "calls",
+      "to": "components/deploy/cache.go::Cache.Stats::method"
+    },
+    {
+      "from": "components/deploy/cache_api.go::Deploy.handleCache::method",
+      "kind": "calls",
+      "to": "kernel/component.go::Logger.Error::method"
+    },
+    {
+      "from": "components/deploy/cache_api.go::Deploy.handleCache::method",
+      "kind": "calls",
+      "to": "kernel/utilities.go::WriteJSON::function"
+    },
+    {
+      "from": "components/deploy/cache_api.go::Deploy.handleCache::method",
+      "kind": "calls",
+      "to": "components/deploy/cache.go::Cache.MaxBytes::method"
+    },
+    {
+      "from": "components/deploy/cache_api.go::Deploy.handleCache::method",
+      "kind": "calls",
+      "to": "components/deploy/cache.go::Cache.Clear::method"
+    },
+    {
+      "from": "components/deploy/cache_api.go::Deploy.handleCachePrune::method",
+      "kind": "uses",
+      "to": "components/deploy/deploy.go::Deploy::class"
+    },
+    {
+      "from": "components/deploy/cache_api.go::Deploy.handleCachePrune::method",
+      "kind": "calls",
+      "to": "kernel/utilities.go::WriteJSON::function"
+    },
+    {
+      "from": "components/deploy/cache_api.go::Deploy.handleCachePrune::method",
+      "kind": "uses",
+      "to": "components/deploy/cache_api.go::defaultPruneDays::variable"
+    },
+    {
+      "from": "components/deploy/cache_api.go::Deploy.handleCachePrune::method",
+      "kind": "calls",
+      "to": "components/deploy/cache.go::Cache.Prune::method"
+    },
+    {
+      "from": "components/deploy/cache_api.go::Deploy.handleCachePrune::method",
+      "kind": "calls",
+      "to": "kernel/component.go::Logger.Error::method"
+    },
+    {
+      "from": "components/deploy/cache_api.go::Deploy.handleCacheConfig::method",
+      "kind": "uses",
+      "to": "components/deploy/deploy.go::Deploy::class"
+    },
+    {
+      "from": "components/deploy/cache_api.go::Deploy.handleCacheConfig::method",
+      "kind": "calls",
+      "to": "kernel/utilities.go::WriteJSON::function"
+    },
+    {
+      "from": "components/deploy/cache_api.go::Deploy.handleCacheConfig::method",
+      "kind": "calls",
+      "to": "components/deploy/cache_api.go::Deploy.ensureCacheConfigTable::method"
+    },
+    {
+      "from": "components/deploy/cache_api.go::Deploy.handleCacheConfig::method",
+      "kind": "calls",
+      "to": "kernel/component.go::Logger.Error::method"
+    },
+    {
+      "from": "components/deploy/cache_api.go::Deploy.handleCacheConfig::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.ExecContext::method"
+    },
+    {
+      "from": "components/deploy/cache_api.go::Deploy.handleCacheConfig::method",
+      "kind": "calls",
+      "to": "components/deploy/cache.go::Cache.SetMaxBytes::method"
+    },
+    {
+      "from": "components/deploy/cache_api.go::Deploy.handleSiteCache::method",
+      "kind": "uses",
+      "to": "components/deploy/deploy.go::Deploy::class"
+    },
+    {
+      "from": "components/deploy/cache_api.go::Deploy.handleSiteCache::method",
+      "kind": "calls",
+      "to": "kernel/utilities.go::WriteJSON::function"
+    },
+    {
+      "from": "components/deploy/cache_api.go::Deploy.handleSiteCache::method",
+      "kind": "calls",
+      "to": "components/deploy/gateway.go::Deploy.verifySiteOwnership::method"
+    },
+    {
+      "from": "components/deploy/cache_api.go::Deploy.handleSiteCache::method",
+      "kind": "calls",
+      "to": "components/deploy/cache.go::Cache.SiteEntries::method"
+    },
+    {
+      "from": "components/deploy/cache_api.go::Deploy.handleSiteCache::method",
+      "kind": "calls",
+      "to": "kernel/component.go::Logger.Error::method"
+    },
+    {
+      "from": "components/deploy/cache_api.go::Deploy.handleSiteCache::method",
+      "kind": "calls",
+      "to": "components/deploy/cache.go::Cache.PurgeSite::method"
+    }
+  ],
+  "file": "components/deploy/cache_api.go",
+  "intent": [
+    {
+      "date": "2026-07-29T00:11:14-03:00",
+      "hash": "78d098f2cf6c87b5f85522a0a88070099b946fd1",
+      "kind": "commit",
+      "message": "fix(deploy): scope site build-cache endpoint by org (refs #180)"
+    },
+    {
+      "date": "2026-07-10T14:46:55-03:00",
+      "hash": "36722e3d731d1da0179c0360d677bc6bdf2b3b19",
+      "kind": "commit",
+      "message": "fix(deploy): prevent manifest path traversal (CWE-22)"
+    },
+    {
+      "date": "2026-06-25T07:08:31-03:00",
+      "hash": "a173b3f7599a22033ba71537b28f17950a32a8de",
+      "kind": "commit",
+      "message": "feat(deploy): cache management UI — per-site tab + global panel (e42s02) (#48)"
+    }
+  ],
+  "lastModified": 1786492494,
+  "symbols": [
+    {
+      "endLine": 17,
+      "endOffset": 334,
+      "kind": "variable",
+      "name": "cacheConfigMigration",
+      "startLine": 17,
+      "startOffset": 314,
+      "symbolId": "components/deploy/cache_api.go::cacheConfigMigration::variable"
+    },
+    {
+      "endLine": 22,
+      "endOffset": 481,
+      "kind": "variable",
+      "name": "defaultPruneDays",
+      "startLine": 22,
+      "startOffset": 465,
+      "symbolId": "components/deploy/cache_api.go::defaultPruneDays::variable"
+    },
+    {
+      "endLine": 27,
+      "endOffset": 639,
+      "kind": "method",
+      "name": "Deploy.ensureCacheConfigTable",
+      "startLine": 25,
+      "startOffset": 545,
+      "symbolId": "components/deploy/cache_api.go::Deploy.ensureCacheConfigTable::method"
+    },
+    {
+      "endLine": 41,
+      "endOffset": 1148,
+      "kind": "method",
+      "name": "Deploy.loadCacheConfig",
+      "startLine": 31,
+      "startOffset": 807,
+      "symbolId": "components/deploy/cache_api.go::Deploy.loadCacheConfig::method"
+    },
+    {
+      "endLine": 49,
+      "endOffset": 1522,
+      "kind": "method",
+      "name": "Deploy.registerCacheRoutes",
+      "startLine": 44,
+      "startOffset": 1220,
+      "symbolId": "components/deploy/cache_api.go::Deploy.registerCacheRoutes::method"
+    },
+    {
+      "endLine": 76,
+      "endOffset": 2525,
+      "kind": "method",
+      "name": "Deploy.handleCache",
+      "startLine": 52,
+      "startOffset": 1595,
+      "symbolId": "components/deploy/cache_api.go::Deploy.handleCache::method"
+    },
+    {
+      "endLine": 110,
+      "endOffset": 3800,
+      "kind": "method",
+      "name": "Deploy.handleCachePrune",
+      "startLine": 79,
+      "startOffset": 2600,
+      "symbolId": "components/deploy/cache_api.go::Deploy.handleCachePrune::method"
+    },
+    {
+      "endLine": 148,
+      "endOffset": 5335,
+      "kind": "method",
+      "name": "Deploy.handleCacheConfig",
+      "startLine": 113,
+      "startOffset": 3870,
+      "symbolId": "components/deploy/cache_api.go::Deploy.handleCacheConfig::method"
+    },
+    {
+      "endLine": 196,
+      "endOffset": 7099,
+      "kind": "method",
+      "name": "Deploy.handleSiteCache",
+      "startLine": 151,
+      "startOffset": 5411,
+      "symbolId": "components/deploy/cache_api.go::Deploy.handleSiteCache::method"
+    }
+  ]
+}

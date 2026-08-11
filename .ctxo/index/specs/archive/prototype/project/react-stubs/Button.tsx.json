@@ -1,0 +1,42 @@
+{
+  "antiPatterns": [],
+  "complexity": [],
+  "contentHash": "1d255859ed10afcd68e64be4dff3bf2ef2bf9dbccab1cc0a4c077cdf0bdeec9a",
+  "edges": [
+    {
+      "from": "specs/archive/prototype/project/react-stubs/Button.tsx::ButtonProps::interface",
+      "kind": "imports",
+      "to": "specs/archive/prototype/project/react-stubs/tokens.ts::ButtonVariant::type",
+      "typeOnly": true
+    },
+    {
+      "from": "specs/archive/prototype/project/react-stubs/Button.tsx::ButtonProps::interface",
+      "kind": "imports",
+      "to": "specs/archive/prototype/project/react-stubs/tokens.ts::ButtonSize::type",
+      "typeOnly": true
+    }
+  ],
+  "file": "specs/archive/prototype/project/react-stubs/Button.tsx",
+  "intent": [],
+  "lastModified": 1786492495,
+  "symbols": [
+    {
+      "endLine": 17,
+      "endOffset": 663,
+      "kind": "interface",
+      "name": "ButtonProps",
+      "startLine": 3,
+      "startOffset": 103,
+      "symbolId": "specs/archive/prototype/project/react-stubs/Button.tsx::ButtonProps::interface"
+    },
+    {
+      "endLine": 50,
+      "endOffset": 1887,
+      "kind": "variable",
+      "name": "Button",
+      "startLine": 25,
+      "startOffset": 975,
+      "symbolId": "specs/archive/prototype/project/react-stubs/Button.tsx::Button::variable"
+    }
+  ]
+}

@@ -1,0 +1,288 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/api/envvars.go::API.EnvVarHandler::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/api/envvars.go::API.ensureEnvVarsTable::method"
+    },
+    {
+      "cyclomatic": 6,
+      "symbolId": "components/api/envvars.go::API.listEnvVars::method"
+    },
+    {
+      "cyclomatic": 8,
+      "symbolId": "components/api/envvars.go::API.createEnvVar::method"
+    },
+    {
+      "cyclomatic": 5,
+      "symbolId": "components/api/envvars.go::API.deleteEnvVar::method"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/api/envvars.go::loadEncryptionKey::function"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/api/envvars.go::aesGCMEncrypt::function"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/api/envvars.go::AESGCMEncryptExported::function"
+    },
+    {
+      "cyclomatic": 6,
+      "symbolId": "components/api/envvars.go::AESGCMDecrypt::function"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/api/envvars.go::isValidEnvVarName::function"
+    }
+  ],
+  "contentHash": "2cff0a716741a1362e868345096cf1ab750c347b0b200b6109ab06869073d7e8",
+  "edges": [
+    {
+      "from": "components/api/envvars.go::API.EnvVarHandler::method",
+      "kind": "uses",
+      "to": "components/api/api.go::API::class"
+    },
+    {
+      "from": "components/api/envvars.go::API.ensureEnvVarsTable::method",
+      "kind": "uses",
+      "to": "components/api/api.go::API::class"
+    },
+    {
+      "from": "components/api/envvars.go::API.ensureEnvVarsTable::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::DBer.Migrate::method"
+    },
+    {
+      "from": "components/api/envvars.go::API.ensureEnvVarsTable::method",
+      "kind": "uses",
+      "to": "components/api/envvars.go::envVarMigration::variable"
+    },
+    {
+      "from": "components/api/envvars.go::API.listEnvVars::method",
+      "kind": "uses",
+      "to": "components/api/api.go::API::class"
+    },
+    {
+      "from": "components/api/envvars.go::API.listEnvVars::method",
+      "kind": "calls",
+      "to": "components/api/envvars.go::API.ensureEnvVarsTable::method"
+    },
+    {
+      "from": "components/api/envvars.go::API.listEnvVars::method",
+      "kind": "calls",
+      "to": "kernel/component.go::Logger.Error::method"
+    },
+    {
+      "from": "components/api/envvars.go::API.listEnvVars::method",
+      "kind": "calls",
+      "to": "kernel/utilities.go::WriteJSON::function"
+    },
+    {
+      "from": "components/api/envvars.go::API.listEnvVars::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.QueryContext::method"
+    },
+    {
+      "from": "components/api/envvars.go::API.listEnvVars::method",
+      "kind": "uses",
+      "to": "components/api/envvars.go::envVarRow::class"
+    },
+    {
+      "from": "components/api/envvars.go::API.createEnvVar::method",
+      "kind": "uses",
+      "to": "components/api/api.go::API::class"
+    },
+    {
+      "from": "components/api/envvars.go::API.createEnvVar::method",
+      "kind": "calls",
+      "to": "components/api/envvars.go::API.ensureEnvVarsTable::method"
+    },
+    {
+      "from": "components/api/envvars.go::API.createEnvVar::method",
+      "kind": "calls",
+      "to": "kernel/component.go::Logger.Error::method"
+    },
+    {
+      "from": "components/api/envvars.go::API.createEnvVar::method",
+      "kind": "calls",
+      "to": "kernel/utilities.go::WriteJSON::function"
+    },
+    {
+      "from": "components/api/envvars.go::API.createEnvVar::method",
+      "kind": "calls",
+      "to": "components/api/envvars.go::isValidEnvVarName::function"
+    },
+    {
+      "from": "components/api/envvars.go::API.createEnvVar::method",
+      "kind": "calls",
+      "to": "components/api/envvars.go::loadEncryptionKey::function"
+    },
+    {
+      "from": "components/api/envvars.go::API.createEnvVar::method",
+      "kind": "calls",
+      "to": "components/api/envvars.go::aesGCMEncrypt::function"
+    },
+    {
+      "from": "components/api/envvars.go::API.createEnvVar::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.ExecContext::method"
+    },
+    {
+      "from": "components/api/envvars.go::API.deleteEnvVar::method",
+      "kind": "uses",
+      "to": "components/api/api.go::API::class"
+    },
+    {
+      "from": "components/api/envvars.go::API.deleteEnvVar::method",
+      "kind": "calls",
+      "to": "components/api/envvars.go::API.ensureEnvVarsTable::method"
+    },
+    {
+      "from": "components/api/envvars.go::API.deleteEnvVar::method",
+      "kind": "calls",
+      "to": "kernel/component.go::Logger.Error::method"
+    },
+    {
+      "from": "components/api/envvars.go::API.deleteEnvVar::method",
+      "kind": "calls",
+      "to": "kernel/utilities.go::WriteJSON::function"
+    },
+    {
+      "from": "components/api/envvars.go::API.deleteEnvVar::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.ExecContext::method"
+    },
+    {
+      "from": "components/api/envvars.go::AESGCMEncryptExported::function",
+      "kind": "calls",
+      "to": "components/api/envvars.go::aesGCMEncrypt::function"
+    }
+  ],
+  "file": "components/api/envvars.go",
+  "intent": [
+    {
+      "date": "2026-07-10T14:46:55-03:00",
+      "hash": "36722e3d731d1da0179c0360d677bc6bdf2b3b19",
+      "kind": "commit",
+      "message": "fix(deploy): prevent manifest path traversal (CWE-22)"
+    }
+  ],
+  "lastModified": 1786492494,
+  "symbols": [
+    {
+      "endLine": 20,
+      "endOffset": 228,
+      "kind": "variable",
+      "name": "envVarMigration",
+      "startLine": 20,
+      "startOffset": 213,
+      "symbolId": "components/api/envvars.go::envVarMigration::variable"
+    },
+    {
+      "endLine": 35,
+      "endOffset": 815,
+      "kind": "method",
+      "name": "API.EnvVarHandler",
+      "startLine": 29,
+      "startOffset": 582,
+      "symbolId": "components/api/envvars.go::API.EnvVarHandler::method"
+    },
+    {
+      "endLine": 39,
+      "endOffset": 899,
+      "kind": "method",
+      "name": "API.ensureEnvVarsTable",
+      "startLine": 37,
+      "startOffset": 817,
+      "symbolId": "components/api/envvars.go::API.ensureEnvVarsTable::method"
+    },
+    {
+      "endLine": 45,
+      "endOffset": 1026,
+      "kind": "class",
+      "name": "envVarRow",
+      "startLine": 41,
+      "startOffset": 906,
+      "symbolId": "components/api/envvars.go::envVarRow::class"
+    },
+    {
+      "endLine": 81,
+      "endOffset": 2308,
+      "kind": "method",
+      "name": "API.listEnvVars",
+      "startLine": 47,
+      "startOffset": 1028,
+      "symbolId": "components/api/envvars.go::API.listEnvVars::method"
+    },
+    {
+      "endLine": 136,
+      "endOffset": 4233,
+      "kind": "method",
+      "name": "API.createEnvVar",
+      "startLine": 83,
+      "startOffset": 2310,
+      "symbolId": "components/api/envvars.go::API.createEnvVar::method"
+    },
+    {
+      "endLine": 166,
+      "endOffset": 5278,
+      "kind": "method",
+      "name": "API.deleteEnvVar",
+      "startLine": 138,
+      "startOffset": 4235,
+      "symbolId": "components/api/envvars.go::API.deleteEnvVar::method"
+    },
+    {
+      "endLine": 182,
+      "endOffset": 5772,
+      "kind": "function",
+      "name": "loadEncryptionKey",
+      "startLine": 169,
+      "startOffset": 5377,
+      "symbolId": "components/api/envvars.go::loadEncryptionKey::function"
+    },
+    {
+      "endLine": 200,
+      "endOffset": 6408,
+      "kind": "function",
+      "name": "aesGCMEncrypt",
+      "startLine": 185,
+      "startOffset": 5866,
+      "symbolId": "components/api/envvars.go::aesGCMEncrypt::function"
+    },
+    {
+      "endLine": 205,
+      "endOffset": 6603,
+      "kind": "function",
+      "name": "AESGCMEncryptExported",
+      "startLine": 203,
+      "startOffset": 6489,
+      "symbolId": "components/api/envvars.go::AESGCMEncryptExported::function"
+    },
+    {
+      "endLine": 230,
+      "endOffset": 7378,
+      "kind": "function",
+      "name": "AESGCMDecrypt",
+      "startLine": 208,
+      "startOffset": 6689,
+      "symbolId": "components/api/envvars.go::AESGCMDecrypt::function"
+    },
+    {
+      "endLine": 242,
+      "endOffset": 7600,
+      "kind": "function",
+      "name": "isValidEnvVarName",
+      "startLine": 232,
+      "startOffset": 7380,
+      "symbolId": "components/api/envvars.go::isValidEnvVarName::function"
+    }
+  ]
+}

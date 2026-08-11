@@ -1,0 +1,71 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 25,
+      "symbolId": "ui/src/hooks/useBuildLogs.ts::useBuildLogs::function"
+    }
+  ],
+  "contentHash": "45545096f4e5a3b36713ea6b8a0d5dc28038efad1af5aacfb525eb3c9b37cfcb",
+  "edges": [],
+  "file": "ui/src/hooks/useBuildLogs.ts",
+  "intent": [
+    {
+      "date": "2026-07-10T20:39:36-03:00",
+      "hash": "db94b7c03f56600323aff8c9132e7d98185ff8b2",
+      "kind": "commit",
+      "message": "fix(ui): CopyButton silent failure + pre-existing ESLint cleanup"
+    },
+    {
+      "date": "2026-06-21T20:22:36-03:00",
+      "hash": "b8acd65841394e3ed2ec464a8458c39a0219e9f4",
+      "kind": "commit",
+      "message": "feat(ui): enhance StreamLog with terminal toolbar, search, copy, timestamps, and ANSI color support"
+    },
+    {
+      "date": "2026-06-21T20:20:29-03:00",
+      "hash": "608e5a7a0cd5ffc54a23446f64f2150aaa2485a8",
+      "kind": "commit",
+      "message": "feat(ui): add WebSocket streaming to useBuildLogs hook with isStreaming state"
+    },
+    {
+      "date": "2026-06-19T15:32:38-03:00",
+      "hash": "8ce417391d038cce5f8756a41220f8be87b3eb84",
+      "kind": "commit",
+      "message": "fix(ui): fix build logs URL from /api/deployments to /api/deploy"
+    },
+    {
+      "date": "2026-06-12T19:40:09-03:00",
+      "hash": "670460601bdcbd5a72dfb21f475ab3b1f336a58a",
+      "kind": "commit",
+      "message": "feat(deploy,sites,proxy): implement site build and request logs"
+    },
+    {
+      "date": "2026-06-12T18:23:32-03:00",
+      "hash": "c9b75a516e2849adc92a44875ba458177e9a302f",
+      "kind": "commit",
+      "message": "feat(ui): add useBuildLogs hook for fetching deployment logs"
+    }
+  ],
+  "lastModified": 1786492495,
+  "symbols": [
+    {
+      "endLine": 114,
+      "endOffset": 3154,
+      "kind": "function",
+      "name": "useBuildLogs",
+      "startLine": 10,
+      "startOffset": 214,
+      "symbolId": "ui/src/hooks/useBuildLogs.ts::useBuildLogs::function"
+    },
+    {
+      "endLine": 8,
+      "endOffset": 212,
+      "kind": "interface",
+      "name": "BuildLogResponse",
+      "startLine": 2,
+      "startOffset": 66,
+      "symbolId": "ui/src/hooks/useBuildLogs.ts::BuildLogResponse::interface"
+    }
+  ]
+}

@@ -1,0 +1,167 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/auth/orgs.go::Auth.CreateOrg::method"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/auth/orgs.go::Auth.GetOrgByID::method"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/auth/orgs.go::Auth.ListOrgsByOwner::method"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/auth/orgs.go::Auth.UpdateOrg::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/auth/orgs.go::Auth.DeleteOrg::method"
+    }
+  ],
+  "contentHash": "2dd2f003a83ab79f52ae275cf63dcc4d1a0ee361a06660d66d6a057941782639",
+  "edges": [
+    {
+      "from": "components/auth/orgs.go::Auth.CreateOrg::method",
+      "kind": "uses",
+      "to": "components/auth/auth.go::Auth::class"
+    },
+    {
+      "from": "components/auth/orgs.go::Auth.CreateOrg::method",
+      "kind": "uses",
+      "to": "components/auth/orgs.go::Organization::class"
+    },
+    {
+      "from": "components/auth/orgs.go::Auth.CreateOrg::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.ExecContext::method"
+    },
+    {
+      "from": "components/auth/orgs.go::Auth.CreateOrg::method",
+      "kind": "calls",
+      "to": "components/auth/orgs.go::Auth.GetOrgByID::method"
+    },
+    {
+      "from": "components/auth/orgs.go::Auth.GetOrgByID::method",
+      "kind": "uses",
+      "to": "components/auth/auth.go::Auth::class"
+    },
+    {
+      "from": "components/auth/orgs.go::Auth.GetOrgByID::method",
+      "kind": "uses",
+      "to": "components/auth/orgs.go::Organization::class"
+    },
+    {
+      "from": "components/auth/orgs.go::Auth.GetOrgByID::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.QueryRowContext::method"
+    },
+    {
+      "from": "components/auth/orgs.go::Auth.ListOrgsByOwner::method",
+      "kind": "uses",
+      "to": "components/auth/auth.go::Auth::class"
+    },
+    {
+      "from": "components/auth/orgs.go::Auth.ListOrgsByOwner::method",
+      "kind": "uses",
+      "to": "components/auth/orgs.go::Organization::class"
+    },
+    {
+      "from": "components/auth/orgs.go::Auth.ListOrgsByOwner::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.QueryContext::method"
+    },
+    {
+      "from": "components/auth/orgs.go::Auth.UpdateOrg::method",
+      "kind": "uses",
+      "to": "components/auth/auth.go::Auth::class"
+    },
+    {
+      "from": "components/auth/orgs.go::Auth.UpdateOrg::method",
+      "kind": "uses",
+      "to": "components/auth/orgs.go::Organization::class"
+    },
+    {
+      "from": "components/auth/orgs.go::Auth.UpdateOrg::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.ExecContext::method"
+    },
+    {
+      "from": "components/auth/orgs.go::Auth.UpdateOrg::method",
+      "kind": "calls",
+      "to": "components/auth/orgs.go::Auth.GetOrgByID::method"
+    },
+    {
+      "from": "components/auth/orgs.go::Auth.DeleteOrg::method",
+      "kind": "uses",
+      "to": "components/auth/auth.go::Auth::class"
+    },
+    {
+      "from": "components/auth/orgs.go::Auth.DeleteOrg::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.ExecContext::method"
+    }
+  ],
+  "file": "components/auth/orgs.go",
+  "intent": [],
+  "lastModified": 1786492494,
+  "symbols": [
+    {
+      "endLine": 18,
+      "endOffset": 352,
+      "kind": "class",
+      "name": "Organization",
+      "startLine": 11,
+      "startOffset": 123,
+      "symbolId": "components/auth/orgs.go::Organization::class"
+    },
+    {
+      "endLine": 40,
+      "endOffset": 1072,
+      "kind": "method",
+      "name": "Auth.CreateOrg",
+      "startLine": 22,
+      "startOffset": 484,
+      "symbolId": "components/auth/orgs.go::Auth.CreateOrg::method"
+    },
+    {
+      "endLine": 59,
+      "endOffset": 1661,
+      "kind": "method",
+      "name": "Auth.GetOrgByID",
+      "startLine": 43,
+      "startOffset": 1144,
+      "symbolId": "components/auth/orgs.go::Auth.GetOrgByID::method"
+    },
+    {
+      "endLine": 83,
+      "endOffset": 2433,
+      "kind": "method",
+      "name": "Auth.ListOrgsByOwner",
+      "startLine": 62,
+      "startOffset": 1733,
+      "symbolId": "components/auth/orgs.go::Auth.ListOrgsByOwner::method"
+    },
+    {
+      "endLine": 105,
+      "endOffset": 3117,
+      "kind": "method",
+      "name": "Auth.UpdateOrg",
+      "startLine": 87,
+      "startOffset": 2563,
+      "symbolId": "components/auth/orgs.go::Auth.UpdateOrg::method"
+    },
+    {
+      "endLine": 114,
+      "endOffset": 3383,
+      "kind": "method",
+      "name": "Auth.DeleteOrg",
+      "startLine": 108,
+      "startOffset": 3163,
+      "symbolId": "components/auth/orgs.go::Auth.DeleteOrg::method"
+    }
+  ]
+}

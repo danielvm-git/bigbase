@@ -1,0 +1,360 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/mcp/knowledge.go::loadServices::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/mcp/knowledge.go::loadFrameworks::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/mcp/knowledge.go::loadCodeExamples::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/mcp/knowledge.go::loadCITemplates::function"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/mcp/knowledge.go::formatCITemplateCatalog::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/mcp/knowledge.go::formatServicesList::function"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/mcp/knowledge.go::formatServiceDoc::function"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/mcp/knowledge.go::formatFrameworksList::function"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/mcp/knowledge.go::formatCodeExample::function"
+    },
+    {
+      "cyclomatic": 5,
+      "symbolId": "components/mcp/knowledge.go::langForFramework::function"
+    }
+  ],
+  "contentHash": "de444818dcbbc48327143a14cc770efd901e97f46bc9c4b489a59f943ade8773",
+  "edges": [
+    {
+      "from": "components/mcp/knowledge.go::loadServices::function",
+      "kind": "uses",
+      "to": "components/mcp/knowledge.go::serviceEntry::class"
+    },
+    {
+      "from": "components/mcp/knowledge.go::loadServices::function",
+      "kind": "uses",
+      "to": "components/mcp/knowledge.go::servicesData::class"
+    },
+    {
+      "from": "components/mcp/knowledge.go::loadServices::function",
+      "kind": "uses",
+      "to": "components/mcp/knowledge.go::servicesJSON::variable"
+    },
+    {
+      "from": "components/mcp/knowledge.go::loadFrameworks::function",
+      "kind": "uses",
+      "to": "components/mcp/knowledge.go::frameworkEntry::class"
+    },
+    {
+      "from": "components/mcp/knowledge.go::loadFrameworks::function",
+      "kind": "uses",
+      "to": "components/mcp/knowledge.go::frameworksData::class"
+    },
+    {
+      "from": "components/mcp/knowledge.go::loadFrameworks::function",
+      "kind": "uses",
+      "to": "components/mcp/knowledge.go::frameworksJSON::variable"
+    },
+    {
+      "from": "components/mcp/knowledge.go::loadCodeExamples::function",
+      "kind": "uses",
+      "to": "components/mcp/knowledge.go::exampleEntry::class"
+    },
+    {
+      "from": "components/mcp/knowledge.go::loadCodeExamples::function",
+      "kind": "uses",
+      "to": "components/mcp/knowledge.go::codeExamplesData::class"
+    },
+    {
+      "from": "components/mcp/knowledge.go::loadCodeExamples::function",
+      "kind": "uses",
+      "to": "components/mcp/knowledge.go::codeExamplesJSON::variable"
+    },
+    {
+      "from": "components/mcp/knowledge.go::loadCITemplates::function",
+      "kind": "uses",
+      "to": "components/mcp/knowledge.go::ciTemplateEntry::class"
+    },
+    {
+      "from": "components/mcp/knowledge.go::loadCITemplates::function",
+      "kind": "uses",
+      "to": "components/mcp/knowledge.go::ciTemplatesData::class"
+    },
+    {
+      "from": "components/mcp/knowledge.go::loadCITemplates::function",
+      "kind": "uses",
+      "to": "components/mcp/knowledge.go::ciTemplatesJSON::variable"
+    },
+    {
+      "from": "components/mcp/knowledge.go::formatCITemplateCatalog::function",
+      "kind": "uses",
+      "to": "components/mcp/knowledge.go::ciTemplateEntry::class"
+    },
+    {
+      "from": "components/mcp/knowledge.go::formatServicesList::function",
+      "kind": "uses",
+      "to": "components/mcp/knowledge.go::serviceEntry::class"
+    },
+    {
+      "from": "components/mcp/knowledge.go::formatServiceDoc::function",
+      "kind": "uses",
+      "to": "components/mcp/knowledge.go::serviceEntry::class"
+    },
+    {
+      "from": "components/mcp/knowledge.go::formatFrameworksList::function",
+      "kind": "uses",
+      "to": "components/mcp/knowledge.go::frameworkEntry::class"
+    },
+    {
+      "from": "components/mcp/knowledge.go::formatCodeExample::function",
+      "kind": "uses",
+      "to": "components/mcp/knowledge.go::exampleEntry::class"
+    },
+    {
+      "from": "components/mcp/knowledge.go::formatCodeExample::function",
+      "kind": "calls",
+      "to": "components/mcp/knowledge.go::langForFramework::function"
+    }
+  ],
+  "file": "components/mcp/knowledge.go",
+  "intent": [
+    {
+      "date": "2026-07-07T17:55:13-03:00",
+      "hash": "6ba8ea4a275faa75c9a55c1fdfaf6dc2494cadac",
+      "kind": "commit",
+      "message": "feat(mcp): add provisioning toolchain — create_repo, create_site, provision_ci_credentials, get_ci_template"
+    },
+    {
+      "date": "2026-06-20T00:16:02-03:00",
+      "hash": "01ab42437762f02884ca20ad9b0c338d2d35e409",
+      "kind": "commit",
+      "message": "feat(cli): add 'bigbase deploy' subcommand; feat(mcp): deploy_site triggers real deploys"
+    },
+    {
+      "date": "2026-06-19T13:31:29-03:00",
+      "hash": "71a23b54e5e944feeb5932b68bb9055a1ec3b6c4",
+      "kind": "commit",
+      "message": "feat(mcp): register knowledge tools — list_services, get_service_docs, get_code_example, list_frameworks"
+    }
+  ],
+  "lastModified": 1786492494,
+  "symbols": [
+    {
+      "endLine": 11,
+      "endOffset": 122,
+      "kind": "variable",
+      "name": "servicesJSON",
+      "startLine": 11,
+      "startOffset": 110,
+      "symbolId": "components/mcp/knowledge.go::servicesJSON::variable"
+    },
+    {
+      "endLine": 14,
+      "endOffset": 186,
+      "kind": "variable",
+      "name": "frameworksJSON",
+      "startLine": 14,
+      "startOffset": 172,
+      "symbolId": "components/mcp/knowledge.go::frameworksJSON::variable"
+    },
+    {
+      "endLine": 17,
+      "endOffset": 264,
+      "kind": "variable",
+      "name": "codeExamplesJSON",
+      "startLine": 17,
+      "startOffset": 248,
+      "symbolId": "components/mcp/knowledge.go::codeExamplesJSON::variable"
+    },
+    {
+      "endLine": 20,
+      "endOffset": 331,
+      "kind": "variable",
+      "name": "ciTemplatesJSON",
+      "startLine": 20,
+      "startOffset": 316,
+      "symbolId": "components/mcp/knowledge.go::ciTemplatesJSON::variable"
+    },
+    {
+      "endLine": 25,
+      "endOffset": 470,
+      "kind": "class",
+      "name": "servicesData",
+      "startLine": 23,
+      "startOffset": 404,
+      "symbolId": "components/mcp/knowledge.go::servicesData::class"
+    },
+    {
+      "endLine": 33,
+      "endOffset": 707,
+      "kind": "class",
+      "name": "serviceEntry",
+      "startLine": 27,
+      "startOffset": 477,
+      "symbolId": "components/mcp/knowledge.go::serviceEntry::class"
+    },
+    {
+      "endLine": 38,
+      "endOffset": 851,
+      "kind": "class",
+      "name": "frameworksData",
+      "startLine": 36,
+      "startOffset": 777,
+      "symbolId": "components/mcp/knowledge.go::frameworksData::class"
+    },
+    {
+      "endLine": 46,
+      "endOffset": 1089,
+      "kind": "class",
+      "name": "frameworkEntry",
+      "startLine": 40,
+      "startOffset": 858,
+      "symbolId": "components/mcp/knowledge.go::frameworkEntry::class"
+    },
+    {
+      "endLine": 51,
+      "endOffset": 1233,
+      "kind": "class",
+      "name": "codeExamplesData",
+      "startLine": 49,
+      "startOffset": 1163,
+      "symbolId": "components/mcp/knowledge.go::codeExamplesData::class"
+    },
+    {
+      "endLine": 58,
+      "endOffset": 1400,
+      "kind": "class",
+      "name": "exampleEntry",
+      "startLine": 53,
+      "startOffset": 1240,
+      "symbolId": "components/mcp/knowledge.go::exampleEntry::class"
+    },
+    {
+      "endLine": 62,
+      "endOffset": 1481,
+      "kind": "class",
+      "name": "ciTemplatesData",
+      "startLine": 60,
+      "startOffset": 1407,
+      "symbolId": "components/mcp/knowledge.go::ciTemplatesData::class"
+    },
+    {
+      "endLine": 70,
+      "endOffset": 1707,
+      "kind": "class",
+      "name": "ciTemplateEntry",
+      "startLine": 64,
+      "startOffset": 1488,
+      "symbolId": "components/mcp/knowledge.go::ciTemplateEntry::class"
+    },
+    {
+      "endLine": 78,
+      "endOffset": 1888,
+      "kind": "function",
+      "name": "loadServices",
+      "startLine": 72,
+      "startOffset": 1709,
+      "symbolId": "components/mcp/knowledge.go::loadServices::function"
+    },
+    {
+      "endLine": 86,
+      "endOffset": 2079,
+      "kind": "function",
+      "name": "loadFrameworks",
+      "startLine": 80,
+      "startOffset": 1890,
+      "symbolId": "components/mcp/knowledge.go::loadFrameworks::function"
+    },
+    {
+      "endLine": 94,
+      "endOffset": 2272,
+      "kind": "function",
+      "name": "loadCodeExamples",
+      "startLine": 88,
+      "startOffset": 2081,
+      "symbolId": "components/mcp/knowledge.go::loadCodeExamples::function"
+    },
+    {
+      "endLine": 102,
+      "endOffset": 2466,
+      "kind": "function",
+      "name": "loadCITemplates",
+      "startLine": 96,
+      "startOffset": 2274,
+      "symbolId": "components/mcp/knowledge.go::loadCITemplates::function"
+    },
+    {
+      "endLine": 119,
+      "endOffset": 2957,
+      "kind": "function",
+      "name": "formatCITemplateCatalog",
+      "startLine": 104,
+      "startOffset": 2468,
+      "symbolId": "components/mcp/knowledge.go::formatCITemplateCatalog::function"
+    },
+    {
+      "endLine": 132,
+      "endOffset": 3343,
+      "kind": "function",
+      "name": "formatServicesList",
+      "startLine": 121,
+      "startOffset": 2959,
+      "symbolId": "components/mcp/knowledge.go::formatServicesList::function"
+    },
+    {
+      "endLine": 148,
+      "endOffset": 3789,
+      "kind": "function",
+      "name": "formatServiceDoc",
+      "startLine": 134,
+      "startOffset": 3345,
+      "symbolId": "components/mcp/knowledge.go::formatServiceDoc::function"
+    },
+    {
+      "endLine": 163,
+      "endOffset": 4225,
+      "kind": "function",
+      "name": "formatFrameworksList",
+      "startLine": 150,
+      "startOffset": 3791,
+      "symbolId": "components/mcp/knowledge.go::formatFrameworksList::function"
+    },
+    {
+      "endLine": 168,
+      "endOffset": 4443,
+      "kind": "function",
+      "name": "formatCodeExample",
+      "startLine": 165,
+      "startOffset": 4227,
+      "symbolId": "components/mcp/knowledge.go::formatCodeExample::function"
+    },
+    {
+      "endLine": 181,
+      "endOffset": 4663,
+      "kind": "function",
+      "name": "langForFramework",
+      "startLine": 170,
+      "startOffset": 4445,
+      "symbolId": "components/mcp/knowledge.go::langForFramework::function"
+    }
+  ]
+}

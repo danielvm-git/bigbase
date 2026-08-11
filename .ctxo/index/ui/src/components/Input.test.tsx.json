@@ -1,0 +1,29 @@
+{
+  "antiPatterns": [],
+  "complexity": [],
+  "contentHash": "c6289e7b14d8cf4f0eddcb8ea44e2235d83d6b935d97f0e7c11becd82d8e1956",
+  "edges": [
+    {
+      "from": "ui/src/components/Input.test.tsx::Input.test::variable",
+      "kind": "imports",
+      "to": "ui/src/components/Input.ts::Input::class"
+    }
+  ],
+  "file": "ui/src/components/Input.test.tsx",
+  "intent": [
+    {
+      "date": "2026-08-11T13:43:58-03:00",
+      "hash": "b48a9e9efdf6a6eb00fef735b18752a057ba7f70",
+      "kind": "commit",
+      "message": "fix(ui): a11y for JsonTree, ThemePicker, Input (T000011/T000013/T000015)"
+    },
+    {
+      "date": "2026-08-11T00:35:18-03:00",
+      "hash": "9848ced3fc0d2e6aef8ef47c1d78c4e4107f3b9a",
+      "kind": "commit",
+      "message": "fix(ui): give placeholder-only form controls accessible names (BUG-2026-08-11T000007)"
+    }
+  ],
+  "lastModified": 1786492495,
+  "symbols": []
+}

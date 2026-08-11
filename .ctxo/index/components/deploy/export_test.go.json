@@ -1,0 +1,22 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/deploy/export_test.go::PickPort::function"
+    }
+  ],
+  "contentHash": "fa2140bada652f32c57d210968f1aa96cc1fbf9af895ff09131d50f7aabc8cd1",
+  "edges": [],
+  "file": "components/deploy/export_test.go",
+  "intent": [
+    {
+      "date": "2026-07-28T09:40:39-03:00",
+      "hash": "5a949048dbc65f5842c2bc5688f3097e1ec57a9b",
+      "kind": "commit",
+      "message": "chore: bug certification sweep + MCP consolidation + deploy test fix (#191)"
+    }
+  ],
+  "lastModified": 1786492494,
+  "symbols": []
+}

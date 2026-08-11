@@ -1,0 +1,110 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 19,
+      "symbolId": "components/deploy/health.go::probeHealth::function"
+    }
+  ],
+  "contentHash": "68cafc3daba94ff42d936595b451a202cea32e16644a94a8410f0f97c4b491b4",
+  "edges": [
+    {
+      "from": "components/deploy/health.go::probeHealth::function",
+      "kind": "uses",
+      "to": "components/deploy/health.go::httpDoer::interface"
+    },
+    {
+      "from": "components/deploy/health.go::probeHealth::function",
+      "kind": "uses",
+      "to": "components/deploy/manifest.go::ManifestHealthCheck::class"
+    },
+    {
+      "from": "components/deploy/health.go::probeHealth::function",
+      "kind": "uses",
+      "to": "components/deploy/runner.go::Clock::interface"
+    },
+    {
+      "from": "components/deploy/health.go::probeHealth::function",
+      "kind": "uses",
+      "to": "components/deploy/health.go::HealthResult::class"
+    },
+    {
+      "from": "components/deploy/health.go::probeHealth::function",
+      "kind": "uses",
+      "to": "components/deploy/health.go::ProbeAttempt::class"
+    },
+    {
+      "from": "components/deploy/health.go::probeHealth::function",
+      "kind": "calls",
+      "to": "components/deploy/runner.go::Clock.Sleep::method"
+    },
+    {
+      "from": "components/deploy/health.go::probeHealth::function",
+      "kind": "calls",
+      "to": "components/deploy/health.go::httpDoer.Do::method"
+    }
+  ],
+  "file": "components/deploy/health.go",
+  "intent": [
+    {
+      "date": "2026-07-10T14:46:55-03:00",
+      "hash": "36722e3d731d1da0179c0360d677bc6bdf2b3b19",
+      "kind": "commit",
+      "message": "fix(deploy): prevent manifest path traversal (CWE-22)"
+    },
+    {
+      "date": "2026-06-26T18:34:05-03:00",
+      "hash": "9b468360a23e4f4955d9a5209e5ddf35eb8f7b82",
+      "kind": "commit",
+      "message": "feat(deploy): semantic health check — probe before marking deployment live"
+    }
+  ],
+  "lastModified": 1786492494,
+  "symbols": [
+    {
+      "endLine": 15,
+      "endOffset": 235,
+      "kind": "interface",
+      "name": "httpDoer",
+      "startLine": 13,
+      "startOffset": 170,
+      "symbolId": "components/deploy/health.go::httpDoer::interface"
+    },
+    {
+      "endLine": 22,
+      "endOffset": 436,
+      "kind": "class",
+      "name": "ProbeAttempt",
+      "startLine": 18,
+      "startOffset": 296,
+      "symbolId": "components/deploy/health.go::ProbeAttempt::class"
+    },
+    {
+      "endLine": 29,
+      "endOffset": 725,
+      "kind": "class",
+      "name": "HealthSummary",
+      "startLine": 25,
+      "startOffset": 519,
+      "symbolId": "components/deploy/health.go::HealthSummary::class"
+    },
+    {
+      "endLine": 38,
+      "endOffset": 1127,
+      "kind": "class",
+      "name": "HealthResult",
+      "startLine": 32,
+      "startOffset": 803,
+      "symbolId": "components/deploy/health.go::HealthResult::class"
+    },
+    {
+      "endLine": 137,
+      "endOffset": 4189,
+      "kind": "function",
+      "name": "probeHealth",
+      "startLine": 45,
+      "startOffset": 1460,
+      "symbolId": "components/deploy/health.go::probeHealth::function"
+    }
+  ]
+}

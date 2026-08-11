@@ -1,0 +1,23 @@
+{
+  "antiPatterns": [],
+  "complexity": [],
+  "contentHash": "fe3cfc6b84e55736767910e37413b7bbb4485e6e12ff2e3fe7258faa24f08ff4",
+  "edges": [
+    {
+      "from": "ui/src/hooks/useRequestLogs.test.ts::useRequestLogs.test::variable",
+      "kind": "imports",
+      "to": "ui/src/hooks/useRequestLogs.ts::useRequestLogs::function"
+    }
+  ],
+  "file": "ui/src/hooks/useRequestLogs.test.ts",
+  "intent": [
+    {
+      "date": "2026-06-12T19:40:09-03:00",
+      "hash": "670460601bdcbd5a72dfb21f475ab3b1f336a58a",
+      "kind": "commit",
+      "message": "feat(deploy,sites,proxy): implement site build and request logs"
+    }
+  ],
+  "lastModified": 1786492495,
+  "symbols": []
+}

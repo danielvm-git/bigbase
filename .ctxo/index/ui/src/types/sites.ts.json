@@ -1,0 +1,233 @@
+{
+  "antiPatterns": [
+    {
+      "date": "2026-06-26T20:20:59-03:00",
+      "hash": "b97fd9f17fe4f8f9feb34ea9d32cb2c43c5c7c8a",
+      "message": "feat(ui): add rollback button to deployment detail + rollback history timeline"
+    },
+    {
+      "date": "2026-06-21T15:03:24-03:00",
+      "hash": "c058782f95b32d8aa3a74c52ac44863ad572627b",
+      "message": "Revert \"feat(deploy): deployment state machine with validated transitions and events\""
+    }
+  ],
+  "complexity": [],
+  "contentHash": "db78ba46651a5b2195923e10e4bb66cca6e61f7cfd3b7821318c49be25edb211",
+  "edges": [],
+  "file": "ui/src/types/sites.ts",
+  "intent": [
+    {
+      "date": "2026-07-10T16:54:20-03:00",
+      "hash": "68d9f6aef3667d3b652daf61f08a2cb5f905809a",
+      "kind": "commit",
+      "message": "feat(ui): add Deploy Keys tab to Site Detail page"
+    },
+    {
+      "date": "2026-06-27T00:52:49-03:00",
+      "hash": "cad59563567bd3e00e0d07c353ba6d216ebb3fbd",
+      "kind": "commit",
+      "message": "feat(ui): add custom domain management tab to SiteDetailPage (e46s03)"
+    },
+    {
+      "date": "2026-06-26T21:55:49-03:00",
+      "hash": "40287fbc5ea901d5337adc152abe67c04b113dd1",
+      "kind": "commit",
+      "message": "feat(deploy): zero-downtime connection draining on deployment switchover (e45)"
+    },
+    {
+      "date": "2026-06-26T20:20:59-03:00",
+      "hash": "b97fd9f17fe4f8f9feb34ea9d32cb2c43c5c7c8a",
+      "kind": "commit",
+      "message": "feat(ui): add rollback button to deployment detail + rollback history timeline"
+    },
+    {
+      "date": "2026-06-26T18:34:05-03:00",
+      "hash": "9b468360a23e4f4955d9a5209e5ddf35eb8f7b82",
+      "kind": "commit",
+      "message": "feat(deploy): semantic health check — probe before marking deployment live"
+    },
+    {
+      "date": "2026-06-25T07:08:31-03:00",
+      "hash": "a173b3f7599a22033ba71537b28f17950a32a8de",
+      "kind": "commit",
+      "message": "feat(deploy): cache management UI — per-site tab + global panel (e42s02) (#48)"
+    },
+    {
+      "date": "2026-06-25T05:18:42-03:00",
+      "hash": "d62388d7459e1269381963269d5b9a1e202b2e40",
+      "kind": "commit",
+      "message": "fix(env-vars): harden secret storage — server-side masking, shared crypto, and error propagation"
+    },
+    {
+      "date": "2026-06-24T14:11:41-03:00",
+      "hash": "4686942f76f423898f1bfdb09e6861eca80b07d2",
+      "kind": "commit",
+      "message": "feat(ui): add Env Vars tab to SiteDetailPage with CRUD and .env import/export"
+    },
+    {
+      "date": "2026-06-21T19:21:24-03:00",
+      "hash": "64ac6c5235062f7f2676f09439ba029bd20f1c4b",
+      "kind": "commit",
+      "message": "feat(deploy): deployment state machine with validated transitions and events"
+    },
+    {
+      "date": "2026-06-21T15:03:24-03:00",
+      "hash": "c058782f95b32d8aa3a74c52ac44863ad572627b",
+      "kind": "commit",
+      "message": "Revert \"feat(deploy): deployment state machine with validated transitions and events\""
+    },
+    {
+      "date": "2026-06-21T14:55:32-03:00",
+      "hash": "6780538cdb4ea45e376bb9cdbcc9cfad563bbe19",
+      "kind": "commit",
+      "message": "feat(deploy): deployment state machine with validated transitions and events"
+    }
+  ],
+  "lastModified": 1786492495,
+  "symbols": [
+    {
+      "endLine": 15,
+      "endOffset": 440,
+      "kind": "interface",
+      "name": "Deployment",
+      "startLine": 2,
+      "startOffset": 146,
+      "symbolId": "ui/src/types/sites.ts::Deployment::interface"
+    },
+    {
+      "endLine": 21,
+      "endOffset": 527,
+      "kind": "interface",
+      "name": "StatusTransition",
+      "startLine": 17,
+      "startOffset": 442,
+      "symbolId": "ui/src/types/sites.ts::StatusTransition::interface"
+    },
+    {
+      "endLine": 29,
+      "endOffset": 667,
+      "kind": "interface",
+      "name": "RollbackEvent",
+      "startLine": 23,
+      "startOffset": 529,
+      "symbolId": "ui/src/types/sites.ts::RollbackEvent::interface"
+    },
+    {
+      "endLine": 36,
+      "endOffset": 773,
+      "kind": "interface",
+      "name": "GitRepo",
+      "startLine": 31,
+      "startOffset": 669,
+      "symbolId": "ui/src/types/sites.ts::GitRepo::interface"
+    },
+    {
+      "endLine": 44,
+      "endOffset": 906,
+      "kind": "interface",
+      "name": "GitHubRepo",
+      "startLine": 38,
+      "startOffset": 775,
+      "symbolId": "ui/src/types/sites.ts::GitHubRepo::interface"
+    },
+    {
+      "endLine": 50,
+      "endOffset": 1001,
+      "kind": "interface",
+      "name": "GitHubStatus",
+      "startLine": 46,
+      "startOffset": 908,
+      "symbolId": "ui/src/types/sites.ts::GitHubStatus::interface"
+    },
+    {
+      "endLine": 61,
+      "endOffset": 1208,
+      "kind": "interface",
+      "name": "Site",
+      "startLine": 52,
+      "startOffset": 1003,
+      "symbolId": "ui/src/types/sites.ts::Site::interface"
+    },
+    {
+      "endLine": 73,
+      "endOffset": 1513,
+      "kind": "interface",
+      "name": "EnvVar",
+      "startLine": 63,
+      "startOffset": 1210,
+      "symbolId": "ui/src/types/sites.ts::EnvVar::interface"
+    },
+    {
+      "endLine": 85,
+      "endOffset": 1740,
+      "kind": "interface",
+      "name": "CacheEntry",
+      "startLine": 77,
+      "startOffset": 1586,
+      "symbolId": "ui/src/types/sites.ts::CacheEntry::interface"
+    },
+    {
+      "endLine": 91,
+      "endOffset": 1850,
+      "kind": "interface",
+      "name": "SiteCacheStatus",
+      "startLine": 87,
+      "startOffset": 1742,
+      "symbolId": "ui/src/types/sites.ts::SiteCacheStatus::interface"
+    },
+    {
+      "endLine": 97,
+      "endOffset": 1959,
+      "kind": "interface",
+      "name": "CacheStats",
+      "startLine": 93,
+      "startOffset": 1852,
+      "symbolId": "ui/src/types/sites.ts::CacheStats::interface"
+    },
+    {
+      "endLine": 109,
+      "endOffset": 2206,
+      "kind": "interface",
+      "name": "SiteDomain",
+      "startLine": 99,
+      "startOffset": 1961,
+      "symbolId": "ui/src/types/sites.ts::SiteDomain::interface"
+    },
+    {
+      "endLine": 115,
+      "endOffset": 2297,
+      "kind": "interface",
+      "name": "SitesDataResult",
+      "startLine": 111,
+      "startOffset": 2208,
+      "symbolId": "ui/src/types/sites.ts::SitesDataResult::interface"
+    },
+    {
+      "endLine": 123,
+      "endOffset": 2433,
+      "kind": "interface",
+      "name": "SiteDeployKey",
+      "startLine": 117,
+      "startOffset": 2299,
+      "symbolId": "ui/src/types/sites.ts::SiteDeployKey::interface"
+    },
+    {
+      "endLine": 0,
+      "endOffset": 144,
+      "kind": "type",
+      "name": "DeploymentStatus",
+      "startLine": 0,
+      "startOffset": 0,
+      "symbolId": "ui/src/types/sites.ts::DeploymentStatus::type"
+    },
+    {
+      "endLine": 75,
+      "endOffset": 1584,
+      "kind": "type",
+      "name": "SiteSource",
+      "startLine": 75,
+      "startOffset": 1515,
+      "symbolId": "ui/src/types/sites.ts::SiteSource::type"
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 7,
+      "symbolId": "components/deploy/state_failed_event_test.go::TestDeployFailedEvent::function"
+    }
+  ],
+  "contentHash": "2eaf37f185276e42b58e2aee1398a60d0bac5483505a6e086436666a40f69f0b",
+  "edges": [],
+  "file": "components/deploy/state_failed_event_test.go",
+  "intent": [
+    {
+      "date": "2026-07-09T01:44:49-03:00",
+      "hash": "82dc49874349b328be8cbd34da05d4ee4b430169",
+      "kind": "commit",
+      "message": "feat(monitoring): AI-assisted deploy observability and incident response (e72) (#64)"
+    }
+  ],
+  "lastModified": 1786492494,
+  "symbols": []
+}

@@ -1,0 +1,32 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 1,
+      "symbolId": "ui/src/hooks/useDocumentTitle.ts::useDocumentTitle::function"
+    }
+  ],
+  "contentHash": "43dfdfa3b41a9e8c0931987f9353b1b0194a9804e528e79f9f8ac0edba1b6de5",
+  "edges": [],
+  "file": "ui/src/hooks/useDocumentTitle.ts",
+  "intent": [
+    {
+      "date": "2026-08-11T13:38:59-03:00",
+      "hash": "29f752195c62f37f18add79a1d2bac29b370cd6d",
+      "kind": "commit",
+      "message": "fix(ui): route-aware document.title (T000019)"
+    }
+  ],
+  "lastModified": 1786492495,
+  "symbols": [
+    {
+      "endLine": 14,
+      "endOffset": 393,
+      "kind": "function",
+      "name": "useDocumentTitle",
+      "startLine": 6,
+      "startOffset": 178,
+      "symbolId": "ui/src/hooks/useDocumentTitle.ts::useDocumentTitle::function"
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 1,
+      "symbolId": "ui/src/lib/countdown.ts::fmtCountdown::function"
+    }
+  ],
+  "contentHash": "b48e6a39c01c259d9af2dc6e2f161ee77cd50085f0b5b5bd07e92d5c1292938a",
+  "edges": [],
+  "file": "ui/src/lib/countdown.ts",
+  "intent": [
+    {
+      "date": "2026-08-11T16:14:38-03:00",
+      "hash": "4bce972d4caf3d73fc2daf4aa78212fe0541893b",
+      "kind": "commit",
+      "message": "fix(ui): move fmtCountdown to lib for fast-refresh rule"
+    }
+  ],
+  "lastModified": 1786492495,
+  "symbols": [
+    {
+      "endLine": 6,
+      "endOffset": 314,
+      "kind": "function",
+      "name": "fmtCountdown",
+      "startLine": 1,
+      "startOffset": 84,
+      "symbolId": "ui/src/lib/countdown.ts::fmtCountdown::function"
+    }
+  ]
+}

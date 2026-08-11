@@ -1,0 +1,215 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 7,
+      "symbolId": "components/auth/usermgmt.go::Auth.handleUpdateMe::method"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/auth/usermgmt.go::Auth.handleListIdentities::method"
+    },
+    {
+      "cyclomatic": 7,
+      "symbolId": "components/auth/usermgmt.go::Auth.handleLinkIdentity::method"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/auth/usermgmt.go::Auth.handleUnlinkIdentity::method"
+    }
+  ],
+  "contentHash": "af839562f69964be5877d43cf68362d84e245d81614fe61a3786fb03da8c888c",
+  "edges": [
+    {
+      "from": "components/auth/usermgmt.go::Auth.handleUpdateMe::method",
+      "kind": "uses",
+      "to": "components/auth/auth.go::Auth::class"
+    },
+    {
+      "from": "components/auth/usermgmt.go::Auth.handleUpdateMe::method",
+      "kind": "calls",
+      "to": "kernel/utilities.go::WriteJSON::function"
+    },
+    {
+      "from": "components/auth/usermgmt.go::Auth.handleUpdateMe::method",
+      "kind": "calls",
+      "to": "components/auth/middleware.go::UserIDFromContext::function"
+    },
+    {
+      "from": "components/auth/usermgmt.go::Auth.handleUpdateMe::method",
+      "kind": "calls",
+      "to": "components/auth/middleware.go::UserEmailFromContext::function"
+    },
+    {
+      "from": "components/auth/usermgmt.go::Auth.handleUpdateMe::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.ExecContext::method"
+    },
+    {
+      "from": "components/auth/usermgmt.go::Auth.handleUpdateMe::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.QueryRowContext::method"
+    },
+    {
+      "from": "components/auth/usermgmt.go::Auth.handleListIdentities::method",
+      "kind": "uses",
+      "to": "components/auth/auth.go::Auth::class"
+    },
+    {
+      "from": "components/auth/usermgmt.go::Auth.handleListIdentities::method",
+      "kind": "calls",
+      "to": "kernel/utilities.go::WriteJSON::function"
+    },
+    {
+      "from": "components/auth/usermgmt.go::Auth.handleListIdentities::method",
+      "kind": "calls",
+      "to": "components/auth/middleware.go::UserIDFromContext::function"
+    },
+    {
+      "from": "components/auth/usermgmt.go::Auth.handleListIdentities::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.QueryRowContext::method"
+    },
+    {
+      "from": "components/auth/usermgmt.go::Auth.handleListIdentities::method",
+      "kind": "calls",
+      "to": "components/auth/middleware.go::UserEmailFromContext::function"
+    },
+    {
+      "from": "components/auth/usermgmt.go::Auth.handleLinkIdentity::method",
+      "kind": "uses",
+      "to": "components/auth/auth.go::Auth::class"
+    },
+    {
+      "from": "components/auth/usermgmt.go::Auth.handleLinkIdentity::method",
+      "kind": "calls",
+      "to": "kernel/utilities.go::WriteJSON::function"
+    },
+    {
+      "from": "components/auth/usermgmt.go::Auth.handleLinkIdentity::method",
+      "kind": "calls",
+      "to": "components/auth/middleware.go::UserIDFromContext::function"
+    },
+    {
+      "from": "components/auth/usermgmt.go::Auth.handleLinkIdentity::method",
+      "kind": "calls",
+      "to": "components/auth/auth.go::Auth.oauthCallbackRedirectURI::method"
+    },
+    {
+      "from": "components/auth/usermgmt.go::Auth.handleLinkIdentity::method",
+      "kind": "uses",
+      "to": "components/auth/oauth_handlers.go::realGoogleVerifier::class"
+    },
+    {
+      "from": "components/auth/usermgmt.go::Auth.handleLinkIdentity::method",
+      "kind": "calls",
+      "to": "components/auth/auth.go::GoogleVerifier.Verify::method"
+    },
+    {
+      "from": "components/auth/usermgmt.go::Auth.handleLinkIdentity::method",
+      "kind": "calls",
+      "to": "kernel/component.go::Logger.Error::method"
+    },
+    {
+      "from": "components/auth/usermgmt.go::Auth.handleLinkIdentity::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.QueryRowContext::method"
+    },
+    {
+      "from": "components/auth/usermgmt.go::Auth.handleLinkIdentity::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.ExecContext::method"
+    },
+    {
+      "from": "components/auth/usermgmt.go::Auth.handleUnlinkIdentity::method",
+      "kind": "uses",
+      "to": "components/auth/auth.go::Auth::class"
+    },
+    {
+      "from": "components/auth/usermgmt.go::Auth.handleUnlinkIdentity::method",
+      "kind": "calls",
+      "to": "kernel/utilities.go::WriteJSON::function"
+    },
+    {
+      "from": "components/auth/usermgmt.go::Auth.handleUnlinkIdentity::method",
+      "kind": "calls",
+      "to": "components/auth/middleware.go::UserIDFromContext::function"
+    },
+    {
+      "from": "components/auth/usermgmt.go::Auth.handleUnlinkIdentity::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.QueryRowContext::method"
+    },
+    {
+      "from": "components/auth/usermgmt.go::Auth.handleUnlinkIdentity::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.ExecContext::method"
+    }
+  ],
+  "file": "components/auth/usermgmt.go",
+  "intent": [
+    {
+      "date": "2026-07-10T15:59:01-03:00",
+      "hash": "742b55f679da2346b47a3dd5677814574eece017",
+      "kind": "commit",
+      "message": "fix(auth): never use Host header for OAuth public URL (CWE-601)"
+    },
+    {
+      "date": "2026-07-10T14:46:55-03:00",
+      "hash": "36722e3d731d1da0179c0360d677bc6bdf2b3b19",
+      "kind": "commit",
+      "message": "fix(deploy): prevent manifest path traversal (CWE-22)"
+    },
+    {
+      "date": "2026-06-28T10:20:20-03:00",
+      "hash": "3a86390d0459d17210d2c86e3184c807ed320ce9",
+      "kind": "commit",
+      "message": "fix(auth): use configured PublicURL for OAuth redirect URIs"
+    },
+    {
+      "date": "2026-06-18T13:52:05-03:00",
+      "hash": "03ff564c81c2d6bb640b8ed9b2b770e68140bfe1",
+      "kind": "commit",
+      "message": "feat(auth): add passwordless auth — OTP, magic link, user management (#31)"
+    }
+  ],
+  "lastModified": 1786492494,
+  "symbols": [
+    {
+      "endLine": 55,
+      "endOffset": 1767,
+      "kind": "method",
+      "name": "Auth.handleUpdateMe",
+      "startLine": 11,
+      "startOffset": 105,
+      "symbolId": "components/auth/usermgmt.go::Auth.handleUpdateMe::method"
+    },
+    {
+      "endLine": 82,
+      "endOffset": 2698,
+      "kind": "method",
+      "name": "Auth.handleListIdentities",
+      "startLine": 57,
+      "startOffset": 1769,
+      "symbolId": "components/auth/usermgmt.go::Auth.handleListIdentities::method"
+    },
+    {
+      "endLine": 139,
+      "endOffset": 4643,
+      "kind": "method",
+      "name": "Auth.handleLinkIdentity",
+      "startLine": 84,
+      "startOffset": 2700,
+      "symbolId": "components/auth/usermgmt.go::Auth.handleLinkIdentity::method"
+    },
+    {
+      "endLine": 166,
+      "endOffset": 5633,
+      "kind": "method",
+      "name": "Auth.handleUnlinkIdentity",
+      "startLine": 141,
+      "startOffset": 4645,
+      "symbolId": "components/auth/usermgmt.go::Auth.handleUnlinkIdentity::method"
+    }
+  ]
+}

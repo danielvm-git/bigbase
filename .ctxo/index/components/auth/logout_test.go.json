@@ -1,0 +1,32 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 7,
+      "symbolId": "components/auth/logout_test.go::TestLogout::function"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/auth/logout_test.go::TestLogoutWithoutCookie::function"
+    }
+  ],
+  "contentHash": "fe3bd1f57f1d484473579b682b912670779803056ed961249edecba750de6df5",
+  "edges": [],
+  "file": "components/auth/logout_test.go",
+  "intent": [
+    {
+      "date": "2026-06-28T12:50:44-03:00",
+      "hash": "cd72c6a2b3fa3f9bcc5c4c967f06cb8b6c817abd",
+      "kind": "commit",
+      "message": "feat(auth): e50 JWT secret persistence, configurable lifetimes, refresh token revocation"
+    },
+    {
+      "date": "2026-06-18T13:12:37-03:00",
+      "hash": "3f51ebfb6c31161b581dca4c46ddf0060457b287",
+      "kind": "commit",
+      "message": "feat(auth): add POST /api/auth/logout endpoint (#30)"
+    }
+  ],
+  "lastModified": 1786492494,
+  "symbols": []
+}

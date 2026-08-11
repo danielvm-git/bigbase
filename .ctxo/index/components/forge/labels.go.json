@@ -1,0 +1,107 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 7,
+      "symbolId": "components/forge/labels.go::Forge.createLabel::method"
+    },
+    {
+      "cyclomatic": 5,
+      "symbolId": "components/forge/labels.go::Forge.listLabels::method"
+    }
+  ],
+  "contentHash": "61dd231076b37a138760567c049f2f671e129d059983124056dd1fb6978941aa",
+  "edges": [
+    {
+      "from": "components/forge/labels.go::Forge.createLabel::method",
+      "kind": "uses",
+      "to": "components/forge/forge.go::Forge::class"
+    },
+    {
+      "from": "components/forge/labels.go::Forge.createLabel::method",
+      "kind": "calls",
+      "to": "kernel/utilities.go::WriteJSON::function"
+    },
+    {
+      "from": "components/forge/labels.go::Forge.createLabel::method",
+      "kind": "calls",
+      "to": "kernel/utilities.go::GenerateID::function"
+    },
+    {
+      "from": "components/forge/labels.go::Forge.createLabel::method",
+      "kind": "calls",
+      "to": "kernel/component.go::Logger.Error::method"
+    },
+    {
+      "from": "components/forge/labels.go::Forge.createLabel::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.ExecContext::method"
+    },
+    {
+      "from": "components/forge/labels.go::Forge.createLabel::method",
+      "kind": "uses",
+      "to": "components/forge/forge.go::Label::class"
+    },
+    {
+      "from": "components/forge/labels.go::Forge.listLabels::method",
+      "kind": "uses",
+      "to": "components/forge/forge.go::Forge::class"
+    },
+    {
+      "from": "components/forge/labels.go::Forge.listLabels::method",
+      "kind": "calls",
+      "to": "kernel/utilities.go::WriteJSON::function"
+    },
+    {
+      "from": "components/forge/labels.go::Forge.listLabels::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.QueryContext::method"
+    },
+    {
+      "from": "components/forge/labels.go::Forge.listLabels::method",
+      "kind": "calls",
+      "to": "kernel/component.go::Logger.Error::method"
+    },
+    {
+      "from": "components/forge/labels.go::Forge.listLabels::method",
+      "kind": "uses",
+      "to": "components/forge/forge.go::Label::class"
+    }
+  ],
+  "file": "components/forge/labels.go",
+  "intent": [
+    {
+      "date": "2026-07-10T14:46:55-03:00",
+      "hash": "36722e3d731d1da0179c0360d677bc6bdf2b3b19",
+      "kind": "commit",
+      "message": "fix(deploy): prevent manifest path traversal (CWE-22)"
+    },
+    {
+      "date": "2026-07-10T14:32:07-03:00",
+      "hash": "0fe629ed484fbde9f0f07d5544bf571305330e84",
+      "kind": "commit",
+      "message": "refactor(forge): split forge.go into entity files"
+    }
+  ],
+  "lastModified": 1786492494,
+  "symbols": [
+    {
+      "endLine": 50,
+      "endOffset": 1491,
+      "kind": "method",
+      "name": "Forge.createLabel",
+      "startLine": 13,
+      "startOffset": 125,
+      "symbolId": "components/forge/labels.go::Forge.createLabel::method"
+    },
+    {
+      "endLine": 81,
+      "endOffset": 2450,
+      "kind": "method",
+      "name": "Forge.listLabels",
+      "startLine": 52,
+      "startOffset": 1493,
+      "symbolId": "components/forge/labels.go::Forge.listLabels::method"
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "antiPatterns": [],
+  "complexity": [],
+  "contentHash": "918aeb534230d206bd845870a1d22b63467dc6dadd0f0869824d9e20b16caeec",
+  "edges": [
+    {
+      "from": "ui/src/components/ComponentHealthGrid.test.tsx::ComponentHealthGrid.test::variable",
+      "kind": "imports",
+      "to": "ui/src/components/ComponentHealthGrid.ts::ComponentHealthGrid::class"
+    }
+  ],
+  "file": "ui/src/components/ComponentHealthGrid.test.tsx",
+  "intent": [],
+  "lastModified": 1786492495,
+  "symbols": []
+}

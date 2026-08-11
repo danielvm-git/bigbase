@@ -1,0 +1,61 @@
+{
+  "antiPatterns": [
+    {
+      "date": "2026-08-02T19:10:16-03:00",
+      "hash": "9bfab4c89790682a509d2d42e48d1a8918867d66",
+      "message": "fix(deploy): wait for drain/rollback to reach stopped in tests"
+    },
+    {
+      "date": "2026-06-26T20:10:31-03:00",
+      "hash": "77132c782be2345c6e399456065d8e129419e6e1",
+      "message": "feat(deploy): add one-click rollback endpoint + artifact reuse (#49)"
+    }
+  ],
+  "complexity": [
+    {
+      "cyclomatic": 8,
+      "symbolId": "components/deploy/rollback_test.go::TestRollbackStaticSite::function"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/deploy/rollback_test.go::TestRollbackNoPrevious::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/deploy/rollback_test.go::TestRollbackInvalidMethod::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/deploy/rollback_test.go::TestRollbackNotFound::function"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/deploy/rollback_test.go::verifyDeployStatus::function"
+    }
+  ],
+  "contentHash": "3657f74ed963cfc35c96a45dc6f9aa6653acbaab48ac18208e7db1c7e8a99fc0",
+  "edges": [],
+  "file": "components/deploy/rollback_test.go",
+  "intent": [
+    {
+      "date": "2026-08-02T19:10:16-03:00",
+      "hash": "9bfab4c89790682a509d2d42e48d1a8918867d66",
+      "kind": "commit",
+      "message": "fix(deploy): wait for drain/rollback to reach stopped in tests"
+    },
+    {
+      "date": "2026-06-26T21:55:49-03:00",
+      "hash": "40287fbc5ea901d5337adc152abe67c04b113dd1",
+      "kind": "commit",
+      "message": "feat(deploy): zero-downtime connection draining on deployment switchover (e45)"
+    },
+    {
+      "date": "2026-06-26T20:10:31-03:00",
+      "hash": "77132c782be2345c6e399456065d8e129419e6e1",
+      "kind": "commit",
+      "message": "feat(deploy): add one-click rollback endpoint + artifact reuse (#49)"
+    }
+  ],
+  "lastModified": 1786492494,
+  "symbols": []
+}

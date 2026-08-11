@@ -1,0 +1,123 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 5,
+      "symbolId": "ui/src/lib/format.ts::timeAgo::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "ui/src/lib/format.ts::siteThumbStyle::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "ui/src/lib/format.ts::siteDisplayUrl::function"
+    },
+    {
+      "cyclomatic": 5,
+      "symbolId": "ui/src/lib/format.ts::mapDeployStatus::function"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "ui/src/lib/format.ts::fmtUptime::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "ui/src/lib/format.ts::fmtMemoryMB::function"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "ui/src/lib/format.ts::memoryBarPercent::function"
+    },
+    {
+      "cyclomatic": 5,
+      "symbolId": "ui/src/lib/format.ts::fmtBytes::function"
+    }
+  ],
+  "contentHash": "933dc06f11e4ddddb2b3ac9c24f9569afd5981648a281aa53ea36a744dec8fe4",
+  "edges": [],
+  "file": "ui/src/lib/format.ts",
+  "intent": [
+    {
+      "date": "2026-06-25T07:08:31-03:00",
+      "hash": "a173b3f7599a22033ba71537b28f17950a32a8de",
+      "kind": "commit",
+      "message": "feat(deploy): cache management UI — per-site tab + global panel (e42s02) (#48)"
+    }
+  ],
+  "lastModified": 1786492495,
+  "symbols": [
+    {
+      "endLine": 11,
+      "endOffset": 459,
+      "kind": "function",
+      "name": "timeAgo",
+      "startLine": 1,
+      "startOffset": 54,
+      "symbolId": "ui/src/lib/format.ts::timeAgo::function"
+    },
+    {
+      "endLine": 25,
+      "endOffset": 984,
+      "kind": "function",
+      "name": "siteThumbStyle",
+      "startLine": 21,
+      "startOffset": 762,
+      "symbolId": "ui/src/lib/format.ts::siteThumbStyle::function"
+    },
+    {
+      "endLine": 30,
+      "endOffset": 1156,
+      "kind": "function",
+      "name": "siteDisplayUrl",
+      "startLine": 27,
+      "startOffset": 986,
+      "symbolId": "ui/src/lib/format.ts::siteDisplayUrl::function"
+    },
+    {
+      "endLine": 37,
+      "endOffset": 1390,
+      "kind": "function",
+      "name": "mapDeployStatus",
+      "startLine": 32,
+      "startOffset": 1158,
+      "symbolId": "ui/src/lib/format.ts::mapDeployStatus::function"
+    },
+    {
+      "endLine": 48,
+      "endOffset": 1763,
+      "kind": "function",
+      "name": "fmtUptime",
+      "startLine": 40,
+      "startOffset": 1443,
+      "symbolId": "ui/src/lib/format.ts::fmtUptime::function"
+    },
+    {
+      "endLine": 54,
+      "endOffset": 1977,
+      "kind": "function",
+      "name": "fmtMemoryMB",
+      "startLine": 51,
+      "startOffset": 1838,
+      "symbolId": "ui/src/lib/format.ts::fmtMemoryMB::function"
+    },
+    {
+      "endLine": 59,
+      "endOffset": 2194,
+      "kind": "function",
+      "name": "memoryBarPercent",
+      "startLine": 57,
+      "startOffset": 2072,
+      "symbolId": "ui/src/lib/format.ts::memoryBarPercent::function"
+    },
+    {
+      "endLine": 73,
+      "endOffset": 2667,
+      "kind": "function",
+      "name": "fmtBytes",
+      "startLine": 62,
+      "startOffset": 2287,
+      "symbolId": "ui/src/lib/format.ts::fmtBytes::function"
+    }
+  ]
+}

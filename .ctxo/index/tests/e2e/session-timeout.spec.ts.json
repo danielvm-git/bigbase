@@ -1,0 +1,17 @@
+{
+  "antiPatterns": [],
+  "complexity": [],
+  "contentHash": "e2a8b4fede1ff63d444a95e3a30431cd2586dad3eb9141b710383f75f36e1265",
+  "edges": [],
+  "file": "tests/e2e/session-timeout.spec.ts",
+  "intent": [
+    {
+      "date": "2026-08-11T16:07:12-03:00",
+      "hash": "be5a14e5d0ad29ef9e877d39c955e8a13b797743",
+      "kind": "commit",
+      "message": "fix(ui): AAA session timeout warning + re-auth (e87s05)"
+    }
+  ],
+  "lastModified": 1786492495,
+  "symbols": []
+}

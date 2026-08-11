@@ -1,0 +1,47 @@
+{
+  "antiPatterns": [],
+  "complexity": [],
+  "contentHash": "3241fde4793991cf79d067af1de4ccb08c1ddea83ef240703d29e0f1b631d9b3",
+  "edges": [],
+  "file": "ui/src/context/toastState.ts",
+  "intent": [],
+  "lastModified": 1786492495,
+  "symbols": [
+    {
+      "endLine": 8,
+      "endOffset": 177,
+      "kind": "interface",
+      "name": "Toast",
+      "startLine": 4,
+      "startOffset": 96,
+      "symbolId": "ui/src/context/toastState.ts::Toast::interface"
+    },
+    {
+      "endLine": 12,
+      "endOffset": 266,
+      "kind": "interface",
+      "name": "ToastCtx",
+      "startLine": 10,
+      "startOffset": 179,
+      "symbolId": "ui/src/context/toastState.ts::ToastCtx::interface"
+    },
+    {
+      "endLine": 2,
+      "endOffset": 94,
+      "kind": "type",
+      "name": "ToastVariant",
+      "startLine": 2,
+      "startOffset": 39,
+      "symbolId": "ui/src/context/toastState.ts::ToastVariant::type"
+    },
+    {
+      "endLine": 14,
+      "endOffset": 339,
+      "kind": "variable",
+      "name": "ToastContext",
+      "startLine": 14,
+      "startOffset": 281,
+      "symbolId": "ui/src/context/toastState.ts::ToastContext::variable"
+    }
+  ]
+}

@@ -1,0 +1,246 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/auth/loginlockout.go::NewDBLoginLockoutStore::function"
+    },
+    {
+      "cyclomatic": 7,
+      "symbolId": "components/auth/loginlockout.go::dbLoginLockoutStore.load::method"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/auth/loginlockout.go::dbLoginLockoutStore.CheckLocked::method"
+    },
+    {
+      "cyclomatic": 11,
+      "symbolId": "components/auth/loginlockout.go::dbLoginLockoutStore.RecordFailure::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/auth/loginlockout.go::dbLoginLockoutStore.ClearFailures::method"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/auth/loginlockout.go::retryAfterHeader::function"
+    }
+  ],
+  "contentHash": "652650fa4da35c62cecfdca02d579b57ef6de9a41d42de14f55a47ae63fc179f",
+  "edges": [
+    {
+      "from": "components/auth/loginlockout.go::NewDBLoginLockoutStore::function",
+      "kind": "uses",
+      "to": "components/auth/auth.go::DBer::interface"
+    },
+    {
+      "from": "components/auth/loginlockout.go::NewDBLoginLockoutStore::function",
+      "kind": "uses",
+      "to": "components/auth/loginlockout.go::LoginLockoutStore::interface"
+    },
+    {
+      "from": "components/auth/loginlockout.go::NewDBLoginLockoutStore::function",
+      "kind": "uses",
+      "to": "components/auth/loginlockout.go::dbLoginLockoutStore::class"
+    },
+    {
+      "from": "components/auth/loginlockout.go::dbLoginLockoutStore.load::method",
+      "kind": "uses",
+      "to": "components/auth/loginlockout.go::dbLoginLockoutStore::class"
+    },
+    {
+      "from": "components/auth/loginlockout.go::dbLoginLockoutStore.load::method",
+      "kind": "uses",
+      "to": "components/auth/loginlockout.go::loginLockoutRow::class"
+    },
+    {
+      "from": "components/auth/loginlockout.go::dbLoginLockoutStore.load::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.QueryRowContext::method"
+    },
+    {
+      "from": "components/auth/loginlockout.go::dbLoginLockoutStore.CheckLocked::method",
+      "kind": "uses",
+      "to": "components/auth/loginlockout.go::dbLoginLockoutStore::class"
+    },
+    {
+      "from": "components/auth/loginlockout.go::dbLoginLockoutStore.CheckLocked::method",
+      "kind": "calls",
+      "to": "components/auth/loginlockout.go::dbLoginLockoutStore.load::method"
+    },
+    {
+      "from": "components/auth/loginlockout.go::dbLoginLockoutStore.RecordFailure::method",
+      "kind": "uses",
+      "to": "components/auth/loginlockout.go::dbLoginLockoutStore::class"
+    },
+    {
+      "from": "components/auth/loginlockout.go::dbLoginLockoutStore.RecordFailure::method",
+      "kind": "calls",
+      "to": "components/auth/loginlockout.go::dbLoginLockoutStore.load::method"
+    },
+    {
+      "from": "components/auth/loginlockout.go::dbLoginLockoutStore.RecordFailure::method",
+      "kind": "uses",
+      "to": "components/auth/loginlockout.go::loginFailureWindow::variable"
+    },
+    {
+      "from": "components/auth/loginlockout.go::dbLoginLockoutStore.RecordFailure::method",
+      "kind": "uses",
+      "to": "components/auth/loginlockout.go::maxFailedLoginAttempts::variable"
+    },
+    {
+      "from": "components/auth/loginlockout.go::dbLoginLockoutStore.RecordFailure::method",
+      "kind": "uses",
+      "to": "components/auth/loginlockout.go::loginLockoutDuration::variable"
+    },
+    {
+      "from": "components/auth/loginlockout.go::dbLoginLockoutStore.RecordFailure::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.ExecContext::method"
+    },
+    {
+      "from": "components/auth/loginlockout.go::dbLoginLockoutStore.ClearFailures::method",
+      "kind": "uses",
+      "to": "components/auth/loginlockout.go::dbLoginLockoutStore::class"
+    },
+    {
+      "from": "components/auth/loginlockout.go::dbLoginLockoutStore.ClearFailures::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.ExecContext::method"
+    },
+    {
+      "from": "components/auth/loginlockout.go::dbLoginLockoutStore::class",
+      "kind": "implements",
+      "to": "components/auth/loginlockout.go::LoginLockoutStore::interface"
+    }
+  ],
+  "file": "components/auth/loginlockout.go",
+  "intent": [
+    {
+      "date": "2026-07-10T15:57:21-03:00",
+      "hash": "15be74d6fcf308e44be1ade7549a379a2960a10e",
+      "kind": "commit",
+      "message": "fix(auth): add per-email login lockout after failed attempts (CWE-307)"
+    }
+  ],
+  "lastModified": 1786492494,
+  "symbols": [
+    {
+      "endLine": 11,
+      "endOffset": 103,
+      "kind": "variable",
+      "name": "maxFailedLoginAttempts",
+      "startLine": 11,
+      "startOffset": 81,
+      "symbolId": "components/auth/loginlockout.go::maxFailedLoginAttempts::variable"
+    },
+    {
+      "endLine": 12,
+      "endOffset": 129,
+      "kind": "variable",
+      "name": "loginLockoutDuration",
+      "startLine": 12,
+      "startOffset": 109,
+      "symbolId": "components/auth/loginlockout.go::loginLockoutDuration::variable"
+    },
+    {
+      "endLine": 13,
+      "endOffset": 170,
+      "kind": "variable",
+      "name": "loginFailureWindow",
+      "startLine": 13,
+      "startOffset": 152,
+      "symbolId": "components/auth/loginlockout.go::loginFailureWindow::variable"
+    },
+    {
+      "endLine": 16,
+      "endOffset": 225,
+      "kind": "variable",
+      "name": "loginLockoutsMigration",
+      "startLine": 16,
+      "startOffset": 203,
+      "symbolId": "components/auth/loginlockout.go::loginLockoutsMigration::variable"
+    },
+    {
+      "endLine": 28,
+      "endOffset": 763,
+      "kind": "interface",
+      "name": "LoginLockoutStore",
+      "startLine": 24,
+      "startOffset": 476,
+      "symbolId": "components/auth/loginlockout.go::LoginLockoutStore::interface"
+    },
+    {
+      "endLine": 32,
+      "endOffset": 809,
+      "kind": "class",
+      "name": "dbLoginLockoutStore",
+      "startLine": 30,
+      "startOffset": 770,
+      "symbolId": "components/auth/loginlockout.go::dbLoginLockoutStore::class"
+    },
+    {
+      "endLine": 36,
+      "endOffset": 906,
+      "kind": "function",
+      "name": "NewDBLoginLockoutStore",
+      "startLine": 34,
+      "startOffset": 811,
+      "symbolId": "components/auth/loginlockout.go::NewDBLoginLockoutStore::function"
+    },
+    {
+      "endLine": 43,
+      "endOffset": 1020,
+      "kind": "class",
+      "name": "loginLockoutRow",
+      "startLine": 38,
+      "startOffset": 913,
+      "symbolId": "components/auth/loginlockout.go::loginLockoutRow::class"
+    },
+    {
+      "endLine": 72,
+      "endOffset": 1875,
+      "kind": "method",
+      "name": "dbLoginLockoutStore.load",
+      "startLine": 45,
+      "startOffset": 1022,
+      "symbolId": "components/auth/loginlockout.go::dbLoginLockoutStore.load::method"
+    },
+    {
+      "endLine": 84,
+      "endOffset": 2215,
+      "kind": "method",
+      "name": "dbLoginLockoutStore.CheckLocked",
+      "startLine": 74,
+      "startOffset": 1877,
+      "symbolId": "components/auth/loginlockout.go::dbLoginLockoutStore.CheckLocked::method"
+    },
+    {
+      "endLine": 140,
+      "endOffset": 3755,
+      "kind": "method",
+      "name": "dbLoginLockoutStore.RecordFailure",
+      "startLine": 86,
+      "startOffset": 2217,
+      "symbolId": "components/auth/loginlockout.go::dbLoginLockoutStore.RecordFailure::method"
+    },
+    {
+      "endLine": 145,
+      "endOffset": 3943,
+      "kind": "method",
+      "name": "dbLoginLockoutStore.ClearFailures",
+      "startLine": 142,
+      "startOffset": 3757,
+      "symbolId": "components/auth/loginlockout.go::dbLoginLockoutStore.ClearFailures::method"
+    },
+    {
+      "endLine": 153,
+      "endOffset": 4076,
+      "kind": "function",
+      "name": "retryAfterHeader",
+      "startLine": 147,
+      "startOffset": 3945,
+      "symbolId": "components/auth/loginlockout.go::retryAfterHeader::function"
+    }
+  ]
+}

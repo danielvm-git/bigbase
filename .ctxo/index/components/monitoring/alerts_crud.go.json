@@ -1,0 +1,157 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 6,
+      "symbolId": "components/monitoring/alerts_crud.go::Monitoring.handleAlertByID::method"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/monitoring/alerts_crud.go::Monitoring.handleAlertGet::method"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/monitoring/alerts_crud.go::Monitoring.handleAlertDelete::method"
+    },
+    {
+      "cyclomatic": 6,
+      "symbolId": "components/monitoring/alerts_crud.go::Monitoring.handleAlertUpdate::method"
+    }
+  ],
+  "contentHash": "c0588df0f85767790a69f988298141f1d2bb03efdaa9d68908912a1dc0404a53",
+  "edges": [
+    {
+      "from": "components/monitoring/alerts_crud.go::Monitoring.handleAlertByID::method",
+      "kind": "uses",
+      "to": "components/monitoring/monitoring.go::Monitoring::class"
+    },
+    {
+      "from": "components/monitoring/alerts_crud.go::Monitoring.handleAlertByID::method",
+      "kind": "calls",
+      "to": "kernel/utilities.go::WriteJSON::function"
+    },
+    {
+      "from": "components/monitoring/alerts_crud.go::Monitoring.handleAlertByID::method",
+      "kind": "calls",
+      "to": "components/monitoring/alerts_crud.go::Monitoring.handleAlertGet::method"
+    },
+    {
+      "from": "components/monitoring/alerts_crud.go::Monitoring.handleAlertByID::method",
+      "kind": "calls",
+      "to": "components/monitoring/alerts_crud.go::Monitoring.handleAlertDelete::method"
+    },
+    {
+      "from": "components/monitoring/alerts_crud.go::Monitoring.handleAlertByID::method",
+      "kind": "calls",
+      "to": "components/monitoring/alerts_crud.go::Monitoring.handleAlertUpdate::method"
+    },
+    {
+      "from": "components/monitoring/alerts_crud.go::Monitoring.handleAlertGet::method",
+      "kind": "uses",
+      "to": "components/monitoring/monitoring.go::Monitoring::class"
+    },
+    {
+      "from": "components/monitoring/alerts_crud.go::Monitoring.handleAlertGet::method",
+      "kind": "calls",
+      "to": "kernel/utilities.go::WriteJSON::function"
+    },
+    {
+      "from": "components/monitoring/alerts_crud.go::Monitoring.handleAlertGet::method",
+      "kind": "uses",
+      "to": "components/monitoring/monitoring.go::Alert::class"
+    },
+    {
+      "from": "components/monitoring/alerts_crud.go::Monitoring.handleAlertGet::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.QueryRowContext::method"
+    },
+    {
+      "from": "components/monitoring/alerts_crud.go::Monitoring.handleAlertDelete::method",
+      "kind": "uses",
+      "to": "components/monitoring/monitoring.go::Monitoring::class"
+    },
+    {
+      "from": "components/monitoring/alerts_crud.go::Monitoring.handleAlertDelete::method",
+      "kind": "calls",
+      "to": "kernel/utilities.go::WriteJSON::function"
+    },
+    {
+      "from": "components/monitoring/alerts_crud.go::Monitoring.handleAlertDelete::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.ExecContext::method"
+    },
+    {
+      "from": "components/monitoring/alerts_crud.go::Monitoring.handleAlertDelete::method",
+      "kind": "calls",
+      "to": "kernel/component.go::Logger.Error::method"
+    },
+    {
+      "from": "components/monitoring/alerts_crud.go::Monitoring.handleAlertUpdate::method",
+      "kind": "uses",
+      "to": "components/monitoring/monitoring.go::Monitoring::class"
+    },
+    {
+      "from": "components/monitoring/alerts_crud.go::Monitoring.handleAlertUpdate::method",
+      "kind": "calls",
+      "to": "kernel/utilities.go::WriteJSON::function"
+    },
+    {
+      "from": "components/monitoring/alerts_crud.go::Monitoring.handleAlertUpdate::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.ExecContext::method"
+    },
+    {
+      "from": "components/monitoring/alerts_crud.go::Monitoring.handleAlertUpdate::method",
+      "kind": "calls",
+      "to": "kernel/component.go::Logger.Error::method"
+    }
+  ],
+  "file": "components/monitoring/alerts_crud.go",
+  "intent": [
+    {
+      "date": "2026-07-10T14:46:55-03:00",
+      "hash": "36722e3d731d1da0179c0360d677bc6bdf2b3b19",
+      "kind": "commit",
+      "message": "fix(deploy): prevent manifest path traversal (CWE-22)"
+    }
+  ],
+  "lastModified": 1786492494,
+  "symbols": [
+    {
+      "endLine": 29,
+      "endOffset": 756,
+      "kind": "method",
+      "name": "Monitoring.handleAlertByID",
+      "startLine": 12,
+      "startOffset": 175,
+      "symbolId": "components/monitoring/alerts_crud.go::Monitoring.handleAlertByID::method"
+    },
+    {
+      "endLine": 47,
+      "endOffset": 1427,
+      "kind": "method",
+      "name": "Monitoring.handleAlertGet",
+      "startLine": 31,
+      "startOffset": 758,
+      "symbolId": "components/monitoring/alerts_crud.go::Monitoring.handleAlertGet::method"
+    },
+    {
+      "endLine": 62,
+      "endOffset": 2008,
+      "kind": "method",
+      "name": "Monitoring.handleAlertDelete",
+      "startLine": 49,
+      "startOffset": 1429,
+      "symbolId": "components/monitoring/alerts_crud.go::Monitoring.handleAlertDelete::method"
+    },
+    {
+      "endLine": 97,
+      "endOffset": 3266,
+      "kind": "method",
+      "name": "Monitoring.handleAlertUpdate",
+      "startLine": 64,
+      "startOffset": 2010,
+      "symbolId": "components/monitoring/alerts_crud.go::Monitoring.handleAlertUpdate::method"
+    }
+  ]
+}

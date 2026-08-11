@@ -1,0 +1,23 @@
+{
+  "antiPatterns": [],
+  "complexity": [],
+  "contentHash": "9c994fb443de84b4c6765447d609cd78dda1808df74acfd5fd9481eca29dc61d",
+  "edges": [
+    {
+      "from": "ui/src/components/Spinner.test.tsx::Spinner.test::variable",
+      "kind": "imports",
+      "to": "ui/src/components/Spinner.ts::Spinner::class"
+    }
+  ],
+  "file": "ui/src/components/Spinner.test.tsx",
+  "intent": [
+    {
+      "date": "2026-06-28T17:11:02-03:00",
+      "hash": "6fb588e63f79ce75dad9a27c5cd8dc0bf796f27c",
+      "kind": "commit",
+      "message": "feat(ui): add design system foundation — tokens, 22 components, a11y audit"
+    }
+  ],
+  "lastModified": 1786492495,
+  "symbols": []
+}

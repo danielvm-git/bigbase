@@ -1,0 +1,191 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 5,
+      "symbolId": "components/deploy/cache_archive.go::createTarGz::function"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/deploy/cache_archive.go::addPath::function"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/deploy/cache_archive.go::addDirToTar::function"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/deploy/cache_archive.go::addFileToTar::function"
+    },
+    {
+      "cyclomatic": 6,
+      "symbolId": "components/deploy/cache_archive.go::extractTarGz::function"
+    },
+    {
+      "cyclomatic": 5,
+      "symbolId": "components/deploy/cache_archive.go::extractEntry::function"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/deploy/cache_archive.go::writeExtractedFile::function"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/deploy/cache_archive.go::isUnderDir::function"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/deploy/cache_archive.go::countWriter.Write::method"
+    }
+  ],
+  "contentHash": "dc033370f27575f6b572a5f438d82fee781c141d5f1638065b9ab57c5a18fb80",
+  "edges": [
+    {
+      "from": "components/deploy/cache_archive.go::createTarGz::function",
+      "kind": "uses",
+      "to": "components/deploy/cache_archive.go::countWriter::class"
+    },
+    {
+      "from": "components/deploy/cache_archive.go::createTarGz::function",
+      "kind": "calls",
+      "to": "components/deploy/cache_archive.go::addPath::function"
+    },
+    {
+      "from": "components/deploy/cache_archive.go::addPath::function",
+      "kind": "calls",
+      "to": "components/deploy/cache_archive.go::addDirToTar::function"
+    },
+    {
+      "from": "components/deploy/cache_archive.go::addPath::function",
+      "kind": "calls",
+      "to": "components/deploy/cache_archive.go::addFileToTar::function"
+    },
+    {
+      "from": "components/deploy/cache_archive.go::addDirToTar::function",
+      "kind": "calls",
+      "to": "components/deploy/cache_archive.go::addFileToTar::function"
+    },
+    {
+      "from": "components/deploy/cache_archive.go::extractTarGz::function",
+      "kind": "calls",
+      "to": "components/deploy/cache_archive.go::extractEntry::function"
+    },
+    {
+      "from": "components/deploy/cache_archive.go::extractEntry::function",
+      "kind": "calls",
+      "to": "components/deploy/cache_archive.go::isUnderDir::function"
+    },
+    {
+      "from": "components/deploy/cache_archive.go::extractEntry::function",
+      "kind": "calls",
+      "to": "components/deploy/cache_archive.go::writeExtractedFile::function"
+    },
+    {
+      "from": "components/deploy/cache_archive.go::countWriter.Write::method",
+      "kind": "uses",
+      "to": "components/deploy/cache_archive.go::countWriter::class"
+    }
+  ],
+  "file": "components/deploy/cache_archive.go",
+  "intent": [
+    {
+      "date": "2026-06-25T06:22:04-03:00",
+      "hash": "29238a6334c45612507ce8dbe4cb41de61d032d0",
+      "kind": "commit",
+      "message": "feat(deploy): build dependency cache — skip npm install on lockfile cache hit (e42s01) (#47)"
+    }
+  ],
+  "lastModified": 1786492494,
+  "symbols": [
+    {
+      "endLine": 32,
+      "endOffset": 607,
+      "kind": "function",
+      "name": "createTarGz",
+      "startLine": 15,
+      "startOffset": 220,
+      "symbolId": "components/deploy/cache_archive.go::createTarGz::function"
+    },
+    {
+      "endLine": 48,
+      "endOffset": 1024,
+      "kind": "function",
+      "name": "addPath",
+      "startLine": 35,
+      "startOffset": 664,
+      "symbolId": "components/deploy/cache_archive.go::addPath::function"
+    },
+    {
+      "endLine": 70,
+      "endOffset": 1564,
+      "kind": "function",
+      "name": "addDirToTar",
+      "startLine": 50,
+      "startOffset": 1026,
+      "symbolId": "components/deploy/cache_archive.go::addDirToTar::function"
+    },
+    {
+      "endLine": 93,
+      "endOffset": 1984,
+      "kind": "function",
+      "name": "addFileToTar",
+      "startLine": 72,
+      "startOffset": 1566,
+      "symbolId": "components/deploy/cache_archive.go::addFileToTar::function"
+    },
+    {
+      "endLine": 117,
+      "endOffset": 2435,
+      "kind": "function",
+      "name": "extractTarGz",
+      "startLine": 96,
+      "startOffset": 2066,
+      "symbolId": "components/deploy/cache_archive.go::extractTarGz::function"
+    },
+    {
+      "endLine": 132,
+      "endOffset": 2918,
+      "kind": "function",
+      "name": "extractEntry",
+      "startLine": 120,
+      "startOffset": 2520,
+      "symbolId": "components/deploy/cache_archive.go::extractEntry::function"
+    },
+    {
+      "endLine": 147,
+      "endOffset": 3294,
+      "kind": "function",
+      "name": "writeExtractedFile",
+      "startLine": 134,
+      "startOffset": 2920,
+      "symbolId": "components/deploy/cache_archive.go::writeExtractedFile::function"
+    },
+    {
+      "endLine": 153,
+      "endOffset": 3522,
+      "kind": "function",
+      "name": "isUnderDir",
+      "startLine": 150,
+      "startOffset": 3363,
+      "symbolId": "components/deploy/cache_archive.go::isUnderDir::function"
+    },
+    {
+      "endLine": 158,
+      "endOffset": 3573,
+      "kind": "class",
+      "name": "countWriter",
+      "startLine": 155,
+      "startOffset": 3529,
+      "symbolId": "components/deploy/cache_archive.go::countWriter::class"
+    },
+    {
+      "endLine": 164,
+      "endOffset": 3685,
+      "kind": "method",
+      "name": "countWriter.Write",
+      "startLine": 160,
+      "startOffset": 3575,
+      "symbolId": "components/deploy/cache_archive.go::countWriter.Write::method"
+    }
+  ]
+}

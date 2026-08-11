@@ -1,0 +1,45 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 2,
+      "symbolId": "config/serve_env.go::FlagOrEnv::function"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "config/serve_env.go::FlagOrEnvBool::function"
+    }
+  ],
+  "contentHash": "5e928032828cee75c332c8f7d337eb061abb8d076392fb06b2a9b213df1cad49",
+  "edges": [],
+  "file": "config/serve_env.go",
+  "intent": [
+    {
+      "date": "2026-06-27T13:16:16-03:00",
+      "hash": "57829a79851daff81804d4a16ec95008f4caab6c",
+      "kind": "commit",
+      "message": "feat(auth): wire rate limiter with graceful shutdown and env prefix"
+    }
+  ],
+  "lastModified": 1786492495,
+  "symbols": [
+    {
+      "endLine": 14,
+      "endOffset": 257,
+      "kind": "function",
+      "name": "FlagOrEnv",
+      "startLine": 9,
+      "startOffset": 142,
+      "symbolId": "config/serve_env.go::FlagOrEnv::function"
+    },
+    {
+      "endLine": 35,
+      "endOffset": 979,
+      "kind": "function",
+      "name": "FlagOrEnvBool",
+      "startLine": 25,
+      "startOffset": 785,
+      "symbolId": "config/serve_env.go::FlagOrEnvBool::function"
+    }
+  ]
+}

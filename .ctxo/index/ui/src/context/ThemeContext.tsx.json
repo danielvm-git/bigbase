@@ -1,0 +1,120 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 3,
+      "symbolId": "ui/src/context/ThemeContext.tsx::applyAccentToDocument::function"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "ui/src/context/ThemeContext.tsx::ThemeProvider::function"
+    }
+  ],
+  "contentHash": "581d1a83913ec6ab883561628c28439343ccfd7c750218406bba527aeff80e7b",
+  "edges": [
+    {
+      "from": "ui/src/context/ThemeContext.tsx::applyAccentToDocument::function",
+      "kind": "imports",
+      "to": "ui/src/context/themeState.ts::ThemeContext::variable"
+    },
+    {
+      "from": "ui/src/context/ThemeContext.tsx::applyAccentToDocument::function",
+      "kind": "imports",
+      "to": "ui/src/context/themeState.ts::Theme::type",
+      "typeOnly": true
+    },
+    {
+      "from": "ui/src/context/ThemeContext.tsx::applyAccentToDocument::function",
+      "kind": "imports",
+      "to": "ui/src/context/accentThemes.ts::AccentId::type",
+      "typeOnly": true
+    },
+    {
+      "from": "ui/src/context/ThemeContext.tsx::applyAccentToDocument::function",
+      "kind": "imports",
+      "to": "ui/src/context/accentThemes.ts::getAccentTheme::function"
+    },
+    {
+      "from": "ui/src/context/ThemeContext.tsx::applyAccentToDocument::function",
+      "kind": "imports",
+      "to": "ui/src/context/accentThemes.ts::isAccentId::function"
+    },
+    {
+      "from": "ui/src/context/ThemeContext.tsx::applyAccentToDocument::function",
+      "kind": "calls",
+      "to": "ui/src/context/accentThemes.ts::getAccentTheme::function"
+    },
+    {
+      "from": "ui/src/context/ThemeContext.tsx::ThemeProvider::function",
+      "kind": "calls",
+      "to": "ui/src/context/ThemeContext.tsx::applyAccentToDocument::function"
+    },
+    {
+      "from": "ui/src/context/ThemeContext.tsx::applyAccentToDocument::function",
+      "kind": "uses",
+      "to": "ui/src/context/accentThemes.ts::AccentId::type"
+    },
+    {
+      "from": "ui/src/context/ThemeContext.tsx::applyAccentToDocument::function",
+      "kind": "uses",
+      "to": "ui/src/context/accentThemes.ts::getAccentTheme::function"
+    },
+    {
+      "from": "ui/src/context/ThemeContext.tsx::ThemeProvider::function",
+      "kind": "uses",
+      "to": "ui/src/context/themeState.ts::Theme::type"
+    },
+    {
+      "from": "ui/src/context/ThemeContext.tsx::ThemeProvider::function",
+      "kind": "uses",
+      "to": "ui/src/context/accentThemes.ts::AccentId::type"
+    },
+    {
+      "from": "ui/src/context/ThemeContext.tsx::ThemeProvider::function",
+      "kind": "uses",
+      "to": "ui/src/context/themeState.ts::ThemeContext::variable"
+    }
+  ],
+  "file": "ui/src/context/ThemeContext.tsx",
+  "intent": [
+    {
+      "date": "2026-08-11T18:22:51-03:00",
+      "hash": "8d7aff4cb0dfb44e2b12627c9b645b74b368c763",
+      "kind": "commit",
+      "message": "fix(ui): accent-theme links >=7:1 (e88s01)"
+    },
+    {
+      "date": "2026-08-11T16:07:12-03:00",
+      "hash": "314e870a962a01a694f12b68a7747e244ca51258",
+      "kind": "commit",
+      "message": "fix(ui): AAA contrast tokens 7:1 (e87s01)"
+    },
+    {
+      "date": "2026-07-10T20:39:36-03:00",
+      "hash": "db94b7c03f56600323aff8c9132e7d98185ff8b2",
+      "kind": "commit",
+      "message": "fix(ui): CopyButton silent failure + pre-existing ESLint cleanup"
+    }
+  ],
+  "lastModified": 1786492495,
+  "symbols": [
+    {
+      "endLine": 52,
+      "endOffset": 1998,
+      "kind": "function",
+      "name": "applyAccentToDocument",
+      "startLine": 29,
+      "startOffset": 805,
+      "symbolId": "ui/src/context/ThemeContext.tsx::applyAccentToDocument::function"
+    },
+    {
+      "endLine": 75,
+      "endOffset": 2919,
+      "kind": "function",
+      "name": "ThemeProvider",
+      "startLine": 54,
+      "startOffset": 2000,
+      "symbolId": "ui/src/context/ThemeContext.tsx::ThemeProvider::function"
+    }
+  ]
+}

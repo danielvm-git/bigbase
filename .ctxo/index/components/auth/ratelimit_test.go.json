@@ -1,0 +1,68 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 22,
+      "symbolId": "components/auth/ratelimit_test.go::TestRateLimit::function"
+    },
+    {
+      "cyclomatic": 6,
+      "symbolId": "components/auth/ratelimit_test.go::TestRateLimitIntegration::function"
+    },
+    {
+      "cyclomatic": 5,
+      "symbolId": "components/auth/ratelimit_test.go::TestRateLimitHeaders::function"
+    },
+    {
+      "cyclomatic": 6,
+      "symbolId": "components/auth/ratelimit_test.go::TestRateLimitDisabled::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/auth/ratelimit_test.go::TestRateLimiterStop::function"
+    }
+  ],
+  "contentHash": "788b22bc96ecd2ea46649e403a3432a27289039ebb7fef6701274e740b791ffc",
+  "edges": [],
+  "file": "components/auth/ratelimit_test.go",
+  "intent": [
+    {
+      "date": "2026-07-10T15:57:21-03:00",
+      "hash": "15be74d6fcf308e44be1ade7549a379a2960a10e",
+      "kind": "commit",
+      "message": "fix(auth): add per-email login lockout after failed attempts (CWE-307)"
+    },
+    {
+      "date": "2026-07-10T14:46:55-03:00",
+      "hash": "36722e3d731d1da0179c0360d677bc6bdf2b3b19",
+      "kind": "commit",
+      "message": "fix(deploy): prevent manifest path traversal (CWE-22)"
+    },
+    {
+      "date": "2026-06-27T13:16:16-03:00",
+      "hash": "57829a79851daff81804d4a16ec95008f4caab6c",
+      "kind": "commit",
+      "message": "feat(auth): wire rate limiter with graceful shutdown and env prefix"
+    },
+    {
+      "date": "2026-06-27T12:09:05-03:00",
+      "hash": "afab36317efac8477f64f38eb2c9930399a7741c",
+      "kind": "commit",
+      "message": "test(e47): add TestRateLimitDisabled — disabled mode passes unhindered"
+    },
+    {
+      "date": "2026-06-27T12:06:07-03:00",
+      "hash": "1769c67d3ba3f50a472efa9de8e17aa66b11cba1",
+      "kind": "commit",
+      "message": "test(e47): add integration tests for rate limiter wiring"
+    },
+    {
+      "date": "2026-06-27T12:00:08-03:00",
+      "hash": "961c2605099750325723110836409795bb1247d7",
+      "kind": "commit",
+      "message": "test(auth): add Reconfigure test for runtime rate limit changes"
+    }
+  ],
+  "lastModified": 1786492494,
+  "symbols": []
+}

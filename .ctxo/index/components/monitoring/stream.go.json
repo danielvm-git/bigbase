@@ -1,0 +1,81 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 10,
+      "symbolId": "components/monitoring/stream.go::Monitoring.handleMetricsStream::method"
+    }
+  ],
+  "contentHash": "79db2b653046cfc818911c60c1e4d05160a45bfa1efeb313ffe319f0d33fbea6",
+  "edges": [
+    {
+      "from": "components/monitoring/stream.go::Monitoring.handleMetricsStream::method",
+      "kind": "uses",
+      "to": "components/monitoring/monitoring.go::Monitoring::class"
+    },
+    {
+      "from": "components/monitoring/stream.go::Monitoring.handleMetricsStream::method",
+      "kind": "calls",
+      "to": "kernel/utilities.go::WriteJSON::function"
+    },
+    {
+      "from": "components/monitoring/stream.go::Monitoring.handleMetricsStream::method",
+      "kind": "uses",
+      "to": "components/monitoring/stream.go::sseEvent::class"
+    },
+    {
+      "from": "components/monitoring/stream.go::Monitoring.handleMetricsStream::method",
+      "kind": "calls",
+      "to": "components/monitoring/monitoring.go::Monitoring.SystemMetrics::method"
+    },
+    {
+      "from": "components/monitoring/stream.go::Monitoring.handleMetricsStream::method",
+      "kind": "calls",
+      "to": "components/monitoring/monitoring.go::Monitoring.LatestHostMetrics::method"
+    },
+    {
+      "from": "components/monitoring/stream.go::Monitoring.handleMetricsStream::method",
+      "kind": "uses",
+      "to": "components/monitoring/stream.go::sseInterval::variable"
+    }
+  ],
+  "file": "components/monitoring/stream.go",
+  "intent": [
+    {
+      "date": "2026-07-10T14:46:55-03:00",
+      "hash": "36722e3d731d1da0179c0360d677bc6bdf2b3b19",
+      "kind": "commit",
+      "message": "fix(deploy): prevent manifest path traversal (CWE-22)"
+    }
+  ],
+  "lastModified": 1786492494,
+  "symbols": [
+    {
+      "endLine": 12,
+      "endOffset": 132,
+      "kind": "variable",
+      "name": "sseInterval",
+      "startLine": 12,
+      "startOffset": 121,
+      "symbolId": "components/monitoring/stream.go::sseInterval::variable"
+    },
+    {
+      "endLine": 19,
+      "endOffset": 343,
+      "kind": "class",
+      "name": "sseEvent",
+      "startLine": 15,
+      "startOffset": 211,
+      "symbolId": "components/monitoring/stream.go::sseEvent::class"
+    },
+    {
+      "endLine": 72,
+      "endOffset": 1586,
+      "kind": "method",
+      "name": "Monitoring.handleMetricsStream",
+      "startLine": 24,
+      "startOffset": 553,
+      "symbolId": "components/monitoring/stream.go::Monitoring.handleMetricsStream::method"
+    }
+  ]
+}

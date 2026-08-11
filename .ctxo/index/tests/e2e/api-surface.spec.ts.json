@@ -1,0 +1,29 @@
+{
+  "antiPatterns": [],
+  "complexity": [],
+  "contentHash": "aa82b2387513598521daba2611e090ce7cc8ee1bdd77b49dd51ab4fb15178ef9",
+  "edges": [],
+  "file": "tests/e2e/api-surface.spec.ts",
+  "intent": [
+    {
+      "date": "2026-07-11T22:16:50-03:00",
+      "hash": "27bffe302e8dd41263e2a02de23884a2af58ef05",
+      "kind": "commit",
+      "message": "test(browser-e2e): add browser-level UI E2E coverage for all 22 SPA routes"
+    },
+    {
+      "date": "2026-07-11T17:57:05-03:00",
+      "hash": "63e7679f6da4f738264a04785f063c351a9083fe",
+      "kind": "commit",
+      "message": "test(api-surface): add E2E request-level tests for all 17 API components"
+    },
+    {
+      "date": "2026-07-11T17:57:05-03:00",
+      "hash": "a4f97682ca6cd6a546ced88f0a0937a7555cc4b2",
+      "kind": "commit",
+      "message": "test(api-surface): add E2E request-level tests for all 17 API components"
+    }
+  ],
+  "lastModified": 1786492495,
+  "symbols": []
+}

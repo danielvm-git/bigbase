@@ -1,0 +1,516 @@
+{
+  "antiPatterns": [
+    {
+      "date": "2026-08-11T00:20:44-03:00",
+      "hash": "b60daca67a24d4020d0e16536bef4921ba7a644b",
+      "message": "fix(ui): replace rollback overlay with accessible Modal (WCAG 2.1.2)"
+    },
+    {
+      "date": "2026-06-26T20:20:59-03:00",
+      "hash": "b97fd9f17fe4f8f9feb34ea9d32cb2c43c5c7c8a",
+      "message": "feat(ui): add rollback button to deployment detail + rollback history timeline"
+    },
+    {
+      "date": "2026-06-21T15:03:24-03:00",
+      "hash": "c058782f95b32d8aa3a74c52ac44863ad572627b",
+      "message": "Revert \"feat(deploy): deployment state machine with validated transitions and events\""
+    }
+  ],
+  "complexity": [
+    {
+      "cyclomatic": 69,
+      "symbolId": "ui/src/pages/SiteDetailPage.tsx::SiteDetailPage::function"
+    }
+  ],
+  "contentHash": "2a809598f40af9faafb669a559c177518db6c54649dc4c2a70de444ee72ac023",
+  "edges": [
+    {
+      "from": "ui/src/pages/SiteDetailPage.tsx::SiteDetailPage::function",
+      "kind": "imports",
+      "to": "ui/src/components.ts::PageHeader::class"
+    },
+    {
+      "from": "ui/src/pages/SiteDetailPage.tsx::SiteDetailPage::function",
+      "kind": "imports",
+      "to": "ui/src/components.ts::Button::class"
+    },
+    {
+      "from": "ui/src/pages/SiteDetailPage.tsx::SiteDetailPage::function",
+      "kind": "imports",
+      "to": "ui/src/components.ts::Modal::class"
+    },
+    {
+      "from": "ui/src/pages/SiteDetailPage.tsx::SiteDetailPage::function",
+      "kind": "imports",
+      "to": "ui/src/components.ts::Card::class"
+    },
+    {
+      "from": "ui/src/pages/SiteDetailPage.tsx::SiteDetailPage::function",
+      "kind": "imports",
+      "to": "ui/src/components.ts::CardHeader::class"
+    },
+    {
+      "from": "ui/src/pages/SiteDetailPage.tsx::SiteDetailPage::function",
+      "kind": "imports",
+      "to": "ui/src/components.ts::Badge::class"
+    },
+    {
+      "from": "ui/src/pages/SiteDetailPage.tsx::SiteDetailPage::function",
+      "kind": "imports",
+      "to": "ui/src/components.ts::statusBadgeVariant::function"
+    },
+    {
+      "from": "ui/src/pages/SiteDetailPage.tsx::SiteDetailPage::function",
+      "kind": "imports",
+      "to": "ui/src/components.ts::PreviewBanner::class"
+    },
+    {
+      "from": "ui/src/pages/SiteDetailPage.tsx::SiteDetailPage::function",
+      "kind": "imports",
+      "to": "ui/src/components.ts::SitesListSkeleton::class"
+    },
+    {
+      "from": "ui/src/pages/SiteDetailPage.tsx::SiteDetailPage::function",
+      "kind": "imports",
+      "to": "ui/src/components.ts::TerminalLogViewer::class"
+    },
+    {
+      "from": "ui/src/pages/SiteDetailPage.tsx::SiteDetailPage::function",
+      "kind": "imports",
+      "to": "ui/src/components.ts::Tabs::class"
+    },
+    {
+      "from": "ui/src/pages/SiteDetailPage.tsx::SiteDetailPage::function",
+      "kind": "imports",
+      "to": "ui/src/components.ts::RequestLogs::class"
+    },
+    {
+      "from": "ui/src/pages/SiteDetailPage.tsx::SiteDetailPage::function",
+      "kind": "imports",
+      "to": "ui/src/components.ts::SiteEnvVarsTab::class"
+    },
+    {
+      "from": "ui/src/pages/SiteDetailPage.tsx::SiteDetailPage::function",
+      "kind": "imports",
+      "to": "ui/src/components.ts::SiteCacheTab::class"
+    },
+    {
+      "from": "ui/src/pages/SiteDetailPage.tsx::SiteDetailPage::function",
+      "kind": "imports",
+      "to": "ui/src/components.ts::SiteDomainsTab::class"
+    },
+    {
+      "from": "ui/src/pages/SiteDetailPage.tsx::SiteDetailPage::function",
+      "kind": "imports",
+      "to": "ui/src/components.ts::SiteDeployKeysTab::class"
+    },
+    {
+      "from": "ui/src/pages/SiteDetailPage.tsx::SiteDetailPage::function",
+      "kind": "imports",
+      "to": "ui/src/components.ts::Page::class"
+    },
+    {
+      "from": "ui/src/pages/SiteDetailPage.tsx::SiteDetailPage::function",
+      "kind": "imports",
+      "to": "ui/src/lib/sitesData.ts::getSite::function"
+    },
+    {
+      "from": "ui/src/pages/SiteDetailPage.tsx::SiteDetailPage::function",
+      "kind": "imports",
+      "to": "ui/src/lib/sitesData.ts::getSiteDeployments::function"
+    },
+    {
+      "from": "ui/src/pages/SiteDetailPage.tsx::SiteDetailPage::function",
+      "kind": "imports",
+      "to": "ui/src/lib/sitesData.ts::deleteSite::function"
+    },
+    {
+      "from": "ui/src/pages/SiteDetailPage.tsx::SiteDetailPage::function",
+      "kind": "imports",
+      "to": "ui/src/lib/sitesData.ts::getSiteManifest::function"
+    },
+    {
+      "from": "ui/src/pages/SiteDetailPage.tsx::SiteDetailPage::function",
+      "kind": "imports",
+      "to": "ui/src/lib/sitesData.ts::saveSiteManifest::function"
+    },
+    {
+      "from": "ui/src/pages/SiteDetailPage.tsx::SiteDetailPage::function",
+      "kind": "imports",
+      "to": "ui/src/lib/sitesData.ts::rollbackDeployment::function"
+    },
+    {
+      "from": "ui/src/pages/SiteDetailPage.tsx::SiteDetailPage::function",
+      "kind": "imports",
+      "to": "ui/src/lib/sitesData.ts::getRollbackEvents::function"
+    },
+    {
+      "from": "ui/src/pages/SiteDetailPage.tsx::SiteDetailPage::function",
+      "kind": "imports",
+      "to": "ui/src/lib/previewMode.ts::isPreviewForced::function"
+    },
+    {
+      "from": "ui/src/pages/SiteDetailPage.tsx::SiteDetailPage::function",
+      "kind": "imports",
+      "to": "ui/src/lib/previewMode.ts::previewQuerySuffix::function"
+    },
+    {
+      "from": "ui/src/pages/SiteDetailPage.tsx::SiteDetailPage::function",
+      "kind": "imports",
+      "to": "ui/src/hooks/useRequestLogs.ts::useRequestLogs::function"
+    },
+    {
+      "from": "ui/src/pages/SiteDetailPage.tsx::SiteDetailPage::function",
+      "kind": "imports",
+      "to": "ui/src/types/sites.ts::Deployment::interface",
+      "typeOnly": true
+    },
+    {
+      "from": "ui/src/pages/SiteDetailPage.tsx::SiteDetailPage::function",
+      "kind": "imports",
+      "to": "ui/src/types/sites.ts::RollbackEvent::interface",
+      "typeOnly": true
+    },
+    {
+      "from": "ui/src/pages/SiteDetailPage.tsx::SiteDetailPage::function",
+      "kind": "imports",
+      "to": "ui/src/types/sites.ts::Site::interface",
+      "typeOnly": true
+    },
+    {
+      "from": "ui/src/pages/SiteDetailPage.tsx::SiteDetailPage::function",
+      "kind": "calls",
+      "to": "ui/src/lib/previewMode.ts::previewQuerySuffix::function"
+    },
+    {
+      "from": "ui/src/pages/SiteDetailPage.tsx::SiteDetailPage::function",
+      "kind": "calls",
+      "to": "ui/src/hooks/useRequestLogs.ts::useRequestLogs::function"
+    },
+    {
+      "from": "ui/src/pages/SiteDetailPage.tsx::SiteDetailPage::function",
+      "kind": "calls",
+      "to": "ui/src/lib/sitesData.ts::getSite::function"
+    },
+    {
+      "from": "ui/src/pages/SiteDetailPage.tsx::SiteDetailPage::function",
+      "kind": "calls",
+      "to": "ui/src/lib/previewMode.ts::isPreviewForced::function"
+    },
+    {
+      "from": "ui/src/pages/SiteDetailPage.tsx::SiteDetailPage::function",
+      "kind": "calls",
+      "to": "ui/src/lib/sitesData.ts::getSiteDeployments::function"
+    },
+    {
+      "from": "ui/src/pages/SiteDetailPage.tsx::SiteDetailPage::function",
+      "kind": "calls",
+      "to": "ui/src/lib/sitesData.ts::getRollbackEvents::function"
+    },
+    {
+      "from": "ui/src/pages/SiteDetailPage.tsx::SiteDetailPage::function",
+      "kind": "calls",
+      "to": "ui/src/lib/sitesData.ts::deleteSite::function"
+    },
+    {
+      "from": "ui/src/pages/SiteDetailPage.tsx::SiteDetailPage::function",
+      "kind": "calls",
+      "to": "ui/src/lib/sitesData.ts::rollbackDeployment::function"
+    },
+    {
+      "from": "ui/src/pages/SiteDetailPage.tsx::SiteDetailPage::function",
+      "kind": "calls",
+      "to": "ui/src/lib/sitesData.ts::getRollbackEvents::function"
+    },
+    {
+      "from": "ui/src/pages/SiteDetailPage.tsx::SiteDetailPage::function",
+      "kind": "calls",
+      "to": "ui/src/lib/previewMode.ts::isPreviewForced::function"
+    },
+    {
+      "from": "ui/src/pages/SiteDetailPage.tsx::SiteDetailPage::function",
+      "kind": "calls",
+      "to": "ui/src/components.ts::statusBadgeVariant::function"
+    },
+    {
+      "from": "ui/src/pages/SiteDetailPage.tsx::SiteDetailPage::function",
+      "kind": "calls",
+      "to": "ui/src/components.ts::statusBadgeVariant::function"
+    },
+    {
+      "from": "ui/src/pages/SiteDetailPage.tsx::SiteDetailPage::function",
+      "kind": "uses",
+      "to": "ui/src/types/sites.ts::Site::interface"
+    },
+    {
+      "from": "ui/src/pages/SiteDetailPage.tsx::SiteDetailPage::function",
+      "kind": "uses",
+      "to": "ui/src/types/sites.ts::Deployment::interface"
+    },
+    {
+      "from": "ui/src/pages/SiteDetailPage.tsx::SiteDetailPage::function",
+      "kind": "uses",
+      "to": "ui/src/types/sites.ts::RollbackEvent::interface"
+    },
+    {
+      "from": "ui/src/pages/SiteDetailPage.tsx::SiteDetailPage::function",
+      "kind": "uses",
+      "to": "ui/src/lib/previewMode.ts::previewQuerySuffix::function"
+    },
+    {
+      "from": "ui/src/pages/SiteDetailPage.tsx::SiteDetailPage::function",
+      "kind": "uses",
+      "to": "ui/src/hooks/useRequestLogs.ts::useRequestLogs::function"
+    },
+    {
+      "from": "ui/src/pages/SiteDetailPage.tsx::SiteDetailPage::function",
+      "kind": "uses",
+      "to": "ui/src/lib/sitesData.ts::getSite::function"
+    },
+    {
+      "from": "ui/src/pages/SiteDetailPage.tsx::SiteDetailPage::function",
+      "kind": "uses",
+      "to": "ui/src/lib/previewMode.ts::isPreviewForced::function"
+    },
+    {
+      "from": "ui/src/pages/SiteDetailPage.tsx::SiteDetailPage::function",
+      "kind": "uses",
+      "to": "ui/src/lib/sitesData.ts::getSiteDeployments::function"
+    },
+    {
+      "from": "ui/src/pages/SiteDetailPage.tsx::SiteDetailPage::function",
+      "kind": "uses",
+      "to": "ui/src/lib/sitesData.ts::getRollbackEvents::function"
+    },
+    {
+      "from": "ui/src/pages/SiteDetailPage.tsx::SiteDetailPage::function",
+      "kind": "uses",
+      "to": "ui/src/lib/sitesData.ts::deleteSite::function"
+    },
+    {
+      "from": "ui/src/pages/SiteDetailPage.tsx::SiteDetailPage::function",
+      "kind": "uses",
+      "to": "ui/src/lib/sitesData.ts::rollbackDeployment::function"
+    },
+    {
+      "from": "ui/src/pages/SiteDetailPage.tsx::SiteDetailPage::function",
+      "kind": "uses",
+      "to": "ui/src/components.ts::SitesListSkeleton::class"
+    },
+    {
+      "from": "ui/src/pages/SiteDetailPage.tsx::SiteDetailPage::function",
+      "kind": "uses",
+      "to": "ui/src/components.ts::PageHeader::class"
+    },
+    {
+      "from": "ui/src/pages/SiteDetailPage.tsx::SiteDetailPage::function",
+      "kind": "uses",
+      "to": "ui/src/components.ts::Page::class"
+    },
+    {
+      "from": "ui/src/pages/SiteDetailPage.tsx::SiteDetailPage::function",
+      "kind": "uses",
+      "to": "ui/src/components.ts::Button::class"
+    },
+    {
+      "from": "ui/src/pages/SiteDetailPage.tsx::SiteDetailPage::function",
+      "kind": "uses",
+      "to": "ui/src/components.ts::PreviewBanner::class"
+    },
+    {
+      "from": "ui/src/pages/SiteDetailPage.tsx::SiteDetailPage::function",
+      "kind": "uses",
+      "to": "ui/src/components.ts::Card::class"
+    },
+    {
+      "from": "ui/src/pages/SiteDetailPage.tsx::SiteDetailPage::function",
+      "kind": "uses",
+      "to": "ui/src/components.ts::CardHeader::class"
+    },
+    {
+      "from": "ui/src/pages/SiteDetailPage.tsx::SiteDetailPage::function",
+      "kind": "uses",
+      "to": "ui/src/components.ts::Badge::class"
+    },
+    {
+      "from": "ui/src/pages/SiteDetailPage.tsx::SiteDetailPage::function",
+      "kind": "uses",
+      "to": "ui/src/components.ts::statusBadgeVariant::function"
+    },
+    {
+      "from": "ui/src/pages/SiteDetailPage.tsx::SiteDetailPage::function",
+      "kind": "uses",
+      "to": "ui/src/components.ts::Tabs::class"
+    },
+    {
+      "from": "ui/src/pages/SiteDetailPage.tsx::SiteDetailPage::function",
+      "kind": "uses",
+      "to": "ui/src/components.ts::TerminalLogViewer::class"
+    },
+    {
+      "from": "ui/src/pages/SiteDetailPage.tsx::SiteDetailPage::function",
+      "kind": "uses",
+      "to": "ui/src/components.ts::RequestLogs::class"
+    },
+    {
+      "from": "ui/src/pages/SiteDetailPage.tsx::SiteDetailPage::function",
+      "kind": "uses",
+      "to": "ui/src/components.ts::SiteEnvVarsTab::class"
+    },
+    {
+      "from": "ui/src/pages/SiteDetailPage.tsx::SiteDetailPage::function",
+      "kind": "uses",
+      "to": "ui/src/components.ts::SiteDomainsTab::class"
+    },
+    {
+      "from": "ui/src/pages/SiteDetailPage.tsx::SiteDetailPage::function",
+      "kind": "uses",
+      "to": "ui/src/components.ts::SiteDeployKeysTab::class"
+    },
+    {
+      "from": "ui/src/pages/SiteDetailPage.tsx::SiteDetailPage::function",
+      "kind": "uses",
+      "to": "ui/src/components.ts::SiteCacheTab::class"
+    },
+    {
+      "from": "ui/src/pages/SiteDetailPage.tsx::SiteDetailPage::function",
+      "kind": "uses",
+      "to": "ui/src/components.ts::Modal::class"
+    }
+  ],
+  "file": "ui/src/pages/SiteDetailPage.tsx",
+  "intent": [
+    {
+      "date": "2026-08-11T16:07:12-03:00",
+      "hash": "314e870a962a01a694f12b68a7747e244ca51258",
+      "kind": "commit",
+      "message": "fix(ui): AAA contrast tokens 7:1 (e87s01)"
+    },
+    {
+      "date": "2026-08-11T13:43:14-03:00",
+      "hash": "23c10a8edc11e8765d5f695aef9e37c7b6e33280",
+      "kind": "commit",
+      "message": "fix(ui): table scope/caption + decorative glyph aria-hidden (T000021)"
+    },
+    {
+      "date": "2026-08-11T00:28:51-03:00",
+      "hash": "414d30a3ef5c70370da6074a834d8683d472a41a",
+      "kind": "commit",
+      "message": "fix(ui): implement WAI-ARIA tabs pattern with roving tabindex (BUG-2026-08-11T000006)"
+    },
+    {
+      "date": "2026-08-11T00:20:44-03:00",
+      "hash": "b60daca67a24d4020d0e16536bef4921ba7a644b",
+      "kind": "commit",
+      "message": "fix(ui): replace rollback overlay with accessible Modal (WCAG 2.1.2)"
+    },
+    {
+      "date": "2026-07-10T20:39:36-03:00",
+      "hash": "db94b7c03f56600323aff8c9132e7d98185ff8b2",
+      "kind": "commit",
+      "message": "fix(ui): CopyButton silent failure + pre-existing ESLint cleanup"
+    },
+    {
+      "date": "2026-07-10T16:54:20-03:00",
+      "hash": "68d9f6aef3667d3b652daf61f08a2cb5f905809a",
+      "kind": "commit",
+      "message": "feat(ui): add Deploy Keys tab to Site Detail page"
+    },
+    {
+      "date": "2026-06-28T17:11:02-03:00",
+      "hash": "6fb588e63f79ce75dad9a27c5cd8dc0bf796f27c",
+      "kind": "commit",
+      "message": "feat(ui): add design system foundation — tokens, 22 components, a11y audit"
+    },
+    {
+      "date": "2026-06-27T00:52:49-03:00",
+      "hash": "cad59563567bd3e00e0d07c353ba6d216ebb3fbd",
+      "kind": "commit",
+      "message": "feat(ui): add custom domain management tab to SiteDetailPage (e46s03)"
+    },
+    {
+      "date": "2026-06-26T21:55:49-03:00",
+      "hash": "40287fbc5ea901d5337adc152abe67c04b113dd1",
+      "kind": "commit",
+      "message": "feat(deploy): zero-downtime connection draining on deployment switchover (e45)"
+    },
+    {
+      "date": "2026-06-26T20:20:59-03:00",
+      "hash": "b97fd9f17fe4f8f9feb34ea9d32cb2c43c5c7c8a",
+      "kind": "commit",
+      "message": "feat(ui): add rollback button to deployment detail + rollback history timeline"
+    },
+    {
+      "date": "2026-06-26T18:34:05-03:00",
+      "hash": "9b468360a23e4f4955d9a5209e5ddf35eb8f7b82",
+      "kind": "commit",
+      "message": "feat(deploy): semantic health check — probe before marking deployment live"
+    },
+    {
+      "date": "2026-06-25T07:08:31-03:00",
+      "hash": "a173b3f7599a22033ba71537b28f17950a32a8de",
+      "kind": "commit",
+      "message": "feat(deploy): cache management UI — per-site tab + global panel (e42s02) (#48)"
+    },
+    {
+      "date": "2026-06-24T14:11:41-03:00",
+      "hash": "4686942f76f423898f1bfdb09e6861eca80b07d2",
+      "kind": "commit",
+      "message": "feat(ui): add Env Vars tab to SiteDetailPage with CRUD and .env import/export"
+    },
+    {
+      "date": "2026-06-24T11:22:02-03:00",
+      "hash": "491afa44b825318daddbc4b6eb47326a6e1d25c0",
+      "kind": "commit",
+      "message": "feat(ui): enhance StatusTimeline with animations, Live badge, and failed indicator"
+    },
+    {
+      "date": "2026-06-24T11:21:09-03:00",
+      "hash": "a98b303e0173f671f3545a7e54aad71996fdb002",
+      "kind": "commit",
+      "message": "fix(ui): reduce poll interval to 2s and include 'deploying' in active-status check"
+    },
+    {
+      "date": "2026-06-21T23:17:46-03:00",
+      "hash": "03a01e23c47d24f03f45e60c952a9e64a8e3f780",
+      "kind": "commit",
+      "message": "feat(e40s03): implement Admin UI manifest view and editor"
+    },
+    {
+      "date": "2026-06-21T20:23:34-03:00",
+      "hash": "512b3da4be82abfa3a887fdb5bc3277e1fc1e7b4",
+      "kind": "commit",
+      "message": "feat(ui): create TerminalLogViewer component and replace BuildLogs in SiteDetailPage"
+    },
+    {
+      "date": "2026-06-21T15:03:24-03:00",
+      "hash": "c058782f95b32d8aa3a74c52ac44863ad572627b",
+      "kind": "commit",
+      "message": "Revert \"feat(deploy): deployment state machine with validated transitions and events\""
+    },
+    {
+      "date": "2026-06-21T14:55:32-03:00",
+      "hash": "6780538cdb4ea45e376bb9cdbcc9cfad563bbe19",
+      "kind": "commit",
+      "message": "feat(deploy): deployment state machine with validated transitions and events"
+    },
+    {
+      "date": "2026-06-19T13:07:25-03:00",
+      "hash": "e2ba57a189f3a1f0225482aff2d06da5d9e0a6a7",
+      "kind": "commit",
+      "message": "feat(ui): add site delete action to Sites grid and SiteDetail danger zone"
+    }
+  ],
+  "lastModified": 1786492495,
+  "symbols": [
+    {
+      "endLine": 702,
+      "endOffset": 26664,
+      "kind": "function",
+      "name": "SiteDetailPage",
+      "startLine": 286,
+      "startOffset": 10726,
+      "symbolId": "ui/src/pages/SiteDetailPage.tsx::SiteDetailPage::function"
+    }
+  ]
+}

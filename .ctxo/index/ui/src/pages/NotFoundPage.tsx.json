@@ -1,0 +1,36 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 1,
+      "symbolId": "ui/src/pages/NotFoundPage.tsx::NotFoundPage::function"
+    }
+  ],
+  "contentHash": "421af576ddd5d2a352f98ff10e67bc79b3c4766c33f411c0870b1bebebc820f2",
+  "edges": [
+    {
+      "from": "ui/src/pages/NotFoundPage.tsx::NotFoundPage::function",
+      "kind": "imports",
+      "to": "ui/src/components.ts::Button::class"
+    },
+    {
+      "from": "ui/src/pages/NotFoundPage.tsx::NotFoundPage::function",
+      "kind": "uses",
+      "to": "ui/src/components.ts::Button::class"
+    }
+  ],
+  "file": "ui/src/pages/NotFoundPage.tsx",
+  "intent": [],
+  "lastModified": 1786492495,
+  "symbols": [
+    {
+      "endLine": 13,
+      "endOffset": 360,
+      "kind": "function",
+      "name": "NotFoundPage",
+      "startLine": 3,
+      "startOffset": 80,
+      "symbolId": "ui/src/pages/NotFoundPage.tsx::NotFoundPage::function"
+    }
+  ]
+}

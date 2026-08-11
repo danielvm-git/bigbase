@@ -1,0 +1,201 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/db/migrator.go::NewMigrator::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/db/migrator.go::Migrator.ensureTable::method"
+    },
+    {
+      "cyclomatic": 5,
+      "symbolId": "components/db/migrator.go::Migrator.applied::method"
+    },
+    {
+      "cyclomatic": 10,
+      "symbolId": "components/db/migrator.go::Migrator.Up::method"
+    },
+    {
+      "cyclomatic": 12,
+      "symbolId": "components/db/migrator.go::Migrator.Down::method"
+    },
+    {
+      "cyclomatic": 8,
+      "symbolId": "components/db/migrator.go::Migrator.Status::method"
+    }
+  ],
+  "contentHash": "b40fbbeae563c40316f908e87c8fb3c0f4b91f9228cb83e96d7f75378f9fea45",
+  "edges": [
+    {
+      "from": "components/db/migrator.go::NewMigrator::function",
+      "kind": "uses",
+      "to": "components/db/migrator.go::Migration::class"
+    },
+    {
+      "from": "components/db/migrator.go::NewMigrator::function",
+      "kind": "uses",
+      "to": "components/db/migrator.go::Migrator::class"
+    },
+    {
+      "from": "components/db/migrator.go::Migrator.ensureTable::method",
+      "kind": "uses",
+      "to": "components/db/migrator.go::Migrator::class"
+    },
+    {
+      "from": "components/db/migrator.go::Migrator.applied::method",
+      "kind": "uses",
+      "to": "components/db/migrator.go::Migrator::class"
+    },
+    {
+      "from": "components/db/migrator.go::Migrator.Up::method",
+      "kind": "uses",
+      "to": "components/db/migrator.go::Migrator::class"
+    },
+    {
+      "from": "components/db/migrator.go::Migrator.Up::method",
+      "kind": "calls",
+      "to": "components/db/migrator.go::Migrator.ensureTable::method"
+    },
+    {
+      "from": "components/db/migrator.go::Migrator.Up::method",
+      "kind": "calls",
+      "to": "components/db/migrator.go::Migrator.applied::method"
+    },
+    {
+      "from": "components/db/migrator.go::Migrator.Down::method",
+      "kind": "uses",
+      "to": "components/db/migrator.go::Migrator::class"
+    },
+    {
+      "from": "components/db/migrator.go::Migrator.Down::method",
+      "kind": "calls",
+      "to": "components/db/migrator.go::Migrator.ensureTable::method"
+    },
+    {
+      "from": "components/db/migrator.go::Migrator.Down::method",
+      "kind": "calls",
+      "to": "components/db/migrator.go::Migrator.applied::method"
+    },
+    {
+      "from": "components/db/migrator.go::Migrator.Down::method",
+      "kind": "uses",
+      "to": "components/db/migrator.go::Migration::class"
+    },
+    {
+      "from": "components/db/migrator.go::Migrator.Status::method",
+      "kind": "uses",
+      "to": "components/db/migrator.go::Migrator::class"
+    },
+    {
+      "from": "components/db/migrator.go::Migrator.Status::method",
+      "kind": "uses",
+      "to": "components/db/migrator.go::MigrationRecord::class"
+    },
+    {
+      "from": "components/db/migrator.go::Migrator.Status::method",
+      "kind": "calls",
+      "to": "components/db/migrator.go::Migrator.ensureTable::method"
+    }
+  ],
+  "file": "components/db/migrator.go",
+  "intent": [
+    {
+      "date": "2026-07-10T14:46:55-03:00",
+      "hash": "36722e3d731d1da0179c0360d677bc6bdf2b3b19",
+      "kind": "commit",
+      "message": "fix(deploy): prevent manifest path traversal (CWE-22)"
+    },
+    {
+      "date": "2026-06-06T11:03:12-03:00",
+      "hash": "1675335a199331880aefdadf8b61b1b9c630265f",
+      "kind": "commit",
+      "message": "feat(db): e18s05 versioned migration system (stdlib, no CGO deps)"
+    }
+  ],
+  "lastModified": 1786492494,
+  "symbols": [
+    {
+      "endLine": 19,
+      "endOffset": 387,
+      "kind": "class",
+      "name": "Migration",
+      "startLine": 15,
+      "startOffset": 319,
+      "symbolId": "components/db/migrator.go::Migration::class"
+    },
+    {
+      "endLine": 25,
+      "endOffset": 539,
+      "kind": "class",
+      "name": "MigrationRecord",
+      "startLine": 22,
+      "startOffset": 474,
+      "symbolId": "components/db/migrator.go::MigrationRecord::class"
+    },
+    {
+      "endLine": 32,
+      "endOffset": 746,
+      "kind": "class",
+      "name": "Migrator",
+      "startLine": 29,
+      "startOffset": 683,
+      "symbolId": "components/db/migrator.go::Migrator::class"
+    },
+    {
+      "endLine": 44,
+      "endOffset": 1230,
+      "kind": "function",
+      "name": "NewMigrator",
+      "startLine": 37,
+      "startOffset": 953,
+      "symbolId": "components/db/migrator.go::NewMigrator::function"
+    },
+    {
+      "endLine": 56,
+      "endOffset": 1597,
+      "kind": "method",
+      "name": "Migrator.ensureTable",
+      "startLine": 47,
+      "startOffset": 1305,
+      "symbolId": "components/db/migrator.go::Migrator.ensureTable::method"
+    },
+    {
+      "endLine": 78,
+      "endOffset": 2226,
+      "kind": "method",
+      "name": "Migrator.applied",
+      "startLine": 59,
+      "startOffset": 1665,
+      "symbolId": "components/db/migrator.go::Migrator.applied::method"
+    },
+    {
+      "endLine": 120,
+      "endOffset": 3401,
+      "kind": "method",
+      "name": "Migrator.Up",
+      "startLine": 83,
+      "startOffset": 2440,
+      "symbolId": "components/db/migrator.go::Migrator.Up::method"
+    },
+    {
+      "endLine": 170,
+      "endOffset": 4740,
+      "kind": "method",
+      "name": "Migrator.Down",
+      "startLine": 124,
+      "startOffset": 3531,
+      "symbolId": "components/db/migrator.go::Migrator.Down::method"
+    },
+    {
+      "endLine": 207,
+      "endOffset": 5800,
+      "kind": "method",
+      "name": "Migrator.Status",
+      "startLine": 174,
+      "startOffset": 4870,
+      "symbolId": "components/db/migrator.go::Migrator.Status::method"
+    }
+  ]
+}

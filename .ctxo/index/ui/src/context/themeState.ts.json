@@ -1,0 +1,45 @@
+{
+  "antiPatterns": [],
+  "complexity": [],
+  "contentHash": "ffeab5f5d590d19e1e274f3e674d52871d6a27c315db45fcad29bac09fb058b4",
+  "edges": [
+    {
+      "from": "ui/src/context/themeState.ts::ThemeCtx::interface",
+      "kind": "imports",
+      "to": "ui/src/context/accentThemes.ts::AccentId::type",
+      "typeOnly": true
+    }
+  ],
+  "file": "ui/src/context/themeState.ts",
+  "intent": [],
+  "lastModified": 1786492495,
+  "symbols": [
+    {
+      "endLine": 10,
+      "endOffset": 248,
+      "kind": "interface",
+      "name": "ThemeCtx",
+      "startLine": 5,
+      "startOffset": 124,
+      "symbolId": "ui/src/context/themeState.ts::ThemeCtx::interface"
+    },
+    {
+      "endLine": 3,
+      "endOffset": 122,
+      "kind": "type",
+      "name": "Theme",
+      "startLine": 3,
+      "startOffset": 86,
+      "symbolId": "ui/src/context/themeState.ts::Theme::type"
+    },
+    {
+      "endLine": 17,
+      "endOffset": 388,
+      "kind": "variable",
+      "name": "ThemeContext",
+      "startLine": 12,
+      "startOffset": 263,
+      "symbolId": "ui/src/context/themeState.ts::ThemeContext::variable"
+    }
+  ]
+}

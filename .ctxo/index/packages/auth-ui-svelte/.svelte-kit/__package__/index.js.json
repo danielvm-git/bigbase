@@ -1,0 +1,17 @@
+{
+  "antiPatterns": [],
+  "complexity": [],
+  "contentHash": "53a164e826ff8f959b9a5d80281a5bd0e7d5990792ccc7a8be721dc4772e3977",
+  "edges": [],
+  "file": "packages/auth-ui-svelte/.svelte-kit/__package__/index.js",
+  "intent": [
+    {
+      "date": "2026-06-18T14:41:08-03:00",
+      "hash": "5a4d48f474b894de0ff8bb15b0d4ccdfa7cfcc8f",
+      "kind": "commit",
+      "message": "feat(ui): add Svelte auth UI components — @bigbase/auth-ui-svelte (#33)"
+    }
+  ],
+  "lastModified": 1786492495,
+  "symbols": []
+}

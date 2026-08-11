@@ -1,0 +1,108 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 5,
+      "symbolId": "components/deploy/static_serve.go::ResolvePureStaticServeDir::function"
+    },
+    {
+      "cyclomatic": 6,
+      "symbolId": "components/deploy/static_serve.go::FindStaticServeDirAfterNodeBuild::function"
+    },
+    {
+      "cyclomatic": 6,
+      "symbolId": "components/deploy/static_serve.go::RequireStaticIndex::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/deploy/static_serve.go::staticOutputMissing::function"
+    }
+  ],
+  "contentHash": "949624d9fe1a21d656958eb355ae9591517ac1a587f5435a045c4d651e3a5ef8",
+  "edges": [
+    {
+      "from": "components/deploy/static_serve.go::ResolvePureStaticServeDir::function",
+      "kind": "calls",
+      "to": "components/deploy/utils.go::fileExists::function"
+    },
+    {
+      "from": "components/deploy/static_serve.go::ResolvePureStaticServeDir::function",
+      "kind": "calls",
+      "to": "components/deploy/static_serve.go::staticOutputMissing::function"
+    },
+    {
+      "from": "components/deploy/static_serve.go::FindStaticServeDirAfterNodeBuild::function",
+      "kind": "calls",
+      "to": "components/deploy/utils.go::fileExists::function"
+    },
+    {
+      "from": "components/deploy/static_serve.go::RequireStaticIndex::function",
+      "kind": "calls",
+      "to": "components/deploy/utils.go::fileExists::function"
+    },
+    {
+      "from": "components/deploy/static_serve.go::RequireStaticIndex::function",
+      "kind": "calls",
+      "to": "components/deploy/static_serve.go::staticOutputMissing::function"
+    },
+    {
+      "from": "components/deploy/static_serve.go::staticOutputMissing::function",
+      "kind": "calls",
+      "to": "components/deploy/errors.go::codedErr::function"
+    }
+  ],
+  "file": "components/deploy/static_serve.go",
+  "intent": [
+    {
+      "date": "2026-07-24T22:36:52-03:00",
+      "hash": "7d360e49a5648a2dfcfb7eca44438d6284baae79",
+      "kind": "commit",
+      "message": "fix(deploy): keep adapter-node SSR as process apps (#168)"
+    },
+    {
+      "date": "2026-07-24T22:25:13-03:00",
+      "hash": "52fb9affdfc6809d147bdea58f096073447ad9cd",
+      "kind": "commit",
+      "message": "fix(deploy): stop static hosts serving checkout directory listings (#167)"
+    }
+  ],
+  "lastModified": 1786492494,
+  "symbols": [
+    {
+      "endLine": 40,
+      "endOffset": 1098,
+      "kind": "function",
+      "name": "ResolvePureStaticServeDir",
+      "startLine": 16,
+      "startOffset": 507,
+      "symbolId": "components/deploy/static_serve.go::ResolvePureStaticServeDir::function"
+    },
+    {
+      "endLine": 63,
+      "endOffset": 1803,
+      "kind": "function",
+      "name": "FindStaticServeDirAfterNodeBuild",
+      "startLine": 45,
+      "startOffset": 1355,
+      "symbolId": "components/deploy/static_serve.go::FindStaticServeDirAfterNodeBuild::function"
+    },
+    {
+      "endLine": 85,
+      "endOffset": 2361,
+      "kind": "function",
+      "name": "RequireStaticIndex",
+      "startLine": 67,
+      "startOffset": 1958,
+      "symbolId": "components/deploy/static_serve.go::RequireStaticIndex::function"
+    },
+    {
+      "endLine": 98,
+      "endOffset": 2768,
+      "kind": "function",
+      "name": "staticOutputMissing",
+      "startLine": 87,
+      "startOffset": 2363,
+      "symbolId": "components/deploy/static_serve.go::staticOutputMissing::function"
+    }
+  ]
+}

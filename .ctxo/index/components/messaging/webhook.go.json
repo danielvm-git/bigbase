@@ -1,0 +1,81 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/messaging/webhook.go::NewWebhookProvider::function"
+    },
+    {
+      "cyclomatic": 7,
+      "symbolId": "components/messaging/webhook.go::WebhookProvider.Send::method"
+    }
+  ],
+  "contentHash": "7151132231f734505cbbc05962bea7b2e5432990ce45a4ddcf4adc594f2413a8",
+  "edges": [
+    {
+      "from": "components/messaging/webhook.go::NewWebhookProvider::function",
+      "kind": "uses",
+      "to": "components/messaging/webhook.go::WebhookProvider::class"
+    },
+    {
+      "from": "components/messaging/webhook.go::WebhookProvider.Send::method",
+      "kind": "uses",
+      "to": "components/messaging/webhook.go::WebhookProvider::class"
+    },
+    {
+      "from": "components/messaging/webhook.go::WebhookProvider.Send::method",
+      "kind": "uses",
+      "to": "components/messaging/messaging.go::Message::class"
+    },
+    {
+      "from": "components/messaging/webhook.go::WebhookProvider::class",
+      "kind": "implements",
+      "to": "components/messaging/messaging.go::Provider::interface"
+    }
+  ],
+  "file": "components/messaging/webhook.go",
+  "intent": [
+    {
+      "date": "2026-07-10T14:46:55-03:00",
+      "hash": "36722e3d731d1da0179c0360d677bc6bdf2b3b19",
+      "kind": "commit",
+      "message": "fix(deploy): prevent manifest path traversal (CWE-22)"
+    },
+    {
+      "date": "2026-06-18T09:46:46-03:00",
+      "hash": "0728992bc65e1ebb1bfe4743249713b6ae2a2633",
+      "kind": "commit",
+      "message": "feat(messaging): add WebhookProvider and telegram messaging endpoint (#26)"
+    }
+  ],
+  "lastModified": 1786492494,
+  "symbols": [
+    {
+      "endLine": 18,
+      "endOffset": 300,
+      "kind": "class",
+      "name": "WebhookProvider",
+      "startLine": 14,
+      "startOffset": 223,
+      "symbolId": "components/messaging/webhook.go::WebhookProvider::class"
+    },
+    {
+      "endLine": 30,
+      "endOffset": 626,
+      "kind": "function",
+      "name": "NewWebhookProvider",
+      "startLine": 22,
+      "startOffset": 445,
+      "symbolId": "components/messaging/webhook.go::NewWebhookProvider::function"
+    },
+    {
+      "endLine": 68,
+      "endOffset": 1615,
+      "kind": "method",
+      "name": "WebhookProvider.Send",
+      "startLine": 33,
+      "startOffset": 696,
+      "symbolId": "components/messaging/webhook.go::WebhookProvider.Send::method"
+    }
+  ]
+}

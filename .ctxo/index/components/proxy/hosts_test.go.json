@@ -1,0 +1,118 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 9,
+      "symbolId": "components/proxy/hosts_test.go::TestProxyDeploymentHost::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/proxy/hosts_test.go::TestProxySiteIDMapping::function"
+    },
+    {
+      "cyclomatic": 5,
+      "symbolId": "components/proxy/hosts_test.go::TestProxyUnregisterDeploymentHost::function"
+    },
+    {
+      "cyclomatic": 6,
+      "symbolId": "components/proxy/hosts_test.go::TestRegisterDeploymentHostReplacesExisting::function"
+    },
+    {
+      "cyclomatic": 7,
+      "symbolId": "components/proxy/hosts_test.go::TestCaddyAllow::function"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/proxy/hosts_test.go::TestCaddyAllowMCPHost::function"
+    },
+    {
+      "cyclomatic": 10,
+      "symbolId": "components/proxy/hosts_test.go::TestMCPDiscoveryEndpoint::function"
+    },
+    {
+      "cyclomatic": 14,
+      "symbolId": "components/proxy/hosts_test.go::TestMCPServiceHostRouting::function"
+    },
+    {
+      "cyclomatic": 16,
+      "symbolId": "components/proxy/hosts_test.go::TestPassthroughAPIPaths::function"
+    },
+    {
+      "cyclomatic": 12,
+      "symbolId": "components/proxy/hosts_test.go::TestMetadataInjection::function"
+    },
+    {
+      "cyclomatic": 5,
+      "symbolId": "components/proxy/hosts_test.go::TestMetadataNotInjectedOnNonHTML::function"
+    },
+    {
+      "cyclomatic": 18,
+      "symbolId": "components/proxy/hosts_test.go::TestProxyAuthPolicy::function"
+    },
+    {
+      "cyclomatic": 8,
+      "symbolId": "components/proxy/hosts_test.go::TestPerSiteCSP::function"
+    }
+  ],
+  "contentHash": "f71b37dcef15c1900b5c97871c529f12e6d64b451e3258d773b38449a13a0d4d",
+  "edges": [],
+  "file": "components/proxy/hosts_test.go",
+  "intent": [
+    {
+      "date": "2026-08-01T21:23:24-03:00",
+      "hash": "c7201d17991d3408ea8060722330f75a49878bfe",
+      "kind": "commit",
+      "message": "feat(proxy): make CSP configurable per-site for deployed static sites (closes #197)"
+    },
+    {
+      "date": "2026-07-10T14:46:55-03:00",
+      "hash": "36722e3d731d1da0179c0360d677bc6bdf2b3b19",
+      "kind": "commit",
+      "message": "fix(deploy): prevent manifest path traversal (CWE-22)"
+    },
+    {
+      "date": "2026-07-09T00:26:41-03:00",
+      "hash": "cf898685d8186910047f2c0e71e9dcf237402572",
+      "kind": "commit",
+      "message": "fix(proxy): stabilize TestProxyAuthPolicy against startup race"
+    },
+    {
+      "date": "2026-07-08T21:27:08-03:00",
+      "hash": "e23603145a3cd159a674133ae51f3c1ed8ddb4a6",
+      "kind": "commit",
+      "message": "feat(proxy): implement site route auth policy, path matching, and passthrough identity header injection"
+    },
+    {
+      "date": "2026-06-20T12:39:33-03:00",
+      "hash": "54d40cfca33492782ff3af4b1cbdeb1d74167d47",
+      "kind": "commit",
+      "message": "feat(deploy): passthrough paths, metadata injection, SPA fallback docs"
+    },
+    {
+      "date": "2026-06-20T02:21:10-03:00",
+      "hash": "3ed14e8485f15130b8fd80c5647c942edf77c5d6",
+      "kind": "commit",
+      "message": "feat(proxy): route service hosts to internal backends"
+    },
+    {
+      "date": "2026-06-20T02:01:52-03:00",
+      "hash": "f26120dc6e922a0216a5f4782dab5c88ff3c1b4c",
+      "kind": "commit",
+      "message": "feat(mcp): add agent discovery endpoint and deploy workflow tests"
+    },
+    {
+      "date": "2026-06-19T23:37:11-03:00",
+      "hash": "84078d3308e8d66bb58958c31f3e4bec6608924a",
+      "kind": "commit",
+      "message": "fix(proxy): forward /api/* to BigBase for deployment hosts; export hostInfo"
+    },
+    {
+      "date": "2026-06-12T19:40:09-03:00",
+      "hash": "670460601bdcbd5a72dfb21f475ab3b1f336a58a",
+      "kind": "commit",
+      "message": "feat(deploy,sites,proxy): implement site build and request logs"
+    }
+  ],
+  "lastModified": 1786492494,
+  "symbols": []
+}

@@ -1,0 +1,71 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/github/github_test.go::testLogger.Info::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/github/github_test.go::testLogger.Warn::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/github/github_test.go::testLogger.Error::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/github/github_test.go::testLogger.Debug::method"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/github/github_test.go::TestVerifyWebhookSignatureValid::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/github/github_test.go::TestVerifyWebhookSignatureInvalid::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/github/github_test.go::setupGitHub::function"
+    },
+    {
+      "cyclomatic": 7,
+      "symbolId": "components/github/github_test.go::TestGitHubFlagsConfigured::function"
+    },
+    {
+      "cyclomatic": 6,
+      "symbolId": "components/github/github_test.go::TestGitHubFlagsUnconfigured::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/github/github_test.go::setupGitHubPublic::function"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/github/github_test.go::TestGitHubCallbackPublicNoAuth::function"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/github/github_test.go::seedGitHubInstallation::function"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/github/github_test.go::TestGitHubReposReturnsNotFoundWhenNoInstallation::function"
+    },
+    {
+      "cyclomatic": 5,
+      "symbolId": "components/github/github_test.go::TestGitHubReposReturnsBadGatewayWhenGitHubAPIFails::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/github/github_test.go::TestGitHubWebhookPublicNotUnauthorized::function"
+    }
+  ],
+  "contentHash": "84d41bff8d08de7669bfc1e7facc62925d5eef5ce362f651186acba5797fccb6",
+  "edges": [],
+  "file": "components/github/github_test.go",
+  "intent": [],
+  "lastModified": 1786492494,
+  "symbols": []
+}

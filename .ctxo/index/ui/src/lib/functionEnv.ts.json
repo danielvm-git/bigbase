@@ -1,0 +1,102 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 2,
+      "symbolId": "ui/src/lib/functionEnv.ts::formatFunctionEnv::function"
+    },
+    {
+      "cyclomatic": 8,
+      "symbolId": "ui/src/lib/functionEnv.ts::parseFunctionEnv::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "ui/src/lib/functionEnv.ts::functionPayloadFromForm::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "ui/src/lib/functionEnv.ts::formEnvFromRecord::function"
+    }
+  ],
+  "contentHash": "1e61014e5fe9fc3de3cf96195098aa4285158cbd745fe8e2f4f0c9492e29de41",
+  "edges": [
+    {
+      "from": "ui/src/lib/functionEnv.ts::functionPayloadFromForm::function",
+      "kind": "calls",
+      "to": "ui/src/lib/functionEnv.ts::parseFunctionEnv::function"
+    },
+    {
+      "from": "ui/src/lib/functionEnv.ts::formEnvFromRecord::function",
+      "kind": "calls",
+      "to": "ui/src/lib/functionEnv.ts::formatFunctionEnv::function"
+    }
+  ],
+  "file": "ui/src/lib/functionEnv.ts",
+  "intent": [],
+  "lastModified": 1786492495,
+  "symbols": [
+    {
+      "endLine": 4,
+      "endOffset": 169,
+      "kind": "function",
+      "name": "formatFunctionEnv",
+      "startLine": 2,
+      "startOffset": 50,
+      "symbolId": "ui/src/lib/functionEnv.ts::formatFunctionEnv::function"
+    },
+    {
+      "endLine": 25,
+      "endOffset": 848,
+      "kind": "function",
+      "name": "parseFunctionEnv",
+      "startLine": 6,
+      "startOffset": 171,
+      "symbolId": "ui/src/lib/functionEnv.ts::parseFunctionEnv::function"
+    },
+    {
+      "endLine": 66,
+      "endOffset": 1706,
+      "kind": "function",
+      "name": "functionPayloadFromForm",
+      "startLine": 49,
+      "startOffset": 1205,
+      "symbolId": "ui/src/lib/functionEnv.ts::functionPayloadFromForm::function"
+    },
+    {
+      "endLine": 71,
+      "endOffset": 1866,
+      "kind": "function",
+      "name": "formEnvFromRecord",
+      "startLine": 68,
+      "startOffset": 1708,
+      "symbolId": "ui/src/lib/functionEnv.ts::formEnvFromRecord::function"
+    },
+    {
+      "endLine": 37,
+      "endOffset": 1043,
+      "kind": "interface",
+      "name": "FunctionRecord",
+      "startLine": 27,
+      "startOffset": 850,
+      "symbolId": "ui/src/lib/functionEnv.ts::FunctionRecord::interface"
+    },
+    {
+      "endLine": 47,
+      "endOffset": 1203,
+      "kind": "interface",
+      "name": "FunctionFormFields",
+      "startLine": 39,
+      "startOffset": 1045,
+      "symbolId": "ui/src/lib/functionEnv.ts::FunctionFormFields::interface"
+    },
+    {
+      "endLine": 0,
+      "endOffset": 48,
+      "kind": "type",
+      "name": "FunctionEnv",
+      "startLine": 0,
+      "startOffset": 0,
+      "symbolId": "ui/src/lib/functionEnv.ts::FunctionEnv::type"
+    }
+  ]
+}

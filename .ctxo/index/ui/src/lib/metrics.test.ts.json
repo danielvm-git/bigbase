@@ -1,0 +1,21 @@
+{
+  "antiPatterns": [],
+  "complexity": [],
+  "contentHash": "47bc5831a364601ec969730e7a385cdfb245a95895d7e7549176564bec9d1988",
+  "edges": [
+    {
+      "from": "ui/src/lib/metrics.test.ts::metrics.test::variable",
+      "kind": "imports",
+      "to": "ui/src/lib/metrics.ts::fetchMonitoringMetrics::function"
+    },
+    {
+      "from": "ui/src/lib/metrics.test.ts::metrics.test::variable",
+      "kind": "imports",
+      "to": "ui/src/lib/metrics.ts::fetchMonitoringMetricsWarmed::function"
+    }
+  ],
+  "file": "ui/src/lib/metrics.test.ts",
+  "intent": [],
+  "lastModified": 1786492495,
+  "symbols": []
+}

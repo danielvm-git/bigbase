@@ -1,0 +1,124 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 9,
+      "symbolId": "components/deploy/env_vars.go::Deploy.FetchSiteEnvVars::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/deploy/env_vars.go::Deploy.EncryptEnvValue::method"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/deploy/env_vars.go::isNoSuchTable::function"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/deploy/env_vars.go::parseEnvEncryptionKey::function"
+    }
+  ],
+  "contentHash": "86072b46fca583c82be77f65c05c41687470392f03d4e1563a9ba5686709e4f2",
+  "edges": [
+    {
+      "from": "components/deploy/env_vars.go::Deploy.FetchSiteEnvVars::method",
+      "kind": "uses",
+      "to": "components/deploy/deploy.go::Deploy::class"
+    },
+    {
+      "from": "components/deploy/env_vars.go::Deploy.FetchSiteEnvVars::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.QueryContext::method"
+    },
+    {
+      "from": "components/deploy/env_vars.go::Deploy.FetchSiteEnvVars::method",
+      "kind": "calls",
+      "to": "components/deploy/env_vars.go::isNoSuchTable::function"
+    },
+    {
+      "from": "components/deploy/env_vars.go::Deploy.FetchSiteEnvVars::method",
+      "kind": "calls",
+      "to": "kernel/component.go::Logger.Warn::method"
+    },
+    {
+      "from": "components/deploy/env_vars.go::Deploy.FetchSiteEnvVars::method",
+      "kind": "calls",
+      "to": "components/internal/envcrypto/envcrypto.go::Decrypt::function"
+    },
+    {
+      "from": "components/deploy/env_vars.go::Deploy.EncryptEnvValue::method",
+      "kind": "uses",
+      "to": "components/deploy/deploy.go::Deploy::class"
+    },
+    {
+      "from": "components/deploy/env_vars.go::Deploy.EncryptEnvValue::method",
+      "kind": "calls",
+      "to": "components/internal/envcrypto/envcrypto.go::Encrypt::function"
+    },
+    {
+      "from": "components/deploy/env_vars.go::parseEnvEncryptionKey::function",
+      "kind": "calls",
+      "to": "components/internal/envcrypto/envcrypto.go::ParseKey::function"
+    }
+  ],
+  "file": "components/deploy/env_vars.go",
+  "intent": [
+    {
+      "date": "2026-06-25T05:18:42-03:00",
+      "hash": "d62388d7459e1269381963269d5b9a1e202b2e40",
+      "kind": "commit",
+      "message": "fix(env-vars): harden secret storage — server-side masking, shared crypto, and error propagation"
+    },
+    {
+      "date": "2026-06-24T13:34:27-03:00",
+      "hash": "d75fa2ae27c0949ad315fcf8e7c31be28101a5f8",
+      "kind": "commit",
+      "message": "refactor(sites): decompose long handlers to satisfy 20-line function limit"
+    },
+    {
+      "date": "2026-06-24T13:23:32-03:00",
+      "hash": "a73b1d0595b3488d0576d19d880120c7f28475a0",
+      "kind": "commit",
+      "message": "test(deploy): red TestEnvVarInjection — unit + integration"
+    }
+  ],
+  "lastModified": 1786492494,
+  "symbols": [
+    {
+      "endLine": 56,
+      "endOffset": 1517,
+      "kind": "method",
+      "name": "Deploy.FetchSiteEnvVars",
+      "startLine": 15,
+      "startOffset": 401,
+      "symbolId": "components/deploy/env_vars.go::Deploy.FetchSiteEnvVars::method"
+    },
+    {
+      "endLine": 63,
+      "endOffset": 1826,
+      "kind": "method",
+      "name": "Deploy.EncryptEnvValue",
+      "startLine": 61,
+      "startOffset": 1709,
+      "symbolId": "components/deploy/env_vars.go::Deploy.EncryptEnvValue::method"
+    },
+    {
+      "endLine": 71,
+      "endOffset": 2011,
+      "kind": "function",
+      "name": "isNoSuchTable",
+      "startLine": 65,
+      "startOffset": 1828,
+      "symbolId": "components/deploy/env_vars.go::isNoSuchTable::function"
+    },
+    {
+      "endLine": 77,
+      "endOffset": 2238,
+      "kind": "function",
+      "name": "parseEnvEncryptionKey",
+      "startLine": 75,
+      "startOffset": 2142,
+      "symbolId": "components/deploy/env_vars.go::parseEnvEncryptionKey::function"
+    }
+  ]
+}

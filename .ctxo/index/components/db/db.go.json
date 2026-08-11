@@ -1,0 +1,452 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/db/db.go::New::function"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/db/db.go::DB.Name::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/db/db.go::DB.Version::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/db/db.go::DB.Dependencies::method"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/db/db.go::DB.Init::method"
+    },
+    {
+      "cyclomatic": 6,
+      "symbolId": "components/db/db.go::DB.Start::method"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/db/db.go::DB.Stop::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/db/db.go::DB.DB::method"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/db/db.go::DB.ExecContext::method"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/db/db.go::DB.QueryContext::method"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/db/db.go::DB.QueryRowContext::method"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/db/db.go::nrDatastoreSegment::function"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/db/db.go::DB.Exec::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/db/db.go::DB.Query::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/db/db.go::DB.QueryRow::method"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/db/db.go::DB.Migrate::method"
+    }
+  ],
+  "contentHash": "1e09f81c11d5695f0df8b9365970fe118d0df0575020729dc3f34d3ee642d01e",
+  "edges": [
+    {
+      "from": "components/db/db.go::New::function",
+      "kind": "uses",
+      "to": "components/db/db.go::Options::class"
+    },
+    {
+      "from": "components/db/db.go::New::function",
+      "kind": "uses",
+      "to": "components/db/db.go::DB::class"
+    },
+    {
+      "from": "components/db/db.go::New::function",
+      "kind": "uses",
+      "to": "kernel/utilities.go::NoopLogger::class"
+    },
+    {
+      "from": "components/db/db.go::New::function",
+      "kind": "uses",
+      "to": "components/db/db.go::DriverSQLite::variable"
+    },
+    {
+      "from": "components/db/db.go::DB.Name::method",
+      "kind": "uses",
+      "to": "components/db/db.go::DB::class"
+    },
+    {
+      "from": "components/db/db.go::DB.Version::method",
+      "kind": "uses",
+      "to": "components/db/db.go::DB::class"
+    },
+    {
+      "from": "components/db/db.go::DB.Version::method",
+      "kind": "uses",
+      "to": "components/db/db.go::version::variable"
+    },
+    {
+      "from": "components/db/db.go::DB.Dependencies::method",
+      "kind": "uses",
+      "to": "components/db/db.go::DB::class"
+    },
+    {
+      "from": "components/db/db.go::DB.Init::method",
+      "kind": "uses",
+      "to": "components/db/db.go::DB::class"
+    },
+    {
+      "from": "components/db/db.go::DB.Init::method",
+      "kind": "uses",
+      "to": "kernel/component.go::Context::class"
+    },
+    {
+      "from": "components/db/db.go::DB.Init::method",
+      "kind": "uses",
+      "to": "components/db/db.go::DriverSQLite::variable"
+    },
+    {
+      "from": "components/db/db.go::DB.Start::method",
+      "kind": "uses",
+      "to": "components/db/db.go::DB::class"
+    },
+    {
+      "from": "components/db/db.go::DB.Start::method",
+      "kind": "uses",
+      "to": "kernel/component.go::Context::class"
+    },
+    {
+      "from": "components/db/db.go::DB.Start::method",
+      "kind": "uses",
+      "to": "components/db/db.go::DriverPostgres::variable"
+    },
+    {
+      "from": "components/db/db.go::DB.Start::method",
+      "kind": "calls",
+      "to": "kernel/component.go::Logger.Info::method"
+    },
+    {
+      "from": "components/db/db.go::DB.Stop::method",
+      "kind": "uses",
+      "to": "components/db/db.go::DB::class"
+    },
+    {
+      "from": "components/db/db.go::DB.Stop::method",
+      "kind": "uses",
+      "to": "kernel/component.go::Context::class"
+    },
+    {
+      "from": "components/db/db.go::DB.DB::method",
+      "kind": "uses",
+      "to": "components/db/db.go::DB::class"
+    },
+    {
+      "from": "components/db/db.go::DB.ExecContext::method",
+      "kind": "uses",
+      "to": "components/db/db.go::DB::class"
+    },
+    {
+      "from": "components/db/db.go::DB.ExecContext::method",
+      "kind": "calls",
+      "to": "components/db/db.go::nrDatastoreSegment::function"
+    },
+    {
+      "from": "components/db/db.go::DB.QueryContext::method",
+      "kind": "uses",
+      "to": "components/db/db.go::DB::class"
+    },
+    {
+      "from": "components/db/db.go::DB.QueryContext::method",
+      "kind": "calls",
+      "to": "components/db/db.go::nrDatastoreSegment::function"
+    },
+    {
+      "from": "components/db/db.go::DB.QueryRowContext::method",
+      "kind": "uses",
+      "to": "components/db/db.go::DB::class"
+    },
+    {
+      "from": "components/db/db.go::DB.QueryRowContext::method",
+      "kind": "calls",
+      "to": "components/db/db.go::nrDatastoreSegment::function"
+    },
+    {
+      "from": "components/db/db.go::DB.Exec::method",
+      "kind": "uses",
+      "to": "components/db/db.go::DB::class"
+    },
+    {
+      "from": "components/db/db.go::DB.Query::method",
+      "kind": "uses",
+      "to": "components/db/db.go::DB::class"
+    },
+    {
+      "from": "components/db/db.go::DB.QueryRow::method",
+      "kind": "uses",
+      "to": "components/db/db.go::DB::class"
+    },
+    {
+      "from": "components/db/db.go::DB.Migrate::method",
+      "kind": "uses",
+      "to": "components/db/db.go::DB::class"
+    },
+    {
+      "from": "components/db/db.go::DB::class",
+      "kind": "implements",
+      "to": "kernel/component.go::Component::interface"
+    },
+    {
+      "from": "components/db/db.go::DB::class",
+      "kind": "implements",
+      "to": "kernel/dber.go::DBer::interface"
+    },
+    {
+      "from": "components/db/db.go::DB::class",
+      "kind": "implements",
+      "to": "kernel/dber.go::QueryExecDBer::interface"
+    }
+  ],
+  "file": "components/db/db.go",
+  "intent": [
+    {
+      "date": "2026-07-10T14:58:38-03:00",
+      "hash": "34b197c676d972ef39ab3cd8fe08a320adae96e9",
+      "kind": "commit",
+      "message": "fix(kernel): remove dead ConfigSchema/Hooks interfaces, add Component compile checks"
+    },
+    {
+      "date": "2026-07-10T14:46:55-03:00",
+      "hash": "36722e3d731d1da0179c0360d677bc6bdf2b3b19",
+      "kind": "commit",
+      "message": "fix(deploy): prevent manifest path traversal (CWE-22)"
+    },
+    {
+      "date": "2026-07-07T00:13:21-03:00",
+      "hash": "bcc0b8745f57075cf71e855bc2496e4c11195708",
+      "kind": "commit",
+      "message": "refactor(kernel): hoist Logger/DBer interfaces — remove 18 duplicate definitions"
+    },
+    {
+      "date": "2026-06-20T18:52:05-03:00",
+      "hash": "d42d6786e31d34171c8f7b83184a67b208ee0e82",
+      "kind": "commit",
+      "message": "feat(newrelic): instrument database queries with datastore segments"
+    },
+    {
+      "date": "2026-06-06T11:00:54-03:00",
+      "hash": "3b55990afe930a314d8014f564815ac99de929d8",
+      "kind": "commit",
+      "message": "feat(db): e18s03 config-based driver selection"
+    }
+  ],
+  "lastModified": 1786492494,
+  "symbols": [
+    {
+      "endLine": 19,
+      "endOffset": 289,
+      "kind": "variable",
+      "name": "version",
+      "startLine": 19,
+      "startOffset": 282,
+      "symbolId": "components/db/db.go::version::variable"
+    },
+    {
+      "endLine": 23,
+      "endOffset": 395,
+      "kind": "variable",
+      "name": "DriverSQLite",
+      "startLine": 23,
+      "startOffset": 383,
+      "symbolId": "components/db/db.go::DriverSQLite::variable"
+    },
+    {
+      "endLine": 24,
+      "endOffset": 424,
+      "kind": "variable",
+      "name": "DriverPostgres",
+      "startLine": 24,
+      "startOffset": 410,
+      "symbolId": "components/db/db.go::DriverPostgres::variable"
+    },
+    {
+      "endLine": 37,
+      "endOffset": 889,
+      "kind": "class",
+      "name": "Options",
+      "startLine": 32,
+      "startOffset": 741,
+      "symbolId": "components/db/db.go::Options::class"
+    },
+    {
+      "endLine": 44,
+      "endOffset": 977,
+      "kind": "class",
+      "name": "DB",
+      "startLine": 39,
+      "startOffset": 896,
+      "symbolId": "components/db/db.go::DB::class"
+    },
+    {
+      "endLine": 66,
+      "endOffset": 1378,
+      "kind": "function",
+      "name": "New",
+      "startLine": 48,
+      "startOffset": 1016,
+      "symbolId": "components/db/db.go::New::function"
+    },
+    {
+      "endLine": 68,
+      "endOffset": 1439,
+      "kind": "method",
+      "name": "DB.Name",
+      "startLine": 68,
+      "startOffset": 1380,
+      "symbolId": "components/db/db.go::DB.Name::method"
+    },
+    {
+      "endLine": 69,
+      "endOffset": 1502,
+      "kind": "method",
+      "name": "DB.Version",
+      "startLine": 69,
+      "startOffset": 1440,
+      "symbolId": "components/db/db.go::DB.Version::method"
+    },
+    {
+      "endLine": 70,
+      "endOffset": 1561,
+      "kind": "method",
+      "name": "DB.Dependencies",
+      "startLine": 70,
+      "startOffset": 1503,
+      "symbolId": "components/db/db.go::DB.Dependencies::method"
+    },
+    {
+      "endLine": 77,
+      "endOffset": 1712,
+      "kind": "method",
+      "name": "DB.Init",
+      "startLine": 72,
+      "startOffset": 1563,
+      "symbolId": "components/db/db.go::DB.Init::method"
+    },
+    {
+      "endLine": 105,
+      "endOffset": 2460,
+      "kind": "method",
+      "name": "DB.Start",
+      "startLine": 79,
+      "startOffset": 1714,
+      "symbolId": "components/db/db.go::DB.Start::method"
+    },
+    {
+      "endLine": 112,
+      "endOffset": 2563,
+      "kind": "method",
+      "name": "DB.Stop",
+      "startLine": 107,
+      "startOffset": 2462,
+      "symbolId": "components/db/db.go::DB.Stop::method"
+    },
+    {
+      "endLine": 116,
+      "endOffset": 2607,
+      "kind": "method",
+      "name": "DB.DB",
+      "startLine": 114,
+      "startOffset": 2565,
+      "symbolId": "components/db/db.go::DB.DB::method"
+    },
+    {
+      "endLine": 124,
+      "endOffset": 2828,
+      "kind": "method",
+      "name": "DB.ExecContext",
+      "startLine": 118,
+      "startOffset": 2609,
+      "symbolId": "components/db/db.go::DB.ExecContext::method"
+    },
+    {
+      "endLine": 132,
+      "endOffset": 3050,
+      "kind": "method",
+      "name": "DB.QueryContext",
+      "startLine": 126,
+      "startOffset": 2830,
+      "symbolId": "components/db/db.go::DB.QueryContext::method"
+    },
+    {
+      "endLine": 140,
+      "endOffset": 3268,
+      "kind": "method",
+      "name": "DB.QueryRowContext",
+      "startLine": 134,
+      "startOffset": 3052,
+      "symbolId": "components/db/db.go::DB.QueryRowContext::method"
+    },
+    {
+      "endLine": 159,
+      "endOffset": 3938,
+      "kind": "function",
+      "name": "nrDatastoreSegment",
+      "startLine": 144,
+      "startOffset": 3448,
+      "symbolId": "components/db/db.go::nrDatastoreSegment::function"
+    },
+    {
+      "endLine": 163,
+      "endOffset": 4042,
+      "kind": "method",
+      "name": "DB.Exec",
+      "startLine": 161,
+      "startOffset": 3940,
+      "symbolId": "components/db/db.go::DB.Exec::method"
+    },
+    {
+      "endLine": 167,
+      "endOffset": 4147,
+      "kind": "method",
+      "name": "DB.Query",
+      "startLine": 165,
+      "startOffset": 4044,
+      "symbolId": "components/db/db.go::DB.Query::method"
+    },
+    {
+      "endLine": 171,
+      "endOffset": 4248,
+      "kind": "method",
+      "name": "DB.QueryRow",
+      "startLine": 169,
+      "startOffset": 4149,
+      "symbolId": "components/db/db.go::DB.QueryRow::method"
+    },
+    {
+      "endLine": 179,
+      "endOffset": 4402,
+      "kind": "method",
+      "name": "DB.Migrate",
+      "startLine": 173,
+      "startOffset": 4250,
+      "symbolId": "components/db/db.go::DB.Migrate::method"
+    }
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "antiPatterns": [
+    {
+      "date": "2026-06-26T20:49:30-03:00",
+      "hash": "a0e8852094a08009ba368066d9b5636e49448b05",
+      "message": "fix(ui): add missing tests for e44s02 rollback functions"
+    }
+  ],
+  "complexity": [],
+  "contentHash": "fa6b8be081e8849ec3415626498b2828b4198a5c59d7f8b75e44df99ccf7a99a",
+  "edges": [
+    {
+      "from": "ui/src/lib/sitesData.test.ts::sitesData.test::variable",
+      "kind": "imports",
+      "to": "ui/src/lib/sitesData.ts::getGitHubRepos::function"
+    },
+    {
+      "from": "ui/src/lib/sitesData.test.ts::sitesData.test::variable",
+      "kind": "imports",
+      "to": "ui/src/lib/sitesData.ts::rollbackDeployment::function"
+    },
+    {
+      "from": "ui/src/lib/sitesData.test.ts::sitesData.test::variable",
+      "kind": "imports",
+      "to": "ui/src/lib/sitesData.ts::getRollbackEvents::function"
+    }
+  ],
+  "file": "ui/src/lib/sitesData.test.ts",
+  "intent": [
+    {
+      "date": "2026-06-26T20:49:30-03:00",
+      "hash": "a0e8852094a08009ba368066d9b5636e49448b05",
+      "kind": "commit",
+      "message": "fix(ui): add missing tests for e44s02 rollback functions"
+    }
+  ],
+  "lastModified": 1786492495,
+  "symbols": []
+}

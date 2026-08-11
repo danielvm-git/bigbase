@@ -1,0 +1,19 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 12,
+      "symbolId": "components/monitoring/host_metrics_test.go::TestHostMetrics::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/monitoring/host_metrics_test.go::keys::function"
+    }
+  ],
+  "contentHash": "96ee537119ba04a5c81ad97ad050e59860338ef3d1f169d5b33e2c0810bbb472",
+  "edges": [],
+  "file": "components/monitoring/host_metrics_test.go",
+  "intent": [],
+  "lastModified": 1786492494,
+  "symbols": []
+}

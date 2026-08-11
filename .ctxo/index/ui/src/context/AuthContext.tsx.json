@@ -1,0 +1,110 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 28,
+      "symbolId": "ui/src/context/AuthContext.tsx::AuthProvider::function"
+    }
+  ],
+  "contentHash": "2f99b23d36dd6b92b28cc87e76f74f3877f572656ec40fe382cfeabdd6397779",
+  "edges": [
+    {
+      "from": "ui/src/context/AuthContext.tsx::AuthProvider::function",
+      "kind": "imports",
+      "to": "ui/src/context/authState.ts::AuthContext::variable"
+    },
+    {
+      "from": "ui/src/context/AuthContext.tsx::AuthProvider::function",
+      "kind": "imports",
+      "to": "ui/src/context/authState.ts::NO_SESSION_REMAINING::variable"
+    },
+    {
+      "from": "ui/src/context/AuthContext.tsx::AuthProvider::function",
+      "kind": "imports",
+      "to": "ui/src/context/authState.ts::PENDING_ROUTE_KEY::variable"
+    },
+    {
+      "from": "ui/src/context/AuthContext.tsx::AuthProvider::function",
+      "kind": "imports",
+      "to": "ui/src/context/authState.ts::AuthSessionInput::interface",
+      "typeOnly": true
+    },
+    {
+      "from": "ui/src/context/AuthContext.tsx::AuthProvider::function",
+      "kind": "imports",
+      "to": "ui/src/context/authState.ts::RefreshResult::type",
+      "typeOnly": true
+    },
+    {
+      "from": "ui/src/context/AuthContext.tsx::AuthProvider::function",
+      "kind": "imports",
+      "to": "ui/src/lib/jwt.ts::decodeJwtExp::function"
+    },
+    {
+      "from": "ui/src/context/AuthContext.tsx::AuthProvider::function",
+      "kind": "calls",
+      "to": "ui/src/context/AuthContext.tsx::resolveExpiry::function"
+    },
+    {
+      "from": "ui/src/context/AuthContext.tsx::AuthProvider::function",
+      "kind": "calls",
+      "to": "ui/src/lib/jwt.ts::decodeJwtExp::function"
+    },
+    {
+      "from": "ui/src/context/AuthContext.tsx::AuthProvider::function",
+      "kind": "calls",
+      "to": "ui/src/context/AuthContext.tsx::isAuthEndpoint::function"
+    },
+    {
+      "from": "ui/src/context/AuthContext.tsx::AuthProvider::function",
+      "kind": "uses",
+      "to": "ui/src/context/authState.ts::AuthSessionInput::interface"
+    },
+    {
+      "from": "ui/src/context/AuthContext.tsx::AuthProvider::function",
+      "kind": "uses",
+      "to": "ui/src/context/authState.ts::RefreshResult::type"
+    },
+    {
+      "from": "ui/src/context/AuthContext.tsx::AuthProvider::function",
+      "kind": "uses",
+      "to": "ui/src/lib/jwt.ts::decodeJwtExp::function"
+    },
+    {
+      "from": "ui/src/context/AuthContext.tsx::AuthProvider::function",
+      "kind": "uses",
+      "to": "ui/src/context/authState.ts::PENDING_ROUTE_KEY::variable"
+    },
+    {
+      "from": "ui/src/context/AuthContext.tsx::AuthProvider::function",
+      "kind": "uses",
+      "to": "ui/src/context/authState.ts::NO_SESSION_REMAINING::variable"
+    },
+    {
+      "from": "ui/src/context/AuthContext.tsx::AuthProvider::function",
+      "kind": "uses",
+      "to": "ui/src/context/authState.ts::AuthContext::variable"
+    }
+  ],
+  "file": "ui/src/context/AuthContext.tsx",
+  "intent": [
+    {
+      "date": "2026-08-11T16:07:12-03:00",
+      "hash": "be5a14e5d0ad29ef9e877d39c955e8a13b797743",
+      "kind": "commit",
+      "message": "fix(ui): AAA session timeout warning + re-auth (e87s05)"
+    }
+  ],
+  "lastModified": 1786492495,
+  "symbols": [
+    {
+      "endLine": 192,
+      "endOffset": 5527,
+      "kind": "function",
+      "name": "AuthProvider",
+      "startLine": 49,
+      "startOffset": 1254,
+      "symbolId": "ui/src/context/AuthContext.tsx::AuthProvider::function"
+    }
+  ]
+}

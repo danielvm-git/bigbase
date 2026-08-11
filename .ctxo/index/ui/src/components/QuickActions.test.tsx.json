@@ -1,0 +1,16 @@
+{
+  "antiPatterns": [],
+  "complexity": [],
+  "contentHash": "8a306ecd317dd6c1809316887afd01df994783c10ca5af2e9f1d805fb66c23a2",
+  "edges": [
+    {
+      "from": "ui/src/components/QuickActions.test.tsx::QuickActions.test::variable",
+      "kind": "imports",
+      "to": "ui/src/components/QuickActions.ts::QuickActions::class"
+    }
+  ],
+  "file": "ui/src/components/QuickActions.test.tsx",
+  "intent": [],
+  "lastModified": 1786492495,
+  "symbols": []
+}

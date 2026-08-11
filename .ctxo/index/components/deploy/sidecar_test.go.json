@@ -1,0 +1,28 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 13,
+      "symbolId": "components/deploy/sidecar_test.go::TestStaticSidecar_BuildAndStart::function"
+    }
+  ],
+  "contentHash": "1a46ee73b44863b93eb422f72141b85893de209e123e957e8d45504d0df8ef14",
+  "edges": [],
+  "file": "components/deploy/sidecar_test.go",
+  "intent": [
+    {
+      "date": "2026-08-02T13:48:28-03:00",
+      "hash": "7bacc8687dd0948ee1eb4e80a0a54c8a7bc5fe15",
+      "kind": "commit",
+      "message": "fix(deploy): increase test timeout to 180s and optimize test polling delays"
+    },
+    {
+      "date": "2026-07-25T15:48:12-03:00",
+      "hash": "24787ecf6972fdbaf2c9e8e786c3615447798706",
+      "kind": "commit",
+      "message": "feat(deploy): implement static-sidecar app type (e70s04)"
+    }
+  ],
+  "lastModified": 1786492494,
+  "symbols": []
+}

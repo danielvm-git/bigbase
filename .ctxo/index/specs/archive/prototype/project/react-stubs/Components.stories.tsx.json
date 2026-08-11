@@ -1,0 +1,78 @@
+{
+  "antiPatterns": [],
+  "complexity": [],
+  "contentHash": "8b2e62daccc4f2ae99990fde08346658a4c87a062a597670b38097c6efa395d1",
+  "edges": [
+    {
+      "from": "specs/archive/prototype/project/react-stubs/Components.stories.tsx::ButtonStates::variable",
+      "kind": "imports",
+      "to": "specs/archive/prototype/project/react-stubs/Button.ts::Button::class"
+    },
+    {
+      "from": "specs/archive/prototype/project/react-stubs/Components.stories.tsx::ButtonStates::variable",
+      "kind": "imports",
+      "to": "specs/archive/prototype/project/react-stubs/Badge.ts::Badge::class"
+    },
+    {
+      "from": "specs/archive/prototype/project/react-stubs/Components.stories.tsx::ButtonStates::variable",
+      "kind": "imports",
+      "to": "specs/archive/prototype/project/react-stubs/Badge.ts::StatusBadge::class"
+    },
+    {
+      "from": "specs/archive/prototype/project/react-stubs/Components.stories.tsx::ButtonStates::variable",
+      "kind": "imports",
+      "to": "specs/archive/prototype/project/react-stubs/Input.ts::Input::class"
+    },
+    {
+      "from": "specs/archive/prototype/project/react-stubs/Components.stories.tsx::ButtonStates::variable",
+      "kind": "imports",
+      "to": "specs/archive/prototype/project/react-stubs/Card.ts::Card::class"
+    },
+    {
+      "from": "specs/archive/prototype/project/react-stubs/Components.stories.tsx::ButtonStates::variable",
+      "kind": "imports",
+      "to": "specs/archive/prototype/project/react-stubs/Card.ts::EmptyState::class"
+    }
+  ],
+  "file": "specs/archive/prototype/project/react-stubs/Components.stories.tsx",
+  "intent": [],
+  "lastModified": 1786492495,
+  "symbols": [
+    {
+      "endLine": 26,
+      "endOffset": 1223,
+      "kind": "variable",
+      "name": "ButtonStates",
+      "startLine": 15,
+      "startOffset": 663,
+      "symbolId": "specs/archive/prototype/project/react-stubs/Components.stories.tsx::ButtonStates::variable"
+    },
+    {
+      "endLine": 39,
+      "endOffset": 1668,
+      "kind": "variable",
+      "name": "BadgeVariants",
+      "startLine": 29,
+      "startOffset": 1303,
+      "symbolId": "specs/archive/prototype/project/react-stubs/Components.stories.tsx::BadgeVariants::variable"
+    },
+    {
+      "endLine": 58,
+      "endOffset": 2415,
+      "kind": "variable",
+      "name": "InputStates",
+      "startLine": 42,
+      "startOffset": 1748,
+      "symbolId": "specs/archive/prototype/project/react-stubs/Components.stories.tsx::InputStates::variable"
+    },
+    {
+      "endLine": 74,
+      "endOffset": 3035,
+      "kind": "variable",
+      "name": "CardAndEmpty",
+      "startLine": 61,
+      "startOffset": 2495,
+      "symbolId": "specs/archive/prototype/project/react-stubs/Components.stories.tsx::CardAndEmpty::variable"
+    }
+  ]
+}

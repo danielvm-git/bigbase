@@ -1,0 +1,139 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 5,
+      "symbolId": "components/deploy/port_allocator.go::GetFreePort::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/deploy/port_allocator.go::pickPort::function"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/deploy/port_allocator.go::pickPortWithLimit::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/deploy/port_allocator.go::portIsFree::function"
+    }
+  ],
+  "contentHash": "2e0acb84a4d49a3877c247fcc4785da6a4ab4be60e90527072ef52aa9df932ad",
+  "edges": [
+    {
+      "from": "components/deploy/port_allocator.go::GetFreePort::function",
+      "kind": "uses",
+      "to": "components/deploy/port_allocator.go::pickPortMu::variable"
+    },
+    {
+      "from": "components/deploy/port_allocator.go::GetFreePort::function",
+      "kind": "calls",
+      "to": "components/deploy/port_allocator.go::portIsFree::function"
+    },
+    {
+      "from": "components/deploy/port_allocator.go::pickPort::function",
+      "kind": "calls",
+      "to": "components/deploy/port_allocator.go::GetFreePort::function"
+    },
+    {
+      "from": "components/deploy/port_allocator.go::pickPort::function",
+      "kind": "calls",
+      "to": "components/deploy/port_allocator.go::pickPortWithLimit::function"
+    },
+    {
+      "from": "components/deploy/port_allocator.go::pickPort::function",
+      "kind": "uses",
+      "to": "components/deploy/port_allocator.go::maxPickPortAttempts::variable"
+    },
+    {
+      "from": "components/deploy/port_allocator.go::pickPortWithLimit::function",
+      "kind": "uses",
+      "to": "components/deploy/port_allocator.go::pickPortMu::variable"
+    },
+    {
+      "from": "components/deploy/port_allocator.go::pickPortWithLimit::function",
+      "kind": "uses",
+      "to": "components/deploy/port_allocator.go::pickPortCounter::variable"
+    },
+    {
+      "from": "components/deploy/port_allocator.go::pickPortWithLimit::function",
+      "kind": "calls",
+      "to": "components/deploy/port_allocator.go::portIsFree::function"
+    }
+  ],
+  "file": "components/deploy/port_allocator.go",
+  "intent": [
+    {
+      "date": "2026-08-02T13:28:41-03:00",
+      "hash": "40c538119e2575f7b441c2d905c96a54b9b47644",
+      "kind": "commit",
+      "message": "fix(deploy): prevent port allocation collision in concurrent integration tests"
+    }
+  ],
+  "lastModified": 1786492494,
+  "symbols": [
+    {
+      "endLine": 11,
+      "endOffset": 75,
+      "kind": "variable",
+      "name": "pickPortMu",
+      "startLine": 11,
+      "startOffset": 65,
+      "symbolId": "components/deploy/port_allocator.go::pickPortMu::variable"
+    },
+    {
+      "endLine": 12,
+      "endOffset": 108,
+      "kind": "variable",
+      "name": "pickPortCounter",
+      "startLine": 12,
+      "startOffset": 93,
+      "symbolId": "components/deploy/port_allocator.go::pickPortCounter::variable"
+    },
+    {
+      "endLine": 15,
+      "endOffset": 143,
+      "kind": "variable",
+      "name": "maxPickPortAttempts",
+      "startLine": 15,
+      "startOffset": 124,
+      "symbolId": "components/deploy/port_allocator.go::maxPickPortAttempts::variable"
+    },
+    {
+      "endLine": 41,
+      "endOffset": 1010,
+      "kind": "function",
+      "name": "GetFreePort",
+      "startLine": 20,
+      "startOffset": 402,
+      "symbolId": "components/deploy/port_allocator.go::GetFreePort::function"
+    },
+    {
+      "endLine": 50,
+      "endOffset": 1303,
+      "kind": "function",
+      "name": "pickPort",
+      "startLine": 45,
+      "startOffset": 1168,
+      "symbolId": "components/deploy/port_allocator.go::pickPort::function"
+    },
+    {
+      "endLine": 63,
+      "endOffset": 1704,
+      "kind": "function",
+      "name": "pickPortWithLimit",
+      "startLine": 52,
+      "startOffset": 1305,
+      "symbolId": "components/deploy/port_allocator.go::pickPortWithLimit::function"
+    },
+    {
+      "endLine": 75,
+      "endOffset": 2083,
+      "kind": "function",
+      "name": "portIsFree",
+      "startLine": 68,
+      "startOffset": 1920,
+      "symbolId": "components/deploy/port_allocator.go::portIsFree::function"
+    }
+  ]
+}

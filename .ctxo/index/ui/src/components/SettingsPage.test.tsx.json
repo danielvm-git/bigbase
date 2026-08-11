@@ -1,0 +1,28 @@
+{
+  "antiPatterns": [],
+  "complexity": [],
+  "contentHash": "8a4f64f2d0071d764751092d0de4803ed3aabb51ede8e382bf9da9df93fb9940",
+  "edges": [
+    {
+      "from": "ui/src/components/SettingsPage.test.tsx::SettingsPage.test::variable",
+      "kind": "imports",
+      "to": "ui/src/components/SettingsPage.ts::SettingsPage::class"
+    },
+    {
+      "from": "ui/src/components/SettingsPage.test.tsx::SettingsPage.test::variable",
+      "kind": "imports",
+      "to": "ui/src/components/SettingsPage.ts::SettingsSection::class"
+    }
+  ],
+  "file": "ui/src/components/SettingsPage.test.tsx",
+  "intent": [
+    {
+      "date": "2026-06-28T17:11:02-03:00",
+      "hash": "6fb588e63f79ce75dad9a27c5cd8dc0bf796f27c",
+      "kind": "commit",
+      "message": "feat(ui): add design system foundation — tokens, 22 components, a11y audit"
+    }
+  ],
+  "lastModified": 1786492495,
+  "symbols": []
+}

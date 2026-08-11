@@ -1,0 +1,17 @@
+{
+  "antiPatterns": [],
+  "complexity": [],
+  "contentHash": "18929fa6696e99e30a687a773b187bb1826d5b0323662f46b34078efcee9d031",
+  "edges": [],
+  "file": "packages/auth-vue/src/types.d.ts",
+  "intent": [
+    {
+      "date": "2026-06-18T14:37:55-03:00",
+      "hash": "554dbe032348bf0a5af3e8b4d5bed85d5c0de699",
+      "kind": "commit",
+      "message": "feat(sdk): add multi-framework auth SDK — @bigbase/auth + 5 adapters (#32)"
+    }
+  ],
+  "lastModified": 1786492495,
+  "symbols": []
+}

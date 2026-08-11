@@ -1,0 +1,253 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/auth/store.go::NewDBOTPStore::function"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/auth/store.go::dbOTPStore.Store::method"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/auth/store.go::dbOTPStore.Get::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/auth/store.go::dbOTPStore.RecordAttempt::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/auth/store.go::dbOTPStore.Delete::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/auth/store.go::NewDBRateLimitStore::function"
+    },
+    {
+      "cyclomatic": 8,
+      "symbolId": "components/auth/store.go::dbRateLimitStore.Increment::method"
+    }
+  ],
+  "contentHash": "9452509f1536024402e492bbaa0f14f846d17d139bcd6180e0cd386f7e538521",
+  "edges": [
+    {
+      "from": "components/auth/store.go::NewDBOTPStore::function",
+      "kind": "uses",
+      "to": "components/auth/auth.go::DBer::interface"
+    },
+    {
+      "from": "components/auth/store.go::NewDBOTPStore::function",
+      "kind": "uses",
+      "to": "components/auth/store.go::OTPStore::interface"
+    },
+    {
+      "from": "components/auth/store.go::NewDBOTPStore::function",
+      "kind": "uses",
+      "to": "components/auth/store.go::dbOTPStore::class"
+    },
+    {
+      "from": "components/auth/store.go::dbOTPStore.Store::method",
+      "kind": "uses",
+      "to": "components/auth/store.go::dbOTPStore::class"
+    },
+    {
+      "from": "components/auth/store.go::dbOTPStore.Store::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.ExecContext::method"
+    },
+    {
+      "from": "components/auth/store.go::dbOTPStore.Get::method",
+      "kind": "uses",
+      "to": "components/auth/store.go::dbOTPStore::class"
+    },
+    {
+      "from": "components/auth/store.go::dbOTPStore.Get::method",
+      "kind": "uses",
+      "to": "components/auth/otp.go::otpRecord::class"
+    },
+    {
+      "from": "components/auth/store.go::dbOTPStore.Get::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.QueryRowContext::method"
+    },
+    {
+      "from": "components/auth/store.go::dbOTPStore.RecordAttempt::method",
+      "kind": "uses",
+      "to": "components/auth/store.go::dbOTPStore::class"
+    },
+    {
+      "from": "components/auth/store.go::dbOTPStore.RecordAttempt::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.ExecContext::method"
+    },
+    {
+      "from": "components/auth/store.go::dbOTPStore.Delete::method",
+      "kind": "uses",
+      "to": "components/auth/store.go::dbOTPStore::class"
+    },
+    {
+      "from": "components/auth/store.go::dbOTPStore.Delete::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.ExecContext::method"
+    },
+    {
+      "from": "components/auth/store.go::NewDBRateLimitStore::function",
+      "kind": "uses",
+      "to": "components/auth/auth.go::DBer::interface"
+    },
+    {
+      "from": "components/auth/store.go::NewDBRateLimitStore::function",
+      "kind": "uses",
+      "to": "components/auth/store.go::RateLimitStore::interface"
+    },
+    {
+      "from": "components/auth/store.go::NewDBRateLimitStore::function",
+      "kind": "uses",
+      "to": "components/auth/store.go::dbRateLimitStore::class"
+    },
+    {
+      "from": "components/auth/store.go::dbRateLimitStore.Increment::method",
+      "kind": "uses",
+      "to": "components/auth/store.go::dbRateLimitStore::class"
+    },
+    {
+      "from": "components/auth/store.go::dbRateLimitStore.Increment::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.QueryRowContext::method"
+    },
+    {
+      "from": "components/auth/store.go::dbRateLimitStore.Increment::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.ExecContext::method"
+    },
+    {
+      "from": "components/auth/store.go::dbOTPStore::class",
+      "kind": "implements",
+      "to": "components/auth/store.go::OTPStore::interface"
+    },
+    {
+      "from": "components/auth/store.go::dbRateLimitStore::class",
+      "kind": "implements",
+      "to": "components/auth/store.go::RateLimitStore::interface"
+    }
+  ],
+  "file": "components/auth/store.go",
+  "intent": [
+    {
+      "date": "2026-07-08T16:55:36-03:00",
+      "hash": "6c369f00e06957990f1a58a99d33d00a771e81b1",
+      "kind": "commit",
+      "message": "chore(auth): address review findings for e56 OTP & audit log"
+    },
+    {
+      "date": "2026-07-08T16:08:02-03:00",
+      "hash": "b0c3e43108d3183b177f1206c67572b5076d4696",
+      "kind": "commit",
+      "message": "feat(auth): DB-backed OTP store & rate limiting with audit logging"
+    }
+  ],
+  "lastModified": 1786492494,
+  "symbols": [
+    {
+      "endLine": 15,
+      "endOffset": 384,
+      "kind": "interface",
+      "name": "OTPStore",
+      "startLine": 10,
+      "startOffset": 126,
+      "symbolId": "components/auth/store.go::OTPStore::interface"
+    },
+    {
+      "endLine": 20,
+      "endOffset": 579,
+      "kind": "interface",
+      "name": "RateLimitStore",
+      "startLine": 18,
+      "startOffset": 461,
+      "symbolId": "components/auth/store.go::RateLimitStore::interface"
+    },
+    {
+      "endLine": 24,
+      "endOffset": 616,
+      "kind": "class",
+      "name": "dbOTPStore",
+      "startLine": 22,
+      "startOffset": 586,
+      "symbolId": "components/auth/store.go::dbOTPStore::class"
+    },
+    {
+      "endLine": 28,
+      "endOffset": 686,
+      "kind": "function",
+      "name": "NewDBOTPStore",
+      "startLine": 26,
+      "startOffset": 618,
+      "symbolId": "components/auth/store.go::NewDBOTPStore::function"
+    },
+    {
+      "endLine": 37,
+      "endOffset": 1111,
+      "kind": "method",
+      "name": "dbOTPStore.Store",
+      "startLine": 30,
+      "startOffset": 688,
+      "symbolId": "components/auth/store.go::dbOTPStore.Store::method"
+    },
+    {
+      "endLine": 60,
+      "endOffset": 1694,
+      "kind": "method",
+      "name": "dbOTPStore.Get",
+      "startLine": 39,
+      "startOffset": 1113,
+      "symbolId": "components/auth/store.go::dbOTPStore.Get::method"
+    },
+    {
+      "endLine": 65,
+      "endOffset": 1885,
+      "kind": "method",
+      "name": "dbOTPStore.RecordAttempt",
+      "startLine": 62,
+      "startOffset": 1696,
+      "symbolId": "components/auth/store.go::dbOTPStore.RecordAttempt::method"
+    },
+    {
+      "endLine": 70,
+      "endOffset": 2046,
+      "kind": "method",
+      "name": "dbOTPStore.Delete",
+      "startLine": 67,
+      "startOffset": 1887,
+      "symbolId": "components/auth/store.go::dbOTPStore.Delete::method"
+    },
+    {
+      "endLine": 74,
+      "endOffset": 2089,
+      "kind": "class",
+      "name": "dbRateLimitStore",
+      "startLine": 72,
+      "startOffset": 2053,
+      "symbolId": "components/auth/store.go::dbRateLimitStore::class"
+    },
+    {
+      "endLine": 78,
+      "endOffset": 2177,
+      "kind": "function",
+      "name": "NewDBRateLimitStore",
+      "startLine": 76,
+      "startOffset": 2091,
+      "symbolId": "components/auth/store.go::NewDBRateLimitStore::function"
+    },
+    {
+      "endLine": 119,
+      "endOffset": 3462,
+      "kind": "method",
+      "name": "dbRateLimitStore.Increment",
+      "startLine": 80,
+      "startOffset": 2179,
+      "symbolId": "components/auth/store.go::dbRateLimitStore.Increment::method"
+    }
+  ]
+}

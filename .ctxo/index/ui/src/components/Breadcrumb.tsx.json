@@ -1,0 +1,34 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 5,
+      "symbolId": "ui/src/components/Breadcrumb.tsx::Breadcrumb::function"
+    }
+  ],
+  "contentHash": "969fa8785ae57f5ddce77d9a0fdb0ced5872983007596b62ea484ae99588d23a",
+  "edges": [],
+  "file": "ui/src/components/Breadcrumb.tsx",
+  "intent": [],
+  "lastModified": 1786492495,
+  "symbols": [
+    {
+      "endLine": 30,
+      "endOffset": 785,
+      "kind": "function",
+      "name": "Breadcrumb",
+      "startLine": 11,
+      "startOffset": 165,
+      "symbolId": "ui/src/components/Breadcrumb.tsx::Breadcrumb::function"
+    },
+    {
+      "endLine": 5,
+      "endOffset": 106,
+      "kind": "interface",
+      "name": "BreadcrumbItem",
+      "startLine": 2,
+      "startOffset": 41,
+      "symbolId": "ui/src/components/Breadcrumb.tsx::BreadcrumbItem::interface"
+    }
+  ]
+}

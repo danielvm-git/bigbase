@@ -1,0 +1,78 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/deploy/cache_api_test.go::newCacheTestDeploy::function"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/deploy/cache_api_test.go::seedCacheEntry::function"
+    },
+    {
+      "cyclomatic": 5,
+      "symbolId": "components/deploy/cache_api_test.go::TestCacheAPI_GlobalStats::function"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/deploy/cache_api_test.go::TestCacheAPI_ClearAll::function"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/deploy/cache_api_test.go::TestCacheAPI_Prune::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/deploy/cache_api_test.go::TestCacheAPI_Prune_RejectsZeroDays::function"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/deploy/cache_api_test.go::TestCacheAPI_Prune_DefaultsWhenAbsent::function"
+    },
+    {
+      "cyclomatic": 5,
+      "symbolId": "components/deploy/cache_api_test.go::TestCacheAPI_SetConfig_Persists::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/deploy/cache_api_test.go::TestCacheAPI_SetConfig_RejectsInvalid::function"
+    },
+    {
+      "cyclomatic": 7,
+      "symbolId": "components/deploy/cache_api_test.go::TestCacheAPI_SiteStatusAndPurge::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/deploy/cache_api_test.go::TestCacheAPI_SiteStatus_RequiresID::function"
+    },
+    {
+      "cyclomatic": 7,
+      "symbolId": "components/deploy/cache_api_test.go::TestCacheAPI_SiteCache_PreventsCrossOrgIDOR::function"
+    }
+  ],
+  "contentHash": "3fdba2f574fb65b587772a53922e0c1387948420554897ef797ae6ceb6c004cd",
+  "edges": [],
+  "file": "components/deploy/cache_api_test.go",
+  "intent": [
+    {
+      "date": "2026-07-29T00:11:14-03:00",
+      "hash": "78d098f2cf6c87b5f85522a0a88070099b946fd1",
+      "kind": "commit",
+      "message": "fix(deploy): scope site build-cache endpoint by org (refs #180)"
+    },
+    {
+      "date": "2026-07-10T14:46:55-03:00",
+      "hash": "36722e3d731d1da0179c0360d677bc6bdf2b3b19",
+      "kind": "commit",
+      "message": "fix(deploy): prevent manifest path traversal (CWE-22)"
+    },
+    {
+      "date": "2026-06-25T07:08:31-03:00",
+      "hash": "a173b3f7599a22033ba71537b28f17950a32a8de",
+      "kind": "commit",
+      "message": "feat(deploy): cache management UI — per-site tab + global panel (e42s02) (#48)"
+    }
+  ],
+  "lastModified": 1786492494,
+  "symbols": []
+}

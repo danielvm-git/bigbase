@@ -1,0 +1,29 @@
+{
+  "antiPatterns": [],
+  "complexity": [],
+  "contentHash": "95cf86c8507a6867f3351045ad2a615942be958d904df6b41a1bef5f65d55e09",
+  "edges": [],
+  "file": "specs/archive/prototype/project/react-stubs/Input.tsx",
+  "intent": [],
+  "lastModified": 1786492495,
+  "symbols": [
+    {
+      "endLine": 13,
+      "endOffset": 577,
+      "kind": "interface",
+      "name": "InputProps",
+      "startLine": 2,
+      "startOffset": 51,
+      "symbolId": "specs/archive/prototype/project/react-stubs/Input.tsx::InputProps::interface"
+    },
+    {
+      "endLine": 53,
+      "endOffset": 1940,
+      "kind": "variable",
+      "name": "Input",
+      "startLine": 20,
+      "startOffset": 831,
+      "symbolId": "specs/archive/prototype/project/react-stubs/Input.tsx::Input::variable"
+    }
+  ]
+}

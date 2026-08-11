@@ -1,0 +1,207 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/auth/anonymous.go::Auth.handleAnonymousToken::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/auth/anonymous.go::generateAnonymousID::function"
+    },
+    {
+      "cyclomatic": 13,
+      "symbolId": "components/auth/anonymous.go::Auth.handlePopupCallback::method"
+    }
+  ],
+  "contentHash": "4118f36331bec0305be1c7e55b70b3605ff142f39b30d4e32c518d6300cce958",
+  "edges": [
+    {
+      "from": "components/auth/anonymous.go::Auth.handleAnonymousToken::method",
+      "kind": "uses",
+      "to": "components/auth/auth.go::Auth::class"
+    },
+    {
+      "from": "components/auth/anonymous.go::Auth.handleAnonymousToken::method",
+      "kind": "calls",
+      "to": "kernel/utilities.go::WriteJSON::function"
+    },
+    {
+      "from": "components/auth/anonymous.go::Auth.handleAnonymousToken::method",
+      "kind": "uses",
+      "to": "components/auth/jwt.go::Claims::class"
+    },
+    {
+      "from": "components/auth/anonymous.go::Auth.handleAnonymousToken::method",
+      "kind": "calls",
+      "to": "components/auth/anonymous.go::generateAnonymousID::function"
+    },
+    {
+      "from": "components/auth/anonymous.go::Auth.handleAnonymousToken::method",
+      "kind": "calls",
+      "to": "kernel/component.go::Logger.Error::method"
+    },
+    {
+      "from": "components/auth/anonymous.go::Auth.handleAnonymousToken::method",
+      "kind": "calls",
+      "to": "components/auth/auth.go::Auth.recordAudit::method"
+    },
+    {
+      "from": "components/auth/anonymous.go::Auth.handleAnonymousToken::method",
+      "kind": "calls",
+      "to": "components/auth/auth.go::getIP::function"
+    },
+    {
+      "from": "components/auth/anonymous.go::generateAnonymousID::function",
+      "kind": "calls",
+      "to": "kernel/utilities.go::GenerateID::function"
+    },
+    {
+      "from": "components/auth/anonymous.go::Auth.handlePopupCallback::method",
+      "kind": "uses",
+      "to": "components/auth/auth.go::Auth::class"
+    },
+    {
+      "from": "components/auth/anonymous.go::Auth.handlePopupCallback::method",
+      "kind": "calls",
+      "to": "kernel/utilities.go::WriteJSON::function"
+    },
+    {
+      "from": "components/auth/anonymous.go::Auth.handlePopupCallback::method",
+      "kind": "calls",
+      "to": "components/auth/oauth_handlers.go::VerifySPAState::function"
+    },
+    {
+      "from": "components/auth/anonymous.go::Auth.handlePopupCallback::method",
+      "kind": "calls",
+      "to": "components/auth/oauth_handlers.go::VerifyState::function"
+    },
+    {
+      "from": "components/auth/anonymous.go::Auth.handlePopupCallback::method",
+      "kind": "calls",
+      "to": "components/auth/auth.go::Auth.oauthCallbackRedirectURI::method"
+    },
+    {
+      "from": "components/auth/anonymous.go::Auth.handlePopupCallback::method",
+      "kind": "uses",
+      "to": "components/auth/oauth_handlers.go::realGoogleVerifier::class"
+    },
+    {
+      "from": "components/auth/anonymous.go::Auth.handlePopupCallback::method",
+      "kind": "calls",
+      "to": "components/auth/auth.go::GoogleVerifier.Verify::method"
+    },
+    {
+      "from": "components/auth/anonymous.go::Auth.handlePopupCallback::method",
+      "kind": "calls",
+      "to": "kernel/component.go::Logger.Error::method"
+    },
+    {
+      "from": "components/auth/anonymous.go::Auth.handlePopupCallback::method",
+      "kind": "calls",
+      "to": "components/auth/oauth_handlers.go::Auth.findOrCreateGoogleUser::method"
+    },
+    {
+      "from": "components/auth/anonymous.go::Auth.handlePopupCallback::method",
+      "kind": "calls",
+      "to": "components/auth/jwt.go::createJWT::function"
+    },
+    {
+      "from": "components/auth/anonymous.go::Auth.handlePopupCallback::method",
+      "kind": "calls",
+      "to": "components/auth/oauth_handlers.go::Auth.clearOAuthStateCookie::method"
+    },
+    {
+      "from": "components/auth/anonymous.go::Auth.handlePopupCallback::method",
+      "kind": "calls",
+      "to": "components/auth/auth.go::Auth.isSPAOriginAllowed::method"
+    }
+  ],
+  "file": "components/auth/anonymous.go",
+  "intent": [
+    {
+      "date": "2026-07-23T21:27:09-03:00",
+      "hash": "0862c58a83807097e474f9dc00116f464c444da5",
+      "kind": "commit",
+      "message": "fix(auth): GREEN — fail closed on popup postMessage to prevent JWT leak"
+    },
+    {
+      "date": "2026-07-10T15:59:01-03:00",
+      "hash": "742b55f679da2346b47a3dd5677814574eece017",
+      "kind": "commit",
+      "message": "fix(auth): never use Host header for OAuth public URL (CWE-601)"
+    },
+    {
+      "date": "2026-07-10T14:46:55-03:00",
+      "hash": "36722e3d731d1da0179c0360d677bc6bdf2b3b19",
+      "kind": "commit",
+      "message": "fix(deploy): prevent manifest path traversal (CWE-22)"
+    },
+    {
+      "date": "2026-07-08T16:55:36-03:00",
+      "hash": "6c369f00e06957990f1a58a99d33d00a771e81b1",
+      "kind": "commit",
+      "message": "chore(auth): address review findings for e56 OTP & audit log"
+    },
+    {
+      "date": "2026-07-08T16:08:02-03:00",
+      "hash": "b0c3e43108d3183b177f1206c67572b5076d4696",
+      "kind": "commit",
+      "message": "feat(auth): DB-backed OTP store & rate limiting with audit logging"
+    },
+    {
+      "date": "2026-06-28T12:50:44-03:00",
+      "hash": "cd72c6a2b3fa3f9bcc5c4c967f06cb8b6c817abd",
+      "kind": "commit",
+      "message": "feat(auth): e50 JWT secret persistence, configurable lifetimes, refresh token revocation"
+    },
+    {
+      "date": "2026-06-28T10:20:20-03:00",
+      "hash": "3a86390d0459d17210d2c86e3184c807ed320ce9",
+      "kind": "commit",
+      "message": "fix(auth): use configured PublicURL for OAuth redirect URIs"
+    },
+    {
+      "date": "2026-06-28T01:20:07-03:00",
+      "hash": "9d587c8f8bcd8ec5d4d49de6eb8c82cc439fe917",
+      "kind": "commit",
+      "message": "feat(auth): fix anonymous tokens with Claims struct and middleware bypass"
+    },
+    {
+      "date": "2026-06-18T16:49:48-03:00",
+      "hash": "2af8713fffb089b189341f0ae319a91536e7c12f",
+      "kind": "commit",
+      "message": "feat(auth): add phone auth, anonymous token, OAuth popup (#34)"
+    }
+  ],
+  "lastModified": 1786492494,
+  "symbols": [
+    {
+      "endLine": 50,
+      "endOffset": 1381,
+      "kind": "method",
+      "name": "Auth.handleAnonymousToken",
+      "startLine": 14,
+      "startOffset": 136,
+      "symbolId": "components/auth/anonymous.go::Auth.handleAnonymousToken::method"
+    },
+    {
+      "endLine": 55,
+      "endOffset": 1476,
+      "kind": "function",
+      "name": "generateAnonymousID",
+      "startLine": 52,
+      "startOffset": 1383,
+      "symbolId": "components/auth/anonymous.go::generateAnonymousID::function"
+    },
+    {
+      "endLine": 164,
+      "endOffset": 5502,
+      "kind": "method",
+      "name": "Auth.handlePopupCallback",
+      "startLine": 57,
+      "startOffset": 1478,
+      "symbolId": "components/auth/anonymous.go::Auth.handlePopupCallback::method"
+    }
+  ]
+}

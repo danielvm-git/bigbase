@@ -1,0 +1,115 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 37,
+      "symbolId": "ui/src/pages/MessagingPage.tsx::MessagingPage::function"
+    }
+  ],
+  "contentHash": "14fef47c75ee4edd2eae4a5d423bc710004076fe58a1e844993144c3c25dead2",
+  "edges": [
+    {
+      "from": "ui/src/pages/MessagingPage.tsx::MessagingPage::function",
+      "kind": "imports",
+      "to": "ui/src/components.ts::PageHeader::class"
+    },
+    {
+      "from": "ui/src/pages/MessagingPage.tsx::MessagingPage::function",
+      "kind": "imports",
+      "to": "ui/src/components.ts::Button::class"
+    },
+    {
+      "from": "ui/src/pages/MessagingPage.tsx::MessagingPage::function",
+      "kind": "imports",
+      "to": "ui/src/components.ts::Input::class"
+    },
+    {
+      "from": "ui/src/pages/MessagingPage.tsx::MessagingPage::function",
+      "kind": "imports",
+      "to": "ui/src/components.ts::Tabs::class"
+    },
+    {
+      "from": "ui/src/pages/MessagingPage.tsx::MessagingPage::function",
+      "kind": "imports",
+      "to": "ui/src/components.ts::Badge::class"
+    },
+    {
+      "from": "ui/src/pages/MessagingPage.tsx::MessagingPage::function",
+      "kind": "imports",
+      "to": "ui/src/components.ts::Dialog::class"
+    },
+    {
+      "from": "ui/src/pages/MessagingPage.tsx::MessagingPage::function",
+      "kind": "imports",
+      "to": "ui/src/mocks/templates.ts::mockTemplates::variable"
+    },
+    {
+      "from": "ui/src/pages/MessagingPage.tsx::MessagingPage::function",
+      "kind": "uses",
+      "to": "ui/src/components.ts::PageHeader::class"
+    },
+    {
+      "from": "ui/src/pages/MessagingPage.tsx::MessagingPage::function",
+      "kind": "uses",
+      "to": "ui/src/components.ts::Button::class"
+    },
+    {
+      "from": "ui/src/pages/MessagingPage.tsx::MessagingPage::function",
+      "kind": "uses",
+      "to": "ui/src/components.ts::Tabs::class"
+    },
+    {
+      "from": "ui/src/pages/MessagingPage.tsx::MessagingPage::function",
+      "kind": "uses",
+      "to": "ui/src/mocks/templates.ts::mockTemplates::variable"
+    },
+    {
+      "from": "ui/src/pages/MessagingPage.tsx::MessagingPage::function",
+      "kind": "uses",
+      "to": "ui/src/components.ts::Badge::class"
+    },
+    {
+      "from": "ui/src/pages/MessagingPage.tsx::MessagingPage::function",
+      "kind": "uses",
+      "to": "ui/src/components.ts::Input::class"
+    },
+    {
+      "from": "ui/src/pages/MessagingPage.tsx::MessagingPage::function",
+      "kind": "uses",
+      "to": "ui/src/components.ts::Dialog::class"
+    }
+  ],
+  "file": "ui/src/pages/MessagingPage.tsx",
+  "intent": [
+    {
+      "date": "2026-08-11T16:01:21-03:00",
+      "hash": "ae55271ccc35d42c3c9cd1bf907b6fd627c494f2",
+      "kind": "commit",
+      "message": "fix(ui): AAA help text + error prevention (e87s06)"
+    },
+    {
+      "date": "2026-08-11T00:35:18-03:00",
+      "hash": "9848ced3fc0d2e6aef8ef47c1d78c4e4107f3b9a",
+      "kind": "commit",
+      "message": "fix(ui): give placeholder-only form controls accessible names (BUG-2026-08-11T000007)"
+    },
+    {
+      "date": "2026-07-10T20:39:36-03:00",
+      "hash": "db94b7c03f56600323aff8c9132e7d98185ff8b2",
+      "kind": "commit",
+      "message": "fix(ui): CopyButton silent failure + pre-existing ESLint cleanup"
+    }
+  ],
+  "lastModified": 1786492495,
+  "symbols": [
+    {
+      "endLine": 245,
+      "endOffset": 9878,
+      "kind": "function",
+      "name": "MessagingPage",
+      "startLine": 23,
+      "startOffset": 571,
+      "symbolId": "ui/src/pages/MessagingPage.tsx::MessagingPage::function"
+    }
+  ]
+}

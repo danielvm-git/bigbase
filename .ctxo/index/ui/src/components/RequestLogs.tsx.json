@@ -1,0 +1,83 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 9,
+      "symbolId": "ui/src/components/RequestLogs.tsx::RequestLogs::function"
+    }
+  ],
+  "contentHash": "cc616fe4a0a741b0e68f86885a1e3f33e021886466dcb30d1b161b0383c95b4c",
+  "edges": [
+    {
+      "from": "ui/src/components/RequestLogs.tsx::RequestLogs::function",
+      "kind": "imports",
+      "to": "ui/src/components/.ts::Badge::class"
+    },
+    {
+      "from": "ui/src/components/RequestLogs.tsx::RequestLogs::function",
+      "kind": "imports",
+      "to": "ui/src/components/.ts::Button::class"
+    },
+    {
+      "from": "ui/src/components/RequestLogs.tsx::RequestLogs::function",
+      "kind": "imports",
+      "to": "ui/src/hooks/useRequestLogs.ts::RequestLogEntry::interface",
+      "typeOnly": true
+    },
+    {
+      "from": "ui/src/components/RequestLogs.tsx::RequestLogs::function",
+      "kind": "uses",
+      "to": "ui/src/components/.ts::Button::class"
+    },
+    {
+      "from": "ui/src/components/RequestLogs.tsx::RequestLogs::function",
+      "kind": "uses",
+      "to": "ui/src/components/.ts::Badge::class"
+    }
+  ],
+  "file": "ui/src/components/RequestLogs.tsx",
+  "intent": [
+    {
+      "date": "2026-08-11T13:43:14-03:00",
+      "hash": "23c10a8edc11e8765d5f695aef9e37c7b6e33280",
+      "kind": "commit",
+      "message": "fix(ui): table scope/caption + decorative glyph aria-hidden (T000021)"
+    },
+    {
+      "date": "2026-08-11T00:35:18-03:00",
+      "hash": "9848ced3fc0d2e6aef8ef47c1d78c4e4107f3b9a",
+      "kind": "commit",
+      "message": "fix(ui): give placeholder-only form controls accessible names (BUG-2026-08-11T000007)"
+    },
+    {
+      "date": "2026-08-11T00:35:09-03:00",
+      "hash": "7fecbe061cea95c844dd8224ba98b63d9864ef8b",
+      "kind": "commit",
+      "message": "fix(ui): announce loading/error/SSE states via live regions (BUG-2026-08-11T000008)"
+    },
+    {
+      "date": "2026-06-18T14:25:11-03:00",
+      "hash": "43253e96e30c80d9a87aad9a81c7b6f845489b5d",
+      "kind": "commit",
+      "message": "fix(ui): resolve TS build errors — unused import and missing node types"
+    },
+    {
+      "date": "2026-06-12T19:40:09-03:00",
+      "hash": "670460601bdcbd5a72dfb21f475ab3b1f336a58a",
+      "kind": "commit",
+      "message": "feat(deploy,sites,proxy): implement site build and request logs"
+    }
+  ],
+  "lastModified": 1786492495,
+  "symbols": [
+    {
+      "endLine": 108,
+      "endOffset": 3482,
+      "kind": "function",
+      "name": "RequestLogs",
+      "startLine": 14,
+      "startOffset": 357,
+      "symbolId": "ui/src/components/RequestLogs.tsx::RequestLogs::function"
+    }
+  ]
+}

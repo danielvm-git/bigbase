@@ -1,0 +1,38 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 6,
+      "symbolId": "scripts/verifytoolchain/version_test.go::TestParseVersion::function"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "scripts/verifytoolchain/version_test.go::TestVersionCompare::function"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "scripts/verifytoolchain/version_test.go::TestAtLeast::function"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "scripts/verifytoolchain/version_test.go::sign::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "scripts/verifytoolchain/version_test.go::floorVersion::function"
+    }
+  ],
+  "contentHash": "3e79a3cf5d88914429d6f8921414d64d5f87c36e2891550660de970188f94fab",
+  "edges": [],
+  "file": "scripts/verifytoolchain/version_test.go",
+  "intent": [
+    {
+      "date": "2026-07-29T00:02:18-03:00",
+      "hash": "3a251704d233dd81746d3eb522b691df962fd988",
+      "kind": "commit",
+      "message": "test(deploy): unit tests for toolchain verifier version parsing and comparison"
+    }
+  ],
+  "lastModified": 1786492495,
+  "symbols": []
+}

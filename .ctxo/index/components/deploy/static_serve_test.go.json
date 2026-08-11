@@ -1,0 +1,66 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 5,
+      "symbolId": "components/deploy/static_serve_test.go::TestResolvePureStaticServeDir_PublicIndex::function"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/deploy/static_serve_test.go::TestResolvePureStaticServeDir_RootIndex::function"
+    },
+    {
+      "cyclomatic": 5,
+      "symbolId": "components/deploy/static_serve_test.go::TestResolvePureStaticServeDir_OutDirHint::function"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/deploy/static_serve_test.go::TestResolvePureStaticServeDir_FailClosedWithoutIndex::function"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/deploy/static_serve_test.go::TestRequireStaticIndex_FailClosed::function"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/deploy/static_serve_test.go::TestRequireStaticIndex_OK::function"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/deploy/static_serve_test.go::TestGetStartCommand_AdapterNodeBuildIndex::function"
+    },
+    {
+      "cyclomatic": 6,
+      "symbolId": "components/deploy/static_serve_test.go::TestFindStaticServeDirAfterNodeBuild_RequiresIndex::function"
+    },
+    {
+      "cyclomatic": 6,
+      "symbolId": "components/deploy/static_serve_test.go::TestFrameworkMode_RootPathWebNotMonorepoListing::function"
+    }
+  ],
+  "contentHash": "8615134f7e0de04e65f85435944a09f3d584c5baddc67d6e436e58250730d676",
+  "edges": [],
+  "file": "components/deploy/static_serve_test.go",
+  "intent": [
+    {
+      "date": "2026-07-24T22:44:52-03:00",
+      "hash": "40a03bab608849b2b9728aa3c87d3312115b8980",
+      "kind": "commit",
+      "message": "fix(deploy): start SvelteKit adapter-node via build/index.js (#169)"
+    },
+    {
+      "date": "2026-07-24T22:36:52-03:00",
+      "hash": "7d360e49a5648a2dfcfb7eca44438d6284baae79",
+      "kind": "commit",
+      "message": "fix(deploy): keep adapter-node SSR as process apps (#168)"
+    },
+    {
+      "date": "2026-07-24T22:25:13-03:00",
+      "hash": "52fb9affdfc6809d147bdea58f096073447ad9cd",
+      "kind": "commit",
+      "message": "fix(deploy): stop static hosts serving checkout directory listings (#167)"
+    }
+  ],
+  "lastModified": 1786492494,
+  "symbols": []
+}

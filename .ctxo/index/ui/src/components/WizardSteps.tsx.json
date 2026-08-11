@@ -1,0 +1,36 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 7,
+      "symbolId": "ui/src/components/WizardSteps.tsx::WizardSteps::function"
+    }
+  ],
+  "contentHash": "bcf4a45ced3d9990d0b47e815a7e01f65a55e312d5f6c873a2503d40c22bf081",
+  "edges": [
+    {
+      "from": "ui/src/components/WizardSteps.tsx::WizardSteps::function",
+      "kind": "imports",
+      "to": "ui/src/components/Icon.ts::Icon::class"
+    },
+    {
+      "from": "ui/src/components/WizardSteps.tsx::WizardSteps::function",
+      "kind": "uses",
+      "to": "ui/src/components/Icon.ts::Icon::class"
+    }
+  ],
+  "file": "ui/src/components/WizardSteps.tsx",
+  "intent": [],
+  "lastModified": 1786492495,
+  "symbols": [
+    {
+      "endLine": 41,
+      "endOffset": 1290,
+      "kind": "function",
+      "name": "WizardSteps",
+      "startLine": 7,
+      "startOffset": 99,
+      "symbolId": "ui/src/components/WizardSteps.tsx::WizardSteps::function"
+    }
+  ]
+}

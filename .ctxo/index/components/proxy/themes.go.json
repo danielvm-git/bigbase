@@ -1,0 +1,68 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/proxy/themes.go::landingThemeScript::function"
+    }
+  ],
+  "contentHash": "f8e9e245ce7a9fc0c04b026e2a219f5b95d590c7e2c5ae0c6bca21176073ee38",
+  "edges": [
+    {
+      "from": "components/proxy/themes.go::landingThemeScript::function",
+      "kind": "uses",
+      "to": "components/proxy/themes.go::landingAccents::variable"
+    }
+  ],
+  "file": "components/proxy/themes.go",
+  "intent": [
+    {
+      "date": "2026-08-11T20:12:34-03:00",
+      "hash": "2f9e8adfd5f6f78da6a063c16a09777f1bbd160f",
+      "kind": "commit",
+      "message": "fix(proxy): landing + docs pages reach WCAG AA/AAA parity with admin"
+    },
+    {
+      "date": "2026-08-11T01:13:12-03:00",
+      "hash": "878e5f89b18d8233d57d47a26319b1e57a96a035",
+      "kind": "commit",
+      "message": "fix(proxy): landing page contrast — dark nav + on-accent text for light accents (#236)"
+    },
+    {
+      "date": "2026-08-10T23:10:57-03:00",
+      "hash": "97aa7a6f1545e995e2ab762424db282e265beaf5",
+      "kind": "commit",
+      "message": "feat(proxy): unify landing page theme with admin console (e85) (#234)"
+    }
+  ],
+  "lastModified": 1786492494,
+  "symbols": [
+    {
+      "endLine": 21,
+      "endOffset": 580,
+      "kind": "class",
+      "name": "landingAccent",
+      "startLine": 14,
+      "startOffset": 450,
+      "symbolId": "components/proxy/themes.go::landingAccent::class"
+    },
+    {
+      "endLine": 26,
+      "endOffset": 813,
+      "kind": "variable",
+      "name": "landingAccents",
+      "startLine": 26,
+      "startOffset": 799,
+      "symbolId": "components/proxy/themes.go::landingAccents::variable"
+    },
+    {
+      "endLine": 97,
+      "endOffset": 5483,
+      "kind": "function",
+      "name": "landingThemeScript",
+      "startLine": 58,
+      "startOffset": 3396,
+      "symbolId": "components/proxy/themes.go::landingThemeScript::function"
+    }
+  ]
+}

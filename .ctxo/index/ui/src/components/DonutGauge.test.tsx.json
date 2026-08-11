@@ -1,0 +1,23 @@
+{
+  "antiPatterns": [],
+  "complexity": [],
+  "contentHash": "fc98a7bc09f8fbb7b4a7cb32ecec9d5fe3a6fcb4eae24c83b679c03a57b0c570",
+  "edges": [
+    {
+      "from": "ui/src/components/DonutGauge.test.tsx::DonutGauge.test::variable",
+      "kind": "imports",
+      "to": "ui/src/components/DonutGauge.ts::DonutGauge::class"
+    }
+  ],
+  "file": "ui/src/components/DonutGauge.test.tsx",
+  "intent": [
+    {
+      "date": "2026-08-11T13:43:04-03:00",
+      "hash": "0084e236186d05c7721f7141c1488b3b5cc0e355",
+      "kind": "commit",
+      "message": "fix(ui): accessible chart/gauges labels + progressbar roles (T000012)"
+    }
+  ],
+  "lastModified": 1786492495,
+  "symbols": []
+}

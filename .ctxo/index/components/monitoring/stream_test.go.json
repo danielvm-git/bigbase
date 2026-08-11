@@ -1,0 +1,26 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 12,
+      "symbolId": "components/monitoring/stream_test.go::TestMetricsStream::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/monitoring/stream_test.go::sseKeys::function"
+    }
+  ],
+  "contentHash": "cde5d3c71b5ec248c9fe85859449c99d8b523650d17f3022dc5833300508222c",
+  "edges": [],
+  "file": "components/monitoring/stream_test.go",
+  "intent": [
+    {
+      "date": "2026-06-21T13:48:43-03:00",
+      "hash": "673a92e76f033a4ef16cc6439216f16d4a824431",
+      "kind": "commit",
+      "message": "fix(deploy,monitoring): harden PEP 668 fix and duration_seconds migration"
+    }
+  ],
+  "lastModified": 1786492494,
+  "symbols": []
+}

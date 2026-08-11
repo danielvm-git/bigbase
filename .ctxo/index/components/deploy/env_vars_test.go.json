@@ -1,0 +1,50 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/deploy/env_vars_test.go::migrateEnvVarsTable::function"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/deploy/env_vars_test.go::insertEnvVar::function"
+    },
+    {
+      "cyclomatic": 28,
+      "symbolId": "components/deploy/env_vars_test.go::TestEnvVarInjection::function"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/deploy/env_vars_test.go::createEnvVarBuildRepo::function"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/deploy/env_vars_test.go::createEnvVarRuntimeRepo::function"
+    }
+  ],
+  "contentHash": "600a4f1d0cd34816325b864e21e4f59d44a5e58e85cfcdaf314451ce53004473",
+  "edges": [],
+  "file": "components/deploy/env_vars_test.go",
+  "intent": [
+    {
+      "date": "2026-08-02T13:48:28-03:00",
+      "hash": "7bacc8687dd0948ee1eb4e80a0a54c8a7bc5fe15",
+      "kind": "commit",
+      "message": "fix(deploy): increase test timeout to 180s and optimize test polling delays"
+    },
+    {
+      "date": "2026-07-11T00:40:25-03:00",
+      "hash": "d8223daf9c5b7ed1e871d4f576f3563d49f95dc1",
+      "kind": "commit",
+      "message": "fix(deploy): deterministic FIFO log eviction and fix three flaky tests"
+    },
+    {
+      "date": "2026-06-24T13:23:32-03:00",
+      "hash": "a73b1d0595b3488d0576d19d880120c7f28475a0",
+      "kind": "commit",
+      "message": "test(deploy): red TestEnvVarInjection — unit + integration"
+    }
+  ],
+  "lastModified": 1786492494,
+  "symbols": []
+}

@@ -1,0 +1,53 @@
+{
+  "antiPatterns": [],
+  "complexity": [],
+  "contentHash": "2f4e5d725ad0854c0865226b5ca4fa554af3f8837be519e05ca1475c88d1a860",
+  "edges": [
+    {
+      "from": "ui/src/lib/format.test.ts::format.test::variable",
+      "kind": "imports",
+      "to": "ui/src/lib/format.ts::timeAgo::function"
+    },
+    {
+      "from": "ui/src/lib/format.test.ts::format.test::variable",
+      "kind": "imports",
+      "to": "ui/src/lib/format.ts::siteDisplayUrl::function"
+    },
+    {
+      "from": "ui/src/lib/format.test.ts::format.test::variable",
+      "kind": "imports",
+      "to": "ui/src/lib/format.ts::mapDeployStatus::function"
+    },
+    {
+      "from": "ui/src/lib/format.test.ts::format.test::variable",
+      "kind": "imports",
+      "to": "ui/src/lib/format.ts::fmtUptime::function"
+    },
+    {
+      "from": "ui/src/lib/format.test.ts::format.test::variable",
+      "kind": "imports",
+      "to": "ui/src/lib/format.ts::fmtMemoryMB::function"
+    },
+    {
+      "from": "ui/src/lib/format.test.ts::format.test::variable",
+      "kind": "imports",
+      "to": "ui/src/lib/format.ts::memoryBarPercent::function"
+    },
+    {
+      "from": "ui/src/lib/format.test.ts::format.test::variable",
+      "kind": "imports",
+      "to": "ui/src/lib/format.ts::fmtBytes::function"
+    }
+  ],
+  "file": "ui/src/lib/format.test.ts",
+  "intent": [
+    {
+      "date": "2026-06-25T07:08:31-03:00",
+      "hash": "a173b3f7599a22033ba71537b28f17950a32a8de",
+      "kind": "commit",
+      "message": "feat(deploy): cache management UI — per-site tab + global panel (e42s02) (#48)"
+    }
+  ],
+  "lastModified": 1786492495,
+  "symbols": []
+}

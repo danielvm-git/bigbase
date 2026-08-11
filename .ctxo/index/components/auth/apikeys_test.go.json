@@ -1,0 +1,52 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/auth/apikeys_test.go::setupAPIKeys::function"
+    },
+    {
+      "cyclomatic": 24,
+      "symbolId": "components/auth/apikeys_test.go::TestAPIKeys::function"
+    },
+    {
+      "cyclomatic": 5,
+      "symbolId": "components/auth/apikeys_test.go::TestAPIKeyOrgScoped::function"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/auth/apikeys_test.go::TestRequireScopes_MatchingScopeAllowed::function"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/auth/apikeys_test.go::TestRequireScopes_MissingScopeDenied::function"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/auth/apikeys_test.go::TestRequireScopes_UnscopedKeyAllowed::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/auth/apikeys_test.go::TestRequireScopes_JWTAuthBypassesScopeCheck::function"
+    }
+  ],
+  "contentHash": "1b008e740b036d107d2943496c950060b7b3e882d5262f075740ea97d56d6f60",
+  "edges": [],
+  "file": "components/auth/apikeys_test.go",
+  "intent": [
+    {
+      "date": "2026-07-28T09:56:58-03:00",
+      "hash": "6c455a48a4fd143819261cd632342d42208062dc",
+      "kind": "commit",
+      "message": "fix(auth): enforce API key scopes on write routes (CWE-287)"
+    },
+    {
+      "date": "2026-06-12T16:16:30-03:00",
+      "hash": "122dd0a0b7ad3b3088fc21027553773bfe0cd83a",
+      "kind": "commit",
+      "message": "feat(auth): security vulnerability fixes and regression tests (#23)"
+    }
+  ],
+  "lastModified": 1786492494,
+  "symbols": []
+}

@@ -1,0 +1,127 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/deploy/pipeline_timeline.go::timelineNow::function"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/deploy/pipeline_timeline.go::Deploy.ensurePipelineTimelineColumn::method"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/deploy/pipeline_timeline.go::Deploy.persistPipelineTimeline::method"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/deploy/pipeline_timeline.go::parsePipelineTimeline::function"
+    }
+  ],
+  "contentHash": "8b9807e70ba8dd13706ef3d00bb79c183f07ddea1e31a501cd999bda5e06abc2",
+  "edges": [
+    {
+      "from": "components/deploy/pipeline_timeline.go::Deploy.ensurePipelineTimelineColumn::method",
+      "kind": "uses",
+      "to": "components/deploy/deploy.go::Deploy::class"
+    },
+    {
+      "from": "components/deploy/pipeline_timeline.go::Deploy.ensurePipelineTimelineColumn::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.ExecContext::method"
+    },
+    {
+      "from": "components/deploy/pipeline_timeline.go::Deploy.ensurePipelineTimelineColumn::method",
+      "kind": "calls",
+      "to": "components/deploy/errors.go::isDuplicateColumnError::function"
+    },
+    {
+      "from": "components/deploy/pipeline_timeline.go::Deploy.persistPipelineTimeline::method",
+      "kind": "uses",
+      "to": "components/deploy/deploy.go::Deploy::class"
+    },
+    {
+      "from": "components/deploy/pipeline_timeline.go::Deploy.persistPipelineTimeline::method",
+      "kind": "uses",
+      "to": "components/deploy/pipeline_timeline.go::PipelineTimeline::class"
+    },
+    {
+      "from": "components/deploy/pipeline_timeline.go::Deploy.persistPipelineTimeline::method",
+      "kind": "calls",
+      "to": "kernel/component.go::Logger.Error::method"
+    },
+    {
+      "from": "components/deploy/pipeline_timeline.go::Deploy.persistPipelineTimeline::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.ExecContext::method"
+    },
+    {
+      "from": "components/deploy/pipeline_timeline.go::parsePipelineTimeline::function",
+      "kind": "uses",
+      "to": "components/deploy/pipeline_timeline.go::PipelineTimeline::class"
+    }
+  ],
+  "file": "components/deploy/pipeline_timeline.go",
+  "intent": [
+    {
+      "date": "2026-07-10T14:43:09-03:00",
+      "hash": "4ca826f62a212cff9a287041a38dc164205e676b",
+      "kind": "commit",
+      "message": "fix(deploy): replace error string matching with sentinel errors"
+    },
+    {
+      "date": "2026-07-09T01:44:49-03:00",
+      "hash": "82dc49874349b328be8cbd34da05d4ee4b430169",
+      "kind": "commit",
+      "message": "feat(monitoring): AI-assisted deploy observability and incident response (e72) (#64)"
+    }
+  ],
+  "lastModified": 1786492494,
+  "symbols": [
+    {
+      "endLine": 22,
+      "endOffset": 772,
+      "kind": "class",
+      "name": "PipelineTimeline",
+      "startLine": 13,
+      "startOffset": 311,
+      "symbolId": "components/deploy/pipeline_timeline.go::PipelineTimeline::class"
+    },
+    {
+      "endLine": 27,
+      "endOffset": 835,
+      "kind": "function",
+      "name": "timelineNow",
+      "startLine": 24,
+      "startOffset": 774,
+      "symbolId": "components/deploy/pipeline_timeline.go::timelineNow::function"
+    },
+    {
+      "endLine": 39,
+      "endOffset": 1161,
+      "kind": "method",
+      "name": "Deploy.ensurePipelineTimelineColumn",
+      "startLine": 29,
+      "startOffset": 837,
+      "symbolId": "components/deploy/pipeline_timeline.go::Deploy.ensurePipelineTimelineColumn::method"
+    },
+    {
+      "endLine": 55,
+      "endOffset": 1618,
+      "kind": "method",
+      "name": "Deploy.persistPipelineTimeline",
+      "startLine": 41,
+      "startOffset": 1163,
+      "symbolId": "components/deploy/pipeline_timeline.go::Deploy.persistPipelineTimeline::method"
+    },
+    {
+      "endLine": 66,
+      "endOffset": 1823,
+      "kind": "function",
+      "name": "parsePipelineTimeline",
+      "startLine": 57,
+      "startOffset": 1620,
+      "symbolId": "components/deploy/pipeline_timeline.go::parsePipelineTimeline::function"
+    }
+  ]
+}

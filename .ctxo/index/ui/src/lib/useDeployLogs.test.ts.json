@@ -1,0 +1,21 @@
+{
+  "antiPatterns": [],
+  "complexity": [],
+  "contentHash": "c57fd50f8e43a25885c8c26730c2892a0fd6ac124f2c3d508eab58e292f9a10b",
+  "edges": [
+    {
+      "from": "ui/src/lib/useDeployLogs.test.ts::useDeployLogs.test::variable",
+      "kind": "imports",
+      "to": "ui/src/lib/useDeployLogs.ts::fetchDeployLogs::function"
+    },
+    {
+      "from": "ui/src/lib/useDeployLogs.test.ts::useDeployLogs.test::variable",
+      "kind": "imports",
+      "to": "ui/src/lib/useDeployLogs.ts::useDeployLogs::function"
+    }
+  ],
+  "file": "ui/src/lib/useDeployLogs.test.ts",
+  "intent": [],
+  "lastModified": 1786492495,
+  "symbols": []
+}

@@ -1,0 +1,23 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/auth/emailverify_test.go::mockEmailSender.SendEmail::method"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/auth/emailverify_test.go::setupAuthWithEmail::function"
+    },
+    {
+      "cyclomatic": 17,
+      "symbolId": "components/auth/emailverify_test.go::TestEmailVerify::function"
+    }
+  ],
+  "contentHash": "6771efa1179bef90c009f9e69ef2ee11803cf2b85d8c14ce351917f158d60ebd",
+  "edges": [],
+  "file": "components/auth/emailverify_test.go",
+  "intent": [],
+  "lastModified": 1786492494,
+  "symbols": []
+}

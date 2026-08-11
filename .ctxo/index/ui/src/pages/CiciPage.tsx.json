@@ -1,0 +1,110 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 32,
+      "symbolId": "ui/src/pages/CiciPage.tsx::CiciPage::function"
+    }
+  ],
+  "contentHash": "6bb7c9cecd5433d8f95287cd302249f8e4b7fd80c6b43bfdb3080b855479323e",
+  "edges": [
+    {
+      "from": "ui/src/pages/CiciPage.tsx::CiciPage::function",
+      "kind": "imports",
+      "to": "ui/src/components.ts::PageHeader::class"
+    },
+    {
+      "from": "ui/src/pages/CiciPage.tsx::CiciPage::function",
+      "kind": "imports",
+      "to": "ui/src/components.ts::Button::class"
+    },
+    {
+      "from": "ui/src/pages/CiciPage.tsx::CiciPage::function",
+      "kind": "imports",
+      "to": "ui/src/components.ts::Input::class"
+    },
+    {
+      "from": "ui/src/pages/CiciPage.tsx::CiciPage::function",
+      "kind": "imports",
+      "to": "ui/src/components.ts::Tabs::class"
+    },
+    {
+      "from": "ui/src/pages/CiciPage.tsx::CiciPage::function",
+      "kind": "imports",
+      "to": "ui/src/components.ts::Badge::class"
+    },
+    {
+      "from": "ui/src/pages/CiciPage.tsx::CiciPage::function",
+      "kind": "imports",
+      "to": "ui/src/components.ts::statusBadgeVariant::function"
+    },
+    {
+      "from": "ui/src/pages/CiciPage.tsx::CiciPage::function",
+      "kind": "calls",
+      "to": "ui/src/components.ts::statusBadgeVariant::function"
+    },
+    {
+      "from": "ui/src/pages/CiciPage.tsx::CiciPage::function",
+      "kind": "uses",
+      "to": "ui/src/components.ts::PageHeader::class"
+    },
+    {
+      "from": "ui/src/pages/CiciPage.tsx::CiciPage::function",
+      "kind": "uses",
+      "to": "ui/src/components.ts::Button::class"
+    },
+    {
+      "from": "ui/src/pages/CiciPage.tsx::CiciPage::function",
+      "kind": "uses",
+      "to": "ui/src/components.ts::Input::class"
+    },
+    {
+      "from": "ui/src/pages/CiciPage.tsx::CiciPage::function",
+      "kind": "uses",
+      "to": "ui/src/components.ts::Tabs::class"
+    },
+    {
+      "from": "ui/src/pages/CiciPage.tsx::CiciPage::function",
+      "kind": "uses",
+      "to": "ui/src/components.ts::Badge::class"
+    },
+    {
+      "from": "ui/src/pages/CiciPage.tsx::CiciPage::function",
+      "kind": "uses",
+      "to": "ui/src/components.ts::statusBadgeVariant::function"
+    }
+  ],
+  "file": "ui/src/pages/CiciPage.tsx",
+  "intent": [
+    {
+      "date": "2026-08-11T13:42:44-03:00",
+      "hash": "6541bd284832987cb1b361f461b5ea86abccf31f",
+      "kind": "commit",
+      "message": "fix(ui): heading hierarchy + glyph aria-hidden (T000018)"
+    },
+    {
+      "date": "2026-08-11T00:35:18-03:00",
+      "hash": "9848ced3fc0d2e6aef8ef47c1d78c4e4107f3b9a",
+      "kind": "commit",
+      "message": "fix(ui): give placeholder-only form controls accessible names (BUG-2026-08-11T000007)"
+    },
+    {
+      "date": "2026-07-10T20:39:36-03:00",
+      "hash": "db94b7c03f56600323aff8c9132e7d98185ff8b2",
+      "kind": "commit",
+      "message": "fix(ui): CopyButton silent failure + pre-existing ESLint cleanup"
+    }
+  ],
+  "lastModified": 1786492495,
+  "symbols": [
+    {
+      "endLine": 194,
+      "endOffset": 7999,
+      "kind": "function",
+      "name": "CiciPage",
+      "startLine": 8,
+      "startOffset": 457,
+      "symbolId": "ui/src/pages/CiciPage.tsx::CiciPage::function"
+    }
+  ]
+}

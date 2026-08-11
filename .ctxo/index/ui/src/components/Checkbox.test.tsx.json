@@ -1,0 +1,23 @@
+{
+  "antiPatterns": [],
+  "complexity": [],
+  "contentHash": "570b49b701a3f27a9bd90fdc5716ae4f307ac154aac8664c429f68bab88bec26",
+  "edges": [
+    {
+      "from": "ui/src/components/Checkbox.test.tsx::Checkbox.test::variable",
+      "kind": "imports",
+      "to": "ui/src/components/Checkbox.ts::Checkbox::class"
+    }
+  ],
+  "file": "ui/src/components/Checkbox.test.tsx",
+  "intent": [
+    {
+      "date": "2026-06-28T17:11:02-03:00",
+      "hash": "6fb588e63f79ce75dad9a27c5cd8dc0bf796f27c",
+      "kind": "commit",
+      "message": "feat(ui): add design system foundation — tokens, 22 components, a11y audit"
+    }
+  ],
+  "lastModified": 1786492495,
+  "symbols": []
+}

@@ -1,0 +1,28 @@
+{
+  "antiPatterns": [],
+  "complexity": [],
+  "contentHash": "edfa1013001ea4d6b546417ce8728afbc6cdbc411702b4e624a98391b914ac73",
+  "edges": [
+    {
+      "from": "ui/src/__tests__/a11y/axe-pages.test.tsx::axe-pages.test::variable",
+      "kind": "imports",
+      "to": "ui/src/pages/UsersPage.ts::UsersPage::class"
+    },
+    {
+      "from": "ui/src/__tests__/a11y/axe-pages.test.tsx::axe-pages.test::variable",
+      "kind": "imports",
+      "to": "ui/src/pages/SettingsPage.ts::SettingsPage::class"
+    }
+  ],
+  "file": "ui/src/__tests__/a11y/axe-pages.test.tsx",
+  "intent": [
+    {
+      "date": "2026-06-28T17:11:02-03:00",
+      "hash": "6fb588e63f79ce75dad9a27c5cd8dc0bf796f27c",
+      "kind": "commit",
+      "message": "feat(ui): add design system foundation — tokens, 22 components, a11y audit"
+    }
+  ],
+  "lastModified": 1786492495,
+  "symbols": []
+}

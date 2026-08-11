@@ -1,0 +1,79 @@
+{
+  "antiPatterns": [
+    {
+      "date": "2026-06-26T20:10:31-03:00",
+      "hash": "77132c782be2345c6e399456065d8e129419e6e1",
+      "message": "feat(deploy): add one-click rollback endpoint + artifact reuse (#49)"
+    },
+    {
+      "date": "2026-06-21T15:03:24-03:00",
+      "hash": "c058782f95b32d8aa3a74c52ac44863ad572627b",
+      "message": "Revert \"feat(deploy): deployment state machine with validated transitions and events\""
+    }
+  ],
+  "complexity": [
+    {
+      "cyclomatic": 5,
+      "symbolId": "components/deploy/state_machine_test.go::TestStateMachineValidTransitions::function"
+    },
+    {
+      "cyclomatic": 5,
+      "symbolId": "components/deploy/state_machine_test.go::TestStateMachineCanTransition::function"
+    },
+    {
+      "cyclomatic": 5,
+      "symbolId": "components/deploy/state_machine_test.go::TestStateMachineIsValidState::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/deploy/state_machine_test.go::TestStatusTransitionStruct::function"
+    },
+    {
+      "cyclomatic": 7,
+      "symbolId": "components/deploy/state_machine_test.go::TestStateConstants::function"
+    }
+  ],
+  "contentHash": "ec3169ce158f1cafc98c8d846d1cf5c7893956fef51a2a211c7d979bd858b4e9",
+  "edges": [],
+  "file": "components/deploy/state_machine_test.go",
+  "intent": [
+    {
+      "date": "2026-07-10T14:51:15-03:00",
+      "hash": "0c2fd4e7c3822f6059c957fb4f8317f51b55ecea",
+      "kind": "commit",
+      "message": "fix(deploy): export state machine and harden AppType enum (OCP)"
+    },
+    {
+      "date": "2026-06-26T21:55:49-03:00",
+      "hash": "40287fbc5ea901d5337adc152abe67c04b113dd1",
+      "kind": "commit",
+      "message": "feat(deploy): zero-downtime connection draining on deployment switchover (e45)"
+    },
+    {
+      "date": "2026-06-26T20:10:31-03:00",
+      "hash": "77132c782be2345c6e399456065d8e129419e6e1",
+      "kind": "commit",
+      "message": "feat(deploy): add one-click rollback endpoint + artifact reuse (#49)"
+    },
+    {
+      "date": "2026-06-21T19:21:24-03:00",
+      "hash": "64ac6c5235062f7f2676f09439ba029bd20f1c4b",
+      "kind": "commit",
+      "message": "feat(deploy): deployment state machine with validated transitions and events"
+    },
+    {
+      "date": "2026-06-21T15:03:24-03:00",
+      "hash": "c058782f95b32d8aa3a74c52ac44863ad572627b",
+      "kind": "commit",
+      "message": "Revert \"feat(deploy): deployment state machine with validated transitions and events\""
+    },
+    {
+      "date": "2026-06-21T14:55:32-03:00",
+      "hash": "6780538cdb4ea45e376bb9cdbcc9cfad563bbe19",
+      "kind": "commit",
+      "message": "feat(deploy): deployment state machine with validated transitions and events"
+    }
+  ],
+  "lastModified": 1786492494,
+  "symbols": []
+}

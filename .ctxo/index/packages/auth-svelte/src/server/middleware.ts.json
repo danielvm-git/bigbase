@@ -1,0 +1,78 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 6,
+      "symbolId": "packages/auth-svelte/src/server/middleware.ts::bigBaseAuthHandle::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "packages/auth-svelte/src/server/middleware.ts::getSession::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "packages/auth-svelte/src/server/middleware.ts::requireAuth::function"
+    }
+  ],
+  "contentHash": "6ce70ef94aae0395474ca9b35ce2656ada1712cd3bf4973fa44d24408cc6cf2d",
+  "edges": [
+    {
+      "from": "packages/auth-svelte/src/server/middleware.ts::bigBaseAuthHandle::function",
+      "kind": "calls",
+      "to": "packages/auth-svelte/src/server/middleware.ts::getSession::function"
+    },
+    {
+      "from": "packages/auth-svelte/src/server/middleware.ts::requireAuth::function",
+      "kind": "calls",
+      "to": "packages/auth-svelte/src/server/middleware.ts::getSession::function"
+    }
+  ],
+  "file": "packages/auth-svelte/src/server/middleware.ts",
+  "intent": [
+    {
+      "date": "2026-06-18T14:37:55-03:00",
+      "hash": "554dbe032348bf0a5af3e8b4d5bed85d5c0de699",
+      "kind": "commit",
+      "message": "feat(sdk): add multi-framework auth SDK — @bigbase/auth + 5 adapters (#32)"
+    }
+  ],
+  "lastModified": 1786492495,
+  "symbols": [
+    {
+      "endLine": 35,
+      "endOffset": 1012,
+      "kind": "function",
+      "name": "bigBaseAuthHandle",
+      "startLine": 9,
+      "startOffset": 217,
+      "symbolId": "packages/auth-svelte/src/server/middleware.ts::bigBaseAuthHandle::function"
+    },
+    {
+      "endLine": 39,
+      "endOffset": 1110,
+      "kind": "function",
+      "name": "getSession",
+      "startLine": 37,
+      "startOffset": 1014,
+      "symbolId": "packages/auth-svelte/src/server/middleware.ts::getSession::function"
+    },
+    {
+      "endLine": 47,
+      "endOffset": 1318,
+      "kind": "function",
+      "name": "requireAuth",
+      "startLine": 41,
+      "startOffset": 1112,
+      "symbolId": "packages/auth-svelte/src/server/middleware.ts::requireAuth::function"
+    },
+    {
+      "endLine": 7,
+      "endOffset": 215,
+      "kind": "interface",
+      "name": "SvelteKitAuthOptions",
+      "startLine": 3,
+      "startOffset": 110,
+      "symbolId": "packages/auth-svelte/src/server/middleware.ts::SvelteKitAuthOptions::interface"
+    }
+  ]
+}

@@ -1,0 +1,500 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/deploy/gateway.go::Deploy.Handler::method"
+    },
+    {
+      "cyclomatic": 13,
+      "symbolId": "components/deploy/gateway.go::Deploy.HandleCreate::method"
+    },
+    {
+      "cyclomatic": 6,
+      "symbolId": "components/deploy/gateway.go::Deploy.verifyDeploymentOwnership::method"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/deploy/gateway.go::Deploy.verifySiteOwnership::method"
+    },
+    {
+      "cyclomatic": 6,
+      "symbolId": "components/deploy/gateway.go::Deploy.HandleList::method"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/deploy/gateway.go::Deploy.handleDeploy::method"
+    },
+    {
+      "cyclomatic": 13,
+      "symbolId": "components/deploy/gateway.go::Deploy.handleDeployByID::method"
+    },
+    {
+      "cyclomatic": 5,
+      "symbolId": "components/deploy/gateway.go::Deploy.handleDeleteDeployment::method"
+    },
+    {
+      "cyclomatic": 6,
+      "symbolId": "components/deploy/gateway.go::Deploy.handleDeployLogs::method"
+    },
+    {
+      "cyclomatic": 9,
+      "symbolId": "components/deploy/gateway.go::Deploy.handleDeployStats::method"
+    }
+  ],
+  "contentHash": "f15b482068c5fba2ba8a7120f87a1fd9fd8b0da56be689dfc2c580d18104af0d",
+  "edges": [
+    {
+      "from": "components/deploy/gateway.go::Deploy.Handler::method",
+      "kind": "uses",
+      "to": "components/deploy/deploy.go::Deploy::class"
+    },
+    {
+      "from": "components/deploy/gateway.go::Deploy.Handler::method",
+      "kind": "calls",
+      "to": "components/deploy/cache_api.go::Deploy.registerCacheRoutes::method"
+    },
+    {
+      "from": "components/deploy/gateway.go::Deploy.HandleCreate::method",
+      "kind": "uses",
+      "to": "components/deploy/deploy.go::Deploy::class"
+    },
+    {
+      "from": "components/deploy/gateway.go::Deploy.HandleCreate::method",
+      "kind": "calls",
+      "to": "kernel/utilities.go::WriteJSON::function"
+    },
+    {
+      "from": "components/deploy/gateway.go::Deploy.HandleCreate::method",
+      "kind": "calls",
+      "to": "kernel/scope.go::SiteIDFromContext::function"
+    },
+    {
+      "from": "components/deploy/gateway.go::Deploy.HandleCreate::method",
+      "kind": "calls",
+      "to": "kernel/component.go::Logger.Warn::method"
+    },
+    {
+      "from": "components/deploy/gateway.go::Deploy.HandleCreate::method",
+      "kind": "calls",
+      "to": "components/auth/middleware.go::OrgIDFromContext::function"
+    },
+    {
+      "from": "components/deploy/gateway.go::Deploy.HandleCreate::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.QueryRowContext::method"
+    },
+    {
+      "from": "components/deploy/gateway.go::Deploy.HandleCreate::method",
+      "kind": "calls",
+      "to": "components/deploy/engine.go::Deploy.Trigger::method"
+    },
+    {
+      "from": "components/deploy/gateway.go::Deploy.HandleCreate::method",
+      "kind": "uses",
+      "to": "components/deploy/errors.go::ErrRepoNotFound::variable"
+    },
+    {
+      "from": "components/deploy/gateway.go::Deploy.HandleCreate::method",
+      "kind": "calls",
+      "to": "kernel/component.go::Logger.Error::method"
+    },
+    {
+      "from": "components/deploy/gateway.go::Deploy.verifyDeploymentOwnership::method",
+      "kind": "uses",
+      "to": "components/deploy/deploy.go::Deploy::class"
+    },
+    {
+      "from": "components/deploy/gateway.go::Deploy.verifyDeploymentOwnership::method",
+      "kind": "calls",
+      "to": "components/auth/middleware.go::OrgIDFromContext::function"
+    },
+    {
+      "from": "components/deploy/gateway.go::Deploy.verifyDeploymentOwnership::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.QueryRowContext::method"
+    },
+    {
+      "from": "components/deploy/gateway.go::Deploy.verifyDeploymentOwnership::method",
+      "kind": "calls",
+      "to": "kernel/utilities.go::WriteJSON::function"
+    },
+    {
+      "from": "components/deploy/gateway.go::Deploy.verifyDeploymentOwnership::method",
+      "kind": "calls",
+      "to": "kernel/component.go::Logger.Warn::method"
+    },
+    {
+      "from": "components/deploy/gateway.go::Deploy.verifySiteOwnership::method",
+      "kind": "uses",
+      "to": "components/deploy/deploy.go::Deploy::class"
+    },
+    {
+      "from": "components/deploy/gateway.go::Deploy.verifySiteOwnership::method",
+      "kind": "calls",
+      "to": "components/auth/middleware.go::OrgIDFromContext::function"
+    },
+    {
+      "from": "components/deploy/gateway.go::Deploy.verifySiteOwnership::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.QueryRowContext::method"
+    },
+    {
+      "from": "components/deploy/gateway.go::Deploy.verifySiteOwnership::method",
+      "kind": "calls",
+      "to": "kernel/component.go::Logger.Warn::method"
+    },
+    {
+      "from": "components/deploy/gateway.go::Deploy.verifySiteOwnership::method",
+      "kind": "calls",
+      "to": "kernel/utilities.go::WriteJSON::function"
+    },
+    {
+      "from": "components/deploy/gateway.go::Deploy.HandleList::method",
+      "kind": "uses",
+      "to": "components/deploy/deploy.go::Deploy::class"
+    },
+    {
+      "from": "components/deploy/gateway.go::Deploy.HandleList::method",
+      "kind": "calls",
+      "to": "kernel/utilities.go::WriteJSON::function"
+    },
+    {
+      "from": "components/deploy/gateway.go::Deploy.HandleList::method",
+      "kind": "calls",
+      "to": "components/auth/middleware.go::OrgIDFromContext::function"
+    },
+    {
+      "from": "components/deploy/gateway.go::Deploy.HandleList::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.QueryContext::method"
+    },
+    {
+      "from": "components/deploy/gateway.go::Deploy.HandleList::method",
+      "kind": "calls",
+      "to": "kernel/component.go::Logger.Error::method"
+    },
+    {
+      "from": "components/deploy/gateway.go::Deploy.HandleList::method",
+      "kind": "uses",
+      "to": "components/deploy/deploy.go::Deployment::class"
+    },
+    {
+      "from": "components/deploy/gateway.go::Deploy.HandleList::method",
+      "kind": "calls",
+      "to": "components/deploy/utils.go::parsePassthroughPaths::function"
+    },
+    {
+      "from": "components/deploy/gateway.go::Deploy.HandleList::method",
+      "kind": "calls",
+      "to": "components/deploy/pipeline_timeline.go::parsePipelineTimeline::function"
+    },
+    {
+      "from": "components/deploy/gateway.go::Deploy.handleDeploy::method",
+      "kind": "uses",
+      "to": "components/deploy/deploy.go::Deploy::class"
+    },
+    {
+      "from": "components/deploy/gateway.go::Deploy.handleDeploy::method",
+      "kind": "calls",
+      "to": "components/deploy/gateway.go::Deploy.HandleCreate::method"
+    },
+    {
+      "from": "components/deploy/gateway.go::Deploy.handleDeploy::method",
+      "kind": "calls",
+      "to": "components/deploy/gateway.go::Deploy.HandleList::method"
+    },
+    {
+      "from": "components/deploy/gateway.go::Deploy.handleDeploy::method",
+      "kind": "calls",
+      "to": "kernel/utilities.go::WriteJSON::function"
+    },
+    {
+      "from": "components/deploy/gateway.go::Deploy.handleDeployByID::method",
+      "kind": "uses",
+      "to": "components/deploy/deploy.go::Deploy::class"
+    },
+    {
+      "from": "components/deploy/gateway.go::Deploy.handleDeployByID::method",
+      "kind": "calls",
+      "to": "kernel/utilities.go::WriteJSON::function"
+    },
+    {
+      "from": "components/deploy/gateway.go::Deploy.handleDeployByID::method",
+      "kind": "calls",
+      "to": "components/deploy/log_stream.go::Deploy.handleLogsStream::method"
+    },
+    {
+      "from": "components/deploy/gateway.go::Deploy.handleDeployByID::method",
+      "kind": "calls",
+      "to": "components/deploy/gateway.go::Deploy.handleDeployLogs::method"
+    },
+    {
+      "from": "components/deploy/gateway.go::Deploy.handleDeployByID::method",
+      "kind": "calls",
+      "to": "components/deploy/rollback.go::Deploy.handleRollbackEvents::method"
+    },
+    {
+      "from": "components/deploy/gateway.go::Deploy.handleDeployByID::method",
+      "kind": "calls",
+      "to": "components/deploy/rollback.go::Deploy.handleRollback::method"
+    },
+    {
+      "from": "components/deploy/gateway.go::Deploy.handleDeployByID::method",
+      "kind": "calls",
+      "to": "components/deploy/observability.go::Deploy.handleDeployDiagnosis::method"
+    },
+    {
+      "from": "components/deploy/gateway.go::Deploy.handleDeployByID::method",
+      "kind": "calls",
+      "to": "components/deploy/observability.go::Deploy.handleDeployRelatedEvents::method"
+    },
+    {
+      "from": "components/deploy/gateway.go::Deploy.handleDeployByID::method",
+      "kind": "calls",
+      "to": "components/deploy/gateway.go::Deploy.handleDeleteDeployment::method"
+    },
+    {
+      "from": "components/deploy/gateway.go::Deploy.handleDeployByID::method",
+      "kind": "calls",
+      "to": "components/deploy/gateway.go::Deploy.verifyDeploymentOwnership::method"
+    },
+    {
+      "from": "components/deploy/gateway.go::Deploy.handleDeployByID::method",
+      "kind": "uses",
+      "to": "components/deploy/deploy.go::Deployment::class"
+    },
+    {
+      "from": "components/deploy/gateway.go::Deploy.handleDeployByID::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.QueryRowContext::method"
+    },
+    {
+      "from": "components/deploy/gateway.go::Deploy.handleDeployByID::method",
+      "kind": "uses",
+      "to": "components/deploy/deploy.go::AppType::type"
+    },
+    {
+      "from": "components/deploy/gateway.go::Deploy.handleDeployByID::method",
+      "kind": "calls",
+      "to": "components/deploy/utils.go::parsePassthroughPaths::function"
+    },
+    {
+      "from": "components/deploy/gateway.go::Deploy.handleDeployByID::method",
+      "kind": "calls",
+      "to": "components/deploy/pipeline_timeline.go::parsePipelineTimeline::function"
+    },
+    {
+      "from": "components/deploy/gateway.go::Deploy.handleDeleteDeployment::method",
+      "kind": "uses",
+      "to": "components/deploy/deploy.go::Deploy::class"
+    },
+    {
+      "from": "components/deploy/gateway.go::Deploy.handleDeleteDeployment::method",
+      "kind": "calls",
+      "to": "components/deploy/gateway.go::Deploy.verifyDeploymentOwnership::method"
+    },
+    {
+      "from": "components/deploy/gateway.go::Deploy.handleDeleteDeployment::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.QueryRowContext::method"
+    },
+    {
+      "from": "components/deploy/gateway.go::Deploy.handleDeleteDeployment::method",
+      "kind": "calls",
+      "to": "kernel/utilities.go::WriteJSON::function"
+    },
+    {
+      "from": "components/deploy/gateway.go::Deploy.handleDeleteDeployment::method",
+      "kind": "calls",
+      "to": "components/deploy/engine.go::Deploy.stopDeployment::method"
+    },
+    {
+      "from": "components/deploy/gateway.go::Deploy.handleDeleteDeployment::method",
+      "kind": "calls",
+      "to": "components/deploy/logs.go::Deploy.deleteDeployLogs::method"
+    },
+    {
+      "from": "components/deploy/gateway.go::Deploy.handleDeleteDeployment::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.ExecContext::method"
+    },
+    {
+      "from": "components/deploy/gateway.go::Deploy.handleDeployLogs::method",
+      "kind": "uses",
+      "to": "components/deploy/deploy.go::Deploy::class"
+    },
+    {
+      "from": "components/deploy/gateway.go::Deploy.handleDeployLogs::method",
+      "kind": "calls",
+      "to": "components/deploy/gateway.go::Deploy.verifyDeploymentOwnership::method"
+    },
+    {
+      "from": "components/deploy/gateway.go::Deploy.handleDeployLogs::method",
+      "kind": "calls",
+      "to": "kernel/utilities.go::WriteJSON::function"
+    },
+    {
+      "from": "components/deploy/gateway.go::Deploy.handleDeployLogs::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.QueryRowContext::method"
+    },
+    {
+      "from": "components/deploy/gateway.go::Deploy.handleDeployLogs::method",
+      "kind": "calls",
+      "to": "components/deploy/logs.go::Deploy.getDeployLogs::method"
+    },
+    {
+      "from": "components/deploy/gateway.go::Deploy.handleDeployStats::method",
+      "kind": "uses",
+      "to": "components/deploy/deploy.go::Deploy::class"
+    },
+    {
+      "from": "components/deploy/gateway.go::Deploy.handleDeployStats::method",
+      "kind": "calls",
+      "to": "kernel/utilities.go::WriteJSON::function"
+    },
+    {
+      "from": "components/deploy/gateway.go::Deploy.handleDeployStats::method",
+      "kind": "calls",
+      "to": "components/auth/middleware.go::OrgIDFromContext::function"
+    },
+    {
+      "from": "components/deploy/gateway.go::Deploy.handleDeployStats::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.QueryRowContext::method"
+    }
+  ],
+  "file": "components/deploy/gateway.go",
+  "intent": [
+    {
+      "date": "2026-07-30T10:55:24-03:00",
+      "hash": "13dbb0acdde74ae07d649c4b84b8f53376312000",
+      "kind": "commit",
+      "message": "fix(deploy): scope handleDeployStats by org_id to prevent cross-tenant info disclosure (#195)"
+    },
+    {
+      "date": "2026-07-23T21:43:13-03:00",
+      "hash": "c69ccf4efe01e77fd625b0ba937c54f5112e83f1",
+      "kind": "commit",
+      "message": "fix(security): IDOR on deployment lifecycle — scope all handlers by org_id"
+    },
+    {
+      "date": "2026-07-23T19:01:35-03:00",
+      "hash": "60fb5066ee8c9b044ce8a3371e6a6e2356095935",
+      "kind": "commit",
+      "message": "fix(security): cross-tenant deployment hijack via missing org_id check"
+    },
+    {
+      "date": "2026-07-11T12:42:19-03:00",
+      "hash": "cc05b2d25009da9844dc9e02fd722b1c92afbe9f",
+      "kind": "commit",
+      "message": "chore: integrate E2E testing epics and update specifications"
+    },
+    {
+      "date": "2026-07-10T14:43:09-03:00",
+      "hash": "4ca826f62a212cff9a287041a38dc164205e676b",
+      "kind": "commit",
+      "message": "fix(deploy): replace error string matching with sentinel errors"
+    },
+    {
+      "date": "2026-07-10T14:36:34-03:00",
+      "hash": "f96d11862e15cc5c35fdc11981527ad23cc8f80c",
+      "kind": "commit",
+      "message": "refactor(deploy): decompose 1924-line god object into domain modules"
+    }
+  ],
+  "lastModified": 1786492494,
+  "symbols": [
+    {
+      "endLine": 26,
+      "endOffset": 576,
+      "kind": "method",
+      "name": "Deploy.Handler",
+      "startLine": 17,
+      "startOffset": 210,
+      "symbolId": "components/deploy/gateway.go::Deploy.Handler::method"
+    },
+    {
+      "endLine": 93,
+      "endOffset": 3328,
+      "kind": "method",
+      "name": "Deploy.HandleCreate",
+      "startLine": 27,
+      "startOffset": 577,
+      "symbolId": "components/deploy/gateway.go::Deploy.HandleCreate::method"
+    },
+    {
+      "endLine": 129,
+      "endOffset": 4714,
+      "kind": "method",
+      "name": "Deploy.verifyDeploymentOwnership",
+      "startLine": 98,
+      "startOffset": 3563,
+      "symbolId": "components/deploy/gateway.go::Deploy.verifyDeploymentOwnership::method"
+    },
+    {
+      "endLine": 152,
+      "endOffset": 5527,
+      "kind": "method",
+      "name": "Deploy.verifySiteOwnership",
+      "startLine": 133,
+      "startOffset": 4873,
+      "symbolId": "components/deploy/gateway.go::Deploy.verifySiteOwnership::method"
+    },
+    {
+      "endLine": 197,
+      "endOffset": 7823,
+      "kind": "method",
+      "name": "Deploy.HandleList",
+      "startLine": 154,
+      "startOffset": 5529,
+      "symbolId": "components/deploy/gateway.go::Deploy.HandleList::method"
+    },
+    {
+      "endLine": 207,
+      "endOffset": 8101,
+      "kind": "method",
+      "name": "Deploy.handleDeploy",
+      "startLine": 198,
+      "startOffset": 7824,
+      "symbolId": "components/deploy/gateway.go::Deploy.handleDeploy::method"
+    },
+    {
+      "endLine": 271,
+      "endOffset": 10524,
+      "kind": "method",
+      "name": "Deploy.handleDeployByID",
+      "startLine": 208,
+      "startOffset": 8102,
+      "symbolId": "components/deploy/gateway.go::Deploy.handleDeployByID::method"
+    },
+    {
+      "endLine": 301,
+      "endOffset": 11558,
+      "kind": "method",
+      "name": "Deploy.handleDeleteDeployment",
+      "startLine": 272,
+      "startOffset": 10525,
+      "symbolId": "components/deploy/gateway.go::Deploy.handleDeleteDeployment::method"
+    },
+    {
+      "endLine": 336,
+      "endOffset": 12629,
+      "kind": "method",
+      "name": "Deploy.handleDeployLogs",
+      "startLine": 302,
+      "startOffset": 11559,
+      "symbolId": "components/deploy/gateway.go::Deploy.handleDeployLogs::method"
+    },
+    {
+      "endLine": 389,
+      "endOffset": 14543,
+      "kind": "method",
+      "name": "Deploy.handleDeployStats",
+      "startLine": 337,
+      "startOffset": 12630,
+      "symbolId": "components/deploy/gateway.go::Deploy.handleDeployStats::method"
+    }
+  ]
+}

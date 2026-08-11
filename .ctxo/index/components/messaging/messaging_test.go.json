@@ -1,0 +1,166 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/messaging/messaging_test.go::testLogger.Info::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/messaging/messaging_test.go::testLogger.Warn::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/messaging/messaging_test.go::testLogger.Error::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/messaging/messaging_test.go::testLogger.Debug::method"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/messaging/messaging_test.go::setupMessaging::function"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/messaging/messaging_test.go::recorderProvider.Send::method"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/messaging/messaging_test.go::recorderProvider.Messages::method"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/messaging/messaging_test.go::postJSON::function"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/messaging/messaging_test.go::TestMessagingImplementsComponent::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/messaging/messaging_test.go::TestMessagingName::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/messaging/messaging_test.go::TestMessagingVersion::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/messaging/messaging_test.go::TestMessagingDependencies::function"
+    },
+    {
+      "cyclomatic": 8,
+      "symbolId": "components/messaging/messaging_test.go::TestEmailSendSuccess::function"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/messaging/messaging_test.go::TestEmailMissingFields::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/messaging/messaging_test.go::TestEmailWrongMethod::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/messaging/messaging_test.go::TestEmailInvalidJSON::function"
+    },
+    {
+      "cyclomatic": 8,
+      "symbolId": "components/messaging/messaging_test.go::TestSMSSendSuccess::function"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/messaging/messaging_test.go::TestSMSMissingFields::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/messaging/messaging_test.go::TestSMSWrongMethod::function"
+    },
+    {
+      "cyclomatic": 9,
+      "symbolId": "components/messaging/messaging_test.go::TestPushSendSuccess::function"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/messaging/messaging_test.go::TestPushMissingFields::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/messaging/messaging_test.go::TestPushWrongMethod::function"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/messaging/messaging_test.go::TestListMessagesEmpty::function"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/messaging/messaging_test.go::TestListMessagesAfterSends::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/messaging/messaging_test.go::TestListMessagesWrongMethod::function"
+    },
+    {
+      "cyclomatic": 5,
+      "symbolId": "components/messaging/messaging_test.go::TestProviderCalled::function"
+    },
+    {
+      "cyclomatic": 7,
+      "symbolId": "components/messaging/messaging_test.go::TestWebhookProvider::function"
+    },
+    {
+      "cyclomatic": 7,
+      "symbolId": "components/messaging/messaging_test.go::TestTelegramHandler::function"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/messaging/messaging_test.go::withOrgID::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/messaging/messaging_test.go::postJSONWithOrg::function"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/messaging/messaging_test.go::getListWithOrg::function"
+    },
+    {
+      "cyclomatic": 8,
+      "symbolId": "components/messaging/messaging_test.go::TestCrossTenantMessageIsolation::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/messaging/messaging_test.go::TestListMessagesRequiresOrgID::function"
+    },
+    {
+      "cyclomatic": 5,
+      "symbolId": "components/messaging/messaging_test.go::TestMessageIncludesOrgID::function"
+    }
+  ],
+  "contentHash": "6f6809f43169e45145f19d0537fcc7ccc46c16ea6b7c54aaef433f0001b1e646",
+  "edges": [],
+  "file": "components/messaging/messaging_test.go",
+  "intent": [
+    {
+      "date": "2026-07-23T21:30:58-03:00",
+      "hash": "09de0a078b7f1ec477125ac65bf694d65870807b",
+      "kind": "commit",
+      "message": "fix(security): cross-tenant message leak — add org_id to messages table"
+    },
+    {
+      "date": "2026-07-10T14:58:38-03:00",
+      "hash": "34b197c676d972ef39ab3cd8fe08a320adae96e9",
+      "kind": "commit",
+      "message": "fix(kernel): remove dead ConfigSchema/Hooks interfaces, add Component compile checks"
+    },
+    {
+      "date": "2026-06-18T09:46:46-03:00",
+      "hash": "0728992bc65e1ebb1bfe4743249713b6ae2a2633",
+      "kind": "commit",
+      "message": "feat(messaging): add WebhookProvider and telegram messaging endpoint (#26)"
+    }
+  ],
+  "lastModified": 1786492494,
+  "symbols": []
+}

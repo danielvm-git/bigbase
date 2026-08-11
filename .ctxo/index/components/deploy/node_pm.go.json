@@ -1,0 +1,229 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/deploy/node_pm.go::DetectNodePackageManager::function"
+    },
+    {
+      "cyclomatic": 5,
+      "symbolId": "components/deploy/node_pm.go::packageManagerFromPackageJSON::function"
+    },
+    {
+      "cyclomatic": 6,
+      "symbolId": "components/deploy/node_pm.go::ensureNodePackageManager::function"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/deploy/node_pm.go::tryCorepackEnable::function"
+    },
+    {
+      "cyclomatic": 5,
+      "symbolId": "components/deploy/node_pm.go::NodeInstallCommand::function"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/deploy/node_pm.go::NodeBuildCommand::function"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/deploy/node_pm.go::NodePMRunCommand::function"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/deploy/node_pm.go::NodePMStartCommand::function"
+    },
+    {
+      "cyclomatic": 5,
+      "symbolId": "components/deploy/node_pm.go::NodeStartCommand::function"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/deploy/node_pm.go::ensureManifestPackageManager::function"
+    }
+  ],
+  "contentHash": "e592ecef0fb06131c8dd9ba880c38123dbade10b7ea25d652ca1d8b4c1671e62",
+  "edges": [
+    {
+      "from": "components/deploy/node_pm.go::DetectNodePackageManager::function",
+      "kind": "calls",
+      "to": "components/deploy/node_pm.go::packageManagerFromPackageJSON::function"
+    },
+    {
+      "from": "components/deploy/node_pm.go::DetectNodePackageManager::function",
+      "kind": "calls",
+      "to": "components/deploy/utils.go::fileExists::function"
+    },
+    {
+      "from": "components/deploy/node_pm.go::ensureNodePackageManager::function",
+      "kind": "calls",
+      "to": "components/deploy/node_pm.go::tryCorepackEnable::function"
+    },
+    {
+      "from": "components/deploy/node_pm.go::ensureNodePackageManager::function",
+      "kind": "calls",
+      "to": "components/deploy/errors.go::codedErr::function"
+    },
+    {
+      "from": "components/deploy/node_pm.go::tryCorepackEnable::function",
+      "kind": "uses",
+      "to": "components/deploy/node_pm.go::corepackEnableOnce::variable"
+    },
+    {
+      "from": "components/deploy/node_pm.go::tryCorepackEnable::function",
+      "kind": "uses",
+      "to": "components/deploy/node_pm.go::corepackEnableErr::variable"
+    },
+    {
+      "from": "components/deploy/node_pm.go::NodePMRunCommand::function",
+      "kind": "calls",
+      "to": "components/deploy/node_pm.go::DetectNodePackageManager::function"
+    },
+    {
+      "from": "components/deploy/node_pm.go::NodePMStartCommand::function",
+      "kind": "calls",
+      "to": "components/deploy/node_pm.go::DetectNodePackageManager::function"
+    },
+    {
+      "from": "components/deploy/node_pm.go::NodeStartCommand::function",
+      "kind": "calls",
+      "to": "components/deploy/node_pm.go::DetectNodePackageManager::function"
+    },
+    {
+      "from": "components/deploy/node_pm.go::NodeStartCommand::function",
+      "kind": "calls",
+      "to": "components/deploy/utils.go::GetStartCommand::function"
+    },
+    {
+      "from": "components/deploy/node_pm.go::ensureManifestPackageManager::function",
+      "kind": "calls",
+      "to": "components/deploy/node_pm.go::ensureNodePackageManager::function"
+    }
+  ],
+  "file": "components/deploy/node_pm.go",
+  "intent": [
+    {
+      "date": "2026-07-24T20:56:01-03:00",
+      "hash": "e77fd137a0fcdc1a7521123153d8c065f11bafca",
+      "kind": "commit",
+      "message": "fix(deploy): never-bounce identity and framework deploy matrix (#166)"
+    },
+    {
+      "date": "2026-07-24T09:26:26-03:00",
+      "hash": "129143f684326a0c3a525f9ab64667b4c9368fd0",
+      "kind": "commit",
+      "message": "fix(deploy): detect pnpm/yarn/bun for Node site builds"
+    }
+  ],
+  "lastModified": 1786492494,
+  "symbols": [
+    {
+      "endLine": 13,
+      "endOffset": 127,
+      "kind": "variable",
+      "name": "corepackEnableOnce",
+      "startLine": 13,
+      "startOffset": 109,
+      "symbolId": "components/deploy/node_pm.go::corepackEnableOnce::variable"
+    },
+    {
+      "endLine": 14,
+      "endOffset": 159,
+      "kind": "variable",
+      "name": "corepackEnableErr",
+      "startLine": 14,
+      "startOffset": 142,
+      "symbolId": "components/deploy/node_pm.go::corepackEnableErr::variable"
+    },
+    {
+      "endLine": 39,
+      "endOffset": 766,
+      "kind": "function",
+      "name": "DetectNodePackageManager",
+      "startLine": 18,
+      "startOffset": 331,
+      "symbolId": "components/deploy/node_pm.go::DetectNodePackageManager::function"
+    },
+    {
+      "endLine": 59,
+      "endOffset": 1228,
+      "kind": "function",
+      "name": "packageManagerFromPackageJSON",
+      "startLine": 41,
+      "startOffset": 768,
+      "symbolId": "components/deploy/node_pm.go::packageManagerFromPackageJSON::function"
+    },
+    {
+      "endLine": 85,
+      "endOffset": 2312,
+      "kind": "function",
+      "name": "ensureNodePackageManager",
+      "startLine": 64,
+      "startOffset": 1447,
+      "symbolId": "components/deploy/node_pm.go::ensureNodePackageManager::function"
+    },
+    {
+      "endLine": 92,
+      "endOffset": 2473,
+      "kind": "function",
+      "name": "tryCorepackEnable",
+      "startLine": 87,
+      "startOffset": 2314,
+      "symbolId": "components/deploy/node_pm.go::tryCorepackEnable::function"
+    },
+    {
+      "endLine": 106,
+      "endOffset": 2847,
+      "kind": "function",
+      "name": "NodeInstallCommand",
+      "startLine": 95,
+      "startOffset": 2556,
+      "symbolId": "components/deploy/node_pm.go::NodeInstallCommand::function"
+    },
+    {
+      "endLine": 111,
+      "endOffset": 3018,
+      "kind": "function",
+      "name": "NodeBuildCommand",
+      "startLine": 109,
+      "startOffset": 2926,
+      "symbolId": "components/deploy/node_pm.go::NodeBuildCommand::function"
+    },
+    {
+      "endLine": 117,
+      "endOffset": 3225,
+      "kind": "function",
+      "name": "NodePMRunCommand",
+      "startLine": 114,
+      "startOffset": 3091,
+      "symbolId": "components/deploy/node_pm.go::NodePMRunCommand::function"
+    },
+    {
+      "endLine": 123,
+      "endOffset": 3439,
+      "kind": "function",
+      "name": "NodePMStartCommand",
+      "startLine": 120,
+      "startOffset": 3320,
+      "symbolId": "components/deploy/node_pm.go::NodePMStartCommand::function"
+    },
+    {
+      "endLine": 141,
+      "endOffset": 3952,
+      "kind": "function",
+      "name": "NodeStartCommand",
+      "startLine": 126,
+      "startOffset": 3510,
+      "symbolId": "components/deploy/node_pm.go::NodeStartCommand::function"
+    },
+    {
+      "endLine": 155,
+      "endOffset": 4310,
+      "kind": "function",
+      "name": "ensureManifestPackageManager",
+      "startLine": 144,
+      "startOffset": 4054,
+      "symbolId": "components/deploy/node_pm.go::ensureManifestPackageManager::function"
+    }
+  ]
+}

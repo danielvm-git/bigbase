@@ -1,0 +1,432 @@
+{
+  "antiPatterns": [
+    {
+      "date": "2026-08-02T17:37:07-03:00",
+      "hash": "16a2bc9874258ccb52a867f4444afdd55b8ce08d",
+      "message": "fix(deploy): avoid 502 on rollback and localhost host registration"
+    }
+  ],
+  "complexity": [
+    {
+      "cyclomatic": 5,
+      "symbolId": "components/deploy/orchestrator.go::Deploy.loadResumeCandidates::method"
+    },
+    {
+      "cyclomatic": 9,
+      "symbolId": "components/deploy/orchestrator.go::Deploy.resumeCandidates::method"
+    },
+    {
+      "cyclomatic": 8,
+      "symbolId": "components/deploy/orchestrator.go::Deploy.restoreRunningDeploymentHosts::method"
+    },
+    {
+      "cyclomatic": 7,
+      "symbolId": "components/deploy/orchestrator.go::Deploy.collectPreviousDeployments::method"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/deploy/orchestrator.go::Deploy.drainOldDeployments::method"
+    },
+    {
+      "cyclomatic": 14,
+      "symbolId": "components/deploy/orchestrator.go::Deploy.drainDeployment::method"
+    },
+    {
+      "cyclomatic": 10,
+      "symbolId": "components/deploy/orchestrator.go::Deploy.DeleteSiteDeployments::method"
+    }
+  ],
+  "contentHash": "55f9d7405ca85200080c56c77ea24f33e7f13ecdad2650686100a9484c0f1978",
+  "edges": [
+    {
+      "from": "components/deploy/orchestrator.go::Deploy.loadResumeCandidates::method",
+      "kind": "uses",
+      "to": "components/deploy/deploy.go::Deploy::class"
+    },
+    {
+      "from": "components/deploy/orchestrator.go::Deploy.loadResumeCandidates::method",
+      "kind": "uses",
+      "to": "components/deploy/orchestrator.go::resumeCandidate::class"
+    },
+    {
+      "from": "components/deploy/orchestrator.go::Deploy.loadResumeCandidates::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.QueryContext::method"
+    },
+    {
+      "from": "components/deploy/orchestrator.go::Deploy.loadResumeCandidates::method",
+      "kind": "calls",
+      "to": "kernel/component.go::Logger.Warn::method"
+    },
+    {
+      "from": "components/deploy/orchestrator.go::Deploy.loadResumeCandidates::method",
+      "kind": "calls",
+      "to": "components/deploy/utils.go::parsePassthroughPaths::function"
+    },
+    {
+      "from": "components/deploy/orchestrator.go::Deploy.loadResumeCandidates::method",
+      "kind": "calls",
+      "to": "components/deploy/urls.go::HostFromDeploymentURL::function"
+    },
+    {
+      "from": "components/deploy/orchestrator.go::Deploy.resumeCandidates::method",
+      "kind": "uses",
+      "to": "components/deploy/deploy.go::Deploy::class"
+    },
+    {
+      "from": "components/deploy/orchestrator.go::Deploy.resumeCandidates::method",
+      "kind": "uses",
+      "to": "components/deploy/orchestrator.go::resumeCandidate::class"
+    },
+    {
+      "from": "components/deploy/orchestrator.go::Deploy.resumeCandidates::method",
+      "kind": "uses",
+      "to": "components/deploy/deploy.go::AppType::type"
+    },
+    {
+      "from": "components/deploy/orchestrator.go::Deploy.resumeCandidates::method",
+      "kind": "uses",
+      "to": "components/deploy/deploy.go::AppNode::variable"
+    },
+    {
+      "from": "components/deploy/orchestrator.go::Deploy.resumeCandidates::method",
+      "kind": "calls",
+      "to": "components/deploy/static_serve.go::FindStaticServeDirAfterNodeBuild::function"
+    },
+    {
+      "from": "components/deploy/orchestrator.go::Deploy.resumeCandidates::method",
+      "kind": "uses",
+      "to": "components/deploy/deploy.go::AppStatic::variable"
+    },
+    {
+      "from": "components/deploy/orchestrator.go::Deploy.resumeCandidates::method",
+      "kind": "calls",
+      "to": "components/deploy/static_serve.go::ResolvePureStaticServeDir::function"
+    },
+    {
+      "from": "components/deploy/orchestrator.go::Deploy.resumeCandidates::method",
+      "kind": "calls",
+      "to": "kernel/component.go::Logger.Error::method"
+    },
+    {
+      "from": "components/deploy/orchestrator.go::Deploy.resumeCandidates::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.ExecContext::method"
+    },
+    {
+      "from": "components/deploy/orchestrator.go::Deploy.resumeCandidates::method",
+      "kind": "calls",
+      "to": "components/deploy/urls.go::deploymentHost::function"
+    },
+    {
+      "from": "components/deploy/orchestrator.go::Deploy.resumeCandidates::method",
+      "kind": "uses",
+      "to": "components/deploy/runner.go::Spec::class"
+    },
+    {
+      "from": "components/deploy/orchestrator.go::Deploy.resumeCandidates::method",
+      "kind": "calls",
+      "to": "components/deploy/env.go::Deploy.buildCmdEnv::method"
+    },
+    {
+      "from": "components/deploy/orchestrator.go::Deploy.resumeCandidates::method",
+      "kind": "uses",
+      "to": "components/deploy/deploy.go::runningApp::class"
+    },
+    {
+      "from": "components/deploy/orchestrator.go::Deploy.resumeCandidates::method",
+      "kind": "calls",
+      "to": "kernel/component.go::Logger.Info::method"
+    },
+    {
+      "from": "components/deploy/orchestrator.go::Deploy.resumeCandidates::method",
+      "kind": "calls",
+      "to": "components/deploy/supervisor.go::Supervisor.Run::method"
+    },
+    {
+      "from": "components/deploy/orchestrator.go::Deploy.resumeCandidates::method",
+      "kind": "uses",
+      "to": "components/deploy/deploy.go::Deployment::class"
+    },
+    {
+      "from": "components/deploy/orchestrator.go::Deploy.resumeCandidates::method",
+      "kind": "calls",
+      "to": "components/deploy/manifest.go::LoadManifest::function"
+    },
+    {
+      "from": "components/deploy/orchestrator.go::Deploy.resumeCandidates::method",
+      "kind": "calls",
+      "to": "components/deploy/engine.go::Deploy.startApp::method"
+    },
+    {
+      "from": "components/deploy/orchestrator.go::Deploy.resumeCandidates::method",
+      "kind": "calls",
+      "to": "components/deploy/urls.go::HostFromDeploymentURL::function"
+    },
+    {
+      "from": "components/deploy/orchestrator.go::Deploy.restoreRunningDeploymentHosts::method",
+      "kind": "uses",
+      "to": "components/deploy/deploy.go::Deploy::class"
+    },
+    {
+      "from": "components/deploy/orchestrator.go::Deploy.restoreRunningDeploymentHosts::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.QueryContext::method"
+    },
+    {
+      "from": "components/deploy/orchestrator.go::Deploy.restoreRunningDeploymentHosts::method",
+      "kind": "calls",
+      "to": "kernel/component.go::Logger.Warn::method"
+    },
+    {
+      "from": "components/deploy/orchestrator.go::Deploy.restoreRunningDeploymentHosts::method",
+      "kind": "calls",
+      "to": "components/deploy/urls.go::HostFromDeploymentURL::function"
+    },
+    {
+      "from": "components/deploy/orchestrator.go::Deploy.restoreRunningDeploymentHosts::method",
+      "kind": "calls",
+      "to": "components/deploy/utils.go::parsePassthroughPaths::function"
+    },
+    {
+      "from": "components/deploy/orchestrator.go::Deploy.restoreRunningDeploymentHosts::method",
+      "kind": "calls",
+      "to": "components/deploy/deploy.go::DeploymentHostRegistry.RegisterDeploymentHost::method"
+    },
+    {
+      "from": "components/deploy/orchestrator.go::Deploy.collectPreviousDeployments::method",
+      "kind": "uses",
+      "to": "components/deploy/deploy.go::Deploy::class"
+    },
+    {
+      "from": "components/deploy/orchestrator.go::Deploy.collectPreviousDeployments::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.QueryContext::method"
+    },
+    {
+      "from": "components/deploy/orchestrator.go::Deploy.collectPreviousDeployments::method",
+      "kind": "calls",
+      "to": "kernel/component.go::Logger.Warn::method"
+    },
+    {
+      "from": "components/deploy/orchestrator.go::Deploy.collectPreviousDeployments::method",
+      "kind": "calls",
+      "to": "kernel/component.go::Logger.Info::method"
+    },
+    {
+      "from": "components/deploy/orchestrator.go::Deploy.drainOldDeployments::method",
+      "kind": "uses",
+      "to": "components/deploy/deploy.go::Deploy::class"
+    },
+    {
+      "from": "components/deploy/orchestrator.go::Deploy.drainOldDeployments::method",
+      "kind": "calls",
+      "to": "kernel/component.go::Logger.Info::method"
+    },
+    {
+      "from": "components/deploy/orchestrator.go::Deploy.drainOldDeployments::method",
+      "kind": "calls",
+      "to": "components/deploy/orchestrator.go::Deploy.drainDeployment::method"
+    },
+    {
+      "from": "components/deploy/orchestrator.go::Deploy.drainDeployment::method",
+      "kind": "uses",
+      "to": "components/deploy/deploy.go::Deploy::class"
+    },
+    {
+      "from": "components/deploy/orchestrator.go::Deploy.drainDeployment::method",
+      "kind": "calls",
+      "to": "kernel/component.go::Logger.Warn::method"
+    },
+    {
+      "from": "components/deploy/orchestrator.go::Deploy.drainDeployment::method",
+      "kind": "calls",
+      "to": "components/deploy/engine.go::Deploy.stopDeployment::method"
+    },
+    {
+      "from": "components/deploy/orchestrator.go::Deploy.drainDeployment::method",
+      "kind": "calls",
+      "to": "components/deploy/state_transitions.go::Deploy.TransitionState::method"
+    },
+    {
+      "from": "components/deploy/orchestrator.go::Deploy.drainDeployment::method",
+      "kind": "calls",
+      "to": "components/deploy/supervisor.go::Supervisor.Stop::method"
+    },
+    {
+      "from": "components/deploy/orchestrator.go::Deploy.drainDeployment::method",
+      "kind": "calls",
+      "to": "kernel/component.go::Logger.Info::method"
+    },
+    {
+      "from": "components/deploy/orchestrator.go::Deploy.drainDeployment::method",
+      "kind": "calls",
+      "to": "components/deploy/deploy.go::killProcessGroup::function"
+    },
+    {
+      "from": "components/deploy/orchestrator.go::Deploy.drainDeployment::method",
+      "kind": "calls",
+      "to": "kernel/component.go::Logger.Debug::method"
+    },
+    {
+      "from": "components/deploy/orchestrator.go::Deploy.drainDeployment::method",
+      "kind": "uses",
+      "to": "components/deploy/state_machine.go::StateStopped::variable"
+    },
+    {
+      "from": "components/deploy/orchestrator.go::Deploy.DeleteSiteDeployments::method",
+      "kind": "uses",
+      "to": "components/deploy/deploy.go::Deploy::class"
+    },
+    {
+      "from": "components/deploy/orchestrator.go::Deploy.DeleteSiteDeployments::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.QueryContext::method"
+    },
+    {
+      "from": "components/deploy/orchestrator.go::Deploy.DeleteSiteDeployments::method",
+      "kind": "uses",
+      "to": "components/deploy/orchestrator.go::depRow::class"
+    },
+    {
+      "from": "components/deploy/orchestrator.go::Deploy.DeleteSiteDeployments::method",
+      "kind": "calls",
+      "to": "components/deploy/deploy.go::killProcessGroup::function"
+    },
+    {
+      "from": "components/deploy/orchestrator.go::Deploy.DeleteSiteDeployments::method",
+      "kind": "calls",
+      "to": "components/deploy/deploy.go::DeploymentHostRegistry.UnregisterDeploymentHost::method"
+    },
+    {
+      "from": "components/deploy/orchestrator.go::Deploy.DeleteSiteDeployments::method",
+      "kind": "calls",
+      "to": "components/deploy/logs.go::Deploy.deleteDeployLogs::method"
+    },
+    {
+      "from": "components/deploy/orchestrator.go::Deploy.DeleteSiteDeployments::method",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.ExecContext::method"
+    }
+  ],
+  "file": "components/deploy/orchestrator.go",
+  "intent": [
+    {
+      "date": "2026-08-02T17:37:07-03:00",
+      "hash": "16a2bc9874258ccb52a867f4444afdd55b8ce08d",
+      "kind": "commit",
+      "message": "fix(deploy): avoid 502 on rollback and localhost host registration"
+    },
+    {
+      "date": "2026-07-30T13:59:46-03:00",
+      "hash": "51f7858e2b13f3c050bfec1555ae3002ba05df77",
+      "kind": "commit",
+      "message": "fix(deploy): replace all Process.Kill() with killProcessGroup() across deploy module"
+    },
+    {
+      "date": "2026-07-30T13:31:53-03:00",
+      "hash": "d66f02c95a0f7e0ebdb5ce450373355af51030a5",
+      "kind": "commit",
+      "message": "fix(deploy): kill entire process tree on drain timeout (closes #196)"
+    },
+    {
+      "date": "2026-07-28T13:07:54-03:00",
+      "hash": "5d2c8e564e76b4fb61bb118d2361105bfcf7ba10",
+      "kind": "commit",
+      "message": "fix(deploy): check for Node server entry before AppNode→AppStatic conversion (closes #181)"
+    },
+    {
+      "date": "2026-07-24T22:25:13-03:00",
+      "hash": "52fb9affdfc6809d147bdea58f096073447ad9cd",
+      "kind": "commit",
+      "message": "fix(deploy): stop static hosts serving checkout directory listings (#167)"
+    },
+    {
+      "date": "2026-07-12T22:10:28-03:00",
+      "hash": "014e7d60478293303dfbc89cd3a2acbbcaec570e",
+      "kind": "commit",
+      "message": "feat(deploy): add asgi_import to bigbase.yaml manifest for Python apps"
+    },
+    {
+      "date": "2026-07-10T14:36:34-03:00",
+      "hash": "f96d11862e15cc5c35fdc11981527ad23cc8f80c",
+      "kind": "commit",
+      "message": "refactor(deploy): decompose 1924-line god object into domain modules"
+    }
+  ],
+  "lastModified": 1786492494,
+  "symbols": [
+    {
+      "endLine": 14,
+      "endOffset": 265,
+      "kind": "class",
+      "name": "resumeCandidate",
+      "startLine": 10,
+      "startOffset": 78,
+      "symbolId": "components/deploy/orchestrator.go::resumeCandidate::class"
+    },
+    {
+      "endLine": 47,
+      "endOffset": 1272,
+      "kind": "method",
+      "name": "Deploy.loadResumeCandidates",
+      "startLine": 16,
+      "startOffset": 267,
+      "symbolId": "components/deploy/orchestrator.go::Deploy.loadResumeCandidates::method"
+    },
+    {
+      "endLine": 121,
+      "endOffset": 4152,
+      "kind": "method",
+      "name": "Deploy.resumeCandidates",
+      "startLine": 48,
+      "startOffset": 1273,
+      "symbolId": "components/deploy/orchestrator.go::Deploy.resumeCandidates::method"
+    },
+    {
+      "endLine": 153,
+      "endOffset": 5190,
+      "kind": "method",
+      "name": "Deploy.restoreRunningDeploymentHosts",
+      "startLine": 122,
+      "startOffset": 4153,
+      "symbolId": "components/deploy/orchestrator.go::Deploy.restoreRunningDeploymentHosts::method"
+    },
+    {
+      "endLine": 190,
+      "endOffset": 6162,
+      "kind": "method",
+      "name": "Deploy.collectPreviousDeployments",
+      "startLine": 154,
+      "startOffset": 5191,
+      "symbolId": "components/deploy/orchestrator.go::Deploy.collectPreviousDeployments::method"
+    },
+    {
+      "endLine": 201,
+      "endOffset": 6451,
+      "kind": "method",
+      "name": "Deploy.drainOldDeployments",
+      "startLine": 191,
+      "startOffset": 6163,
+      "symbolId": "components/deploy/orchestrator.go::Deploy.drainOldDeployments::method"
+    },
+    {
+      "endLine": 290,
+      "endOffset": 9350,
+      "kind": "method",
+      "name": "Deploy.drainDeployment",
+      "startLine": 202,
+      "startOffset": 6452,
+      "symbolId": "components/deploy/orchestrator.go::Deploy.drainDeployment::method"
+    },
+    {
+      "endLine": 339,
+      "endOffset": 10512,
+      "kind": "method",
+      "name": "Deploy.DeleteSiteDeployments",
+      "startLine": 291,
+      "startOffset": 9351,
+      "symbolId": "components/deploy/orchestrator.go::Deploy.DeleteSiteDeployments::method"
+    }
+  ]
+}

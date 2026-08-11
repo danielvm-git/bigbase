@@ -1,0 +1,72 @@
+{
+  "antiPatterns": [],
+  "complexity": [],
+  "contentHash": "eb48b564a14364f1bae7c1cfeb8cf2d00b41490ebefb6d69ef15c2c501b972a7",
+  "edges": [],
+  "file": "kernel/component.go",
+  "intent": [
+    {
+      "date": "2026-07-10T14:58:38-03:00",
+      "hash": "34b197c676d972ef39ab3cd8fe08a320adae96e9",
+      "kind": "commit",
+      "message": "fix(kernel): remove dead ConfigSchema/Hooks interfaces, add Component compile checks"
+    }
+  ],
+  "lastModified": 1786492495,
+  "symbols": [
+    {
+      "endLine": 12,
+      "endOffset": 229,
+      "kind": "interface",
+      "name": "Component",
+      "startLine": 5,
+      "startOffset": 45,
+      "symbolId": "kernel/component.go::Component::interface"
+    },
+    {
+      "endLine": 19,
+      "endOffset": 321,
+      "kind": "class",
+      "name": "HookDef",
+      "startLine": 14,
+      "startOffset": 236,
+      "symbolId": "kernel/component.go::HookDef::class"
+    },
+    {
+      "endLine": 21,
+      "endOffset": 374,
+      "kind": "type",
+      "name": "HookFunc",
+      "startLine": 21,
+      "startOffset": 328,
+      "symbolId": "kernel/component.go::HookFunc::type"
+    },
+    {
+      "endLine": 26,
+      "endOffset": 431,
+      "kind": "class",
+      "name": "Event",
+      "startLine": 23,
+      "startOffset": 381,
+      "symbolId": "kernel/component.go::Event::class"
+    },
+    {
+      "endLine": 33,
+      "endOffset": 567,
+      "kind": "class",
+      "name": "Context",
+      "startLine": 28,
+      "startOffset": 438,
+      "symbolId": "kernel/component.go::Context::class"
+    },
+    {
+      "endLine": 40,
+      "endOffset": 720,
+      "kind": "interface",
+      "name": "Logger",
+      "startLine": 35,
+      "startOffset": 574,
+      "symbolId": "kernel/component.go::Logger::interface"
+    }
+  ]
+}

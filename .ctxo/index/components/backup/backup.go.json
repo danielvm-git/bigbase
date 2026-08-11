@@ -1,0 +1,197 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/backup/backup.go::OpenSQLite::function"
+    },
+    {
+      "cyclomatic": 9,
+      "symbolId": "components/backup/backup.go::Dump::function"
+    },
+    {
+      "cyclomatic": 15,
+      "symbolId": "components/backup/backup.go::dumpTable::function"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/backup/backup.go::Restore::function"
+    },
+    {
+      "cyclomatic": 7,
+      "symbolId": "components/backup/backup.go::splitSQL::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/backup/backup.go::truncate::function"
+    },
+    {
+      "cyclomatic": 9,
+      "symbolId": "components/backup/backup.go::sqlLiteral::function"
+    },
+    {
+      "cyclomatic": 1,
+      "symbolId": "components/backup/backup.go::sqlQuoteString::function"
+    }
+  ],
+  "contentHash": "d211596c72befb262e024b6f4ca2621cb7822173da3ee81e73d9d18de48bb698",
+  "edges": [
+    {
+      "from": "components/backup/backup.go::Dump::function",
+      "kind": "uses",
+      "to": "components/backup/backup.go::DBer::interface"
+    },
+    {
+      "from": "components/backup/backup.go::Dump::function",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.QueryContext::method"
+    },
+    {
+      "from": "components/backup/backup.go::Dump::function",
+      "kind": "calls",
+      "to": "components/backup/backup.go::dumpTable::function"
+    },
+    {
+      "from": "components/backup/backup.go::dumpTable::function",
+      "kind": "uses",
+      "to": "components/backup/backup.go::DBer::interface"
+    },
+    {
+      "from": "components/backup/backup.go::dumpTable::function",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.QueryContext::method"
+    },
+    {
+      "from": "components/backup/backup.go::dumpTable::function",
+      "kind": "calls",
+      "to": "components/backup/backup.go::sqlLiteral::function"
+    },
+    {
+      "from": "components/backup/backup.go::Restore::function",
+      "kind": "uses",
+      "to": "components/backup/backup.go::DBer::interface"
+    },
+    {
+      "from": "components/backup/backup.go::Restore::function",
+      "kind": "calls",
+      "to": "components/backup/backup.go::splitSQL::function"
+    },
+    {
+      "from": "components/backup/backup.go::Restore::function",
+      "kind": "calls",
+      "to": "kernel/dber.go::QueryExecDBer.ExecContext::method"
+    },
+    {
+      "from": "components/backup/backup.go::Restore::function",
+      "kind": "calls",
+      "to": "components/backup/backup.go::truncate::function"
+    },
+    {
+      "from": "components/backup/backup.go::sqlLiteral::function",
+      "kind": "calls",
+      "to": "components/backup/backup.go::sqlQuoteString::function"
+    }
+  ],
+  "file": "components/backup/backup.go",
+  "intent": [
+    {
+      "date": "2026-07-10T14:29:28-03:00",
+      "hash": "e47c703b4061f0a64cd606b037575e8b1b0da31a",
+      "kind": "commit",
+      "message": "fix(mcp,backup,proxy): unify custom DBer interfaces with kernel.QueryExecDBer"
+    }
+  ],
+  "lastModified": 1786492494,
+  "symbols": [
+    {
+      "endLine": 19,
+      "endOffset": 384,
+      "kind": "type",
+      "name": "SQLiteDB",
+      "startLine": 19,
+      "startOffset": 366,
+      "symbolId": "components/backup/backup.go::SQLiteDB::type"
+    },
+    {
+      "endLine": 22,
+      "endOffset": 476,
+      "kind": "type",
+      "name": "DBer",
+      "startLine": 22,
+      "startOffset": 449,
+      "symbolId": "components/backup/backup.go::DBer::type"
+    },
+    {
+      "endLine": 32,
+      "endOffset": 747,
+      "kind": "function",
+      "name": "OpenSQLite",
+      "startLine": 25,
+      "startOffset": 553,
+      "symbolId": "components/backup/backup.go::OpenSQLite::function"
+    },
+    {
+      "endLine": 73,
+      "endOffset": 2047,
+      "kind": "function",
+      "name": "Dump",
+      "startLine": 37,
+      "startOffset": 950,
+      "symbolId": "components/backup/backup.go::Dump::function"
+    },
+    {
+      "endLine": 140,
+      "endOffset": 3700,
+      "kind": "function",
+      "name": "dumpTable",
+      "startLine": 75,
+      "startOffset": 2049,
+      "symbolId": "components/backup/backup.go::dumpTable::function"
+    },
+    {
+      "endLine": 157,
+      "endOffset": 4248,
+      "kind": "function",
+      "name": "Restore",
+      "startLine": 144,
+      "startOffset": 3833,
+      "symbolId": "components/backup/backup.go::Restore::function"
+    },
+    {
+      "endLine": 189,
+      "endOffset": 4957,
+      "kind": "function",
+      "name": "splitSQL",
+      "startLine": 160,
+      "startOffset": 4322,
+      "symbolId": "components/backup/backup.go::splitSQL::function"
+    },
+    {
+      "endLine": 196,
+      "endOffset": 5054,
+      "kind": "function",
+      "name": "truncate",
+      "startLine": 191,
+      "startOffset": 4959,
+      "symbolId": "components/backup/backup.go::truncate::function"
+    },
+    {
+      "endLine": 220,
+      "endOffset": 5531,
+      "kind": "function",
+      "name": "sqlLiteral",
+      "startLine": 199,
+      "startOffset": 5139,
+      "symbolId": "components/backup/backup.go::sqlLiteral::function"
+    },
+    {
+      "endLine": 225,
+      "endOffset": 5681,
+      "kind": "function",
+      "name": "sqlQuoteString",
+      "startLine": 223,
+      "startOffset": 5588,
+      "symbolId": "components/backup/backup.go::sqlQuoteString::function"
+    }
+  ]
+}

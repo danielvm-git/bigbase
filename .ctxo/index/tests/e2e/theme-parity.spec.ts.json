@@ -1,0 +1,23 @@
+{
+  "antiPatterns": [],
+  "complexity": [],
+  "contentHash": "343b80160a1b084f1cedb6fc9bb8afa2c6b327c834221650187d5a5c831ec4f7",
+  "edges": [],
+  "file": "tests/e2e/theme-parity.spec.ts",
+  "intent": [
+    {
+      "date": "2026-08-10T23:55:26-03:00",
+      "hash": "44172fced01463dc9891f5e90d083f371873372a",
+      "kind": "commit",
+      "message": "fix(ui): theme picker popover opens upward — no longer clipped off-screen (#235)"
+    },
+    {
+      "date": "2026-08-10T23:10:57-03:00",
+      "hash": "97aa7a6f1545e995e2ab762424db282e265beaf5",
+      "kind": "commit",
+      "message": "feat(proxy): unify landing page theme with admin console (e85) (#234)"
+    }
+  ],
+  "lastModified": 1786492495,
+  "symbols": []
+}

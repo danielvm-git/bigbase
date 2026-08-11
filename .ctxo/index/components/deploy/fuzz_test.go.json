@@ -1,0 +1,19 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 6,
+      "symbolId": "components/deploy/fuzz_test.go::FuzzSiteSlug::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/deploy/fuzz_test.go::FuzzHostFromDeploymentURL::function"
+    }
+  ],
+  "contentHash": "059230da1cec2543adf54fc4ecba6fbd7a0466391414b93e41eee670de7fe954",
+  "edges": [],
+  "file": "components/deploy/fuzz_test.go",
+  "intent": [],
+  "lastModified": 1786492494,
+  "symbols": []
+}

@@ -1,0 +1,50 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/sites/deploy_identity_test.go::decodeErrBody::function"
+    },
+    {
+      "cyclomatic": 3,
+      "symbolId": "components/sites/deploy_identity_test.go::setupSitesWithCaptureDeploy::function"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/sites/deploy_identity_test.go::TestSiteKeyOwnership_MissingSite_StructuredCode::function"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/sites/deploy_identity_test.go::TestSiteKeyOwnership_Mismatch_StructuredCode::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/sites/deploy_identity_test.go::TestSiteKeyOwnership_NoOrgIDInjection::function"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/sites/deploy_identity_test.go::TestUniqueSiteName_RejectsDuplicateInOrg::function"
+    },
+    {
+      "cyclomatic": 5,
+      "symbolId": "components/sites/deploy_identity_test.go::TestRedeploy_UsesSiteGitRepoID::function"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/sites/deploy_identity_test.go::TestRedeploy_GitRepoIDAlias_StillBindsCanonicalRepo::function"
+    }
+  ],
+  "contentHash": "5a2b34c82f6e15afe5c4c41fbfaa40221df3cd70625b2cd68d11222e1a23c8e4",
+  "edges": [],
+  "file": "components/sites/deploy_identity_test.go",
+  "intent": [
+    {
+      "date": "2026-07-24T20:56:01-03:00",
+      "hash": "e77fd137a0fcdc1a7521123153d8c065f11bafca",
+      "kind": "commit",
+      "message": "fix(deploy): never-bounce identity and framework deploy matrix (#166)"
+    }
+  ],
+  "lastModified": 1786492494,
+  "symbols": []
+}

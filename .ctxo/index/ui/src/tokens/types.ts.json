@@ -1,0 +1,108 @@
+{
+  "antiPatterns": [],
+  "complexity": [],
+  "contentHash": "63e7eb32c01aca9dc12017187f762f7152ce6a7776ba0c9557bfd94dad70015a",
+  "edges": [],
+  "file": "ui/src/tokens/types.ts",
+  "intent": [
+    {
+      "date": "2026-06-28T17:11:02-03:00",
+      "hash": "6fb588e63f79ce75dad9a27c5cd8dc0bf796f27c",
+      "kind": "commit",
+      "message": "feat(ui): add design system foundation — tokens, 22 components, a11y audit"
+    }
+  ],
+  "lastModified": 1786492495,
+  "symbols": [
+    {
+      "endLine": 15,
+      "endOffset": 315,
+      "kind": "interface",
+      "name": "ColorTokens",
+      "startLine": 0,
+      "startOffset": 0,
+      "symbolId": "ui/src/tokens/types.ts::ColorTokens::interface"
+    },
+    {
+      "endLine": 26,
+      "endOffset": 519,
+      "kind": "interface",
+      "name": "BackgroundTokens",
+      "startLine": 17,
+      "startOffset": 317,
+      "symbolId": "ui/src/tokens/types.ts::BackgroundTokens::interface"
+    },
+    {
+      "endLine": 34,
+      "endOffset": 651,
+      "kind": "interface",
+      "name": "ForegroundTokens",
+      "startLine": 28,
+      "startOffset": 521,
+      "symbolId": "ui/src/tokens/types.ts::ForegroundTokens::interface"
+    },
+    {
+      "endLine": 42,
+      "endOffset": 770,
+      "kind": "interface",
+      "name": "BorderTokens",
+      "startLine": 36,
+      "startOffset": 653,
+      "symbolId": "ui/src/tokens/types.ts::BorderTokens::interface"
+    },
+    {
+      "endLine": 58,
+      "endOffset": 967,
+      "kind": "interface",
+      "name": "SpacingTokens",
+      "startLine": 44,
+      "startOffset": 772,
+      "symbolId": "ui/src/tokens/types.ts::SpacingTokens::interface"
+    },
+    {
+      "endLine": 66,
+      "endOffset": 1066,
+      "kind": "interface",
+      "name": "RadiusTokens",
+      "startLine": 60,
+      "startOffset": 969,
+      "symbolId": "ui/src/tokens/types.ts::RadiusTokens::interface"
+    },
+    {
+      "endLine": 78,
+      "endOffset": 1261,
+      "kind": "interface",
+      "name": "TypographyTokens",
+      "startLine": 68,
+      "startOffset": 1068,
+      "symbolId": "ui/src/tokens/types.ts::TypographyTokens::interface"
+    },
+    {
+      "endLine": 86,
+      "endOffset": 1358,
+      "kind": "interface",
+      "name": "ShadowTokens",
+      "startLine": 80,
+      "startOffset": 1263,
+      "symbolId": "ui/src/tokens/types.ts::ShadowTokens::interface"
+    },
+    {
+      "endLine": 98,
+      "endOffset": 1601,
+      "kind": "interface",
+      "name": "MotionTokens",
+      "startLine": 88,
+      "startOffset": 1360,
+      "symbolId": "ui/src/tokens/types.ts::MotionTokens::interface"
+    },
+    {
+      "endLine": 111,
+      "endOffset": 1872,
+      "kind": "interface",
+      "name": "DesignTokens",
+      "startLine": 100,
+      "startOffset": 1603,
+      "symbolId": "ui/src/tokens/types.ts::DesignTokens::interface"
+    }
+  ]
+}

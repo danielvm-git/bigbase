@@ -1,0 +1,64 @@
+{
+  "antiPatterns": [],
+  "complexity": [
+    {
+      "cyclomatic": 5,
+      "symbolId": "components/deploy/db_env_test.go::TestNativeDBEnv_sqlite::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/deploy/db_env_test.go::TestNativeDBEnv_postgres::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/deploy/db_env_test.go::TestNativeDBEnv_emptyDSN::function"
+    },
+    {
+      "cyclomatic": 2,
+      "symbolId": "components/deploy/db_env_test.go::TestNativeDBEnv_memorySQLite::function"
+    },
+    {
+      "cyclomatic": 8,
+      "symbolId": "components/deploy/db_env_test.go::TestRuntimeInjectsNativeDBEnv_sqlite::function"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/deploy/db_env_test.go::createNativeDBRuntimeRepo::function"
+    },
+    {
+      "cyclomatic": 4,
+      "symbolId": "components/deploy/db_env_test.go::waitForDeploymentRunning::function"
+    }
+  ],
+  "contentHash": "7ee82e32952210279cba0721c5ee8c8da7352882f5c8c789278c51407e37e023",
+  "edges": [],
+  "file": "components/deploy/db_env_test.go",
+  "intent": [
+    {
+      "date": "2026-08-02T13:48:28-03:00",
+      "hash": "7bacc8687dd0948ee1eb4e80a0a54c8a7bc5fe15",
+      "kind": "commit",
+      "message": "fix(deploy): increase test timeout to 180s and optimize test polling delays"
+    },
+    {
+      "date": "2026-08-02T13:28:41-03:00",
+      "hash": "40c538119e2575f7b441c2d905c96a54b9b47644",
+      "kind": "commit",
+      "message": "fix(deploy): prevent port allocation collision in concurrent integration tests"
+    },
+    {
+      "date": "2026-07-11T00:40:25-03:00",
+      "hash": "d8223daf9c5b7ed1e871d4f576f3563d49f95dc1",
+      "kind": "commit",
+      "message": "fix(deploy): deterministic FIFO log eviction and fix three flaky tests"
+    },
+    {
+      "date": "2026-07-07T18:14:45-03:00",
+      "hash": "6d31b46384aecb7293b76655863ab1623bfa6c46",
+      "kind": "commit",
+      "message": "feat(deploy): inject native DB connection string into app env"
+    }
+  ],
+  "lastModified": 1786492494,
+  "symbols": []
+}
