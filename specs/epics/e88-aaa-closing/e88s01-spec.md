@@ -13,6 +13,25 @@ The last 1.4.6 gap: 13 accent themes' light-mode link color (per-theme `brand600
 
 `ui/src/context/accentThemes.ts` — each `AccentTheme` has `brand500/600/700/300` (RGB comma-strings). e87 set light `--fg-accent: var(--brand-600)` and dark `--fg-accent: var(--brand-300)` (dark links verified ≥7:1 via ThemeContext.applyAccentToDocument). Known failing light values (computed): july 251,146,60 (~3.1:1), august 107,114,128 (~4.6:1), september 202,138,4 (~4.2:1), may 139,92,246 (~4.5:1), june/december 67,56,202 / 185,28,28 (pass), others mixed.
 
+### brandLink values (lightest step from brand700 with ≥7:1 on white)
+
+| theme | brandLink | ratio vs white |
+|---|---|---|
+| default / june (rainbow) | `55, 48, 163` | 9.93:1 |
+| january | `17, 94, 89` | 7.58:1 |
+| february | `154, 52, 18` | 7.31:1 |
+| march | `91, 33, 182` | 8.98:1 |
+| april | `22, 101, 52` | 7.13:1 |
+| may | `109, 40, 217` | 7.10:1 |
+| july | `154, 52, 18` | 7.31:1 |
+| august | `75, 85, 99` | 7.56:1 |
+| september | `113, 63, 18` | 8.67:1 |
+| october | `157, 23, 77` | 7.88:1 |
+| november | `30, 64, 175` | 8.72:1 |
+| december | `153, 27, 27` | 8.31:1 |
+
+Dark-mode links (brand300 on neutral-850 `29,29,33`) are all ≥7:1 (8.43–12.74:1). Verified by `specs/epics/e88-aaa-closing/e88s01-contrast-matrix.mjs` (parses `accentThemes.ts` — single source of truth).
+
 ## Requirements
 
 #### ADDED: Per-theme AAA link step (1.4.6)
