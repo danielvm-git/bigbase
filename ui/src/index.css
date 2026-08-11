@@ -556,7 +556,7 @@ select.input {
   color: var(--error-fg);
 }
 .badge-accent {
-  background: rgba(79, 70, 229, 0.1);
+  background: var(--brand-tint);
   color: var(--fg-accent);
 }
 .badge-info {
@@ -1718,7 +1718,7 @@ tr:hover td {
   box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12);
 }
 .sql-textarea::placeholder {
-  color: var(--neutral-500);
+  color: var(--neutral-300);
 }
 .sql-actions {
   display: flex;

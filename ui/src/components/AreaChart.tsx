@@ -105,7 +105,7 @@ export function AreaChart({
             y={padT + chartH + 20}
             textAnchor="middle"
             fontSize={11}
-            fill="var(--fg-tertiary, #9999)"
+            fill="var(--fg-tertiary, #4b4b50)"
           >
             {x}
           </text>

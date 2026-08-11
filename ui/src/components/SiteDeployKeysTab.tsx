@@ -292,7 +292,7 @@ export function SiteDeployKeysTab({ siteId, id }: { siteId: string; id?: string 
       {rateLimited && (
         <div style={{
           padding: 'var(--space-3)', background: 'var(--warning-bg, #fff3cd)',
-          borderRadius: 'var(--radius-s)', fontSize: 'var(--text-sm)', color: 'var(--warning-text, #856404)',
+          borderRadius: 'var(--radius-s)', fontSize: 'var(--text-sm)', color: 'var(--warning-fg)',
         }}>
           Rate limited. Too many requests. Please wait before trying again.
         </div>

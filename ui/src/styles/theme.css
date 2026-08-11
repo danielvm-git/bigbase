@@ -12,8 +12,9 @@
 
   /* ── Foreground semantic roles (dark mode) ──────────────── */
   --fg-primary: var(--neutral-25);
-  --fg-secondary: var(--neutral-300);
-  --fg-tertiary: var(--neutral-400);
+  --fg-secondary: var(--neutral-250);    /* AAA 7.79:1 on neutral-800 */
+  --fg-tertiary: var(--neutral-300);     /* AAA 7.51:1 on neutral-850 */
+  --fg-accent: var(--brand-300);         /* AAA 8.45:1 on neutral-850 */
 
   /* ── Border semantic roles (dark mode) ──────────────────── */
   --border-default: var(--neutral-750);

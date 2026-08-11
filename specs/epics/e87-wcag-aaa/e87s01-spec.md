@@ -39,8 +39,40 @@ Every text token resolves to ≥7:1 against its background in both modes. Verifi
 - Over-darkening text flattens visual hierarchy (tertiary ≈ secondary). Acceptable for AAA; document the tradeoff.
 - Chart colors are data-viz, not text — 1.4.6 applies to text; keep chart fills as-is if labels carry the values (aria-label pattern from T000012).
 
+## Contrast Matrix (e87s01)
+
+Reproducible script: `specs/epics/e87-wcag-aaa/e87s01-contrast-matrix.mjs`
+(`node specs/epics/e87-wcag-aaa/e87s01-contrast-matrix.mjs`). WCAG relative-luminance
+computation, threshold 7.0, both modes. **36/36 token pairs PASS.**
+
+Light mode: fg-primary/secondary/tertiary/accent on white, neutral-25, neutral-40
+(7.20–13.71:1); fg-accent on brand-tint (7.23:1); success-fg / warning-fg / error-fg /
+info-fg on their tinted backgrounds (7.78–9.92:1); fg-on-accent on bg-accent
+brand-600 (7.90:1) and hover brand-700 (9.93:1).
+
+Dark mode: fg-primary neutral-25 (13.15–16.82:1), fg-secondary neutral-250
+(7.80–9.98:1), fg-tertiary neutral-300 (7.51–7.84:1), fg-accent brand-300
+(8.10–8.80:1), semantic fg on dark tinted bgs (8.21–9.40:1), fg-on-accent on
+brand-600 (7.90:1).
+
+Token changes beyond the table (all required by "100% of text pairs ≥7:1"):
+`--bg-accent` → brand-600 / `--bg-accent-hover` → brand-700 (white button text was
+6.29:1 on brand-500), `--brand-tint` 0.10 → 0.06 alpha (fg-accent text on badge/
+wizard/theme-menu tints was 6.80:1), dark `--fg-secondary` → neutral-250 (table
+headers + neutral badges on neutral-800 were 6.12:1), dark `--fg-accent` → new
+brand-300 ramp step (dark links were 2.68:1), light `--warning-fg` → rgb(120,53,15)
+(was 6.28:1).
+
+Known component-state pairs still <7:1 (not token pairs; rendered only in
+error/modal/wizard-completion states, out of this story's token-only scope):
+white on `--error` (btn-danger, 3.76:1), `--error` as `.input-error-text`
+(3.76:1 light / 4.46:1 dark), white on `--success` (wizard done step, 2.54:1),
+dark `.wizard-step-num` fg-tertiary on bg-subtle (6.13:1). Custom accent themes
+keep their AA-only promise: light-mode links use each theme's brand-600 step
+(4.23–7.90:1).
+
 ## Acceptance Criteria
 
-- [ ] Contrast matrix: 100% of text pairs ≥7:1, both modes
-- [ ] `npm run build` + targeted chart tests green
-- [ ] axe-scan still 0 violations (re-run `npx playwright test axe-scan`)
+- [x] Contrast matrix: 100% of text pairs ≥7:1, both modes
+- [x] `npm run build` + targeted chart tests green
+- [x] axe-scan still 0 violations (re-run `npx playwright test axe-scan`)

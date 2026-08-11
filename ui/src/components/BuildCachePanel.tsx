@@ -80,7 +80,7 @@ export function BuildCachePanel() {
       </div>
 
       {error && <p className="input-error-text" role="alert" style={{ marginBottom: 'var(--space-3)' }}>{error}</p>}
-      {notice && <p role="status" style={{ color: 'var(--brand-500)', marginBottom: 'var(--space-3)', fontSize: 'var(--text-sm)' }}>{notice}</p>}
+      {notice && <p role="status" style={{ color: 'var(--fg-accent)', marginBottom: 'var(--space-3)', fontSize: 'var(--text-sm)' }}>{notice}</p>}
 
       <div style={{ display: 'flex', gap: 'var(--space-2)', alignItems: 'center', flexWrap: 'wrap' }}>
         <Button variant="secondary" size="sm" onClick={handlePrune} disabled={busy}>
