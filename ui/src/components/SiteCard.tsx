@@ -18,7 +18,7 @@ export function SiteCard({ site }: SiteCardProps) {
   const commitShort = dep?.commit_sha?.slice(0, 7) ?? '—'
 
   return (
-    <Link to={`/deploy/${site.id}${pq}`} className="site-card">
+    <Link to={`/deploy/${site.id}${pq}`} className="site-card" aria-label={`Open ${site.name} deployment`}>
       <div className="site-card-thumb" style={siteThumbStyle(site.id)}>
         {(displayStatus === 'building' || rawStatus === 'building' || rawStatus === 'pending') && (
           <span className="site-card-thumb-badge">
@@ -33,7 +33,7 @@ export function SiteCard({ site }: SiteCardProps) {
       </div>
       <div className="site-card-body">
         <div className="site-card-row">
-          <span className="site-card-name">{site.name}</span>
+          <h3 className="site-card-name">{site.name}</h3>
           {dep && (
             <Badge variant={statusBadgeVariant(rawStatus)}>{displayStatus}</Badge>
           )}

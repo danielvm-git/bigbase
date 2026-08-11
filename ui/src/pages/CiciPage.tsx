@@ -114,7 +114,7 @@ export default function CiciPage() {
 
       {showForm && (
         <div className="card" style={{ marginBottom: 'var(--space-8)' }}>
-          <h3 style={{ marginBottom: 'var(--space-6)', fontSize: 'var(--text-m)', fontWeight: 600 }}>New Workflow</h3>
+          <h2 style={{ marginBottom: 'var(--space-6)', fontSize: 'var(--text-m)', fontWeight: 600 }}>New Workflow</h2>
           <form onSubmit={handleCreateWorkflow} className="fn-form">
             <Input label="Workflow name" placeholder="Workflow name *" value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} required />
             <Input as="textarea" aria-label="YAML config" placeholder="YAML config *" value={form.yaml} onChange={e => setForm(p => ({ ...p, yaml: e.target.value }))} required rows={10} className="code-textarea" />
