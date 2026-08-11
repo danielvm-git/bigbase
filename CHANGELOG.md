@@ -1,3 +1,19 @@
+## [2.86.3](https://github.com/danielvm-git/bigbase/compare/v2.86.2...v2.86.3) (2026-08-11)
+
+
+### Bug Fixes
+
+* **ui:** add focus trap and Escape handling to tutorial overlay (WCAG 2.1.2) ([5a61b52](https://github.com/danielvm-git/bigbase/commit/5a61b522e93ef31ae0198674d380fab68db7fb62))
+* **ui:** add focus trap, initial focus, and focus restoration to Dialog (BUG-2026-08-11T000010) ([526f024](https://github.com/danielvm-git/bigbase/commit/526f0243676a54da30ab9c2d6e8ac68de7902014))
+* **ui:** announce loading/error/SSE states via live regions (BUG-2026-08-11T000008) ([7fecbe0](https://github.com/danielvm-git/bigbase/commit/7fecbe061cea95c844dd8224ba98b63d9864ef8b))
+* **ui:** give placeholder-only form controls accessible names (BUG-2026-08-11T000007) ([9848ced](https://github.com/danielvm-git/bigbase/commit/9848ced3fc0d2e6aef8ef47c1d78c4e4107f3b9a))
+* **ui:** give sidebar nav links accessible names on mobile (WCAG 4.1.2) ([51464b0](https://github.com/danielvm-git/bigbase/commit/51464b01735527159f575ff08c27bc795e501bea))
+* **ui:** implement WAI-ARIA tabs pattern with roving tabindex (BUG-2026-08-11T000006) ([414d30a](https://github.com/danielvm-git/bigbase/commit/414d30a3ef5c70370da6074a834d8683d472a41a))
+* **ui:** make click-only div/span elements keyboard-accessible (BUG-2026-08-11T000009) ([607fcf0](https://github.com/danielvm-git/bigbase/commit/607fcf087b580974b5acf50a6499221c0850bb96))
+* **ui:** raise fg-tertiary contrast to WCAG 1.4.3 AA (4.5:1) ([7d9ef63](https://github.com/danielvm-git/bigbase/commit/7d9ef63c1c9149930ef9db8b6cd45aa2a246c787))
+* **ui:** render storage image preview in accessible Modal (WCAG 2.1.2) ([2592180](https://github.com/danielvm-git/bigbase/commit/25921802bb26129b3a86c6b7f38d17f65445d81f))
+* **ui:** replace rollback overlay with accessible Modal (WCAG 2.1.2) ([b60daca](https://github.com/danielvm-git/bigbase/commit/b60daca67a24d4020d0e16536bef4921ba7a644b))
+
 ## [2.86.2](https://github.com/danielvm-git/bigbase/compare/v2.86.1...v2.86.2) (2026-08-11)
 
 
