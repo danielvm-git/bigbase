@@ -2506,12 +2506,14 @@ bugs:
     scope: ui
     summary: "WCAG 4.1.2/2.1.1: JsonTree missing tree roles, aria-expanded, and arrow-key navigation"
     file: specs/bugs/BUG-2026-08-11T000011-wcag-jsontree-tree-semantics.md
-    status: open
+    status: fixed
     audit_source: wcag-2.2-audit-2026-08-11
     files_changed:
       - ui/src/components/JsonTree.tsx
     approach: Add role=tree/treeitem + aria-expanded + aria-level; roving tabindex with arrow keys; data-bearing toggle labels.
     risk_level: medium
+    regression_guards:
+      - "ui/src/components/JsonTree.test.tsx (13 tests: disclosure aria-expanded + accessible labels)"
   - id: BUG-2026-08-11T000012
     date: "2026-08-11"
     severity: high
@@ -2519,7 +2521,7 @@ bugs:
     scope: ui
     summary: "WCAG 1.1.1: Charts/gauges lack data in accessible names — BarGauge no progressbar role, DonutGauge/Sparkline generic aria-labels, SystemStatusPanel bars, RequestChart title-only values"
     file: specs/bugs/BUG-2026-08-11T000012-wcag-chart-accessible-names.md
-    status: open
+    status: fixed
     audit_source: wcag-2.2-audit-2026-08-11
     files_changed:
       - ui/src/components/BarGauge.tsx
@@ -2529,6 +2531,8 @@ bugs:
       - ui/src/components/RequestChart.tsx
     approach: Compose data-bearing aria-labels; add role=progressbar + aria-valuenow/min/max; replace title-only values.
     risk_level: medium
+    regression_guards:
+      - "ui/src/components/BarGauge.test.tsx DonutGauge.test.tsx Sparkline.test.tsx RequestChart.test.tsx SystemStatusPanel.test.tsx (33 tests: progressbar roles + data-bearing labels)"
   - id: BUG-2026-08-11T000013
     date: "2026-08-11"
     severity: high
@@ -2536,12 +2540,14 @@ bugs:
     scope: ui
     summary: "WCAG 2.1.1/4.1.2/2.4.3: ThemePicker menu lacks arrow-key navigation, uses aria-current instead of aria-checked, focus not moved into menu on open"
     file: specs/bugs/BUG-2026-08-11T000013-wcag-themepicker-menu.md
-    status: open
+    status: fixed
     audit_source: wcag-2.2-audit-2026-08-11
     files_changed:
       - ui/src/components/ThemePicker.tsx
     approach: Implement roving-tabindex + Arrow/Home/End per ARIA menu pattern, menuitemradio + aria-checked, focus move on open, close on blur.
     risk_level: medium
+    regression_guards:
+      - "ui/src/components/ThemePicker.test.tsx (15 tests: menuitemradio + roving tabindex)"
   - id: BUG-2026-08-11T000014
     date: "2026-08-11"
     severity: high
@@ -2549,7 +2555,7 @@ bugs:
     scope: ui
     summary: "WCAG 2.4.1/1.3.1: No skip-to-content link anywhere; main landmark lacks id/tabindex; LoginPage renders with no landmarks"
     file: specs/bugs/BUG-2026-08-11T000014-wcag-skip-link-landmarks.md
-    status: open
+    status: fixed
     audit_source: wcag-2.2-audit-2026-08-11
     files_changed:
       - ui/src/components/AppShell.tsx
@@ -2557,6 +2563,9 @@ bugs:
       - ui/src/pages/LoginPage.tsx
     approach: Add skip-link as first focusable element, main id=main-content + tabIndex=-1, wrap LoginPage in main landmark.
     risk_level: high
+    regression_guards:
+      - "ui/src/components/AppShell.test.tsx (skip link first focusable)"
+      - "ui/src/Layout.test.tsx"
   - id: BUG-2026-08-11T000015
     date: "2026-08-11"
     severity: high
@@ -2564,12 +2573,14 @@ bugs:
     scope: ui
     summary: "WCAG 3.3.1: Input component errors not associated via aria-describedby, no aria-invalid (Select/Checkbox implement correct pattern)"
     file: specs/bugs/BUG-2026-08-11T000015-wcag-input-error-association.md
-    status: open
+    status: fixed
     audit_source: wcag-2.2-audit-2026-08-11
     files_changed:
       - ui/src/components/Input.tsx
     approach: Give error text stable id, wire aria-describedby + aria-invalid on the field, matching Select.tsx.
     risk_level: medium
+    regression_guards:
+      - "ui/src/components/Input.test.tsx (12 tests: aria-describedby + aria-invalid)"
   - id: BUG-2026-08-11T000016
     date: "2026-08-11"
     severity: medium
@@ -2577,7 +2588,7 @@ bugs:
     scope: ui
     summary: "WCAG 1.4.1: Meaning conveyed by color alone — Alert/Badge variants, MetricCard trend+value, RequestChart status colors, OnboardingChecklist state"
     file: specs/bugs/BUG-2026-08-11T000016-wcag-color-only-meaning.md
-    status: open
+    status: fixed
     audit_source: wcag-2.2-audit-2026-08-11
     files_changed:
       - ui/src/components/Alert.tsx
@@ -2587,6 +2598,8 @@ bugs:
       - ui/src/components/OnboardingChecklist.tsx
     approach: Add per-variant icons or visually-hidden status words; trend arrows get aria-label; chart legends get category labels.
     risk_level: medium
+    regression_guards:
+      - "ui/src/components/Alert.test.tsx Badge.test.tsx MetricCard.test.tsx OnboardingChecklist.test.tsx (55 tests: non-color cues)"
   - id: BUG-2026-08-11T000017
     date: "2026-08-11"
     severity: medium
@@ -2594,7 +2607,7 @@ bugs:
     scope: ui
     summary: "WCAG 4.1.3/2.1.1: Log viewers (BuildLogs, StreamLog, FunctionLogsPanel) lack role=log/aria-live and are not keyboard-scrollable"
     file: specs/bugs/BUG-2026-08-11T000017-wcag-log-viewers.md
-    status: open
+    status: fixed
     audit_source: wcag-2.2-audit-2026-08-11
     files_changed:
       - ui/src/components/BuildLogs.tsx
@@ -2602,6 +2615,8 @@ bugs:
       - ui/src/components/FunctionLogsPanel.tsx
     approach: Add role=log aria-live=polite aria-label + tabIndex=0 to log containers.
     risk_level: medium
+    regression_guards:
+      - "ui/src/components/BuildLogs.test.tsx StreamLog.test.tsx FunctionLogsPanel.test.tsx (21 tests: role=log + keyboard scroll)"
   - id: BUG-2026-08-11T000018
     date: "2026-08-11"
     severity: medium
@@ -2609,7 +2624,7 @@ bugs:
     scope: ui
     summary: "WCAG 1.3.1/2.4.6: Heading hierarchy — span-as-heading (CardHeader, EmptyState, SiteCard, SystemStatusPanel) and h1→h3 skips (Functions, Forge, Cici)"
     file: specs/bugs/BUG-2026-08-11T000018-wcag-heading-hierarchy.md
-    status: open
+    status: fixed
     audit_source: wcag-2.2-audit-2026-08-11
     files_changed:
       - ui/src/components/Card.tsx
@@ -2622,6 +2637,8 @@ bugs:
       - ui/src/pages/RealtimePage.tsx
     approach: Render card/empty titles as headings; never skip levels; always render page h1 before branching.
     risk_level: medium
+    regression_guards:
+      - "ui/src/components/Card.test.tsx + CiciPage/RealtimePage tests (19 tests: heading levels)"
   - id: BUG-2026-08-11T000019
     date: "2026-08-11"
     severity: medium
@@ -2629,13 +2646,15 @@ bugs:
     scope: ui
     summary: "WCAG 2.4.2: No document.title management on route change — every route announces static 'BigBase Admin' title"
     file: specs/bugs/BUG-2026-08-11T000019-wcag-page-titles.md
-    status: open
+    status: fixed
     audit_source: wcag-2.2-audit-2026-08-11
     files_changed:
       - ui/src/pages/*
       - ui/index.html
     approach: Add useDocumentTitle(pageName) hook and call from each page.
     risk_level: low
+    regression_guards:
+      - "ui/src/hooks/useDocumentTitle.test.tsx (3 tests: set/restore/update)"
   - id: BUG-2026-08-11T000020
     date: "2026-08-11"
     severity: medium
@@ -2643,13 +2662,15 @@ bugs:
     scope: ui
     summary: "WCAG 2.3.3: No prefers-reduced-motion CSS gating for spin/shimmer/status-pulse/toast-in animations; usePrefersReducedMotion hook exists but is never imported"
     file: specs/bugs/BUG-2026-08-11T000020-wcag-reduced-motion.md
-    status: open
+    status: fixed
     audit_source: wcag-2.2-audit-2026-08-11
     files_changed:
       - ui/src/index.css
       - ui/src/tokens/motion.ts
     approach: "Add @media (prefers-reduced-motion: reduce) rules disabling/slowing animations; wire the existing hook."
     risk_level: low
+    regression_guards:
+      - "cd ui && npm run build (prefers-reduced-motion CSS block present)"
   - id: BUG-2026-08-11T000021
     date: "2026-08-11"
     severity: medium
@@ -2657,7 +2678,7 @@ bugs:
     scope: ui
     summary: "WCAG 1.3.1: Tables missing scope/caption (RequestLogs, site tabs, Table.tsx) and decorative glyphs not aria-hidden (RealtimePage, StoragePage, SiteEnvVarsTab ✓/— cells)"
     file: specs/bugs/BUG-2026-08-11T000021-wcag-tables-and-glyphs.md
-    status: open
+    status: fixed
     audit_source: wcag-2.2-audit-2026-08-11
     files_changed:
       - ui/src/components/Table.tsx
@@ -2673,3 +2694,5 @@ bugs:
       - ui/src/pages/SiteDetailPage.tsx
     approach: Add scope=col + caption to tables, role=region to scroll wrappers, aria-hidden to decorative glyphs, sr-only Yes/No for symbol cells.
     risk_level: low
+    regression_guards:
+      - "ui/src/components/Table.test.tsx SiteCacheTab.test.tsx SiteDeployKeysTab.test.tsx StoragePage/SiteDetailPage tests (63 tests: scope/caption)"
