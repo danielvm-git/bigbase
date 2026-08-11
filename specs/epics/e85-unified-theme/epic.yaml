@@ -4,7 +4,7 @@ id: e85
 title: "Unified Theming — Landing Page Parity with Admin Console"
 wsjf: 3.7
 total_bcps: 8
-status: open
+status: done
 tier: 2
 depends_on: []
 note: >
@@ -19,12 +19,12 @@ stories:
   - id: e85s01
     title: "Landing page theme bootstrap — inline script + accent ramp + CSS selector refactor"
     bcps: 5
-    status: in_progress
+    status: done
     depends_on: []
     spec: e85s01-spec.md
   - id: e85s02
     title: "Accent ramp drift guard + cross-surface parity test"
     bcps: 3
-    status: open
+    status: done
     depends_on: [e85s01]
     spec: e85s02-spec.md
