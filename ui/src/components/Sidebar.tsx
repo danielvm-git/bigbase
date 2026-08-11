@@ -29,7 +29,7 @@ export function SidebarSection({ title, items }: SidebarSectionProps) {
       <ul className="sidebar-nav">
         {items.map(item => (
           <li key={item.to}>
-            <NavLink to={item.to} end={item.end}>
+            <NavLink to={item.to} end={item.end} aria-label={item.label}>
               <Icon name={item.icon} size={18} />
               <span>{item.label}</span>
             </NavLink>
