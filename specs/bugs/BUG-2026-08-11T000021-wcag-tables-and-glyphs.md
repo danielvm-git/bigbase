@@ -15,7 +15,10 @@ Two related structural gaps:
 Add `scope="col"` to headers and a `<caption>` per table; add `role="region"` + `aria-label` to scrollable table wrappers; mark decorative glyphs `aria-hidden="true"` and replace symbol-only status cells with visually-hidden "Yes"/"No" text; give emoji-only buttons proper `aria-label`s.
 
 ## Status
-open
+fixed
+
+## Resolution
+2026-08-11 — Tables: added `scope="col"` to all header cells and visually-hidden `<caption>`s (Request logs, Deploy keys, Build cache, Custom domains, Environment variables, Stored files, Deployment history, Rollback history); `Table.tsx` gained a `caption` prop rendered as the caption's first child, honors caller-provided `scope`, and labels its scrollable wrapper as `role="region"` + `aria-label` when a caption is given. Decorative glyphs: env-var Build/Runtime ✓/— cells now announce "Yes"/"No" via visually-hidden text with the glyph `aria-hidden`; StoragePage grid 📄 and SiteDetailPage StatusTimeline dots/connectors/live-dot are `aria-hidden="true"`. Other listed glyphs (RealtimePage, EmptyState, StreamLog) tracked separately.
 
 ## Source
 wcag-2.2-audit-2026-08-11

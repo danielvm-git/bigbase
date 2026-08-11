@@ -61,13 +61,14 @@ export function RequestLogs({
 
       <div className="table-wrap">
         <table>
+          <caption className="visually-hidden">Request logs</caption>
           <thead>
             <tr>
-              <th>Method</th>
-              <th>Path</th>
-              <th>Status</th>
-              <th>Duration</th>
-              <th>Timestamp</th>
+              <th scope="col">Method</th>
+              <th scope="col">Path</th>
+              <th scope="col">Status</th>
+              <th scope="col">Duration</th>
+              <th scope="col">Timestamp</th>
             </tr>
           </thead>
           <tbody>

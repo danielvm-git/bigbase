@@ -90,13 +90,14 @@ export default function StoragePage() {
       {files.length > 0 && viewMode === 'list' && (
         <div className="table-wrap">
           <table>
+            <caption className="visually-hidden">Stored files</caption>
             <thead>
               <tr>
-                <th>Name</th>
-                <th>Size</th>
-                <th>Type</th>
-                <th>Uploaded</th>
-                <th>Actions</th>
+                <th scope="col">Name</th>
+                <th scope="col">Size</th>
+                <th scope="col">Type</th>
+                <th scope="col">Uploaded</th>
+                <th scope="col">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -149,7 +150,7 @@ export default function StoragePage() {
                     style={{ width: '100%', height: 120, objectFit: 'cover', borderRadius: 'var(--radius-s)', marginBottom: 'var(--space-3)' }}
                   />
                 ) : (
-                  <div style={{ width: '100%', height: 120, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-subtle)', borderRadius: 'var(--radius-s)', marginBottom: 'var(--space-3)', fontSize: '2rem' }}>
+                  <div aria-hidden="true" style={{ width: '100%', height: 120, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-subtle)', borderRadius: 'var(--radius-s)', marginBottom: 'var(--space-3)', fontSize: '2rem' }}>
                     📄
                   </div>
                 )}

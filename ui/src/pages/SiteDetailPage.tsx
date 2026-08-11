@@ -84,17 +84,17 @@ function StatusTimeline({ status, healthSummary }: { status: string; healthSumma
     <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', padding: 'var(--space-3) 0' }}>
       {STATUS_STEPS.map((step, i) => (
         <div key={step} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', flex: 1 }}>
-          <div className={dotClass(step, i)} style={dotStyle(step, i)} />
+          <div aria-hidden="true" className={dotClass(step, i)} style={dotStyle(step, i)} />
           <span style={{
             fontSize: 'var(--text-xs)', textTransform: 'capitalize', whiteSpace: 'nowrap',
             color: i <= currentIdx ? 'var(--fg-primary)' : 'var(--fg-tertiary)',
             fontWeight: i === currentIdx ? 600 : 400,
           }}>
             {label(step, i)}
-            {i === currentIdx && step === 'running' && <span style={{ marginLeft: 'var(--space-1)', color: 'var(--brand-500)', fontWeight: 600, fontSize: 'var(--text-xs)' }}>●</span>}
+            {i === currentIdx && step === 'running' && <span aria-hidden="true" style={{ marginLeft: 'var(--space-1)', color: 'var(--brand-500)', fontWeight: 600, fontSize: 'var(--text-xs)' }}>●</span>}
           </span>
           {i < STATUS_STEPS.length - 1 && (
-            <div style={{ flex: 1, height: 2, background: i < currentIdx ? 'var(--brand-500)' : 'var(--border-default)', minWidth: 16 }} />
+            <div aria-hidden="true" style={{ flex: 1, height: 2, background: i < currentIdx ? 'var(--brand-500)' : 'var(--border-default)', minWidth: 16 }} />
           )}
         </div>
       ))}
@@ -507,14 +507,15 @@ export default function SiteDetailPage() {
           {deployments.length > 0 && (
             <div className="table-wrap">
               <table>
+                <caption className="visually-hidden">Deployment history</caption>
                 <thead>
                   <tr>
-                    <th>Status</th>
-                    <th>Branch</th>
-                    <th>Commit</th>
-                    <th>URL</th>
-                    <th>Created</th>
-                    <th>Actions</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">Branch</th>
+                    <th scope="col">Commit</th>
+                    <th scope="col">URL</th>
+                    <th scope="col">Created</th>
+                    <th scope="col">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -560,12 +561,13 @@ export default function SiteDetailPage() {
               <h2 className="section-title">Rollback History</h2>
               <div className="table-wrap">
                 <table>
+                  <caption className="visually-hidden">Rollback history</caption>
                   <thead>
                     <tr>
-                      <th>Timestamp</th>
-                      <th>Rolled Back From</th>
-                      <th>Rolled Back To</th>
-                      <th>Details</th>
+                      <th scope="col">Timestamp</th>
+                      <th scope="col">Rolled Back From</th>
+                      <th scope="col">Rolled Back To</th>
+                      <th scope="col">Details</th>
                     </tr>
                   </thead>
                   <tbody>

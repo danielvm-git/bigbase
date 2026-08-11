@@ -21,6 +21,15 @@ function parseEnvFile(text: string): Array<{ key: string; value: string }> {
     })
 }
 
+function BooleanCell({ value }: { value: boolean }) {
+  return (
+    <td style={{ textAlign: 'center' }}>
+      <span aria-hidden="true">{value ? '✓' : '—'}</span>
+      <span className="visually-hidden">{value ? 'Yes' : 'No'}</span>
+    </td>
+  )
+}
+
 function EnvVarRow({
   ev,
   onEdit,
@@ -38,8 +47,8 @@ function EnvVarRow({
           {ev.value_preview}
         </code>
       </td>
-      <td style={{ textAlign: 'center' }}>{ev.is_build_time ? '✓' : '—'}</td>
-      <td style={{ textAlign: 'center' }}>{ev.is_runtime ? '✓' : '—'}</td>
+      <BooleanCell value={ev.is_build_time} />
+      <BooleanCell value={ev.is_runtime} />
       <td style={{ fontSize: 'var(--text-xs)', color: 'var(--fg-tertiary)' }}>
         {new Date(ev.created_at).toLocaleDateString()}
       </td>
@@ -296,14 +305,15 @@ export function SiteEnvVarsTab({ siteId, id }: { siteId: string; id?: string }) 
       ) : (
         <div className="table-wrap">
           <table>
+            <caption className="visually-hidden">Environment variables</caption>
             <thead>
               <tr>
-                <th>Key</th>
-                <th>Value</th>
-                <th style={{ textAlign: 'center' }}>Build</th>
-                <th style={{ textAlign: 'center' }}>Runtime</th>
-                <th>Created</th>
-                <th>Actions</th>
+                <th scope="col">Key</th>
+                <th scope="col">Value</th>
+                <th scope="col" style={{ textAlign: 'center' }}>Build</th>
+                <th scope="col" style={{ textAlign: 'center' }}>Runtime</th>
+                <th scope="col">Created</th>
+                <th scope="col">Actions</th>
               </tr>
             </thead>
             <tbody>
