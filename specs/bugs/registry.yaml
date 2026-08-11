@@ -2318,7 +2318,7 @@ bugs:
     scope: ui
     summary: "WCAG 1.4.3: fg-tertiary/neutral-400 text contrast 2.91:1 fails 4.5:1 AA on all light-mode backgrounds (placeholders, hints, tertiary text, disabled ghost buttons)"
     file: specs/bugs/BUG-2026-08-11T000001-wcag-contrast-fg-tertiary.md
-    status: open
+    status: fixed
     audit_source: wcag-2.2-audit-2026-08-11
     files_changed:
       - ui/src/styles/tokens.css
@@ -2326,6 +2326,9 @@ bugs:
       - ui/src/index.css
     approach: Darken --neutral-400 from rgb(151,151,155) to >= rgb(122,122,127) (~4.5:1) or introduce a compliant --fg-placeholder token and re-point consumers.
     risk_level: high
+    regression_guards:
+      - "cd ui && npm run build (tokens.ts + tokens.css compile)"
+      - "contrast check: fg-tertiary 5.22:1 on white, 5.01:1 on neutral-25 (light); 5.77:1 on neutral-850 (dark)"
   - id: BUG-2026-08-11T000002
     date: "2026-08-11"
     severity: high
@@ -2333,13 +2336,15 @@ bugs:
     scope: ui
     summary: "WCAG 4.1.2: Sidebar NavLinks lose accessible name on mobile (<=768px) — label display:none + aria-hidden icon leaves empty link names"
     file: specs/bugs/BUG-2026-08-11T000002-wcag-sidebar-mobile-nameless-links.md
-    status: open
+    status: fixed
     audit_source: wcag-2.2-audit-2026-08-11
     files_changed:
       - ui/src/components/Sidebar.tsx
       - ui/src/index.css
     approach: Add aria-label={item.label} to each NavLink or use sr-only labels instead of display:none.
     risk_level: high
+    regression_guards:
+      - "ui/src/components/Sidebar.test.tsx (aria-label regression test, 9/9 pass)"
   - id: BUG-2026-08-11T000003
     date: "2026-08-11"
     severity: high
@@ -2347,12 +2352,14 @@ bugs:
     scope: ui
     summary: "WCAG 2.1.2: SiteDetailPage rollback confirmation is ad-hoc div modal — no role=dialog, no focus trap, no Escape, no focus restore"
     file: specs/bugs/BUG-2026-08-11T000003-wcag-sitedetail-rollback-modal.md
-    status: open
+    status: fixed
     audit_source: wcag-2.2-audit-2026-08-11
     files_changed:
       - ui/src/pages/SiteDetailPage.tsx
     approach: Replace with shared Modal/Dialog component (role=dialog, aria-modal, initial focus, Escape, focus trap).
     risk_level: high
+    regression_guards:
+      - "ui/src/pages/SiteDetailPage.test.tsx (dialog role + aria-modal + Escape assertions, 15/15 pass)"
   - id: BUG-2026-08-11T000004
     date: "2026-08-11"
     severity: high
@@ -2360,12 +2367,14 @@ bugs:
     scope: ui
     summary: "WCAG 2.1.2: StoragePage image preview is ad-hoc div overlay — no dialog semantics, no focus management, no Escape"
     file: specs/bugs/BUG-2026-08-11T000004-wcag-storage-preview-modal.md
-    status: open
+    status: fixed
     audit_source: wcag-2.2-audit-2026-08-11
     files_changed:
       - ui/src/pages/StoragePage.tsx
     approach: Render through Modal/Dialog with title={previewFile.name} and proper focus handling.
     risk_level: high
+    regression_guards:
+      - "ui/src/pages/StoragePage.test.tsx (dialog role + aria-modal assertions, 13/13 pass)"
   - id: BUG-2026-08-11T000005
     date: "2026-08-11"
     severity: high
@@ -2373,12 +2382,14 @@ bugs:
     scope: ui
     summary: "WCAG 2.1.2: TutorialOverlay declares role=dialog aria-modal but has no focus trap/move/restore and no Escape handler"
     file: specs/bugs/BUG-2026-08-11T000005-wcag-tutorial-overlay-focus.md
-    status: open
+    status: fixed
     audit_source: wcag-2.2-audit-2026-08-11
     files_changed:
       - ui/src/components/TutorialOverlay.tsx
     approach: Port Modal.tsx focus management (capture trigger, focus dialog on open, trap Tab, restore on unmount, Escape to close).
     risk_level: high
+    regression_guards:
+      - "ui/src/components/TutorialOverlay.test.tsx (6 tests: focus move-in, Tab trap, Escape, focus restore, aria-describedby)"
   - id: BUG-2026-08-11T000006
     date: "2026-08-11"
     severity: high
