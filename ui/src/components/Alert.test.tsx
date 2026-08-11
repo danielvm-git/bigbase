@@ -54,4 +54,16 @@ describe('Alert', () => {
     render(<Alert>Alert</Alert>)
     expect(screen.queryByRole('button', { name: /dismiss/i })).not.toBeInTheDocument()
   })
+
+  it.each([
+    ['info', 'Info:'],
+    ['success', 'Success:'],
+    ['warning', 'Warning:'],
+    ['error', 'Error:'],
+  ] as const)('renders a visible %s status word (non-color cue)', (variant, word) => {
+    render(<Alert variant={variant}>Message</Alert>)
+    const label = screen.getByText(word)
+    expect(label).toBeInTheDocument()
+    expect(label).not.toHaveAttribute('aria-hidden')
+  })
 })

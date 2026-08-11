@@ -18,8 +18,23 @@ const variantClass: Record<BadgeVariant, string> = {
   info: 'badge-info',
 }
 
-export function Badge({ variant = 'neutral', className = '', ...rest }: BadgeProps) {
-  return <span className={`badge ${variantClass[variant]} ${className}`} {...rest} />
+/** Distinct non-color shape cue per variant; decorative (aria-hidden), the text stays the accessible cue. */
+const variantGlyph: Record<BadgeVariant, string> = {
+  neutral: '•',
+  success: '✓',
+  warning: '!',
+  error: '✕',
+  accent: '★',
+  info: 'i',
+}
+
+export function Badge({ variant = 'neutral', className = '', children, ...rest }: BadgeProps) {
+  return (
+    <span className={`badge ${variantClass[variant]} ${className}`} {...rest}>
+      <span aria-hidden="true" className="badge-indicator">{variantGlyph[variant]}</span>
+      {children}
+    </span>
+  )
 }
 
 // eslint-disable-next-line react-refresh/only-export-components
