@@ -1,9 +1,12 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { Button, Input, Card } from '../components'
+import { useAuthSession } from '../hooks/useAuthSession'
 
 interface AuthResponse {
   token: string
+  refresh_token?: string
+  expires_at?: string
   error?: string
 }
 
@@ -13,6 +16,8 @@ function isValidEmail(value: string): boolean {
 
 export default function LoginPage() {
   const nav = useNavigate()
+  const location = useLocation()
+  const { setSession, restorePendingRoute, peekPendingRoute } = useAuthSession()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -24,6 +29,12 @@ export default function LoginPage() {
   const [resetEmail, setResetEmail] = useState('')
   const [resetEmailError, setResetEmailError] = useState('')
   const [resetSent, setResetSent] = useState(false)
+
+  // "Session expired" re-auth notice: either the redirect carried the flag or
+  // a pending route was saved for restoration (e.g. Layout's /api/auth/me 401).
+  const [sessionExpired] = useState<boolean>(
+    () => location.state?.sessionExpired === true || peekPendingRoute() !== null,
+  )
 
   useEffect(() => {
     fetch('/api/auth/oauth/google', { redirect: 'manual' })
@@ -71,7 +82,13 @@ export default function LoginPage() {
         setError(data.error || 'request failed')
         return
       }
-      nav('/')
+      setSession({
+        token: data.token,
+        refreshToken: data.refresh_token ?? null,
+        expiresAtMs: data.expires_at ? Date.parse(data.expires_at) : null,
+      })
+      const pending = restorePendingRoute()
+      nav(pending ?? '/')
     } catch {
       setError('network error')
     }
@@ -132,6 +149,24 @@ export default function LoginPage() {
           <h1>BigBase</h1>
           <p>{isRegister ? 'Create your account' : 'Sign in to continue'}</p>
         </div>
+
+        {sessionExpired && (
+          <div
+            role="status"
+            style={{
+              marginBottom: 'var(--space-6)',
+              padding: 'var(--space-4) var(--space-6)',
+              borderRadius: 'var(--radius-s)',
+              background: 'var(--info-bg)',
+              color: 'var(--info-fg)',
+              border: '1px solid var(--info)',
+              fontSize: 'var(--text-s)',
+            }}
+          >
+            Your session expired. Please sign in again — you will return to where you
+            left off.
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="login-form">
           <Input
