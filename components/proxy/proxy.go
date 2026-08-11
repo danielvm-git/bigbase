@@ -489,11 +489,13 @@ func (p *Proxy) handleHome(w http.ResponseWriter, r *http.Request) {
 		Components  []kernel.ComponentStatus
 		GitHubStars string
 		Port        string
+		ThemeScript template.HTML
 	}{
 		Version:     kernel.Version,
 		Components:  components,
 		GitHubStars: starsDisplay,
 		Port:        p.port,
+		ThemeScript: landingThemeScript(),
 	}
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
@@ -570,6 +572,7 @@ var homeTemplate = `<!DOCTYPE html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>BigBase — Open-Source BaaS</title>
+{{.ThemeScript}}
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
@@ -602,8 +605,18 @@ var homeTemplate = `<!DOCTYPE html>
   -webkit-font-smoothing: antialiased;
 }
 
+[data-theme="dark"] {
+  --bg: var(--neutral-900); --surface: var(--neutral-850, #1d1d21);
+  --fg: var(--neutral-25); --fg-secondary: var(--neutral-300);
+  --fg-tertiary: var(--neutral-500);
+  --border: var(--neutral-700); --border-strong: var(--neutral-600);
+}
+/* No-JS fallback: visitors whose browser never sets data-theme (script
+   disabled) still follow the OS preference. JS users always get data-theme,
+   so :not([data-theme]) excludes them and prevents a light-chosen user on a
+   dark OS from inheriting the dark media query. */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme]) {
     --bg: var(--neutral-900); --surface: var(--neutral-850, #1d1d21);
     --fg: var(--neutral-25); --fg-secondary: var(--neutral-300);
     --fg-tertiary: var(--neutral-500);
@@ -643,6 +656,13 @@ a:hover { opacity: 0.8; }
 .hero-cta-primary:hover { background: var(--brand-600); }
 .hero-cta-secondary { padding: var(--space-12) var(--space-24); background: var(--surface); color: var(--fg); border: 1px solid var(--border-strong); border-radius: var(--radius-s); font-weight: 500; font-size: 1rem; cursor: pointer; transition: background 0.15s; text-decoration: none; }
 .hero-cta-secondary:hover { background: var(--neutral-25); }
+
+/* Rainbow accent (June) — gradient CTA fill matches the admin rainbow buttons. */
+[data-accent-rainbow="true"] .hero-cta-primary,
+[data-accent-rainbow="true"] .nav-cta {
+  background: linear-gradient(90deg, #ef4444, #f59e0b, #22c55e, #3b82f6, #a855f7);
+  text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+}
 
 /* Dashboard Mockup */
 .mockup { margin-top: var(--space-48); width: 100%; max-width: 800px; border: 1px solid var(--border); border-radius: var(--radius-l); overflow: hidden; background: var(--surface); box-shadow: 0 4px 24px rgba(0,0,0,0.06); }

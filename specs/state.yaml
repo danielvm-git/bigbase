@@ -1,9 +1,9 @@
 type: session-state
 context: infra
-active_flow: null
-active_epic_id: e84
-active_story_id: e84s03
-active_story_status: done
+active_flow: build_epic
+active_epic_id: e85
+active_story_id: e85s01
+active_story_status: in_progress
 bug_id: null
 release:
   target_version: 2.81.2
@@ -20,24 +20,24 @@ metrics:
   bcps_per_hour: 0
 epic_cycle:
   step: 8
-  story_bcps: 0
-  story: e70s03-e70s04
+  story_bcps: 8
+  story: e85s01+e85s02
   audit_result: pass
   completed_steps:
-    - "0: threat-model"
-    - "1: survey-context"
-    - "2: plan-work"
-    - "3: kickoff-branch"
-    - "4: develop-tdd"
-    - "5: verify-work"
-    - "6: audit-code"
-    - "7: commit-message"
+    - "0: threat-model (LOW, no HIGH)"
+    - "1-2: survey + plan"
+    - "3: kickoff-branch (feat/e85-unified-theming)"
+    - "4: develop-tdd (GREEN — 5 go tests + 5 e2e tests)"
+    - "5: verify-work (proxy ok, vet clean, lint 0 issues, ui build ok)"
+    - "6: audit-code (PASS)"
+    - "7: commit-message (feat proxy, c7c311278)"
+    - "8: release-branch (PR #234)"
   story_complete: true
-  note: "e70s03 and e70s04 complete. CI parameterized and static-sidecar app type added."
+  note: "e85 complete — landing page theme parity with admin (light/dark + 13 accents). Full auto-run (yolo). PR #234. trace + OKF wiki scripts not vendored (skipped, non-blocking)."
   fast_mode: true
 bug_cycle: null
 git:
-  branch: main
+  branch: feat/e85-unified-theming
   hash: 13dbb0acd
   worktree: null
   ci_status: success
