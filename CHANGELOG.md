@@ -1,3 +1,10 @@
+## [2.86.4](https://github.com/danielvm-git/bigbase/compare/v2.86.3...v2.86.4) (2026-08-11)
+
+
+### Bug Fixes
+
+* **proxy:** landing page contrast — dark nav + on-accent text for light accents ([#236](https://github.com/danielvm-git/bigbase/issues/236)) ([878e5f8](https://github.com/danielvm-git/bigbase/commit/878e5f89b18d8233d57d47a26319b1e57a96a035)), closes [#fff](https://github.com/danielvm-git/bigbase/issues/fff) [#19191c](https://github.com/danielvm-git/bigbase/issues/19191c)
+
 ## [2.86.3](https://github.com/danielvm-git/bigbase/compare/v2.86.2...v2.86.3) (2026-08-11)
 
 
