@@ -2,10 +2,15 @@ import type { ButtonHTMLAttributes, AnchorHTMLAttributes, ReactNode } from 'reac
 
 type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'link' | 'ghost'
 type ButtonSize = 'sm' | 'md' | 'block'
+/** Density opt-out for the 2.5.5 spacing exception (e87s03):
+ * `compact` drops the 44px min-height for row-level text actions
+ * (e.g. table `.actions-cell`). Default keeps ≥44×44 targets. */
+type ButtonDensity = 'default' | 'compact'
 
 interface ButtonBase {
   variant?: ButtonVariant
   size?: ButtonSize
+  density?: ButtonDensity
   children: ReactNode
 }
 
@@ -22,8 +27,8 @@ const variantClass: Record<ButtonVariant, string> = {
 }
 
 export function Button(props: ButtonProps) {
-  const { variant = 'primary', size = 'md', children, className = '' } = props
-  const classes = ['btn', variantClass[variant], size === 'sm' ? 'btn-sm' : '', size === 'block' ? 'btn-block' : '', className]
+  const { variant = 'primary', size = 'md', density = 'default', children, className = '' } = props
+  const classes = ['btn', variantClass[variant], size === 'sm' ? 'btn-sm' : '', size === 'block' ? 'btn-block' : '', density === 'compact' ? 'btn-compact' : '', className]
     .filter(Boolean)
     .join(' ')
 

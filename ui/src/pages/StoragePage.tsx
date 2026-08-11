@@ -121,8 +121,8 @@ export default function StoragePage() {
                   <td><code>{f.mime_type}</code></td>
                   <td>{new Date(f.created_at).toLocaleString()}</td>
                   <td className="actions-cell">
-                    <a href={`/api/storage/files/${f.id}`} className="btn btn-secondary btn-sm" download={f.name} style={{ marginRight: 'var(--space-2)' }}>Download</a>
-                    <Button variant="danger" size="sm" onClick={() => handleDelete(f.id)}>Delete</Button>
+                    <a href={`/api/storage/files/${f.id}`} className="btn btn-secondary btn-sm btn-compact" download={f.name} style={{ marginRight: 'var(--space-2)' }}>Download</a>
+                    <Button variant="danger" size="sm" density="compact" onClick={() => handleDelete(f.id)}>Delete</Button>
                   </td>
                 </tr>
               ))}

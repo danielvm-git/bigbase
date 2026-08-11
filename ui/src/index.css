@@ -78,12 +78,16 @@ body {
 }
 
 /* Button */
+/* e87s03 (WCAG 2.2 AAA 2.5.5): all button targets ≥44×44. Row-level
+   text actions opt out via .btn-compact (documented spacing exception). */
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: var(--space-3);
   padding: var(--space-3) var(--space-6);
+  min-height: 44px;
+  min-width: 44px;
   border: 1px solid transparent;
   border-radius: var(--radius-s);
   font-family: var(--font-sans);
@@ -96,6 +100,21 @@ body {
               opacity var(--duration-fast) var(--ease-standard);
   white-space: nowrap;
   text-decoration: none;
+}
+/* 2.5.5 spacing exception: compact row-level text actions keep density
+   (used via Button density="compact" in table .actions-cell). */
+.btn-compact {
+  min-height: 0;
+}
+
+/* e87s03 (2.5.5): additional standalone controls need ≥44px targets.
+   .segmented-control padding lives in styles/sites.css; min-height here so
+   all target-sizing rules stay in index.css. */
+.segmented-control button {
+  min-height: 44px;
+}
+.dropdown-item {
+  min-height: 44px;
 }
 .btn:focus-visible {
   outline: 2px solid var(--border-focus);
@@ -239,6 +258,17 @@ body {
 }
 .modal-close {
   min-width: auto;
+}
+
+/* e87s03 (2.5.5): icon-only buttons get a 44px-wide hit area.
+   Height comes from .btn min-height: 44px. */
+.modal-close,
+.dialog-close,
+.alert-dismiss {
+  min-width: 44px;
+}
+.copy-button {
+  min-width: 44px;
 }
 
 /* ── Breadcrumb ──────────────────────────────────────────────── */
@@ -573,6 +603,7 @@ select.input {
 }
 .tab {
   padding: var(--space-4) var(--space-8);
+  min-height: 44px; /* e87s03 (2.5.5) */
   background: none;
   border: none;
   cursor: pointer;
@@ -694,6 +725,7 @@ select.input {
   gap: var(--space-2);
   width: 100%;
   padding: var(--space-2) var(--space-3);
+  min-height: 44px; /* e87s03 (2.5.5) */
   background: var(--bg-surface);
   color: var(--fg-primary);
   border: 1px solid var(--border-default);
@@ -741,6 +773,7 @@ select.input {
   gap: var(--space-2);
   width: 100%;
   padding: var(--space-2) var(--space-3);
+  min-height: 44px; /* e87s03 (2.5.5) */
   background: transparent;
   border: none;
   border-radius: var(--radius-xs);
@@ -885,6 +918,9 @@ tr:hover td {
 }
 
 /* Actions Cell */
+/* e87s03 (2.5.5): row-level text actions in .actions-cell qualify for the
+   spacing/inline exception (documented in specs/epics/e87-wcag-aaa/e87s03-spec.md);
+   they use Button density="compact" (.btn-compact) to keep row density. */
 .actions-cell {
   white-space: nowrap;
   display: flex;
@@ -1025,6 +1061,7 @@ tr:hover td {
   align-items: center;
   gap: var(--space-4);
   padding: var(--space-3) var(--space-4);
+  min-height: 44px; /* e87s03 (2.5.5): ≥44px nav targets incl. collapsed icon mode */
   border-radius: var(--radius-s);
   color: var(--fg-secondary);
   text-decoration: none;
@@ -1264,6 +1301,7 @@ tr:hover td {
   gap: var(--space-4);
   width: 100%;
   padding: var(--space-4) var(--space-6);
+  min-height: 44px; /* e87s03 (2.5.5) */
   border: 1px solid var(--border-default);
   border-radius: var(--radius-s);
   background: var(--bg-surface);
@@ -1637,6 +1675,7 @@ tr:hover td {
   width: 100%;
   text-align: left;
   padding: var(--space-3) var(--space-4);
+  min-height: 44px; /* e87s03 (2.5.5) */
   background: none;
   border: none;
   border-radius: var(--radius-s);
@@ -1786,6 +1825,12 @@ tr:hover td {
   line-height: 1;
   flex-shrink: 0;
   margin-left: auto;
+  /* e87s03 (2.5.5): 44×44 hit area for the icon-only close control */
+  min-width: 44px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 .toast-close:hover {
   opacity: 1;
@@ -1863,6 +1908,7 @@ tr:hover td {
   border: 1px solid var(--border-default);
   border-radius: var(--radius-s);
   padding: var(--space-5);
+  min-height: 44px; /* e87s03 (2.5.5) */
   margin-bottom: var(--space-4);
   cursor: pointer;
   font-size: var(--text-s);
@@ -2044,6 +2090,8 @@ tr:hover td {
 }
 
 /* ── Responsive ─────────────────────────────────────────────── */
+/* e87s03 (2.5.5): 44×44 hit area for the mobile sidebar toggle
+   (visible only in the media query below; display stays `none` here). */
 .sidebar-toggle {
   display: none;
   position: fixed;
@@ -2051,6 +2099,10 @@ tr:hover td {
   left: var(--space-4);
   z-index: 100;
   padding: var(--space-3);
+  min-width: 44px;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
   border-radius: var(--radius-s);
   background: var(--bg-surface);
   border: 1px solid var(--border-default);
@@ -2062,8 +2114,10 @@ tr:hover td {
   .sidebar-toggle {
     display: flex;
   }
+  /* e87s03 (2.5.5): 64px − 2×12px padding = 40px nav-link width (<44px).
+     Widening to 72px yields 48px targets for the collapsed icon links. */
   .sidebar {
-    width: 64px;
+    width: 72px;
     padding: var(--space-6);
   }
   .sidebar-logo span,

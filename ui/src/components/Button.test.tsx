@@ -41,6 +41,16 @@ describe('Button', () => {
     expect(btn.className).toContain('btn-block')
   })
 
+  it('applies btn-compact class for density="compact" (2.5.5 exception)', () => {
+    render(<Button size="sm" density="compact">Edit</Button>)
+    expect(screen.getByRole('button').className).toContain('btn-compact')
+  })
+
+  it('defaults to full target size (no btn-compact class)', () => {
+    render(<Button size="sm">Edit</Button>)
+    expect(screen.getByRole('button').className).not.toContain('btn-compact')
+  })
+
   it('renders as anchor when as="a"', () => {
     render(<Button as="a" href="/x">Anchor</Button>)
     const a = screen.getByRole('link', { name: 'Anchor' })

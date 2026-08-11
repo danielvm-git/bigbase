@@ -180,8 +180,8 @@ export default function DataStudioPage() {
                           <td><code>{col.name}</code></td>
                           <td>{col.type}</td>
                           <td className="actions-cell">
-                            <Button variant="ghost" size="sm" onClick={() => openEditColumn(col)}>Edit</Button>
-                            <Button variant="danger" size="sm" onClick={() => deleteColumn(col.name)}>Delete</Button>
+                            <Button variant="ghost" size="sm" density="compact" onClick={() => openEditColumn(col)}>Edit</Button>
+                            <Button variant="danger" size="sm" density="compact" onClick={() => deleteColumn(col.name)}>Delete</Button>
                           </td>
                         </tr>
                       ))}
