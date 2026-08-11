@@ -15,7 +15,10 @@ Two related structural gaps:
 Add `scope="col"` to headers and a `<caption>` per table; add `role="region"` + `aria-label` to scrollable table wrappers; mark decorative glyphs `aria-hidden="true"` and replace symbol-only status cells with visually-hidden "Yes"/"No" text; give emoji-only buttons proper `aria-label`s.
 
 ## Status
-open
+fixed
+
+## Resolution
+StreamLog.tsx portion: timestamp toggle button now has `aria-label="Toggle timestamps"`; copy button emoji (`📋`/`✓`) wrapped in `aria-hidden` spans so the accessible name comes from text.
 
 ## Source
 wcag-2.2-audit-2026-08-11

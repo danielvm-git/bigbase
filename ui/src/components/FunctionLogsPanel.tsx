@@ -63,7 +63,9 @@ export function FunctionLogsPanel({ functionId, showMonitoringLink }: FunctionLo
               {exec.error && <p className="input-error-text">{exec.error}</p>}
               {exec.logs.length > 0 && (
                 <div className="code-output">
-                  <pre>{exec.logs.join('\n')}</pre>
+                  <pre role="log" aria-live="polite" aria-label="Function log" tabIndex={0}>
+                    {exec.logs.join('\n')}
+                  </pre>
                 </div>
               )}
             </div>

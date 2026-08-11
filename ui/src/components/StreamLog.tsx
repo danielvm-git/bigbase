@@ -90,9 +90,10 @@ export function StreamLog({
               className={`stream-log-toolbar-btn ${showTimestampsEffective ? 'stream-log-toolbar-btn--active' : ''}`}
               onClick={() => setTimestamps(t => !t)}
               title="Toggle timestamps"
+              aria-label="Toggle timestamps"
               data-testid="stream-log-timestamp-btn"
             >
-              🕐
+              <span aria-hidden="true">🕐</span>
             </button>
             <Button
               variant="ghost"
@@ -101,12 +102,28 @@ export function StreamLog({
               title="Copy all logs"
               data-testid="stream-log-copy-btn"
             >
-              {copied ? '✓ Copied' : '📋 Copy'}
+              {copied ? (
+                <>
+                  <span aria-hidden="true">✓</span> Copied
+                </>
+              ) : (
+                <>
+                  <span aria-hidden="true">📋</span> Copy
+                </>
+              )}
             </Button>
           </div>
         </div>
       )}
-      <div ref={scrollRef} className="stream-log" data-testid="stream-log" aria-live="polite">
+      <div
+        ref={scrollRef}
+        className="stream-log"
+        data-testid="stream-log"
+        role="log"
+        aria-live="polite"
+        aria-label="Build log"
+        tabIndex={0}
+      >
         {filteredLogs.map((line, i) => {
           const html = ansiToHtml(line)
           return (
