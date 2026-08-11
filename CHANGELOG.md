@@ -1,3 +1,32 @@
+# [2.87.0](https://github.com/danielvm-git/bigbase/compare/v2.86.4...v2.87.0) (2026-08-11)
+
+
+### Bug Fixes
+
+* **ui:** a11y for JsonTree, ThemePicker, Input (T000011/T000013/T000015) ([b48a9e9](https://github.com/danielvm-git/bigbase/commit/b48a9e9efdf6a6eb00fef735b18752a057ba7f70))
+* **ui:** AAA abbreviation expansions + glossary (e87s04) ([4cf60c0](https://github.com/danielvm-git/bigbase/commit/4cf60c0162260bba12b4c7cb271b08857ac7d6f9))
+* **ui:** AAA contrast tokens 7:1 (e87s01) ([314e870](https://github.com/danielvm-git/bigbase/commit/314e870a962a01a694f12b68a7747e244ca51258))
+* **ui:** AAA focus appearance 3:1 (e87s02) ([852d578](https://github.com/danielvm-git/bigbase/commit/852d5789a30bd36718e3ee83acc50de19c78029c))
+* **ui:** AAA help text + error prevention (e87s06) ([ae55271](https://github.com/danielvm-git/bigbase/commit/ae55271ccc35d42c3c9cd1bf907b6fd627c494f2))
+* **ui:** AAA session timeout warning + re-auth (e87s05) ([be5a14e](https://github.com/danielvm-git/bigbase/commit/be5a14e5d0ad29ef9e877d39c955e8a13b797743))
+* **ui:** AAA target size 44px (e87s03) ([0613fd1](https://github.com/danielvm-git/bigbase/commit/0613fd1496ac09565ea6c7ff71efbe6efb88433c))
+* **ui:** AAA text scaling + location indicator (e87s07) ([f80cb44](https://github.com/danielvm-git/bigbase/commit/f80cb4472e6258ee7a0355f6e0b9ded00cf3fac0))
+* **ui:** accessible chart/gauges labels + progressbar roles (T000012) ([0084e23](https://github.com/danielvm-git/bigbase/commit/0084e236186d05c7721f7141c1488b3b5cc0e355))
+* **ui:** accessible log viewers with role=log + keyboard scroll (T000017) ([b4fae49](https://github.com/danielvm-git/bigbase/commit/b4fae4950b1988e9d499c35b5d4c55d9a52b3a5a))
+* **ui:** close remaining sub-7:1 component-state contrast gaps ([b1f0197](https://github.com/danielvm-git/bigbase/commit/b1f0197aa496919f1c55daa433ded029a2a78ab0))
+* **ui:** heading hierarchy + glyph aria-hidden (T000018) ([6541bd2](https://github.com/danielvm-git/bigbase/commit/6541bd284832987cb1b361f461b5ea86abccf31f))
+* **ui:** move fmtCountdown to lib for fast-refresh rule ([4bce972](https://github.com/danielvm-git/bigbase/commit/4bce972d4caf3d73fc2daf4aa78212fe0541893b))
+* **ui:** non-color status cues for Alert/Badge/MetricCard/Onboarding (T000016) ([54abc85](https://github.com/danielvm-git/bigbase/commit/54abc85bbaf720088d05aba09bb7c803a1bc9722))
+* **ui:** route-aware document.title (T000019) ([29f7521](https://github.com/danielvm-git/bigbase/commit/29f752195c62f37f18add79a1d2bac29b370cd6d))
+* **ui:** skip-to-content link + reduced-motion support (T000014/T000020) ([e0c6c36](https://github.com/danielvm-git/bigbase/commit/e0c6c3640a3a2f36d2d88656bbffdaa1e165a439))
+* **ui:** table scope/caption + decorative glyph aria-hidden (T000021) ([23c10a8](https://github.com/danielvm-git/bigbase/commit/23c10a8edc11e8765d5f695aef9e37c7b6e33280))
+* **ui:** ThemePicker open handler syncs activeIndex in event context ([f1b71ce](https://github.com/danielvm-git/bigbase/commit/f1b71ce12988b16c27f31593e0c5e091e0a2c508))
+
+
+### Features
+
+* **epics:** e87 — WCAG 2.2 AAA conformance scope (7 stories, 22 BCPs) ([335d138](https://github.com/danielvm-git/bigbase/commit/335d1386bd8d0953f61c39c6c8927b2fc46e20db))
+
 ## [2.86.4](https://github.com/danielvm-git/bigbase/compare/v2.86.3...v2.86.4) (2026-08-11)
 
 
