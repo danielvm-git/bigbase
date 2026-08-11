@@ -292,7 +292,7 @@ export default function MonitoringPage() {
         <>
           <div className="card" style={{ marginBottom: 'var(--space-8)' }}>
             <form onSubmit={e => { e.preventDefault(); fetchLogs(logQuery) }} className="form-row">
-              <Input placeholder="Search logs..." value={logQuery} onChange={e => setLogQuery(e.target.value)} />
+              <Input aria-label="Search logs" placeholder="Search logs..." value={logQuery} onChange={e => setLogQuery(e.target.value)} />
               <Button type="submit" size="sm">Search</Button>
             </form>
           </div>
@@ -327,10 +327,10 @@ export default function MonitoringPage() {
           {showAlertForm && (
             <div className="card" style={{ marginBottom: 'var(--space-8)' }}>
               <form onSubmit={handleCreateAlert} className="fn-form">
-                <Input placeholder="Name *" value={alertForm.name} onChange={e => setAlertForm(p => ({ ...p, name: e.target.value }))} required />
-                <Input placeholder="Metric *" value={alertForm.metric} onChange={e => setAlertForm(p => ({ ...p, metric: e.target.value }))} required />
-                <Input placeholder="Threshold" type="number" step="0.1" value={alertForm.threshold} onChange={e => setAlertForm(p => ({ ...p, threshold: +e.target.value }))} />
-                <Input as="select" value={alertForm.operator} onChange={e => setAlertForm(p => ({ ...p, operator: e.target.value }))}>
+                <Input label="Name" placeholder="Name *" value={alertForm.name} onChange={e => setAlertForm(p => ({ ...p, name: e.target.value }))} required />
+                <Input label="Metric" placeholder="Metric *" value={alertForm.metric} onChange={e => setAlertForm(p => ({ ...p, metric: e.target.value }))} required />
+                <Input label="Threshold" placeholder="Threshold" type="number" step="0.1" value={alertForm.threshold} onChange={e => setAlertForm(p => ({ ...p, threshold: +e.target.value }))} />
+                <Input as="select" aria-label="Operator" value={alertForm.operator} onChange={e => setAlertForm(p => ({ ...p, operator: e.target.value }))}>
                   <option value="gt">Greater Than</option>
                   <option value="lt">Less Than</option>
                   <option value="eq">Equals</option>

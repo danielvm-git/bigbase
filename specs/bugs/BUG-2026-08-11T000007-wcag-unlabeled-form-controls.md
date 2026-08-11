@@ -28,6 +28,8 @@ Pass `label="..."` (or `aria-label="..."`) to every `<Input>`/`<select>`/`<texta
 ## Status
 open
 
+**Fixed:** 9848ced3f — give every placeholder-only form control an accessible name (labels/aria-labels; htmlFor linkage for site-tab fields)
+
 ## Source
 wcag-2.2-audit-2026-08-11
 

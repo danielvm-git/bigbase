@@ -105,6 +105,7 @@ export default function LoginPage() {
             <form onSubmit={handleForgotSubmit} className="login-form">
               <Input
                 type="email"
+                label="Email"
                 placeholder="Email"
                 value={resetEmail}
                 onChange={e => { setResetEmail(e.target.value); setResetEmailError('') }}
@@ -135,6 +136,7 @@ export default function LoginPage() {
         <form onSubmit={handleSubmit} className="login-form">
           <Input
             type="email"
+            label="Email"
             placeholder="Email"
             value={email}
             onChange={e => { setEmail(e.target.value); setEmailError('') }}
@@ -142,6 +144,7 @@ export default function LoginPage() {
           />
           <Input
             type="password"
+            label="Password"
             placeholder="Password"
             value={password}
             onChange={e => { setPassword(e.target.value); setPasswordError('') }}

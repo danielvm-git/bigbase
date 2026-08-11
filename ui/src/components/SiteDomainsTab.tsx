@@ -110,6 +110,7 @@ function AddDomainForm({
       <div style={{ flex: 1 }}>
         <input
           type="text"
+          aria-label="Domain name"
           placeholder="myapp.com"
           value={domain}
           onChange={e => { setDomain(e.target.value); setValidationError('') }}

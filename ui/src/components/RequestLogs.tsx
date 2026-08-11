@@ -37,12 +37,14 @@ export function RequestLogs({
           type="text"
           placeholder="Filter by path prefix..."
           className="input"
+          aria-label="Filter by path prefix"
           style={{ flex: 1 }}
           value={pathPrefix}
           onChange={(e) => onPathPrefixChange(e.target.value)}
         />
         <select
           className="input"
+          aria-label="Filter by status class"
           style={{ width: '120px' }}
           value={statusClass}
           onChange={(e) => onStatusClassChange(e.target.value)}
