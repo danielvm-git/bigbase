@@ -39,6 +39,7 @@
   --warning-bg: rgba(245, 158, 11, 0.12);
   --warning-fg: rgba(120, 53, 15, 1);   /* AAA >=7:1 on warning-bg */
   --error: rgba(239, 68, 68, 1);        /* Red #EF4444 */
+  --error-strong: rgba(153, 27, 27, 1); /* Red-800 — white text 8.31:1 (AAA 1.4.6) */
   --error-bg: rgba(239, 68, 68, 0.08);
   --error-fg: rgba(120, 20, 20, 1);     /* AAA >=7:1 on error-bg */
   --info: rgba(59, 130, 246, 1);        /* Blue */

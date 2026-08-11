@@ -175,7 +175,7 @@ body {
 }
 
 .btn-danger {
-  background: var(--error);
+  background: var(--error-strong);
   color: #fff;
 }
 .btn-danger:hover:not(:disabled) {
@@ -513,7 +513,7 @@ body {
   color: var(--fg-tertiary);
 }
 .input-error-text {
-  color: var(--error);
+  color: var(--error-fg);
   font-size: var(--text-xs);
 }
 .input-with-prefix {
