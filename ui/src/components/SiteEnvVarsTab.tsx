@@ -147,7 +147,7 @@ function AddEditForm({
   )
 }
 
-export function SiteEnvVarsTab({ siteId }: { siteId: string }) {
+export function SiteEnvVarsTab({ siteId, id }: { siteId: string; id?: string }) {
   const [envVars, setEnvVars] = useState<EnvVar[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -243,6 +243,9 @@ export function SiteEnvVarsTab({ siteId }: { siteId: string }) {
 
   return (
     <div
+      id={id ?? 'panel-env-vars'}
+      role="tabpanel"
+      aria-labelledby="tab-env-vars"
       onDragOver={e => e.preventDefault()}
       onDrop={handleDrop}
     >
