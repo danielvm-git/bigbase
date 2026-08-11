@@ -82,3 +82,15 @@ AAA criteria and the two documented partials honestly.
   `specs/epics/archive/e87-wcag-aaa/epic.yaml`, `specs/epics/e88-aaa-closing/epic.yaml`.
 - axe gate: `tests/e2e/axe-scan.spec.ts` (17 routes, wcag2a+aa+aaa).
 - Contrast matrix: `specs/epics/archive/e87-wcag-aaa/e87s01-contrast-matrix.mjs`.
+
+---
+
+## Certification Record (e88s03)
+
+**Date:** 2026-08-11 · **Version:** 2.87.x (post-e88)
+**Gates:**
+- Contrast matrix: **13/13 accent themes PASS** (light links 7.10–9.93:1 on white; dark links ≥7:1 on neutral-850) — `node specs/epics/e88-aaa-closing/e88s01-contrast-matrix.mjs`
+- axe: **17/17 routes, 0 violations** (wcag2a + wcag2aa + wcag2aaa tags) on rebuilt dist
+- UI suite: **709/709** · build green · lint clean
+
+**Claim (final):** WCAG 2.2 AA certified (axe-verified, 17/17 routes). AAA implemented except the two documented items above — 1.4.8 partial (user-selectable fg/bg + spacing controls; OS/browser settings + density rationale) and 2.2.3 essential/security exception (JWT session expiry, warned via 2.2.6).
