@@ -220,10 +220,10 @@ export default function ForgePage() {
             <div key={col} className="board-col">
               <h3 className="board-col-title">{col.replace('_', ' ')}</h3>
               {(board[col] || []).map(issue => (
-                <div key={issue.id} className="board-card" onClick={() => { setSelectedIssue(issue); setTab('issues'); loadComments(issue.id) }}>
+                <button key={issue.id} type="button" className="board-card btn-reset" onClick={() => { setSelectedIssue(issue); setTab('issues'); loadComments(issue.id) }}>
                   <strong>{issue.title}</strong>
-                  {issue.labels && <div className="board-labels">{issue.labels.split(',').map(l => <span key={l} className="label-badge" style={{ background: labelColor(l.trim()) }}>{l.trim()}</span>)}</div>}
-                </div>
+                  {issue.labels && <span className="board-labels">{issue.labels.split(',').map(l => <span key={l} className="label-badge" style={{ background: labelColor(l.trim()) }}>{l.trim()}</span>)}</span>}
+                </button>
               ))}
             </div>
           ))}

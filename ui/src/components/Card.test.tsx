@@ -1,5 +1,6 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { Card, CardHeader } from './Card'
 
 describe('Card', () => {
@@ -22,6 +23,33 @@ describe('Card', () => {
     const card = container.firstElementChild
     expect(card).toHaveClass('card')
     expect(card).toHaveClass('custom-class')
+  })
+
+  it('renders a real button when onClick is provided', () => {
+    const { container } = render(<Card onClick={() => {}}>x</Card>)
+    const card = container.firstElementChild as HTMLElement
+    expect(card.tagName).toBe('BUTTON')
+    expect(card).toHaveClass('card')
+    expect(card).toHaveAttribute('type', 'button')
+  })
+
+  it('activates onClick with Enter and Space keys (WCAG 2.1.1)', async () => {
+    const onClick = vi.fn()
+    const user = userEvent.setup()
+    render(<Card onClick={onClick}>x</Card>)
+    const card = screen.getByRole('button')
+    card.focus()
+    await user.keyboard('{Enter}')
+    expect(onClick).toHaveBeenCalledTimes(1)
+    await user.keyboard(' ')
+    expect(onClick).toHaveBeenCalledTimes(2)
+  })
+
+  it('calls onClick on click when interactive usage', () => {
+    const onClick = vi.fn()
+    render(<Card interactive onClick={onClick}>x</Card>)
+    screen.getByRole('button').click()
+    expect(onClick).toHaveBeenCalledTimes(1)
   })
 
   it('renders CardHeader with title and optional children', () => {

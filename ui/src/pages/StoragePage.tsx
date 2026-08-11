@@ -103,12 +103,18 @@ export default function StoragePage() {
               {files.map(f => (
                 <tr key={f.id}>
                   <td>
-                    <span
-                      style={{ cursor: f.mime_type.startsWith('image/') ? 'pointer' : 'default', color: f.mime_type.startsWith('image/') ? 'var(--fg-accent)' : 'inherit' }}
-                      onClick={() => f.mime_type.startsWith('image/') && setPreviewFile(f)}
-                    >
-                      {f.name}
-                    </span>
+                    {f.mime_type.startsWith('image/') ? (
+                      <button
+                        type="button"
+                        className="btn-reset"
+                        style={{ cursor: 'pointer', color: 'var(--fg-accent)' }}
+                        onClick={() => setPreviewFile(f)}
+                      >
+                        {f.name}
+                      </button>
+                    ) : (
+                      <span>{f.name}</span>
+                    )}
                   </td>
                   <td>{fmtSize(f.size)}</td>
                   <td><code>{f.mime_type}</code></td>
@@ -128,11 +134,13 @@ export default function StoragePage() {
           {files.map(f => {
             const isImage = f.mime_type.startsWith('image/')
             return (
-              <div
+              <button
                 key={f.id}
-                className="card"
-                style={{ padding: 'var(--space-6)', cursor: isImage ? 'pointer' : 'default', textAlign: 'center' }}
+                type="button"
+                className="card btn-reset"
+                style={{ display: 'block', width: '100%', padding: 'var(--space-6)', cursor: isImage ? 'pointer' : 'default', textAlign: 'center' }}
                 onClick={() => isImage && setPreviewFile(f)}
+                disabled={!isImage}
               >
                 {isImage ? (
                   <img
@@ -147,7 +155,7 @@ export default function StoragePage() {
                 )}
                 <div style={{ fontSize: 'var(--text-xs)', fontWeight: 500, wordBreak: 'break-word' }}>{f.name}</div>
                 <div style={{ fontSize: 'var(--text-xs)', color: 'var(--fg-tertiary)' }}>{fmtSize(f.size)}</div>
-              </div>
+              </button>
             )
           })}
         </div>

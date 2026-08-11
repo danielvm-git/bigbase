@@ -1,4 +1,5 @@
 import { render, screen, fireEvent } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { describe, it, expect, vi } from 'vitest'
 import { DropdownMenu } from './DropdownMenu'
 
@@ -23,6 +24,28 @@ describe('DropdownMenu', () => {
     render(<DropdownMenu trigger={<button>Options</button>} items={items} />)
     fireEvent.click(screen.getByRole('button', { name: 'Options' }))
     expect(screen.getByRole('menu')).toBeInTheDocument()
+  })
+
+  it('makes a non-interactive trigger keyboard-accessible (Enter/Space open menu)', async () => {
+    const user = userEvent.setup()
+    render(<DropdownMenu trigger={<span>Options</span>} items={items} />)
+    const trigger = screen.getByRole('button', { name: 'Options' })
+    expect(trigger.tagName).toBe('SPAN')
+    expect(trigger).toHaveAttribute('tabindex', '0')
+    trigger.focus()
+    await user.keyboard('{Enter}')
+    expect(screen.getByRole('menu')).toBeInTheDocument()
+    fireEvent.keyDown(screen.getByRole('menu'), { key: 'Escape' })
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument()
+    await user.keyboard(' ')
+    expect(screen.getByRole('menu')).toBeInTheDocument()
+  })
+
+  it('does not double up keyboard controls when trigger is already a button', () => {
+    render(<DropdownMenu trigger={<button>Options</button>} items={items} />)
+    const buttons = screen.getAllByRole('button')
+    expect(buttons).toHaveLength(1)
+    expect(buttons[0].tagName).toBe('BUTTON')
   })
 
   it('renders all menu items', () => {

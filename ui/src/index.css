@@ -21,6 +21,23 @@ body {
 
 /* ── Shared Components ─────────────────────────────────────── */
 
+/* Upgrade for click-only div/span elements rendered as real <button>s
+   (WCAG 2.1.1 keyboard access). Defined before component styles so that
+   classes like `.card` / `.board-card` still override background, border,
+   padding, etc. Keeps button font, color, alignment and sizing neutral. */
+.btn-reset {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  text-align: inherit;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
 /* Button */
 .btn {
   display: inline-flex;
@@ -1770,6 +1787,9 @@ tr:hover td {
   margin-bottom: var(--space-4);
 }
 .board-card {
+  display: block;
+  width: 100%;
+  text-align: left;
   background: var(--bg-surface);
   border: 1px solid var(--border-default);
   border-radius: var(--radius-s);
