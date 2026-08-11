@@ -45,6 +45,13 @@ export function AppFooter({ appVersion, showTutorial = false, onOpenTutorial }: 
         >
           Changelog
         </a>
+        <a
+          href="https://github.com/danielvm-git/bigbase/blob/main/specs/tech-architecture/GLOSSARY_LATEST.md"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Glossary
+        </a>
       </div>
     </footer>
   )

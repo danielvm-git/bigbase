@@ -13,6 +13,29 @@ AAA language criteria: 3.1.3 (unusual words have a mechanism for definitions), 3
 
 Jargon inventory (from pages): Dashboard "Goroutines", "Heap MB", "Uptime"; Monitoring "SSE", "avg latency"; MCP "Model Context Protocol"; docs/landing "BaaS"; sites "ACME SSL", "repo". The `Tooltip` component (aria-describedby) is the existing mechanism for definition-on-demand. Reading level 3.1.5: technical UI text is necessarily above lower-secondary — the acceptable mechanism is an expandable glossary (or documenting the exception).
 
+## Canonical expansion inventory (t1)
+
+Recorded 2026-08-11 from `grep -rn 'Goroutines\|MCP\|SSE\|BaaS\|ACME' ui/src/pages ui/src/components` (8 matches, all code identifiers/comments in MonitoringPage) plus a full term sweep of `ui/src/pages/*` and `ui/src/components/*`:
+
+| Term | Expansion | Where it appears as visible text | Mechanism |
+| --- | --- | --- | --- |
+| Goroutines | Concurrent lightweight tasks managed by the Go runtime | MonitoringPage stat label | `<abbr title>` + tooltip definition (Abbr) |
+| Heap MB | Heap memory in megabytes | MonitoringPage stat label | `<abbr title>` |
+| Avg Latency | Average latency | MonitoringPage stat label + requests table header | `<abbr title>` |
+| Uptime | Time elapsed since the server last started | MonitoringPage stat label, SystemStatusPanel sub-line | `<abbr title>` + tooltip definition |
+| CPU | Central processing unit | MonitoringPage host tab, SystemStatusPanel metric label | `<abbr title>` |
+| RAM | Random-access memory | MonitoringPage host tab (BarGauge label prop — outside contract, glossary only) | glossary |
+| process heap | The memory region where the server process makes dynamic allocations | SystemStatusPanel dim label | tooltip definition (Abbr) |
+| SQL | Structured Query Language | DashboardPage jump link "Write a SQL query" | `<abbr title>` |
+| Git Repos | Git repositories | DashboardPage stat card label | `<abbr title>` |
+| SSE | Server-Sent Events | not user-visible (code identifiers/comments only) | glossary |
+| MCP | Model Context Protocol | not user-visible in UI | glossary |
+| BaaS | Backend-as-a-Service | docs/landing only, not UI | glossary |
+| ACME | Automated Certificate Management Environment | sample site data only, not static UI text | glossary |
+| repo | repository | data-driven (site/repo names); DashboardPage "Git Repos" annotated | `<abbr title>` + glossary |
+
+SiteCard contains no literal acronyms (ACME/repo are data values, not static text) — left unannotated; terms covered by glossary.
+
 ## Requirements
 
 #### ADDED: Abbreviations expandable (3.1.4)
