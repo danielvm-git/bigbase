@@ -19,7 +19,7 @@ metrics:
   stories_completed: 202
   bcps_per_hour: 0
 epic_cycle:
-  step: 7
+  step: 8
   story_bcps: 8
   story: e85s01+e85s02
   audit_result: pass
@@ -30,11 +30,14 @@ epic_cycle:
     - "4: develop-tdd (GREEN — 5 go tests + 5 e2e tests)"
     - "5: verify-work (proxy ok, vet clean, lint 0 issues, ui build ok)"
     - "6: audit-code (PASS)"
-  note: "e85 unified theming — landing page parity with admin console. Full auto-run (yolo) mode. Client-side localStorage transport, full parity."
+    - "7: commit-message (feat proxy, c7c311278)"
+    - "8: release-branch (PR #234)"
+  story_complete: true
+  note: "e85 complete — landing page theme parity with admin (light/dark + 13 accents). Full auto-run (yolo). PR #234. trace + OKF wiki scripts not vendored (skipped, non-blocking)."
   fast_mode: true
 bug_cycle: null
 git:
-  branch: main
+  branch: feat/e85-unified-theming
   hash: 13dbb0acd
   worktree: null
   ci_status: success
