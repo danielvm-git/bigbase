@@ -2311,3 +2311,342 @@ bugs:
     validated:
       date: "2026-07-30"
       verdict: CERTIFIED
+  - id: BUG-2026-08-11T000001
+    date: "2026-08-11"
+    severity: high
+    priority: critical
+    scope: ui
+    summary: "WCAG 1.4.3: fg-tertiary/neutral-400 text contrast 2.91:1 fails 4.5:1 AA on all light-mode backgrounds (placeholders, hints, tertiary text, disabled ghost buttons)"
+    file: specs/bugs/BUG-2026-08-11T000001-wcag-contrast-fg-tertiary.md
+    status: open
+    audit_source: wcag-2.2-audit-2026-08-11
+    files_changed:
+      - ui/src/styles/tokens.css
+      - ui/src/styles/theme.css
+      - ui/src/index.css
+    approach: Darken --neutral-400 from rgb(151,151,155) to >= rgb(122,122,127) (~4.5:1) or introduce a compliant --fg-placeholder token and re-point consumers.
+    risk_level: high
+  - id: BUG-2026-08-11T000002
+    date: "2026-08-11"
+    severity: high
+    priority: critical
+    scope: ui
+    summary: "WCAG 4.1.2: Sidebar NavLinks lose accessible name on mobile (<=768px) — label display:none + aria-hidden icon leaves empty link names"
+    file: specs/bugs/BUG-2026-08-11T000002-wcag-sidebar-mobile-nameless-links.md
+    status: open
+    audit_source: wcag-2.2-audit-2026-08-11
+    files_changed:
+      - ui/src/components/Sidebar.tsx
+      - ui/src/index.css
+    approach: Add aria-label={item.label} to each NavLink or use sr-only labels instead of display:none.
+    risk_level: high
+  - id: BUG-2026-08-11T000003
+    date: "2026-08-11"
+    severity: high
+    priority: critical
+    scope: ui
+    summary: "WCAG 2.1.2: SiteDetailPage rollback confirmation is ad-hoc div modal — no role=dialog, no focus trap, no Escape, no focus restore"
+    file: specs/bugs/BUG-2026-08-11T000003-wcag-sitedetail-rollback-modal.md
+    status: open
+    audit_source: wcag-2.2-audit-2026-08-11
+    files_changed:
+      - ui/src/pages/SiteDetailPage.tsx
+    approach: Replace with shared Modal/Dialog component (role=dialog, aria-modal, initial focus, Escape, focus trap).
+    risk_level: high
+  - id: BUG-2026-08-11T000004
+    date: "2026-08-11"
+    severity: high
+    priority: critical
+    scope: ui
+    summary: "WCAG 2.1.2: StoragePage image preview is ad-hoc div overlay — no dialog semantics, no focus management, no Escape"
+    file: specs/bugs/BUG-2026-08-11T000004-wcag-storage-preview-modal.md
+    status: open
+    audit_source: wcag-2.2-audit-2026-08-11
+    files_changed:
+      - ui/src/pages/StoragePage.tsx
+    approach: Render through Modal/Dialog with title={previewFile.name} and proper focus handling.
+    risk_level: high
+  - id: BUG-2026-08-11T000005
+    date: "2026-08-11"
+    severity: high
+    priority: critical
+    scope: ui
+    summary: "WCAG 2.1.2: TutorialOverlay declares role=dialog aria-modal but has no focus trap/move/restore and no Escape handler"
+    file: specs/bugs/BUG-2026-08-11T000005-wcag-tutorial-overlay-focus.md
+    status: open
+    audit_source: wcag-2.2-audit-2026-08-11
+    files_changed:
+      - ui/src/components/TutorialOverlay.tsx
+    approach: Port Modal.tsx focus management (capture trigger, focus dialog on open, trap Tab, restore on unmount, Escape to close).
+    risk_level: high
+  - id: BUG-2026-08-11T000006
+    date: "2026-08-11"
+    severity: high
+    priority: high
+    scope: ui
+    summary: "WCAG 4.1.2/2.1.1: Tabs component missing entire ARIA tablist/tab/tabpanel pattern + arrow-key navigation (affects 6 pages)"
+    file: specs/bugs/BUG-2026-08-11T000006-wcag-tabs-aria-pattern.md
+    status: open
+    audit_source: wcag-2.2-audit-2026-08-11
+    files_changed:
+      - ui/src/components/Tabs.tsx
+      - ui/src/components/SiteDeployKeysTab.tsx
+      - ui/src/components/SiteCacheTab.tsx
+      - ui/src/components/SiteDomainsTab.tsx
+      - ui/src/components/SiteEnvVarsTab.tsx
+      - ui/src/pages/SiteDetailPage.tsx
+    approach: Add role=tablist/tab/tabpanel, aria-selected, aria-controls/aria-labelledby, roving tabindex, Arrow/Home/End keys.
+    risk_level: high
+  - id: BUG-2026-08-11T000007
+    date: "2026-08-11"
+    severity: high
+    priority: high
+    scope: ui
+    summary: "WCAG 3.3.2/4.1.2: Systemic placeholder-only form controls with no accessible name across 15+ files (Login, SqlEditor, Functions, Messaging, Forge, Cici, Monitoring, site tabs, log filters)"
+    file: specs/bugs/BUG-2026-08-11T000007-wcag-unlabeled-form-controls.md
+    status: open
+    audit_source: wcag-2.2-audit-2026-08-11
+    files_changed:
+      - ui/src/pages/LoginPage.tsx
+      - ui/src/pages/SqlEditorPage.tsx
+      - ui/src/pages/DataStudioPage.tsx
+      - ui/src/pages/StoragePage.tsx
+      - ui/src/pages/FunctionsPage.tsx
+      - ui/src/pages/MessagingPage.tsx
+      - ui/src/pages/ForgePage.tsx
+      - ui/src/pages/CiciPage.tsx
+      - ui/src/pages/MonitoringPage.tsx
+      - ui/src/components/StreamLog.tsx
+      - ui/src/components/RequestLogs.tsx
+      - ui/src/components/SiteDeployKeysTab.tsx
+      - ui/src/components/SiteEnvVarsTab.tsx
+      - ui/src/components/SiteDomainsTab.tsx
+    approach: Pass label (or aria-label) to every Input/select/textarea; add sr-only utility class; link existing labels via htmlFor/id.
+    risk_level: high
+  - id: BUG-2026-08-11T000008
+    date: "2026-08-11"
+    severity: high
+    priority: high
+    scope: ui
+    summary: "WCAG 4.1.3: Loading/error/status states not announced across 12 components — no role=status/aria-busy for loaders, no role=alert for errors, no aria-live for SSE updates"
+    file: specs/bugs/BUG-2026-08-11T000008-wcag-live-regions-missing.md
+    status: open
+    audit_source: wcag-2.2-audit-2026-08-11
+    files_changed:
+      - ui/src/components/BuildLogs.tsx
+      - ui/src/components/StreamLog.tsx
+      - ui/src/components/TerminalLogViewer.tsx
+      - ui/src/components/FunctionLogsPanel.tsx
+      - ui/src/components/RequestLogs.tsx
+      - ui/src/components/SiteCacheTab.tsx
+      - ui/src/components/BuildCachePanel.tsx
+      - ui/src/components/ListPage.tsx
+      - ui/src/components/OnboardingChecklist.tsx
+      - ui/src/pages/DashboardPage.tsx
+      - ui/src/pages/EventsPage.tsx
+      - ui/src/pages/MonitoringPage.tsx
+    approach: Wrap loading states in role=status aria-busy; dynamic errors get role=alert; SSE regions get aria-live=polite. Copy Spinner/SkeletonCard patterns.
+    risk_level: high
+  - id: BUG-2026-08-11T000009
+    date: "2026-08-11"
+    severity: high
+    priority: high
+    scope: ui
+    summary: "WCAG 2.1.1: Click-only divs/spans without keyboard access — Card onClick div, ForgePage board cards, StoragePage image triggers, DropdownMenu trigger span"
+    file: specs/bugs/BUG-2026-08-11T000009-wcag-click-only-divs.md
+    status: open
+    audit_source: wcag-2.2-audit-2026-08-11
+    files_changed:
+      - ui/src/components/Card.tsx
+      - ui/src/components/DropdownMenu.tsx
+      - ui/src/pages/ForgePage.tsx
+      - ui/src/pages/StoragePage.tsx
+    approach: Render real button/a elements, or auto-add role=button + tabIndex=0 + onKeyDown (Enter/Space) when interactive.
+    risk_level: high
+  - id: BUG-2026-08-11T000010
+    date: "2026-08-11"
+    severity: high
+    priority: high
+    scope: ui
+    summary: "WCAG 2.1.2/2.4.3: Dialog component missing focus trap, focus restoration, and initial focus (Escape only)"
+    file: specs/bugs/BUG-2026-08-11T000010-wcag-dialog-focus-mgmt.md
+    status: open
+    audit_source: wcag-2.2-audit-2026-08-11
+    files_changed:
+      - ui/src/components/Dialog.tsx
+    approach: Port focus-management effect from Modal.tsx (capture trigger, focus dialog, trap Tab, restore on unmount).
+    risk_level: high
+  - id: BUG-2026-08-11T000011
+    date: "2026-08-11"
+    severity: high
+    priority: high
+    scope: ui
+    summary: "WCAG 4.1.2/2.1.1: JsonTree missing tree roles, aria-expanded, and arrow-key navigation"
+    file: specs/bugs/BUG-2026-08-11T000011-wcag-jsontree-tree-semantics.md
+    status: open
+    audit_source: wcag-2.2-audit-2026-08-11
+    files_changed:
+      - ui/src/components/JsonTree.tsx
+    approach: Add role=tree/treeitem + aria-expanded + aria-level; roving tabindex with arrow keys; data-bearing toggle labels.
+    risk_level: medium
+  - id: BUG-2026-08-11T000012
+    date: "2026-08-11"
+    severity: high
+    priority: high
+    scope: ui
+    summary: "WCAG 1.1.1: Charts/gauges lack data in accessible names — BarGauge no progressbar role, DonutGauge/Sparkline generic aria-labels, SystemStatusPanel bars, RequestChart title-only values"
+    file: specs/bugs/BUG-2026-08-11T000012-wcag-chart-accessible-names.md
+    status: open
+    audit_source: wcag-2.2-audit-2026-08-11
+    files_changed:
+      - ui/src/components/BarGauge.tsx
+      - ui/src/components/DonutGauge.tsx
+      - ui/src/components/Sparkline.tsx
+      - ui/src/components/SystemStatusPanel.tsx
+      - ui/src/components/RequestChart.tsx
+    approach: Compose data-bearing aria-labels; add role=progressbar + aria-valuenow/min/max; replace title-only values.
+    risk_level: medium
+  - id: BUG-2026-08-11T000013
+    date: "2026-08-11"
+    severity: high
+    priority: high
+    scope: ui
+    summary: "WCAG 2.1.1/4.1.2/2.4.3: ThemePicker menu lacks arrow-key navigation, uses aria-current instead of aria-checked, focus not moved into menu on open"
+    file: specs/bugs/BUG-2026-08-11T000013-wcag-themepicker-menu.md
+    status: open
+    audit_source: wcag-2.2-audit-2026-08-11
+    files_changed:
+      - ui/src/components/ThemePicker.tsx
+    approach: Implement roving-tabindex + Arrow/Home/End per ARIA menu pattern, menuitemradio + aria-checked, focus move on open, close on blur.
+    risk_level: medium
+  - id: BUG-2026-08-11T000014
+    date: "2026-08-11"
+    severity: high
+    priority: high
+    scope: ui
+    summary: "WCAG 2.4.1/1.3.1: No skip-to-content link anywhere; main landmark lacks id/tabindex; LoginPage renders with no landmarks"
+    file: specs/bugs/BUG-2026-08-11T000014-wcag-skip-link-landmarks.md
+    status: open
+    audit_source: wcag-2.2-audit-2026-08-11
+    files_changed:
+      - ui/src/components/AppShell.tsx
+      - ui/src/Layout.tsx
+      - ui/src/pages/LoginPage.tsx
+    approach: Add skip-link as first focusable element, main id=main-content + tabIndex=-1, wrap LoginPage in main landmark.
+    risk_level: high
+  - id: BUG-2026-08-11T000015
+    date: "2026-08-11"
+    severity: high
+    priority: high
+    scope: ui
+    summary: "WCAG 3.3.1: Input component errors not associated via aria-describedby, no aria-invalid (Select/Checkbox implement correct pattern)"
+    file: specs/bugs/BUG-2026-08-11T000015-wcag-input-error-association.md
+    status: open
+    audit_source: wcag-2.2-audit-2026-08-11
+    files_changed:
+      - ui/src/components/Input.tsx
+    approach: Give error text stable id, wire aria-describedby + aria-invalid on the field, matching Select.tsx.
+    risk_level: medium
+  - id: BUG-2026-08-11T000016
+    date: "2026-08-11"
+    severity: medium
+    priority: medium
+    scope: ui
+    summary: "WCAG 1.4.1: Meaning conveyed by color alone — Alert/Badge variants, MetricCard trend+value, RequestChart status colors, OnboardingChecklist state"
+    file: specs/bugs/BUG-2026-08-11T000016-wcag-color-only-meaning.md
+    status: open
+    audit_source: wcag-2.2-audit-2026-08-11
+    files_changed:
+      - ui/src/components/Alert.tsx
+      - ui/src/components/Badge.tsx
+      - ui/src/components/MetricCard.tsx
+      - ui/src/components/RequestChart.tsx
+      - ui/src/components/OnboardingChecklist.tsx
+    approach: Add per-variant icons or visually-hidden status words; trend arrows get aria-label; chart legends get category labels.
+    risk_level: medium
+  - id: BUG-2026-08-11T000017
+    date: "2026-08-11"
+    severity: medium
+    priority: medium
+    scope: ui
+    summary: "WCAG 4.1.3/2.1.1: Log viewers (BuildLogs, StreamLog, FunctionLogsPanel) lack role=log/aria-live and are not keyboard-scrollable"
+    file: specs/bugs/BUG-2026-08-11T000017-wcag-log-viewers.md
+    status: open
+    audit_source: wcag-2.2-audit-2026-08-11
+    files_changed:
+      - ui/src/components/BuildLogs.tsx
+      - ui/src/components/StreamLog.tsx
+      - ui/src/components/FunctionLogsPanel.tsx
+    approach: Add role=log aria-live=polite aria-label + tabIndex=0 to log containers.
+    risk_level: medium
+  - id: BUG-2026-08-11T000018
+    date: "2026-08-11"
+    severity: medium
+    priority: medium
+    scope: ui
+    summary: "WCAG 1.3.1/2.4.6: Heading hierarchy — span-as-heading (CardHeader, EmptyState, SiteCard, SystemStatusPanel) and h1→h3 skips (Functions, Forge, Cici)"
+    file: specs/bugs/BUG-2026-08-11T000018-wcag-heading-hierarchy.md
+    status: open
+    audit_source: wcag-2.2-audit-2026-08-11
+    files_changed:
+      - ui/src/components/Card.tsx
+      - ui/src/components/EmptyState.tsx
+      - ui/src/components/SiteCard.tsx
+      - ui/src/components/SystemStatusPanel.tsx
+      - ui/src/pages/FunctionsPage.tsx
+      - ui/src/pages/ForgePage.tsx
+      - ui/src/pages/CiciPage.tsx
+      - ui/src/pages/RealtimePage.tsx
+    approach: Render card/empty titles as headings; never skip levels; always render page h1 before branching.
+    risk_level: medium
+  - id: BUG-2026-08-11T000019
+    date: "2026-08-11"
+    severity: medium
+    priority: medium
+    scope: ui
+    summary: "WCAG 2.4.2: No document.title management on route change — every route announces static 'BigBase Admin' title"
+    file: specs/bugs/BUG-2026-08-11T000019-wcag-page-titles.md
+    status: open
+    audit_source: wcag-2.2-audit-2026-08-11
+    files_changed:
+      - ui/src/pages/*
+      - ui/index.html
+    approach: Add useDocumentTitle(pageName) hook and call from each page.
+    risk_level: low
+  - id: BUG-2026-08-11T000020
+    date: "2026-08-11"
+    severity: medium
+    priority: medium
+    scope: ui
+    summary: "WCAG 2.3.3: No prefers-reduced-motion CSS gating for spin/shimmer/status-pulse/toast-in animations; usePrefersReducedMotion hook exists but is never imported"
+    file: specs/bugs/BUG-2026-08-11T000020-wcag-reduced-motion.md
+    status: open
+    audit_source: wcag-2.2-audit-2026-08-11
+    files_changed:
+      - ui/src/index.css
+      - ui/src/tokens/motion.ts
+    approach: "Add @media (prefers-reduced-motion: reduce) rules disabling/slowing animations; wire the existing hook."
+    risk_level: low
+  - id: BUG-2026-08-11T000021
+    date: "2026-08-11"
+    severity: medium
+    priority: medium
+    scope: ui
+    summary: "WCAG 1.3.1: Tables missing scope/caption (RequestLogs, site tabs, Table.tsx) and decorative glyphs not aria-hidden (RealtimePage, StoragePage, SiteEnvVarsTab ✓/— cells)"
+    file: specs/bugs/BUG-2026-08-11T000021-wcag-tables-and-glyphs.md
+    status: open
+    audit_source: wcag-2.2-audit-2026-08-11
+    files_changed:
+      - ui/src/components/Table.tsx
+      - ui/src/components/RequestLogs.tsx
+      - ui/src/components/SiteDeployKeysTab.tsx
+      - ui/src/components/SiteCacheTab.tsx
+      - ui/src/components/SiteDomainsTab.tsx
+      - ui/src/components/SiteEnvVarsTab.tsx
+      - ui/src/components/EmptyState.tsx
+      - ui/src/components/StreamLog.tsx
+      - ui/src/pages/RealtimePage.tsx
+      - ui/src/pages/StoragePage.tsx
+      - ui/src/pages/SiteDetailPage.tsx
+    approach: Add scope=col + caption to tables, role=region to scroll wrappers, aria-hidden to decorative glyphs, sr-only Yes/No for symbol cells.
+    risk_level: low
