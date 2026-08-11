@@ -106,7 +106,7 @@ export function StreamLog({
           </div>
         </div>
       )}
-      <div ref={scrollRef} className="stream-log" data-testid="stream-log">
+      <div ref={scrollRef} className="stream-log" data-testid="stream-log" aria-live="polite">
         {filteredLogs.map((line, i) => {
           const html = ansiToHtml(line)
           return (

@@ -16,12 +16,12 @@ export function BuildLogs({ lines, loading, error }: BuildLogsProps) {
   }, [lines])
 
   if (loading && lines.length === 0) {
-    return <p className="dim">Loading logs...</p>
+    return <p className="dim" role="status" aria-busy="true">Loading logs...</p>
   }
 
   if (error) {
     return (
-      <div className="card-error" style={{ padding: 'var(--space-4)' }}>
+      <div className="card-error" role="alert" style={{ padding: 'var(--space-4)' }}>
         <p className="input-error-text">{error}</p>
       </div>
     )

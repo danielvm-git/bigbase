@@ -177,21 +177,21 @@ export default function MonitoringPage() {
     { id: 'alerts', label: 'Alerts' },
   ]
 
-  if (loading) return <div className="loading">Loading monitoring...</div>
+  if (loading) return <div className="loading" role="status" aria-busy="true">Loading monitoring...</div>
 
   return (
     <div>
       <PageHeader title="Monitoring">
         <Button variant="secondary" size="sm" onClick={() => { fetchMetrics(); fetchLogs(); fetchAlerts() }}>Refresh</Button>
       </PageHeader>
-      {error && <p className="input-error-text">{error}</p>}
+      {error && <p className="input-error-text" role="alert">{error}</p>}
 
       <Tabs tabs={monitoringTabs} active={tab} onChange={setTab} />
 
       {tab === 'overview' && metrics && (
         <>
           <h2 className="section-title">System</h2>
-          <div className="stats-grid">
+          <div className="stats-grid" aria-live="polite">
             <div className="stat-card"><span className="stat-count">{metrics.system.cpu_percent.toFixed(1)}%</span><span className="stat-label">CPU</span></div>
             <div className="stat-card"><span className="stat-count">{metrics.system.memory_mb.toFixed(1)}</span><span className="stat-label">Heap MB</span></div>
             <div className="stat-card"><span className="stat-count">{metrics.system.goroutines}</span><span className="stat-label">Goroutines</span></div>

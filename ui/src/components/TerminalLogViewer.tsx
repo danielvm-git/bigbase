@@ -11,7 +11,7 @@ export function TerminalLogViewer({ deploymentId }: TerminalLogViewerProps): Rea
 
   if (loading && lines.length === 0) {
     return (
-      <div className="stream-log-container" data-testid="terminal-log-viewer-loading">
+      <div className="stream-log-container" data-testid="terminal-log-viewer-loading" role="status" aria-busy="true">
         <div className="stream-log-toolbar">
           <span className="dim" style={{ padding: 'var(--space-2)' }}>Connecting...</span>
         </div>
@@ -24,7 +24,7 @@ export function TerminalLogViewer({ deploymentId }: TerminalLogViewerProps): Rea
 
   if (error) {
     return (
-      <div className="card-error" style={{ padding: 'var(--space-4)' }} data-testid="terminal-log-viewer-error">
+      <div className="card-error" style={{ padding: 'var(--space-4)' }} data-testid="terminal-log-viewer-error" role="alert">
         <p className="input-error-text">{error}</p>
       </div>
     )
@@ -33,7 +33,7 @@ export function TerminalLogViewer({ deploymentId }: TerminalLogViewerProps): Rea
   return (
     <div data-testid="terminal-log-viewer">
       {isStreaming && (
-        <div className="stream-log-badge" data-testid="terminal-log-viewer-live">
+        <div className="stream-log-badge" data-testid="terminal-log-viewer-live" role="status">
           ● LIVE
         </div>
       )}

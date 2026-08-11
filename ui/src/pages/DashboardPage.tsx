@@ -97,8 +97,8 @@ export default function DashboardPage() {
     statusLabel: activityStatusLabel(d.status),
   }))
 
-  if (loading) return <div className="loading">Loading dashboard...</div>
-  if (!user) return <div className="loading">Loading...</div>
+  if (loading) return <div className="loading" role="status" aria-busy="true">Loading dashboard...</div>
+  if (!user) return <div className="loading" role="status" aria-busy="true">Loading...</div>
 
   const displayName = user.email.split('@')[0]
   const healthOk = health?.status === 'ok'

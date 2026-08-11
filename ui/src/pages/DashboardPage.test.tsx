@@ -140,6 +140,8 @@ describe('DashboardPage', () => {
     mockDashboardAPIsNoUser()
     render(<MemoryRouter><DashboardPage /></MemoryRouter>)
     await waitFor(() => {
+      const status = screen.getByRole('status')
+      expect(status).toHaveAttribute('aria-busy', 'true')
       expect(screen.getByText(/loading/i)).toBeInTheDocument()
     })
   })

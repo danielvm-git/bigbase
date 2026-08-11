@@ -37,13 +37,13 @@ export function OnboardingChecklist() {
   return (
     <Card data-testid="onboarding-checklist">
       <CardHeader title="Get started">
-        <span className="dim" style={{ fontSize: '0.8rem' }}>
+        <span className="dim" style={{ fontSize: '0.8rem' }} aria-live="polite">
           {loading ? '…' : `${doneCount} / ${steps.length}`}
         </span>
       </CardHeader>
 
       {loading ? (
-        <p className="dim">Loading checklist…</p>
+        <p className="dim" role="status" aria-busy="true">Loading checklist…</p>
       ) : (
         <ul className="onboarding-list" role="list">
           {steps.map(step => (

@@ -36,11 +36,11 @@ export function FunctionLogsPanel({ functionId, showMonitoringLink }: FunctionLo
   }, [functionId])
 
   if (error) {
-    return <p className="input-error-text">{error}</p>
+    return <p className="input-error-text" role="alert">{error}</p>
   }
 
   if (!executions) {
-    return <div className="loading">Loading execution logs...</div>
+    return <div className="loading" role="status" aria-busy="true">Loading execution logs...</div>
   }
 
   return (
