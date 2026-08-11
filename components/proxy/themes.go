@@ -80,6 +80,11 @@ s.setProperty('--fg-accent','rgb('+v.b+')');
 s.setProperty('--brand-tint','rgba('+v.b+',0.10)');
 s.setProperty('--focus-ring','0 0 0 3px rgba('+v.b+',0.18)');
 if(v.r){r.setAttribute('data-accent-rainbow','true')}else{r.removeAttribute('data-accent-rainbow')}
-})();</script>`)
+	})();</script>`)
+	// #nosec G203 -- verified false positive: b.String() is built solely from a
+	// hardcoded Go data table (landingAccents) + static literals; no attacker-
+	// controlled input reaches it. Both localStorage reads are enum-validated
+	// before any DOM write, and the script contains no HTML sink. See
+	// specs/security/epics/e85/THREAT_MODEL.md (CWE-79, confidence < 8).
 	return template.HTML(b.String())
 }
