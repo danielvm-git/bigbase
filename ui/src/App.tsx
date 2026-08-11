@@ -1,5 +1,7 @@
 import { Routes, Route, useLocation } from 'react-router-dom'
 import { useDocumentTitle } from './hooks/useDocumentTitle'
+import { AuthProvider } from './context/AuthContext'
+import SessionTimeoutWarning from './components/SessionTimeoutWarning'
 import LoginPage from './pages/LoginPage'
 import DashboardPage from './pages/DashboardPage'
 import DataStudioPage from './pages/DataStudioPage'
@@ -67,7 +69,7 @@ function RouteTitle() {
 
 function App() {
   return (
-    <>
+    <AuthProvider>
       <RouteTitle />
       <Routes>
       <Route element={<Layout />}>
@@ -95,7 +97,8 @@ function App() {
       </Route>
       <Route path="login" element={<LoginPage />} />
     </Routes>
-    </>
+      <SessionTimeoutWarning />
+    </AuthProvider>
   )
 }
 
