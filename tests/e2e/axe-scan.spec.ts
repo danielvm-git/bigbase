@@ -32,6 +32,12 @@ const ROUTES = [
   { path: '/admin/#/realtime', name: 'Realtime' },
   { path: '/admin/#/settings', name: 'Settings' },
   { path: '/admin/#/login', name: 'Login (public)' },
+  // Public (Go-served) pages — guard against the landing/docs style drift
+  // (e89: token values duplicated in proxy.go/themes.go must stay in parity).
+  // Accent-theme coverage is enforced by TestAccentRampParity (Go) + the
+  // e88s01 brandLink contrast matrix, not per-route scans.
+  { path: '/', name: 'Landing (public)' },
+  { path: '/docs', name: 'Docs (public)' },
 ];
 
 test.beforeAll(async ({ request }) => {
