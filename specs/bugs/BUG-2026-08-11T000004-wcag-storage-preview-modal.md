@@ -15,7 +15,10 @@ Image preview (`StoragePage.tsx` ~L170-195, `{previewFile && (<div style={{posit
 Render through `<Modal>`/`<Dialog>` with `title={previewFile.name}` and proper focus handling.
 
 ## Status
-open
+fixed
+
+## Resolution
+Replaced the ad-hoc fixed-position `<div>` overlay in `StoragePage.tsx` with the shared `Modal` component (`ui/src/components/Modal.tsx`), passing `open={!!previewFile}`, `onClose={() => setPreviewFile(null)}`, and `title={previewFile?.name}`. The preview `<img>` is rendered as Modal children with its `alt={previewFile.name}` preserved. The Modal provides `role="dialog"`, `aria-modal="true"`, `aria-labelledby`, focus capture/trap and restore, and Escape-to-close (WCAG 2.1.1/2.1.2/4.1.2). Updated `StoragePage.test.tsx` preview assertions to target the dialog role/close-button accessible name and added an `aria-modal` regression assertion. Verified: `vitest run src/pages/StoragePage.test.tsx` (13 passed) and `npm run build` green.
 
 ## Source
 wcag-2.2-audit-2026-08-11

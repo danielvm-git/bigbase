@@ -133,8 +133,10 @@ describe('StoragePage', () => {
     fireEvent.click(photoLink)
 
     await waitFor(() => {
-      // Preview modal should show the file name and a Close button
-      expect(screen.getByText('Close')).toBeInTheDocument()
+      // Preview must be a real modal dialog with the file name and a close button
+      const dialog = screen.getByRole('dialog', { name: /photo\.png/ })
+      expect(dialog).toHaveAttribute('aria-modal', 'true')
+      expect(screen.getByRole('button', { name: 'Close dialog' })).toBeInTheDocument()
     })
   })
 
@@ -151,13 +153,13 @@ describe('StoragePage', () => {
     fireEvent.click(photoLink)
 
     await waitFor(() => {
-      expect(screen.getByText('Close')).toBeInTheDocument()
+      expect(screen.getByRole('dialog')).toBeInTheDocument()
     })
 
-    fireEvent.click(screen.getByText('Close'))
+    fireEvent.click(screen.getByRole('button', { name: 'Close dialog' }))
 
     await waitFor(() => {
-      expect(screen.queryByText('Close')).not.toBeInTheDocument()
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
     })
   })
 

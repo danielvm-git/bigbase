@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react'
-import { PageHeader, Button } from '../components'
+import { PageHeader, Button, Modal } from '../components'
 
 interface FileObj {
   id: string
@@ -153,31 +153,19 @@ export default function StoragePage() {
         </div>
       )}
 
-      {previewFile && (
-        <div
-          style={{
-            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-            background: 'var(--overlay-scrim)', display: 'flex', alignItems: 'center',
-            justifyContent: 'center', zIndex: 1000, cursor: 'pointer',
-          }}
-          onClick={() => setPreviewFile(null)}
-        >
-          <div
-            style={{ background: 'var(--bg-surface)', borderRadius: 'var(--radius-m)', padding: 'var(--space-8)', maxWidth: '90vw', maxHeight: '90vh' }}
-            onClick={e => e.stopPropagation()}
-          >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-6)' }}>
-              <span style={{ fontWeight: 600 }}>{previewFile.name}</span>
-              <Button variant="secondary" size="sm" onClick={() => setPreviewFile(null)}>Close</Button>
-            </div>
-            <img
-              src={`/api/storage/files/${previewFile.id}`}
-              alt={previewFile.name}
-              style={{ maxWidth: '100%', maxHeight: '70vh', borderRadius: 'var(--radius-s)' }}
-            />
-          </div>
-        </div>
-      )}
+      <Modal
+        open={!!previewFile}
+        onClose={() => setPreviewFile(null)}
+        title={previewFile?.name ?? 'Image preview'}
+      >
+        {previewFile && (
+          <img
+            src={`/api/storage/files/${previewFile.id}`}
+            alt={previewFile.name}
+            style={{ maxWidth: '100%', maxHeight: '70vh', borderRadius: 'var(--radius-s)' }}
+          />
+        )}
+      </Modal>
     </div>
   )
 }
