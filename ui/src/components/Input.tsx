@@ -31,6 +31,9 @@ type InputProps = InputAsInput | InputAsTextarea | InputAsSelect
 export function Input(props: InputProps) {
   const { label, error, hint, mono = false, className = '', ...rest } = props
   const id = props.id || props.name
+  const errorId = id ? `${id}-error` : undefined
+  const hintId = id ? `${id}-hint` : undefined
+  const describedBy = error ? errorId : hint ? hintId : undefined
   const inputClass =
     `input ${error ? 'input-error ' : ''}${mono ? 'input-mono ' : ''}${className}`.trim()
 
@@ -54,13 +57,31 @@ export function Input(props: InputProps) {
 
   const inputElement =
     props.as === 'textarea' ? (
-      <textarea id={id} className={inputClass} {...(rest as InputAsTextarea)} />
+      <textarea
+        id={id}
+        className={inputClass}
+        aria-invalid={error ? 'true' : undefined}
+        aria-describedby={describedBy}
+        {...(rest as InputAsTextarea)}
+      />
     ) : props.as === 'select' ? (
-      <select id={id} className={inputClass} {...(rest as InputAsSelect)}>
+      <select
+        id={id}
+        className={inputClass}
+        aria-invalid={error ? 'true' : undefined}
+        aria-describedby={describedBy}
+        {...(rest as InputAsSelect)}
+      >
         {(rest as InputAsSelect).children}
       </select>
     ) : (
-      <input id={id} className={inputClass} {...inputAttrs} />
+      <input
+        id={id}
+        className={inputClass}
+        aria-invalid={error ? 'true' : undefined}
+        aria-describedby={describedBy}
+        {...inputAttrs}
+      />
     )
 
   return (
@@ -80,8 +101,16 @@ export function Input(props: InputProps) {
       ) : (
         inputElement
       )}
-      {hint && !error && <span className="input-hint">{hint}</span>}
-      {error && <span className="input-error-text">{error}</span>}
+      {hint && !error && (
+        <span id={hintId} className="input-hint">
+          {hint}
+        </span>
+      )}
+      {error && (
+        <span id={errorId} className="input-error-text" role="alert">
+          {error}
+        </span>
+      )}
     </div>
   )
 }

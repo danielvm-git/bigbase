@@ -15,7 +15,10 @@
 Give the error text a stable `id` (e.g. `${id}-error`), set `aria-describedby={error ? \`${id}-error\` : undefined}` and `aria-invalid={error ? 'true' : undefined}` on the input/textarea/select, matching the Select.tsx pattern.
 
 ## Status
-open
+fixed
+
+## Resolution
+2026-08-11 — `ui/src/components/Input.tsx` now wires error association per the Select.tsx pattern: the error message carries a stable `id` (`${id}-error`, `role="alert"`), the hint carries `${id}-hint`, and the input/textarea/select gets `aria-invalid={error ? 'true' : undefined}` plus `aria-describedby` pointing at the error (or hint) id on all three variants. Tests added in `ui/src/components/Input.test.tsx` covering aria-describedby/aria-invalid on input, textarea, and select variants, hint association, and the no-error case. Targeted vitest: all 3 suites pass (40 tests total); `npm run build` green.
 
 ## Source
 wcag-2.2-audit-2026-08-11

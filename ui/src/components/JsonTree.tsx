@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useId, useState } from 'react'
 
 type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue }
 
@@ -11,6 +11,7 @@ interface JsonNodeProps {
 
 function JsonNode({ data, depth, maxDepth, keyName }: JsonNodeProps) {
   const [open, setOpen] = useState(true)
+  const regionId = useId()
 
   const label = keyName !== undefined ? (
     <><span className="json-tree-key">{keyName}</span><span className="json-tree-colon">: </span></>
@@ -39,13 +40,20 @@ function JsonNode({ data, depth, maxDepth, keyName }: JsonNodeProps) {
 
   const brackets = isArray ? ['[', ']'] : ['{', '}']
   const tooDeep = depth >= maxDepth
+  // Disclosure-pattern accessible name: key (when present) + state + item
+  // count, so screen readers announce which node and how much it contains.
+  const toggleLabel = `${keyName !== undefined ? `${keyName}: ` : ''}${
+    open ? 'collapse' : 'expand'
+  } ${entries.length} items`
 
   return (
     <div className="json-tree-node">
       <button
         type="button"
         className="json-tree-toggle"
-        aria-label={open ? 'collapse' : 'expand'}
+        aria-expanded={open}
+        aria-controls={open ? regionId : undefined}
+        aria-label={toggleLabel}
         onClick={() => setOpen(o => !o)}
       >
         {open ? '▾' : '▸'}
@@ -55,7 +63,7 @@ function JsonNode({ data, depth, maxDepth, keyName }: JsonNodeProps) {
       {(!open || tooDeep) ? (
         <span className="json-tree-collapsed">…</span>
       ) : (
-        <div className="json-tree-children">
+        <div className="json-tree-children" id={regionId}>
           {entries.map(([k, v]) => (
             <JsonNode
               key={k}
