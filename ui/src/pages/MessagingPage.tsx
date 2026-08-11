@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { PageHeader, Button, Input, Tabs, Badge } from '../components'
+import { PageHeader, Button, Input, Tabs, Badge, Dialog } from '../components'
 import { mockTemplates } from '../mocks/templates'
 
 interface Message {
@@ -30,6 +30,7 @@ export default function MessagingPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [sending, setSending] = useState(false)
+  const [confirmSend, setConfirmSend] = useState<Channel | null>(null)
 
   const [emailTo, setEmailTo] = useState('')
   const [emailSubject, setEmailSubject] = useState('')
@@ -56,8 +57,8 @@ export default function MessagingPage() {
 
   const setPageTab = (id: string) => setSearchParams({ tab: id })
 
-  const sendEmail = async (e: React.FormEvent) => {
-    e.preventDefault(); setSending(true); setError('')
+  const sendEmail = async () => {
+    setSending(true); setError('')
     try {
       const res = await fetch('/api/messaging/email', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -71,8 +72,8 @@ export default function MessagingPage() {
     finally { setSending(false) }
   }
 
-  const sendSms = async (e: React.FormEvent) => {
-    e.preventDefault(); setSending(true); setError('')
+  const sendSms = async () => {
+    setSending(true); setError('')
     try {
       const res = await fetch('/api/messaging/sms', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -86,8 +87,8 @@ export default function MessagingPage() {
     finally { setSending(false) }
   }
 
-  const sendPush = async (e: React.FormEvent) => {
-    e.preventDefault(); setSending(true); setError('')
+  const sendPush = async () => {
+    setSending(true); setError('')
     try {
       const res = await fetch('/api/messaging/push', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -99,6 +100,21 @@ export default function MessagingPage() {
       fetchMessages()
     } catch { setError('network error') }
     finally { setSending(false) }
+  }
+
+  // Each form submit opens the confirmation dialog instead of sending
+  // directly; the dialog's confirm button calls the matching send* handler.
+  const requestSend = (channel: Channel) => (e: React.FormEvent) => {
+    e.preventDefault()
+    setConfirmSend(channel)
+  }
+
+  const confirmAndSend = () => {
+    const channel = confirmSend
+    setConfirmSend(null)
+    if (channel === 'email') sendEmail()
+    else if (channel === 'sms') sendSms()
+    else if (channel === 'push') sendPush()
   }
 
   const channelTabs = [
@@ -137,24 +153,24 @@ export default function MessagingPage() {
           <Tabs tabs={channelTabs} active={tab} onChange={id => setTab(id as Channel)} />
           <div className="card" style={{ marginBottom: 'var(--space-12)' }}>
             {tab === 'email' && (
-              <form onSubmit={sendEmail} className="msg-form">
-                <Input label="To" placeholder="To" value={emailTo} onChange={e => setEmailTo(e.target.value)} required />
-                <Input label="Subject" placeholder="Subject" value={emailSubject} onChange={e => setEmailSubject(e.target.value)} />
+              <form onSubmit={requestSend('email')} className="msg-form">
+                <Input label="To" name="emailTo" placeholder="To" hint="Recipient email address, e.g. name@example.com" value={emailTo} onChange={e => setEmailTo(e.target.value)} required />
+                <Input label="Subject" name="emailSubject" placeholder="Subject" value={emailSubject} onChange={e => setEmailSubject(e.target.value)} />
                 <Input as="textarea" aria-label="Body" placeholder="Body" value={emailBody} onChange={e => setEmailBody(e.target.value)} required rows={4} />
                 <Button type="submit" disabled={sending}>{sending ? 'Sending...' : 'Send Email'}</Button>
               </form>
             )}
             {tab === 'sms' && (
-              <form onSubmit={sendSms} className="msg-form">
-                <Input label="To" placeholder="To" value={smsTo} onChange={e => setSmsTo(e.target.value)} required />
+              <form onSubmit={requestSend('sms')} className="msg-form">
+                <Input label="To" name="smsTo" placeholder="To" hint="Recipient phone number in E.164 format, e.g. +15551234567" value={smsTo} onChange={e => setSmsTo(e.target.value)} required />
                 <Input as="textarea" aria-label="Message" placeholder="Message" value={smsMsg} onChange={e => setSmsMsg(e.target.value)} required rows={3} />
                 <Button type="submit" disabled={sending}>{sending ? 'Sending...' : 'Send SMS'}</Button>
               </form>
             )}
             {tab === 'push' && (
-              <form onSubmit={sendPush} className="msg-form">
-                <Input label="Device token" placeholder="Device Token" value={pushToken} onChange={e => setPushToken(e.target.value)} required />
-                <Input label="Title" placeholder="Title" value={pushTitle} onChange={e => setPushTitle(e.target.value)} />
+              <form onSubmit={requestSend('push')} className="msg-form">
+                <Input label="Device token" name="pushToken" placeholder="Device Token" hint="Push token registered by the device (APNs or FCM)" value={pushToken} onChange={e => setPushToken(e.target.value)} required />
+                <Input label="Title" name="pushTitle" placeholder="Title" value={pushTitle} onChange={e => setPushTitle(e.target.value)} />
                 <Input as="textarea" aria-label="Body" placeholder="Body" value={pushBody} onChange={e => setPushBody(e.target.value)} required rows={3} />
                 <Button type="submit" disabled={sending}>{sending ? 'Sending...' : 'Send Push'}</Button>
               </form>
@@ -194,6 +210,37 @@ export default function MessagingPage() {
           )}
         </>
       )}
+
+      <Dialog
+        open={confirmSend !== null}
+        title="Send message"
+        danger
+        confirmLabel="Send"
+        cancelLabel="Cancel"
+        onClose={() => setConfirmSend(null)}
+        onConfirm={confirmAndSend}
+      >
+        {confirmSend === 'email' && (
+          <p>
+            Send an email to <strong>{emailTo}</strong>
+            {emailSubject ? <> with subject “{emailSubject}”</> : null}? It is delivered
+            immediately and cannot be recalled.
+          </p>
+        )}
+        {confirmSend === 'sms' && (
+          <p>
+            Send an SMS to <strong>{smsTo}</strong> with message “{smsMsg}”? It is delivered
+            immediately and cannot be recalled.
+          </p>
+        )}
+        {confirmSend === 'push' && (
+          <p>
+            Send a push notification to device <strong>{pushToken}</strong>
+            {pushTitle ? <> with title “{pushTitle}”</> : null}? It is delivered immediately
+            and cannot be recalled.
+          </p>
+        )}
+      </Dialog>
     </div>
   )
 }

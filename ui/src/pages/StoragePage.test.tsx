@@ -195,10 +195,8 @@ describe('StoragePage', () => {
     })
   })
 
-  it('deletes a file when confirmed', async () => {
+  it('deletes a file after confirming in the dialog', async () => {
     mockFetchOk({ data: mockFiles })
-
-    vi.spyOn(window, 'confirm').mockReturnValueOnce(true)
 
     render(<MemoryRouter><StoragePage /></MemoryRouter>)
 
@@ -216,10 +214,16 @@ describe('StoragePage', () => {
       json: () => Promise.resolve({ data: mockFiles.slice(1) }),
     } as Response)
 
-    // Find and click the delete button for photo.png
+    // Click the delete button for the first file → a danger dialog opens
     const deleteButtons = screen.getAllByText('Delete')
-    // Delete the first file
     fireEvent.click(deleteButtons[0])
+
+    const dialog = await screen.findByRole('dialog', { name: 'Delete file' })
+    expect(dialog).toHaveAttribute('aria-modal', 'true')
+    // The dialog summarises what will happen before anything is deleted
+    expect(screen.getByText(/permanently removes the file and cannot be undone/)).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Delete file' }))
 
     await waitFor(() => {
       // After delete, the file should no longer appear
@@ -229,10 +233,8 @@ describe('StoragePage', () => {
     })
   })
 
-  it('does not delete when confirmation is cancelled', async () => {
+  it('does not delete when the confirmation is cancelled', async () => {
     mockFetchOk({ data: mockFiles })
-
-    vi.spyOn(window, 'confirm').mockReturnValueOnce(false)
 
     render(<MemoryRouter><StoragePage /></MemoryRouter>)
 
@@ -243,10 +245,14 @@ describe('StoragePage', () => {
     const deleteButtons = screen.getAllByText('Delete')
     fireEvent.click(deleteButtons[0])
 
-    // File should still be present
+    await screen.findByRole('dialog', { name: 'Delete file' })
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }))
+
+    // File should still be present and the dialog closed
     await waitFor(() => {
       expect(screen.getByText('photo.png')).toBeInTheDocument()
     })
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 
   it('shows Refresh button', async () => {

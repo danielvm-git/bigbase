@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { PageHeader, Button, Input, PreviewBanner, SitesListSkeleton, BuildCachePanel } from '../components'
+import { PageHeader, Button, Input, PreviewBanner, SitesListSkeleton, BuildCachePanel, Dialog } from '../components'
 import { SiteCard } from '../components/SiteCard'
 import { Icon } from '../components/Icon'
 import { getSites, deleteSite } from '../lib/sitesData'
@@ -17,6 +17,7 @@ export default function DeployPage() {
   const [filter, setFilter] = useState<EnvFilter>('all')
   const [search, setSearch] = useState('')
   const [deletingSiteId, setDeletingSiteId] = useState<string | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<Site | null>(null)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -34,9 +35,7 @@ export default function DeployPage() {
 
   const pq = previewQuerySuffix()
 
-  const handleDeleteSite = async (site: Site) => {
-    const name = site.name || site.full_name || site.id.slice(0, 8)
-    if (!window.confirm(`Delete site "${name}"?\n\nThis will remove all deployments, domains, and logs. This cannot be undone.`)) return
+  const performDeleteSite = async (site: Site) => {
     if (previewMode) {
       setSites(prev => prev.filter(s => s.id !== site.id))
       return
@@ -151,7 +150,7 @@ export default function DeployPage() {
                     onClick={(e: React.MouseEvent) => {
                       e.preventDefault()
                       e.stopPropagation()
-                      handleDeleteSite(s)
+                      setDeleteTarget(s)
                     }}
                   >
                     {deletingSiteId === s.id ? '…' : <Icon name="trash-2" size={14} />}
@@ -164,6 +163,27 @@ export default function DeployPage() {
           <BuildCachePanel />
         </>
       )}
+
+      <Dialog
+        open={!!deleteTarget}
+        title="Delete site"
+        danger
+        confirmLabel="Delete site"
+        cancelLabel="Cancel"
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={() => {
+          const target = deleteTarget
+          setDeleteTarget(null)
+          if (target) performDeleteSite(target)
+        }}
+      >
+        {deleteTarget && (
+          <p>
+            Delete <strong>{deleteTarget.name || deleteTarget.full_name || deleteTarget.id.slice(0, 8)}</strong>?
+            This will remove all deployments, domains, and logs for the site. This cannot be undone.
+          </p>
+        )}
+      </Dialog>
     </div>
   )
 }

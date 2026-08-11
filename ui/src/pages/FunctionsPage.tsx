@@ -122,19 +122,76 @@ export default function FunctionsPage() {
             {editing ? 'Edit Function' : 'New Function'}
           </h2>
           <form onSubmit={handleSave} className="fn-form">
-            <Input label="Name" placeholder="Name *" value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} required />
-            <Input as="select" aria-label="Runtime" value={form.runtime} onChange={e => setForm(p => ({ ...p, runtime: e.target.value }))}>
+            <Input
+              label="Name"
+              name="fn-name"
+              placeholder="Name *"
+              hint="Unique name for this function; shown in the Functions list."
+              value={form.name}
+              onChange={e => setForm(p => ({ ...p, name: e.target.value }))}
+              required
+            />
+            <Input
+              as="select"
+              name="runtime"
+              aria-label="Runtime"
+              hint="Runtime for the function. JavaScript is the only supported runtime."
+              value={form.runtime}
+              onChange={e => setForm(p => ({ ...p, runtime: e.target.value }))}
+            >
               <option value="javascript">JavaScript</option>
             </Input>
-            <Input as="select" aria-label="Trigger" value={form.trigger} onChange={e => setForm(p => ({ ...p, trigger: e.target.value }))}>
+            <Input
+              as="select"
+              name="trigger"
+              aria-label="Trigger"
+              hint="How the function is invoked: HTTP endpoint, schedule (cron), or event."
+              value={form.trigger}
+              onChange={e => setForm(p => ({ ...p, trigger: e.target.value }))}
+            >
               <option value="http">HTTP</option>
               <option value="schedule">Schedule</option>
               <option value="event">Event</option>
             </Input>
-            {form.trigger === 'schedule' && <Input label="Cron schedule" placeholder="Cron schedule" value={form.schedule} onChange={e => setForm(p => ({ ...p, schedule: e.target.value }))} />}
-            <Input label="Env JSON" placeholder='Env JSON ({"KEY":"val"})' value={form.env} onChange={e => setForm(p => ({ ...p, env: e.target.value }))} />
-            <Input label="Timeout (seconds)" placeholder="Timeout (seconds)" type="number" value={form.timeout} onChange={e => setForm(p => ({ ...p, timeout: +e.target.value }))} />
-            <Input as="textarea" aria-label="Source code" placeholder="Source code *" value={form.source} onChange={e => setForm(p => ({ ...p, source: e.target.value }))} required rows={8} className="code-textarea" />
+            {form.trigger === 'schedule' && (
+              <Input
+                label="Cron schedule"
+                name="cron-schedule"
+                placeholder="Cron schedule"
+                hint="Cron expression in UTC, e.g. */5 * * * *."
+                value={form.schedule}
+                onChange={e => setForm(p => ({ ...p, schedule: e.target.value }))}
+              />
+            )}
+            <Input
+              label="Env JSON"
+              name="env-json"
+              placeholder='Env JSON ({"KEY":"val"})'
+              hint='Environment variables as a JSON object, e.g. {"KEY":"value"}.'
+              value={form.env}
+              onChange={e => setForm(p => ({ ...p, env: e.target.value }))}
+            />
+            <Input
+              label="Timeout (seconds)"
+              name="fn-timeout"
+              placeholder="Timeout (seconds)"
+              type="number"
+              hint="Maximum execution time in seconds before the function is stopped."
+              value={form.timeout}
+              onChange={e => setForm(p => ({ ...p, timeout: +e.target.value }))}
+            />
+            <Input
+              as="textarea"
+              aria-label="Source code"
+              name="fn-source"
+              placeholder="Source code *"
+              hint="The function handler; must export a default function."
+              value={form.source}
+              onChange={e => setForm(p => ({ ...p, source: e.target.value }))}
+              required
+              rows={8}
+              className="code-textarea"
+            />
             <div className="form-actions">
               <Button type="submit">{editing ? 'Update' : 'Create'}</Button>
               <Button type="button" variant="secondary" onClick={() => setShowForm(false)}>Cancel</Button>

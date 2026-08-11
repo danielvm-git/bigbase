@@ -69,17 +69,17 @@ describe('CreateSitePage layout', () => {
     expect(container.querySelectorAll('.repo-picker-item').length).toBe(2)
   })
 
-  it('uses a 3-step wizard rail', async () => {
+  it('uses a 4-step wizard rail with a review step', async () => {
     renderPage()
     await waitFor(() => {
       expect(screen.getByText('Source')).toBeInTheDocument()
     })
     expect(screen.getByText('Configure')).toBeInTheDocument()
+    expect(screen.getByText('Review')).toBeInTheDocument()
     expect(screen.getByText('Deploy')).toBeInTheDocument()
-    expect(screen.queryByText('Review')).not.toBeInTheDocument()
   })
 
-  it('does not render pre-fix copy or 4-step review wizard', async () => {
+  it('does not render pre-fix copy', async () => {
     renderPage()
     await waitFor(() => {
       expect(screen.getByText("Where's your code?")).toBeInTheDocument()
@@ -97,7 +97,7 @@ describe('CreateSitePage layout', () => {
     const steps = container.querySelector('.wizard-steps')
     expect(steps).toBeTruthy()
     expect(getComputedStyle(steps!).display).toBe('flex')
-    expect(container.querySelectorAll('.wizard-step-label').length).toBe(3)
+    expect(container.querySelectorAll('.wizard-step-label').length).toBe(4)
   })
 })
 
@@ -162,6 +162,15 @@ describe('CreateSitePage deploy step', () => {
     })
     const nameInput = document.querySelector('.input-group input.input') as HTMLInputElement
     fireEvent.change(nameInput, { target: { value: 'my-app' } })
+    fireEvent.click(screen.getByRole('button', { name: /Continue →/i }))
+
+    // Review step summarises the config before the final deploy
+    await waitFor(() => {
+      expect(screen.getByText('Review your site')).toBeInTheDocument()
+    })
+    expect(screen.getByText('my-app')).toBeInTheDocument()
+    expect(screen.getByText('acme/app')).toBeInTheDocument()
+
     fireEvent.click(screen.getByRole('button', { name: 'Deploy' }))
 
     await waitFor(() => {
@@ -173,6 +182,32 @@ describe('CreateSitePage deploy step', () => {
       expect(screen.getByText('→ Cloning repository')).toBeInTheDocument()
     })
     expect(screen.getByText('Live')).toBeInTheDocument()
+  })
+
+  it('shows a review step with the site config summary before deploying', async () => {
+    renderPage()
+    await waitFor(() => {
+      expect(screen.getByText('acme/app')).toBeInTheDocument()
+    })
+
+    fireEvent.click(screen.getByText('acme/app').closest('button')!)
+    fireEvent.click(screen.getByRole('button', { name: /Continue →/i }))
+
+    await waitFor(() => {
+      expect(screen.getByText('Configure your site')).toBeInTheDocument()
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: /Continue →/i }))
+
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: 'Review your site' })).toBeInTheDocument()
+    })
+    // Summary lists the resolved config values before the final deploy
+    expect(screen.getByText('app')).toBeInTheDocument()
+    expect(screen.getByText('main')).toBeInTheDocument()
+    expect(screen.getByText('acme/app')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Deploy' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /← Back/i })).toBeInTheDocument()
   })
 })
 
