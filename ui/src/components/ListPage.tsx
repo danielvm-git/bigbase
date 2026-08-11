@@ -37,7 +37,7 @@ export function ListPage({
       {filters && <div className="list-page-filters">{filters}</div>}
       <div className="list-page-content">
         {loading && (loadingMessage
-          ? <div className="loading">{loadingMessage}</div>
+          ? <div className="loading" role="status" aria-busy="true">{loadingMessage}</div>
           : <Spinner aria-label="Loading" />
         )}
         {!loading && error && <div role="alert" className="error-banner">{error}</div>}

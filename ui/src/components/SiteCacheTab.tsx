@@ -32,7 +32,7 @@ export function SiteCacheTab({ siteId }: { siteId: string }) {
     void load()
   }
 
-  if (loading) return <p className="dim">Loading…</p>
+  if (loading) return <p className="dim" role="status" aria-busy="true">Loading…</p>
 
   const entries = status?.entries ?? []
 
@@ -47,7 +47,7 @@ export function SiteCacheTab({ siteId }: { siteId: string }) {
         )}
       </div>
 
-      {error && <p className="input-error-text" style={{ marginBottom: 'var(--space-3)' }}>{error}</p>}
+      {error && <p className="input-error-text" role="alert" style={{ marginBottom: 'var(--space-3)' }}>{error}</p>}
 
       {entries.length === 0 ? (
         <Card style={{ padding: 'var(--space-6)', textAlign: 'center' }}>

@@ -49,12 +49,12 @@ export default function EventsPage() {
         title="Event Bus"
         subtitle="Live stream of internal event bus emissions."
       >
-        <span className={`badge badge-${connected ? 'success' : 'warning'}`}>
+        <span role="status" className={`badge badge-${connected ? 'success' : 'warning'}`}>
           {connected ? 'Connected' : 'Connecting…'}
         </span>
       </PageHeader>
 
-      <div ref={listRef} className="events-log" data-testid="events-log">
+      <div ref={listRef} className="events-log" data-testid="events-log" aria-live="polite">
         {events.length === 0 ? (
           <p className="dim events-empty">Waiting for events…</p>
         ) : (

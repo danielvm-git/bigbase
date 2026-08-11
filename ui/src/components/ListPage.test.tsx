@@ -18,6 +18,13 @@ describe('ListPage', () => {
     expect(screen.getByRole('status')).toBeInTheDocument()
   })
 
+  it('renders loading state with custom message as an announced status', () => {
+    render(<ListPage title="Users" loading loadingMessage="Crunching numbers..."><p>ignored</p></ListPage>)
+    const status = screen.getByRole('status')
+    expect(status).toHaveAttribute('aria-busy', 'true')
+    expect(screen.getByText('Crunching numbers...')).toBeInTheDocument()
+  })
+
   it('renders error state', () => {
     render(<ListPage title="Users" error="Failed to load"><p>ignored</p></ListPage>)
     expect(screen.getByRole('alert')).toBeInTheDocument()

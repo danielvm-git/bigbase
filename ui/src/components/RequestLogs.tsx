@@ -24,7 +24,7 @@ export function RequestLogs({
 }: RequestLogsProps) {
   if (error) {
     return (
-      <div className="card-error" style={{ padding: 'var(--space-4)' }}>
+      <div className="card-error" role="alert" style={{ padding: 'var(--space-4)' }}>
         <p className="input-error-text">{error}</p>
       </div>
     )
@@ -69,6 +69,13 @@ export function RequestLogs({
             </tr>
           </thead>
           <tbody>
+            {logs.length === 0 && loading && (
+              <tr>
+                <td colSpan={5} className="dim" style={{ textAlign: 'center', padding: 'var(--space-8)' }} role="status" aria-busy="true">
+                  Loading request logs…
+                </td>
+              </tr>
+            )}
             {logs.length === 0 && !loading && (
               <tr>
                 <td colSpan={5} className="dim" style={{ textAlign: 'center', padding: 'var(--space-8)' }}>
