@@ -1,3 +1,10 @@
+## [2.86.1](https://github.com/danielvm-git/bigbase/compare/v2.86.0...v2.86.1) (2026-08-11)
+
+
+### Bug Fixes
+
+* **ui:** theme picker popover opens upward — no longer clipped off-screen ([#235](https://github.com/danielvm-git/bigbase/issues/235)) ([44172fc](https://github.com/danielvm-git/bigbase/commit/44172fced01463dc9891f5e90d083f371873372a))
+
 # [2.86.0](https://github.com/danielvm-git/bigbase/compare/v2.85.2...v2.86.0) (2026-08-11)
 
 
