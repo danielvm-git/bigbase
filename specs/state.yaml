@@ -6,12 +6,12 @@ active_story_id: null
 active_story_status: null
 bug_id: null
 release:
-  target_version: 2.86.0
-  codename: "Unified Theming — Landing Page Parity with Admin Console"
-  last_tag: v2.86.4
+  target_version: 2.87.0
+  codename: "WCAG 2.2 AAA Conformance — Enhanced Accessibility"
+  last_tag: v2.87.0
   last_publish: '2026-08-11'
   ci_verified: true
-  ci_verified_at: '2026-08-11T14:07:00Z'
+  ci_verified_at: '2026-08-11T20:05:03Z'
   release_skipped: "no new release: pushed diff is chore/docs only (dependabot bumps, WCAG registry, e86 epic specs); semantic-release correctly skipped (default rules require feat/fix/perf)"
 metrics:
   session_start: '2026-07-12T16:00:00-03:00'
