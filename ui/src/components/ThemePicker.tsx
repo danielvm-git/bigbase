@@ -27,11 +27,12 @@ export function ThemePicker({ value, onChange, label = 'Accent theme' }: ThemePi
   }
 
   // Move focus into the menu, landing on the currently selected item,
-  // whenever the menu opens.
+  // whenever the menu opens. Imperative only — activeIndex is synced in
+  // the trigger's onClick (user event context) to satisfy the
+  // react-hooks/set-state-in-effect rule.
   useEffect(() => {
     if (!open) return
     const idx = Math.max(0, ACCENT_THEMES.findIndex(t => t.id === value))
-    setActiveIndex(idx)
     itemRefs.current[idx]?.focus()
   }, [open, value])
 
@@ -115,7 +116,13 @@ export function ThemePicker({ value, onChange, label = 'Accent theme' }: ThemePi
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label={label}
-        onClick={() => setOpen(o => !o)}
+        onClick={() => {
+          if (!open) {
+            const idx = Math.max(0, ACCENT_THEMES.findIndex(t => t.id === value))
+            setActiveIndex(idx)
+          }
+          setOpen(o => !o)
+        }}
       >
         <span className="theme-dot" style={dotStyle(current.brand500)} />
         <span className="theme-trigger-label">{current.label}</span>
