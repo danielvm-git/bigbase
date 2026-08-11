@@ -746,8 +746,8 @@ epics:
   wsjf: 5.0
   mode: capsule
   tier: 2
-  status: open
+  status: done
   depends_on: [e87]
-  note: "3 stories, 8 BCPs. Closes the last two AAA partials: per-theme brandLink >=7:1 for all 13 accent themes (1.4.6), formal CONFORMANCE.md exceptions (1.4.8 partial + 2.2.3 security), re-certification (14/14 matrix + axe 17/17). WSJF 5.0 = (4+2+4)/2."
-  capsule_dir: epics/e88-aaa-closing
-  file: epics/e88-aaa-closing/epic.yaml
+  note: "3 stories, 8 BCPs. SHIPPED 2026-08-11. Per-theme brandLink >=7:1 for all 13 accent themes (7.10-9.93:1), CONFORMANCE.md formal exceptions (1.4.8 partial + 2.2.3 security), re-certified: matrix 13/13 PASS, axe 17/17 zero violations, UI 709/709. Final claim: AA certified; AAA except documented partials. Archived to epics/archive/."
+  capsule_dir: epics/archive/e88-aaa-closing
+  file: epics/archive/e88-aaa-closing/epic.yaml
