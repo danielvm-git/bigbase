@@ -117,6 +117,16 @@ test.describe('e85 — cross-surface theme parity', () => {
 
     // Pick the March (purple) accent via the ThemePicker popover.
     await page.getByRole('button', { name: /Accent theme/i }).click();
+
+    // Regression guard: the popover must open fully within the viewport.
+    // It previously opened below the trigger (top: calc(100%+4px)) and was
+    // clipped off the bottom edge of the screen, making accents unselectable.
+    const menuBox = await page.locator('.theme-menu').boundingBox();
+    const viewport = page.viewportSize();
+    expect(menuBox).not.toBeNull();
+    expect(menuBox!.y).toBeGreaterThanOrEqual(0);
+    expect(menuBox!.y + menuBox!.height).toBeLessThanOrEqual(viewport!.height);
+
     await page.getByRole('menuitem', { name: /March/i }).click();
 
     // The admin ThemeProvider must have persisted both keys.
