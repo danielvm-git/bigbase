@@ -49,6 +49,17 @@ describe('SiteCacheTab', () => {
     expect(screen.getAllByText('7').length).toBeGreaterThanOrEqual(1)
   })
 
+  it('labels the table with a caption and scopes column headers', async () => {
+    getSiteCache.mockResolvedValue(populated)
+    render(<SiteCacheTab siteId="s1" />)
+    await waitFor(() => {
+      expect(screen.getByRole('table', { name: 'Build cache' })).toBeInTheDocument()
+    })
+    for (const name of ['Key', 'Branch', 'Size', 'Hits', 'Created']) {
+      expect(screen.getByRole('columnheader', { name })).toHaveAttribute('scope', 'col')
+    }
+  })
+
   it('clears the cache after confirmation and reloads', async () => {
     getSiteCache.mockResolvedValueOnce(populated).mockResolvedValueOnce(emptyOk)
     clearSiteCache.mockResolvedValue({ ok: true })

@@ -310,13 +310,14 @@ export function SiteDeployKeysTab({ siteId, id }: { siteId: string; id?: string 
       ) : (
         <div className="table-wrap">
           <table>
+            <caption className="visually-hidden">Deploy keys</caption>
             <thead>
               <tr>
-                <th>Name</th>
-                <th>Key</th>
-                <th>Last Used</th>
-                <th>Created</th>
-                <th>Actions</th>
+                <th scope="col">Name</th>
+                <th scope="col">Key</th>
+                <th scope="col">Last Used</th>
+                <th scope="col">Created</th>
+                <th scope="col">Actions</th>
               </tr>
             </thead>
             <tbody>

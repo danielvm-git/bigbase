@@ -88,6 +88,38 @@ describe('StoragePage', () => {
     expect(listButton.className).toContain('secondary')
   })
 
+  it('labels the files table with a caption and scopes column headers', async () => {
+    mockFetchOk({ data: mockFiles })
+
+    render(<MemoryRouter><StoragePage /></MemoryRouter>)
+
+    await waitFor(() => {
+      expect(screen.getByRole('table', { name: 'Stored files' })).toBeInTheDocument()
+    })
+    for (const name of ['Name', 'Size', 'Type', 'Uploaded', 'Actions']) {
+      expect(screen.getByRole('columnheader', { name })).toHaveAttribute('scope', 'col')
+    }
+  })
+
+  it('hides decorative file emoji from assistive technology in grid view', async () => {
+    mockFetchOk({ data: mockFiles })
+
+    render(<MemoryRouter><StoragePage /></MemoryRouter>)
+
+    await waitFor(() => {
+      expect(screen.getByText('photo.png')).toBeInTheDocument()
+    })
+
+    fireEvent.click(screen.getByText('Grid'))
+
+    // doc.pdf and readme.md are non-images → 📄 placeholder; the file name below
+    // carries the real label, so the glyph is decorative.
+    await waitFor(() => {
+      expect(screen.getAllByText('📄').length).toBe(2)
+    })
+    expect(screen.getAllByText('📄').every(el => el.getAttribute('aria-hidden') === 'true')).toBe(true)
+  })
+
   it('shows error message on fetch failure', async () => {
     vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('Network error'))
 

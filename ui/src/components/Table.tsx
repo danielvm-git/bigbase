@@ -2,6 +2,8 @@ import type { HTMLAttributes, ThHTMLAttributes, TdHTMLAttributes, ReactNode } fr
 
 interface TableProps extends HTMLAttributes<HTMLTableElement> {
   children: ReactNode
+  /** Accessible name for the table, rendered as a visually-hidden <caption>. */
+  caption?: string
 }
 
 interface TableSectionProps extends HTMLAttributes<HTMLTableSectionElement> {
@@ -18,10 +20,16 @@ interface TableCellProps extends TdHTMLAttributes<HTMLTableCellElement> {
   scope?: ThHTMLAttributes<HTMLTableCellElement>['scope']
 }
 
-export function Table({ children, className = '', ...rest }: TableProps) {
+export function Table({ children, className = '', caption, ...rest }: TableProps) {
+  // The wrapper scrolls horizontally on small screens; expose it as a labelled
+  // region so the scrollable area is announced (WCAG 1.4.10 Reflow).
+  const regionProps = caption
+    ? { role: 'region' as const, 'aria-label': caption }
+    : {}
   return (
-    <div className="table-wrapper">
+    <div className="table-wrapper" {...regionProps}>
       <table className={`table ${className}`.trim()} {...rest}>
+        {caption && <caption className="visually-hidden">{caption}</caption>}
         {children}
       </table>
     </div>

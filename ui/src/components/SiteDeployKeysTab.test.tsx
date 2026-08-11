@@ -54,6 +54,28 @@ describe('SiteDeployKeysTab', () => {
     expect(screen.getAllByRole('button', { name: 'Revoke' }).length).toBe(2)
   })
 
+  it('labels the table with a caption and scopes column headers', async () => {
+    const keys = [
+      {
+        key_id: 'key-1',
+        name: 'ci-key',
+        prefix: 'bb_dep_abc',
+        last_used_at: '2026-06-15T10:00:00Z',
+        created_at: '2026-01-10T08:00:00Z',
+      },
+    ]
+    getDeployKeys.mockResolvedValue(keys)
+
+    render(<SiteDeployKeysTab siteId="s1" />)
+
+    await waitFor(() => {
+      expect(screen.getByRole('table', { name: 'Deploy keys' })).toBeInTheDocument()
+    })
+    for (const name of ['Name', 'Key', 'Last Used', 'Created', 'Actions']) {
+      expect(screen.getByRole('columnheader', { name })).toHaveAttribute('scope', 'col')
+    }
+  })
+
   // ── 1b. Copy button copies the displayed prefix, not the internal key_id ──
 
   it('copies the displayed key prefix, not the internal key_id, when the copy button is clicked', async () => {

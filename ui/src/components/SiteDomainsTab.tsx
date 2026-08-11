@@ -218,13 +218,14 @@ export function SiteDomainsTab({ siteId, id }: { siteId: string; id?: string }) 
       ) : (
         <div className="table-wrap">
           <table>
+            <caption className="visually-hidden">Custom domains</caption>
             <thead>
               <tr>
-                <th>Domain</th>
-                <th>Verification</th>
-                <th>SSL</th>
-                <th>Added</th>
-                <th>Actions</th>
+                <th scope="col">Domain</th>
+                <th scope="col">Verification</th>
+                <th scope="col">SSL</th>
+                <th scope="col">Added</th>
+                <th scope="col">Actions</th>
               </tr>
             </thead>
             <tbody>

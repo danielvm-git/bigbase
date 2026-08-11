@@ -112,6 +112,45 @@ describe('SiteDetailPage', () => {
     })
   })
 
+  it('labels the deployment table and scopes its column headers', async () => {
+    renderPage()
+    await waitFor(() => {
+      expect(screen.getByRole('table', { name: 'Deployment history' })).toBeInTheDocument()
+    })
+    for (const name of ['Status', 'Branch', 'Commit', 'URL', 'Created', 'Actions']) {
+      expect(screen.getByRole('columnheader', { name })).toHaveAttribute('scope', 'col')
+    }
+  })
+
+  it('labels the rollback history table when rollback events exist', async () => {
+    getRollbackEventsMock.mockResolvedValue({
+      ok: true,
+      events: [
+        { id: 'rb-1', site_id: 'site-1', rolled_back_from: 'd-prev', rolled_back_to: 'd1', created_at: '2026-06-26T20:00:00Z' },
+      ],
+    })
+    renderPage()
+    await waitFor(() => {
+      expect(screen.getByRole('table', { name: 'Rollback history' })).toBeInTheDocument()
+    })
+    for (const name of ['Timestamp', 'Rolled Back From', 'Rolled Back To', 'Details']) {
+      expect(screen.getByRole('columnheader', { name })).toHaveAttribute('scope', 'col')
+    }
+  })
+
+  it('hides decorative status timeline dots and connectors from assistive technology', async () => {
+    const { container } = renderPage()
+    // The status text itself is announced; the dots/connectors/live glyph are decorative.
+    await waitFor(() => {
+      expect(screen.getByText('Live')).toBeInTheDocument()
+    })
+    const dots = container.querySelectorAll('.status-dot-live, .status-dot-spin, .status-dot-pulse, .status-dot-failed')
+    expect(dots.length).toBeGreaterThan(0)
+    for (const dot of dots) {
+      expect(dot.getAttribute('aria-hidden')).toBe('true')
+    }
+  })
+
   it('shows back link', async () => {
     renderPage()
     await waitFor(() => {

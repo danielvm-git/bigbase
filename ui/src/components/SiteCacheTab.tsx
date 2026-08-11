@@ -74,13 +74,14 @@ export function SiteCacheTab({ siteId, id }: { siteId: string; id?: string }) {
 
           <div className="table-wrap">
             <table>
+              <caption className="visually-hidden">Build cache</caption>
               <thead>
                 <tr>
-                  <th>Key</th>
-                  <th>Branch</th>
-                  <th>Size</th>
-                  <th style={{ textAlign: 'center' }}>Hits</th>
-                  <th>Created</th>
+                  <th scope="col">Key</th>
+                  <th scope="col">Branch</th>
+                  <th scope="col">Size</th>
+                  <th scope="col" style={{ textAlign: 'center' }}>Hits</th>
+                  <th scope="col">Created</th>
                 </tr>
               </thead>
               <tbody>
