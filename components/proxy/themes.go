@@ -79,6 +79,10 @@ s.setProperty('--bg-accent-active','rgb('+v.d+')');
 s.setProperty('--fg-accent','rgb('+v.b+')');
 s.setProperty('--brand-tint','rgba('+v.b+',0.10)');
 s.setProperty('--focus-ring','0 0 0 3px rgba('+v.b+',0.18)');
+// On-accent text color: dark for light accents (silver/lavender/peach/yellow),
+// white for dark accents. White-on-silver was 2.5:1 (WCAG 1.4.3 fails).
+var L;try{var q=v.b.split(',').map(function(n){return(+n)/255}).map(function(x){return x<=0.03928?x/12.92:Math.pow((x+0.055)/1.055,2.4)});L=0.2126*q[0]+0.7152*q[1]+0.0722*q[2]}catch(e){L=0}
+s.setProperty('--fg-on-accent',L>0.2?'#19191c':'#ffffff');
 if(v.r){r.setAttribute('data-accent-rainbow','true')}else{r.removeAttribute('data-accent-rainbow')}
 	})();</script>`)
 	// #nosec G203 -- verified false positive: b.String() is built solely from a

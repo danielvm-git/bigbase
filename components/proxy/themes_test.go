@@ -80,7 +80,7 @@ func TestLandingThemeScript(t *testing.T) {
 		"--brand-500", "--brand-600", "--brand-700",
 		"--bg-accent", "--bg-accent-hover", "--bg-accent-active",
 		"--fg-accent", "--border-accent",
-		"--brand-tint", "--focus-ring",
+		"--brand-tint", "--focus-ring", "--fg-on-accent",
 		"data-accent-rainbow",
 	} {
 		if !strings.Contains(script, want) {
