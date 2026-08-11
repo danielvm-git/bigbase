@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom'
 import {
   PageHeader,
   Button,
+  Modal,
   Card,
   CardHeader,
   Badge,
@@ -413,6 +414,8 @@ export default function SiteDetailPage() {
     setRollbackError(null)
   }
 
+  const closeRollback = useCallback(() => setRollbackTarget(null), [])
+
   const handleRollbackConfirm = async () => {
     if (!rollbackTarget) return
     setRollbacking(true)
@@ -631,43 +634,34 @@ export default function SiteDetailPage() {
       )}
 
       {/* Rollback confirmation dialog */}
-      {rollbackTarget && (
-        <div style={{
-          position: 'fixed', inset: 0, zIndex: 1000,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          background: 'rgba(0,0,0,0.5)',
-        }} onClick={() => setRollbackTarget(null)}>
-          <Card style={{ maxWidth: 480, width: '90vw', padding: 'var(--space-6)' }} onClick={e => e.stopPropagation()}>
-            <h3 style={{ margin: '0 0 var(--space-4)' }}>Rollback Deployment?</h3>
-            <p style={{ marginBottom: 'var(--space-4)', fontSize: 'var(--text-sm)' }}>
-              This will stop the current live deployment and restore the previous
-              successful deployment using its build artifacts. The current deployment
-              will be marked as <strong>rolled_back</strong>.
-            </p>
-            <p className="dim" style={{ marginBottom: 'var(--space-6)', fontSize: 'var(--text-sm)' }}>
-              Commit: <code>{rollbackTarget.commit_sha ? rollbackTarget.commit_sha.slice(0, 7) : '—'}</code>
-              {' · '}Deployed: {new Date(rollbackTarget.created_at).toLocaleString()}
-            </p>
-            {rollbackError && (
-              <p className="input-error-text" style={{ marginBottom: 'var(--space-4)' }}>{rollbackError}</p>
-            )}
-            <div style={{ display: 'flex', gap: 'var(--space-2)', justifyContent: 'flex-end' }}>
-              <Button variant="secondary" size="sm" onClick={() => setRollbackTarget(null)} disabled={rollbacking}>
-                Cancel
-              </Button>
-              <Button
-                variant="primary"
-                size="sm"
-                onClick={handleRollbackConfirm}
-                disabled={rollbacking}
-                style={{ background: 'var(--error)', borderColor: 'var(--error)' }}
-              >
-                {rollbacking ? 'Rolling back…' : 'Confirm Rollback'}
-              </Button>
-            </div>
-          </Card>
+      <Modal open={!!rollbackTarget} onClose={closeRollback} title="Rollback Deployment?">
+        <p style={{ marginBottom: 'var(--space-4)', fontSize: 'var(--text-sm)' }}>
+          This will stop the current live deployment and restore the previous
+          successful deployment using its build artifacts. The current deployment
+          will be marked as <strong>rolled_back</strong>.
+        </p>
+        <p className="dim" style={{ marginBottom: 'var(--space-6)', fontSize: 'var(--text-sm)' }}>
+          Commit: <code>{rollbackTarget?.commit_sha ? rollbackTarget.commit_sha.slice(0, 7) : '—'}</code>
+          {' · '}Deployed: {rollbackTarget ? new Date(rollbackTarget.created_at).toLocaleString() : ''}
+        </p>
+        {rollbackError && (
+          <p className="input-error-text" style={{ marginBottom: 'var(--space-4)' }}>{rollbackError}</p>
+        )}
+        <div style={{ display: 'flex', gap: 'var(--space-2)', justifyContent: 'flex-end' }}>
+          <Button variant="secondary" size="sm" onClick={closeRollback} disabled={rollbacking}>
+            Cancel
+          </Button>
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={handleRollbackConfirm}
+            disabled={rollbacking}
+            style={{ background: 'var(--error)', borderColor: 'var(--error)' }}
+          >
+            {rollbacking ? 'Rolling back…' : 'Confirm Rollback'}
+          </Button>
         </div>
-      )}
+      </Modal>
 
       {rollbackError && !rollbackTarget && (
         <p className="input-error-text" style={{ marginTop: 'var(--space-4)' }}>{rollbackError}</p>

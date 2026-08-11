@@ -159,6 +159,13 @@ describe('SiteDetailPage', () => {
         expect(screen.getByText('Confirm Rollback')).toBeInTheDocument()
         expect(screen.getByText('Cancel')).toBeInTheDocument()
       })
+      // WCAG 2.1.2: rollback confirmation must be a real dialog (role, aria-modal, Escape closes)
+      const dialog = screen.getByRole('dialog', { name: 'Rollback Deployment?' })
+      expect(dialog).toHaveAttribute('aria-modal', 'true')
+      fireEvent.keyDown(dialog, { key: 'Escape' })
+      await waitFor(() => {
+        expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+      })
     })
 
     it('closes dialog on cancel without calling rollbackDeployment', async () => {

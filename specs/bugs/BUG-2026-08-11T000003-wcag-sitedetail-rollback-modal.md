@@ -15,7 +15,10 @@ The rollback confirm overlay (`SiteDetailPage.tsx` ~L600-630, `{rollbackTarget &
 Replace with the shared `<Modal>`/`<Dialog>` component, which already provides `role="dialog"`, `aria-modal`, initial focus, Escape-to-close, and a focus trap.
 
 ## Status
-open
+fixed
+
+## Resolution
+Replaced the hand-built rollback overlay in `ui/src/pages/SiteDetailPage.tsx` with the shared `Modal` component (imported from `../components`). The overlay now renders with `role="dialog"`, `aria-modal="true"`, `aria-labelledby` (title), initial focus on open, Tab focus trap, Escape-to-close, and focus restoration to the trigger on close. Added a `closeRollback` callback; confirm/cancel buttons, error display, and loading state preserved unchanged. Regression assertion added to `SiteDetailPage.test.tsx` (role=dialog + aria-modal + Escape closes); all 15 tests pass and `npm run build` is green. Fixed 2026-08-11 (commit `fix(ui): replace rollback overlay with accessible Modal (WCAG 2.1.2)`).
 
 ## Source
 wcag-2.2-audit-2026-08-11
