@@ -718,3 +718,14 @@ epics:
   note: "2 stories, ~8 BCPs. SHIPPED via PR #234 (2026-08-11). Landing page reads admin localStorage theme/accent, applies light/dark + 13 accents. No backend. Archived to epics/archive/."
   capsule_dir: epics/archive/e85-unified-theme
   file: epics/archive/e85-unified-theme/epic.yaml
+
+- id: e86
+  title: "Monitoring Logs — Live Streaming, Pagination, Org Scope & Auto-Ingestion"
+  wsjf: 3.2
+  mode: capsule
+  tier: 2
+  status: open
+  depends_on: [e14, e39]
+  note: "4 stories, 12 BCPs. SSE live log streaming, keyset pagination (replaces LIMIT 100), org_id isolation (closes cross-tenant log leak), deploy-component auto-ingestion via event bus. Deltas: ADDED streaming+ingestion, MODIFIED pagination+org scope. WSJF 3.2 = (7+3+6)/5."
+  capsule_dir: epics/e86-monitoring-logs
+  file: epics/e86-monitoring-logs/epic.yaml

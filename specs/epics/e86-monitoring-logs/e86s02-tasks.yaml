@@ -1,0 +1,69 @@
+story_id: e86s02
+title: "Live log streaming via SSE + Logs tab subscribe"
+status: failing
+bcps: 3
+tasks:
+  - id: e86s02t1
+    description: "Backend — add logStream *eventStream (or generalize existing) + broadcastLog(LogEntry); init in Start"
+    verify: "go test ./components/monitoring/... -run TestLogStream -v"
+    risk: P1
+    status: failing
+    security: low
+    allure:
+      severity: high
+      categories:
+        - "unit"
+        - "Realtime"
+  - id: e86s02t2
+    description: "Backend — handleLogStream SSE handler (headers, keepalive, subscribe loop from handleSSEEvents); register GET /api/monitoring/logs/stream exact-path before catch-all"
+    verify: "go test ./components/monitoring/... -run TestLogStream -v && go build ./..."
+    risk: P1
+    status: failing
+    security: low
+    allure:
+      severity: high
+      categories:
+        - "unit"
+        - "Realtime"
+  - id: e86s02t3
+    description: "Backend — broadcast from handleLogCreate after INSERT succeeds"
+    verify: "go test ./components/monitoring/... -run TestLogStream -v"
+    risk: P1
+    status: failing
+    security: low
+    allure:
+      severity: high
+      categories:
+        - "unit"
+        - "Realtime"
+  - id: e86s02t4
+    description: "Backend — stream test: connect, POST log, assert event arrives with matching id/level/message; assert unsubscribe on client close"
+    verify: "go test ./components/monitoring/... -run TestLogStream -v"
+    risk: P1
+    status: failing
+    security: low
+    allure:
+      severity: high
+      categories:
+        - "integration"
+        - "Realtime"
+  - id: e86s02t5
+    description: "UI — Logs tab EventSource('/api/monitoring/logs/stream') when active, prepend entries deduped by id, close on tab switch/unmount"
+    verify: "cd ui && npx vitest run src/pages/MonitoringPage.test.tsx"
+    risk: P2
+    status: failing
+    security: none
+    allure:
+      severity: normal
+      categories:
+        - "ui"
+  - id: e86s02t6
+    description: "UI — Live indicator bound to es.readyState === EventSource.OPEN"
+    verify: "cd ui && npx vitest run src/pages/MonitoringPage.test.tsx && cd ui && npm run build"
+    risk: P3
+    status: failing
+    security: none
+    allure:
+      severity: minor
+      categories:
+        - "ui"

@@ -1,0 +1,60 @@
+story_id: e86s03
+title: "Org-scoped logs — org_id migration + isolation"
+status: failing
+bcps: 3
+tasks:
+  - id: e86s03t1
+    description: "Schema — add org_id INTEGER to monitoring_logs (CREATE TABLE for new installs + idempotent ALTER with duplicate-column tolerance, mirroring initObservability BUG-143 pattern)"
+    verify: "go test ./components/monitoring/... -run TestMigrate -v && go build ./... && sqlite3 data/bigbase.db 'PRAGMA table_info(monitoring_logs)' | grep -q org_id"
+    risk: P0
+    status: failing
+    security: high
+    allure:
+      severity: critical
+      categories:
+        - "Security Review"
+        - "Multi-tenancy"
+  - id: e86s03t2
+    description: "handleLogCreate — resolve kernel.OrgIDFromContext, 401 org_id required when absent (BUG-143), INSERT org_id"
+    verify: "go test ./components/monitoring/... -run TestLogCreateOrg -v"
+    risk: P0
+    status: failing
+    security: high
+    allure:
+      severity: critical
+      categories:
+        - "Security Review"
+        - "Multi-tenancy"
+  - id: e86s03t3
+    description: "handleLogSearch + handleLogByID — filter WHERE org_id = ?; NULL-org rows never returned to tenant orgs"
+    verify: "go test ./components/monitoring/... -run 'TestLogSearch|TestLogByID' -v"
+    risk: P0
+    status: failing
+    security: high
+    allure:
+      severity: critical
+      categories:
+        - "Security Review"
+        - "Multi-tenancy"
+  - id: e86s03t4
+    description: "Isolation tests — org B cannot read org A logs; cross-org byID 404; NULL-org invisible to both (extend org_isolation_test.go)"
+    verify: "go test ./components/monitoring/... -run TestOrgIsolationLogs -v && echo 'no new security findings in affected paths'"
+    risk: P0
+    status: failing
+    security: high
+    allure:
+      severity: critical
+      categories:
+        - "Security Review"
+        - "Multi-tenancy"
+  - id: e86s03t5
+    description: "Regression — evidence.go reads monitoring_logs (column-specific SELECT unaffected); full monitoring suite green"
+    verify: "go test ./components/monitoring/... && echo 'no new security findings in affected paths'"
+    risk: P2
+    status: failing
+    security: high
+    allure:
+      severity: normal
+      categories:
+        - "unit"
+        - "Regression"

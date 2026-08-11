@@ -1,0 +1,68 @@
+type: epic-shard
+context: domain
+id: e86
+title: "Monitoring Logs — Live Streaming, Pagination, Org Scope & Auto-Ingestion"
+wsjf: 3.2
+wsjf_rationale: "BV=7 (live streaming + auto-ingestion make deploy debugging real-time; pagination is table stakes for a log viewer) TC=3 (no deadline, but org scoping is an open security gap that grows with usage) RR=6 (closes cross-tenant log exposure; reduces operational toil) / JS=5 (4 stories: schema migration + SSE + event-bus hook + UI)"
+total_bcps: 12
+status: open
+tier: 2
+depends_on:
+  - e14
+  - e39
+note: |
+  4 stories, 12 BCPs. Upgrades the monitoring_logs pipeline end to end:
+  SSE live streaming (mirrors the existing host-metrics stream), keyset
+  pagination (replaces the hard LIMIT 100), org_id isolation (closes a
+  cross-tenant log leak — alerts already have org_id, logs do not), and
+  automatic log ingestion from the deploy component via the event bus
+  (logs currently exist only via manual POST).
+
+  Requirement deltas vs current behavior (specs/bugs and e14/e72 baseline):
+  - e86s01 MODIFIED — GET /api/monitoring/logs gains ?cursor=&limit= keyset
+    pagination with has_more/next_cursor (before: hard LIMIT 100, no paging)
+  - e86s02 ADDED — GET /api/monitoring/logs/stream SSE channel + UI subscribe
+  - e86s03 MODIFIED — monitoring_logs gains org_id column; write + query
+    scoped by authenticated org (before: no org_id — any auth user sees all
+    tenants' logs, cross-tenant leak)
+  - e86s04 ADDED — deploy lifecycle events auto-ingested as log rows
+
+implementation_order:
+  - e86s03  # org_id schema + isolation — foundational, closes the leak
+  - e86s01  # pagination — independent, builds on the scoped query layer
+  - e86s02  # SSE stream — independent, mirrors metrics/stream
+  - e86s04  # deploy auto-ingestion — needs e86s03 (org_id at write time)
+
+prerequisites:
+  - "deploy: emit lifecycle events on the event bus with org/site context (deploy.started/succeeded/failed) — verify existing hook wiring from e72/e39 first"
+  - "auth: org context available to the monitoring component (org_isolation_test.go pattern already exists for alerts)"
+
+stories:
+  - id: e86s01
+    title: "Paginated log search API + UI (keyset cursor)"
+    bcps: 3
+    status: open
+    depends_on: []
+    spec: e86s01-spec.md
+    tasks: e86s01-tasks.yaml
+  - id: e86s02
+    title: "Live log streaming via SSE + Logs tab subscribe"
+    bcps: 3
+    status: open
+    depends_on: []
+    spec: e86s02-spec.md
+    tasks: e86s02-tasks.yaml
+  - id: e86s03
+    title: "Org-scoped logs — org_id migration + isolation"
+    bcps: 3
+    status: open
+    depends_on: []
+    spec: e86s03-spec.md
+    tasks: e86s03-tasks.yaml
+  - id: e86s04
+    title: "Deploy-component automatic log ingestion"
+    bcps: 3
+    status: open
+    depends_on: [e86s03]
+    spec: e86s04-spec.md
+    tasks: e86s04-tasks.yaml

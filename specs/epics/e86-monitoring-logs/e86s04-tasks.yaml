@@ -1,0 +1,62 @@
+story_id: e86s04
+title: "Deploy-component automatic log ingestion"
+status: failing
+bcps: 3
+tasks:
+  - id: e86s04t1
+    description: "Recon — confirm deploy emit paths (state_transitions.go:55, observability.go:87) have site context and a site→org lookup available at emit time"
+    verify: "go test ./components/deploy/... -run 'TestStateTransition|TestFailedEvent' -v"
+    risk: P2
+    status: failing
+    security: low
+    allure:
+      severity: normal
+      categories:
+        - "unit"
+        - "Deploy"
+  - id: e86s04t2
+    description: "Deploy — enrich deploy.state_changed and deploy.failed event Data with org_id; tests assert the field is present"
+    verify: "go test ./components/deploy/... -run 'TestStateTransition|TestFailedEvent' -v"
+    risk: P1
+    status: failing
+    security: medium
+    allure:
+      severity: high
+      categories:
+        - "Security Review"
+        - "Deploy"
+  - id: e86s04t3
+    description: "Monitoring — wireObservabilityHooks: deploy.state_changed subscription inserts info row; deploy.failed handler inserts error row; both read org_id/site_id/deployment_id from ev.Data and broadcast via broadcastLog"
+    verify: "go test ./components/monitoring/... -run TestDeployIngest -v"
+    risk: P1
+    status: failing
+    security: medium
+    allure:
+      severity: high
+      categories:
+        - "integration"
+        - "Deploy"
+        - "Realtime"
+  - id: e86s04t4
+    description: "Ingestion tests — success transition → info row with org_id; deploy.failed → error row; live SSE subscriber receives; manual POST unaffected"
+    verify: "go test ./components/monitoring/... -run 'TestDeployIngest|TestLogStream|TestLogCreate' -v && echo 'no new security findings in affected paths'"
+    risk: P1
+    status: failing
+    security: medium
+    allure:
+      severity: high
+      categories:
+        - "integration"
+        - "Security Review"
+        - "Deploy"
+  - id: e86s04t5
+    description: "E2E smoke — drive a real deploy locally, assert lifecycle rows appear in Logs tab (s01+s02+s03 combined)"
+    verify: "cd ui && npm run build && go build -o /tmp/bigbase-check . && go test ./components/deploy/... ./components/monitoring/... && echo 'e2e smoke: deploy then verify Logs tab rows'"
+    risk: P1
+    status: failing
+    security: medium
+    allure:
+      severity: high
+      categories:
+        - "e2e"
+        - "Deploy"

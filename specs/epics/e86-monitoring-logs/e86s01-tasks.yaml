@@ -1,0 +1,58 @@
+story_id: e86s01
+title: "Paginated log search API + UI (keyset cursor)"
+status: failing
+bcps: 3
+tasks:
+  - id: e86s01t1
+    description: "handleLogSearch — parse limit (default 100, clamp 1-500) and cursor; WHERE id < ? keyset; limit+1 probe for has_more"
+    verify: "go test ./components/monitoring/... -run TestLogPagination -v"
+    risk: P1
+    status: failing
+    security: low
+    allure:
+      severity: high
+      categories:
+        - "unit"
+        - "API"
+  - id: e86s01t2
+    description: "Response shape {data, next_cursor, has_more}; ?q= LIKE filter composed with cursor"
+    verify: "go test ./components/monitoring/... -run 'TestLogPagination|TestLogSearch' -v"
+    risk: P1
+    status: failing
+    security: low
+    allure:
+      severity: high
+      categories:
+        - "unit"
+        - "API"
+  - id: e86s01t3
+    description: "Pagination tests — 250 rows page 100/100/50, has_more flips false on last page, cursor+query combined"
+    verify: "go test ./components/monitoring/... -run TestLogPagination -v"
+    risk: P1
+    status: failing
+    security: low
+    allure:
+      severity: high
+      categories:
+        - "unit"
+        - "API"
+  - id: e86s01t4
+    description: "UI — Logs tab nextCursor/hasMore state; fetchLogs(q, cursor?) replaces on load/search, appends on cursor"
+    verify: "cd ui && npx vitest run src/pages/MonitoringPage.test.tsx"
+    risk: P2
+    status: failing
+    security: none
+    allure:
+      severity: normal
+      categories:
+        - "ui"
+  - id: e86s01t5
+    description: "UI — Load more button below table when has_more, disabled while fetching, hidden on last page"
+    verify: "cd ui && npx vitest run src/pages/MonitoringPage.test.tsx && cd ui && npm run build"
+    risk: P2
+    status: failing
+    security: none
+    allure:
+      severity: normal
+      categories:
+        - "ui"
