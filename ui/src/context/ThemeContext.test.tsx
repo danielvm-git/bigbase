@@ -37,7 +37,9 @@ describe('ThemeContext accent', () => {
   it('applies brand CSS variables on documentElement', () => {
     applyAccentToDocument('october')
     expect(document.documentElement.style.getPropertyValue('--brand-500')).toBe('rgb(236, 72, 153)')
-    expect(document.documentElement.style.getPropertyValue('--fg-accent')).toBe('rgb(236, 72, 153)')
+    // Light mode (no data-theme): accent text uses the 600 step for >=7:1 on white.
+    expect(document.documentElement.style.getPropertyValue('--fg-accent')).toBe('rgb(219, 39, 119)')
+    expect(document.documentElement.style.getPropertyValue('--bg-accent')).toBe('rgb(219, 39, 119)')
   })
 
   it('sets rainbow attribute for June theme', () => {

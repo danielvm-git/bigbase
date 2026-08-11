@@ -37,15 +37,18 @@ export function applyAccentToDocument(accent: AccentId) {
     root.removeAttribute('data-accent-rainbow')
   }
 
+  const dark = document.documentElement.getAttribute('data-theme') === 'dark'
+
   root.style.setProperty('--brand-500', `rgb(${theme.brand500})`)
   root.style.setProperty('--brand-600', `rgb(${theme.brand600})`)
   root.style.setProperty('--brand-700', `rgb(${theme.brand700})`)
   root.style.setProperty('--border-accent', `rgb(${theme.brand500})`)
-  root.style.setProperty('--bg-accent', `rgb(${theme.brand500})`)
-  root.style.setProperty('--bg-accent-hover', `rgb(${theme.brand600})`)
+  root.style.setProperty('--bg-accent', `rgb(${theme.brand600})`)
+  root.style.setProperty('--bg-accent-hover', `rgb(${theme.brand700})`)
   root.style.setProperty('--bg-accent-active', `rgb(${theme.brand700})`)
-  root.style.setProperty('--fg-accent', `rgb(${theme.brand500})`)
-  root.style.setProperty('--brand-tint', `rgba(${theme.brand500}, 0.10)`)
+  // Accent TEXT: brand-600 on light (7.90:1 on white), brand-300 on dark (8.45:1 on neutral-850).
+  root.style.setProperty('--fg-accent', dark ? `rgb(${theme.brand300})` : `rgb(${theme.brand600})`)
+  root.style.setProperty('--brand-tint', `rgba(${theme.brand500}, 0.06)`)
   root.style.setProperty('--focus-ring', `0 0 0 3px rgba(${theme.brand500}, 0.18)`)
 }
 
@@ -55,13 +58,12 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)
-    try { localStorage.setItem(THEME_KEY, theme) } catch { /* noop */ }
-  }, [theme])
-
-  useEffect(() => {
+    // Re-apply accent-derived tokens so --fg-accent tracks the current theme
+    // (light: brand-600, dark: brand-300) when the user toggles dark mode.
     applyAccentToDocument(accent)
+    try { localStorage.setItem(THEME_KEY, theme) } catch { /* noop */ }
     try { localStorage.setItem(ACCENT_KEY, accent) } catch { /* noop */ }
-  }, [accent])
+  }, [theme, accent])
 
   const toggle = () => setTheme(prev => (prev === 'light' ? 'dark' : 'light'))
   const setAccent = (next: AccentId) => setAccentState(next)

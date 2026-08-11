@@ -25,21 +25,22 @@
   /* ── Brand accent — Indigo #4F46E5 (BigBase identity) ──── */
   --brand-50: rgba(238, 236, 252, 1);
   --brand-100: rgba(224, 221, 250, 1);
+  --brand-300: rgba(165, 180, 252, 1);   /* dark-mode link/emphasis */
   --brand-500: rgba(79, 70, 229, 1);
   --brand-600: rgba(67, 56, 202, 1);
   --brand-700: rgba(55, 48, 163, 1);
-  --brand-tint: rgba(79, 70, 229, 0.10);
+  --brand-tint: rgba(79, 70, 229, 0.06); /* light tint keeps fg-accent text >=7:1 */
 
   /* ── Semantic colors ────────────────────────────────────── */
   --success: rgba(16, 185, 129, 1);     /* Emerald #10B981 */
   --success-bg: rgba(16, 185, 129, 0.12);
-  --success-fg: rgba(6, 95, 70, 1);
+  --success-fg: rgba(4, 78, 58, 1);      /* AAA >=7:1 on success-bg */
   --warning: rgba(245, 158, 11, 1);     /* Amber #F59E0B */
   --warning-bg: rgba(245, 158, 11, 0.12);
-  --warning-fg: rgba(146, 64, 14, 1);
+  --warning-fg: rgba(120, 53, 15, 1);   /* AAA >=7:1 on warning-bg */
   --error: rgba(239, 68, 68, 1);        /* Red #EF4444 */
   --error-bg: rgba(239, 68, 68, 0.08);
-  --error-fg: rgba(153, 27, 27, 1);
+  --error-fg: rgba(120, 20, 20, 1);     /* AAA >=7:1 on error-bg */
   --info: rgba(59, 130, 246, 1);        /* Blue */
   --info-bg: rgba(59, 130, 246, 0.10);
   --info-fg: rgba(30, 64, 175, 1);
@@ -49,16 +50,16 @@
   --bg-surface: var(--neutral-0);
   --bg-surface-hover: var(--neutral-25);
   --bg-surface-secondary: var(--neutral-40);
-  --bg-accent: var(--brand-500);
-  --bg-accent-hover: var(--brand-600);
+  --bg-accent: var(--brand-600);         /* white fg-on-accent text >=7:1 */
+  --bg-accent-hover: var(--brand-700);
   --bg-accent-active: var(--brand-700);
   --bg-subtle: var(--neutral-40);
 
   /* ── Foreground semantic roles ──────────────────────────── */
   --fg-primary: var(--neutral-800);
-  --fg-secondary: var(--neutral-600);
-  --fg-tertiary: var(--neutral-600);
-  --fg-accent: var(--brand-500);
+  --fg-secondary: rgba(75, 75, 80, 1);   /* AAA 8.67:1 on white */
+  --fg-tertiary: rgba(75, 75, 80, 1);    /* AAA 8.67:1 on white */
+  --fg-accent: var(--brand-600);         /* AAA 7.90:1 on white */
   --fg-on-accent: var(--neutral-0);
 
   /* ── Border semantic roles ──────────────────────────────── */

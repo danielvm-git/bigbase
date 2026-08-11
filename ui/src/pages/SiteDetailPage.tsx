@@ -54,7 +54,7 @@ function StatusTimeline({ status, healthSummary }: { status: string; healthSumma
       return { width: 16, height: 16, borderRadius: '50%', flexShrink: 0, background: 'var(--error)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, color: '#fff', lineHeight: '16px' }
     }
     if (isCurrent && status === 'running') {
-      return { width: 16, height: 16, borderRadius: '50%', flexShrink: 0, background: 'var(--brand-500)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, color: '#fff', lineHeight: '16px' }
+      return { width: 16, height: 16, borderRadius: '50%', flexShrink: 0, background: 'var(--brand-600)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, color: '#fff', lineHeight: '16px' }
     }
     const bg = isPast || (isCurrent && isTerminal) ? 'var(--brand-500)' : isCurrent && step === 'building' ? 'var(--brand-500)' : (isCurrent && step === 'deploying') || (isCurrent && step === 'draining') ? 'rgba(255, 183, 0, 0.8)' : 'var(--border-default)'
     return { width: 10, height: 10, borderRadius: '50%', flexShrink: 0, background: bg }
@@ -111,7 +111,7 @@ function StatusTimeline({ status, healthSummary }: { status: string; healthSumma
             {hs.probe_count != null && <span style={{ marginLeft: 'var(--space-1)', opacity: 0.7 }}>({hs.probe_count} probes)</span>}
           </span>
         ) : (
-          <span style={{ color: 'var(--brand-500)' }}>
+          <span style={{ color: 'var(--fg-accent)' }}>
             ✓ Passed
             {hs.avg_response_time_ms != null && <span style={{ marginLeft: 'var(--space-1)', opacity: 0.7 }}>({hs.avg_response_time_ms}ms avg)</span>}
             {hs.probe_count != null && <span style={{ marginLeft: 'var(--space-1)', opacity: 0.7 }}>{hs.probe_count} probe{hs.probe_count !== 1 ? 's' : ''}</span>}
@@ -224,7 +224,7 @@ start:
 
       {error && <p className="input-error-text">{error}</p>}
       {saveError && <p className="input-error-text" style={{ marginBottom: 'var(--space-4)' }}>{saveError}</p>}
-      {saveSuccess && <p style={{ color: 'var(--brand-500)', marginBottom: 'var(--space-4)', fontSize: 'var(--text-sm)' }}>Manifest saved successfully!</p>}
+      {saveSuccess && <p style={{ color: 'var(--fg-accent)', marginBottom: 'var(--space-4)', fontSize: 'var(--text-sm)' }}>Manifest saved successfully!</p>}
 
       {!exists && !isEditing ? (
         <Card style={{ padding: 'var(--space-6)', textAlign: 'center' }}>
