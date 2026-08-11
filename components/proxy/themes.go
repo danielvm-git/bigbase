@@ -12,30 +12,31 @@ import (
 // "r, g, b" triple (without the rgb() wrapper) so the inline script can compose
 // rgb()/rgba() the same way applyAccentToDocument does in the React app.
 type landingAccent struct {
-	ID       string
-	Brand500 string
-	Brand600 string
-	Brand700 string
-	Rainbow  bool
+	ID        string
+	Brand500  string
+	Brand600  string
+	Brand700  string
+	BrandLink string
+	Rainbow   bool
 }
 
 // landingAccents is the single Go source of truth for the landing page's accent
 // ramp. It MUST stay byte-for-byte equal to ACCENT_THEMES in
 // ui/src/context/accentThemes.ts (enforced by TestAccentRampParity).
 var landingAccents = []landingAccent{
-	{ID: "default", Brand500: "79, 70, 229", Brand600: "67, 56, 202", Brand700: "55, 48, 163"},
-	{ID: "january", Brand500: "13, 148, 136", Brand600: "15, 118, 110", Brand700: "17, 94, 89"},
-	{ID: "february", Brand500: "234, 88, 12", Brand600: "194, 65, 12", Brand700: "154, 52, 18"},
-	{ID: "march", Brand500: "124, 58, 237", Brand600: "109, 40, 217", Brand700: "91, 33, 182"},
-	{ID: "april", Brand500: "22, 163, 74", Brand600: "21, 128, 61", Brand700: "22, 101, 52"},
-	{ID: "may", Brand500: "167, 139, 250", Brand600: "139, 92, 246", Brand700: "124, 58, 237"},
-	{ID: "june", Brand500: "79, 70, 229", Brand600: "67, 56, 202", Brand700: "55, 48, 163", Rainbow: true},
-	{ID: "july", Brand500: "253, 186, 116", Brand600: "251, 146, 60", Brand700: "234, 88, 12"},
-	{ID: "august", Brand500: "156, 163, 175", Brand600: "107, 114, 128", Brand700: "75, 85, 99"},
-	{ID: "september", Brand500: "234, 179, 8", Brand600: "202, 138, 4", Brand700: "161, 98, 7"},
-	{ID: "october", Brand500: "236, 72, 153", Brand600: "219, 39, 119", Brand700: "190, 24, 93"},
-	{ID: "november", Brand500: "37, 99, 235", Brand600: "29, 78, 216", Brand700: "30, 64, 175"},
-	{ID: "december", Brand500: "220, 38, 38", Brand600: "185, 28, 28", Brand700: "153, 27, 27"},
+	{ID: "default", Brand500: "79, 70, 229", Brand600: "67, 56, 202", Brand700: "55, 48, 163", BrandLink: "55, 48, 163"},
+	{ID: "january", Brand500: "13, 148, 136", Brand600: "15, 118, 110", Brand700: "17, 94, 89", BrandLink: "17, 94, 89"},
+	{ID: "february", Brand500: "234, 88, 12", Brand600: "194, 65, 12", Brand700: "154, 52, 18", BrandLink: "154, 52, 18"},
+	{ID: "march", Brand500: "124, 58, 237", Brand600: "109, 40, 217", Brand700: "91, 33, 182", BrandLink: "91, 33, 182"},
+	{ID: "april", Brand500: "22, 163, 74", Brand600: "21, 128, 61", Brand700: "22, 101, 52", BrandLink: "22, 101, 52"},
+	{ID: "may", Brand500: "167, 139, 250", Brand600: "139, 92, 246", Brand700: "124, 58, 237", BrandLink: "109, 40, 217"},
+	{ID: "june", Brand500: "79, 70, 229", Brand600: "67, 56, 202", Brand700: "55, 48, 163", BrandLink: "55, 48, 163", Rainbow: true},
+	{ID: "july", Brand500: "253, 186, 116", Brand600: "251, 146, 60", Brand700: "234, 88, 12", BrandLink: "154, 52, 18"},
+	{ID: "august", Brand500: "156, 163, 175", Brand600: "107, 114, 128", Brand700: "75, 85, 99", BrandLink: "75, 85, 99"},
+	{ID: "september", Brand500: "234, 179, 8", Brand600: "202, 138, 4", Brand700: "161, 98, 7", BrandLink: "113, 63, 18"},
+	{ID: "october", Brand500: "236, 72, 153", Brand600: "219, 39, 119", Brand700: "190, 24, 93", BrandLink: "157, 23, 77"},
+	{ID: "november", Brand500: "37, 99, 235", Brand600: "29, 78, 216", Brand700: "30, 64, 175", BrandLink: "30, 64, 175"},
+	{ID: "december", Brand500: "220, 38, 38", Brand600: "185, 28, 28", Brand700: "153, 27, 27", BrandLink: "153, 27, 27"},
 }
 
 // landingThemeScript returns the blocking inline <head> script that gives the
@@ -61,7 +62,7 @@ func landingThemeScript() template.HTML {
 		if i > 0 {
 			b.WriteByte(',')
 		}
-		fmt.Fprintf(&b, "%s:{b:%q,c:%q,d:%q,r:%t}", a.ID, a.Brand500, a.Brand600, a.Brand700, a.Rainbow)
+		fmt.Fprintf(&b, "%s:{b:%q,c:%q,d:%q,e:%q,r:%t}", a.ID, a.Brand500, a.Brand600, a.Brand700, a.BrandLink, a.Rainbow)
 	}
 	b.WriteString(`};var t;try{t=localStorage.getItem('bigbase-theme')}catch(e){}
 if(t!=='light'&&t!=='dark'){t=(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light'}
@@ -72,6 +73,7 @@ r.setAttribute('data-theme',t);
 s.setProperty('--brand-500','rgb('+v.b+')');
 s.setProperty('--brand-600','rgb('+v.c+')');
 s.setProperty('--brand-700','rgb('+v.d+')');
+s.setProperty('--brand-link','rgb('+v.e+')');
 s.setProperty('--border-accent','rgb('+v.b+')');
 s.setProperty('--bg-accent','rgb('+v.b+')');
 s.setProperty('--bg-accent-hover','rgb('+v.c+')');
@@ -79,10 +81,11 @@ s.setProperty('--bg-accent-active','rgb('+v.d+')');
 s.setProperty('--fg-accent','rgb('+v.b+')');
 s.setProperty('--brand-tint','rgba('+v.b+',0.10)');
 s.setProperty('--focus-ring','0 0 0 3px rgba('+v.b+',0.18)');
-// On-accent text color: dark for light accents (silver/lavender/peach/yellow),
-// white for dark accents. White-on-silver was 2.5:1 (WCAG 1.4.3 fails).
-var L;try{var q=v.b.split(',').map(function(n){return(+n)/255}).map(function(x){return x<=0.03928?x/12.92:Math.pow((x+0.055)/1.055,2.4)});L=0.2126*q[0]+0.7152*q[1]+0.0722*q[2]}catch(e){L=0}
-s.setProperty('--fg-on-accent',L>0.2?'#19191c':'#ffffff');
+// On-accent text is always white: every accent-bearing surface (CTA buttons,
+// logo mark) uses --brand-link, the per-accent dark step verified >=7:1 for
+// white text (e88s01 parity). The old luminance-based dark/white switch picked
+// dark text for october's pink, yielding 3.81:1 on brand-600 — removed.
+s.setProperty('--fg-on-accent','#ffffff');
 if(v.r){r.setAttribute('data-accent-rainbow','true')}else{r.removeAttribute('data-accent-rainbow')}
 	})();</script>`)
 	// #nosec G203 -- verified false positive: b.String() is built solely from a

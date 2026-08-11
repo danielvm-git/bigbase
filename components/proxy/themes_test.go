@@ -150,6 +150,7 @@ func parseTSAccents(t *testing.T) []landingAccent {
 	b500 := regexp.MustCompile(`brand500:\s*'([^']+)'`)
 	b600 := regexp.MustCompile(`brand600:\s*'([^']+)'`)
 	b700 := regexp.MustCompile(`brand700:\s*'([^']+)'`)
+	blink := regexp.MustCompile(`brandLink:\s*'([^']+)'`)
 	rainbowRe := regexp.MustCompile(`rainbow:\s*true`)
 
 	var out []landingAccent
@@ -163,15 +164,17 @@ func parseTSAccents(t *testing.T) []landingAccent {
 		f500 := b500.FindStringSubmatch(block)
 		f600 := b600.FindStringSubmatch(block)
 		f700 := b700.FindStringSubmatch(block)
-		if id == nil || f500 == nil || f600 == nil || f700 == nil {
-			t.Fatalf("could not parse accent block: %s", block)
+		flink := blink.FindStringSubmatch(block)
+		if id == nil || f500 == nil || f600 == nil || f700 == nil || flink == nil {
+			t.Fatalf("could not parse accent block (brandLink required): %s", block)
 		}
 		out = append(out, landingAccent{
-			ID:       id[1],
-			Brand500: f500[1],
-			Brand600: f600[1],
-			Brand700: f700[1],
-			Rainbow:  rainbowRe.MatchString(block),
+			ID:        id[1],
+			Brand500:  f500[1],
+			Brand600:  f600[1],
+			Brand700:  f700[1],
+			BrandLink: flink[1],
+			Rainbow:   rainbowRe.MatchString(block),
 		})
 	}
 	if len(out) != 13 {
