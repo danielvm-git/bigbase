@@ -61,7 +61,7 @@ export const TOKENS: DesignTokens = {
   border: {
     default: 'var(--neutral-100)',
     strong: 'var(--neutral-200)',
-    focus: 'var(--neutral-300)',
+    focus: 'var(--brand-600)',
     accent: 'var(--brand-500)',
     error: 'var(--error)',
   },

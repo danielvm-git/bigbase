@@ -101,6 +101,13 @@ body {
   outline: 2px solid var(--border-focus);
   outline-offset: 2px;
 }
+/* Accent-filled buttons: brand-600 alone is ~1.3:1 against the brand-500
+   fill, so double the indicator — the light inner ring (box-shadow, against
+   the fill) plus the brand ring (outline, against the page background). */
+.btn-primary:focus-visible,
+.btn-danger:focus-visible {
+  box-shadow: 0 0 0 2px var(--neutral-0);
+}
 .btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
@@ -459,8 +466,9 @@ body {
   color: var(--fg-tertiary);
 }
 .input:focus {
-  outline: none;
   border-color: var(--border-accent);
+  outline: 2px solid var(--border-focus);
+  outline-offset: 2px;
   box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12);
 }
 .input-error {
@@ -586,7 +594,7 @@ select.input {
 }
 .tab:focus-visible {
   outline: 2px solid var(--border-focus);
-  outline-offset: -2px;
+  outline-offset: 2px;
 }
 
 /* Page Header */
@@ -796,6 +804,13 @@ select.input {
   overflow-x: auto;
   border: 1px solid var(--border-default);
   border-radius: var(--radius-s);
+  /* Breathing room so 2px+2px focus rings on first/last rows are not clipped
+     by the scroll container's padding box; the table's negative margin keeps
+     the visual layout identical. */
+  padding: var(--space-1) 0;
+}
+.table-wrap > table {
+  margin: calc(var(--space-1) * -1) 0;
 }
 table {
   width: 100%;
@@ -1028,7 +1043,7 @@ tr:hover td {
   font-weight: 500;
 }
 .sidebar-nav a:focus-visible {
-  outline: 2px solid var(--border-accent);
+  outline: 2px solid var(--border-focus);
   outline-offset: 2px;
 }
 .sidebar-nav-icon {
@@ -1697,8 +1712,9 @@ tr:hover td {
               box-shadow var(--duration-fast) var(--ease-standard);
 }
 .sql-textarea:focus {
-  outline: none;
   border-color: var(--border-accent);
+  outline: 2px solid var(--border-focus);
+  outline-offset: 2px;
   box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12);
 }
 .sql-textarea::placeholder {
@@ -2151,6 +2167,10 @@ tr:hover td {
   .table-wrapper {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
+    padding: var(--space-1) 0;
+  }
+  .table-wrapper > table {
+    margin: calc(var(--space-1) * -1) 0;
   }
   .settings-section-header {
     flex-direction: column;

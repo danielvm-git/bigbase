@@ -64,7 +64,7 @@
   /* ── Border semantic roles ──────────────────────────────── */
   --border-default: var(--neutral-100);
   --border-strong: var(--neutral-200);
-  --border-focus: var(--neutral-300);
+  --border-focus: var(--brand-600);
   --border-accent: var(--brand-500);
   --border-error: var(--error);
 

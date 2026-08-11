@@ -18,7 +18,7 @@
   /* ── Border semantic roles (dark mode) ──────────────────── */
   --border-default: var(--neutral-750);
   --border-strong: var(--neutral-700);
-  --border-focus: var(--neutral-600);
+  --border-focus: rgba(129, 140, 248, 1);
 
   /* ── Overlay (dark mode — light overlays on dark bg) ────── */
   --overlay-hover: rgba(255, 255, 255, 0.05);
