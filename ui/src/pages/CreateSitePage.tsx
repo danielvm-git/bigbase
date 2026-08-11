@@ -27,7 +27,7 @@ import { deployWizardTitle } from '../lib/deployWizard'
 import { useDeployLogs } from '../lib/useDeployLogs'
 import type { GitHubRepo, GitRepo, SiteSource } from '../types/sites'
 
-const WIZARD_STEPS = ['Source', 'Configure', 'Deploy']
+const WIZARD_STEPS = ['Source', 'Configure', 'Review', 'Deploy']
 
 const PREVIEW_DEPLOY_LINES = [
   '→ Deployment started (branch: main)',
@@ -161,7 +161,7 @@ export default function CreateSitePage() {
     setDeploymentId('')
     setDoneStatus('building')
     setDoneUrl('')
-    setStep(3)
+    setStep(4)
     if (pollRef.current) {
       clearInterval(pollRef.current)
       pollRef.current = null
@@ -193,7 +193,7 @@ export default function CreateSitePage() {
     if (result.error) {
       setError(result.error)
       setDeploying(false)
-      setStep(2)
+      setStep(3)
       return
     }
 
@@ -248,7 +248,7 @@ export default function CreateSitePage() {
       : localRepos.find(r => r.id === selectedLocalId)?.name
 
   return (
-    <div className={`wizard${step === 3 ? ' wizard--deploy' : ''}`}>
+    <div className={`wizard${step === 4 ? ' wizard--deploy' : ''}`}>
       <Breadcrumb
         items={[
           { label: 'Sites', to: `/deploy${pq}` },
@@ -453,7 +453,7 @@ export default function CreateSitePage() {
           <div className="wizard-intro">
             <h2 className="wizard-intro-title">Configure your site</h2>
             <p className="wizard-intro-desc">
-              Review settings, then deploy. URL preview:{' '}
+              Set the site details, then review before deploying. URL preview:{' '}
               <span className="mono" style={{ fontFamily: 'var(--font-mono)' }}>
                 {siteDisplayUrl(name || 'your-site')}
               </span>
@@ -461,15 +461,60 @@ export default function CreateSitePage() {
           </div>
           <div className="card">
             <div className="form-row" style={{ flexDirection: 'column', alignItems: 'stretch' }}>
-              <Input label="Site name" value={name} onChange={e => setName(e.target.value)} required />
-              <Input label="Production branch" value={branch} onChange={e => setBranch(e.target.value)} />
-              <Input label="Root directory" value={rootPath} onChange={e => setRootPath(e.target.value)} />
+              <Input
+                label="Site name"
+                name="site-name"
+                value={name}
+                onChange={e => setName(e.target.value)}
+                hint="Used in the site URL and list, e.g. my-app."
+                required
+              />
+              <Input
+                label="Production branch"
+                name="production-branch"
+                value={branch}
+                onChange={e => setBranch(e.target.value)}
+                hint="Commits pushed to this branch trigger production deploys."
+              />
+              <Input
+                label="Root directory"
+                name="root-directory"
+                value={rootPath}
+                onChange={e => setRootPath(e.target.value)}
+                hint="Subdirectory of the repo that contains the app, e.g. ./ or packages/web."
+              />
             </div>
           </div>
+          <div className="wizard-actions">
+            <Button variant="secondary" size="sm" onClick={() => setStep(1)}>
+              ← Back
+            </Button>
+            <Button variant="primary" size="sm" disabled={!name.trim()} onClick={() => setStep(3)}>
+              Continue →
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {step === 3 && (
+        <div className="wizard-panel">
+          <div className="wizard-intro">
+            <h2 className="wizard-intro-title">Review your site</h2>
+            <p className="wizard-intro-desc">
+              Confirm the configuration below, then deploy.
+            </p>
+          </div>
           <Card>
+            <p><strong>Site name:</strong> {name}</p>
             <p><strong>Source:</strong> {sourceLabel}</p>
-            <p><strong>Branch:</strong> {branch}</p>
-            <p><strong>Root:</strong> <code>{rootPath}</code></p>
+            <p><strong>Production branch:</strong> {branch}</p>
+            <p><strong>Root directory:</strong> <code>{rootPath}</code></p>
+            <p>
+              <strong>URL:</strong>{' '}
+              <span className="mono" style={{ fontFamily: 'var(--font-mono)' }}>
+                {siteDisplayUrl(name || 'your-site')}
+              </span>
+            </p>
             <p style={{ marginTop: 'var(--space-6)' }}>
               <Badge variant="neutral">Stack detected after build</Badge>
               <span className="dim" style={{ marginLeft: 'var(--space-4)' }}>
@@ -479,17 +524,17 @@ export default function CreateSitePage() {
           </Card>
           {error && <p className="input-error-text">{error}</p>}
           <div className="wizard-actions">
-            <Button variant="secondary" size="sm" onClick={() => setStep(1)}>
+            <Button variant="secondary" size="sm" onClick={() => setStep(2)}>
               ← Back
             </Button>
-            <Button variant="primary" size="sm" disabled={!name.trim()} onClick={handleDeploy}>
+            <Button variant="primary" size="sm" disabled={deploying} onClick={handleDeploy}>
               Deploy
             </Button>
           </div>
         </div>
       )}
 
-      {step === 3 && (
+      {step === 4 && (
         <div className="wizard-panel">
           <div className="deploy-step-layout">
             <Card className="deploy-status-card">

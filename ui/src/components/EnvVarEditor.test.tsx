@@ -1,6 +1,13 @@
 import { describe, it, expect, vi } from 'vitest'
+import { useState } from 'react'
 import { render, screen, fireEvent } from '@testing-library/react'
 import { EnvVarEditor } from './EnvVarEditor'
+
+// The editor is controlled, so a stateful wrapper mirrors real usage.
+function StatefulEnvVarEditor({ initial }: { initial: Record<string, string> }) {
+  const [vars, setVars] = useState(initial)
+  return <EnvVarEditor vars={vars} onChange={setVars} />
+}
 
 describe('EnvVarEditor', () => {
   it('renders existing key-value pairs', () => {
@@ -86,5 +93,50 @@ describe('EnvVarEditor', () => {
 
     // onChange should NOT be called because BAR already exists
     expect(onChange).not.toHaveBeenCalled()
+  })
+
+  it('does not show Revert for untouched rows', () => {
+    render(<StatefulEnvVarEditor initial={{ FOO: 'bar', BAZ: 'qux' }} />)
+
+    expect(screen.queryByText('Revert')).not.toBeInTheDocument()
+  })
+
+  it('shows a Revert action for an edited row and restores the original value', () => {
+    render(<StatefulEnvVarEditor initial={{ KEY: 'old' }} />)
+
+    fireEvent.change(screen.getByDisplayValue('old'), { target: { value: 'new' } })
+    expect(screen.getByDisplayValue('new')).toBeInTheDocument()
+    expect(screen.getByText('Revert')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByText('Revert'))
+
+    expect(screen.getByDisplayValue('old')).toBeInTheDocument()
+    expect(screen.queryByText('Revert')).not.toBeInTheDocument()
+  })
+
+  it('Revert restores the original key after a rename', () => {
+    render(<StatefulEnvVarEditor initial={{ OLD_KEY: 'val' }} />)
+
+    fireEvent.change(screen.getByDisplayValue('OLD_KEY'), { target: { value: 'NEW_KEY' } })
+    expect(screen.getByDisplayValue('NEW_KEY')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByText('Revert'))
+
+    expect(screen.getByDisplayValue('OLD_KEY')).toBeInTheDocument()
+    expect(screen.getByDisplayValue('val')).toBeInTheDocument()
+    expect(screen.queryByText('Revert')).not.toBeInTheDocument()
+  })
+
+  it('Revert removes a row that was added during editing', () => {
+    render(<StatefulEnvVarEditor initial={{ FOO: 'bar' }} />)
+
+    fireEvent.click(screen.getByText('Add Variable'))
+    expect(screen.getByDisplayValue('KEY_1')).toBeInTheDocument()
+
+    fireEvent.change(screen.getByDisplayValue(''), { target: { value: 'secret' } })
+    fireEvent.click(screen.getByText('Revert'))
+
+    expect(screen.queryByDisplayValue('KEY_1')).not.toBeInTheDocument()
+    expect(screen.getByDisplayValue('bar')).toBeInTheDocument()
   })
 })

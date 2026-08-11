@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react'
-import { PageHeader, Button, Modal } from '../components'
+import { PageHeader, Button, Modal, Dialog } from '../components'
 
 interface FileObj {
   id: string
@@ -22,6 +22,7 @@ export default function StoragePage() {
   const [uploading, setUploading] = useState(false)
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('list')
   const [previewFile, setPreviewFile] = useState<FileObj | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<FileObj | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
 
   const fetchFiles = async () => {
@@ -56,7 +57,6 @@ export default function StoragePage() {
   }
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Delete this file?')) return
     try {
       const res = await fetch(`/api/storage/files/${id}`, { method: 'DELETE' })
       if (!res.ok) { const d = await res.json(); setError(d.error || 'delete failed'); return }
@@ -79,11 +79,21 @@ export default function StoragePage() {
 
       <div className="card" style={{ marginBottom: 'var(--space-8)' }}>
         <form onSubmit={handleUpload} className="upload-form">
-          <input type="file" ref={fileRef} required aria-label="Upload file" style={{ fontSize: 'var(--text-s)' }} />
+          <input
+            type="file"
+            ref={fileRef}
+            required
+            aria-label="Upload file"
+            aria-describedby="upload-hint"
+            style={{ fontSize: 'var(--text-s)' }}
+          />
           <Button type="submit" size="sm" disabled={uploading}>
             {uploading ? 'Uploading...' : 'Upload'}
           </Button>
         </form>
+        <p id="upload-hint" className="input-hint" style={{ marginTop: 'var(--space-3)' }}>
+          Files are stored on this instance and stay available until you delete them.
+        </p>
       </div>
 
       {files.length === 0 && !error && <p className="dim">No files uploaded.</p>}
@@ -122,7 +132,7 @@ export default function StoragePage() {
                   <td>{new Date(f.created_at).toLocaleString()}</td>
                   <td className="actions-cell">
                     <a href={`/api/storage/files/${f.id}`} className="btn btn-secondary btn-sm" download={f.name} style={{ marginRight: 'var(--space-2)' }}>Download</a>
-                    <Button variant="danger" size="sm" onClick={() => handleDelete(f.id)}>Delete</Button>
+                    <Button variant="danger" size="sm" onClick={() => setDeleteTarget(f)}>Delete</Button>
                   </td>
                 </tr>
               ))}
@@ -175,6 +185,27 @@ export default function StoragePage() {
           />
         )}
       </Modal>
+
+      <Dialog
+        open={!!deleteTarget}
+        title="Delete file"
+        danger
+        confirmLabel="Delete file"
+        cancelLabel="Cancel"
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={() => {
+          const target = deleteTarget
+          setDeleteTarget(null)
+          if (target) handleDelete(target.id)
+        }}
+      >
+        {deleteTarget && (
+          <p>
+            Delete <strong>{deleteTarget.name}</strong> ({fmtSize(deleteTarget.size)})? This
+            permanently removes the file and cannot be undone.
+          </p>
+        )}
+      </Dialog>
     </div>
   )
 }
