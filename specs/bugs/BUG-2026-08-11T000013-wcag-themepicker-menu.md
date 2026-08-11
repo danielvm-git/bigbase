@@ -15,7 +15,10 @@
 Implement roving-tabindex + Arrow/Home/End per the ARIA menu pattern and switch selected items to `role="menuitemradio"` `aria-checked`, OR drop `role="menu"`/`menuitem` for a simpler accessible widget. Move focus to the selected item on open; close on blur/Tab-out.
 
 ## Status
-open
+fixed
+
+## Resolution
+2026-08-11 — `ui/src/components/ThemePicker.tsx` implements the ARIA menu pattern: items are `role="menuitemradio"` with `aria-checked` (replacing `aria-current`), roving tabindex with ArrowDown/ArrowUp/Home/End navigation (wrapping), focus moves to the selected item when the menu opens, Enter/Space activates the focused item, and focus leaving the popover (Tab-out/blur) closes it. Tests in `ui/src/components/ThemePicker.test.tsx` updated to `menuitemradio`/`aria-checked` and extended with focus-on-open, arrow/Home/End navigation, Enter selection, and Tab-out close coverage. Targeted vitest: 15/15 passed; `npm run build` green.
 
 ## Source
 wcag-2.2-audit-2026-08-11

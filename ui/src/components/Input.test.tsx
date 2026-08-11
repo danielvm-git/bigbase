@@ -69,4 +69,45 @@ describe('Input', () => {
     render(<Input as="textarea" name="query" aria-label="SQL query" />)
     expect(screen.getByLabelText('SQL query')).toHaveAttribute('id', 'query')
   })
+
+  it('associates the error message with the input via aria-describedby and aria-invalid', () => {
+    render(<Input as="input" label="Email" name="email" error="Email is required" />)
+    const input = screen.getByLabelText('Email')
+    const error = screen.getByText('Email is required')
+    expect(input).toHaveAttribute('aria-invalid', 'true')
+    expect(input).toHaveAttribute('aria-describedby', 'email-error')
+    expect(error).toHaveAttribute('id', 'email-error')
+  })
+
+  it('does not set aria-invalid or aria-describedby when there is no error or hint', () => {
+    render(<Input as="input" label="Email" name="email" />)
+    const input = screen.getByLabelText('Email')
+    expect(input).not.toHaveAttribute('aria-invalid')
+    expect(input).not.toHaveAttribute('aria-describedby')
+  })
+
+  it('associates the error message with the textarea and select variants', () => {
+    render(<Input as="textarea" label="Query" name="query" error="Invalid SQL" />)
+    const textarea = screen.getByLabelText('Query')
+    expect(textarea).toHaveAttribute('aria-invalid', 'true')
+    expect(textarea).toHaveAttribute('aria-describedby', 'query-error')
+    expect(screen.getByText('Invalid SQL')).toHaveAttribute('id', 'query-error')
+
+    render(
+      <Input as="select" label="Runtime" name="runtime" error="Pick one">
+        <option value="node">Node</option>
+      </Input>
+    )
+    const select = screen.getByLabelText('Runtime')
+    expect(select).toHaveAttribute('aria-invalid', 'true')
+    expect(select).toHaveAttribute('aria-describedby', 'runtime-error')
+    expect(screen.getByText('Pick one')).toHaveAttribute('id', 'runtime-error')
+  })
+
+  it('associates the hint via aria-describedby when there is no error', () => {
+    render(<Input as="input" label="Name" name="name" hint="Visible to your team" />)
+    const input = screen.getByLabelText('Name')
+    expect(input).toHaveAttribute('aria-describedby', 'name-hint')
+    expect(screen.getByText('Visible to your team')).toHaveAttribute('id', 'name-hint')
+  })
 })
