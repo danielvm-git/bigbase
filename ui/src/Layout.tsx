@@ -48,7 +48,7 @@ export default function Layout() {
     fetch('/api/auth/logout', { method: 'POST' }).catch(() => {})
     setUser(null)
     closeSidebar()
-    nav('/login')
+    window.location.href = '/'
   }
 
   const initial = user?.email?.[0]?.toUpperCase() || '?'
