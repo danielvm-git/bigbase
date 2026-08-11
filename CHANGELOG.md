@@ -1,3 +1,10 @@
+## [2.86.2](https://github.com/danielvm-git/bigbase/compare/v2.86.1...v2.86.2) (2026-08-11)
+
+
+### Bug Fixes
+
+* **ui:** logout redirects to the landing page instead of /login ([12fec11](https://github.com/danielvm-git/bigbase/commit/12fec11c50334efc84f6c85db0efed4ea6464ed4))
+
 ## [2.86.1](https://github.com/danielvm-git/bigbase/compare/v2.86.0...v2.86.1) (2026-08-11)
 
 
