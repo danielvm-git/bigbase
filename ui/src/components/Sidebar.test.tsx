@@ -28,6 +28,15 @@ describe('SidebarSection', () => {
     wrap(<SidebarSection title="Build" items={items} />)
     expect(screen.getByRole('link', { name: /Home/ })).toHaveAttribute('href', '/home')
   })
+
+  it('gives every nav link an accessible name even when labels are hidden', () => {
+    // On mobile (<=768px) the label span is display:none, so links must carry an
+    // explicit aria-label to keep a non-empty accessible name (WCAG 4.1.2).
+    wrap(<SidebarSection title="Build" items={items} />)
+    const links = screen.getAllByRole('link')
+    expect(links.length).toBeGreaterThan(0)
+    expect(links.every(l => l.getAttribute('aria-label') || l.textContent.trim())).toBe(true)
+  })
 })
 
 describe('Sidebar', () => {
