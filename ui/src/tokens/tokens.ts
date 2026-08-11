@@ -54,7 +54,7 @@ export const TOKENS: DesignTokens = {
   fg: {
     primary: 'var(--neutral-800)',
     secondary: 'var(--neutral-600)',
-    tertiary: 'var(--neutral-400)',
+    tertiary: 'var(--neutral-600)',
     accent: 'var(--brand-500)',
     onAccent: 'var(--neutral-0)',
   },

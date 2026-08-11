@@ -26,7 +26,19 @@ Used for: input placeholder text (`.input::placeholder`), hints, tertiary labels
 Darken `--neutral-400` from rgb(151,151,155) to ≥ rgb(122,122,127) (≈4.5:1), or introduce a distinct compliant `--fg-placeholder`/`--fg-tertiary` token and re-point consumers.
 
 ## Status
-open
+fixed
+
+## Resolution
+Fixed 2026-08-11. Darkened the semantic `--fg-tertiary` mapping (neutral scale untouched; `--neutral-400` remains for non-text borders).
+
+- Light mode (`ui/src/styles/tokens.css`): `--fg-tertiary: var(--neutral-400)` → `var(--neutral-600)` (rgb 108,108,113).
+  - neutral-600 on white (bg-surface): **5.22:1** PASS
+  - neutral-600 on neutral-25 (bg-default): **5.01:1** PASS
+- Dark mode (`ui/src/styles/theme.css`): `--fg-tertiary: var(--neutral-500)` → `var(--neutral-400)` (rgb 151,151,155).
+  - neutral-400 on neutral-850 (bg-surface): **5.77:1** PASS
+- `ui/src/tokens/tokens.ts` TS token mirror `fg.tertiary` aligned to `var(--neutral-600)`.
+- Consumer audit (grep): every text consumer (`.input::placeholder`, hints, breadcrumbs, empty states, `.btn-ghost:disabled`, `.status-indicator-pending`, table headers, etc.) reads `var(--fg-tertiary)` and is covered by the token change. No CSS rule consumes `--input-placeholder` for text (definition retained). The only direct `--neutral-500` text use, `.sql-textarea::placeholder`, sits on the code editor's fixed `--neutral-900` background where it passes at **4.53:1** (re-pointing it to the new light-mode `--fg-tertiary` would regress it to 3.36:1, so it was left as-is).
+- Verified with node contrast script; `npm run build` green.
 
 ## Source
 wcag-2.2-audit-2026-08-11
