@@ -16,7 +16,10 @@ Streaming/static log regions lack `role="log"` + `aria-live` (newly streamed lin
 Add `role="log" aria-live="polite" aria-label="<name> log" tabIndex={0}` to each log container so streamed lines are announced and keyboard users can focus+scroll.
 
 ## Status
-open
+fixed
+
+## Resolution
+Added `role="log" aria-live="polite" aria-label` + `tabIndex={0}` to the log regions in BuildLogs.tsx, StreamLog.tsx, and FunctionLogsPanel.tsx (keyboard-scrollable live regions). Loading/error states already carried `role="status" aria-busy` / `role="alert"`.
 
 ## Source
 wcag-2.2-audit-2026-08-11

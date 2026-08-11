@@ -44,4 +44,26 @@ describe('StreamLog', () => {
     const container = screen.getByTestId('stream-log-container')
     expect(container.className).toContain('custom-log')
   })
+
+  it('exposes the log region with live-region semantics and keyboard scroll', () => {
+    render(<StreamLog logs={['building...']} />)
+
+    const log = screen.getByRole('log', { name: 'Build log' })
+    expect(log).toHaveAttribute('aria-live', 'polite')
+    expect(log).toHaveAttribute('tabindex', '0')
+  })
+
+  it('gives the timestamp toggle an accessible name', () => {
+    render(<StreamLog logs={['building...']} />)
+
+    expect(screen.getByRole('button', { name: 'Toggle timestamps' })).toBeInTheDocument()
+  })
+
+  it('gives the copy button an accessible name without emoji glyphs', () => {
+    render(<StreamLog logs={['building...']} />)
+
+    const copy = screen.getByRole('button', { name: /copy/i })
+    expect(copy).toHaveAccessibleName(/copy/i)
+    expect(copy.querySelector('[aria-hidden="true"]')).toHaveTextContent('📋')
+  })
 })

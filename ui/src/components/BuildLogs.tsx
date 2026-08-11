@@ -34,6 +34,10 @@ export function BuildLogs({ lines, loading, error }: BuildLogsProps) {
   return (
     <pre
       ref={preRef}
+      role="log"
+      aria-live="polite"
+      aria-label="Build log"
+      tabIndex={0}
       style={{
         background: 'var(--bg-code, #1e1e1e)',
         color: '#d4d4d4',

@@ -79,6 +79,28 @@ describe('FunctionLogsPanel', () => {
     })
   })
 
+  it('exposes execution logs as live regions with keyboard scroll', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve(mockLogsResponse),
+    } as Response)
+
+    render(
+      <MemoryRouter>
+        <FunctionLogsPanel functionId="fn-123" />
+      </MemoryRouter>,
+    )
+
+    await waitFor(() => {
+      const logs = screen.getAllByRole('log', { name: 'Function log' })
+      expect(logs).toHaveLength(2)
+      logs.forEach(log => {
+        expect(log).toHaveAttribute('aria-live', 'polite')
+        expect(log).toHaveAttribute('tabindex', '0')
+      })
+    })
+  })
+
   it('shows error message for failed executions', async () => {
     vi.spyOn(globalThis, 'fetch').mockResolvedValue({
       ok: true,
