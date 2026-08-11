@@ -1,3 +1,10 @@
+## [2.88.1](https://github.com/danielvm-git/bigbase/compare/v2.88.0...v2.88.1) (2026-08-11)
+
+
+### Bug Fixes
+
+* **proxy:** landing + docs pages reach WCAG AA/AAA parity with admin ([2f9e8ad](https://github.com/danielvm-git/bigbase/commit/2f9e8adfd5f6f78da6a063c16a09777f1bbd160f)), closes [#4b4b50](https://github.com/danielvm-git/bigbase/issues/4b4b50) [#4b4b50](https://github.com/danielvm-git/bigbase/issues/4b4b50) [#044e3a](https://github.com/danielvm-git/bigbase/issues/044e3a)
+
 # [2.88.0](https://github.com/danielvm-git/bigbase/compare/v2.87.0...v2.88.0) (2026-08-11)
 
 
