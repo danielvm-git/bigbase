@@ -2397,7 +2397,7 @@ bugs:
     scope: ui
     summary: "WCAG 4.1.2/2.1.1: Tabs component missing entire ARIA tablist/tab/tabpanel pattern + arrow-key navigation (affects 6 pages)"
     file: specs/bugs/BUG-2026-08-11T000006-wcag-tabs-aria-pattern.md
-    status: open
+    status: fixed
     audit_source: wcag-2.2-audit-2026-08-11
     files_changed:
       - ui/src/components/Tabs.tsx
@@ -2408,6 +2408,8 @@ bugs:
       - ui/src/pages/SiteDetailPage.tsx
     approach: Add role=tablist/tab/tabpanel, aria-selected, aria-controls/aria-labelledby, roving tabindex, Arrow/Home/End keys.
     risk_level: high
+    regression_guards:
+      - "ui/src/components/Tabs.test.tsx (WAI-ARIA tabs pattern + roving tabindex tests)"
   - id: BUG-2026-08-11T000007
     date: "2026-08-11"
     severity: high
@@ -2415,7 +2417,7 @@ bugs:
     scope: ui
     summary: "WCAG 3.3.2/4.1.2: Systemic placeholder-only form controls with no accessible name across 15+ files (Login, SqlEditor, Functions, Messaging, Forge, Cici, Monitoring, site tabs, log filters)"
     file: specs/bugs/BUG-2026-08-11T000007-wcag-unlabeled-form-controls.md
-    status: open
+    status: fixed
     audit_source: wcag-2.2-audit-2026-08-11
     files_changed:
       - ui/src/pages/LoginPage.tsx
@@ -2434,6 +2436,8 @@ bugs:
       - ui/src/components/SiteDomainsTab.tsx
     approach: Pass label (or aria-label) to every Input/select/textarea; add sr-only utility class; link existing labels via htmlFor/id.
     risk_level: high
+    regression_guards:
+      - "ui/src/components/Input.test.tsx (accessible-name regression tests)"
   - id: BUG-2026-08-11T000008
     date: "2026-08-11"
     severity: high
@@ -2441,7 +2445,7 @@ bugs:
     scope: ui
     summary: "WCAG 4.1.3: Loading/error/status states not announced across 12 components — no role=status/aria-busy for loaders, no role=alert for errors, no aria-live for SSE updates"
     file: specs/bugs/BUG-2026-08-11T000008-wcag-live-regions-missing.md
-    status: open
+    status: fixed
     audit_source: wcag-2.2-audit-2026-08-11
     files_changed:
       - ui/src/components/BuildLogs.tsx
@@ -2458,6 +2462,9 @@ bugs:
       - ui/src/pages/MonitoringPage.tsx
     approach: Wrap loading states in role=status aria-busy; dynamic errors get role=alert; SSE regions get aria-live=polite. Copy Spinner/SkeletonCard patterns.
     risk_level: high
+    regression_guards:
+      - "ui/src/components/ListPage.test.tsx (live-region assertions)"
+      - "ui/src/pages/DashboardPage.test.tsx (role=status loading assertion)"
   - id: BUG-2026-08-11T000009
     date: "2026-08-11"
     severity: high
@@ -2465,7 +2472,7 @@ bugs:
     scope: ui
     summary: "WCAG 2.1.1: Click-only divs/spans without keyboard access — Card onClick div, ForgePage board cards, StoragePage image triggers, DropdownMenu trigger span"
     file: specs/bugs/BUG-2026-08-11T000009-wcag-click-only-divs.md
-    status: open
+    status: fixed
     audit_source: wcag-2.2-audit-2026-08-11
     files_changed:
       - ui/src/components/Card.tsx
@@ -2474,6 +2481,9 @@ bugs:
       - ui/src/pages/StoragePage.tsx
     approach: Render real button/a elements, or auto-add role=button + tabIndex=0 + onKeyDown (Enter/Space) when interactive.
     risk_level: high
+    regression_guards:
+      - "ui/src/components/Card.test.tsx (keyboard-activation tests)"
+      - "ui/src/components/DropdownMenu.test.tsx (keyboard-access tests)"
   - id: BUG-2026-08-11T000010
     date: "2026-08-11"
     severity: high
@@ -2481,12 +2491,14 @@ bugs:
     scope: ui
     summary: "WCAG 2.1.2/2.4.3: Dialog component missing focus trap, focus restoration, and initial focus (Escape only)"
     file: specs/bugs/BUG-2026-08-11T000010-wcag-dialog-focus-mgmt.md
-    status: open
+    status: fixed
     audit_source: wcag-2.2-audit-2026-08-11
     files_changed:
       - ui/src/components/Dialog.tsx
     approach: Port focus-management effect from Modal.tsx (capture trigger, focus dialog, trap Tab, restore on unmount).
     risk_level: high
+    regression_guards:
+      - "ui/src/components/Dialog.test.tsx (focus trap + initial focus + restoration tests)"
   - id: BUG-2026-08-11T000011
     date: "2026-08-11"
     severity: high

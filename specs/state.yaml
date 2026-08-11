@@ -36,10 +36,16 @@ epic_cycle:
   note: "e85 complete — landing page theme parity with admin (light/dark + 13 accents). Full auto-run (yolo). PR #234. trace + OKF wiki scripts not vendored (skipped, non-blocking)."
   fast_mode: true
 bug_cycle:
-  current_step: 1
-  completed_steps: []
+  current_step: 5
+  completed_steps:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
   batch: "wcag-serious-5 (T000006-T000010)"
   worktree_strategy: "5 parallel worktrees/branches, one per bug"
+  note: "T000006-T000010 fixed and merged to main (Tabs ARIA, form labels, live regions, click-divs, Dialog focus). Full UI suite 577/577, build + lint green. Next open batch: T000011-T000015."
 git:
   branch: main
   hash: 13dbb0acd
