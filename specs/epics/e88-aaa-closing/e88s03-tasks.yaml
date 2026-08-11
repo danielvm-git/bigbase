@@ -1,0 +1,58 @@
+story_id: e88s03
+title: "AAA re-certification — matrix + axe + conformance statement"
+status: failing
+bcps: 3
+tasks:
+  - id: e88s03t1
+    description: "Run the full accent-theme contrast matrix (default + 13 themes x light/dark links) — assert 14/14 PASS >=7:1"
+    verify: "node specs/epics/e88-aaa-closing/e88s01-contrast-matrix.mjs | tail -1 | grep -q PASS"
+    risk: P1
+    status: failing
+    security: none
+    allure:
+      severity: high
+      categories:
+        - "Accessibility"
+        - "Regression"
+  - id: e88s03t2
+    description: "Full UI suite + build + lint on merged main"
+    verify: "cd ui && npx vitest run 2>&1 | tail -2 | grep -q 'passed' && cd ui && npm run build && cd ui && npm run lint && echo 'suite green'"
+    risk: P1
+    status: failing
+    security: none
+    allure:
+      severity: high
+      categories:
+        - "unit"
+        - "Regression"
+  - id: e88s03t3
+    description: "axe scan 17 routes on the rebuilt dist (build must precede scan)"
+    verify: "npx playwright test axe-scan --config tests/e2e/playwright.config.ts 2>&1 | tail -1 | grep -q '17 passed'"
+    risk: P1
+    status: failing
+    security: none
+    allure:
+      severity: high
+      categories:
+        - "e2e"
+        - "Accessibility"
+  - id: e88s03t4
+    description: "Update CONFORMANCE.md with the certified run (date, version, gate results); tick e88 acceptance"
+    verify: "grep -q 'certified' specs/CONFORMANCE.md && echo 'conformance certified'"
+    risk: P3
+    status: failing
+    security: none
+    allure:
+      severity: minor
+      categories:
+        - "Documentation"
+  - id: e88s03t5
+    description: "Release: land on main (solo), archive e88 capsule, push -> CI + semantic-release; confirm release tag"
+    verify: "git log --oneline -1 && gh release view --json tagName 2>/dev/null | grep -q tagName && echo 'release cut'"
+    risk: P1
+    status: failing
+    security: none
+    allure:
+      severity: high
+      categories:
+        - "Release"

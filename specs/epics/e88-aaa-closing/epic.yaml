@@ -1,0 +1,58 @@
+type: epic-shard
+context: domain
+id: e88
+title: "WCAG AAA Closing — Accent-Theme Link Contrast + Formal Conformance"
+wsjf: 5.0
+wsjf_rationale: "BV=4 (completes the strict AAA claim started in e87) TC=2 RR=4 (removes the last documented 1.4.6 partial) / JS=2 (3 small stories: 13-value data table + exception docs + re-cert) = 10/2"
+total_bcps: 8
+status: open
+tier: 2
+depends_on:
+  - e87
+note: |
+  3 stories, 8 BCPs. The final work between 'AAA substantially met' and a
+  strict AAA claim (v2.87.0 shipped e87; this epic closes the two remaining
+  partials):
+  - e88s01: per-theme light-mode link color >=7:1 for all 13 accent themes
+    (brand600 of july/august/september/may/etc. is 4.23-6.8:1 on white).
+    Adds a per-theme AAA link step to accentThemes.ts, used for light-mode
+    --fg-accent; dark-mode links already >=7:1 via brand300 (e87).
+  - e88s02: formal conformance exception record — 1.4.8 partial (user-
+    selectable fg/bg + spacing controls out, OS/browser settings + density
+    rationale) and 2.2.3 essential/security exception (JWT session expiry),
+    plus verified implemented 1.4.8 bullets.
+  - e88s03: re-certification — full contrast matrix (default + 13 themes,
+    light + dark), axe 17/17 re-run, conformance statement.
+
+implementation_order:
+  - e88s01  # data + verification
+  - e88s02  # exception record (independent)
+  - e88s03  # re-cert after s01/s02
+
+prerequisites:
+  - "ui/src/context/accentThemes.ts (13-theme ramp, brand300 added in e87)"
+  - "contrast matrix script: specs/epics/archive/e87-wcag-aaa/e87s01-contrast-matrix.mjs (extend for accent themes)"
+  - "axe gate: tests/e2e/axe-scan.spec.ts (17 routes, wcag2a+aa+aaa)"
+
+stories:
+  - id: e88s01
+    title: "Accent-theme light-mode link contrast >=7:1 (1.4.6)"
+    bcps: 3
+    status: open
+    depends_on: []
+    spec: e88s01-spec.md
+    tasks: e88s01-tasks.yaml
+  - id: e88s02
+    title: "Formal conformance exceptions (1.4.8 partial + 2.2.3 security)"
+    bcps: 2
+    status: open
+    depends_on: []
+    spec: e88s02-spec.md
+    tasks: e88s02-tasks.yaml
+  - id: e88s03
+    title: "AAA re-certification — matrix + axe + conformance statement"
+    bcps: 3
+    status: open
+    depends_on: [e88s01, e88s02]
+    spec: e88s03-spec.md
+    tasks: e88s03-tasks.yaml

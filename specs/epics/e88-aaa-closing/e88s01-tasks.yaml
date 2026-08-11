@@ -1,0 +1,60 @@
+story_id: e88s01
+title: "Accent-theme light-mode link contrast >=7:1 (1.4.6)"
+status: failing
+bcps: 3
+tasks:
+  - id: e88s01t1
+    description: "Compute brandLink per theme (darken brand700 until >=7:1 on white; Tailwind 800-level); record all 13 values + ratios in the spec"
+    verify: "grep -q 'brandLink' specs/epics/e88-aaa-closing/e88s01-spec.md && echo '13 brandLink values recorded'"
+    risk: P1
+    status: failing
+    security: none
+    allure:
+      severity: high
+      categories:
+        - "Accessibility"
+        - "AAA"
+  - id: e88s01t2
+    description: "Add brandLink to all 13 AccentTheme entries in accentThemes.ts (RGB comma-string)"
+    verify: "grep -c 'brandLink' ui/src/context/accentThemes.ts && cd ui && npm run build"
+    risk: P1
+    status: failing
+    security: none
+    allure:
+      severity: high
+      categories:
+        - "Accessibility"
+        - "AAA"
+  - id: e88s01t3
+    description: "ThemeContext: light-mode --fg-accent uses per-theme brandLink; dark keeps brand300; update applyAccentToDocument"
+    verify: "cd ui && npm run build && cd ui && npx vitest run src/context/ThemeContext.test.tsx"
+    risk: P1
+    status: failing
+    security: none
+    allure:
+      severity: high
+      categories:
+        - "Accessibility"
+        - "AAA"
+  - id: e88s01t4
+    description: "Extend the contrast matrix script to cover default + 13 themes x light link on white + dark link on neutral-850, all >=7:1"
+    verify: "node specs/epics/e88-aaa-closing/e88s01-contrast-matrix.mjs | tail -1 | grep -q PASS"
+    risk: P1
+    status: failing
+    security: none
+    allure:
+      severity: high
+      categories:
+        - "Accessibility"
+        - "Regression"
+  - id: e88s01t5
+    description: "ThemeContext tests: update october --fg-accent expectation + add per-theme >=7:1 assertion loop"
+    verify: "cd ui && npx vitest run src/context/ThemeContext.test.tsx 2>&1 | tail -2 | grep -q 'passed'"
+    risk: P2
+    status: failing
+    security: none
+    allure:
+      severity: normal
+      categories:
+        - "Accessibility"
+        - "unit"

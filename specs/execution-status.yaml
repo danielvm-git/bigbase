@@ -83,6 +83,7 @@ epics:
   e85: done
   e86: open
   e87: open
+  e88: open
 stories:
   e01s01: done
   e02s01: done
@@ -322,3 +323,6 @@ stories:
   e87s05: open
   e87s06: open
   e87s07: open
+  e88s01: open
+  e88s02: open
+  e88s03: open

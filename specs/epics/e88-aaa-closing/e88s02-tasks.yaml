@@ -1,0 +1,37 @@
+story_id: e88s02
+title: "Formal conformance exceptions (1.4.8 partial + 2.2.3 security)"
+status: failing
+bcps: 2
+tasks:
+  - id: e88s02t1
+    description: "Verify implemented 1.4.8 bullets on current build: line-height >=1.5, rem text tokens, no justified text"
+    verify: "grep -q 'line-height: 1.5' ui/src/styles/tokens.css && grep -q '0.75rem' ui/src/styles/tokens.css && echo '1.4.8 implemented bullets verified'"
+    risk: P3
+    status: failing
+    security: none
+    allure:
+      severity: minor
+      categories:
+        - "Accessibility"
+        - "Documentation"
+  - id: e88s02t2
+    description: "Write specs/CONFORMANCE.md: criteria evidence table, 1.4.8 partial rationale, 2.2.3 essential/security exception, honest claim wording (AA certified; AAA except documented partials)"
+    verify: "grep -q '1.4.8' specs/CONFORMANCE.md && grep -q '2.2.3' specs/CONFORMANCE.md && grep -q 'certified' specs/CONFORMANCE.md"
+    risk: P3
+    status: failing
+    security: none
+    allure:
+      severity: minor
+      categories:
+        - "Documentation"
+        - "Accessibility"
+  - id: e88s02t3
+    description: "Cross-link CONFORMANCE.md from the e88 epic note + release-plan e88 note"
+    verify: "grep -c 'CONFORMANCE' specs/epics/e88-aaa-closing/epic.yaml"
+    risk: P3
+    status: failing
+    security: none
+    allure:
+      severity: minor
+      categories:
+        - "Documentation"
