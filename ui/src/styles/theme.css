@@ -13,7 +13,7 @@
   /* ── Foreground semantic roles (dark mode) ──────────────── */
   --fg-primary: var(--neutral-25);
   --fg-secondary: var(--neutral-300);
-  --fg-tertiary: var(--neutral-500);
+  --fg-tertiary: var(--neutral-400);
 
   /* ── Border semantic roles (dark mode) ──────────────────── */
   --border-default: var(--neutral-750);

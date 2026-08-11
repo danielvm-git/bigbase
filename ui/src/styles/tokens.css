@@ -57,7 +57,7 @@
   /* ── Foreground semantic roles ──────────────────────────── */
   --fg-primary: var(--neutral-800);
   --fg-secondary: var(--neutral-600);
-  --fg-tertiary: var(--neutral-400);
+  --fg-tertiary: var(--neutral-600);
   --fg-accent: var(--brand-500);
   --fg-on-accent: var(--neutral-0);
 
