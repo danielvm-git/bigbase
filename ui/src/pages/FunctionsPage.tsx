@@ -122,19 +122,19 @@ export default function FunctionsPage() {
             {editing ? 'Edit Function' : 'New Function'}
           </h3>
           <form onSubmit={handleSave} className="fn-form">
-            <Input placeholder="Name *" value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} required />
-            <Input as="select" value={form.runtime} onChange={e => setForm(p => ({ ...p, runtime: e.target.value }))}>
+            <Input label="Name" placeholder="Name *" value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} required />
+            <Input as="select" aria-label="Runtime" value={form.runtime} onChange={e => setForm(p => ({ ...p, runtime: e.target.value }))}>
               <option value="javascript">JavaScript</option>
             </Input>
-            <Input as="select" value={form.trigger} onChange={e => setForm(p => ({ ...p, trigger: e.target.value }))}>
+            <Input as="select" aria-label="Trigger" value={form.trigger} onChange={e => setForm(p => ({ ...p, trigger: e.target.value }))}>
               <option value="http">HTTP</option>
               <option value="schedule">Schedule</option>
               <option value="event">Event</option>
             </Input>
-            {form.trigger === 'schedule' && <Input placeholder="Cron schedule" value={form.schedule} onChange={e => setForm(p => ({ ...p, schedule: e.target.value }))} />}
-            <Input placeholder='Env JSON ({"KEY":"val"})' value={form.env} onChange={e => setForm(p => ({ ...p, env: e.target.value }))} />
-            <Input placeholder="Timeout (seconds)" type="number" value={form.timeout} onChange={e => setForm(p => ({ ...p, timeout: +e.target.value }))} />
-            <Input as="textarea" placeholder="Source code *" value={form.source} onChange={e => setForm(p => ({ ...p, source: e.target.value }))} required rows={8} className="code-textarea" />
+            {form.trigger === 'schedule' && <Input label="Cron schedule" placeholder="Cron schedule" value={form.schedule} onChange={e => setForm(p => ({ ...p, schedule: e.target.value }))} />}
+            <Input label="Env JSON" placeholder='Env JSON ({"KEY":"val"})' value={form.env} onChange={e => setForm(p => ({ ...p, env: e.target.value }))} />
+            <Input label="Timeout (seconds)" placeholder="Timeout (seconds)" type="number" value={form.timeout} onChange={e => setForm(p => ({ ...p, timeout: +e.target.value }))} />
+            <Input as="textarea" aria-label="Source code" placeholder="Source code *" value={form.source} onChange={e => setForm(p => ({ ...p, source: e.target.value }))} required rows={8} className="code-textarea" />
             <div className="form-actions">
               <Button type="submit">{editing ? 'Update' : 'Create'}</Button>
               <Button type="button" variant="secondary" onClick={() => setShowForm(false)}>Cancel</Button>

@@ -79,7 +79,7 @@ export default function StoragePage() {
 
       <div className="card" style={{ marginBottom: 'var(--space-8)' }}>
         <form onSubmit={handleUpload} className="upload-form">
-          <input type="file" ref={fileRef} required style={{ fontSize: 'var(--text-s)' }} />
+          <input type="file" ref={fileRef} required aria-label="Upload file" style={{ fontSize: 'var(--text-s)' }} />
           <Button type="submit" size="sm" disabled={uploading}>
             {uploading ? 'Uploading...' : 'Upload'}
           </Button>

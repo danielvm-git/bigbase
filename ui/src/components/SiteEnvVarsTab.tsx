@@ -96,9 +96,10 @@ function AddEditForm({
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-3)', alignItems: 'flex-start' }}>
         {!isEdit && (
           <div style={{ flex: '1 1 180px' }}>
-            <label className="label">Key</label>
+            <label className="label" htmlFor="env-key">Key</label>
             <input
               className="input"
+              id="env-key"
               placeholder="DATABASE_URL"
               value={key}
               onChange={e => { setKey(e.target.value.toUpperCase()); setKeyError('') }}
@@ -109,10 +110,11 @@ function AddEditForm({
           </div>
         )}
         <div style={{ flex: '2 1 240px' }}>
-          <label className="label">Value</label>
+          <label className="label" htmlFor="env-value">Value</label>
           <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
             <input
               className="input"
+              id="env-value"
               type={showValue ? 'text' : 'password'}
               placeholder="Enter value…"
               value={value}
@@ -249,7 +251,7 @@ export function SiteEnvVarsTab({ siteId }: { siteId: string }) {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-4)' }}>
         <h2 className="section-title" style={{ margin: 0 }}>Environment Variables</h2>
         <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
-          <input ref={fileRef} type="file" accept=".env,text/plain" style={{ display: 'none' }}
+          <input ref={fileRef} type="file" accept=".env,text/plain" style={{ display: 'none' }} aria-label="Import .env file"
             onChange={e => { const f = e.target.files?.[0]; if (f) void handleImportFile(f); e.target.value = '' }}
           />
           <Button variant="secondary" size="sm" onClick={() => fileRef.current?.click()} disabled={importing}>

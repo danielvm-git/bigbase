@@ -198,12 +198,14 @@ export default function DataStudioPage() {
           {selected && mode === 'data' && !recordError && (
             <div style={{ display: 'flex', gap: 'var(--space-4)', marginBottom: 'var(--space-4)', flexWrap: 'wrap' }}>
               <Input
+                aria-label="Filter records"
                 placeholder="filter: field=value or field:gt=value"
                 value={filterValue}
                 onChange={e => { setFilterValue(e.target.value); if (selected) loadRecords(selected, e.target.value, sortField) }}
                 style={{ flex: 2, minWidth: 200 }}
               />
               <Input
+                aria-label="Sort records"
                 placeholder="sort: field or -field"
                 value={sortField}
                 onChange={e => { setSortField(e.target.value); if (selected) loadRecords(selected, filterValue, e.target.value) }}
@@ -233,8 +235,8 @@ export default function DataStudioPage() {
       </div>
 
       <Modal open={modalOpen} onClose={() => setModalOpen(false)} title={editCol ? 'Edit column' : 'Add column'}>
-        <Input placeholder="Column name" value={colName} onChange={e => setColName(e.target.value)} />
-        <Input as="select" value={colType} onChange={e => setColType(e.target.value)} style={{ marginTop: 'var(--space-4)' }}>
+        <Input label="Column name" placeholder="Column name" value={colName} onChange={e => setColName(e.target.value)} />
+        <Input as="select" aria-label="Column type" value={colType} onChange={e => setColType(e.target.value)} style={{ marginTop: 'var(--space-4)' }}>
           <option value="text">text</option>
           <option value="integer">integer</option>
           <option value="number">number</option>

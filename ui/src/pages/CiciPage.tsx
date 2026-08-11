@@ -91,7 +91,7 @@ export default function CiciPage() {
     <div>
       <PageHeader title="CI/CD" />
       <p className="dim">Select a repo to view workflows.</p>
-      <select value={repoId} onChange={e => setRepoId(e.target.value)} className="input" style={{ maxWidth: 240, marginTop: 'var(--space-4)' }}>
+      <select value={repoId} onChange={e => setRepoId(e.target.value)} className="input" aria-label="Repository" style={{ maxWidth: 240, marginTop: 'var(--space-4)' }}>
         <option value="">Select repo...</option>
         {repos.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
       </select>
@@ -103,7 +103,7 @@ export default function CiciPage() {
   return (
     <div>
       <PageHeader title="CI/CD">
-        <select value={repoId} onChange={e => setRepoId(e.target.value)} className="input" style={{ maxWidth: 200 }}>
+        <select value={repoId} onChange={e => setRepoId(e.target.value)} className="input" aria-label="Repository" style={{ maxWidth: 200 }}>
           {repos.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
         </select>
         <Button variant="primary" size="sm" onClick={() => setShowForm(!showForm)}>
@@ -116,8 +116,8 @@ export default function CiciPage() {
         <div className="card" style={{ marginBottom: 'var(--space-8)' }}>
           <h3 style={{ marginBottom: 'var(--space-6)', fontSize: 'var(--text-m)', fontWeight: 600 }}>New Workflow</h3>
           <form onSubmit={handleCreateWorkflow} className="fn-form">
-            <Input placeholder="Workflow name *" value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} required />
-            <Input as="textarea" placeholder="YAML config *" value={form.yaml} onChange={e => setForm(p => ({ ...p, yaml: e.target.value }))} required rows={10} className="code-textarea" />
+            <Input label="Workflow name" placeholder="Workflow name *" value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} required />
+            <Input as="textarea" aria-label="YAML config" placeholder="YAML config *" value={form.yaml} onChange={e => setForm(p => ({ ...p, yaml: e.target.value }))} required rows={10} className="code-textarea" />
             <Button type="submit">Save</Button>
           </form>
         </div>

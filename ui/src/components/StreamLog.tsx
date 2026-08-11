@@ -79,6 +79,7 @@ export function StreamLog({
           <input
             type="text"
             className="stream-log-search"
+            aria-label="Filter logs"
             placeholder="Filter logs..."
             value={searchQuery}
             onChange={e => handleSearchChange(e.target.value)}

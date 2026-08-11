@@ -124,11 +124,12 @@ function GenerateModal({
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
           <div>
-            <label style={{ display: 'block', fontSize: 'var(--text-sm)', fontWeight: 500, marginBottom: 'var(--space-1)' }}>
+            <label htmlFor="deploy-key-name" style={{ display: 'block', fontSize: 'var(--text-sm)', fontWeight: 500, marginBottom: 'var(--space-1)' }}>
               Key Name
             </label>
             <input
               type="text"
+              id="deploy-key-name"
               placeholder="e.g. ci-bot"
               value={name}
               onChange={e => { setName(e.target.value); setError(undefined) }}

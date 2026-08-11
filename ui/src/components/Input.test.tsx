@@ -40,4 +40,33 @@ describe('Input', () => {
     expect(screen.getByLabelText('Token')).toHaveClass('input-mono')
     expect(screen.getByTestId('prefix')).toBeInTheDocument()
   })
+
+  it('links the label to the input via htmlFor/id', () => {
+    const { container } = render(<Input as="input" label="Email" name="email" />)
+    const label = container.querySelector('.input-label')
+    expect(label).toHaveAttribute('for', 'email')
+    expect(screen.getByLabelText('Email')).toHaveAttribute('id', 'email')
+  })
+
+  it('falls back to id when name is absent for the label linkage', () => {
+    const { container } = render(<Input as="input" label="Site name" id="site-name" />)
+    expect(container.querySelector('.input-label')).toHaveAttribute('for', 'site-name')
+    expect(screen.getByLabelText('Site name')).toHaveAttribute('id', 'site-name')
+  })
+
+  it('passes aria-label through to the input variant', () => {
+    render(<Input as="input" name="log-search" aria-label="Search logs" />)
+    expect(screen.getByLabelText('Search logs')).toHaveAttribute('id', 'log-search')
+  })
+
+  it('passes aria-label through to the select and textarea variants', () => {
+    render(
+      <Input as="select" name="runtime" aria-label="Runtime">
+        <option value="javascript">JavaScript</option>
+      </Input>
+    )
+    expect(screen.getByLabelText('Runtime')).toHaveAttribute('id', 'runtime')
+    render(<Input as="textarea" name="query" aria-label="SQL query" />)
+    expect(screen.getByLabelText('SQL query')).toHaveAttribute('id', 'query')
+  })
 })

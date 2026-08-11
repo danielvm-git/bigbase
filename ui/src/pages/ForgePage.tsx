@@ -103,7 +103,7 @@ export default function ForgePage() {
     <div>
       <PageHeader title="Forge" />
       <p className="dim">Select a repo to view issues.</p>
-      <select value={repoId} onChange={e => setRepoId(e.target.value)} className="input" style={{ maxWidth: 240, marginTop: 'var(--space-4)' }}>
+      <select value={repoId} onChange={e => setRepoId(e.target.value)} className="input" aria-label="Repository" style={{ maxWidth: 240, marginTop: 'var(--space-4)' }}>
         <option value="">Select repo...</option>
         {repos.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
       </select>
@@ -122,7 +122,7 @@ export default function ForgePage() {
   return (
     <div>
       <PageHeader title="Forge">
-        <select value={repoId} onChange={e => setRepoId(e.target.value)} className="input" style={{ maxWidth: 200 }}>
+        <select value={repoId} onChange={e => setRepoId(e.target.value)} className="input" aria-label="Repository" style={{ maxWidth: 200 }}>
           {repos.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
         </select>
         <Button variant="primary" size="sm" onClick={() => setShowForm(!showForm)}>
@@ -137,9 +137,9 @@ export default function ForgePage() {
         <div className="card" style={{ marginBottom: 'var(--space-8)' }}>
           <h3 style={{ marginBottom: 'var(--space-6)', fontSize: 'var(--text-m)', fontWeight: 600 }}>New Issue</h3>
           <form onSubmit={handleCreate} className="fn-form">
-            <Input placeholder="Title *" value={form.title} onChange={e => setForm(p => ({ ...p, title: e.target.value }))} required />
-            <Input as="textarea" placeholder="Description" value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} rows={4} />
-            <Input placeholder="Labels (comma-separated)" value={form.labels} onChange={e => setForm(p => ({ ...p, labels: e.target.value }))} />
+            <Input label="Title" placeholder="Title *" value={form.title} onChange={e => setForm(p => ({ ...p, title: e.target.value }))} required />
+            <Input as="textarea" aria-label="Description" placeholder="Description" value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} rows={4} />
+            <Input label="Labels" placeholder="Labels (comma-separated)" value={form.labels} onChange={e => setForm(p => ({ ...p, labels: e.target.value }))} />
             <Button type="submit">Create</Button>
           </form>
         </div>
@@ -166,7 +166,7 @@ export default function ForgePage() {
                         <button className="btn-link" onClick={() => { setSelectedIssue(issue); loadComments(issue.id) }}>{issue.title}</button>
                       </td>
                       <td>
-                        <select value={issue.status} onChange={e => handleStatusChange(issue.id, e.target.value)} className="status-select">
+                        <select value={issue.status} onChange={e => handleStatusChange(issue.id, e.target.value)} className="status-select" aria-label={`Status for ${issue.title}`}>
                           <option value="open">Open</option>
                           <option value="in_progress">In Progress</option>
                           <option value="review">Review</option>
@@ -206,7 +206,7 @@ export default function ForgePage() {
                 </div>
               )}
               <form onSubmit={handleComment} className="form-row" style={{ marginTop: 'var(--space-4)' }}>
-                <Input placeholder="Add a comment..." value={commentText} onChange={e => setCommentText(e.target.value)} />
+                <Input aria-label="Add a comment" placeholder="Add a comment..." value={commentText} onChange={e => setCommentText(e.target.value)} />
                 <Button type="submit" size="sm">Comment</Button>
               </form>
             </div>

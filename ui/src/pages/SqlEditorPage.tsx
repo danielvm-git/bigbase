@@ -60,6 +60,7 @@ export default function SqlEditorPage() {
         <div className="sql-input-area">
           <textarea
             className="sql-textarea"
+            aria-label="SQL query"
             value={query}
             onChange={e => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}

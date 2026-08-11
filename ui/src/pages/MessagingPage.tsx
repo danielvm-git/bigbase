@@ -138,24 +138,24 @@ export default function MessagingPage() {
           <div className="card" style={{ marginBottom: 'var(--space-12)' }}>
             {tab === 'email' && (
               <form onSubmit={sendEmail} className="msg-form">
-                <Input placeholder="To" value={emailTo} onChange={e => setEmailTo(e.target.value)} required />
-                <Input placeholder="Subject" value={emailSubject} onChange={e => setEmailSubject(e.target.value)} />
-                <Input as="textarea" placeholder="Body" value={emailBody} onChange={e => setEmailBody(e.target.value)} required rows={4} />
+                <Input label="To" placeholder="To" value={emailTo} onChange={e => setEmailTo(e.target.value)} required />
+                <Input label="Subject" placeholder="Subject" value={emailSubject} onChange={e => setEmailSubject(e.target.value)} />
+                <Input as="textarea" aria-label="Body" placeholder="Body" value={emailBody} onChange={e => setEmailBody(e.target.value)} required rows={4} />
                 <Button type="submit" disabled={sending}>{sending ? 'Sending...' : 'Send Email'}</Button>
               </form>
             )}
             {tab === 'sms' && (
               <form onSubmit={sendSms} className="msg-form">
-                <Input placeholder="To" value={smsTo} onChange={e => setSmsTo(e.target.value)} required />
-                <Input as="textarea" placeholder="Message" value={smsMsg} onChange={e => setSmsMsg(e.target.value)} required rows={3} />
+                <Input label="To" placeholder="To" value={smsTo} onChange={e => setSmsTo(e.target.value)} required />
+                <Input as="textarea" aria-label="Message" placeholder="Message" value={smsMsg} onChange={e => setSmsMsg(e.target.value)} required rows={3} />
                 <Button type="submit" disabled={sending}>{sending ? 'Sending...' : 'Send SMS'}</Button>
               </form>
             )}
             {tab === 'push' && (
               <form onSubmit={sendPush} className="msg-form">
-                <Input placeholder="Device Token" value={pushToken} onChange={e => setPushToken(e.target.value)} required />
-                <Input placeholder="Title" value={pushTitle} onChange={e => setPushTitle(e.target.value)} />
-                <Input as="textarea" placeholder="Body" value={pushBody} onChange={e => setPushBody(e.target.value)} required rows={3} />
+                <Input label="Device token" placeholder="Device Token" value={pushToken} onChange={e => setPushToken(e.target.value)} required />
+                <Input label="Title" placeholder="Title" value={pushTitle} onChange={e => setPushTitle(e.target.value)} />
+                <Input as="textarea" aria-label="Body" placeholder="Body" value={pushBody} onChange={e => setPushBody(e.target.value)} required rows={3} />
                 <Button type="submit" disabled={sending}>{sending ? 'Sending...' : 'Send Push'}</Button>
               </form>
             )}
