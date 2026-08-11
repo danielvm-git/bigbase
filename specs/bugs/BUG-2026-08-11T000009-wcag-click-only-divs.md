@@ -18,6 +18,7 @@ Use real `<button>`/`<a>` elements, or add `role="button" tabIndex={0}` + `onKey
 
 ## Status
 open
+**Fixed:** 607fcf087 — click-only div/span elements now render as real buttons (Card, board-card, file names, storage grid) or carry role="button"+tabIndex+onKeyDown (dropdown trigger).
 
 ## Source
 wcag-2.2-audit-2026-08-11

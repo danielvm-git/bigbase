@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, type ReactNode } from 'react'
+import { useState, useRef, useEffect, isValidElement, type KeyboardEvent, type ReactNode } from 'react'
 
 export interface DropdownItem {
   id: string
@@ -39,7 +39,14 @@ export function DropdownMenu({ trigger, items, onSelect, className = '' }: Dropd
     onSelect?.(item.id)
   }
 
-  function handleKeyDown(e: React.KeyboardEvent) {
+  function handleTriggerKeyDown(e: KeyboardEvent<HTMLSpanElement>) {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault()
+      setOpen(o => !o)
+    }
+  }
+
+  function handleKeyDown(e: KeyboardEvent<HTMLDivElement>) {
     if (e.key === 'Escape') setOpen(false)
     if (e.key === 'ArrowDown') {
       const items = menuRef.current?.querySelectorAll('[role="menuitem"]:not([disabled])')
@@ -48,9 +55,29 @@ export function DropdownMenu({ trigger, items, onSelect, className = '' }: Dropd
     }
   }
 
+  // If the trigger child is already a native control (button/link) it is the
+  // accessible element and the wrapper span stays non-interactive. Otherwise
+  // the span itself must be keyboard-accessible (WCAG 2.1.1).
+  const triggerIsInteractive =
+    isValidElement(trigger) &&
+    typeof trigger.type === 'string' &&
+    (trigger.type === 'button' || trigger.type === 'a')
+
   return (
     <div className={`dropdown ${className}`.trim()}>
-      <span ref={triggerRef} onClick={() => setOpen(o => !o)}>
+      <span
+        ref={triggerRef}
+        onClick={() => setOpen(o => !o)}
+        {...(triggerIsInteractive
+          ? {}
+          : {
+              role: 'button' as const,
+              tabIndex: 0,
+              'aria-haspopup': 'menu' as const,
+              'aria-expanded': open,
+              onKeyDown: handleTriggerKeyDown,
+            })}
+      >
         {trigger}
       </span>
       {open && (
