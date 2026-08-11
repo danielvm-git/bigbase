@@ -18,6 +18,7 @@ Add `role="tablist"` to the container, `role="tab"` + `aria-selected` + `id` + `
 
 ## Status
 open
+**Fixed:** 414d30a3e — full WAI-ARIA tablist pattern: roles, aria-selected, id/aria-controls/aria-labelledby linkage, roving tabindex, Arrow/Home/End keyboard nav
 
 ## Source
 wcag-2.2-audit-2026-08-11
