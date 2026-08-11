@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Button } from './Button'
 
 const STORAGE_KEY = 'bigbase_tutorial_step'
@@ -45,15 +45,80 @@ interface TutorialOverlayProps {
   onClose?: () => void
 }
 
+const FOCUSABLE =
+  'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+
+function getFocusable(dialog: HTMLDivElement): HTMLElement[] {
+  return Array.from(dialog.querySelectorAll<HTMLElement>(FOCUSABLE))
+    .filter(el => !el.hasAttribute('disabled'))
+}
+
+function trapTabKey(e: KeyboardEvent, dialog: HTMLDivElement) {
+  if (e.key !== 'Tab') return
+  const focusable = getFocusable(dialog)
+  if (focusable.length === 0) return
+  const first = focusable[0]
+  const last = focusable[focusable.length - 1]
+  const active = document.activeElement
+  if (!dialog.contains(active)) {
+    e.preventDefault()
+    first.focus()
+    return
+  }
+  if (e.shiftKey && active === first) {
+    e.preventDefault()
+    last.focus()
+  } else if (!e.shiftKey && active === last) {
+    e.preventDefault()
+    first.focus()
+  }
+}
+
 export function TutorialOverlay({ onClose }: TutorialOverlayProps) {
   const [stepIndex, setStepIndex] = useState<number>(() => {
     const saved = localStorage.getItem(STORAGE_KEY)
     return saved ? parseInt(saved, 10) : 0
   })
+  const dialogRef = useRef<HTMLDivElement>(null)
+  const triggerRef = useRef<Element | null>(null)
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, String(stepIndex))
   }, [stepIndex])
+
+  const handleDoneRef = useRef(handleDone)
+  useEffect(() => { handleDoneRef.current = handleDone })
+
+  // Focus management: the overlay is a modal dialog (role=dialog aria-modal).
+  // On mount, move focus into the dialog, trap Tab within it, close on Escape,
+  // and restore focus to the trigger element on unmount.
+  useEffect(() => {
+    triggerRef.current = document.activeElement
+    const dialog = dialogRef.current
+
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        handleDoneRef.current()
+        return
+      }
+      if (dialog) trapTabKey(e, dialog)
+    }
+
+    document.addEventListener('keydown', onKey)
+    const focusable = dialog ? getFocusable(dialog) : []
+    if (focusable.length > 0) {
+      focusable[0].focus()
+    } else {
+      dialog?.focus()
+    }
+
+    return () => {
+      document.removeEventListener('keydown', onKey)
+      if (triggerRef.current instanceof HTMLElement) {
+        triggerRef.current.focus()
+      }
+    }
+  }, [])
 
   const step = STEPS[stepIndex]
   const isLast = stepIndex === STEPS.length - 1
@@ -78,8 +143,16 @@ export function TutorialOverlay({ onClose }: TutorialOverlayProps) {
   }
 
   return (
-    <div className="tutorial-backdrop" role="dialog" aria-modal="true" aria-label="Tutorial" data-testid="tutorial-overlay">
-      <div className="tutorial-modal">
+    <div className="tutorial-backdrop" role="presentation" data-testid="tutorial-overlay">
+      <div
+        ref={dialogRef}
+        className="tutorial-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Tutorial"
+        aria-describedby="tutorial-description"
+        tabIndex={-1}
+      >
         <div className="tutorial-header">
           <span className="tutorial-progress dim">{progress}</span>
           <button type="button" className="btn-icon tutorial-close" onClick={handleDone} aria-label="Close tutorial">
@@ -89,7 +162,7 @@ export function TutorialOverlay({ onClose }: TutorialOverlayProps) {
 
         <div className="tutorial-body">
           <h2 className="tutorial-title">{step.title}</h2>
-          <p className="tutorial-text">{step.body}</p>
+          <p id="tutorial-description" className="tutorial-text">{step.body}</p>
         </div>
 
         <div className="tutorial-step-dots" aria-hidden>
