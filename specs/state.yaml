@@ -6,12 +6,12 @@ active_story_id: null
 active_story_status: null
 bug_id: null
 release:
-  target_version: 2.87.0
-  codename: "WCAG 2.2 AAA Conformance — Enhanced Accessibility"
-  last_tag: v2.87.0
+  target_version: 2.88.0
+  codename: "WCAG AAA Closing — Accent Links + Formal Conformance"
+  last_tag: v2.88.0
   last_publish: '2026-08-11'
   ci_verified: true
-  ci_verified_at: '2026-08-11T20:05:03Z'
+  ci_verified_at: '2026-08-11T21:36:23Z'
   release_skipped: "no new release: pushed diff is chore/docs only (dependabot bumps, WCAG registry, e86 epic specs); semantic-release correctly skipped (default rules require feat/fix/perf)"
 metrics:
   session_start: '2026-07-12T16:00:00-03:00'
