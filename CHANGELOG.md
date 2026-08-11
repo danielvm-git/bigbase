@@ -1,3 +1,10 @@
+# [2.86.0](https://github.com/danielvm-git/bigbase/compare/v2.85.2...v2.86.0) (2026-08-11)
+
+
+### Features
+
+* **proxy:** unify landing page theme with admin console (e85) ([#234](https://github.com/danielvm-git/bigbase/issues/234)) ([97aa7a6](https://github.com/danielvm-git/bigbase/commit/97aa7a6f1545e995e2ab762424db282e265beaf5))
+
 ## [2.85.2](https://github.com/danielvm-git/bigbase/compare/v2.85.1...v2.85.2) (2026-08-02)
 
 
