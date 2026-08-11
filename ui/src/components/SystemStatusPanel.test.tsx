@@ -70,6 +70,40 @@ describe('SystemStatusPanel', () => {
     expect(screen.getByText('12')).toBeInTheDocument()
   })
 
+  it('renders panel title as an h2 heading', () => {
+    render(
+      <SystemStatusPanel
+        healthOk
+        componentCount={16}
+        system={system}
+        activity={[]}
+      />,
+    )
+    expect(
+      screen.getByRole('heading', { level: 2, name: 'All systems operational' }),
+    ).toBeInTheDocument()
+  })
+
+  it('renders CPU and memory bars as progressbars with values and labels', () => {
+    render(
+      <SystemStatusPanel
+        healthOk
+        componentCount={16}
+        system={system}
+        activity={[]}
+      />,
+    )
+    const cpuBar = screen.getByRole('progressbar', { name: 'CPU: 23.5 percent' })
+    expect(cpuBar).toHaveAttribute('aria-valuenow', '23.5')
+    expect(cpuBar).toHaveAttribute('aria-valuemin', '0')
+    expect(cpuBar).toHaveAttribute('aria-valuemax', '100')
+
+    const memBar = screen.getByRole('progressbar', { name: 'Memory: 512 MB (50 percent of 1 GiB)' })
+    expect(memBar).toHaveAttribute('aria-valuenow', '50')
+    expect(memBar).toHaveAttribute('aria-valuemin', '0')
+    expect(memBar).toHaveAttribute('aria-valuemax', '100')
+  })
+
   it('renders activity rows', () => {
     render(
       <SystemStatusPanel

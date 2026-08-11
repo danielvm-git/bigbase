@@ -31,6 +31,11 @@ function SingleBar({ used, total, label, color, formatValue }: Omit<BarGaugeProp
         </div>
       )}
       <div
+        role="progressbar"
+        aria-label={label ? `${label}: ${fmt(used)} of ${fmt(total)}` : `${fmt(used)} of ${fmt(total)}`}
+        aria-valuenow={Math.min(used, total)}
+        aria-valuemin={0}
+        aria-valuemax={total}
         style={{
           height: 10,
           background: 'var(--color-border, #e5e7eb)',
@@ -72,6 +77,8 @@ function StackedBar({ total, segments = [], formatValue }: { total: number; segm
         {segments.map(s => (
           <div
             key={s.label}
+            role="img"
+            aria-label={`${s.label}: ${fmt(s.value)}`}
             style={{
               height: '100%',
               width: `${(s.value / base) * 100}%`,
@@ -99,6 +106,8 @@ function GroupedBar({ total, segments = [], formatValue }: { total: number; segm
           </div>
           <div style={{ height: 8, background: 'var(--color-border, #e5e7eb)', borderRadius: 'var(--radius-s)', overflow: 'hidden' }}>
             <div
+              role="img"
+              aria-label={`${s.label}: ${fmt(s.value)}`}
               style={{
                 height: '100%',
                 width: `${(s.value / base) * 100}%`,

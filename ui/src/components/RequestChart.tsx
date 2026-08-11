@@ -23,6 +23,14 @@ function barColor(code: string): string {
   return statusColors[code] || '#6b7280'
 }
 
+function statusCategory(code: string): string {
+  if (code.startsWith('2')) return 'success'
+  if (code.startsWith('3')) return 'redirect'
+  if (code.startsWith('4')) return 'client error'
+  if (code.startsWith('5')) return 'server error'
+  return 'other'
+}
+
 export function RequestChart({ byStatus, total }: RequestChartProps): ReactNode {
   if (total === 0) {
     return (
@@ -45,7 +53,9 @@ export function RequestChart({ byStatus, total }: RequestChartProps): ReactNode 
           return (
             <div
               key={code}
+              role="img"
               title={`${code}: ${count}`}
+              aria-label={`${code}: ${count}`}
               style={{ width: `${pct}%`, background: barColor(code), minWidth: 2, transition: 'width var(--duration-medium) var(--ease-standard)' }}
             />
           )
@@ -55,7 +65,8 @@ export function RequestChart({ byStatus, total }: RequestChartProps): ReactNode 
         {entries.map(([code, count]) => (
           <span key={code} style={{ fontSize: 'var(--text-xs)', display: 'flex', alignItems: 'center', gap: 'var(--space-1)' }}>
             <span style={{ width: 8, height: 8, borderRadius: 2, background: barColor(code), display: 'inline-block' }} />
-            {code}: {count}
+            <span>{code}: {count}</span>
+            <span className="dim">{statusCategory(code)}</span>
           </span>
         ))}
       </div>

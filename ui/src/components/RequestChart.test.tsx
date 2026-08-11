@@ -38,4 +38,20 @@ describe('RequestChart', () => {
     expect(screen.getByTitle('999: 10')).toBeInTheDocument()
     expect(screen.getByText('999: 10')).toBeInTheDocument()
   })
+
+  it('gives bar segments accessible names with values', () => {
+    render(<RequestChart byStatus={{ '200': 80, '404': 15 }} total={100} />)
+
+    expect(screen.getByRole('img', { name: '200: 80' })).toBeInTheDocument()
+    expect(screen.getByRole('img', { name: '404: 15' })).toBeInTheDocument()
+  })
+
+  it('shows status category text in the legend so color is not the only signal', () => {
+    render(<RequestChart byStatus={{ '200': 50, '301': 2, '404': 15, '500': 3 }} total={70} />)
+
+    expect(screen.getByText('success')).toBeInTheDocument()
+    expect(screen.getByText('redirect')).toBeInTheDocument()
+    expect(screen.getByText('client error')).toBeInTheDocument()
+    expect(screen.getByText('server error')).toBeInTheDocument()
+  })
 })
