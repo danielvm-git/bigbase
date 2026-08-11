@@ -4,7 +4,7 @@ import { getSiteCache, clearSiteCache } from '../lib/sitesData'
 import { fmtBytes } from '../lib/format'
 import type { SiteCacheStatus } from '../types/sites'
 
-export function SiteCacheTab({ siteId }: { siteId: string }) {
+export function SiteCacheTab({ siteId, id }: { siteId: string; id?: string }) {
   const [status, setStatus] = useState<SiteCacheStatus | null>(null)
   const [loading, setLoading] = useState(true)
   const [clearing, setClearing] = useState(false)
@@ -37,7 +37,7 @@ export function SiteCacheTab({ siteId }: { siteId: string }) {
   const entries = status?.entries ?? []
 
   return (
-    <div>
+    <div id={id ?? 'panel-cache'} role="tabpanel" aria-labelledby="tab-cache">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-4)' }}>
         <h2 className="section-title" style={{ margin: 0 }}>Build Cache</h2>
         {entries.length > 0 && (

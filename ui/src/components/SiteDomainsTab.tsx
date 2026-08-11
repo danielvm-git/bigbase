@@ -133,7 +133,7 @@ function AddDomainForm({
   )
 }
 
-export function SiteDomainsTab({ siteId }: { siteId: string }) {
+export function SiteDomainsTab({ siteId, id }: { siteId: string; id?: string }) {
   const [domains, setDomains] = useState<SiteDomain[]>([])
   const [loading, setLoading] = useState(true)
   const [adding, setAdding] = useState(false)
@@ -185,7 +185,7 @@ export function SiteDomainsTab({ siteId }: { siteId: string }) {
   if (loading) return <p className="dim">Loading domains…</p>
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+    <div id={id ?? 'panel-domains'} role="tabpanel" aria-labelledby="tab-domains" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
       <Card>
         <h3 style={{ fontSize: 'var(--text-sm)', fontWeight: 600, marginBottom: 'var(--space-3)' }}>
           Add Custom Domain

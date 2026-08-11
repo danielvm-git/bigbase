@@ -206,7 +206,7 @@ function RevokeConfirmModal({
   )
 }
 
-export function SiteDeployKeysTab({ siteId }: { siteId: string }) {
+export function SiteDeployKeysTab({ siteId, id }: { siteId: string; id?: string }) {
   const [keys, setKeys] = useState<SiteDeployKey[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | undefined>()
@@ -260,7 +260,7 @@ export function SiteDeployKeysTab({ siteId }: { siteId: string }) {
   if (loading) return <p className="dim">Loading deploy keys…</p>
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+    <div id={id ?? 'panel-deploy-keys'} role="tabpanel" aria-labelledby="tab-deploy-keys" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h3 style={{ fontSize: 'var(--text-sm)', fontWeight: 600, margin: 0 }}>
           Deploy Keys

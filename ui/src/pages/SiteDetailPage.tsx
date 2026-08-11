@@ -501,7 +501,7 @@ export default function SiteDetailPage() {
       <Tabs tabs={tabs} active={activeTab} onChange={setActiveTab} />
 
       {activeTab === 'deployments' && (
-        <>
+        <div id="panel-deployments" role="tabpanel" aria-labelledby="tab-deployments">
           <h2 className="section-title">Deployment History</h2>
           {deployments.length === 0 && <p className="dim">No deployment history.</p>}
           {deployments.length > 0 && (
@@ -554,18 +554,51 @@ export default function SiteDetailPage() {
               </table>
             </div>
           )}
-        </>
+
+          {rollbackEvents.length > 0 && (
+            <div style={{ marginTop: 'var(--space-8)' }}>
+              <h2 className="section-title">Rollback History</h2>
+              <div className="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Timestamp</th>
+                      <th>Rolled Back From</th>
+                      <th>Rolled Back To</th>
+                      <th>Details</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {rollbackEvents.map(ev => (
+                      <tr key={ev.id}>
+                        <td>{new Date(ev.created_at).toLocaleString()}</td>
+                        <td><code>{ev.rolled_back_from.slice(0, 8)}</code></td>
+                        <td><code>{ev.rolled_back_to.slice(0, 8)}</code></td>
+                        <td>
+                          Rolled back from{' '}
+                          <Link to={`/deploy/deployment/${ev.rolled_back_from}${pq}`}>{ev.rolled_back_from.slice(0, 8)}</Link>
+                          {' → '}
+                          <Link to={`/deploy/deployment/${ev.rolled_back_to}${pq}`}>{ev.rolled_back_to.slice(0, 8)}</Link>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </div>
       )}
 
       {activeTab === 'logs' && (
-        <div>
+        <div id="panel-logs" role="tabpanel" aria-labelledby="tab-logs">
           <h2 className="section-title">Build Logs</h2>
           <TerminalLogViewer deploymentId={latestFromDeployments?.id || site?.latest_deployment?.id || ''} />
         </div>
       )}
 
       {activeTab === 'request-logs' && (
-        <div>
+        <div id="panel-request-logs" role="tabpanel" aria-labelledby="tab-request-logs">
           <h2 className="section-title">Request Logs</h2>
           <RequestLogs
             logs={logs}
@@ -581,55 +614,24 @@ export default function SiteDetailPage() {
       )}
 
       {activeTab === 'env-vars' && (
-        <SiteEnvVarsTab siteId={siteId} />
+        <SiteEnvVarsTab siteId={siteId} id="panel-env-vars" />
       )}
 
       {activeTab === 'domains' && (
-        <SiteDomainsTab siteId={siteId} />
+        <SiteDomainsTab siteId={siteId} id="panel-domains" />
       )}
 
       {activeTab === 'deploy-keys' && (
-        <SiteDeployKeysTab siteId={siteId} />
+        <SiteDeployKeysTab siteId={siteId} id="panel-deploy-keys" />
       )}
 
       {activeTab === 'cache' && (
-        <SiteCacheTab siteId={siteId} />
+        <SiteCacheTab siteId={siteId} id="panel-cache" />
       )}
 
       {activeTab === 'manifest' && (
-        <SiteManifest site={site} latestDeployment={latest} />
-      )}
-
-      {activeTab === 'deployments' && rollbackEvents.length > 0 && (
-        <div style={{ marginTop: 'var(--space-8)' }}>
-          <h2 className="section-title">Rollback History</h2>
-          <div className="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Timestamp</th>
-                  <th>Rolled Back From</th>
-                  <th>Rolled Back To</th>
-                  <th>Details</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rollbackEvents.map(ev => (
-                  <tr key={ev.id}>
-                    <td>{new Date(ev.created_at).toLocaleString()}</td>
-                    <td><code>{ev.rolled_back_from.slice(0, 8)}</code></td>
-                    <td><code>{ev.rolled_back_to.slice(0, 8)}</code></td>
-                    <td>
-                      Rolled back from{' '}
-                      <Link to={`/deploy/deployment/${ev.rolled_back_from}${pq}`}>{ev.rolled_back_from.slice(0, 8)}</Link>
-                      {' → '}
-                      <Link to={`/deploy/deployment/${ev.rolled_back_to}${pq}`}>{ev.rolled_back_to.slice(0, 8)}</Link>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+        <div id="panel-manifest" role="tabpanel" aria-labelledby="tab-manifest">
+          <SiteManifest site={site} latestDeployment={latest} />
         </div>
       )}
 
