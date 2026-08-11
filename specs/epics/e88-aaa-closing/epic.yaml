@@ -23,6 +23,10 @@ note: |
     plus verified implemented 1.4.8 bullets.
   - e88s03: re-certification — full contrast matrix (default + 13 themes,
     light + dark), axe 17/17 re-run, conformance statement.
+  Conformance record (formal AAA exceptions + claim): specs/CONFORMANCE.md —
+    1.4.8 partial (user-selectable fg/bg + spacing out, OS/browser settings +
+    density rationale) and 2.2.3 essential/security exception (JWT expiry),
+    claim: WCAG 2.2 AA certified; AAA except documented partials.
 
 implementation_order:
   - e88s01  # data + verification
