@@ -33,6 +33,37 @@ All interactive targets are ≥44×44 CSS px, or qualify for the inline/spacing 
 
 ## Acceptance Criteria
 
-- [ ] Target-size spec passes (all targets ≥44px or documented exception)
-- [ ] `npm run build` + component suites green
-- [ ] Exception map recorded in this spec
+- [x] Target-size spec passes (all targets ≥44px or documented exception)
+- [x] `npm run build` + component suites green
+- [x] Exception map recorded in this spec
+
+## 2.5.5 Exception Map (conformance record)
+
+All interactive targets are ≥44×44 CSS px **unless** listed below. The listed
+targets rely on the 2.5.5 spacing exception (targets in a row of text-like
+actions, or an explicit density opt-out) and are verified by
+`tests/e2e/target-size.spec.ts`, which measures bounding boxes and asserts
+≥44px-or-exception.
+
+| Target | Measured size | Exception status | Mechanism |
+|---|---|---|---|
+| `.btn` (md) | ≥44×44 | — | `min-height: 44px` on `.btn` base (index.css) |
+| `.btn-sm` (standalone, incl. CopyButton, page headers, cards) | ≥44×44 | — | inherits `.btn` min-height |
+| `.modal-close`, `.dialog-close`, `.alert-dismiss` (icon-only) | 44×44 | — | `min-width: 44px` + `.btn` min-height (index.css) |
+| `.toast-close` (class-level; no live instance in current UI — ToastContext renders toasts without a close button) | 44×44 rule | — | `min-width`/`min-height: 44px` (index.css) |
+| `.copy-button` (icon-only variant) | ≥44×44 | — | `min-width: 44px` (index.css) |
+| `.sidebar-toggle` (mobile) | 44×44 | — | `min-width`/`min-height: 44px` (index.css) |
+| `.sidebar-nav a` (desktop + collapsed icon mode) | ≥44×44 | — | `min-height: 44px`; collapsed sidebar widened 64→72px for 48px link width (index.css) |
+| `.theme-trigger`, `.theme-menu-item` | ≥44×44 | — | `min-height: 44px` (index.css) |
+| `.tab`, `.segmented-control button`, `.collection-btn`, `.google-btn`, `.board-card`, `.dropdown-item` | ≥44×44 | — | `min-height: 44px` (index.css) |
+| `.actions-cell` children (Data Studio Edit/Delete, Storage Download/Delete) | ~33×… | **spacing exception** — row-level text actions; function re-achievable by selecting the row/entity | `Button density="compact"` → `.btn-compact { min-height: 0 }` (Button.tsx + index.css) |
+| `.btn-link` bare (Login toggles, Forge issue-title links) | inline text | **inline exception** — target within a line of text | — |
+| `.breadcrumb a` | inline text | **inline exception** — breadcrumb text links | — |
+| `.app-footer a` (BigPowers, danielvm-git, GitHub, Changelog) | inline text | **inline exception** — links inline within the footer sentence | — |
+| `.skip-link` | offscreen | **not a pointer target** — keyboard bypass-block helper | — |
+| `input`/`select`/`textarea` | ~40px | out of inventory scope — e87 scope doc assessed Input/Select height as acceptable | — |
+
+Exceptions are machine-verified by `tests/e2e/target-size.spec.ts`: any target
+below 44×44 that does not match the exception matchers fails the run.
+`density="compact"` is the only way to opt a `.btn` out of the 44px floor and
+is used exclusively for row-level table text actions.
