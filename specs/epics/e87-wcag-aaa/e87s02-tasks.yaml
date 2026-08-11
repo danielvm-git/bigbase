@@ -1,0 +1,59 @@
+story_id: e87s02
+title: "Focus appearance enhanced (2.4.13)"
+status: failing
+bcps: 3
+tasks:
+  - id: e87s02t1
+    description: "Set --border-focus to brand-600 (light, >=3:1 on white) and a light indigo ~rgb(129,140,248) (dark, >=3:1 on neutral-850); update tokens.css + theme.css + tokens.ts"
+    verify: "cd ui && npm run build && node -e \"const l=c=>{c/=255;return c<=0.04045?c/12.92:Math.pow((c+0.055)/1.055,2.4)},L=r=>0.2126*l(r[0])+0.7152*l(r[1])+0.0722*l(r[2]),C=(a,b)=>{const x=L(a),y=L(b);return (Math.max(x,y)+0.05)/(Math.min(x,y)+0.05)};if(C([67,56,202],[255,255,255])<3||C([129,140,248],[29,29,33])<3)process.exit(1);console.log('focus ring AAA ok')\""
+    risk: P1
+    status: failing
+    security: none
+    allure:
+      severity: high
+      categories:
+        - "Accessibility"
+        - "AAA"
+  - id: e87s02t2
+    description: "Normalize ring geometry app-wide: 2px outline + 2px offset on all :focus-visible rules; inputs use the ring, not just border-color"
+    verify: "grep -c ':focus-visible' ui/src/index.css && cd ui && npm run build"
+    risk: P1
+    status: failing
+    security: none
+    allure:
+      severity: high
+      categories:
+        - "Accessibility"
+        - "AAA"
+  - id: e87s02t3
+    description: "Primary-button focus: ring must contrast against brand-500 fill — use a light ring (ring-white or brand-200) on accent-filled buttons"
+    verify: "cd ui && npx vitest run src/components/Button.test.tsx"
+    risk: P1
+    status: failing
+    security: none
+    allure:
+      severity: high
+      categories:
+        - "Accessibility"
+        - "AAA"
+  - id: e87s02t4
+    description: "Fix clipped focus rings in overflow containers (log viewers, table wrappers) with outline-offset compensation"
+    verify: "cd ui && npx vitest run src/components/StreamLog.test.tsx src/components/Table.test.tsx && npm run build"
+    risk: P2
+    status: failing
+    security: none
+    allure:
+      severity: normal
+      categories:
+        - "Accessibility"
+  - id: e87s02t5
+    description: "Regression: re-run axe-scan (focus-order + color-contrast rules) across all routes"
+    verify: "npx playwright test axe-scan --config tests/e2e/playwright.config.ts 2>&1 | tail -2 | grep -q '17 passed'"
+    risk: P2
+    status: failing
+    security: none
+    allure:
+      severity: normal
+      categories:
+        - "Accessibility"
+        - "Regression"

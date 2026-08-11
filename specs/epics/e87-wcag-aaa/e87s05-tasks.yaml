@@ -1,0 +1,53 @@
+story_id: e87s05
+title: "Session timeout warning + re-authentication (2.2.5/2.2.6)"
+status: failing
+bcps: 3
+tasks:
+  - id: e87s05t1
+    description: "Read JWT exp claim client-side, expose remaining time via auth context; warning threshold configurable (default 5 min)"
+    verify: "cd ui && npx vitest run src/context/ --passWithNoTests 2>&1 | tail -2 | grep -q 'passed' && cd ui && npm run build"
+    risk: P1
+    status: failing
+    security: low
+    allure:
+      severity: high
+      categories:
+        - "Accessibility"
+        - "AAA"
+        - "Auth"
+  - id: e87s05t2
+    description: "SessionTimeoutWarning component: toast/dialog when remaining < threshold, 'Stay signed in' calls POST /api/auth/refresh, countdown visible"
+    verify: "cd ui && npx vitest run src/components/SessionTimeoutWarning.test.tsx && npm run build"
+    risk: P1
+    status: failing
+    security: low
+    allure:
+      severity: high
+      categories:
+        - "Accessibility"
+        - "AAA"
+        - "Auth"
+  - id: e87s05t3
+    description: "Graceful re-auth: on 401 save route to sessionStorage, redirect to /login with 'session expired' message, restore route after login"
+    verify: "cd ui && npx vitest run src/pages/LoginPage.test.tsx && npm run build"
+    risk: P1
+    status: failing
+    security: low
+    allure:
+      severity: high
+      categories:
+        - "Accessibility"
+        - "AAA"
+        - "Auth"
+  - id: e87s05t4
+    description: "E2E with --jwt-access-expiry=60s: warning appears, refresh extends session, un-refreshed expiry re-auths and restores route"
+    verify: "npx playwright test --config tests/e2e/playwright.config.ts tests/e2e/token-lifecycle.spec.ts 2>&1 | tail -2 | grep -q 'passed'"
+    risk: P1
+    status: failing
+    security: low
+    allure:
+      severity: high
+      categories:
+        - "e2e"
+        - "Auth"
+        - "AAA"

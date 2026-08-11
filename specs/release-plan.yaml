@@ -729,3 +729,14 @@ epics:
   note: "4 stories, 12 BCPs. SSE live log streaming, keyset pagination (replaces LIMIT 100), org_id isolation (closes cross-tenant log leak), deploy-component auto-ingestion via event bus. Deltas: ADDED streaming+ingestion, MODIFIED pagination+org scope. WSJF 3.2 = (7+3+6)/5."
   capsule_dir: epics/e86-monitoring-logs
   file: epics/e86-monitoring-logs/epic.yaml
+
+- id: e87
+  title: "WCAG 2.2 AAA Conformance — Enhanced Accessibility"
+  wsjf: 1.9
+  mode: capsule
+  tier: 2
+  status: open
+  depends_on: [e17]
+  note: "7 stories, 22 BCPs. AAA after the 21-defect AA pass (axe-verified). Closes gaps beyond axe's reach: 1.4.6 contrast 7:1, 2.4.13 focus 3:1, 2.5.5 44px targets, 3.1.3-5 jargon, 2.2.5/2.2.6 session, 3.3.5/3.3.6 help+error prevention, 1.4.8/2.4.8 presentation+location. WSJF 1.9 = (5+3+5)/7 — compliance investment, low rank."
+  capsule_dir: epics/e87-wcag-aaa
+  file: epics/e87-wcag-aaa/epic.yaml

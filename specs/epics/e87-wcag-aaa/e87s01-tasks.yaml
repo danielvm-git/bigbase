@@ -1,0 +1,60 @@
+story_id: e87s01
+title: "AAA color contrast tokens (1.4.6 Contrast Enhanced)"
+status: failing
+bcps: 3
+tasks:
+  - id: e87s01t1
+    description: "Darken fg-secondary/fg-tertiary to >=7:1 on white (target ~rgb(75,75,80)) in tokens.css + theme.css + tokens.ts TS mirror"
+    verify: "cd ui && npm run build && node -e \"const l=c=>{c/=255;return c<=0.04045?c/12.92:Math.pow((c+0.055)/1.055,2.4)},L=r=>0.2126*l(r[0])+0.7152*l(r[1])+0.0722*l(r[2]),C=(a,b)=>{const x=L(a),y=L(b);return (Math.max(x,y)+0.05)/(Math.min(x,y)+0.05)};if(C([75,75,80],[255,255,255])<7)process.exit(1);console.log('fg-secondary AAA ok')"
+    risk: P0
+    status: failing
+    security: none
+    allure:
+      severity: critical
+      categories:
+        - "Accessibility"
+        - "AAA"
+  - id: e87s01t2
+    description: "Brand link text to brand-600 (7.90:1) in light mode; verify dark-mode tertiary to neutral-300 (7.51:1)"
+    verify: "grep -q 'fg-accent: var(--brand-600)' ui/src/styles/tokens.css && grep -q 'fg-tertiary: var(--neutral-300)' ui/src/styles/theme.css && cd ui && npm run build"
+    risk: P0
+    status: failing
+    security: none
+    allure:
+      severity: critical
+      categories:
+        - "Accessibility"
+        - "AAA"
+  - id: e87s01t3
+    description: "Darken success-fg/error-fg to >=7:1 on their tinted backgrounds (target ~rgb(4,78,58) / ~rgb(120,20,20))"
+    verify: "cd ui && npm run build && npx vitest run src/components/Badge.test.tsx src/components/Alert.test.tsx"
+    risk: P1
+    status: failing
+    security: none
+    allure:
+      severity: high
+      categories:
+        - "Accessibility"
+        - "AAA"
+  - id: e87s01t4
+    description: "Sweep hardcoded text colors in components (AreaChart #9999 fallback, chart axis fills) — >=7:1 or aria-hidden"
+    verify: "cd ui && npx vitest run src/components/AreaChart.test.tsx src/components/BarGauge.test.tsx && npm run build"
+    risk: P2
+    status: failing
+    security: none
+    allure:
+      severity: normal
+      categories:
+        - "Accessibility"
+        - "AAA"
+  - id: e87s01t5
+    description: "Full contrast matrix verification (light + dark), all text pairs >=7:1; re-run axe-scan"
+    verify: "npx playwright test axe-scan --config tests/e2e/playwright.config.ts 2>&1 | tail -2 | grep -q '17 passed'"
+    risk: P1
+    status: failing
+    security: none
+    allure:
+      severity: high
+      categories:
+        - "Accessibility"
+        - "Regression"

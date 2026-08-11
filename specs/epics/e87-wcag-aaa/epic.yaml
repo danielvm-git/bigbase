@@ -1,0 +1,86 @@
+type: epic-shard
+context: domain
+id: e87
+title: "WCAG 2.2 AAA Conformance — Enhanced Accessibility"
+wsjf: 1.9
+wsjf_rationale: "BV=5 (enterprise/procurement compliance, accessibility legal exposure) TC=3 (no deadline; audit momentum) RR=5 (conformance risk reduction after 21-defect AA pass) / JS=7 (7 stories across tokens, components, pages, auth). Ranked LOW vs in-progress work (e86 3.2, e84 6.0) — this is a compliance investment, not a feature."
+total_bcps: 22
+status: open
+tier: 2
+depends_on:
+  - e17
+note: |
+  7 stories, 22 BCPs. Reach WCAG 2.2 AAA after the 21-defect AA pass
+  (machine-verified 17/17 routes via @axe-core/playwright, tests/e2e/axe-scan.spec.ts).
+  Axe cannot verify most AAA criteria — these stories close the gaps the
+  manual audit identified beyond axe's reach. All requirements ADDED (net-new).
+
+  Gap source: WCAG re-audit 2026-08-11 — AAA blocked by 1.4.6 (contrast
+  5.2-6.8:1 < 7:1), 2.4.13 (focus ring 1.7:1 < 3:1), 2.5.5 (targets
+  ~24-32px < 44px), 3.1.3-5 (jargon unexpanded), 2.2.5/2.2.6 (session
+  expiry), 3.3.5/3.3.6 (help/error prevention), 1.4.8 + 2.4.8 (presentation
+  controls, location).
+
+implementation_order:
+  - e87s01  # contrast tokens — CSS-only, no design impact
+  - e87s02  # focus appearance — CSS-only
+  - e87s03  # target size — component-level, biggest design tradeoff
+  - e87s05  # session timeout — independent feature
+  - e87s04  # abbreviations — text-level
+  - e87s06  # help + error prevention — incremental
+  - e87s07  # presentation + location — partial/documentation
+
+prerequisites:
+  - "tests/e2e/axe-scan.spec.ts green (machine-verified AA baseline, committed f46fe6327)"
+  - "UI token system: ui/src/tokens/tokens.ts + ui/src/styles/tokens.css (single source of truth)"
+
+stories:
+  - id: e87s01
+    title: "AAA color contrast tokens (1.4.6 Contrast Enhanced)"
+    bcps: 3
+    status: open
+    depends_on: []
+    spec: e87s01-spec.md
+    tasks: e87s01-tasks.yaml
+  - id: e87s02
+    title: "Focus appearance enhanced (2.4.13)"
+    bcps: 3
+    status: open
+    depends_on: []
+    spec: e87s02-spec.md
+    tasks: e87s02-tasks.yaml
+  - id: e87s03
+    title: "Target size enhanced — 44px (2.5.5)"
+    bcps: 3
+    status: open
+    depends_on: [e87s02]
+    spec: e87s03-spec.md
+    tasks: e87s03-tasks.yaml
+  - id: e87s04
+    title: "Abbreviations, unusual words, reading level (3.1.3/3.1.4/3.1.5)"
+    bcps: 3
+    status: open
+    depends_on: []
+    spec: e87s04-spec.md
+    tasks: e87s04-tasks.yaml
+  - id: e87s05
+    title: "Session timeout warning + re-authentication (2.2.5/2.2.6)"
+    bcps: 3
+    status: open
+    depends_on: []
+    spec: e87s05-spec.md
+    tasks: e87s05-tasks.yaml
+  - id: e87s06
+    title: "Help text + error prevention (3.3.5/3.3.6)"
+    bcps: 4
+    status: open
+    depends_on: []
+    spec: e87s06-spec.md
+    tasks: e87s06-tasks.yaml
+  - id: e87s07
+    title: "Visual presentation + location (1.4.8/2.4.8)"
+    bcps: 3
+    status: open
+    depends_on: []
+    spec: e87s07-spec.md
+    tasks: e87s07-tasks.yaml

@@ -1,0 +1,48 @@
+story_id: e87s04
+title: "Abbreviations, unusual words, reading level (3.1.3/3.1.4/3.1.5)"
+status: failing
+bcps: 3
+tasks:
+  - id: e87s04t1
+    description: "Inventory acronyms/jargon (Goroutines, Heap MB, MCP, SSE, BaaS, ACME, Cici, Forge) across pages/components; record canonical expansions in the spec"
+    verify: "grep -rn 'Goroutines\\|MCP\\|SSE\\|BaaS\\|ACME' ui/src/pages ui/src/components | wc -l"
+    risk: P2
+    status: failing
+    security: none
+    allure:
+      severity: normal
+      categories:
+        - "Accessibility"
+        - "AAA"
+  - id: e87s04t2
+    description: "Wrap abbreviations in <abbr title> where they appear (Dashboard stats, Monitoring labels, site cards)"
+    verify: "grep -c '<abbr' ui/src/pages/DashboardPage.tsx ui/src/pages/MonitoringPage.tsx ui/src/components/SiteCard.tsx | grep -v ':0' && cd ui && npm run build"
+    risk: P2
+    status: failing
+    security: none
+    allure:
+      severity: normal
+      categories:
+        - "Accessibility"
+        - "AAA"
+  - id: e87s04t3
+    description: "Add a reusable Abbr component wired through Tooltip for high-jargon terms (3.1.3 mechanism)"
+    verify: "cd ui && npx vitest run src/components/Tooltip.test.tsx && npm run build"
+    risk: P2
+    status: failing
+    security: none
+    allure:
+      severity: normal
+      categories:
+        - "Accessibility"
+  - id: e87s04t4
+    description: "Add a Glossary artifact (page or footer-linked doc) listing terms + expansions (3.1.5 mechanism); link from the app footer"
+    verify: "ls specs/tech-architecture/GLOSSARY_LATEST.md 2>/dev/null || ls ui/src/pages/GlossaryPage.tsx 2>/dev/null; grep -rn 'Glossary' ui/src/components/AppFooter.tsx | head -1"
+    risk: P3
+    status: failing
+    security: none
+    allure:
+      severity: minor
+      categories:
+        - "Accessibility"
+        - "Documentation"

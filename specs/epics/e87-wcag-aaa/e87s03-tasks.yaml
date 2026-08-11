@@ -1,0 +1,60 @@
+story_id: e87s03
+title: "Target size enhanced — 44px (2.5.5)"
+status: failing
+bcps: 3
+tasks:
+  - id: e87s03t1
+    description: "Write tests/e2e/target-size.spec.ts measuring bounding boxes of every interactive target class; produce target->size->exception inventory"
+    verify: "npx playwright test --config tests/e2e/playwright.config.ts tests/e2e/target-size.spec.ts 2>&1 | tail -2 | grep -q 'passed'"
+    risk: P1
+    status: failing
+    security: none
+    allure:
+      severity: high
+      categories:
+        - "Accessibility"
+        - "AAA"
+  - id: e87s03t2
+    description: "Button.tsx: min-height 44px on btn-sm (or density=compact opt-out for documented exceptions)"
+    verify: "cd ui && npx vitest run src/components/Button.test.tsx && npm run build"
+    risk: P1
+    status: failing
+    security: none
+    allure:
+      severity: high
+      categories:
+        - "Accessibility"
+        - "AAA"
+  - id: e87s03t3
+    description: "Icon-only buttons (.modal-close, .toast-close, CopyButton, sidebar toggle): 44x44 target area (padding or ::before expansion)"
+    verify: "cd ui && npx vitest run src/components/CopyButton.test.tsx src/components/Modal.test.tsx src/components/AppShell.test.tsx"
+    risk: P1
+    status: failing
+    security: none
+    allure:
+      severity: high
+      categories:
+        - "Accessibility"
+        - "AAA"
+  - id: e87s03t4
+    description: "Table action cells: min 44px per-cell hit area OR document inline/spacing exception per row-level text actions"
+    verify: "npx playwright test --config tests/e2e/playwright.config.ts tests/e2e/target-size.spec.ts 2>&1 | tail -2 | grep -q 'passed'"
+    risk: P1
+    status: failing
+    security: none
+    allure:
+      severity: high
+      categories:
+        - "Accessibility"
+        - "AAA"
+  - id: e87s03t5
+    description: "Record the 2.5.5 exception map in the spec (which targets rely on inline/spacing exception) for the conformance record"
+    verify: "grep -q 'exception' specs/epics/e87-wcag-aaa/e87s03-spec.md && echo 'exception map recorded'"
+    risk: P3
+    status: failing
+    security: none
+    allure:
+      severity: minor
+      categories:
+        - "Documentation"
+        - "AAA"

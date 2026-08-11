@@ -1,0 +1,60 @@
+story_id: e87s06
+title: "Help text + error prevention (3.3.5/3.3.6)"
+status: failing
+bcps: 4
+tasks:
+  - id: e87s06t1
+    description: "Audit every Input/Select usage for missing hint; record the field list (deploy env vars, messaging, alert form, function runtime) in the spec"
+    verify: "grep -rn 'placeholder=' ui/src/pages | wc -l && echo 'field audit recorded'"
+    risk: P2
+    status: failing
+    security: none
+    allure:
+      severity: normal
+      categories:
+        - "Accessibility"
+        - "AAA"
+  - id: e87s06t2
+    description: "Add hint (or help link) to audited fields; hints render with aria-describedby (T000015 wiring)"
+    verify: "cd ui && npx vitest run src/components/Input.test.tsx src/components/Select.test.tsx && npm run build"
+    risk: P2
+    status: failing
+    security: none
+    allure:
+      severity: normal
+      categories:
+        - "Accessibility"
+        - "AAA"
+  - id: e87s06t3
+    description: "Storage/site deletes + messaging sends: confirm step via Dialog (danger variant) with a summary of the action"
+    verify: "cd ui && npx vitest run src/pages/StoragePage.test.tsx src/pages/MessagingPage.test.tsx src/pages/DeployPage.test.tsx && npm run build"
+    risk: P1
+    status: failing
+    security: none
+    allure:
+      severity: high
+      categories:
+        - "Accessibility"
+        - "AAA"
+  - id: e87s06t4
+    description: "CreateSite wizard: review step before final deploy (site config summary) or post-deploy undo surface"
+    verify: "cd ui && npx vitest run src/pages/CreateSitePage.test.tsx && npm run build"
+    risk: P1
+    status: failing
+    security: none
+    allure:
+      severity: high
+      categories:
+        - "Accessibility"
+        - "AAA"
+  - id: e87s06t5
+    description: "EnvVarEditor: per-row Revert action while editing (reversible > confirm for row-level edits)"
+    verify: "cd ui && npx vitest run src/components/EnvVarEditor.test.tsx && npm run build"
+    risk: P2
+    status: failing
+    security: none
+    allure:
+      severity: normal
+      categories:
+        - "Accessibility"
+        - "AAA"

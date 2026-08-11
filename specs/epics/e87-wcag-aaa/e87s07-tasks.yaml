@@ -1,0 +1,50 @@
+story_id: e87s07
+title: "Visual presentation + location (1.4.8/2.4.8)"
+status: failing
+bcps: 3
+tasks:
+  - id: e87s07t1
+    description: "Line-height floor: body/paragraph line-height >=1.5; verify headings don't clip with raised line-height"
+    verify: "grep -q 'line-height: 1.5' ui/src/styles/tokens.css && cd ui && npm run build"
+    risk: P2
+    status: failing
+    security: none
+    allure:
+      severity: normal
+      categories:
+        - "Accessibility"
+        - "AAA"
+  - id: e87s07t2
+    description: "Convert text-size tokens px->rem (--text-xs: 0.75rem ... --text-3xl: 2.5rem) so text scales with browser font settings"
+    verify: "grep -q '0.75rem' ui/src/styles/tokens.css && cd ui && npx vitest run 2>&1 | tail -2 | grep -q 'passed' && cd ui && npm run build"
+    risk: P1
+    status: failing
+    security: none
+    allure:
+      severity: high
+      categories:
+        - "Accessibility"
+        - "AAA"
+        - "Design System"
+  - id: e87s07t3
+    description: "Top-level location indicator: depth-1 breadcrumb or 'Section · Page' in PageHeader on pages without detail breadcrumbs"
+    verify: "cd ui && npx vitest run src/components/Breadcrumb.test.tsx src/components/PageHeader.test.tsx && npm run build"
+    risk: P2
+    status: failing
+    security: none
+    allure:
+      severity: normal
+      categories:
+        - "Accessibility"
+        - "AAA"
+  - id: e87s07t4
+    description: "Document the 1.4.8 partial non-conformance (user color/spacing controls not implemented, rationale: OS/browser settings + density constraint) in the epic conformance note"
+    verify: "grep -q '1.4.8' specs/epics/e87-wcag-aaa/e87s07-spec.md && echo 'partial conformance documented'"
+    risk: P3
+    status: failing
+    security: none
+    allure:
+      severity: minor
+      categories:
+        - "Documentation"
+        - "AAA"
