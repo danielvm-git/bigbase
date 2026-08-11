@@ -16,6 +16,8 @@ Wrap loading states in `role="status" aria-busy="true"`; give dynamic errors `ro
 ## Status
 open
 
+**Fixed:** 7fecbe061 — loading branches wrapped in role="status" aria-busy, dynamic errors role="alert", SSE/stream regions aria-live="polite" across 12 components
+
 ## Source
 wcag-2.2-audit-2026-08-11
 
