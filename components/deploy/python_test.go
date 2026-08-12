@@ -286,8 +286,8 @@ func TestPythonStartCommand_CLIScriptFallsBackToAppApp(t *testing.T) {
 	// the ASGI import string must fall back to "app:app" instead of using
 	// the CLI entry as an ASGI import.
 	tests := []struct {
-		name      string
-		entry     string
+		name       string
+		entry      string
 		wantImport string
 	}{
 		{
@@ -344,12 +344,12 @@ func TestPythonStartCommand_CLIScriptFallsBackToAppApp(t *testing.T) {
 
 func TestIsCLIScriptEntry(t *testing.T) {
 	tests := []struct {
-		module  string
-		appVar  string
-		isCLI   bool
+		module string
+		appVar string
+		isCLI  bool
 	}{
 		{"grimoire.__main__", "main", true},
-		{"grimoire.__main__", "app", true},  // __main__ always CLI
+		{"grimoire.__main__", "app", true}, // __main__ always CLI
 		{"myapp.main", "main", true},
 		{"myapp.cli", "run", true},
 		{"myapp.main", "cli", true},
