@@ -21,6 +21,7 @@ import MonitoringPage from './pages/MonitoringPage'
 import EventsPage from './pages/EventsPage'
 import SiteDetailPage from './pages/SiteDetailPage'
 import RealtimePage from './pages/RealtimePage'
+import SecretsPage from './pages/SecretsPage'
 import SettingsPage from './pages/SettingsPage'
 import NotFoundPage from './pages/NotFoundPage'
 import Layout from './Layout'
@@ -41,6 +42,7 @@ const PAGE_TITLES: Record<string, string> = {
   '/monitoring': 'Monitoring',
   '/events': 'Events',
   '/realtime': 'Realtime',
+  '/secrets': 'Project Secrets',
   '/settings': 'Settings',
   '/login': 'Login',
 }
@@ -50,6 +52,7 @@ const DYNAMIC_TITLE_PREFIXES: Array<[prefix: string, title: string]> = [
   ['/deploy/', 'Site Details'],
   ['/messaging/', 'Messaging Detail'],
   ['/functions/', 'Function Details'],
+  ['/secrets/', 'Project Secrets'],
 ]
 
 function titleForPathname(pathname: string): string {
@@ -92,6 +95,9 @@ function App() {
         <Route path="monitoring" element={<MonitoringPage />} />
         <Route path="events" element={<EventsPage />} />
         <Route path="realtime" element={<RealtimePage />} />
+        <Route path="secrets" element={<SecretsPage />} />
+        <Route path="secrets/:projectId" element={<SecretsPage />} />
+        <Route path="secrets/:projectId/:envId" element={<SecretsPage />} />
         <Route path="settings" element={<SettingsPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Route>

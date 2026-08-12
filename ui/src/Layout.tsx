@@ -56,6 +56,7 @@ export default function Layout() {
   const buildNav: NavItem[] = [
     { to: '/deploy', label: 'Sites', icon: 'rocket' },
     { to: '/functions', label: 'Functions', icon: 'box' },
+    { to: '/secrets', label: 'Secrets', icon: 'key' },
   ]
   const dataNav: NavItem[] = [
     { to: '/data', label: 'Data Studio', icon: 'database' },

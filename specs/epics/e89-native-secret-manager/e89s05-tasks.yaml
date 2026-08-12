@@ -8,7 +8,7 @@ tasks:
     verify: "cd ui && npx vitest run src/lib/secretsData.test.ts && echo 'no new security findings in affected paths'"
     scenarios: [SC-e89s05-P1-01, SC-e89s05-P1-02, SC-e89s05-P1-03]
     risk: P1
-    status: failing
+    status: passing
     security: medium
     allure:
       severity: high
@@ -18,7 +18,7 @@ tasks:
     verify: "cd ui && npx vitest run src/components/ProjectSecretsTab.test.tsx && echo 'no new security findings in affected paths'"
     scenarios: [SC-e89s05-P1-01, SC-e89s05-P1-04]
     risk: P1
-    status: failing
+    status: passing
     security: medium
     allure:
       severity: high
@@ -28,7 +28,7 @@ tasks:
     verify: "cd ui && npx vitest run src/components/ProjectSecretsTab.test.tsx -t 'mask|reveal|import|version' && echo 'no new security findings in affected paths'"
     scenarios: [SC-e89s05-P1-02, SC-e89s05-P1-03, SC-e89s05-P1-05]
     risk: P1
-    status: failing
+    status: passing
     security: high
     allure:
       severity: high
@@ -38,7 +38,7 @@ tasks:
     verify: "cd ui && npx tsc --noEmit && npm run build && cd .. && npx playwright test tests/e2e/project-secrets-ui.spec.ts --config tests/e2e/playwright.config.ts && npx playwright test tests/e2e/axe-scan.spec.ts --config tests/e2e/playwright.config.ts --grep 'Project Secrets' && echo 'no new security findings in affected paths'"
     scenarios: [SC-e89s05-P1-06]
     risk: P1
-    status: failing
+    status: passing
     security: medium
     allure:
       severity: high
