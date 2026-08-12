@@ -1,6 +1,6 @@
 type: session-state
 context: infra
-active_flow: build_epic
+active_flow: null
 active_epic_id: e89
 active_story_id: e89s01
 active_story_status: planned
@@ -23,9 +23,15 @@ metrics:
   bcps_per_hour: 0
 bug_cycle:
   current_step: 5
-  completed_steps: [1, 2, 3, 4, 5]
+  completed_steps:
+  - 1
+  - 2
+  - 3
+  - 4
+  - 5
   batch: deploy-redeploy-flake
-  note: "FIXED: waitForHostRegistration polling removed the first-deploy race; regression guards pass."
+  note: 'FIXED: TestRedeployReplacesPrevious flake (host-registration race). Poll
+    helper added, x15+x10 pass, full suite + CI green.'
 epic_cycle:
   step: 0
   story_bcps: 5
@@ -70,13 +76,16 @@ cleanup:
   zero_open_prs: true
   open_issues: 3 (all deferred/labeled)
 handoff:
-  last_step_completed: "Active deploy-redeploy flake fixed and verified; resume e89 build-epic"
+  last_step_completed: Active deploy-redeploy flake fixed and verified; resume e89
+    build-epic
   open_decisions:
-    - "Checkpoint e89 planning/helper artifacts before kickoff-branch"
-    - "Resolve F-001 optional Site encryption / canonical root-key wiring before s01 completion"
-    - "Resolve F-002 MCP Site target IDOR with authenticated principal binding"
-    - "Resolve F-003 runtime fail-open decryption/fetch behavior and log redaction"
-    - "Resolve F-004 MCP internal error disclosure with generic typed errors"
-    - "Run build-epic step 0 security review on the e89 implementation branch"
+  - Checkpoint e89 planning/helper artifacts before kickoff-branch
+  - Resolve F-001 optional Site encryption / canonical root-key wiring before s01
+    completion
+  - Resolve F-002 MCP Site target IDOR with authenticated principal binding
+  - Resolve F-003 runtime fail-open decryption/fetch behavior and log redaction
+  - Resolve F-004 MCP internal error disclosure with generic typed errors
+  - Run build-epic step 0 security review on the e89 implementation branch
   next_skill: kickoff-branch
-  context: "Bug cycle complete; e89 yolo mode may resume after a clean planning checkpoint. Security gate remains non-bypassable."
+  context: Bug cycle complete; e89 yolo mode may resume after a clean planning checkpoint.
+    Security gate remains non-bypassable.
