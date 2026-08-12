@@ -31,6 +31,7 @@ import (
 	"github.com/danielvm/bigbase/components/mcp"
 	"github.com/danielvm/bigbase/components/messaging"
 	"github.com/danielvm/bigbase/components/monitoring"
+	"github.com/danielvm/bigbase/components/projects"
 	"github.com/danielvm/bigbase/components/proxy"
 	"github.com/danielvm/bigbase/components/realtime"
 	"github.com/danielvm/bigbase/components/sites"
@@ -370,6 +371,7 @@ func startProxy() {
 	f := forge.New(forge.Options{DB: d, Logger: logger})
 	ci := cici.New(cici.Options{DB: d, Logger: logger})
 	fn := functions.New(functions.Options{DB: d, Logger: logger})
+	projectsComp := projects.New(projects.Options{DB: d, Logger: logger})
 	msgComp := messaging.New(messaging.Options{
 		DB:     d,
 		Logger: logger,
@@ -428,10 +430,11 @@ func startProxy() {
 		WebhookSecret:  ghWebhookSecret,
 	})
 	st := sites.New(sites.Options{
-		DB:             d,
-		Logger:         logger,
-		EncryptionKey:  encryptionKey,
-		AllowPlaintext: allowPlaintext,
+		DB:                 d,
+		Logger:             logger,
+		EncryptionKey:      encryptionKey,
+		AllowPlaintext:     allowPlaintext,
+		ProjectProvisioner: projectsComp,
 		TriggerDeploy: func(ctx context.Context, repoID, branch, siteName, siteID string, passthroughPaths []string, appType string) (*sites.Deployment, error) {
 			dep, err := depComp.Trigger(ctx, repoID, branch, siteName, siteID, passthroughPaths, appType, "")
 			if err != nil {
@@ -480,6 +483,7 @@ func startProxy() {
 	k.Register(f)
 	k.Register(gh)
 	k.Register(st)
+	k.Register(projectsComp)
 	k.Register(ci)
 	k.Register(fn)
 	k.Register(rt)
@@ -530,7 +534,10 @@ func startProxy() {
 	githubPublic := mComp.Middleware(gh.PublicHandler())
 	githubProtected := mComp.Middleware(authComp.Middleware(gh.ProtectedHandler()))
 	sitesHandler := mComp.Middleware(authComp.Middleware(st.Handler()))
+	projectsHandler := mComp.Middleware(authComp.Middleware(projectsComp.Handler()))
 
+	p.Handle("/api/projects", projectsHandler.ServeHTTP)
+	p.Handle("/api/projects/", projectsHandler.ServeHTTP)
 	p.Handle("/api/collections/", protectedAPI.ServeHTTP)
 	// /api/sql requires admin role. The access rule is now declared as a Policy
 	// (issue #43) rather than a hand-threaded middleware chain: PolicyAdmin()
