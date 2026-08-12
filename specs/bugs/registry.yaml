@@ -2696,3 +2696,22 @@ bugs:
     risk_level: low
     regression_guards:
       - "ui/src/components/Table.test.tsx SiteCacheTab.test.tsx SiteDeployKeysTab.test.tsx StoragePage/SiteDetailPage tests (63 tests: scope/caption)"
+
+  - id: BUG-2026-08-11T235900
+    date: "2026-08-11"
+    severity: medium
+    priority: medium
+    scope: infra
+    summary: "ctxo MCP serves stale index (12h+ behind code); search_symbols param mismatch (pattern vs query); verify-index unusable (config-carry + timestamp churn)"
+    file: specs/bugs/BUG-2026-08-11T235900-ctxo-mcp-stale-index.md
+    status: fixed
+    audit_source: validate-fix-2026-08-11
+    files_changed:
+      - .githooks/pre-commit
+      - .gitignore
+      - .ctxo/config.yaml
+    approach: "Rebuilt index + synced SQLite; killed stale servers; audited all 14 tool schemas (search_symbols requires pattern, verified 0 errors across the surface); pre-commit hook auto-runs ctxo index on source changes. Committed-index approach tried then reverted (lastModified timestamp churn across all 554 files)."
+    risk_level: medium
+    regression_guards:
+      - ".githooks/pre-commit runs ctxo index (verified: 8s, index refreshed)"
+      - "search_symbols(pattern=...) returns symbols (verified: useDocumentTitle found)"
