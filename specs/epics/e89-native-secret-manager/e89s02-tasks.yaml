@@ -8,7 +8,7 @@ tasks:
     verify: "go test ./components/db ./components/projects ./components/sites -run 'Test.*Project|Test.*Environment|Test.*Migration' -count=1 && echo 'no new security findings in affected paths'"
     scenarios: [SC-e89s02-P1-03, SC-e89s02-P1-04, SC-e89s02-P1-05]
     risk: P1
-    status: failing
+    status: passing
     security: high
     allure:
       severity: high
@@ -18,7 +18,7 @@ tasks:
     verify: "go test ./components/api ./components/projects ./components/sites -run 'Test.*Project|Test.*Environment|Test.*Org' -count=1 && echo 'no new security findings in affected paths'"
     scenarios: [SC-e89s02-P1-01, SC-e89s02-P1-02]
     risk: P1
-    status: failing
+    status: passing
     security: high
     allure:
       severity: high
@@ -28,7 +28,7 @@ tasks:
     verify: "go test ./components/sites -run 'Test.*Site.*Project|Test.*Compatibility' -count=1 && echo 'no new security findings in affected paths'"
     scenarios: [SC-e89s02-P1-03, SC-e89s02-P1-04]
     risk: P1
-    status: failing
+    status: passing
     security: medium
     allure:
       severity: high
