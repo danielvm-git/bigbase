@@ -590,8 +590,8 @@ epics:
   - e57
   - e67
   note: "4 stories, 7 BCPs. TOML deploy manifest. Blocked by e57 schema changes."
-  capsule_dir: epics/e70-site-deploy-manifest
-  file: epics/e70-site-deploy-manifest/epic.yaml
+  capsule_dir: epics/archive/e70-site-deploy-manifest
+  file: epics/archive/e70-site-deploy-manifest/epic.yaml
 
 - id: e71
   title: "Security — Host-Level Route Auth Policy"
@@ -673,8 +673,8 @@ epics:
   status: done
   depends_on: [e76, e77]
   note: "6 stories, 36 BCPs. Comprehensive Playwright browser-level test suite. Released 2026-07-11 (commit 27bffe30)."
-  capsule_dir: epics/e78-browser-e2e-coverage
-  file: epics/e78-browser-e2e-coverage/epic.yaml
+  capsule_dir: epics/archive/e78-browser-e2e-coverage
+  file: epics/archive/e78-browser-e2e-coverage/epic.yaml
 
 - id: e79
   title: "CI/CD Template Consolidation — Issue #95"
@@ -686,6 +686,17 @@ epics:
   note: "1 story, 8 BCPs. Migrated to consolidated templates from .github template repo. PR #105."
   capsule_dir: epics/e79-ci-cd-consolidation
   file: epics/e79-ci-cd-consolidation/epic.yaml
+- id: e89
+  title: "Native Infisical-Inspired Secret Manager"
+  wsjf: 8.4
+  mode: capsule
+  tier: 1
+  status: planned
+  wave: 1
+  depends_on: [e18, e23, e38, e41]
+  note: "7 stories, 29 BCPs. Native Project → Environment → Folder → Secret → SecretVersion model; envelope encryption; policy-separated reads; deployment resolver; MCP isolation. Critical security boost applied. Advanced Infisical providers remain out of scope."
+  capsule_dir: epics/e89-native-secret-manager
+  file: epics/e89-native-secret-manager/epic.yaml
 - id: e81
   title: "Multi-Language Deploy — Rust, PHP, Java, Ruby"
   wsjf: 1.6

@@ -1,0 +1,55 @@
+story_id: e89s06
+title: "Resolve project and site secrets in deployments"
+status: failing
+bcps: 5
+tasks:
+  - id: e89s06t1
+    description: "Extend EnvResolver with Project Environment and Site compatibility sources while preserving deterministic precedence"
+    verify: "go test ./components/deploy -run 'TestEnvResolver.*Project|Test.*Precedence' -count=1 && echo 'no new security findings in affected paths'"
+    scenarios: [SC-e89s06-P0-01]
+    risk: P0
+    status: failing
+    security: high
+    allure:
+      severity: critical
+      categories: ["Security Review", "Deploy"]
+  - id: e89s06t2
+    description: "Replace startApp legacy fetching with EnvResolver and enforce build/runtime/reserved-variable scope"
+    verify: "go test ./components/deploy -run 'TestEnvVarInjection|Test.*Runtime' -count=1 && echo 'no new security findings in affected paths'"
+    scenarios: [SC-e89s06-P0-02]
+    risk: P0
+    status: failing
+    security: high
+    allure:
+      severity: critical
+      categories: ["Security Review", "Deploy"]
+  - id: e89s06t3
+    description: "Redact build, runtime, diagnostic, and LLM log paths from resolved secret values"
+    verify: "go test ./components/deploy ./components/internal/llm -run 'Test.*Redact|Test.*Secret' -count=1 && echo 'no new security findings in affected paths'"
+    scenarios: [SC-e89s06-P0-03]
+    risk: P0
+    status: failing
+    security: high
+    allure:
+      severity: critical
+      categories: ["Security Review", "Log Redaction"]
+  - id: e89s06t4
+    description: "Add native-first dual-read and explicit resumable legacy migration with plaintext/ciphertext mode selection"
+    verify: "go test ./components/deploy ./components/backup -run 'Test.*Legacy|Test.*Migration|Test.*Backup' -count=1 && echo 'no new security findings in affected paths'"
+    scenarios: [SC-e89s06-P0-04, SC-e89s06-P0-05]
+    risk: P0
+    status: failing
+    security: high
+    allure:
+      severity: critical
+      categories: ["Security Review", "Migration", "Backup"]
+  - id: e89s06t5
+    description: "Run all runtime and restart/rollback deployment integration coverage"
+    verify: "go test ./components/deploy ./components/backup -run 'Test.*(Runtime|Restart|Rollback|Resume|Legacy|Backup)' -count=1 && echo 'no new security findings in affected paths'"
+    scenarios: [SC-e89s06-P1-06]
+    risk: P1
+    status: failing
+    security: medium
+    allure:
+      severity: high
+      categories: ["Regression", "Deploy"]

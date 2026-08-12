@@ -1,0 +1,45 @@
+story_id: e89s02
+title: "Add organization-scoped Projects and Environments"
+status: failing
+bcps: 4
+tasks:
+  - id: e89s02t1
+    description: "Add Project, Environment, and Site attachment schema with foreign keys and indexes for both database drivers"
+    verify: "go test ./components/db ./components/projects ./components/sites -run 'Test.*Project|Test.*Environment|Test.*Migration' -count=1 && echo 'no new security findings in affected paths'"
+    scenarios: [SC-e89s02-P1-03, SC-e89s02-P1-04, SC-e89s02-P1-05]
+    risk: P1
+    status: failing
+    security: high
+    allure:
+      severity: high
+      categories: ["Domain", "Multi-tenancy", "Migration"]
+  - id: e89s02t2
+    description: "Add organization-scoped Project and Environment handlers using authenticated org context"
+    verify: "go test ./components/api ./components/projects ./components/sites -run 'Test.*Project|Test.*Environment|Test.*Org' -count=1 && echo 'no new security findings in affected paths'"
+    scenarios: [SC-e89s02-P1-01, SC-e89s02-P1-02]
+    risk: P1
+    status: failing
+    security: high
+    allure:
+      severity: high
+      categories: ["Security Review", "Multi-tenancy"]
+  - id: e89s02t3
+    description: "Attach new Sites and existing Sites to compatibility Projects with one production Environment"
+    verify: "go test ./components/sites -run 'Test.*Site.*Project|Test.*Compatibility' -count=1 && echo 'no new security findings in affected paths'"
+    scenarios: [SC-e89s02-P1-03, SC-e89s02-P1-04]
+    risk: P1
+    status: failing
+    security: medium
+    allure:
+      severity: high
+      categories: ["Migration", "Sites"]
+  - id: e89s02t4
+    description: "Add Project and Environment REST contract and browser-level isolation coverage"
+    verify: "go test ./tests/contract ./components/projects -run 'Test.*Project|Test.*Environment' -count=1 && npx playwright test tests/e2e/project-environments-ui.spec.ts --config tests/e2e/playwright.config.ts && echo 'no new security findings in affected paths'"
+    scenarios: [SC-e89s02-P1-01, SC-e89s02-P1-02]
+    risk: P1
+    status: failing
+    security: high
+    allure:
+      severity: high
+      categories: ["Contract", "E2E", "Tenant Isolation"]

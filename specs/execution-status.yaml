@@ -71,18 +71,22 @@ epics:
   e67: done
   e68: done
   e73: planned
+  e70: in_progress
   e71: done
   e72: done
   e75: todo
   e74: done
   e76: planned
   e77: done
+  e78: done
   e79: planned
+  e89: planned
   e81: open
   e84: open
   e85: done
   e86: open
   e87: open
+  e88: open
 stories:
   e01s01: done
   e02s01: done
@@ -284,6 +288,10 @@ stories:
   e73s02: pending
   e73s03: pending
   e73s04: pending
+  e70s01: done
+  e70s02: done
+  e70s03: done
+  e70s04: pending
   e71s01: done
   e71s02: done
   e71s03: done
@@ -298,7 +306,20 @@ stories:
   e74s02: done
   e76s01: pending
   e77s01: pending
+  e78s01: pending
+  e78s02: pending
+  e78s03: pending
+  e78s04: pending
+  e78s05: pending
+  e78s06: pending
   e79s01: pending
+  e89s01: todo
+  e89s02: todo
+  e89s03: todo
+  e89s04: todo
+  e89s05: todo
+  e89s06: todo
+  e89s07: todo
   e81s00: open
   e81s01: open
   e81s02: open
@@ -322,3 +343,6 @@ stories:
   e87s05: open
   e87s06: open
   e87s07: open
+  e88s01: open
+  e88s02: open
+  e88s03: open

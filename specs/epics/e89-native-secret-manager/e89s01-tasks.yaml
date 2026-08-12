@@ -1,0 +1,55 @@
+story_id: e89s01
+title: "Harden existing site-secret storage and delivery"
+status: failing
+bcps: 5
+tasks:
+  - id: e89s01t1
+    description: "Wire canonical root-key configuration and explicit development plaintext mode; reject missing or malformed production keys"
+    verify: "go test ./components/internal/envcrypto ./components/sites ./components/deploy -run 'Test.*Key|Test.*Encryption' -count=1 && echo 'no new security findings in affected paths'"
+    scenarios: [SC-e89s01-P0-01]
+    risk: P0
+    status: failing
+    security: high
+    allure:
+      severity: critical
+      categories: ["Security Review", "Encryption", "Regression"]
+  - id: e89s01t2
+    description: "Remove plaintext values from Site env mutation responses and enforce value-size and build/runtime validation"
+    verify: "go test ./components/sites -run 'TestEnvVarsAPI|TestEnvVarsValidation' -count=1 && echo 'no new security findings in affected paths'"
+    scenarios: [SC-e89s01-P0-02, SC-e89s01-P1-07]
+    risk: P0
+    status: failing
+    security: high
+    allure:
+      severity: critical
+      categories: ["Security Review", "API Contract"]
+  - id: e89s01t3
+    description: "Route build and runtime environment creation through one EnvResolver and fail closed on selected decryption errors"
+    verify: "go test ./components/deploy -run 'TestEnvResolver|TestEnvVarInjection' -count=1 && echo 'no new security findings in affected paths'"
+    scenarios: [SC-e89s01-P0-04, SC-e89s01-P0-05]
+    risk: P0
+    status: failing
+    security: high
+    allure:
+      severity: critical
+      categories: ["Security Review", "Deploy"]
+  - id: e89s01t4
+    description: "Redact runtime, build, diagnostic, and LLM log paths and bind MCP Site targets to organization ownership"
+    verify: "go test ./components/mcp ./components/deploy ./components/internal/llm -run 'TestEnvVar|Test.*Redact|Test.*Org' -count=1 && echo 'no new security findings in affected paths'"
+    scenarios: [SC-e89s01-P0-03, SC-e89s01-P0-06]
+    risk: P0
+    status: failing
+    security: high
+    allure:
+      severity: critical
+      categories: ["Security Review", "Tenant Isolation", "Log Redaction"]
+  - id: e89s01t5
+    description: "Run affected package regression tests against the supported database abstraction"
+    verify: "go test ./components/sites ./components/deploy ./components/mcp ./components/db -count=1 && go test ./components/db -run 'Test.*(SQLite|Postgres)' -count=1 && echo 'no new security findings in affected paths'"
+    scenarios: [SC-e89s01-P0-01, SC-e89s01-P0-02, SC-e89s01-P0-03, SC-e89s01-P0-04, SC-e89s01-P0-05, SC-e89s01-P0-06, SC-e89s01-P1-07]
+    risk: P1
+    status: failing
+    security: medium
+    allure:
+      severity: high
+      categories: ["Regression", "SQLite", "PostgreSQL"]

@@ -1,0 +1,74 @@
+type: epic-shard
+context: domain
+id: e89
+title: "Native Infisical-Inspired Secret Manager"
+wsjf: 8.4
+wsjf_rationale: "BV=9 (shared secure deployment secrets), TC=6 (blocks future project-scoped deploy work), RR=10 (closes plaintext storage, MCP tenant isolation, and log exposure risks) / JS=9. Security boost +2 applied for CRITICAL pre-implementation risk."
+total_bcps: 29
+status: planned
+tier: 1
+depends_on: [e18, e23, e38, e41]
+note: |
+  Native BigBase implementation of Infisical-inspired secret semantics. Does not
+  copy Infisical source or implement advanced providers. Preserves site_env_vars
+  through a dual-read migration. Core release has no new external dependency.
+  Requirement deltas: e89s01/e89s06 modify existing site/deploy behavior; the
+  remaining stories add Project, Environment, Secret, and policy capabilities.
+implementation_order:
+  - e89s01
+  - e89s02
+  - e89s03
+  - e89s04
+  - e89s05
+  - e89s06
+  - e89s07
+stories:
+  - id: e89s01
+    title: "Harden existing site-secret storage and delivery"
+    bcps: 5
+    status: todo
+    delta: MODIFIED
+    spec: e89s01-harden-site-secrets.md
+    tasks: e89s01-tasks.yaml
+  - id: e89s02
+    title: "Add organization-scoped Projects and Environments"
+    bcps: 4
+    status: todo
+    delta: ADDED
+    spec: e89s02-project-environments.md
+    tasks: e89s02-tasks.yaml
+  - id: e89s03
+    title: "Add versioned envelope-encrypted project secrets"
+    bcps: 5
+    status: todo
+    delta: ADDED
+    spec: e89s03-versioned-secret-store.md
+    tasks: e89s03-tasks.yaml
+  - id: e89s04
+    title: "Add secret REST API, policies, and audit events"
+    bcps: 4
+    status: todo
+    delta: ADDED
+    spec: e89s04-secret-api-policy.md
+    tasks: e89s04-tasks.yaml
+  - id: e89s05
+    title: "Add Admin UI for project secrets"
+    bcps: 3
+    status: todo
+    delta: ADDED
+    spec: e89s05-secret-ui.md
+    tasks: e89s05-tasks.yaml
+  - id: e89s06
+    title: "Resolve project and site secrets in deployments"
+    bcps: 5
+    status: todo
+    delta: MODIFIED
+    spec: e89s06-deployment-resolution.md
+    tasks: e89s06-tasks.yaml
+  - id: e89s07
+    title: "Secure MCP secret-management tools"
+    bcps: 3
+    status: todo
+    delta: ADDED
+    spec: e89s07-mcp-secret-tools.md
+    tasks: e89s07-tasks.yaml

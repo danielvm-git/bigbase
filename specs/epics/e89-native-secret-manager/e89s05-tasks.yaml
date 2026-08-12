@@ -1,0 +1,45 @@
+story_id: e89s05
+title: "Add Admin UI for project secrets"
+status: failing
+bcps: 3
+tasks:
+  - id: e89s05t1
+    description: "Add Project Secret metadata/value types and API fetch helpers with separate plaintext response types"
+    verify: "cd ui && npx vitest run src/lib/secretsData.test.ts && echo 'no new security findings in affected paths'"
+    scenarios: [SC-e89s05-P1-01, SC-e89s05-P1-02, SC-e89s05-P1-03]
+    risk: P1
+    status: failing
+    security: medium
+    allure:
+      severity: high
+      categories: ["UI", "API Contract"]
+  - id: e89s05t2
+    description: "Add masked Project Environment Folder table and create/update/delete forms"
+    verify: "cd ui && npx vitest run src/components/ProjectSecretsTab.test.tsx && echo 'no new security findings in affected paths'"
+    scenarios: [SC-e89s05-P1-01, SC-e89s05-P1-04]
+    risk: P1
+    status: failing
+    security: medium
+    allure:
+      severity: high
+      categories: ["UI", "Secret Management"]
+  - id: e89s05t3
+    description: "Add explicit reveal, version history, safe .env import, and value-free error rendering"
+    verify: "cd ui && npx vitest run src/components/ProjectSecretsTab.test.tsx -t 'mask|reveal|import|version' && echo 'no new security findings in affected paths'"
+    scenarios: [SC-e89s05-P1-02, SC-e89s05-P1-03, SC-e89s05-P1-05]
+    risk: P1
+    status: failing
+    security: high
+    allure:
+      severity: high
+      categories: ["Security Review", "UI", "Import"]
+  - id: e89s05t4
+    description: "Integrate /secrets navigation, accessibility route coverage, browser E2E, typecheck, and production build"
+    verify: "cd ui && npx tsc --noEmit && npm run build && cd .. && npx playwright test tests/e2e/project-secrets-ui.spec.ts --config tests/e2e/playwright.config.ts && npx playwright test tests/e2e/axe-scan.spec.ts --config tests/e2e/playwright.config.ts --grep 'Project Secrets' && echo 'no new security findings in affected paths'"
+    scenarios: [SC-e89s05-P1-06]
+    risk: P1
+    status: failing
+    security: medium
+    allure:
+      severity: high
+      categories: ["UI", "Accessibility", "Build"]

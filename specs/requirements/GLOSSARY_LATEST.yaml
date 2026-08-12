@@ -41,3 +41,17 @@ terms:
   Admin UI: React SPA embedded in Go binary
   Dashboard: Admin UI home — stats, navigation, component status
   Design Token: CSS variable for semantic color, spacing, typography
+
+  Project: Organization-owned grouping of related BigBase Sites and secret Environments.
+  Environment: Named deployment context within a Project, such as development, staging, or production.
+  Secret Folder: Hierarchical path that groups Secrets inside an Environment.
+  Secret: Named sensitive value with metadata, access policy, and immutable SecretVersions.
+  Secret Version: Immutable encrypted representation of a Secret value created by a write or restore.
+  Secret Manager: BigBase module that owns secret storage, encryption, masking, policy, versions, and audit events.
+  Secret Scope: Project, Environment, Folder, and key location used to authorize and resolve a Secret.
+  Secret Resolver: Deployment seam that merges platform configuration, project Secrets, site compatibility values, and reserved runtime values.
+  Project Data Key: Random per-Project key used to encrypt SecretVersions; stored encrypted under the root key hierarchy.
+  Root Encryption Key: Operator-provided key that protects the encrypted key hierarchy and is never stored in plaintext in the database.
+  Describe Secret: Permission to learn that a Secret exists without receiving its value.
+  Read Secret Value: Permission to receive a decrypted Secret value.
+  Compatibility Layer: Existing site_env_vars source retained during dual-read migration to the native Secret Manager.

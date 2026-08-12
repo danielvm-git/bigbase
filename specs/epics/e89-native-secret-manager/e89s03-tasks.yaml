@@ -1,0 +1,45 @@
+story_id: e89s03
+title: "Add versioned envelope-encrypted project secrets"
+status: failing
+bcps: 5
+tasks:
+  - id: e89s03t1
+    description: "Add SecretFolder, Secret, SecretVersion, and Project key-record schema with constraints"
+    verify: "go test ./components/db ./components/secrets -run 'Test.*Schema|Test.*Constraint' -count=1 && echo 'no new security findings in affected paths'"
+    scenarios: [SC-e89s03-P0-01]
+    risk: P0
+    status: failing
+    security: high
+    allure:
+      severity: critical
+      categories: ["Security Review", "Secret Storage"]
+  - id: e89s03t2
+    description: "Implement KeyHierarchy with root-key bootstrap, Project Data Keys, versioned AES-GCM, and scope-bound authenticated data"
+    verify: "go test ./components/secrets ./components/internal/envcrypto -run 'Test.*Key|Test.*Cipher|Test.*Version' -count=1 && echo 'no new security findings in affected paths'"
+    scenarios: [SC-e89s03-P0-03, SC-e89s03-P0-05]
+    risk: P0
+    status: failing
+    security: high
+    allure:
+      severity: critical
+      categories: ["Security Review", "Cryptography"]
+  - id: e89s03t3
+    description: "Implement SecretManager metadata, value, version, and deletion operations through one public seam"
+    verify: "go test ./components/secrets -run TestSecretManager -count=1 && echo 'no new security findings in affected paths'"
+    scenarios: [SC-e89s03-P0-02]
+    risk: P0
+    status: failing
+    security: high
+    allure:
+      severity: critical
+      categories: ["Domain", "Secret Storage"]
+  - id: e89s03t4
+    description: "Add concurrent key creation, wrong-scope, backup/restore, transaction-seam, and race coverage"
+    verify: "go test -race ./components/secrets ./components/backup ./components/db ./kernel -count=1 && echo 'no new security findings in affected paths'"
+    scenarios: [SC-e89s03-P0-04, SC-e89s03-P1-06]
+    risk: P0
+    status: failing
+    security: high
+    allure:
+      severity: critical
+      categories: ["Security Review", "Concurrency", "Backup"]

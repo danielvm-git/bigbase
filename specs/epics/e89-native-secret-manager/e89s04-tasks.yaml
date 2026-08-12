@@ -1,0 +1,45 @@
+story_id: e89s04
+title: "Add secret REST API, policies, and audit events"
+status: failing
+bcps: 4
+tasks:
+  - id: e89s04t1
+    description: "Add canonical Project Environment Secret routes with typed metadata-only request and response contracts"
+    verify: "go test ./components/secrets ./components/api -run 'Test.*Secret.*API' -count=1 && echo 'no new security findings in affected paths'"
+    scenarios: [SC-e89s04-P0-01]
+    risk: P0
+    status: failing
+    security: high
+    allure:
+      severity: critical
+      categories: ["Security Review", "REST API"]
+  - id: e89s04t2
+    description: "Add Describe Secret, Read Secret Value, and mutation policy checks from authenticated organization context"
+    verify: "go test ./components/secrets ./components/auth -run 'Test.*Secret.*Auth|Test.*Org' -count=1 && echo 'no new security findings in affected paths'"
+    scenarios: [SC-e89s04-P0-02, SC-e89s04-P0-03]
+    risk: P0
+    status: failing
+    security: high
+    allure:
+      severity: critical
+      categories: ["Security Review", "Authorization"]
+  - id: e89s04t3
+    description: "Add masked listing, explicit value reads, version listing, input limits, and mutating rate limits"
+    verify: "go test ./tests/contract -run 'Test.*Secret' -count=1 && echo 'no new security findings in affected paths'"
+    scenarios: [SC-e89s04-P1-05, SC-e89s04-P1-06]
+    risk: P1
+    status: failing
+    security: high
+    allure:
+      severity: high
+      categories: ["Contract", "Rate Limiting"]
+  - id: e89s04t4
+    description: "Emit value-free audit events and assert plaintext/ciphertext absence from audit records"
+    verify: "go test ./components/secrets ./components/monitoring -run 'Test.*Secret.*Audit' -count=1 && echo 'no new security findings in affected paths'"
+    scenarios: [SC-e89s04-P0-04]
+    risk: P0
+    status: failing
+    security: high
+    allure:
+      severity: critical
+      categories: ["Security Review", "Audit"]

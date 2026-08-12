@@ -1,0 +1,45 @@
+story_id: e89s07
+title: "Secure MCP secret-management tools"
+status: failing
+bcps: 3
+tasks:
+  - id: e89s07t1
+    description: "Add narrow MCP secret scopes and one target authorization helper for organization, Project, Environment, and Site binding"
+    verify: "go test ./components/mcp ./components/auth -run 'Test.*Secret.*Scope|Test.*Org|Test.*Site.*Binding' -count=1 && echo 'no new security findings in affected paths'"
+    scenarios: [SC-e89s07-P0-01, SC-e89s07-P0-03, SC-e89s07-P0-04]
+    risk: P0
+    status: failing
+    security: high
+    allure:
+      severity: critical
+      categories: ["Security Review", "MCP", "Tenant Isolation"]
+  - id: e89s07t2
+    description: "Route existing Site environment tools through the ownership-aware SecretManager adapter"
+    verify: "go test ./components/mcp -run 'TestEnvVar.*Isolation|TestEnvVar.*Auth' -count=1 && echo 'no new security findings in affected paths'"
+    scenarios: [SC-e89s07-P0-03, SC-e89s07-P0-04]
+    risk: P0
+    status: failing
+    security: high
+    allure:
+      severity: critical
+      categories: ["Security Review", "MCP"]
+  - id: e89s07t3
+    description: "Register native Project secret list/get/set/delete tools with masked and explicit-value contracts"
+    verify: "go test ./components/mcp -run TestProjectSecret -count=1 && echo 'no new security findings in affected paths'"
+    scenarios: [SC-e89s07-P0-01, SC-e89s07-P0-02, SC-e89s07-P1-06]
+    risk: P0
+    status: failing
+    security: high
+    allure:
+      severity: critical
+      categories: ["MCP", "Secret Management"]
+  - id: e89s07t4
+    description: "Add real MCP HTTP integration tests in components/mcp and assert generic errors never expose SQL, keys, or plaintext"
+    verify: "go test ./components/mcp -run 'TestMCP.*Secret|Test.*Secret.*MCP|Test.*Stdio.*Secret' -count=1 && echo 'no new security findings in affected paths'"
+    scenarios: [SC-e89s07-P0-05]
+    risk: P0
+    status: failing
+    security: high
+    allure:
+      severity: critical
+      categories: ["Security Review", "E2E", "MCP"]

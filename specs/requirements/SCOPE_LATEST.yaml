@@ -1,93 +1,70 @@
 type: requirements-scope
 context: domain
-version: "2.0.0"
-release: BigBase v2.0
+version: "1.0.0"
+release: "Next BigBase secret-management increment"
+core_value: >-
+  Give BigBase operators one secure, auditable, project-scoped place to manage
+  secrets and deliver only authorized values to builds and running applications.
+summary: >-
+  This initiative hardens the existing site environment-variable path, introduces
+  Project, Environment, Folder, Secret, and SecretVersion concepts, and adds a
+  native encrypted secret manager. Existing site_env_vars routes remain usable
+  while values migrate to the native model.
+
+  The release provides authenticated REST, Admin UI, MCP, and deployment-resolver
+  paths. It deliberately stops before advanced Infisical features such as dynamic
+  secrets, external KMS, secret syncs, PKI, PAM, and Kubernetes delivery.
 in_scope:
-  - id: e17
-    title: Enhanced Admin UI
-    status: done
-    items:
-      - Realtime inspector page
-      - Function logs viewer
-      - Storage browser with preview
-      - Deploy and CICI pipeline detail viewer
-      - Dashboard overhaul with charts, dark mode, quick actions
-  - id: e18
-    title: Multi-DB Support (PostgreSQL)
-    items:
-      - Generalize DBer interface to kernel-level abstraction
-      - PostgreSQL driver via lib/pq
-      - Config-based driver selection (--db-driver, --db-dsn)
-      - Dual-driver CI test matrix
-      - Versioned migration system
-  - id: e19
-    title: Security Hardening
-    items:
-      - Rate limiting middleware
-      - Email verification flow
-      - Password reset
-      - Refresh token rotation
-      - Security headers middleware
-  - id: e20
-    title: Platform Operations
-    items:
-      - Backup/restore CLI and API
-      - DB migration tooling CLI
-      - Environment variable management
-      - Custom domains for Sites
-      - Outbound webhook system
-  - id: e21
-    title: Testing and Quality Hardening
-    items:
-      - E2E test suite (Playwright)
-      - API contract tests
-      - Performance benchmarks
-      - Coverage gates (80% minimum)
-      - Race condition hardening and fuzz testing
-  - id: e22
-    title: Developer Experience
-    items:
-      - Onboarding checklist UI
-      - 1-click scaffolding
-      - Event Bus visualizer
-      - Sample applications with deploy buttons
-      - Interactive tutorial
-  - id: e23
-    title: Multi-Tenancy and Organizations
-    items:
-      - Organization CRUD and settings
-      - Team membership and invitations
-      - Resource isolation (org-scoped)
-      - API key management per org
-  - id: e24
-    title: Wire Observability
-    items:
-      - Structured logging across all components
-      - Distributed request IDs
-      - Per-component health reporting
-      - Prometheus metrics export
-      - Idempotent setup and health-check scripts
-  - id: e25
-    title: Hardware Monitoring
-    items:
-      - Host metrics (disk, network, load)
-      - Real-time metrics SSE stream
-      - Monitoring page live charts
-      - Process-level monitoring
-      - Configurable alert rules
+  - id: e89s01
+    title: Harden existing site-secret storage and delivery
+  - id: e89s02
+    title: Add organization-scoped Projects and Environments
+  - id: e89s03
+    title: Add versioned envelope-encrypted project secrets
+  - id: e89s04
+    title: Add secret REST API, policies, and audit events
+  - id: e89s05
+    title: Add Admin UI for project secrets
+  - id: e89s06
+    title: Resolve project and site secrets in deployments
+  - id: e89s07
+    title: Secure MCP secret-management tools
 out_of_scope:
-  - SDK/client library generation (REST API docs only)
-  - Redis integration
-  - Container/runtime isolation for deploys
-  - Enterprise SSO (SAML, LDAP) beyond Google OAuth
-  - Rate limiting with Redis
-  - PostgreSQL read replicas
-  - Billing/invoicing integration
-  - CGo dependencies
-future_candidates:
-  - Client SDK generation (JS, Go, Python)
-  - Redis for rate limiting, pub/sub, caching
-  - Container-based deployment isolation
-  - Enterprise SSO (SAML, LDAP, OIDC)
-  - PostgreSQL read replicas and sharding
-  - Billing and usage-based metering
+  - item: External AWS KMS, GCP KMS, and HSM adapters
+    reason: Requires new provider dependencies and a separate threat model.
+  - item: Dynamic secrets and provider-specific rotation
+    reason: Depends on external systems and is not required for static deployment secrets.
+  - item: Secret syncs to GitHub, Vercel, AWS, or other platforms
+    reason: Adds outbound credentials and retry/reconciliation surfaces.
+  - item: PKI, PAM, honey tokens, secret scanning, and agent vaults
+    reason: Separate product capabilities with different domain models.
+  - item: Kubernetes Operator, Agent, and generated client SDKs
+    reason: BigBase currently has no Kubernetes runtime or SDK-generation commitment.
+  - item: Approval workflows, secret sharing, and cross-project imports
+    reason: Require a mature policy and collaboration model after core access control.
+  - item: Wholesale Infisical source-code port
+    reason: Runtime, storage, licensing, and operational assumptions do not match BigBase.
+constraints:
+  - BigBase remains a single Go binary using ECC lifecycle and composition-root wiring.
+  - SQLite and PostgreSQL are supported with parameterized SQL and equivalent behavior.
+  - No Redis, containers, or new external dependency is required for the core release.
+  - Existing site_env_vars REST/UI/MCP behavior remains available during migration.
+  - Production secret encryption fails closed; plaintext mode is explicit and development-only.
+  - Secret values never appear in logs, audit records, list responses, or write responses.
+success_criteria:
+  - Missing or invalid production encryption configuration prevents startup or secret writes.
+  - Cross-organization HTTP and MCP requests cannot read or mutate another tenant's secrets.
+  - Secret list and mutation responses contain metadata and masked previews only.
+  - Every update creates an immutable SecretVersion and preserves prior versions.
+  - Build and runtime environments use one deterministic resolver with tested precedence.
+  - Decryption failures fail protected deployment paths instead of silently omitting values.
+  - Build, runtime, diagnostic, and LLM log paths redact resolved secret values.
+  - Existing site_env_vars remain deployable during dual-read migration.
+  - SQLite/PostgreSQL migrations, backup/restore, race tests, API tests, UI tests, and E2E tests pass.
+references:
+  - specs/planning-context.yaml
+  - specs/adr/0008-native-secret-manager.md
+  - specs/adr/0009-secret-envelope-encryption.md
+  - specs/security/epics/e89/THREAT_MODEL.md
+  - specs/IMPACT_LATEST.md
+  - https://github.com/Infisical/infisical

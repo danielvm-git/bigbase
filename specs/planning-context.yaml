@@ -1,0 +1,40 @@
+type: planning-context
+context: domain
+feature_name: Native Infisical-inspired Secret Manager
+problem_statement: >-
+  BigBase currently stores site-scoped environment values in a flat table with
+  optional encryption, duplicated build/runtime resolution, incomplete redaction,
+  and no project, environment, folder, version, or read-policy model. The goal is
+  to provide a secure native secret manager that preserves existing site APIs while
+  adding reusable project-scoped secrets for deployments.
+constraints:
+  - Preserve the single-binary ECC architecture.
+  - Support SQLite and PostgreSQL with parameterized SQL.
+  - Preserve existing site_env_vars API behavior during migration.
+  - Keep current JWT, organization, API-key, site-key, and MCP authentication.
+  - No Redis, containers, or new external dependency in the core release.
+  - Production encryption must fail closed; plaintext mode is explicit development-only.
+  - Do not copy Infisical enterprise implementation code.
+out_of_scope:
+  - External AWS/GCP KMS and HSM adapters in the core release.
+  - Dynamic secrets, secret rotation providers, secret syncs, PKI, PAM, and honey tokens.
+  - Kubernetes Operator, Agent, generated SDKs, and secret scanning.
+  - Approval workflows, secret sharing, and cross-project imports.
+key_decisions:
+  - decision: Build a native BigBase Secret Manager instead of embedding Infisical.
+    rationale: Infisical assumes a different runtime and infrastructure model; native semantics preserve ECC and single-binary operation.
+  - decision: Use Project -> Environment -> Folder -> Secret -> SecretVersion.
+    rationale: A flat project_secrets table cannot support Infisical-style isolation, versioning, or future references.
+  - decision: Keep site_env_vars as a compatibility layer during migration.
+    rationale: Existing sites and deployment contracts must remain available while native secrets roll out.
+  - decision: Use envelope encryption with a root key and project data keys.
+    rationale: Limits blast radius and enables future key rotation without changing secret APIs.
+  - decision: Use one EnvResolver seam for build, runtime, redaction, and precedence.
+    rationale: The current duplicated paths already have confirmed cross-runtime blast radius.
+references:
+  - specs/product/SCOPE_LATEST.yaml
+  - specs/adr/0008-native-secret-manager.md
+  - specs/adr/0009-secret-envelope-encryption.md
+  - specs/security/epics/e89/THREAT_MODEL.md
+  - specs/epics/archive/e61-secrets/e61s01-spec.md
+  - https://github.com/Infisical/infisical

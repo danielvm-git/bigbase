@@ -356,6 +356,39 @@ confidence ≥ 8 were identified in the July 2026 review.
 | v2.76.0+ | — | Bulk bug fix: 17 fixes across deploy keys+security, dep vulns (7 critical), DAST CSP/Cache-Control, test cleanup, comment stripping |
 | v2.76.16 | — | SQL injection hardening (`tableName` type), MCP auth tier fix (`list_site_keys` moved to read tier), E2E coverage (22 SPA routes + 17 API components), dependency bumps (Go 1.26.3, React 19.2.7, modernc.org/sqlite 1.53.0) |
 
+## Secret Manager Domain and Architecture
+
+The native Secret Manager follows `Organization → Project → Environment → Secret Folder → Secret → Secret Version`.
+`site_env_vars` is a Compatibility Layer during migration, not the target domain model.
+
+### Deep modules and seams
+
+- **SecretManager** — deep module that hides encrypted storage, versions, masking, policy, audit, and legacy reads.
+- **KeyHierarchy** — deep module that hides root-key bootstrap, Project Data Keys, ciphertext versions, and future rotation.
+- **EnvResolver** — single deployment seam for build/runtime selection, precedence, and log redaction.
+- **SecretPolicy** — authorization seam separating Describe Secret from Read Secret Value and mutation actions.
+- **SQLSecretStore** — first concrete Adapter for SQLite/PostgreSQL; no external provider dependency in the core release.
+
+### Secret resolution precedence
+
+1. Platform baseline.
+2. Manifest/site non-secret configuration.
+3. Project Environment Secrets.
+4. Site-scoped compatibility Secrets, which win on collision.
+5. Reserved system runtime values such as `PORT`, `DATABASE_URL`, and `DB_PATH`.
+
+Build and runtime scopes are resolved independently. Decryption failures are fatal
+for protected deployment paths; a deployment must not silently start without a
+required Secret. All log-facing views use the same redaction seam.
+
+### Secret concurrency
+
+Project Data Key creation and key rotation require transactional serialization.
+Secret Version numbers are allocated under the same transaction as the write.
+Bulk imports use one transaction per request with per-item validation before any
+mutation. SecretManager returns immutable metadata copies; callers do not mutate
+shared resolver state.
+
 ## Verification
 
 ```bash
