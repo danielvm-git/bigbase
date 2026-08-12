@@ -1,0 +1,26 @@
+# Conventions Wiki
+
+Generated from `CONVENTIONS.md`.
+
+- [Architecture](architecture.md)
+- [Entity-Component-Construct (ECC)](entity-component-construct-ecc.md)
+- [Kernel Responsibilities](kernel-responsibilities.md)
+- [Component Interface](component-interface.md)
+- [Code Quality](code-quality.md)
+- [Readability First](readability-first.md)
+- [KISS](kiss.md)
+- [DRY](dry.md)
+- [YAGNI](yagni.md)
+- [Go Conventions](go-conventions.md)
+- [Naming](naming.md)
+- [Error Handling](error-handling.md)
+- [Immutability](immutability.md)
+- [Testing](testing.md)
+- [Project Structure](project-structure.md)
+- [Specs Convention](specs-convention.md)
+- [Defensive Code Categories](defensive-code-categories.md)
+- [Security](security.md)
+- [Production Hardening (Contabo VPS)](production-hardening-contabo-vps.md)
+- [Git & Workflow](git-workflow.md)
+- [Solo-git Mode](solo-git-mode.md)
+- [Conventional Commits](conventional-commits.md)

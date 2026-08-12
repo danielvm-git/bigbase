@@ -1,0 +1,7 @@
+# seed-conventions
+
+source: /Users/danielvm/.claude/skills/seed-conventions/SKILL.md
+references: [/Users/danielvm/.claude/skills/seed-conventions/SKILL.md]
+enforced_by: [survey-context, plan-work, verify-work]
+
+Generate CLAUDE.md and CONVENTIONS.md for a brand-new project through a brief interview, and create the specs/ directory with evolved bigpowers structure (product/, tech-architecture/, verifications/, epics/archive/). Entry point for greenfield projects. Use when starting a new project from scratch, when user asks to set up AI agent conventions, or when there is no CLAUDE.md yet.

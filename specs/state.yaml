@@ -7,12 +7,14 @@ active_story_status: planned
 bug_id: null
 release:
   target_version: 2.88.0
-  codename: "WCAG AAA Closing — Accent Links + Formal Conformance"
+  codename: "WCAG AAA Closing \u2014 Accent Links + Formal Conformance"
   last_tag: v2.88.0
   last_publish: '2026-08-11'
   ci_verified: true
   ci_verified_at: '2026-08-11T21:36:23Z'
-  release_skipped: "no new release: pushed diff is chore/docs only (dependabot bumps, WCAG registry, e86 epic specs); semantic-release correctly skipped (default rules require feat/fix/perf)"
+  release_skipped: 'no new release: pushed diff is chore/docs only (dependabot bumps,
+    WCAG registry, e86 epic specs); semantic-release correctly skipped (default rules
+    require feat/fix/perf)'
 metrics:
   session_start: '2026-07-12T16:00:00-03:00'
   session_end: '2026-07-12T18:45:00-03:00'
@@ -21,15 +23,9 @@ metrics:
   bcps_per_hour: 0
 bug_cycle:
   current_step: 5
-  completed_steps:
-    - 1
-    - 2
-    - 3
-    - 4
-    - 5
-  batch: "wcag-moderate-11 (T000011-T000021)"
-  worktree_strategy: "8 parallel worktrees partitioned by file ownership (shared files assigned to one agent each)"
-  note: "ALL 21 WCAG defects now fixed. T000011-T000021 merged via 8 branches. Full UI suite 656/656, build green, lint clean (1 ThemePicker setState-in-effect fixed post-merge). Registry 21/21 fixed. fix_bug flow complete."
+  completed_steps: [1, 2, 3, 4, 5]
+  batch: deploy-redeploy-flake
+  note: "FIXED: waitForHostRegistration polling removed the first-deploy race; regression guards pass."
 epic_cycle:
   step: 0
   story_bcps: 5
@@ -37,44 +33,50 @@ epic_cycle:
   audit_result: null
   completed_steps: []
   story_complete: false
-  fast_mode: false
-  worktree_strategy: "DAG: s01 -> s02 -> s03 -> (s04 || s06) -> (s05 || s07)"
-  note: "Parallel execution plan recorded in specs/epics/e89-native-secret-manager/PARALLEL-EXECUTION-PLAN.md"
+  yolo_mode: true
+  worktree_strategy: 'DAG: s01 -> s02 -> s03 -> (s04 || s06) -> (s05 || s07)'
+  note: Parallel execution plan and YOLO runbook recorded in specs/epics/e89-native-secret-manager/
 git:
   branch: main
-  hash: b535145d1
+  hash: ba123ea92
   worktree: null
   ci_status: success
 cleanup:
   completed_at: '2026-07-13T16:10:00-03:00'
   rerun: true
   steps:
-    - "verify-e74: e74 verified (auth 20/20, UI build ok, status done)"
-    - "merge-pr-112: actions/checkout v4->v7 (already merged, CI green)"
-    - "merge-pr-114: actions/download-artifact v4->v8 (already merged, CI green)"
-    - "fix-issue-109: setup-python@v6 already applied; issue #109 already closed"
-    - "merge-pr-111: github/codeql-action v3->v4 (already merged, CI green)"
-    - "merge-pr-116: appleboy/ssh-action 1.2.2->1.2.5 (already merged, CI green)"
-    - "bump-scp-action: SKIPPED — scp-action latest is v1.0.0 (SHA ff85246), no v1.2.5 tag exists"
-    - "merge-pr-110: peaceiris/actions-gh-pages SHA bump (already merged, CI green)"
-    - "merge-pr-117: typescript 6.0.3->7.0.2 (build PASSED, vitest FAILED — jsdom missing, commented on PR)"
-    - "merge-pr-115: @types/node 24.12.4->26.1.1 (build PASSED, vitest TIMED OUT — commented on PR)"
-    - "merge-pr-113: @types/react 19.2.15->19.2.17 (build PASSED, vitest FAILED — jsdom missing, commented on PR)"
-    - "close-issues: closed #45, deferred #43/#41 (label deferred-tech-debt), labeled #58 (enhancement,epic-proposed)"
-    - "guardrails-doc: created specs/e81-guardrails.md, committed ef74e560, CI green"
-    - "release-branch: go test 1103/1105 (2 pre-existing failures in deploy integration), vet clean, build ok, CI green"
+  - 'verify-e74: e74 verified (auth 20/20, UI build ok, status done)'
+  - 'merge-pr-112: actions/checkout v4->v7 (already merged, CI green)'
+  - 'merge-pr-114: actions/download-artifact v4->v8 (already merged, CI green)'
+  - 'fix-issue-109: setup-python@v6 already applied; issue #109 already closed'
+  - 'merge-pr-111: github/codeql-action v3->v4 (already merged, CI green)'
+  - 'merge-pr-116: appleboy/ssh-action 1.2.2->1.2.5 (already merged, CI green)'
+  - "bump-scp-action: SKIPPED \u2014 scp-action latest is v1.0.0 (SHA ff85246), no\
+    \ v1.2.5 tag exists"
+  - 'merge-pr-110: peaceiris/actions-gh-pages SHA bump (already merged, CI green)'
+  - "merge-pr-117: typescript 6.0.3->7.0.2 (build PASSED, vitest FAILED \u2014 jsdom\
+    \ missing, commented on PR)"
+  - "merge-pr-115: @types/node 24.12.4->26.1.1 (build PASSED, vitest TIMED OUT \u2014\
+    \ commented on PR)"
+  - "merge-pr-113: @types/react 19.2.15->19.2.17 (build PASSED, vitest FAILED \u2014\
+    \ jsdom missing, commented on PR)"
+  - 'close-issues: closed #45, deferred #43/#41 (label deferred-tech-debt), labeled
+    #58 (enhancement,epic-proposed)'
+  - 'guardrails-doc: created specs/e81-guardrails.md, committed ef74e560, CI green'
+  - 'release-branch: go test 1103/1105 (2 pre-existing failures in deploy integration),
+    vet clean, build ok, CI green'
   ci_verified_at: '2026-07-13T16:08:00-03:00'
   zero_open_bugs: true
   zero_open_prs: true
   open_issues: 3 (all deferred/labeled)
 handoff:
-  last_step_completed: "e89 audit-plan and security-review completed: NOT READY with four HIGH baseline findings"
+  last_step_completed: "Active deploy-redeploy flake fixed and verified; resume e89 build-epic"
   open_decisions:
+    - "Checkpoint e89 planning/helper artifacts before kickoff-branch"
     - "Resolve F-001 optional Site encryption / canonical root-key wiring before s01 completion"
     - "Resolve F-002 MCP Site target IDOR with authenticated principal binding"
     - "Resolve F-003 runtime fail-open decryption/fetch behavior and log redaction"
     - "Resolve F-004 MCP internal error disclosure with generic typed errors"
-    - "Checkpoint current planning changes and classify non-spec scripts/lib before kickoff-branch"
-    - "Create coordinator-owned specs/agent-locks.yaml because it is absent"
+    - "Run build-epic step 0 security review on the e89 implementation branch"
   next_skill: kickoff-branch
-  context: "Audit and security review are NOT READY; kickoff remains blocked until clean checkpoint and e89s01 security remediation/re-review."
+  context: "Bug cycle complete; e89 yolo mode may resume after a clean planning checkpoint. Security gate remains non-bypassable."

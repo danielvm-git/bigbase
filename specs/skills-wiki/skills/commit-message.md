@@ -1,0 +1,7 @@
+# commit-message
+
+source: /Users/danielvm/.claude/skills/commit-message/SKILL.md
+references: [/Users/danielvm/.claude/skills/commit-message/SKILL.md]
+enforced_by: [survey-context, plan-work, verify-work]
+
+Reviews working-tree changes, then drafts a Conventional Commits title/body and states the semantic-release version bump a single such commit would imply. Also notes which defensive-code categories were touched. Use when the user wants to commit recent work, prepare a Conventional Commits message, or asks for semantic-release / semver-consistent messaging before git commit.

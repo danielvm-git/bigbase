@@ -22,9 +22,9 @@ passing, its P0/P1 verification evidence exists, and the story audit gate passes
 - Dependencies: e18, e23, e38, e41.
 - Security model: `specs/security/epics/e89/THREAT_MODEL.md`; CRITICAL before s01 and HIGH during project-secret rollout.
 - Existing ledgers: all seven are `status: failing`, as required before TDD.
-- Current baseline observed: `main` at `b535145d1`; the working tree contains the e89 planning specs plus an untracked non-spec helper directory `scripts/lib/`. Kickoff is blocked until the coordinator reviews and checkpoints the spec artifacts and separately classifies/preserves or commits the helper; do not silently treat the tree as spec-only.
-- No implementation worktree exists. `scripts/land-branch.sh` exists; `scripts/trace-stories.sh` and the review-worktree helper are absent and must be reported as skipped if still absent.
-- No new external dependency is planned. Slopcheck: `[OK]` for the existing Go/React/SQLite stack; do not add a package without a new plan-work review.
+- Current baseline observed: `main` at `36278758a`; the working tree is clean. No implementation worktree exists.
+- `scripts/land-branch.sh` exists. `scripts/trace-stories.sh`, `scripts/decompose-conventions.sh`, `scripts/generate-agent-guide.sh`, and the parallel review-worktree helper are absent; report their skips explicitly.
+- `specs/agent-locks.yaml` is absent and must be created by the coordinator before tests.
 
 ## Dependency DAG and waves
 

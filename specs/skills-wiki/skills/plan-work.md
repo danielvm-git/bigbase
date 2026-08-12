@@ -1,0 +1,7 @@
+# plan-work
+
+source: /Users/danielvm/.claude/skills/plan-work/SKILL.md
+references: [/Users/danielvm/.claude/skills/plan-work/SKILL.md]
+enforced_by: [survey-context, plan-work, verify-work]
+
+PLANNING SPINE STEP 3 of 3 — Plan the work: write detailed implementation tasks into the active epic capsule (specs/epics/eNN-slug/). Produces countable-story-format .md specs and runnable -tasks.yaml files. Use after slice-tasks (step 2). Not a substitute for scope-work (step 1) or slice-tasks (step 2).

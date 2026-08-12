@@ -1,0 +1,988 @@
+{
+  "generated_at": "2026-08-12T00:24:37.616472+00:00",
+  "source": [
+    "specs/release-plan.yaml",
+    "specs/epics/**/epic.yaml",
+    "story tags in source/test files"
+  ],
+  "stories": [
+    {
+      "story_id": "e17s01",
+      "title": "e17s01",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e17s02",
+      "title": "e17s02",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e17s03",
+      "title": "e17s03",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e17s04",
+      "title": "e17s04",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e17s05",
+      "title": "e17s05",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e17s06",
+      "title": "e17s06",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e17s07",
+      "title": "e17s07",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e17s08",
+      "title": "e17s08",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e17s09",
+      "title": "e17s09",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e17s10",
+      "title": "e17s10",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e17s11",
+      "title": "e17s11",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e17s12",
+      "title": "e17s12",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e17s13",
+      "title": "e17s13",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e17s14",
+      "title": "e17s14",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e17s15",
+      "title": "e17s15",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e17s16",
+      "title": "e17s16",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e17s17",
+      "title": "e17s17",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e17s18",
+      "title": "e17s18",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e43s01",
+      "title": "e43s01",
+      "files": [
+        "tests/e2e/health.spec.ts"
+      ],
+      "tests": [
+        "tests/e2e/health.spec.ts"
+      ],
+      "orphan": true,
+      "status": "Covered"
+    },
+    {
+      "story_id": "e47s01",
+      "title": "Wire rate limiter to auth public endpoints",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e48s01",
+      "title": "Block .git exposure and harden /health endpoint",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e48s02",
+      "title": "Add missing security headers and CI scanning",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e48s03",
+      "title": "DAST baseline scan and scheduled automation",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e49s01",
+      "title": "Fix anonymous tokens \u2014 add org_id context",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e49s02",
+      "title": "Fix OAuth redirect URI \u2014 use configured base URL",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e49s03",
+      "title": "Add path traversal defense to file downloads",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e50s01",
+      "title": "Persist JWT secret \u2014 env var with fallback",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e50s02",
+      "title": "Configurable token lifetimes",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e50s03",
+      "title": "Refresh token revocation \u2014 per-user invalidation",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e51s01",
+      "title": "Design Tokens & Theme System",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e51s02",
+      "title": "Core Component Library",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e51s03",
+      "title": "Layout Components",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e51s04",
+      "title": "Console Page Templates",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e51s05",
+      "title": "Accessibility & Responsive Audit",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e51s06",
+      "title": "Extended Component Library",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e51s07",
+      "title": "Data Visualization & Editor Components",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e56s01",
+      "title": "Move OTP store from in-memory to database",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e56s02",
+      "title": "Audit log for security-sensitive operations",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e57s01",
+      "title": "Kernel Interface Hardening",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e57s02",
+      "title": "Projects table \u2014 backend CRUD",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e57s03",
+      "title": "Database isolation per project",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e57s04",
+      "title": "Auth namespacing and Site\u2192Project backfill",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e57s05",
+      "title": "Deepen: EnvResolver seam for projects",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e58s01",
+      "title": "Project Scoping Admin UI",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e59s01",
+      "title": "SQL-over-HTTP Transport (Neon wire format)",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e59s02",
+      "title": "Database Branching (SQLite snapshot, blocks e65)",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e59s03",
+      "title": "Better Auth Backend Engine (wire-compat endpoints)",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e59s04",
+      "title": "MCP Database Migration Tools",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e60s01",
+      "title": "Rename /deploy/* \u2192 /sites/* routes with 301 redirect shim",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e61s01",
+      "title": "Encrypted project secrets store & CRUD API",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e61s02",
+      "title": "Project Secrets admin UI tab",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e62s01",
+      "title": "e62s01",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e62s02",
+      "title": "e62s02",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e63s01",
+      "title": "e63s01",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e63s02",
+      "title": "e63s02",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e64s01",
+      "title": "e64s01",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e64s02",
+      "title": "e64s02",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e65s01",
+      "title": "e65s01",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e65s02",
+      "title": "e65s02",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e66s01",
+      "title": "e66s01",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e66s02",
+      "title": "e66s02",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e66s03",
+      "title": "e66s03",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e67s01",
+      "title": "MCP create_repo tool \u2014 register a GitHub repo with BigBase",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e67s02",
+      "title": "MCP create_site tool \u2014 provision a site and get site_id back",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e67s03",
+      "title": "MCP provision_ci_credentials \u2014 site-scoped keys via existing API key infrastructure",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e67s04",
+      "title": "MCP get_ci_template \u2014 return canonical CI/CD workflow YAML",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e70s01",
+      "title": "Persist deploy defaults on site record",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e70s02",
+      "title": "bigbase.toml manifest parsing in repository root",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e70s03",
+      "title": "Parameterized CI templates with deploy defaults",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e70s04",
+      "title": "static-sidecar app profile",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e71s01",
+      "title": "Site auth policy schema",
+      "files": [
+        "components/mcp/auth.go"
+      ],
+      "tests": [],
+      "status": "Covered"
+    },
+    {
+      "story_id": "e71s02",
+      "title": "Proxy JWT validation for protected static paths",
+      "files": [
+        "components/mcp/auth.go"
+      ],
+      "tests": [],
+      "status": "Covered"
+    },
+    {
+      "story_id": "e71s03",
+      "title": "Passthrough auth injection \u2014 X-BigBase-User-ID header",
+      "files": [
+        "components/mcp/auth.go"
+      ],
+      "tests": [],
+      "status": "Covered"
+    },
+    {
+      "story_id": "e71s04",
+      "title": "MCP set_site_auth_policy tool for agent config",
+      "files": [
+        "components/mcp/auth.go"
+      ],
+      "tests": [],
+      "status": "Covered"
+    },
+    {
+      "story_id": "e72s01",
+      "title": "MCP HTTP Bearer middleware \u2014 validate bb_ org API keys",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e72s02",
+      "title": "Scope-gated provisioning \u2014 mcp:provision scope required for write tools",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e72s03",
+      "title": "Read-only public tier \u2014 list_services, get_ci_template without auth",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e72s04",
+      "title": "provision_mcp_credentials tool \u2014 issue scoped MCP access keys for agents",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e73s01",
+      "title": "pyproject.toml detection + uv package manager",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e73s02",
+      "title": "ASGI server (uvicorn) runtime",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e73s03",
+      "title": "Writable disk + health check polling",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e73s04",
+      "title": "System dependencies + long-running subprocesses",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e74s01",
+      "title": "REST endpoints for site deploy keys",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e74s02",
+      "title": "Deploy Keys tab on Site Detail page",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e76s01",
+      "title": "Token Lifecycle E2E Tests",
+      "files": [
+        "tests/e2e/token-lifecycle.spec.ts"
+      ],
+      "tests": [
+        "tests/e2e/token-lifecycle.spec.ts"
+      ],
+      "status": "Covered"
+    },
+    {
+      "story_id": "e77s01",
+      "title": "API Surface E2E Tests",
+      "files": [
+        "tests/e2e/health.spec.ts"
+      ],
+      "tests": [
+        "tests/e2e/health.spec.ts"
+      ],
+      "status": "Covered"
+    },
+    {
+      "story_id": "e78s01",
+      "title": "Login & Authentication UI \u2014 browser E2E",
+      "files": [
+        "tests/e2e/api-surface.spec.ts",
+        "tests/e2e/health.spec.ts",
+        "tests/e2e/login-ui.spec.ts",
+        "tests/e2e/login.spec.ts",
+        "tests/e2e/sites.spec.ts",
+        "tests/e2e/token-lifecycle.spec.ts"
+      ],
+      "tests": [
+        "tests/e2e/api-surface.spec.ts",
+        "tests/e2e/health.spec.ts",
+        "tests/e2e/login-ui.spec.ts",
+        "tests/e2e/login.spec.ts",
+        "tests/e2e/sites.spec.ts",
+        "tests/e2e/token-lifecycle.spec.ts"
+      ],
+      "status": "Covered"
+    },
+    {
+      "story_id": "e78s02",
+      "title": "Dashboard & Navigation \u2014 browser E2E",
+      "files": [
+        "tests/e2e/dashboard-ui.spec.ts",
+        "tests/e2e/settings-ui.spec.ts"
+      ],
+      "tests": [
+        "tests/e2e/dashboard-ui.spec.ts",
+        "tests/e2e/settings-ui.spec.ts"
+      ],
+      "status": "Covered"
+    },
+    {
+      "story_id": "e78s03",
+      "title": "Sites & Deploy UI \u2014 browser E2E",
+      "files": [
+        "tests/e2e/cici-ui.spec.ts",
+        "tests/e2e/deploy-ui.spec.ts"
+      ],
+      "tests": [
+        "tests/e2e/cici-ui.spec.ts",
+        "tests/e2e/deploy-ui.spec.ts"
+      ],
+      "status": "Covered"
+    },
+    {
+      "story_id": "e78s04",
+      "title": "Data, SQL & Storage \u2014 browser E2E",
+      "files": [
+        "tests/e2e/data-ui.spec.ts",
+        "tests/e2e/storage-ui.spec.ts"
+      ],
+      "tests": [
+        "tests/e2e/data-ui.spec.ts",
+        "tests/e2e/storage-ui.spec.ts"
+      ],
+      "status": "Covered"
+    },
+    {
+      "story_id": "e78s05",
+      "title": "Secondary Pages (Functions, Messaging, Users, Settings) \u2014 browser E2E",
+      "files": [
+        "tests/e2e/functions-ui.spec.ts",
+        "tests/e2e/messaging-ui.spec.ts",
+        "tests/e2e/users-ui.spec.ts"
+      ],
+      "tests": [
+        "tests/e2e/functions-ui.spec.ts",
+        "tests/e2e/messaging-ui.spec.ts",
+        "tests/e2e/users-ui.spec.ts"
+      ],
+      "status": "Covered"
+    },
+    {
+      "story_id": "e78s06",
+      "title": "DevOps Pages (CI/CD, Monitoring, Forge, Realtime, Events, Git) \u2014 browser E2E",
+      "files": [
+        "tests/e2e/axe-scan.spec.ts",
+        "tests/e2e/events-ui.spec.ts",
+        "tests/e2e/forge-ui.spec.ts",
+        "tests/e2e/monitoring-ui.spec.ts",
+        "tests/e2e/repos-ui.spec.ts"
+      ],
+      "tests": [
+        "tests/e2e/axe-scan.spec.ts",
+        "tests/e2e/events-ui.spec.ts",
+        "tests/e2e/forge-ui.spec.ts",
+        "tests/e2e/monitoring-ui.spec.ts",
+        "tests/e2e/repos-ui.spec.ts"
+      ],
+      "status": "Covered"
+    },
+    {
+      "story_id": "e79s01",
+      "title": "Consolidate CI/CD workflows with template migration",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e80s01",
+      "title": "Ubuntu OS security hardening",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e80s02",
+      "title": "BigBase monitoring alerts and backup automation",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e80s03",
+      "title": "Contabo VPS operations \u2014 snapshots and API monitoring",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e82s01",
+      "title": "Multipart deploy API + empty-artifact error/log",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e82s02",
+      "title": "Engine unpack/start; skip host build",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e82s03",
+      "title": "bigbase-deploy action uploads CI artifact",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e82s04",
+      "title": "Admin UI upload + deploy log feedback parity",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e84s01",
+      "title": "Site model + API layer \u2014 add csp_policy to DeployDefaults",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e84s02",
+      "title": "Proxy per-site CSP override at request time",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e84s03",
+      "title": "Manifest security.csp field + deploy-time propagation",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e85s01",
+      "title": "Landing page theme bootstrap \u2014 inline script + accent ramp + CSS selector refactor",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e85s02",
+      "title": "Accent ramp drift guard + cross-surface parity test",
+      "files": [
+        "tests/e2e/theme-parity.spec.ts"
+      ],
+      "tests": [
+        "tests/e2e/theme-parity.spec.ts"
+      ],
+      "status": "Covered"
+    },
+    {
+      "story_id": "e86s01",
+      "title": "Paginated log search API + UI (keyset cursor)",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e86s02",
+      "title": "Live log streaming via SSE + Logs tab subscribe",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e86s03",
+      "title": "Org-scoped logs \u2014 org_id migration + isolation",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e86s04",
+      "title": "Deploy-component automatic log ingestion",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e87s01",
+      "title": "AAA color contrast tokens (1.4.6 Contrast Enhanced)",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e87s02",
+      "title": "Focus appearance enhanced (2.4.13)",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e87s03",
+      "title": "Target size enhanced \u2014 44px (2.5.5)",
+      "files": [
+        "tests/e2e/target-size.spec.ts"
+      ],
+      "tests": [
+        "tests/e2e/target-size.spec.ts"
+      ],
+      "status": "Covered"
+    },
+    {
+      "story_id": "e87s04",
+      "title": "Abbreviations, unusual words, reading level (3.1.3/3.1.4/3.1.5)",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e87s05",
+      "title": "Session timeout warning + re-authentication (2.2.5/2.2.6)",
+      "files": [
+        "tests/e2e/session-timeout.spec.ts"
+      ],
+      "tests": [
+        "tests/e2e/session-timeout.spec.ts"
+      ],
+      "status": "Covered"
+    },
+    {
+      "story_id": "e87s06",
+      "title": "Help text + error prevention (3.3.5/3.3.6)",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e87s07",
+      "title": "Visual presentation + location (1.4.8/2.4.8)",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e88s01",
+      "title": "Accent-theme light-mode link contrast >=7:1 (1.4.6)",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e88s02",
+      "title": "Formal conformance exceptions (1.4.8 partial + 2.2.3 security)",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e88s03",
+      "title": "AAA re-certification \u2014 matrix + axe + conformance statement",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e89s01",
+      "title": "Harden existing site-secret storage and delivery",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e89s02",
+      "title": "Add organization-scoped Projects and Environments",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e89s03",
+      "title": "Add versioned envelope-encrypted project secrets",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e89s04",
+      "title": "Add secret REST API, policies, and audit events",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e89s05",
+      "title": "Add Admin UI for project secrets",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e89s06",
+      "title": "Resolve project and site secrets in deployments",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    },
+    {
+      "story_id": "e89s07",
+      "title": "Secure MCP secret-management tools",
+      "files": [],
+      "tests": [],
+      "status": "Dark"
+    }
+  ],
+  "summary": {
+    "total": 126,
+    "covered": 16,
+    "dark": 110,
+    "orphans": 1
+  },
+  "oracle_stats": {
+    "explicit_tag_links": 16,
+    "heuristic_links": 0,
+    "heuristic_ratio": 0.0
+  }
+}

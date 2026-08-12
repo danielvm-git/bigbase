@@ -56,12 +56,14 @@ are not implemented yet. No security exception is approved.
 
 ## Operational Blockers
 
-- Working tree is dirty with e89 planning artifacts and untracked non-spec
-  `scripts/lib/`; review and checkpoint before kickoff.
-- `specs/agent-locks.yaml` is absent; create coordinator-owned locks before tests.
-- `scripts/trace-stories.sh` and the parallel review-worktree helper are absent; report
-  trace/review skips explicitly if still absent at release.
+- Working tree is not clean: user-owned changes exist in `components/deploy/deploy_test.go`
+  and `components/deploy/drain_test.go`; generated e89 helper/wiki artifacts are also
+  uncommitted. Do not checkpoint, stash, reset, or modify the user-owned source changes.
+- Current `specs/state.yaml` is in `active_flow: fix_bug` for `BUG-2026-08-12-deploy-redeploy-flake`; the referenced bug capsule is not present at the expected path. Resolve or reconcile that active flow before e89 kickoff.
+- `specs/agent-locks.yaml`, trace generation, OKF generators, blind-spot/completeness,
+  drift, CWE fixture, and gate-trace helper paths now exist and have syntax/self-tests.
 - No implementation worktree exists; current branch is `main`.
+
 
 ## Verdict
 
