@@ -1,3 +1,10 @@
+## [2.88.3](https://github.com/danielvm-git/bigbase/compare/v2.88.2...v2.88.3) (2026-08-12)
+
+
+### Bug Fixes
+
+* **ctxo:** revert committed-index approach — lastModified timestamps make it non-viable ([32c5fe1](https://github.com/danielvm-git/bigbase/commit/32c5fe1643ae58dd2f924d50f009fe89a733daa3))
+
 ## [2.88.2](https://github.com/danielvm-git/bigbase/compare/v2.88.1...v2.88.2) (2026-08-12)
 
 
