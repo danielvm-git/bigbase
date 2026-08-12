@@ -54,6 +54,19 @@ func TestParseKey(t *testing.T) {
 	}
 }
 
+func TestParseRootKey(t *testing.T) {
+	raw := strings.Repeat("A", 43) + "="
+	key, err := envcrypto.ParseRootKey(raw)
+	if err != nil || len(key) != 32 {
+		t.Fatalf("valid base64 root key: len=%d err=%v", len(key), err)
+	}
+	for _, input := range []string{"", "not-base64", "AA=="} {
+		if _, err := envcrypto.ParseRootKey(input); err == nil {
+			t.Fatalf("ParseRootKey(%q) accepted invalid configuration", input)
+		}
+	}
+}
+
 func TestEncryptDecryptRoundTrip(t *testing.T) {
 	key := mustKey(t, validKey)
 	plaintexts := []string{"", "x", "secret-token", "postgres://user:pass@host/db", "ünïcödé-π"}

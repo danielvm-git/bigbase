@@ -266,3 +266,11 @@ func TestSecretNeverAppearsInBuildLog(t *testing.T) {
 		t.Fatalf("SECRET LEAKED into build log:\n%s", logged)
 	}
 }
+
+func TestEnvResolverDecryptionFailureStopsResolution(t *testing.T) {
+	key := strings.Repeat("ab", 32)
+	resolver := resolveEnvEncrypted(t, key, [][4]any{{"BROKEN_SECRET", "not-ciphertext", false, true}})
+	if _, err := resolver.Resolve(context.Background(), "site-x", deploy.ScopeRuntime); err == nil {
+		t.Fatal("selected decryption failure was silently ignored")
+	}
+}

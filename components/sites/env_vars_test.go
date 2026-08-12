@@ -82,8 +82,8 @@ func TestEnvVarsAPI(t *testing.T) {
 		if ev["key"] != "DATABASE_URL" {
 			t.Fatalf("expected key=DATABASE_URL, got %v", ev["key"])
 		}
-		if ev["value"] != "postgres://localhost/mydb" {
-			t.Fatalf("expected value=postgres://localhost/mydb, got %v", ev["value"])
+		if _, exists := ev["value"]; exists {
+			t.Fatal("create response returned plaintext value")
 		}
 		if ev["is_runtime"] != true {
 			t.Fatalf("expected is_runtime=true, got %v", ev["is_runtime"])
@@ -156,8 +156,8 @@ func TestEnvVarsAPI(t *testing.T) {
 		}
 		var ev map[string]any
 		_ = json.NewDecoder(w.Body).Decode(&ev)
-		if ev["value"] != "postgres://prod/db" {
-			t.Fatalf("expected updated value, got %v", ev["value"])
+		if _, exists := ev["value"]; exists {
+			t.Fatal("update response returned plaintext value")
 		}
 	})
 

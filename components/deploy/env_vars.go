@@ -38,13 +38,11 @@ func (d *Deploy) FetchSiteEnvVars(ctx context.Context, siteID string, buildTime 
 	for rows.Next() {
 		var key, encrypted string
 		if err := rows.Scan(&key, &encrypted); err != nil {
-			d.logger.Warn("scan env var row", "error", err)
-			continue
+			return nil, fmt.Errorf("fetch site env vars")
 		}
 		value, err := envcrypto.Decrypt(d.envKey, encrypted)
 		if err != nil {
-			d.logger.Warn("decrypt env var", "key", key, "error", err)
-			continue
+			return nil, fmt.Errorf("fetch site env vars")
 		}
 		out = append(out, key+"="+value)
 	}

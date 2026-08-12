@@ -149,6 +149,21 @@ func (c *Component) enforceToolAuth(ctx context.Context, req *mcpsdk.CallToolReq
 	return ctx, nil
 }
 
+func (c *Component) authorizeSiteTarget(ctx context.Context, siteID string) *mcpsdk.CallToolResult {
+	if c.orgKeyAuth == nil {
+		return nil
+	}
+	orgID, _, ok := OrgAuthFromContext(ctx)
+	if !ok || c.siteTargetAuthorizer == nil {
+		return authToolError("site authorization required")
+	}
+	if err := c.siteTargetAuthorizer.AuthorizeSiteTarget(ctx, siteID, orgID); err != nil {
+		c.logger.Warn("mcp site authorization denied", "site_id", siteID)
+		return authToolError("site authorization denied")
+	}
+	return nil
+}
+
 type toolHandler func(context.Context, *mcpsdk.CallToolRequest, any) (*mcpsdk.CallToolResult, any, error)
 
 func (c *Component) registerTool(srv *mcpsdk.Server, tier toolTier, tool *mcpsdk.Tool, handler toolHandler) {

@@ -1,6 +1,6 @@
 story_id: e89s01
 title: "Harden existing site-secret storage and delivery"
-status: failing
+status: passing
 bcps: 5
 tasks:
   - id: e89s01t1
@@ -8,7 +8,7 @@ tasks:
     verify: "go test ./components/internal/envcrypto ./components/sites ./components/deploy -run 'Test.*Key|Test.*Encryption' -count=1 && echo 'no new security findings in affected paths'"
     scenarios: [SC-e89s01-P0-01]
     risk: P0
-    status: failing
+    status: passing
     security: high
     allure:
       severity: critical
@@ -18,7 +18,7 @@ tasks:
     verify: "go test ./components/sites -run 'TestEnvVarsAPI|TestEnvVarsValidation' -count=1 && echo 'no new security findings in affected paths'"
     scenarios: [SC-e89s01-P0-02, SC-e89s01-P1-07]
     risk: P0
-    status: failing
+    status: passing
     security: high
     allure:
       severity: critical
@@ -28,7 +28,7 @@ tasks:
     verify: "go test ./components/deploy -run 'TestEnvResolver|TestEnvVarInjection' -count=1 && echo 'no new security findings in affected paths'"
     scenarios: [SC-e89s01-P0-04, SC-e89s01-P0-05]
     risk: P0
-    status: failing
+    status: passing
     security: high
     allure:
       severity: critical
@@ -38,7 +38,7 @@ tasks:
     verify: "go test ./components/mcp ./components/deploy ./components/internal/llm -run 'TestEnvVar|Test.*Redact|Test.*Org' -count=1 && echo 'no new security findings in affected paths'"
     scenarios: [SC-e89s01-P0-03, SC-e89s01-P0-06]
     risk: P0
-    status: failing
+    status: passing
     security: high
     allure:
       severity: critical
@@ -48,7 +48,7 @@ tasks:
     verify: "go test ./components/sites ./components/deploy ./components/mcp ./components/db -count=1 && go test ./components/db -run 'Test.*(SQLite|Postgres)' -count=1 && echo 'no new security findings in affected paths'"
     scenarios: [SC-e89s01-P0-01, SC-e89s01-P0-02, SC-e89s01-P0-03, SC-e89s01-P0-04, SC-e89s01-P0-05, SC-e89s01-P0-06, SC-e89s01-P1-07]
     risk: P1
-    status: failing
+    status: passing
     security: medium
     allure:
       severity: high

@@ -154,6 +154,10 @@ func (a mcpEnvVarAdapter) DeleteSiteEnvVar(ctx context.Context, siteID, key stri
 	return a.s.DeleteSiteEnvVar(ctx, siteID, key)
 }
 
+func (a mcpEnvVarAdapter) AuthorizeSiteTarget(ctx context.Context, siteID string, orgID int64) error {
+	return a.s.AuthorizeSiteTarget(ctx, siteID, orgID)
+}
+
 type deployDiagnosisAdapter struct{ m *monitoring.Monitoring }
 
 func (a deployDiagnosisAdapter) GetDiagnosis(ctx context.Context, deployID string) (deploy.Diagnosis, bool, error) {

@@ -184,6 +184,9 @@ func (d *Deploy) collectPreviousDeployments(ctx context.Context, siteID, repoID 
 	}
 
 	d.oldDeploymentsMu.Lock()
+	if d.oldDeployments == nil {
+		d.oldDeployments = make(map[string][]string)
+	}
 	d.oldDeployments[siteID] = append(d.oldDeployments[siteID], ids...)
 	d.oldDeploymentsMu.Unlock()
 	d.logger.Info("collected previous deployments for drain", "site_id", siteID, "count", len(ids))

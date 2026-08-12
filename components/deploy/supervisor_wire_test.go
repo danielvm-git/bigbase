@@ -76,9 +76,9 @@ func TestTriggerRunsThroughSupervisor(t *testing.T) {
 	t.Cleanup(func() { _ = dep.Stop(&kernel.Context{}) })
 
 	// resumeCandidates runs in a goroutine; wait for Spawn to be called.
-	eventually(t, func() bool { return fakeRunner.calls >= 1 })
+	eventually(t, func() bool { return fakeRunner.Calls() >= 1 })
 
-	if fakeRunner.calls != 1 {
-		t.Errorf("Runner.Spawn calls = %d, want 1 (resumeCandidates must route through Supervisor)", fakeRunner.calls)
+	if fakeRunner.Calls() != 1 {
+		t.Fatalf("Runner.Spawn calls = %d, want 1 (resumeCandidates must route through Supervisor)", fakeRunner.Calls())
 	}
 }

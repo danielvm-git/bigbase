@@ -1,0 +1,33 @@
+story_id: e89s01
+verified_at: "2026-08-12T01:40:00Z"
+verifier: verify-work
+risk: P0
+phases:
+  build:
+    passed: true
+    command: "go test ./..."
+  typecheck:
+    passed: true
+    command: "go vet ./..."
+  race:
+    passed: true
+    command: "go test -race ./components/sites/... ./components/deploy/... ./components/mcp/... ./components/auth/..."
+  security:
+    passed: true
+    report: "specs/security/epics/e89/REVIEW.md"
+  task_verifies:
+    passed: true
+    count: 5
+  terminal_verdict:
+    command: "go test ./... && go vet ./..."
+    exit_code: 0
+    note: "Single contiguous run on feat/e89s01."
+  manual:
+    passed: false
+    note: "Manual deployment/UAT remains to be exercised by verify-work before story release."
+gaps:
+  closed: false
+  remaining:
+    - "Run manual UAT for Site encryption, runtime fail-closed behavior, MCP target binding, and redaction."
+    - "Run canonical audit-code --gate when the skill runner is available."
+    - "Integrate and re-review with e89s07 Site deploy-key principal support."

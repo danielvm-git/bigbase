@@ -617,12 +617,21 @@ func (d *Deploy) startApp(ctx context.Context, buildDir string, deploy *Deployme
 	// (npm exec → node, python → uvicorn, etc.) without leaking orphans.
 	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
 
+	resolvedRuntime, err := d.envResolver.Resolve(ctx, deploy.SiteID, ScopeRuntime)
+	if err != nil {
+		d.logger.Error("resolve runtime environment failed", "deployment_id", deploy.ID)
+		d.updateStatus(deploy.ID, "failed")
+		return
+	}
 	cmd.Env = append(os.Environ(), fmt.Sprintf("PORT=%d", deploy.Port))
+	if resolvedRuntime != nil {
+		cmd.Env = append(cmd.Env, resolvedRuntime.Environ...)
+	}
 
 	// Create and inject writable persistent directory for runtime data.
 	writableDir := filepath.Join(d.buildsDir, "..", "writable", deploy.ID)
 	if err := os.MkdirAll(writableDir, 0755); err != nil {
-		d.logger.Warn("create writable dir", "deployID", deploy.ID, "error", err)
+		d.logger.Warn("create writable dir", "deployID", deploy.ID)
 	} else {
 		cmd.Env = append(cmd.Env, "WRITABLE_DIR="+writableDir)
 	}
@@ -630,14 +639,6 @@ func (d *Deploy) startApp(ctx context.Context, buildDir string, deploy *Deployme
 	// Inject native DB connection (DB_PATH for SQLite, DATABASE_URL for Postgres).
 	if native := d.nativeDBEnv(); len(native) > 0 {
 		cmd.Env = append(cmd.Env, native...)
-	}
-
-	// Inject site env vars (runtime) into the running process. A fetch failure
-	// must not be silent: the app would boot without its secrets (F09).
-	if siteEnv, err := d.FetchSiteEnvVars(ctx, deploy.SiteID, false); err != nil {
-		d.logger.Warn("fetch runtime env vars — app starting without site env", "site", deploy.SiteID, "error", err)
-	} else {
-		cmd.Env = append(cmd.Env, siteEnv...)
 	}
 
 	// Inject manifest environment variables into the running process.
@@ -666,17 +667,24 @@ func (d *Deploy) startApp(ctx context.Context, buildDir string, deploy *Deployme
 		_, _ = d.db.ExecContext(context.Background(),
 			"UPDATE deployments SET pid = ? WHERE id = ?", pid, deploy.ID)
 	}
-
 	go func() {
 		scanner := bufio.NewScanner(stdout)
 		for scanner.Scan() {
-			d.appendDeployLog(deploy.ID, "[runtime] "+scanner.Text())
+			line := scanner.Text()
+			if resolvedRuntime != nil {
+				line = RedactLogText(line, resolvedRuntime)
+			}
+			d.appendDeployLog(deploy.ID, "[runtime] "+line)
 		}
 	}()
 	go func() {
 		scanner := bufio.NewScanner(stderr)
 		for scanner.Scan() {
-			d.appendDeployLog(deploy.ID, "[runtime] "+scanner.Text())
+			line := scanner.Text()
+			if resolvedRuntime != nil {
+				line = RedactLogText(line, resolvedRuntime)
+			}
+			d.appendDeployLog(deploy.ID, "[runtime] "+line)
 		}
 	}()
 
@@ -766,6 +774,7 @@ func (d *Deploy) failDeployment(id string, buildErr error) {
 	_, _ = d.db.ExecContext(context.Background(),
 		"UPDATE deployments SET error_message = ? WHERE id = ?", msg, id)
 }
+
 // applyManifestCSP writes a manifest-declared CSP to deploy_defaults.csp_policy
 // so it persists across proxy restarts and is picked up by RegisterDeploymentHost.
 func (d *Deploy) applyManifestCSP(siteID, csp string) {

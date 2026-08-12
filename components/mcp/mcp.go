@@ -115,6 +115,12 @@ type SiteEnvVarManager interface {
 	DeleteSiteEnvVar(ctx context.Context, siteID, key string) error
 }
 
+// SiteTargetAuthorizer binds caller-supplied Site IDs to the authenticated
+// organization. Implementations must return a non-disclosing error.
+type SiteTargetAuthorizer interface {
+	AuthorizeSiteTarget(ctx context.Context, siteID string, orgID int64) error
+}
+
 // Options configure the MCP component.
 type Options struct {
 	// Logger is the structured logger. If nil, a no-op logger is used.
@@ -144,6 +150,8 @@ type Options struct {
 	SiteEnvVarManager SiteEnvVarManager
 	// OrgKeyAuthenticator validates bb_ org keys for HTTP MCP auth. Nil disables auth (stdio/tests).
 	OrgKeyAuthenticator OrgKeyAuthenticator
+	// SiteTargetAuthorizer enforces organization ownership for caller-supplied Site IDs.
+	SiteTargetAuthorizer SiteTargetAuthorizer
 	// UpdateAuthPolicy notifies the proxy when a site's auth policy changes.
 	UpdateAuthPolicy func(siteID string, policyJSON string)
 }
@@ -153,21 +161,22 @@ type DBer = kernel.QueryExecDBer
 
 // Component is the ECC component for the MCP server.
 type Component struct {
-	logger            kernel.Logger
-	port              int
-	transport         string
-	enabled           bool
-	db                DBer
-	deployer          DeployTrigger
-	gitCreator        GitCreator
-	siteCreator       SiteCreator
-	siteLister        SiteLister
-	siteKeyCreator    SiteKeyCreator
-	siteKeyResolver   SiteKeyResolver
-	siteEnvVarManager SiteEnvVarManager
-	orgKeyAuth        OrgKeyAuthenticator
-	updateAuthPolicy  func(siteID string, policyJSON string)
-	streamableHandler http.Handler // created once, reused across requests for session persistence
+	logger               kernel.Logger
+	port                 int
+	transport            string
+	enabled              bool
+	db                   DBer
+	deployer             DeployTrigger
+	gitCreator           GitCreator
+	siteCreator          SiteCreator
+	siteLister           SiteLister
+	siteKeyCreator       SiteKeyCreator
+	siteKeyResolver      SiteKeyResolver
+	siteEnvVarManager    SiteEnvVarManager
+	siteTargetAuthorizer SiteTargetAuthorizer
+	orgKeyAuth           OrgKeyAuthenticator
+	updateAuthPolicy     func(siteID string, policyJSON string)
+	streamableHandler    http.Handler // created once, reused across requests for session persistence
 }
 
 var _ kernel.Component = (*Component)(nil)
@@ -187,20 +196,21 @@ func New(opts Options) *Component {
 		transport = "http"
 	}
 	return &Component{
-		logger:           logger,
-		port:             port,
-		transport:        transport,
-		enabled:          opts.Enabled,
-		db:               opts.DB,
-		deployer:         opts.Deployer,
-		gitCreator:       opts.GitCreator,
-		siteCreator:      opts.SiteCreator,
-		siteLister:       opts.SiteLister,
-		siteKeyCreator:   opts.SiteKeyCreator,
-		siteKeyResolver:  opts.SiteKeyResolver,
-		siteEnvVarManager: opts.SiteEnvVarManager,
-		orgKeyAuth:       opts.OrgKeyAuthenticator,
-		updateAuthPolicy: opts.UpdateAuthPolicy,
+		logger:               logger,
+		port:                 port,
+		transport:            transport,
+		enabled:              opts.Enabled,
+		db:                   opts.DB,
+		deployer:             opts.Deployer,
+		gitCreator:           opts.GitCreator,
+		siteCreator:          opts.SiteCreator,
+		siteLister:           opts.SiteLister,
+		siteKeyCreator:       opts.SiteKeyCreator,
+		siteKeyResolver:      opts.SiteKeyResolver,
+		siteEnvVarManager:    opts.SiteEnvVarManager,
+		siteTargetAuthorizer: opts.SiteTargetAuthorizer,
+		orgKeyAuth:           opts.OrgKeyAuthenticator,
+		updateAuthPolicy:     opts.UpdateAuthPolicy,
 	}
 }
 
@@ -646,7 +656,7 @@ Port is set via ` + "`PORT`" + ` env var. Database is SQLite by default.
 				if at == appType {
 					c.logger.Info("mcp tool", "tool", "get_ci_template", "app_type", appType, "site_id", siteID)
 					content := t.Content
-					
+
 					// Auto-populate env vars
 					if len(envs) > 0 {
 						var envsStr strings.Builder
@@ -712,12 +722,12 @@ Port is set via ` + "`PORT`" + ` env var. Database is SQLite by default.
 			})), nil, nil
 		}
 		out := map[string]any{
-			"ok":           true,
-			"code":         "ok",
-			"site_id":      site.ID,
-			"name":         site.Name,
-			"git_repo_id":  site.GitRepoID,
-			"hint":         "Site exists. Set BIGBASE_SITE_ID to this site_id. Provision bb_dep_ with provision_ci_credentials if needed.",
+			"ok":            true,
+			"code":          "ok",
+			"site_id":       site.ID,
+			"name":          site.Name,
+			"git_repo_id":   site.GitRepoID,
+			"hint":          "Site exists. Set BIGBASE_SITE_ID to this site_id. Provision bb_dep_ with provision_ci_credentials if needed.",
 			"token_checked": false,
 		}
 		if token == "" {
@@ -925,6 +935,9 @@ Port is set via ` + "`PORT`" + ` env var. Database is SQLite by default.
 		if siteID == "" {
 			return textResult("site_id is required. Use list_sites or create_site to get one."), nil, nil
 		}
+		if authErr := c.authorizeSiteTarget(ctx, siteID); authErr != nil {
+			return authErr, nil, nil
+		}
 		name, _ := args["name"].(string)
 		token, keyID, err := c.siteKeyCreator.CreateSiteKey(ctx, siteID, name, []string{"deploy"})
 		if err != nil {
@@ -956,6 +969,9 @@ Port is set via ` + "`PORT`" + ` env var. Database is SQLite by default.
 		siteID, _ := args["site_id"].(string)
 		if siteID == "" {
 			return textResult("site_id is required. Use list_sites to find available sites."), nil, nil
+		}
+		if authErr := c.authorizeSiteTarget(ctx, siteID); authErr != nil {
+			return authErr, nil, nil
 		}
 		keys, err := c.siteKeyCreator.ListSiteKeys(ctx, siteID)
 		if err != nil {
@@ -1075,9 +1091,12 @@ Port is set via ` + "`PORT`" + ` env var. Database is SQLite by default.
 		if siteID == "" {
 			return textResult("site_id is required. Use list_sites to find available sites."), nil, nil
 		}
+		if authErr := c.authorizeSiteTarget(ctx, siteID); authErr != nil {
+			return authErr, nil, nil
+		}
 		vars, err := c.siteEnvVarManager.ListSiteEnvVars(ctx, siteID)
 		if err != nil {
-			return textResult(fmt.Sprintf("Failed to list env vars: %v", err)), nil, nil
+			return textResult(safeSiteEnvError(err)), nil, nil
 		}
 		c.logger.Info("mcp tool", "tool", "get_site_env_vars", "site_id", siteID, "count", len(vars))
 		return textResult(formatJSON(map[string]any{"site_id": siteID, "vars": vars})), nil, nil
@@ -1099,6 +1118,9 @@ Port is set via ` + "`PORT`" + ` env var. Database is SQLite by default.
 		if siteID == "" {
 			return textResult("site_id is required. Use list_sites to find available sites."), nil, nil
 		}
+		if authErr := c.authorizeSiteTarget(ctx, siteID); authErr != nil {
+			return authErr, nil, nil
+		}
 		varsRaw, ok := args["vars"]
 		if !ok || varsRaw == nil {
 			return textResult("vars is required. Provide a map of key→value pairs."), nil, nil
@@ -1113,7 +1135,7 @@ Port is set via ` + "`PORT`" + ` env var. Database is SQLite by default.
 		}
 		result, err := c.siteEnvVarManager.SetSiteEnvVars(ctx, siteID, vars)
 		if err != nil {
-			return textResult(fmt.Sprintf("Failed to set env vars: %v", err)), nil, nil
+			return textResult(safeSiteEnvError(err)), nil, nil
 		}
 		c.logger.Info("mcp tool", "tool", "set_site_env_vars", "site_id", siteID, "count", len(result))
 		return textResult(formatJSON(map[string]any{"site_id": siteID, "vars": result})), nil, nil
@@ -1135,17 +1157,19 @@ Port is set via ` + "`PORT`" + ` env var. Database is SQLite by default.
 		if siteID == "" {
 			return textResult("site_id is required. Use list_sites to find available sites."), nil, nil
 		}
+		if authErr := c.authorizeSiteTarget(ctx, siteID); authErr != nil {
+			return authErr, nil, nil
+		}
 		key, _ := args["key"].(string)
 		if key == "" {
 			return textResult("key is required. Use get_site_env_vars to see available keys."), nil, nil
 		}
 		if err := c.siteEnvVarManager.DeleteSiteEnvVar(ctx, siteID, key); err != nil {
-			return textResult(fmt.Sprintf("Failed to delete env var: %v", err)), nil, nil
+			return textResult(safeSiteEnvError(err)), nil, nil
 		}
 		c.logger.Info("mcp tool", "tool", "delete_site_env_var", "site_id", siteID, "key", key)
 		return textResult(formatJSON(map[string]string{"site_id": siteID, "key": key, "status": "deleted"})), nil, nil
 	})
-
 	return srv, nil
 }
 
@@ -1155,6 +1179,12 @@ func formatJSON(v any) string {
 		return fmt.Sprintf("%v", v)
 	}
 	return string(b)
+}
+func safeSiteEnvError(err error) string {
+	if err != nil && strings.Contains(strings.ToLower(err.Error()), "not found") {
+		return "env var not found"
+	}
+	return "failed to update site environment"
 }
 
 func boolArg(args map[string]any, key string) bool {
