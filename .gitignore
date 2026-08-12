@@ -52,12 +52,13 @@ allure-report/
 allure-history/
 
 
-# Ctxo index — committed so `ctxo verify-index` has a baseline (e89).
-# The pre-commit hook rebuilds it on source changes; .cache stays local.
+# Ctxo local cache (auto-rebuilt on source commits by .githooks/pre-commit,
+# never committed — every index JSON embeds a lastModified timestamp, so a
+# committed baseline would dirty all 554 files on each rebuild; verify-index
+# is additionally upstream-broken: its temp comparison build runs with default
+# config and cannot match the configured index. Freshness is hook-managed.)
 .ctxo/*
 !.ctxo/config.yaml
-!.ctxo/index/
-.ctxo/.cache/
 
 # Dev tooling (local-only)
 .bts.toml

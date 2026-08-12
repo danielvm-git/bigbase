@@ -32,9 +32,6 @@ if [ -n "$STAGED_SRC" ]; then
     echo "   ctxo index..."
     if command -v ctxo >/dev/null 2>&1; then
         ctxo index >/dev/null 2>&1 || echo "   ⚠ ctxo index failed (check .ctxo config)"
-        # The index is tracked (verify-index baseline) — re-stage the rebuild
-        # so the commit carries the fresh symbols.
-        git add .ctxo/index/ 2>/dev/null || true
     else
         echo "   ⚠ ctxo not installed — index not refreshed"
     fi
