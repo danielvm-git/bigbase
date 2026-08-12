@@ -3,17 +3,21 @@ package deploy
 import (
 	"context"
 	"errors"
+	"sync"
 	"testing"
 	"time"
 )
 
 // supervisorRegistry is a minimal DeploymentHostRegistry spy for the Supervisor tests.
 type supervisorRegistry struct {
+	mu           sync.Mutex
 	registered   map[string]int // host → port
 	unregistered []string       // hosts that were unregistered
 }
 
 func (r *supervisorRegistry) RegisterDeploymentHost(host string, port int, _ string, _ []string, _ map[string]string) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
 	if r.registered == nil {
 		r.registered = make(map[string]int)
 	}
@@ -22,8 +26,17 @@ func (r *supervisorRegistry) RegisterDeploymentHost(host string, port int, _ str
 }
 
 func (r *supervisorRegistry) UnregisterDeploymentHost(host string) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
 	r.unregistered = append(r.unregistered, host)
 	delete(r.registered, host)
+}
+
+func (r *supervisorRegistry) HasHost(host string) bool {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	_, ok := r.registered[host]
+	return ok
 }
 
 // supervisorHarness wires a Supervisor under test with injectable fakes.
@@ -66,12 +79,12 @@ func TestSupervisorRespawnsAfterBackoff(t *testing.T) {
 
 	// Let the loop run: crash → sleep → respawn → second instance healthy (blocks).
 	// Signal that the second instance should stop.
-	eventually(t, func() bool { return h.runner.calls >= 2 })
+	eventually(t, func() bool { return h.runner.Calls() >= 2 })
 	h.sup.Stop(spec.DeployID)
 	<-done
 
-	if h.runner.calls != 2 {
-		t.Errorf("Spawn calls = %d, want 2", h.runner.calls)
+	if h.runner.Calls() != 2 {
+		t.Errorf("Spawn calls = %d, want 2", h.runner.Calls())
 	}
 	if len(h.clock.Sleeps) == 0 {
 		t.Error("Supervisor did not sleep between crash and respawn")
@@ -98,7 +111,7 @@ func TestSupervisorCrashLoopDeregistersHost(t *testing.T) {
 	h.sup.Run(context.Background(), spec)
 
 	// Host must be de-registered after crash-loop.
-	if _, ok := h.registry.registered[spec.Host]; ok {
+	if h.registry.HasHost(spec.Host) {
 		t.Error("host still registered after crash-loop; want UnregisterDeploymentHost called")
 	}
 	// Event must be emitted.
@@ -124,12 +137,12 @@ func TestSupervisorNoRespawnAfterStop(t *testing.T) {
 		close(done)
 	}()
 
-	eventually(t, func() bool { return h.runner.calls >= 1 })
+	eventually(t, func() bool { return h.runner.Calls() >= 1 })
 	h.sup.Stop(spec.DeployID)
 	<-done
 
-	if h.runner.calls != 1 {
-		t.Errorf("Spawn calls after intentional Stop = %d, want 1 (no respawn)", h.runner.calls)
+	if h.runner.Calls() != 1 {
+		t.Errorf("Spawn calls after intentional Stop = %d, want 1 (no respawn)", h.runner.Calls())
 	}
 }
 
