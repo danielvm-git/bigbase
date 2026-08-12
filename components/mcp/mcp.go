@@ -150,8 +150,19 @@ type Options struct {
 	SiteEnvVarManager SiteEnvVarManager
 	// OrgKeyAuthenticator validates bb_ org keys for HTTP MCP auth. Nil disables auth (stdio/tests).
 	OrgKeyAuthenticator OrgKeyAuthenticator
+	// SiteKeyAuthenticator resolves bb_dep_ Site deploy keys into Site-bound
+	// principals for MCP tool calls. Nil rejects Site deploy keys (the
+	// pre-e89s07 behavior).
+	SiteKeyAuthenticator SiteKeyAuthenticator
 	// SiteTargetAuthorizer enforces organization ownership for caller-supplied Site IDs.
 	SiteTargetAuthorizer SiteTargetAuthorizer
+	// ProjectSecretManager backs the native Project secret tools. Implemented
+	// at the composition root by an adapter over the frozen SecretManager seam.
+	// Nil disables the native secret tools.
+	ProjectSecretManager ProjectSecretManager
+	// ProjectTargetAuthorizer binds caller-supplied Project IDs to the
+	// authenticated principal (org ownership or Site-key Site→Project binding).
+	ProjectTargetAuthorizer ProjectTargetAuthorizer
 	// UpdateAuthPolicy notifies the proxy when a site's auth policy changes.
 	UpdateAuthPolicy func(siteID string, policyJSON string)
 }
@@ -161,22 +172,25 @@ type DBer = kernel.QueryExecDBer
 
 // Component is the ECC component for the MCP server.
 type Component struct {
-	logger               kernel.Logger
-	port                 int
-	transport            string
-	enabled              bool
-	db                   DBer
-	deployer             DeployTrigger
-	gitCreator           GitCreator
-	siteCreator          SiteCreator
-	siteLister           SiteLister
-	siteKeyCreator       SiteKeyCreator
-	siteKeyResolver      SiteKeyResolver
-	siteEnvVarManager    SiteEnvVarManager
-	siteTargetAuthorizer SiteTargetAuthorizer
-	orgKeyAuth           OrgKeyAuthenticator
-	updateAuthPolicy     func(siteID string, policyJSON string)
-	streamableHandler    http.Handler // created once, reused across requests for session persistence
+	logger                  kernel.Logger
+	port                    int
+	transport               string
+	enabled                 bool
+	db                      DBer
+	deployer                DeployTrigger
+	gitCreator              GitCreator
+	siteCreator             SiteCreator
+	siteLister              SiteLister
+	siteKeyCreator          SiteKeyCreator
+	siteKeyResolver         SiteKeyResolver
+	siteEnvVarManager       SiteEnvVarManager
+	siteTargetAuthorizer    SiteTargetAuthorizer
+	orgKeyAuth              OrgKeyAuthenticator
+	siteKeyAuth             SiteKeyAuthenticator
+	projectSecretManager    ProjectSecretManager
+	projectTargetAuthorizer ProjectTargetAuthorizer
+	updateAuthPolicy        func(siteID string, policyJSON string)
+	streamableHandler       http.Handler // created once, reused across requests for session persistence
 }
 
 var _ kernel.Component = (*Component)(nil)
@@ -196,21 +210,24 @@ func New(opts Options) *Component {
 		transport = "http"
 	}
 	return &Component{
-		logger:               logger,
-		port:                 port,
-		transport:            transport,
-		enabled:              opts.Enabled,
-		db:                   opts.DB,
-		deployer:             opts.Deployer,
-		gitCreator:           opts.GitCreator,
-		siteCreator:          opts.SiteCreator,
-		siteLister:           opts.SiteLister,
-		siteKeyCreator:       opts.SiteKeyCreator,
-		siteKeyResolver:      opts.SiteKeyResolver,
-		siteEnvVarManager:    opts.SiteEnvVarManager,
-		siteTargetAuthorizer: opts.SiteTargetAuthorizer,
-		orgKeyAuth:           opts.OrgKeyAuthenticator,
-		updateAuthPolicy:     opts.UpdateAuthPolicy,
+		logger:                  logger,
+		port:                    port,
+		transport:               transport,
+		enabled:                 opts.Enabled,
+		db:                      opts.DB,
+		deployer:                opts.Deployer,
+		gitCreator:              opts.GitCreator,
+		siteCreator:             opts.SiteCreator,
+		siteLister:              opts.SiteLister,
+		siteKeyCreator:          opts.SiteKeyCreator,
+		siteKeyResolver:         opts.SiteKeyResolver,
+		siteEnvVarManager:       opts.SiteEnvVarManager,
+		siteTargetAuthorizer:    opts.SiteTargetAuthorizer,
+		orgKeyAuth:              opts.OrgKeyAuthenticator,
+		siteKeyAuth:             opts.SiteKeyAuthenticator,
+		projectSecretManager:    opts.ProjectSecretManager,
+		projectTargetAuthorizer: opts.ProjectTargetAuthorizer,
+		updateAuthPolicy:        opts.UpdateAuthPolicy,
 	}
 }
 
@@ -1076,7 +1093,7 @@ Port is set via ` + "`PORT`" + ` env var. Database is SQLite by default.
 	})
 
 	// registerGetSiteEnvVars
-	c.registerTool(srv, tierRead, &mcpsdk.Tool{
+	c.registerScopedTool(srv, tierRead, toolGate{siteAllowed: true}, &mcpsdk.Tool{
 		Name:        "get_site_env_vars",
 		Description: "List environment variables for a site. Values are masked (last 4 chars only). Use list_sites to find site IDs.",
 	}, func(ctx context.Context, req *mcpsdk.CallToolRequest, _ any) (*mcpsdk.CallToolResult, any, error) {
@@ -1103,7 +1120,7 @@ Port is set via ` + "`PORT`" + ` env var. Database is SQLite by default.
 	})
 
 	// registerSetSiteEnvVars
-	c.registerTool(srv, tierWrite, &mcpsdk.Tool{
+	c.registerScopedTool(srv, tierWrite, toolGate{siteAllowed: true}, &mcpsdk.Tool{
 		Name:        "set_site_env_vars",
 		Description: "Set or update environment variables for a site. Existing keys are updated, new keys are created. Keys must be uppercase alphanumeric + underscore (e.g. DATABASE_URL). Values are encrypted at rest.",
 	}, func(ctx context.Context, req *mcpsdk.CallToolRequest, _ any) (*mcpsdk.CallToolResult, any, error) {
@@ -1142,7 +1159,7 @@ Port is set via ` + "`PORT`" + ` env var. Database is SQLite by default.
 	})
 
 	// registerDeleteSiteEnvVar
-	c.registerTool(srv, tierWrite, &mcpsdk.Tool{
+	c.registerScopedTool(srv, tierWrite, toolGate{siteAllowed: true}, &mcpsdk.Tool{
 		Name:        "delete_site_env_var",
 		Description: "Delete a single environment variable from a site by key. Use get_site_env_vars to see available keys.",
 	}, func(ctx context.Context, req *mcpsdk.CallToolRequest, _ any) (*mcpsdk.CallToolResult, any, error) {
@@ -1170,6 +1187,9 @@ Port is set via ` + "`PORT`" + ` env var. Database is SQLite by default.
 		c.logger.Info("mcp tool", "tool", "delete_site_env_var", "site_id", siteID, "key", key)
 		return textResult(formatJSON(map[string]string{"site_id": siteID, "key": key, "status": "deleted"})), nil, nil
 	})
+	// Native Project secret tools (e89s07): scoped, masked-by-default,
+	// ownership-bound, with safe generic errors on both transports.
+	c.registerSecretTools(srv)
 	return srv, nil
 }
 
