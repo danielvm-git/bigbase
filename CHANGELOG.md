@@ -1,3 +1,10 @@
+## [2.88.2](https://github.com/danielvm-git/bigbase/compare/v2.88.1...v2.88.2) (2026-08-12)
+
+
+### Bug Fixes
+
+* **ctxo:** tool contract, index automation, and gitignore contradiction ([95b7cb6](https://github.com/danielvm-git/bigbase/commit/95b7cb69621663b6928890ebf8b984065dc303bc))
+
 ## [2.88.1](https://github.com/danielvm-git/bigbase/compare/v2.88.0...v2.88.1) (2026-08-11)
 
 
