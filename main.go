@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"crypto/rand"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -34,6 +35,7 @@ import (
 	"github.com/danielvm/bigbase/components/projects"
 	"github.com/danielvm/bigbase/components/proxy"
 	"github.com/danielvm/bigbase/components/realtime"
+	"github.com/danielvm/bigbase/components/secrets"
 	"github.com/danielvm/bigbase/components/sites"
 	"github.com/danielvm/bigbase/components/storage"
 	"github.com/danielvm/bigbase/config"
@@ -372,6 +374,22 @@ func startProxy() {
 	ci := cici.New(cici.Options{DB: d, Logger: logger})
 	fn := functions.New(functions.Options{DB: d, Logger: logger})
 	projectsComp := projects.New(projects.Options{DB: d, Logger: logger})
+	secretsKey := encryptionKey
+	if len(secretsKey) == 0 && allowPlaintext {
+		// Development-only composition fallback: a random in-memory root key so
+		// the project secret manager is usable without key management. Never
+		// persisted, never the production path (production requires the env key).
+		secretsKey = make([]byte, 32)
+		if _, err := rand.Read(secretsKey); err != nil {
+			logger.Error("generate development secret key", "error", err)
+			os.Exit(1)
+		}
+	}
+	secretsComp, err := secrets.New(secrets.Options{DB: d, Logger: logger, RootKey: secretsKey})
+	if err != nil {
+		logger.Error("initialize secret manager", "error", err)
+		os.Exit(1)
+	}
 	msgComp := messaging.New(messaging.Options{
 		DB:     d,
 		Logger: logger,
@@ -484,6 +502,7 @@ func startProxy() {
 	k.Register(gh)
 	k.Register(st)
 	k.Register(projectsComp)
+	k.Register(secretsComp)
 	k.Register(ci)
 	k.Register(fn)
 	k.Register(rt)
@@ -538,6 +557,14 @@ func startProxy() {
 
 	p.Handle("/api/projects", projectsHandler.ServeHTTP)
 	p.Handle("/api/projects/", projectsHandler.ServeHTTP)
+	secretAPI, apiErr := api.NewSecretsAPI(api.SecretsAPIOptions{Manager: secretsComp, DB: d, Logger: logger})
+	if apiErr != nil {
+		logger.Error("initialize secret REST API", "error", apiErr)
+		os.Exit(1)
+	}
+	secretsHandler := mComp.Middleware(authComp.Middleware(http.HandlerFunc(secretAPI.ServeHTTP)))
+	p.Handle("/api/projects/{project}/environments/{env}/secrets", secretsHandler.ServeHTTP)
+	p.Handle("/api/projects/{project}/environments/{env}/secrets/", secretsHandler.ServeHTTP)
 	p.Handle("/api/collections/", protectedAPI.ServeHTTP)
 	// /api/sql requires admin role. The access rule is now declared as a Policy
 	// (issue #43) rather than a hand-threaded middleware chain: PolicyAdmin()
