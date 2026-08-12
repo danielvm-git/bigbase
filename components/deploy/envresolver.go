@@ -2,11 +2,15 @@ package deploy
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 	"fmt"
 	"os"
 	"strings"
 
+	"github.com/danielvm/bigbase/components/auth"
 	"github.com/danielvm/bigbase/components/internal/envcrypto"
+	"github.com/danielvm/bigbase/components/secrets"
 	"github.com/danielvm/bigbase/kernel"
 )
 
@@ -31,18 +35,47 @@ func (s EnvScope) column() string {
 	return "is_runtime"
 }
 
+// SecretResolver is the deployment-facing projection of the native SecretManager
+// seam (e89s03). The secrets component satisfies it structurally at the
+// composition root; deploy consumes the frozen public types and never touches
+// the store implementation. Returning nil from NewEnvResolver disables native
+// Project resolution entirely (legacy-only deployments).
+type SecretResolver interface {
+	ListFolders(ctx context.Context, projectID, environmentID string) ([]secrets.SecretFolder, error)
+	ListSecrets(ctx context.Context, projectID, environmentID, folderID string) ([]secrets.SecretMetadata, error)
+	ReadSecretValue(ctx context.Context, projectID, environmentID, folderID, key string) (secrets.SecretValue, error)
+}
+
+// ResolveOptions are the per-deployment inputs layered on top of the platform
+// baseline by ResolveOptions. Both fields are optional.
+type ResolveOptions struct {
+	// ManifestEnv is the manifest (bigbase.yaml/toml) [env] configuration. It
+	// is applied after the platform baseline and before Project/Site secrets,
+	// so a secret can override a manifest default but a manifest value never
+	// overrides a secret.
+	ManifestEnv map[string]string
+	// Reserved are "KEY=value" pairs applied last: they win over every other
+	// layer and are never treated as secrets for redaction. They carry the
+	// runtime-ownership values (PORT, WRITABLE_DIR, DB_PATH/DATABASE_URL) that
+	// a deployment must never let a repo or secret override.
+	Reserved []string
+}
+
 // EnvResolver is the single owner of "what environment does this deployment
 // see, and what must never appear in a log." Both the build path (the deploy
 // engine's build command) and the runtime path (the started app) resolve env
 // through it, so precedence and redaction are defined in exactly one place.
 //
 // This is the seam introduced for issue #41; it unblocks epics e41 (Env Vars
-// UI), e47 (Secrets Mgmt), and e51 (Preview Envs).
+// UI), e47 (Secrets Mgmt), and e51 (Preview Envs). e89s06 extended it with the
+// native Project Environment layer, the legacy Site compatibility layer, and
+// the reserved runtime layer.
 type EnvResolver struct {
-	db        kernel.DBer
-	envKey    []byte
-	logger    kernel.Logger
-	buildHome string
+	db             kernel.DBer
+	envKey         []byte
+	logger         kernel.Logger
+	buildHome      string
+	secretResolver SecretResolver
 }
 
 // NewEnvResolver constructs a resolver backed by the given DB and (optional)
@@ -52,11 +85,13 @@ type EnvResolver struct {
 // buildHome is the tuned build cache home used for the build scope baseline
 // (mirrors the deploy component's buildHomeDir); empty falls back to
 // BIGBASE_HOME then os.Environ, the same as BuildEnv.
-func NewEnvResolver(db kernel.DBer, envKey []byte, logger kernel.Logger, buildHome string) *EnvResolver {
+// secretResolver is the injected native SecretManager seam (e89s03); nil
+// disables native Project resolution.
+func NewEnvResolver(db kernel.DBer, envKey []byte, logger kernel.Logger, buildHome string, secretResolver SecretResolver) *EnvResolver {
 	if logger == nil {
 		logger = kernel.NoopLogger{}
 	}
-	return &EnvResolver{db: db, envKey: envKey, logger: logger, buildHome: strings.TrimSpace(buildHome)}
+	return &EnvResolver{db: db, envKey: envKey, logger: logger, buildHome: strings.TrimSpace(buildHome), secretResolver: secretResolver}
 }
 
 // ResolvedEnv is the result of Resolve: the full environment plus the set of
@@ -66,10 +101,15 @@ type ResolvedEnv struct {
 	// Environ is the merged environment as "KEY=value" lines, ready for
 	// exec.Cmd.Env.
 	Environ []string
-	// secretKeys is the set of keys that came from site_env_vars. Values from
-	// this store are encrypted at rest and must never appear in logs, so any
+	// secretKeys is the set of keys that came from the secret stores (native
+	// Project Environment values and legacy site_env_vars). Values from these
+	// stores are encrypted at rest and must never appear in logs, so any
 	// log-facing view must mask them via Redact.
 	secretKeys map[string]struct{}
+	// conflicts lists keys where a legacy Site compatibility value overrode a
+	// native Project value during dual-read. Values are never recorded — only
+	// keys — so operators see the collision surface without any plaintext.
+	conflicts []string
 }
 
 // SecretKeys returns the set of keys whose values were sourced from the
@@ -95,35 +135,139 @@ func (r *ResolvedEnv) IsSecret(key string) bool {
 	return ok
 }
 
-// Resolve computes the environment for a deployment in the given scope.
+// Conflicts returns the keys where a legacy Site compatibility value overrode
+// a native Project value during dual-read. The returned slice is a defensive
+// copy; it contains keys only, never values.
+func (r *ResolvedEnv) Conflicts() []string {
+	if r == nil || len(r.conflicts) == 0 {
+		return nil
+	}
+	out := make([]string, len(r.conflicts))
+	copy(out, r.conflicts)
+	return out
+}
+
+// Resolve computes the environment for a deployment in the given scope with
+// no per-deployment inputs beyond the platform baseline and the Site chain.
+// It is kept for callers that need only the base layers; startApp and buildApp
+// use ResolveOptions to layer manifest configuration and reserved values.
+func (r *EnvResolver) Resolve(ctx context.Context, siteID string, scope EnvScope) (*ResolvedEnv, error) {
+	return r.ResolveOptions(ctx, siteID, scope, ResolveOptions{})
+}
+
+// ResolveOptions computes the environment for a deployment in the given scope.
 //
 // Precedence (lowest → highest, last write wins):
 //
 //  1. Platform build/runtime defaults — os.Environ() plus the deploy
 //     component's build-time home/cache tuning (see BuildEnv). These are the
 //     system-supplied baseline.
-//  2. Site env vars for the requested scope, decrypted from the secret
-//     store. Because every site env var is stored encrypted at rest, all of
-//     these are treated as secrets for redaction purposes.
+//  2. Manifest configuration (opts.ManifestEnv) — repo-declared [env] values.
+//     Not a secret: the manifest ships in the repository.
+//  3. Native Project Environment secrets — resolved through the injected
+//     SecretResolver seam for the site's project and production environment.
+//     Every value from this store is treated as a secret for redaction.
+//  4. Legacy Site compatibility values — site_env_vars for the requested
+//     scope, decrypted from the legacy store. A Site value overrides a
+//     Project value on key collision (SC-e89s06-P0-01) and the collision is
+//     reported through Conflicts without logging values.
+//  5. Reserved values (opts.Reserved) — applied last so runtime ownership
+//     values (PORT, WRITABLE_DIR, DB connection) always win.
 //
 // Within a scope, a later-applied layer overrides an earlier one, so a
 // site-defined var (e.g. NODE_ENV=production) takes precedence over a
 // platform default. This keeps the precedence rules auditable in one module.
 //
-// TODO(e47): when a dedicated secrets layer lands, it will be applied last
-// (secrets override user env vars on conflict) — this is the documented seam
-// for that addition; the loop below already supports appending further
-// layers without touching consumers.
-func (r *EnvResolver) Resolve(ctx context.Context, siteID string, scope EnvScope) (*ResolvedEnv, error) {
+// Protected decryption failures — a native Project value or a selected legacy
+// Site value that cannot be decrypted — are fatal: delivery must stop rather
+// than boot without a secret (SC-e89s01-P0-05).
+func (r *EnvResolver) ResolveOptions(ctx context.Context, siteID string, scope EnvScope, opts ResolveOptions) (*ResolvedEnv, error) {
 	out := &ResolvedEnv{
 		Environ:    r.defaultEnviron(scope),
 		secretKeys: make(map[string]struct{}),
 	}
+	merged := keyValueMap(out.Environ)
 
-	if siteID == "" || r.db == nil {
-		return out, nil
+	// Layer 2: manifest configuration.
+	for k, v := range opts.ManifestEnv {
+		merged[k] = v
 	}
 
+	if siteID != "" && r.db != nil {
+		// Layer 3: native Project Environment secrets.
+		if err := r.resolveProjectSecrets(ctx, siteID, merged, out); err != nil {
+			return nil, err
+		}
+		// Layer 4: legacy Site compatibility values (Site wins on collision).
+		if err := r.resolveSiteEnvVars(ctx, siteID, scope, merged, out); err != nil {
+			return nil, err
+		}
+	}
+
+	// Layer 5: reserved runtime values — final and authoritative.
+	for _, kv := range opts.Reserved {
+		idx := strings.IndexByte(kv, '=')
+		if idx < 0 {
+			continue
+		}
+		merged[kv[:idx]] = kv[idx+1:]
+	}
+
+	out.Environ = mapToEnviron(merged)
+	return out, nil
+}
+
+// resolveProjectSecrets applies layer 3: every native Project secret in the
+// site's production environment. Native secrets are scope-agnostic (the native
+// model has no build/runtime flag), so they appear in both build and runtime
+// scopes; scope isolation remains the legacy Site layer's responsibility.
+// A value that cannot be decrypted is fatal.
+func (r *EnvResolver) resolveProjectSecrets(ctx context.Context, siteID string, merged map[string]string, out *ResolvedEnv) error {
+	if r.secretResolver == nil {
+		return nil
+	}
+	projectID, envID, orgID, err := r.siteProjectEnvironment(ctx, siteID)
+	if err != nil {
+		return err
+	}
+	if projectID == "" || envID == "" {
+		return nil
+	}
+	// The resolver is an internal trusted seam: tenant identity comes from the
+	// persisted site → project chain, never from caller input.
+	secCtx := auth.WithOrgID(ctx, orgID)
+
+	folders, err := r.secretResolver.ListFolders(secCtx, projectID, envID)
+	if err != nil {
+		return fmt.Errorf("resolve project secret folders: %w", err)
+	}
+	// Folders are ordered by name from the seam; within a folder, secrets are
+	// ordered by key, and a later folder overrides an earlier one on collision.
+	for _, folder := range folders {
+		metas, err := r.secretResolver.ListSecrets(secCtx, projectID, envID, folder.ID)
+		if err != nil {
+			return fmt.Errorf("resolve project secrets in %s: %w", folder.Name, err)
+		}
+		for _, meta := range metas {
+			val, err := r.secretResolver.ReadSecretValue(secCtx, projectID, envID, folder.ID, meta.Key)
+			if err != nil {
+				// Fail closed: a selected secret that cannot be decrypted must
+				// stop delivery rather than silently disappear.
+				return fmt.Errorf("resolve project secret %s: %w", meta.Key, err)
+			}
+			merged[meta.Key] = val.Value
+			out.secretKeys[meta.Key] = struct{}{}
+		}
+	}
+	return nil
+}
+
+// resolveSiteEnvVars applies layer 4: legacy site_env_vars rows for the
+// requested scope, decrypted from the legacy store. A Site value overrides a
+// Project value on collision; the collision is reported (key only, never the
+// value) so operators can drive the legacy migration. A selected decryption
+// failure is fatal.
+func (r *EnvResolver) resolveSiteEnvVars(ctx context.Context, siteID string, scope EnvScope, merged map[string]string, out *ResolvedEnv) error {
 	rows, err := r.db.QueryContext(ctx,
 		"SELECT key, value_encrypted FROM site_env_vars WHERE site_id = ? AND "+scope.column()+" = 1",
 		siteID)
@@ -131,33 +275,90 @@ func (r *EnvResolver) Resolve(ctx context.Context, siteID string, scope EnvScope
 		// The table may not exist in older deployments — treat as empty, the
 		// same as FetchSiteEnvVars does, so resolution never blocks a deploy.
 		if isNoSuchTable(err) {
-			return out, nil
+			return nil
 		}
-		return nil, fmt.Errorf("resolve site env vars: %w", err)
+		return fmt.Errorf("resolve site env vars: %w", err)
 	}
 	defer func() { _ = rows.Close() }()
 
-	merged := keyValueMap(out.Environ)
 	for rows.Next() {
 		var key, encrypted string
 		if err := rows.Scan(&key, &encrypted); err != nil {
-			r.logger.Warn("scan env var row", "error", err)
-			continue
+			return fmt.Errorf("resolve site env vars")
 		}
 		value, err := envcrypto.Decrypt(r.envKey, encrypted)
 		if err != nil {
-			r.logger.Warn("decrypt env var", "key", key, "error", err)
-			continue
+			// Protected delivery: a selected Site-secret decryption failure is
+			// fatal, never silently dropped (SC-e89s01-P0-05 / SC-e89s06-P0-05).
+			return fmt.Errorf("resolve site env var %s: %w", key, err)
+		}
+		if _, fromProject := out.secretKeys[key]; fromProject {
+			// Native-first dual-read collision: Site wins, report the key.
+			out.conflicts = append(out.conflicts, key)
+			r.logger.Info("site compatibility value overrides project secret", "key", key)
 		}
 		merged[key] = value
 		out.secretKeys[key] = struct{}{}
 	}
 	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("resolve site env vars iteration: %w", err)
+		return fmt.Errorf("resolve site env vars iteration: %w", err)
+	}
+	return nil
+}
+
+// siteProjectEnvironment resolves the site → project → production environment
+// chain used by native secret resolution. Empty results mean the site has no
+// project attachment yet (legacy-only mode). Missing tables degrade to empty
+// so older databases resolve exactly as before e89s02.
+func (r *EnvResolver) siteProjectEnvironment(ctx context.Context, siteID string) (projectID, envID string, orgID int64, err error) {
+	var project sql.NullString
+	if err := r.db.QueryRowContext(ctx, `SELECT project_id FROM sites WHERE id = ?`, siteID).Scan(&project); err != nil {
+		// Older deployments may lack the sites table entirely or predate the
+		// project_id attachment column — degrade to legacy-only resolution.
+		if isNoSuchTable(err) || missingProjectColumn(err) || errors.Is(err, sql.ErrNoRows) {
+			return "", "", 0, nil
+		}
+		return "", "", 0, fmt.Errorf("resolve site project: %w", err)
+	}
+	if !project.Valid || project.String == "" {
+		return "", "", 0, nil
+	}
+	projectID = project.String
+
+	if err := r.db.QueryRowContext(ctx, `SELECT org_id FROM projects WHERE id = ?`, projectID).Scan(&orgID); err != nil {
+		if isNoSuchTable(err) || errors.Is(err, sql.ErrNoRows) {
+			return "", "", 0, nil
+		}
+		return "", "", 0, fmt.Errorf("resolve project org: %w", err)
 	}
 
-	out.Environ = mapToEnviron(merged)
-	return out, nil
+	// Prefer the production environment (the compatibility environment created
+	// by projects.EnsureSiteProject); fall back to the earliest environment.
+	envID, err = r.productionEnvironmentID(ctx, projectID)
+	if err != nil {
+		return "", "", 0, err
+	}
+	return projectID, envID, orgID, nil
+}
+
+func (r *EnvResolver) productionEnvironmentID(ctx context.Context, projectID string) (string, error) {
+	var envID string
+	if err := r.db.QueryRowContext(ctx,
+		`SELECT id FROM project_environments WHERE project_id = ? AND slug = 'production' ORDER BY created_at, id LIMIT 1`,
+		projectID).Scan(&envID); err == nil {
+		return envID, nil
+	} else if !errors.Is(err, sql.ErrNoRows) && !isNoSuchTable(err) {
+		return "", fmt.Errorf("resolve project environment: %w", err)
+	}
+	if err := r.db.QueryRowContext(ctx,
+		`SELECT id FROM project_environments WHERE project_id = ? ORDER BY created_at, id LIMIT 1`,
+		projectID).Scan(&envID); err != nil {
+		if errors.Is(err, sql.ErrNoRows) || isNoSuchTable(err) {
+			return "", nil
+		}
+		return "", fmt.Errorf("resolve project environment: %w", err)
+	}
+	return envID, nil
 }
 
 // Redact returns a copy of env with every value whose key is in secretKeys
@@ -254,6 +455,13 @@ func sortPairsByLenDesc(p []maskPair) {
 			p[j-1], p[j] = p[j], p[j-1]
 		}
 	}
+}
+
+// missingProjectColumn reports the SQLite "no such column: project_id" error
+// raised when a pre-e89s02 sites table has not yet received the attachment
+// column. Resolution degrades to legacy-only in that case.
+func missingProjectColumn(err error) bool {
+	return err != nil && strings.Contains(err.Error(), "no such column: project_id")
 }
 
 // defaultEnviron returns the platform-baseline environment for a scope: for

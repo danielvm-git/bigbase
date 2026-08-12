@@ -108,9 +108,9 @@ func New(opts Options) *API {
 	}
 }
 
-func (a *API) Name() string                  { return "api" }
-func (a *API) Version() string               { return version }
-func (a *API) Dependencies() []string        { return []string{"db"} }
+func (a *API) Name() string           { return "api" }
+func (a *API) Version() string        { return version }
+func (a *API) Dependencies() []string { return []string{"db"} }
 
 func (a *API) Init(ctx *kernel.Context, config json.RawMessage) error {
 	return nil

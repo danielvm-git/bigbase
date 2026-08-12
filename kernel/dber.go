@@ -23,3 +23,13 @@ type DBer interface {
 	QueryRow(query string, args ...any) *sql.Row
 	Migrate(migration string) error
 }
+
+// TxBeginner is an optional seam for databases that can start transactions.
+// It is intentionally separate from DBer: only components that need atomic
+// multi-statement operations (for example SecretManager first-key creation)
+// type-assert to it, so unrelated component interfaces stay narrow. Both the
+// SQLite and PostgreSQL drivers implement it, and so does *sql.DB, which keeps
+// the seam usable by component tests that pass raw handles.
+type TxBeginner interface {
+	BeginTx(ctx context.Context, opts *sql.TxOptions) (*sql.Tx, error)
+}

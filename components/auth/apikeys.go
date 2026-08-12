@@ -384,6 +384,15 @@ func (a *Auth) RevokeSiteKey(ctx context.Context, siteID, keyID string) error {
 
 // ResolveSiteKey looks up the site_id for a bb_dep_ prefixed key.
 func (a *Auth) ResolveSiteKey(rawKey string) (string, error) {
+	siteID, _, err := a.ResolveSiteKeyScopes(rawKey)
+	return siteID, err
+}
+
+// ResolveSiteKeyScopes looks up the bound site_id and scopes for a bb_dep_
+// prefixed key. It is the credential-resolution half of the MCP Site
+// principal seam (e89s07): the binding and scopes come from the stored key
+// row, never from the caller. Revoked keys are rejected.
+func (a *Auth) ResolveSiteKeyScopes(rawKey string) (string, []string, error) {
 	keyHash := a.hashAPIKey(rawKey)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -391,25 +400,26 @@ func (a *Auth) ResolveSiteKey(rawKey string) (string, error) {
 
 	var siteID sql.NullString
 	var keyID int64
+	var scopesStr string
 	err := a.db.QueryRowContext(ctx,
-		`SELECT id, site_id FROM org_api_keys WHERE key_hash = ? AND revoked = 0 AND site_id IS NOT NULL`,
+		`SELECT id, site_id, scopes FROM org_api_keys WHERE key_hash = ? AND revoked = 0 AND site_id IS NOT NULL`,
 		keyHash,
-	).Scan(&keyID, &siteID)
+	).Scan(&keyID, &siteID, &scopesStr)
 	if err == sql.ErrNoRows {
-		return "", fmt.Errorf("site key not found")
+		return "", nil, fmt.Errorf("site key not found")
 	}
 	if err != nil {
-		return "", fmt.Errorf("resolve site key: %w", err)
+		return "", nil, fmt.Errorf("resolve site key: %w", err)
 	}
 	if !siteID.Valid || siteID.String == "" {
-		return "", fmt.Errorf("site key not found")
+		return "", nil, fmt.Errorf("site key not found")
 	}
 
 	now := time.Now().UTC().Format(time.RFC3339)
 	_, _ = a.db.ExecContext(context.Background(),
 		`UPDATE org_api_keys SET last_used_at = ? WHERE id = ?`, now, keyID)
 
-	return siteID.String, nil
+	return siteID.String, splitScopes(scopesStr), nil
 }
 
 // generateSiteKey creates a site-scoped key with bb_dep_ prefix.

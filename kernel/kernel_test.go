@@ -20,9 +20,9 @@ type testComponent struct {
 	deps []string
 }
 
-func (t *testComponent) Name() string                                           { return t.name }
-func (t *testComponent) Version() string                                        { return "0.0.1" }
-func (t *testComponent) Dependencies() []string                                 { return t.deps }
+func (t *testComponent) Name() string           { return t.name }
+func (t *testComponent) Version() string        { return "0.0.1" }
+func (t *testComponent) Dependencies() []string { return t.deps }
 
 func (t *testComponent) Init(ctx *kernel.Context, config json.RawMessage) error { return nil }
 func (t *testComponent) Start(ctx *kernel.Context) error                        { return nil }

@@ -13,26 +13,41 @@ import (
 	"io"
 )
 
-// ParseKey decodes a 64-char hex string into a 32-byte AES-256 key.
-// Returns nil, nil when keyHex is empty (encryption disabled).
-//
-// Encryption is deliberately optional: a nil key puts Encrypt/Decrypt into a
-// no-op pass-through mode so the feature works out-of-the-box in development
-// without key management. The trade-off is that values are then stored as
-// plaintext at rest — callers are expected to log a warning at startup when the
-// key is missing/invalid so operators notice the misconfiguration in production.
+// ParseRootKey decodes the canonical base64-encoded 32-byte root key.
+// An empty or malformed value is always an error; callers must not silently
+// enter plaintext mode when production configuration is missing.
+func ParseRootKey(raw string) ([]byte, error) {
+	if raw == "" {
+		return nil, fmt.Errorf("root encryption key is required")
+	}
+	key, err := base64.StdEncoding.DecodeString(raw)
+	if err != nil || len(key) != 32 {
+		return nil, fmt.Errorf("root encryption key must be base64-encoded 32 bytes")
+	}
+	return key, nil
+}
+
+// ParseLegacyKey decodes the pre-e89 hexadecimal key format. It is retained
+// only for explicit migration and test inputs; production composition must use
+// ParseRootKey instead.
+func ParseLegacyKey(keyHex string) ([]byte, error) {
+	if keyHex == "" {
+		return nil, fmt.Errorf("legacy encryption key is required")
+	}
+	key, err := hex.DecodeString(keyHex)
+	if err != nil || len(key) != 32 {
+		return nil, fmt.Errorf("legacy encryption key must be 32 bytes")
+	}
+	return key, nil
+}
+
+// ParseKey is the legacy/test parser. New composition code must call
+// ParseRootKey and pass legacy values only through an explicit migration path.
 func ParseKey(keyHex string) ([]byte, error) {
 	if keyHex == "" {
 		return nil, nil
 	}
-	key, err := hex.DecodeString(keyHex)
-	if err != nil {
-		return nil, fmt.Errorf("invalid hex key: %w", err)
-	}
-	if len(key) != 32 {
-		return nil, fmt.Errorf("env encryption key must be 32 bytes (64 hex chars), got %d", len(key))
-	}
-	return key, nil
+	return ParseLegacyKey(keyHex)
 }
 
 // Encrypt encrypts plaintext with AES-256-GCM and returns a base64-encoded

@@ -246,6 +246,46 @@ func TestResolveOrgKeyRejectsSiteKey(t *testing.T) {
 	}
 }
 
+type mockSiteTargetAuthorizer struct {
+	allowed string
+	called  bool
+}
+
+func (m *mockSiteTargetAuthorizer) AuthorizeSiteTarget(_ context.Context, siteID string, orgID int64) error {
+	m.called = true
+	if orgID != 1 || siteID != m.allowed {
+		return errors.New("denied")
+	}
+	return nil
+}
+
+func TestMCPEnvToolsEnforceSiteTargetOwnership(t *testing.T) {
+	manager := newMockEnvVarManager()
+	manager.vars["site-a"] = []mcp.SiteEnvVar{{SiteID: "site-a", Key: "TOKEN", ValuePreview: "••••oken"}}
+	authorizer := &mockSiteTargetAuthorizer{allowed: "site-a"}
+	c := mcp.New(mcp.Options{
+		Enabled:              true,
+		SiteEnvVarManager:    manager,
+		OrgKeyAuthenticator:  mockOrgKeyAuth{},
+		SiteTargetAuthorizer: authorizer,
+	})
+	ctx := mcp.WithOrgAuth(context.Background(), 1, nil)
+
+	denied := callToolTextWithCtx(t, c, ctx, "get_site_env_vars", map[string]any{"site_id": "site-b"})
+	if !strings.Contains(denied, "site authorization denied") {
+		t.Fatalf("expected generic ownership denial, got %q", denied)
+	}
+	if !authorizer.called {
+		t.Fatal("expected target authorizer to run before Site env access")
+	}
+
+	authorizer.called = false
+	allowed := callToolTextWithCtx(t, c, ctx, "get_site_env_vars", map[string]any{"site_id": "site-a"})
+	if !strings.Contains(allowed, "TOKEN") || !authorizer.called {
+		t.Fatalf("expected authorized Site env response, got %q", allowed)
+	}
+}
+
 func callToolTextWithCtx(t *testing.T, c *mcp.Component, ctx context.Context, name string, args map[string]any) string {
 	t.Helper()
 	srv, err := c.NewMCPServer()

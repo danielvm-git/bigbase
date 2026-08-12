@@ -98,6 +98,51 @@ func TestSiteKeyResolve(t *testing.T) {
 	}
 }
 
+// TestSiteKeyScopesBinding verifies the MCP Site-principal half of the
+// credential seam (e89s07): ResolveSiteKeyScopes returns the bound Site and
+// the key's own scopes, never a caller-supplied Site.
+func TestSiteKeyScopesBinding(t *testing.T) {
+	a, _ := setupSiteKeys(t)
+	ctx := context.Background()
+
+	token, _, err := a.CreateSiteKey(ctx, "site-1", "ci", []string{"deploy", "mcp:secrets:read"})
+	if err != nil {
+		t.Fatalf("CreateSiteKey: %v", err)
+	}
+
+	siteID, scopes, err := a.ResolveSiteKeyScopes(token)
+	if err != nil {
+		t.Fatalf("ResolveSiteKeyScopes: %v", err)
+	}
+	if siteID != "site-1" {
+		t.Fatalf("expected site-1, got %q", siteID)
+	}
+	if len(scopes) != 2 || scopes[0] != "deploy" || scopes[1] != "mcp:secrets:read" {
+		t.Fatalf("unexpected scopes: %v", scopes)
+	}
+
+	// Default scope when none are minted.
+	token2, _, err := a.CreateSiteKey(ctx, "site-1", "ci-default", nil)
+	if err != nil {
+		t.Fatalf("CreateSiteKey: %v", err)
+	}
+	_, scopes2, err := a.ResolveSiteKeyScopes(token2)
+	if err != nil {
+		t.Fatalf("ResolveSiteKeyScopes: %v", err)
+	}
+	if len(scopes2) != 1 || scopes2[0] != "deploy" {
+		t.Fatalf("expected default deploy scope, got %v", scopes2)
+	}
+
+	// Revoked keys fail closed.
+	if err := a.RevokeSiteKey(ctx, "site-1", "1"); err != nil {
+		t.Fatalf("RevokeSiteKey: %v", err)
+	}
+	if _, _, err := a.ResolveSiteKeyScopes(token); err == nil {
+		t.Fatal("expected revoked key rejection")
+	}
+}
+
 func TestSiteKeyMiddleware(t *testing.T) {
 	a, _ := setupSiteKeys(t)
 	ctx := context.Background()

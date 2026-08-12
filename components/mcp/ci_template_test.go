@@ -43,7 +43,7 @@ func TestCITemplateWithDefaults(t *testing.T) {
 		if err != nil {
 			t.Fatalf("CallTool(get_ci_template): %v", err)
 		}
-		
+
 		content := result.Content[0].(*mcpsdk.TextContent).Text
 		if !strings.Contains(content, "build_command: \"make build\"") {
 			t.Errorf("expected build_command: \"make build\" in content, got: %s", content)
@@ -66,11 +66,10 @@ command = "npm run start"
 		if err != nil {
 			t.Fatalf("CallTool(get_ci_template): %v", err)
 		}
-		
+
 		content := result.Content[0].(*mcpsdk.TextContent).Text
 		if !strings.Contains(content, "build_command: \"npm run build\"") {
 			t.Errorf("expected build_command: \"npm run build\" in content, got: %s", content)
 		}
 	})
 }
-

@@ -3,6 +3,7 @@ package deploy
 import (
 	"context"
 	"errors"
+	"sync"
 	"testing"
 	"time"
 )
@@ -44,11 +45,14 @@ func (f *FakeInstance) Health(ctx context.Context) error { return nil }
 var ErrRunnerExhausted = errors.New("FakeRunner: no more scripted instances")
 
 type FakeRunner struct {
+	mu    sync.Mutex
 	queue []*FakeInstance
 	calls int // how many times Spawn was called
 }
 
 func (r *FakeRunner) Spawn(_ context.Context, _ Spec) (Instance, error) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
 	r.calls++
 	if len(r.queue) == 0 {
 		return nil, ErrRunnerExhausted
@@ -56,6 +60,12 @@ func (r *FakeRunner) Spawn(_ context.Context, _ Spec) (Instance, error) {
 	inst := r.queue[0]
 	r.queue = r.queue[1:]
 	return inst, nil
+}
+
+func (r *FakeRunner) Calls() int {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	return r.calls
 }
 
 // FakeClock records durations passed to Sleep so tests can assert backoff behaviour.
@@ -117,7 +127,7 @@ func TestFakeRunnerSpawnsScriptedInstances(t *testing.T) {
 		t.Errorf("Spawn on empty queue = %v, want ErrRunnerExhausted", err)
 	}
 
-	if runner.calls != 4 {
-		t.Errorf("Spawn call count = %d, want 4", runner.calls)
+	if runner.Calls() != 4 {
+		t.Errorf("Spawn call count = %d, want 4", runner.Calls())
 	}
 }

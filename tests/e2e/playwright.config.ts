@@ -13,7 +13,7 @@ export default defineConfig({
     { name: 'chromium', use: { browserName: 'chromium' } },
   ],
   webServer: {
-    command: 'go run . serve --port 9999 --db /tmp/bigbase-e2e.db --jwt-access-expiry=30s --jwt-refresh-expiry=60s',
+    command: 'BIGBASE_ENV=development BIGBASE_ALLOW_PLAINTEXT_SECRETS=true BIGBASE_ROOT_ENCRYPTION_KEY=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA= go run . serve --port 9999 --db /tmp/bigbase-e2e.db --jwt-access-expiry=30s --jwt-refresh-expiry=60s',
     url: 'http://localhost:9999/health',
     reuseExistingServer: !process.env.CI,
     timeout: 120000,

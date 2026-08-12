@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"crypto/rand"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -31,8 +32,10 @@ import (
 	"github.com/danielvm/bigbase/components/mcp"
 	"github.com/danielvm/bigbase/components/messaging"
 	"github.com/danielvm/bigbase/components/monitoring"
+	"github.com/danielvm/bigbase/components/projects"
 	"github.com/danielvm/bigbase/components/proxy"
 	"github.com/danielvm/bigbase/components/realtime"
+	"github.com/danielvm/bigbase/components/secrets"
 	"github.com/danielvm/bigbase/components/sites"
 	"github.com/danielvm/bigbase/components/storage"
 	"github.com/danielvm/bigbase/config"
@@ -42,8 +45,8 @@ import (
 )
 
 var (
-	version  = kernel.Version
-	nrApp    *newrelic.Application
+	version = kernel.Version
+	nrApp   *newrelic.Application
 )
 
 // parseLogLevel converts a case-insensitive log level string to slog.Level.
@@ -195,6 +198,23 @@ func startProxy() {
 	ghWebhookSecret := config.FlagOrEnv(*githubWebhookSecret, "GITHUB_WEBHOOK_SECRET")
 	sitesDomainVal := config.FlagOrEnv(*sitesDomain, "BIGBASE_SITES_DOMAIN")
 	dbDriverVal := config.FlagOrEnv(*dbDriver, "BIGBASE_DB_DRIVER")
+	rootKeyRaw := config.FlagOrEnv("", "BIGBASE_ROOT_ENCRYPTION_KEY")
+	runtimeEnv := strings.ToLower(config.FlagOrEnv("production", "BIGBASE_ENV"))
+	allowPlaintext := runtimeEnv == "development" && config.FlagOrEnvBool(false, "BIGBASE_ALLOW_PLAINTEXT_SECRETS")
+	var encryptionKey []byte
+	if rootKeyRaw == "" {
+		if !allowPlaintext {
+			fmt.Fprintln(os.Stderr, "configuration error: BIGBASE_ROOT_ENCRYPTION_KEY is required")
+			os.Exit(1)
+		}
+	} else {
+		var keyErr error
+		encryptionKey, keyErr = sites.ParseRootEncryptionKey(rootKeyRaw)
+		if keyErr != nil {
+			fmt.Fprintln(os.Stderr, "configuration error: site encryption configuration is invalid")
+			os.Exit(1)
+		}
+	}
 	dbDSNVal := config.FlagOrEnv(*dbDSN, "BIGBASE_DB_DSN")
 
 	// JWT expiry config with env var fallbacks.
@@ -353,6 +373,23 @@ func startProxy() {
 	f := forge.New(forge.Options{DB: d, Logger: logger})
 	ci := cici.New(cici.Options{DB: d, Logger: logger})
 	fn := functions.New(functions.Options{DB: d, Logger: logger})
+	projectsComp := projects.New(projects.Options{DB: d, Logger: logger})
+	secretsKey := encryptionKey
+	if len(secretsKey) == 0 && allowPlaintext {
+		// Development-only composition fallback: a random in-memory root key so
+		// the project secret manager is usable without key management. Never
+		// persisted, never the production path (production requires the env key).
+		secretsKey = make([]byte, 32)
+		if _, err := rand.Read(secretsKey); err != nil {
+			logger.Error("generate development secret key", "error", err)
+			os.Exit(1)
+		}
+	}
+	secretsComp, err := secrets.New(secrets.Options{DB: d, Logger: logger, RootKey: secretsKey})
+	if err != nil {
+		logger.Error("initialize secret manager", "error", err)
+		os.Exit(1)
+	}
 	msgComp := messaging.New(messaging.Options{
 		DB:     d,
 		Logger: logger,
@@ -362,19 +399,18 @@ func startProxy() {
 		effectiveDSN = *dbPath
 	}
 	depComp := deploy.New(deploy.Options{
-		DB:           d,
-		Logger:       logger,
-		BuildHome:    os.Getenv("BIGBASE_HOME"),
-		PublicDomain: sitesDomainVal,
-		HostRouter:   p,
-		DBDriver:     dbDriverVal,
-		DBDSN:        effectiveDSN,
+		DB:             d,
+		Logger:         logger,
+		BuildHome:      os.Getenv("BIGBASE_HOME"),
+		PublicDomain:   sitesDomainVal,
+		HostRouter:     p,
+		EncryptionKey:  encryptionKey,
+		AllowPlaintext: allowPlaintext,
+		Secrets:        secretsComp,
+		DBDriver:       dbDriverVal,
+		DBDSN:          effectiveDSN,
 	})
-	p.SetRequestLogger(depComp)
-	mComp := monitoring.New(monitoring.Options{
-		DB:     d,
-		Logger: logger,
-	})
+	mComp := monitoring.New(monitoring.Options{DB: d, Logger: logger})
 	// Wire alert.triggered → SMTP email delivery (Issue #178). The notifier is
 	// only installed when SMTP host + at least one recipient are configured, so
 	// local/dev setups with no mail server are unaffected. The subscriber that
@@ -413,8 +449,11 @@ func startProxy() {
 		WebhookSecret:  ghWebhookSecret,
 	})
 	st := sites.New(sites.Options{
-		DB:     d,
-		Logger: logger,
+		DB:                 d,
+		Logger:             logger,
+		EncryptionKey:      encryptionKey,
+		AllowPlaintext:     allowPlaintext,
+		ProjectProvisioner: projectsComp,
 		TriggerDeploy: func(ctx context.Context, repoID, branch, siteName, siteID string, passthroughPaths []string, appType string) (*sites.Deployment, error) {
 			dep, err := depComp.Trigger(ctx, repoID, branch, siteName, siteID, passthroughPaths, appType, "")
 			if err != nil {
@@ -463,6 +502,8 @@ func startProxy() {
 	k.Register(f)
 	k.Register(gh)
 	k.Register(st)
+	k.Register(projectsComp)
+	k.Register(secretsComp)
 	k.Register(ci)
 	k.Register(fn)
 	k.Register(rt)
@@ -471,20 +512,24 @@ func startProxy() {
 	k.Register(mComp)
 
 	mcpComp := mcp.New(mcp.Options{
-		Logger:              logger,
-		Enabled:             !*mcpDisabled,
-		Port:                *mcpPort,
-		Transport:           *mcpTransport,
-		DB:                  d,
-		Deployer:            mcpDeployAdapter{d: depComp},
-		GitCreator:          g,
-		SiteCreator:         st,
-		SiteLister:          mcpSiteListerAdapter{s: st},
-		SiteKeyCreator:      mcpSiteKeyAdapter{a: authComp},
-		SiteKeyResolver:     mcpSiteKeyAdapter{a: authComp},
-		SiteEnvVarManager:   mcpEnvVarAdapter{s: st},
-		OrgKeyAuthenticator: authComp,
-		UpdateAuthPolicy:    p.SetSiteAuthPolicy,
+		Logger:                  logger,
+		Enabled:                 !*mcpDisabled,
+		Port:                    *mcpPort,
+		Transport:               *mcpTransport,
+		DB:                      d,
+		Deployer:                mcpDeployAdapter{d: depComp},
+		GitCreator:              g,
+		SiteCreator:             st,
+		SiteLister:              mcpSiteListerAdapter{s: st},
+		SiteKeyCreator:          mcpSiteKeyAdapter{a: authComp},
+		SiteKeyResolver:         mcpSiteKeyAdapter{a: authComp},
+		SiteKeyAuthenticator:    mcpSiteKeyAdapter{a: authComp},
+		SiteEnvVarManager:       mcpEnvVarAdapter{s: st},
+		SiteTargetAuthorizer:    mcpEnvVarAdapter{s: st},
+		ProjectSecretManager:    mcpProjectSecretManagerAdapter{m: secretsComp, db: d},
+		ProjectTargetAuthorizer: mcpProjectTargetAuthorizerAdapter{db: d},
+		OrgKeyAuthenticator:     authComp,
+		UpdateAuthPolicy:        p.SetSiteAuthPolicy,
 	})
 	k.Register(mcpComp)
 
@@ -512,7 +557,18 @@ func startProxy() {
 	githubPublic := mComp.Middleware(gh.PublicHandler())
 	githubProtected := mComp.Middleware(authComp.Middleware(gh.ProtectedHandler()))
 	sitesHandler := mComp.Middleware(authComp.Middleware(st.Handler()))
+	projectsHandler := mComp.Middleware(authComp.Middleware(projectsComp.Handler()))
 
+	p.Handle("/api/projects", projectsHandler.ServeHTTP)
+	p.Handle("/api/projects/", projectsHandler.ServeHTTP)
+	secretAPI, apiErr := api.NewSecretsAPI(api.SecretsAPIOptions{Manager: secretsComp, DB: d, Logger: logger})
+	if apiErr != nil {
+		logger.Error("initialize secret REST API", "error", apiErr)
+		os.Exit(1)
+	}
+	secretsHandler := mComp.Middleware(authComp.Middleware(http.HandlerFunc(secretAPI.ServeHTTP)))
+	p.Handle("/api/projects/{project}/environments/{env}/secrets", secretsHandler.ServeHTTP)
+	p.Handle("/api/projects/{project}/environments/{env}/secrets/", secretsHandler.ServeHTTP)
 	p.Handle("/api/collections/", protectedAPI.ServeHTTP)
 	// /api/sql requires admin role. The access rule is now declared as a Policy
 	// (issue #43) rather than a hand-threaded middleware chain: PolicyAdmin()

@@ -12,6 +12,12 @@ import (
 // decrypted KEY=value strings. When buildTime is true, only is_build_time=1
 // vars are returned; when false, only is_runtime=1 vars are returned.
 // Returns nil (no error) when the table does not exist yet.
+//
+// Deprecated: the deployment engine no longer uses this path. EnvResolver
+// (via buildApp/startApp) is the only build/runtime resolution seam; it
+// resolves the legacy Site compatibility layer itself and fails closed on
+// decryption errors. This method is retained as a legacy compatibility helper
+// for tests and external callers; do not use it for new delivery paths.
 func (d *Deploy) FetchSiteEnvVars(ctx context.Context, siteID string, buildTime bool) ([]string, error) {
 	if siteID == "" {
 		return nil, nil
@@ -38,13 +44,11 @@ func (d *Deploy) FetchSiteEnvVars(ctx context.Context, siteID string, buildTime 
 	for rows.Next() {
 		var key, encrypted string
 		if err := rows.Scan(&key, &encrypted); err != nil {
-			d.logger.Warn("scan env var row", "error", err)
-			continue
+			return nil, fmt.Errorf("fetch site env vars")
 		}
 		value, err := envcrypto.Decrypt(d.envKey, encrypted)
 		if err != nil {
-			d.logger.Warn("decrypt env var", "key", key, "error", err)
-			continue
+			return nil, fmt.Errorf("fetch site env vars")
 		}
 		out = append(out, key+"="+value)
 	}

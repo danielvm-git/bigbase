@@ -151,9 +151,9 @@ func newGitStub(dir string) *gitStub {
 	return &gitStub{dir: dir}
 }
 
-func (g *gitStub) Name() string                                           { return "git" }
-func (g *gitStub) Version() string                                        { return "0.1.0" }
-func (g *gitStub) Dependencies() []string                                 { return []string{"db"} }
+func (g *gitStub) Name() string           { return "git" }
+func (g *gitStub) Version() string        { return "0.1.0" }
+func (g *gitStub) Dependencies() []string { return []string{"db"} }
 
 func (g *gitStub) Init(ctx *kernel.Context, config json.RawMessage) error { return nil }
 func (g *gitStub) Start(ctx *kernel.Context) error                        { return os.MkdirAll(g.dir, 0755) }

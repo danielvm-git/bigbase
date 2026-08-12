@@ -67,7 +67,7 @@ max_retries = 2
 	deployID := created["id"].(string)
 
 	// Wait for deploy to finish (success or fail)
-	deadline := time.Now().Add(10 * time.Second)
+	deadline := time.Now().Add(30 * time.Second) // generous under -race scheduling
 	var status string
 	for time.Now().Before(deadline) {
 		err := database.QueryRowContext(context.Background(), "SELECT status FROM deployments WHERE id = ?", deployID).Scan(&status)
@@ -110,5 +110,3 @@ max_retries = 2
 		t.Errorf("expected error message about start failure, got none")
 	}
 }
-
-
