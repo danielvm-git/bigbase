@@ -140,6 +140,10 @@ type Options struct {
 	EncryptionKey    []byte
 	EnvEncryptionKey string
 	AllowPlaintext   bool
+	// Secrets is the native SecretManager seam (e89s03) used for Project
+	// Environment resolution. Nil disables native resolution (legacy-only
+	// deployments still resolve through the Site compatibility layer).
+	Secrets SecretResolver
 	// CacheDir is the directory for build dependency archives (default: data/cache/deploy).
 	CacheDir string
 	// CacheMaxSize is the maximum cache size in bytes (default: 2 GiB).
@@ -218,7 +222,7 @@ func New(opts Options) *Deploy {
 	}
 	// Single owner of env resolution + redaction (issue #41). Both the build
 	// and runtime paths resolve through it, sharing one precedence definition.
-	d.envResolver = NewEnvResolver(d.db, d.envKey, d.logger, d.buildHome)
+	d.envResolver = NewEnvResolver(d.db, d.envKey, d.logger, d.buildHome, opts.Secrets)
 	cacheDir := opts.CacheDir
 	if cacheDir == "" {
 		cacheDir = "data/cache/deploy"
