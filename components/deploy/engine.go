@@ -646,7 +646,8 @@ func (d *Deploy) startApp(ctx context.Context, buildDir string, deploy *Deployme
 		Reserved:    reserved,
 	})
 	if err != nil {
-		d.logger.Error("resolve runtime environment failed", "deployment_id", deploy.ID)
+		d.logger.Error("resolve runtime environment failed", "deployment_id", deploy.ID, "error", err)
+		_, _ = d.db.ExecContext(context.Background(), "UPDATE deployments SET error_message = ? WHERE id = ?", err.Error(), deploy.ID)
 		d.updateStatus(deploy.ID, "failed")
 		return
 	}
@@ -659,10 +660,10 @@ func (d *Deploy) startApp(ctx context.Context, buildDir string, deploy *Deployme
 	stderr, _ := cmd.StderrPipe()
 
 	host := deploymentHost(d.publicDomain, repoName)
-	d.mu.Lock()
-	d.apps[deploy.ID] = &runningApp{cmd: cmd, port: deploy.Port, buildID: deploy.ID, host: host}
-	d.mu.Unlock()
 
+	// Start the child BEFORE publishing it in d.apps: Stop/drain only ever see
+	// apps whose Process is already populated, closing the cmd.Start vs
+	// cmd.Process.Pid read/write race under -race.
 	if err := cmd.Start(); err != nil {
 		d.logger.Error("start app", "id", deploy.ID, "error", err)
 		d.updateStatus(deploy.ID, "failed")
@@ -674,6 +675,11 @@ func (d *Deploy) startApp(ctx context.Context, buildDir string, deploy *Deployme
 		_, _ = d.db.ExecContext(context.Background(),
 			"UPDATE deployments SET pid = ? WHERE id = ?", pid, deploy.ID)
 	}
+
+	d.mu.Lock()
+	d.apps[deploy.ID] = &runningApp{cmd: cmd, port: deploy.Port, buildID: deploy.ID, host: host}
+	d.mu.Unlock()
+
 	go func() {
 		scanner := bufio.NewScanner(stdout)
 		for scanner.Scan() {
@@ -697,12 +703,13 @@ func (d *Deploy) startApp(ctx context.Context, buildDir string, deploy *Deployme
 
 	if err := cmd.Wait(); err != nil {
 		d.logger.Error("app exited", "id", deploy.ID, "error", err)
-		// The process was intentionally stopped or drained (redeploy/rollback),
-		// the stop path already recorded the terminal status. Do not let the
-		// Wait handler race that write with "failed" (redeploy drain flake).
-		if d.hasTerminalStopStatus(deploy.ID) {
+		// Intentional stops remove the app from d.apps (Stop/drain/rollback)
+		// or record a terminal DB status. In both cases the stop path owns the
+		// final status; do not race it with "failed".
+		if d.hasTerminalStopStatus(deploy.ID) || !d.hasRegisteredApp(deploy.ID) {
 			return
 		}
+		_, _ = d.db.ExecContext(context.Background(), "UPDATE deployments SET error_message = ? WHERE id = ?", err.Error(), deploy.ID)
 		d.appendDeployLog(deploy.ID, fmt.Sprintf("✗ App exited: %v", err))
 		d.updateStatus(deploy.ID, "failed")
 		// Do NOT unregister the host here — the host may be shared with another
@@ -720,6 +727,16 @@ func (d *Deploy) hasTerminalStopStatus(id string) bool {
 		return false
 	}
 	return status == "stopped" || status == "replaced"
+}
+
+// hasRegisteredApp reports whether the deployment is still in the running-app
+// registry. Stop, drain, and rollback remove it before/after killing the
+// process, which is the intentional-stop signal for the Wait handler.
+func (d *Deploy) hasRegisteredApp(id string) bool {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+	_, ok := d.apps[id]
+	return ok
 }
 func (d *Deploy) serveStatic(ctx context.Context, buildDir string, deploy *Deployment, repoName string) {
 	mux := http.NewServeMux()
