@@ -63,6 +63,7 @@ type Site struct {
 	GitRepoID        string          `json:"git_repo_id"`
 	ProductionBranch string          `json:"production_branch"`
 	RootPath         string          `json:"root_path"`
+	ProjectID        string          `json:"project_id,omitempty"`
 	DeployDefaults   *DeployDefaults `json:"deploy_defaults,omitempty"`
 	GitHubConnected  bool            `json:"github_connected,omitempty"`
 	LatestDeployment *Deployment     `json:"latest_deployment,omitempty"`
@@ -110,30 +111,37 @@ type CertInfoFunc func(ctx context.Context, domain string) (notAfter time.Time, 
 // routes immediately, without waiting for the next deployment.
 type ActivateDomainFunc func(ctx context.Context, siteID, domain string) error
 
+type ProjectProvisioner interface {
+	EnsureSiteProject(ctx context.Context, siteID, siteName string, orgID int64) (string, error)
+	MigrateSiteAttachments(ctx context.Context) error
+}
+
 type Sites struct {
-	db                DBer
-	logger            kernel.Logger
-	gitDir            string
-	triggerDeploy     DeployTrigger
-	deleteSiteCleanup DeleteSiteCleanupFunc
-	encryptionKey     []byte
-	certInfo          CertInfoFunc
-	unregisterHost    func(domain string)
-	activateDomain    ActivateDomainFunc
-	updateAuthPolicy  func(siteID string, policyJSON string)
-	updateCSP         func(siteID string, cspPolicy string)
-	verifyLim         *verifyLimiter
-	validateManifest  func([]byte) error
+	db                 DBer
+	logger             kernel.Logger
+	gitDir             string
+	triggerDeploy      DeployTrigger
+	deleteSiteCleanup  DeleteSiteCleanupFunc
+	encryptionKey      []byte
+	projectProvisioner ProjectProvisioner
+	certInfo           CertInfoFunc
+	unregisterHost     func(domain string)
+	activateDomain     ActivateDomainFunc
+	updateAuthPolicy   func(siteID string, policyJSON string)
+	updateCSP          func(siteID string, cspPolicy string)
+	verifyLim          *verifyLimiter
+	validateManifest   func([]byte) error
 }
 
 var _ kernel.Component = (*Sites)(nil)
 
 type Options struct {
-	DB                DBer
-	Logger            kernel.Logger
-	GitDir            string
-	TriggerDeploy     DeployTrigger
-	DeleteSiteCleanup DeleteSiteCleanupFunc
+	DB                 DBer
+	Logger             kernel.Logger
+	GitDir             string
+	TriggerDeploy      DeployTrigger
+	DeleteSiteCleanup  DeleteSiteCleanupFunc
+	ProjectProvisioner ProjectProvisioner
 	// EncryptionKey is the canonical, already-validated root key from the
 	// composition root. EnvEncryptionKey remains an explicit legacy/test input.
 	EncryptionKey    []byte
@@ -195,26 +203,34 @@ func NewWithError(opts Options) (*Sites, error) {
 		key = append([]byte(nil), key...)
 	}
 	return &Sites{
-		db:                opts.DB,
-		logger:            logger,
-		gitDir:            gitDir,
-		triggerDeploy:     opts.TriggerDeploy,
-		deleteSiteCleanup: opts.DeleteSiteCleanup,
-		encryptionKey:     key,
-		certInfo:          opts.CertInfo,
-		unregisterHost:    opts.UnregisterHost,
-		activateDomain:    opts.ActivateDomain,
-		updateAuthPolicy:  opts.UpdateAuthPolicy,
-		updateCSP:         opts.UpdateCSP,
-		verifyLim:         newVerifyLimiter(5 * time.Second),
-		validateManifest:  opts.ValidateManifest,
+		db:                 opts.DB,
+		logger:             logger,
+		gitDir:             gitDir,
+		triggerDeploy:      opts.TriggerDeploy,
+		deleteSiteCleanup:  opts.DeleteSiteCleanup,
+		encryptionKey:      key,
+		projectProvisioner: opts.ProjectProvisioner,
+		certInfo:           opts.CertInfo,
+		unregisterHost:     opts.UnregisterHost,
+		activateDomain:     opts.ActivateDomain,
+		updateAuthPolicy:   opts.UpdateAuthPolicy,
+		updateCSP:          opts.UpdateCSP,
+		verifyLim:          newVerifyLimiter(5 * time.Second),
+		validateManifest:   opts.ValidateManifest,
 	}, nil
 }
 
-func (s *Sites) Name() string           { return "sites" }
-func (s *Sites) DB() DBer               { return s.db }
-func (s *Sites) Version() string        { return version }
-func (s *Sites) Dependencies() []string { return []string{"db"} }
+func (s *Sites) Name() string    { return "sites" }
+func (s *Sites) DB() DBer        { return s.db }
+func (s *Sites) Version() string { return version }
+func (s *Sites) Dependencies() []string {
+	if s.projectProvisioner != nil {
+		return []string{"projects"}
+	}
+	// Legacy/test constructors without the optional project seam retain the
+	// original db-only lifecycle; production composition injects the seam.
+	return []string{"db"}
+}
 
 func (s *Sites) Init(ctx *kernel.Context, config json.RawMessage) error {
 	return nil
@@ -226,6 +242,8 @@ func (s *Sites) Start(ctx *kernel.Context) error {
 	}
 	_ = s.db.Migrate(`ALTER TABLE sites ADD COLUMN auth_policy TEXT NOT NULL DEFAULT '{}'`)
 	_ = s.db.Migrate(`ALTER TABLE sites ADD COLUMN org_id INTEGER NOT NULL DEFAULT 0`)
+	_ = s.db.Migrate(`ALTER TABLE sites ADD COLUMN project_id TEXT REFERENCES projects(id)`)
+	_ = s.db.Migrate(`CREATE INDEX IF NOT EXISTS idx_sites_project_id ON sites(project_id)`)
 	// Reassign orphaned sites (org_id=0 from the DEFAULT) to the admin's
 	// default_org_id so they become visible under org-scoped queries.
 	if _, err := s.db.Exec(`
@@ -241,6 +259,11 @@ func (s *Sites) Start(ctx *kernel.Context) error {
 	}
 	if err := s.migrateEnvVars(); err != nil {
 		return fmt.Errorf("migrate site_env_vars: %w", err)
+	}
+	if s.projectProvisioner != nil {
+		if err := s.projectProvisioner.MigrateSiteAttachments(context.Background()); err != nil {
+			return fmt.Errorf("migrate site project attachments: %w", err)
+		}
 	}
 	_ = s.db.Migrate(`ALTER TABLE sites ADD COLUMN deploy_defaults TEXT NOT NULL DEFAULT '{}'`)
 	s.logger.Info("sites component ready")
@@ -390,7 +413,7 @@ func (s *Sites) ListSites(ctx context.Context) ([]Site, error) {
 			rows, err = s.db.QueryContext(ctx, `
 				SELECT s.id, s.name, s.git_repo_id, s.production_branch, s.root_path,
 					COALESCE(NULLIF(s.github_full_name, ''), g.name, s.name),
-					s.auth_policy
+					s.auth_policy, s.project_id
 				FROM sites s
 				LEFT JOIN git_repos g ON g.id = s.git_repo_id
 				WHERE s.org_id = ? OR s.org_id = 0
@@ -399,7 +422,7 @@ func (s *Sites) ListSites(ctx context.Context) ([]Site, error) {
 			rows, err = s.db.QueryContext(ctx, `
 				SELECT s.id, s.name, s.git_repo_id, s.production_branch, s.root_path,
 					COALESCE(NULLIF(s.github_full_name, ''), g.name, s.name),
-					s.auth_policy
+					s.auth_policy, s.project_id
 				FROM sites s
 				LEFT JOIN git_repos g ON g.id = s.git_repo_id
 				WHERE s.org_id = ?
@@ -410,7 +433,7 @@ func (s *Sites) ListSites(ctx context.Context) ([]Site, error) {
 		rows, err = s.db.QueryContext(ctx, `
 			SELECT s.id, s.name, s.git_repo_id, s.production_branch, s.root_path,
 				COALESCE(NULLIF(s.github_full_name, ''), g.name, s.name),
-				s.auth_policy
+					s.auth_policy, s.project_id
 			FROM sites s
 			LEFT JOIN git_repos g ON g.id = s.git_repo_id
 			ORDER BY s.name`)
@@ -424,9 +447,13 @@ func (s *Sites) ListSites(ctx context.Context) ([]Site, error) {
 	for rows.Next() {
 		var site Site
 		var authPolicyStr string
+		var projectID sql.NullString
 		if err := rows.Scan(&site.ID, &site.Name, &site.GitRepoID, &site.ProductionBranch,
-			&site.RootPath, &site.FullName, &authPolicyStr); err != nil {
+			&site.RootPath, &site.FullName, &authPolicyStr, &projectID); err != nil {
 			continue
+		}
+		if projectID.Valid {
+			site.ProjectID = projectID.String
 		}
 		if site.FullName != "" {
 			site.GitHubConnected = strings.Contains(site.FullName, "/")
@@ -617,12 +644,13 @@ func (s *Sites) GetSite(ctx context.Context, id string) (*Site, error) {
 	var repoName string
 	var authPolicyStr string
 	var deployDefaultsStr string
+	var projectID sql.NullString
 	err := s.db.QueryRowContext(ctx, `
 		SELECT s.id, s.name, s.git_repo_id, s.production_branch, s.root_path, s.github_full_name,
-			COALESCE(g.name, ''), s.auth_policy, s.deploy_defaults
+			COALESCE(g.name, ''), s.auth_policy, s.deploy_defaults, s.project_id
 		FROM sites s LEFT JOIN git_repos g ON g.id = s.git_repo_id
 		WHERE s.id = ? OR s.git_repo_id = ?`, id, id).
-		Scan(&site.ID, &site.Name, &site.GitRepoID, &site.ProductionBranch, &site.RootPath, &site.FullName, &repoName, &authPolicyStr, &deployDefaultsStr)
+		Scan(&site.ID, &site.Name, &site.GitRepoID, &site.ProductionBranch, &site.RootPath, &site.FullName, &repoName, &authPolicyStr, &deployDefaultsStr, &projectID)
 	if err != nil {
 		err = s.db.QueryRowContext(ctx,
 			"SELECT id, name, default_branch FROM git_repos WHERE id = ?", id).
@@ -634,6 +662,9 @@ func (s *Sites) GetSite(ctx context.Context, id string) (*Site, error) {
 		site.FullName = site.Name
 		site.RootPath = "./"
 	} else {
+		if projectID.Valid {
+			site.ProjectID = projectID.String
+		}
 		if authPolicyStr != "" {
 			_ = json.Unmarshal([]byte(authPolicyStr), &site.AuthPolicy)
 		}
@@ -712,6 +743,8 @@ func (s *Sites) createSite(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var projectID sql.NullString
+	_ = s.db.QueryRowContext(r.Context(), `SELECT project_id FROM sites WHERE id = ?`, id).Scan(&projectID)
 	site := Site{
 		ID:               id,
 		Name:             name,
@@ -719,6 +752,7 @@ func (s *Sites) createSite(w http.ResponseWriter, r *http.Request) {
 		GitRepoID:        req.GitRepoID,
 		ProductionBranch: req.ProductionBranch,
 		RootPath:         req.RootPath,
+		ProjectID:        projectID.String,
 		DeployDefaults:   req.DeployDefaults,
 		GitHubConnected:  req.GitHubFullName != "",
 	}
@@ -799,6 +833,12 @@ func (s *Sites) insertSite(ctx context.Context, gitRepoID, name, branch, rootPat
 		id, name, gitRepoID, branch, rootPath, githubFullName, now, orgID, deployDefaultsJSON)
 	if err != nil {
 		return "", "", fmt.Errorf("insert site: %w", err)
+	}
+	if s.projectProvisioner != nil {
+		if _, err := s.projectProvisioner.EnsureSiteProject(ctx, id, name, orgID); err != nil {
+			_, _ = s.db.ExecContext(ctx, `DELETE FROM sites WHERE id = ?`, id)
+			return "", "", fmt.Errorf("attach site project: %w", err)
+		}
 	}
 
 	return id, name, nil
