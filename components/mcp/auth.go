@@ -23,11 +23,11 @@ const ScopeProvision = "mcp:provision"
 
 // ScopeSecretsRead is the narrow scope required for secret metadata and
 // explicit value-read tools (list/get/read value). It never grants mutation.
-const ScopeSecretsRead = "mcp:secrets:read"
+const ScopeSecretsRead = "mcp:secrets:read" // #nosec G101 -- authorization scope identifier, not a credential
 
 // ScopeSecretsWrite is the narrow scope required for secret mutation tools
 // (set/delete). It is enforced independently per tool on both transports.
-const ScopeSecretsWrite = "mcp:secrets:write"
+const ScopeSecretsWrite = "mcp:secrets:write" // #nosec G101 -- authorization scope identifier, not a credential
 
 // OrgKeyAuthenticator resolves bb_ organization API keys for MCP HTTP auth.
 // Implemented by auth at the composition root (main.go); MCP does not import auth.
