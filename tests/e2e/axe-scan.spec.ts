@@ -30,6 +30,7 @@ const ROUTES = [
   { path: '/admin/#/monitoring', name: 'Monitoring' },
   { path: '/admin/#/events', name: 'Events' },
   { path: '/admin/#/realtime', name: 'Realtime' },
+  { path: '/admin/#/secrets', name: 'Project Secrets' },
   { path: '/admin/#/settings', name: 'Settings' },
   { path: '/admin/#/login', name: 'Login (public)' },
   // Public (Go-served) pages — guard against the landing/docs style drift
