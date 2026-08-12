@@ -51,6 +51,15 @@ func (d *Deploy) EnvResolver() *EnvResolver {
 	return d.envResolver
 }
 
+// manifestEnv returns the manifest [env] map, or nil when no manifest is
+// present. Safe to pass directly to ResolveOptions.ManifestEnv.
+func manifestEnv(m *Manifest) map[string]string {
+	if m == nil {
+		return nil
+	}
+	return m.Env
+}
+
 // buildCmdEnv is the platform build-time baseline (layer 1 of Resolve's
 // precedence): os.Environ plus build home/cache tuning. Site env vars are
 // layered on top via EnvResolver.Resolve.

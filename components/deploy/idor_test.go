@@ -289,8 +289,6 @@ func TestIDOR_MultipleDeploymentsSameOrg(t *testing.T) {
 	}
 }
 
-
-
 func TestIDOR_StatsScopedByOrg(t *testing.T) {
 	dep, handler, database, _ := setupDeploy(t)
 	_ = dep

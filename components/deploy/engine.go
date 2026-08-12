@@ -407,9 +407,12 @@ func (d *Deploy) getCommitSHA(buildDir string) (string, error) {
 }
 func (d *Deploy) buildApp(ctx context.Context, deployID, siteID, repoID, branch, buildDir string, appType AppType, manifest *Manifest) error {
 	// Resolve the build environment through EnvResolver (issue #41): the
-	// single owner of precedence (platform defaults → site env vars) and of
-	// which keys are secrets (for redacting captured build output).
-	resolved, err := d.envResolver.Resolve(ctx, siteID, ScopeBuild)
+	// single owner of precedence (platform defaults → manifest → project →
+	// site) and of which keys are secrets (for redacting captured build
+	// output). Manifest [env] is a build-scope layer below secrets.
+	resolved, err := d.envResolver.ResolveOptions(ctx, siteID, ScopeBuild, ResolveOptions{
+		ManifestEnv: manifestEnv(manifest),
+	})
 	if err != nil {
 		return fmt.Errorf("resolve build-time env vars: %w", err)
 	}
@@ -617,36 +620,40 @@ func (d *Deploy) startApp(ctx context.Context, buildDir string, deploy *Deployme
 	// (npm exec → node, python → uvicorn, etc.) without leaking orphans.
 	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
 
-	resolvedRuntime, err := d.envResolver.Resolve(ctx, deploy.SiteID, ScopeRuntime)
-	if err != nil {
-		d.logger.Error("resolve runtime environment failed", "deployment_id", deploy.ID)
-		d.updateStatus(deploy.ID, "failed")
-		return
-	}
-	cmd.Env = append(os.Environ(), fmt.Sprintf("PORT=%d", deploy.Port))
-	if resolvedRuntime != nil {
-		cmd.Env = append(cmd.Env, resolvedRuntime.Environ...)
-	}
+	// Reserved runtime values are owned by the platform and always win: the
+	// allocated port, the writable runtime directory, and the native DB
+	// connection. They are applied as the final resolution layer so neither a
+	// manifest value nor a secret can hijack them.
+	reserved := []string{fmt.Sprintf("PORT=%d", deploy.Port)}
 
 	// Create and inject writable persistent directory for runtime data.
 	writableDir := filepath.Join(d.buildsDir, "..", "writable", deploy.ID)
 	if err := os.MkdirAll(writableDir, 0755); err != nil {
 		d.logger.Warn("create writable dir", "deployID", deploy.ID)
 	} else {
-		cmd.Env = append(cmd.Env, "WRITABLE_DIR="+writableDir)
+		reserved = append(reserved, "WRITABLE_DIR="+writableDir)
 	}
 
 	// Inject native DB connection (DB_PATH for SQLite, DATABASE_URL for Postgres).
-	if native := d.nativeDBEnv(); len(native) > 0 {
-		cmd.Env = append(cmd.Env, native...)
-	}
+	reserved = append(reserved, d.nativeDBEnv()...)
 
-	// Inject manifest environment variables into the running process.
-	if manifest != nil {
-		for k, v := range manifest.Env {
-			cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", k, v))
-		}
+	// Resolve the complete runtime environment through the single resolver:
+	// platform baseline → manifest config → Project secrets → Site
+	// compatibility values → reserved runtime values. Manifest env must NOT be
+	// appended after resolution — that would let repo config override secrets.
+	resolvedRuntime, err := d.envResolver.ResolveOptions(ctx, deploy.SiteID, ScopeRuntime, ResolveOptions{
+		ManifestEnv: manifestEnv(manifest),
+		Reserved:    reserved,
+	})
+	if err != nil {
+		d.logger.Error("resolve runtime environment failed", "deployment_id", deploy.ID)
+		d.updateStatus(deploy.ID, "failed")
+		return
 	}
+	// resolvedRuntime.Environ already contains the platform baseline; replacing
+	// cmd.Env wholesale (instead of appending over os.Environ) keeps precedence
+	// deterministic and removes duplicate entries.
+	cmd.Env = resolvedRuntime.Environ
 
 	stdout, _ := cmd.StdoutPipe()
 	stderr, _ := cmd.StderrPipe()
@@ -690,12 +697,29 @@ func (d *Deploy) startApp(ctx context.Context, buildDir string, deploy *Deployme
 
 	if err := cmd.Wait(); err != nil {
 		d.logger.Error("app exited", "id", deploy.ID, "error", err)
+		// The process was intentionally stopped or drained (redeploy/rollback),
+		// the stop path already recorded the terminal status. Do not let the
+		// Wait handler race that write with "failed" (redeploy drain flake).
+		if d.hasTerminalStopStatus(deploy.ID) {
+			return
+		}
 		d.appendDeployLog(deploy.ID, fmt.Sprintf("✗ App exited: %v", err))
 		d.updateStatus(deploy.ID, "failed")
 		// Do NOT unregister the host here — the host may be shared with another
 		// running deployment for the same site. Host cleanup is handled by
 		// stopDeployment and drainDeployment.
 	}
+}
+
+// hasTerminalStopStatus reports whether the deployment was already recorded as
+// intentionally stopped or replaced by a stop/drain/rollback path.
+func (d *Deploy) hasTerminalStopStatus(id string) bool {
+	var status string
+	if err := d.db.QueryRowContext(context.Background(),
+		"SELECT status FROM deployments WHERE id = ?", id).Scan(&status); err != nil {
+		return false
+	}
+	return status == "stopped" || status == "replaced"
 }
 func (d *Deploy) serveStatic(ctx context.Context, buildDir string, deploy *Deployment, repoName string) {
 	mux := http.NewServeMux()

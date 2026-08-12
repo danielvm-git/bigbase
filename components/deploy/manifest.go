@@ -85,7 +85,7 @@ var validFrameworks = map[string]bool{
 	"static-sidecar": true,
 	"go":             true,
 	"python":         true,
-	"node":      true,
+	"node":           true,
 }
 
 // manifestToAppType converts a manifest framework string to an AppType.

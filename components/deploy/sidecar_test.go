@@ -110,5 +110,3 @@ max_retries = 2
 		t.Errorf("expected error message about start failure, got none")
 	}
 }
-
-

@@ -8,8 +8,6 @@ import (
 	"strings"
 )
 
-
-
 func marshalPassthroughPaths(paths []string) string {
 	if len(paths) == 0 {
 		return ""
