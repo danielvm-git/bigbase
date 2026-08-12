@@ -120,3 +120,9 @@ func (p *PostgresDB) Migrate(migration string) error {
 	}
 	return nil
 }
+
+// BeginTx starts a database transaction. It is the PostgreSQL driver's
+// implementation of the optional kernel.TxBeginner seam.
+func (p *PostgresDB) BeginTx(ctx context.Context, opts *sql.TxOptions) (*sql.Tx, error) {
+	return p.sqlDB.BeginTx(ctx, opts)
+}
