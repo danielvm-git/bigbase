@@ -1,3 +1,34 @@
+# [2.89.0](https://github.com/danielvm-git/bigbase/compare/v2.88.3...v2.89.0) (2026-08-12)
+
+
+### Bug Fixes
+
+* **ci:** sync npm peer dependency lockfile ([a52d46f](https://github.com/danielvm-git/bigbase/commit/a52d46f1dfeb449afcfbc96817c3a415d44170c4))
+* **deploy:** close start/Stop and Wait race windows under -race ([a00005b](https://github.com/danielvm-git/bigbase/commit/a00005b48184fa2c016f17bc03d73a478b018bdf))
+* **mcp:** mark scope identifiers as non-credentials ([71e3a10](https://github.com/danielvm-git/bigbase/commit/71e3a10abcdf8412164f60b34f92fba8819068ef))
+
+
+### Features
+
+* **e89:** merge e89s01 security foundation ([35b7f4c](https://github.com/danielvm-git/bigbase/commit/35b7f4c5dc6228334861ca993d611be56c559f3b))
+* **e89:** merge e89s02 project foundations ([b3a6b42](https://github.com/danielvm-git/bigbase/commit/b3a6b422b7810d3232c5865b81b0fe22838c8d98))
+* **e89:** merge e89s03 encrypted secret store ([b92ae08](https://github.com/danielvm-git/bigbase/commit/b92ae082edecb60c11bfb04fca2cc1798fa3dac0))
+* **e89:** merge e89s04 secret REST policy surface ([869dbd2](https://github.com/danielvm-git/bigbase/commit/869dbd24034b2096ae9abbda3cdc36f20bacf5c0))
+* **e89:** merge e89s05 project secrets UI ([ea25ce1](https://github.com/danielvm-git/bigbase/commit/ea25ce1ced8afbfe134f7c40fb298167176e4ac1))
+* **e89:** merge e89s06 deployment resolution ([4d89a62](https://github.com/danielvm-git/bigbase/commit/4d89a621a8b469bfc79f1690d154294e981acf35))
+* **e89:** merge e89s07 MCP secret tools ([9aff623](https://github.com/danielvm-git/bigbase/commit/9aff6231ceef178c542b2655dbb8ee8f2608da9e))
+* **e89:** native secret manager — all seven stories ([d274f75](https://github.com/danielvm-git/bigbase/commit/d274f75973cc0fd47cd32a7ecae65ad299a65105))
+* **e89s01:** harden site secret delivery ([2617665](https://github.com/danielvm-git/bigbase/commit/2617665c5b333b41358d130afc6c1b5599e6bbcc))
+* **e89s02:** add organization projects and environments ([b67fa0b](https://github.com/danielvm-git/bigbase/commit/b67fa0b7494dc302be5937cc702d407f8640bae7))
+* **e89s02:** wire project routes and browser coverage ([da75a21](https://github.com/danielvm-git/bigbase/commit/da75a214270efb69bd12f90e2ff2b83466486aec))
+* **e89s03:** add versioned encrypted secret store ([b445e2e](https://github.com/danielvm-git/bigbase/commit/b445e2edcd817f52e35bca65f700cf7813e04752))
+* **e89s04:** add secret REST policy surface ([afd15fb](https://github.com/danielvm-git/bigbase/commit/afd15fb07906f73ecdabc2134e047290ef50b038))
+* **e89s04:** wire secret manager and REST routes ([a2da4d7](https://github.com/danielvm-git/bigbase/commit/a2da4d7621ab5bf49ebef4f4cf112fa802a02dc5))
+* **e89s05:** add project secrets admin UI ([7037c75](https://github.com/danielvm-git/bigbase/commit/7037c7556f3a76dfbb382be3e75429047f343577))
+* **e89s06:** unify deployment resolution and legacy migration ([ce7625f](https://github.com/danielvm-git/bigbase/commit/ce7625fcae4b10da04b4138a7cd33cd1f6abed88))
+* **e89s06:** wire secret resolver into deploy ([4e0a828](https://github.com/danielvm-git/bigbase/commit/4e0a828ae11507799d959cff117e23941f0c72ba))
+* **e89s07:** add scoped MCP secret tools ([aa487c2](https://github.com/danielvm-git/bigbase/commit/aa487c27552a78acdb0f9dcd3f4bcc78d4a586c6))
+
 ## [2.88.3](https://github.com/danielvm-git/bigbase/compare/v2.88.2...v2.88.3) (2026-08-12)
 
 
