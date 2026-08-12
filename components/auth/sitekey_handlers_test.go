@@ -240,7 +240,7 @@ func TestSiteKeyHandlers(t *testing.T) {
 	})
 }
 
-		func TestSiteKeyInputValidation(t *testing.T) {
+func TestSiteKeyInputValidation(t *testing.T) {
 	_, _, protected, siteID, token := setupAuthWithSite(t)
 
 	tests := []struct {
