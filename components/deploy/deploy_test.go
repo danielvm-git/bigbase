@@ -85,6 +85,34 @@ func waitForDeploymentTerminal(t *testing.T, handler http.Handler, depID string,
 	}
 }
 
+// waitForHostRegistration polls until the host maps to wantPort (or any port
+// when wantPort < 0) or the deadline passes. Host registration
+// (RegisterDeploymentHost) runs synchronously right after the "running"
+// status update inside the deployment goroutine — a test that reads the
+// status from the DB can observe "running" microseconds before the in-memory
+// host map lands, so a one-shot getPort check after waitForDeploymentTerminal
+// is flaky. Poll, mirroring the status waits. (e51s04 CI gate failure:
+// TestRedeployReplacesPrevious flaked 1-in-5.)
+func waitForHostRegistration(t *testing.T, reg *mockHostRegistry, host string, wantPort int, timeout time.Duration) int {
+	t.Helper()
+	deadline := time.Now().Add(timeout)
+	for {
+		got, ok := reg.getPort(host)
+		if ok && (wantPort < 0 || got == wantPort) {
+			return got
+		}
+		if time.Now().After(deadline) {
+			break
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+	got, ok := reg.getPort(host)
+	if !ok {
+		t.Fatalf("host %s not registered within %v", host, timeout)
+	}
+	return got
+}
+
 // waitForDeployStatus polls until the deployment reaches wantStatus.
 // Drain runs asynchronously (go drainDeployment), so tests must synchronize
 // on the transition rather than asserting immediately after the new deploy
@@ -1861,13 +1889,7 @@ func TestRedeployReplacesPrevious(t *testing.T) {
 	}
 
 	host := "redeploy-test.test.click"
-	gotPort, ok := hostReg.getPort(host)
-	if !ok {
-		t.Fatal("host not registered after first deploy")
-	}
-	if gotPort != int(port1) {
-		t.Fatalf("after first deploy host port = %d, want %d", gotPort, int(port1))
-	}
+	_ = waitForHostRegistration(t, hostReg, host, int(port1), 5*time.Second)
 
 	// ── Second deployment (same repo, same site) ──
 	buf.Reset()

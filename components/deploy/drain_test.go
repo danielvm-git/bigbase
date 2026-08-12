@@ -157,10 +157,7 @@ func TestDrainFailedDeployment(t *testing.T) {
 	verifyDeployStatus(t, handler, dep1.ID, "running")
 
 	host := "drain-fail-old.test.click"
-	firstPort, hostOK := hostReg.getPort(host)
-	if !hostOK {
-		t.Fatal("host not registered after first deployment")
-	}
+	firstPort := waitForHostRegistration(t, hostReg, host, -1, 5*time.Second)
 
 	// Second deployment: Go process that exits immediately → health check fails
 	// Use the same site ID so collectPreviousDeployments finds the first one.
@@ -202,10 +199,7 @@ func main() {
 	verifyDeployStatus(t, handler, dep1.ID, "running")
 
 	// Host should still point to first deployment's port
-	gotPort, hostOK := hostReg.getPort(host)
-	if !hostOK {
-		t.Fatal("host was unregistered after failed deployment")
-	}
+	gotPort := waitForHostRegistration(t, hostReg, host, firstPort, 5*time.Second)
 	if gotPort != firstPort {
 		t.Fatalf("host port changed after failed deployment: got %d, want %d", gotPort, firstPort)
 	}
@@ -269,10 +263,7 @@ func TestDrainMultipleDeployments(t *testing.T) {
 
 	// Host should point to last deployment
 	host := "drain-multi-test.test.click"
-	gotPort, ok := hostReg.getPort(host)
-	if !ok {
-		t.Fatal("host not registered after third deploy")
-	}
+	gotPort := waitForHostRegistration(t, hostReg, host, -1, 5*time.Second)
 	// Verify host points to last deployment by checking its port
 	getReq := httptest.NewRequest("GET", "/api/deploy/"+lastID, nil)
 	getW := httptest.NewRecorder()
