@@ -2715,3 +2715,21 @@ bugs:
     regression_guards:
       - ".githooks/pre-commit runs ctxo index (verified: 8s, index refreshed)"
       - "search_symbols(pattern=...) returns symbols (verified: useDocumentTitle found)"
+
+  - id: BUG-2026-08-12-deploy-redeploy-flake
+    date: "2026-08-12"
+    severity: medium
+    priority: high
+    scope: deploy
+    summary: "TestRedeployReplacesPrevious flaky (1-in-5): host not registered after first deploy — DB-visible running status races in-memory host registration in the deployment goroutine"
+    file: specs/bugs/BUG-2026-08-12-deploy-redeploy-flake.md
+    status: fixed
+    audit_source: fix-bug-e51s04-2026-08-12
+    files_changed:
+      - components/deploy/deploy_test.go
+      - components/deploy/drain_test.go
+    approach: "waitForHostRegistration poll helper (mirrors status-polling); applied to the one-shot check in TestRedeployReplacesPrevious + same defect class in drain_test.go 160/205/272."
+    risk_level: low
+    regression_guards:
+      - "go test ./components/deploy/ -run TestRedeployReplacesPrevious -count=15 (all pass)"
+      - "go test ./components/deploy/ -run 'TestDrain|TestRedeploy' -count=10 (all pass)"
