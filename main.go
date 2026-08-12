@@ -406,6 +406,7 @@ func startProxy() {
 		HostRouter:     p,
 		EncryptionKey:  encryptionKey,
 		AllowPlaintext: allowPlaintext,
+		Secrets:        secretsComp,
 		DBDriver:       dbDriverVal,
 		DBDSN:          effectiveDSN,
 	})
