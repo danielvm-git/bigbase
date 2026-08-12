@@ -34,10 +34,10 @@ type DBer = kernel.DBer
 type AppType string
 
 const (
-	AppNode   AppType = "node"
-	AppGo     AppType = "go"
-	AppPython AppType = "python"
-	AppPHP    AppType = "php"
+	AppNode          AppType = "node"
+	AppGo            AppType = "go"
+	AppPython        AppType = "python"
+	AppPHP           AppType = "php"
 	AppStatic        AppType = "static"
 	AppStaticSidecar AppType = "static-sidecar"
 )
@@ -126,16 +126,20 @@ type Deploy struct {
 var _ kernel.Component = (*Deploy)(nil)
 
 type Options struct {
-	DB               DBer
-	Logger           kernel.Logger
-	BuildsDir        string
-	GitDir           string
-	BuildHome        string
-	BasePort         int
-	PublicDomain     string
-	UseHTTPS         bool
-	HostRouter       DeploymentHostRegistry
+	DB           DBer
+	Logger       kernel.Logger
+	BuildsDir    string
+	GitDir       string
+	BuildHome    string
+	BasePort     int
+	PublicDomain string
+	UseHTTPS     bool
+	HostRouter   DeploymentHostRegistry
+	// EncryptionKey is the canonical, already-validated root key. The legacy
+	// EnvEncryptionKey is retained only for explicit migration/test inputs.
+	EncryptionKey    []byte
 	EnvEncryptionKey string
+	AllowPlaintext   bool
 	// CacheDir is the directory for build dependency archives (default: data/cache/deploy).
 	CacheDir string
 	// CacheMaxSize is the maximum cache size in bytes (default: 2 GiB).
@@ -180,6 +184,11 @@ func New(opts Options) *Deploy {
 	if strings.TrimSpace(opts.PublicDomain) != "" {
 		useHTTPS = true
 	}
+	envKey := opts.EncryptionKey
+	if len(envKey) == 0 && opts.EnvEncryptionKey != "" {
+		envKey, _ = parseEnvEncryptionKey(opts.EnvEncryptionKey)
+	}
+
 	drainTimeout := opts.DrainTimeout
 	if drainTimeout <= 0 {
 		drainTimeout = 30 * time.Second
@@ -204,11 +213,8 @@ func New(opts Options) *Deploy {
 		dbDriver:       opts.DBDriver,
 		dbDSN:          opts.DBDSN,
 	}
-	envKey, envKeyErr := parseEnvEncryptionKey(opts.EnvEncryptionKey)
-	d.envKey = envKey
-	if envKeyErr != nil {
-		// Encryption disabled — warn so operators notice the misconfiguration.
-		d.logger.Warn("env encryption key invalid — env vars stored without encryption", "error", envKeyErr)
+	if len(envKey) > 0 {
+		d.envKey = append([]byte(nil), envKey...)
 	}
 	// Single owner of env resolution + redaction (issue #41). Both the build
 	// and runtime paths resolve through it, sharing one precedence definition.
@@ -238,9 +244,9 @@ func (d *Deploy) SetDiagnosisReader(r DeployDiagnosisReader) {
 func (d *Deploy) SetRelatedEventsReader(r DeployRelatedEventsReader) {
 	d.relatedEventsReader = r
 }
-func (d *Deploy) Name() string                  { return "deploy" }
-func (d *Deploy) Version() string               { return version }
-func (d *Deploy) Dependencies() []string        { return []string{"db", "git"} }
+func (d *Deploy) Name() string           { return "deploy" }
+func (d *Deploy) Version() string        { return version }
+func (d *Deploy) Dependencies() []string { return []string{"db", "git"} }
 
 func (d *Deploy) EventBus(bus *kernel.EventBus) {
 	d.eventBus = bus

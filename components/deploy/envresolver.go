@@ -141,13 +141,11 @@ func (r *EnvResolver) Resolve(ctx context.Context, siteID string, scope EnvScope
 	for rows.Next() {
 		var key, encrypted string
 		if err := rows.Scan(&key, &encrypted); err != nil {
-			r.logger.Warn("scan env var row", "error", err)
-			continue
+			return nil, fmt.Errorf("resolve site env vars")
 		}
 		value, err := envcrypto.Decrypt(r.envKey, encrypted)
 		if err != nil {
-			r.logger.Warn("decrypt env var", "key", key, "error", err)
-			continue
+			return nil, fmt.Errorf("resolve site env vars")
 		}
 		merged[key] = value
 		out.secretKeys[key] = struct{}{}

@@ -16,6 +16,11 @@ import (
 
 var validEnvKey = regexp.MustCompile(`^[A-Z][A-Z0-9_]*$`)
 
+const (
+	maxEnvKeyLen   = 128
+	maxEnvValueLen = 64 * 1024
+)
+
 // EnvVar represents a site-scoped environment variable.
 // Value is the plaintext in write/single-read paths.
 // ValuePreview is a masked preview (last 4 chars) returned by the list endpoint.
@@ -159,6 +164,10 @@ func (s *Sites) createEnvVar(w http.ResponseWriter, r *http.Request, siteID stri
 }
 
 func (s *Sites) updateEnvVar(w http.ResponseWriter, r *http.Request, siteID, key string) {
+	if len(key) > maxEnvKeyLen || !validEnvKey.MatchString(key) {
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid env var key"})
+		return
+	}
 	_, value, buildTime, isRuntime, ok := s.decodeEnvVarBody(w, r, false)
 	if !ok {
 		return
@@ -184,7 +193,6 @@ func (s *Sites) updateEnvVar(w http.ResponseWriter, r *http.Request, siteID, key
 		ID:           existingID,
 		SiteID:       siteID,
 		Key:          key,
-		Value:        value, // plaintext returned only on write response
 		ValuePreview: envcrypto.MaskValue(value),
 		IsBuildTime:  buildTime,
 		IsRuntime:    isRuntime,
@@ -205,7 +213,6 @@ func (s *Sites) deleteEnvVar(w http.ResponseWriter, r *http.Request, siteID, key
 	}
 	w.WriteHeader(http.StatusNoContent)
 }
-
 func (s *Sites) decodeEnvVarBody(w http.ResponseWriter, r *http.Request, requireKey bool) (key, value string, buildTime, isRuntime bool, ok bool) {
 	var body struct {
 		Key         string `json:"key"`
@@ -213,7 +220,7 @@ func (s *Sites) decodeEnvVarBody(w http.ResponseWriter, r *http.Request, require
 		IsBuildTime bool   `json:"is_build_time"`
 		IsRuntime   bool   `json:"is_runtime"`
 	}
-	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+	if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, maxEnvValueLen+maxEnvKeyLen+1024)).Decode(&body); err != nil {
 		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid JSON"})
 		return
 	}
@@ -221,8 +228,16 @@ func (s *Sites) decodeEnvVarBody(w http.ResponseWriter, r *http.Request, require
 		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "key is required"})
 		return
 	}
-	if requireKey && !validEnvKey.MatchString(body.Key) {
-		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "key must be uppercase alphanumeric + underscore, starting with a letter"})
+	if body.Key != "" && (len(body.Key) > maxEnvKeyLen || !validEnvKey.MatchString(body.Key)) {
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid env var key"})
+		return
+	}
+	if len(body.Value) > maxEnvValueLen {
+		kernel.WriteJSON(w, http.StatusRequestEntityTooLarge, map[string]string{"error": "env var value exceeds size limit"})
+		return
+	}
+	if !body.IsBuildTime && !body.IsRuntime {
+		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "at least one env var flag is required"})
 		return
 	}
 	return body.Key, body.Value, body.IsBuildTime, body.IsRuntime, true
@@ -245,7 +260,6 @@ func (s *Sites) insertEnvVar(ctx context.Context, siteID, key, plainValue, encry
 		ID:           id,
 		SiteID:       siteID,
 		Key:          key,
-		Value:        plainValue, // plaintext on create response
 		ValuePreview: envcrypto.MaskValue(plainValue),
 		IsBuildTime:  buildTime,
 		IsRuntime:    isRuntime,
@@ -314,38 +328,33 @@ func (s *Sites) ListSiteEnvVars(ctx context.Context, siteID string) ([]EnvVar, e
 
 // SetSiteEnvVars upserts multiple env vars for a site (for MCP tools).
 func (s *Sites) SetSiteEnvVars(ctx context.Context, siteID string, vars map[string]string) ([]EnvVar, error) {
+	if len(vars) > 1000 {
+		return nil, fmt.Errorf("env var batch exceeds size limit")
+	}
 	out := make([]EnvVar, 0, len(vars))
 	for key, value := range vars {
-		if !validEnvKey.MatchString(key) {
-			return nil, fmt.Errorf("invalid env var key %q: must be uppercase alphanumeric + underscore, starting with a letter", key)
+		if len(key) > maxEnvKeyLen || !validEnvKey.MatchString(key) || len(value) > maxEnvValueLen {
+			return nil, fmt.Errorf("invalid env var payload")
 		}
 		encrypted, err := envcrypto.Encrypt(s.encryptionKey, value)
 		if err != nil {
-			return nil, fmt.Errorf("encrypt env var %s: %w", key, err)
+			return nil, fmt.Errorf("encrypt env var")
 		}
 		existingID, lookupErr := s.lookupEnvVarID(ctx, siteID, key)
 		now := time.Now().UTC().Format(time.RFC3339)
 		if lookupErr == sql.ErrNoRows {
 			ev, insertErr := s.insertEnvVar(ctx, siteID, key, value, encrypted, false, true)
 			if insertErr != nil {
-				return nil, insertErr
+				return nil, fmt.Errorf("persist env vars")
 			}
 			out = append(out, ev)
 		} else if lookupErr != nil {
-			return nil, lookupErr
+			return nil, fmt.Errorf("lookup env vars")
 		} else {
 			if err := s.execUpdateEnvVar(ctx, siteID, key, encrypted, false, true, now); err != nil {
-				return nil, err
+				return nil, fmt.Errorf("persist env vars")
 			}
-			out = append(out, EnvVar{
-				ID:           existingID,
-				SiteID:       siteID,
-				Key:          key,
-				ValuePreview: envcrypto.MaskValue(value),
-				IsBuildTime:  false,
-				IsRuntime:    true,
-				UpdatedAt:    now,
-			})
+			out = append(out, EnvVar{ID: existingID, SiteID: siteID, Key: key, ValuePreview: envcrypto.MaskValue(value), IsRuntime: true, UpdatedAt: now})
 		}
 	}
 	return out, nil
@@ -368,3 +377,10 @@ func (s *Sites) DeleteSiteEnvVar(ctx context.Context, siteID, key string) error 
 func parseEncryptionKey(keyHex string) ([]byte, error) {
 	return envcrypto.ParseKey(keyHex)
 }
+
+// ParseRootEncryptionKey is the composition-root seam for canonical key
+// validation; the crypto primitive remains owned by envcrypto.
+func ParseRootEncryptionKey(raw string) ([]byte, error) { return envcrypto.ParseRootKey(raw) }
+
+// ParseLegacyEncryptionKey is an explicit migration/test-only input.
+func ParseLegacyEncryptionKey(raw string) ([]byte, error) { return envcrypto.ParseLegacyKey(raw) }

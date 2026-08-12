@@ -57,16 +57,16 @@ type AuthPolicy struct {
 }
 
 type Site struct {
-	ID               string            `json:"id"`
-	Name             string            `json:"name"`
-	FullName         string            `json:"full_name"`
-	GitRepoID        string            `json:"git_repo_id"`
-	ProductionBranch string            `json:"production_branch"`
-	RootPath         string            `json:"root_path"`
-	DeployDefaults   *DeployDefaults   `json:"deploy_defaults,omitempty"`
-	GitHubConnected  bool              `json:"github_connected,omitempty"`
-	LatestDeployment *Deployment       `json:"latest_deployment,omitempty"`
-	AuthPolicy       *AuthPolicy       `json:"auth_policy,omitempty"`
+	ID               string          `json:"id"`
+	Name             string          `json:"name"`
+	FullName         string          `json:"full_name"`
+	GitRepoID        string          `json:"git_repo_id"`
+	ProductionBranch string          `json:"production_branch"`
+	RootPath         string          `json:"root_path"`
+	DeployDefaults   *DeployDefaults `json:"deploy_defaults,omitempty"`
+	GitHubConnected  bool            `json:"github_connected,omitempty"`
+	LatestDeployment *Deployment     `json:"latest_deployment,omitempty"`
+	AuthPolicy       *AuthPolicy     `json:"auth_policy,omitempty"`
 }
 
 // DeployDefaults holds site-level deploy configuration that serves as the
@@ -134,7 +134,13 @@ type Options struct {
 	GitDir            string
 	TriggerDeploy     DeployTrigger
 	DeleteSiteCleanup DeleteSiteCleanupFunc
-	EnvEncryptionKey  string
+	// EncryptionKey is the canonical, already-validated root key from the
+	// composition root. EnvEncryptionKey remains an explicit legacy/test input.
+	EncryptionKey    []byte
+	EnvEncryptionKey string
+	// AllowPlaintext is test/development-only and must never be enabled by the
+	// production composition root.
+	AllowPlaintext bool
 	// CertInfo resolves live TLS certificate status for verified domains.
 	CertInfo CertInfoFunc
 	// UnregisterHost removes a proxy host route when a domain is deleted.
@@ -149,7 +155,23 @@ type Options struct {
 	ValidateManifest func([]byte) error
 }
 
+// New constructs Sites for compatibility with existing development callers.
+// Production composition must use NewWithError so missing encryption cannot
+// silently initialize a secret-bearing component.
 func New(opts Options) *Sites {
+	if len(opts.EncryptionKey) == 0 && opts.EnvEncryptionKey == "" {
+		// Legacy constructor is test/development compatibility only; production
+		// composition uses NewWithError with a canonical key.
+		opts.AllowPlaintext = true
+	}
+	s, _ := NewWithError(opts)
+	return s
+}
+
+// NewWithError validates encryption configuration before constructing Sites.
+// Plaintext mode is accepted only when explicitly enabled by a test/development
+// caller; canonical keys are supplied as already-validated bytes.
+func NewWithError(opts Options) (*Sites, error) {
 	logger := opts.Logger
 	if logger == nil {
 		logger = kernel.NoopLogger{}
@@ -158,8 +180,21 @@ func New(opts Options) *Sites {
 	if gitDir == "" {
 		gitDir = "data/git"
 	}
-	key, keyErr := parseEncryptionKey(opts.EnvEncryptionKey)
-	s := &Sites{
+	key := opts.EncryptionKey
+	if len(key) == 0 && opts.EnvEncryptionKey != "" {
+		var err error
+		key, err = parseEncryptionKey(opts.EnvEncryptionKey)
+		if err != nil {
+			return nil, fmt.Errorf("invalid legacy site encryption configuration")
+		}
+	}
+	if len(key) == 0 && !opts.AllowPlaintext {
+		return nil, fmt.Errorf("site encryption configuration is required")
+	}
+	if len(key) > 0 {
+		key = append([]byte(nil), key...)
+	}
+	return &Sites{
 		db:                opts.DB,
 		logger:            logger,
 		gitDir:            gitDir,
@@ -173,18 +208,13 @@ func New(opts Options) *Sites {
 		updateCSP:         opts.UpdateCSP,
 		verifyLim:         newVerifyLimiter(5 * time.Second),
 		validateManifest:  opts.ValidateManifest,
-	}
-	if keyErr != nil {
-		// Log immediately — encryption is silently disabled when the key is malformed.
-		logger.Warn("env encryption key invalid — env vars will be stored without encryption", "error", keyErr)
-	}
-	return s
+	}, nil
 }
 
-func (s *Sites) Name() string                  { return "sites" }
-func (s *Sites) DB() DBer                      { return s.db }
-func (s *Sites) Version() string               { return version }
-func (s *Sites) Dependencies() []string        { return []string{"db"} }
+func (s *Sites) Name() string           { return "sites" }
+func (s *Sites) DB() DBer               { return s.db }
+func (s *Sites) Version() string        { return version }
+func (s *Sites) Dependencies() []string { return []string{"db"} }
 
 func (s *Sites) Init(ctx *kernel.Context, config json.RawMessage) error {
 	return nil
@@ -627,12 +657,12 @@ func (s *Sites) GetSite(ctx context.Context, id string) (*Site, error) {
 
 func (s *Sites) createSite(w http.ResponseWriter, r *http.Request) {
 	var req struct {
-		Name             string           `json:"name"`
-		GitRepoID        string           `json:"git_repo_id"`
-		ProductionBranch string           `json:"production_branch"`
-		RootPath         string           `json:"root_path"`
-		GitHubFullName   string           `json:"github_full_name"`
-		DeployDefaults   *DeployDefaults  `json:"deploy_defaults"`
+		Name             string          `json:"name"`
+		GitRepoID        string          `json:"git_repo_id"`
+		ProductionBranch string          `json:"production_branch"`
+		RootPath         string          `json:"root_path"`
+		GitHubFullName   string          `json:"github_full_name"`
+		DeployDefaults   *DeployDefaults `json:"deploy_defaults"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		kernel.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json"})
@@ -1315,4 +1345,19 @@ func (s *Sites) setSiteDeployDefaults(w http.ResponseWriter, r *http.Request, id
 	}
 
 	kernel.WriteJSON(w, http.StatusOK, map[string]any{"status": "ok", "deploy_defaults": dd})
+}
+
+// AuthorizeSiteTarget verifies that an authenticated organization owns a Site.
+// It intentionally returns a generic error so MCP callers cannot enumerate
+// another organization's Site IDs.
+func (s *Sites) AuthorizeSiteTarget(ctx context.Context, siteID string, orgID int64) error {
+	if siteID == "" || orgID <= 0 {
+		return fmt.Errorf("site authorization denied")
+	}
+	var exists int
+	err := s.db.QueryRowContext(ctx, "SELECT 1 FROM sites WHERE (id = ? OR git_repo_id = ?) AND org_id = ? LIMIT 1", siteID, siteID, orgID).Scan(&exists)
+	if err != nil {
+		return fmt.Errorf("site authorization denied")
+	}
+	return nil
 }
