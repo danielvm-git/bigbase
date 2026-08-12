@@ -55,7 +55,7 @@ func Dump(ctx context.Context, db DBer, w io.Writer) error {
 	}
 	_ = tableRows.Close()
 
-	if _, err := fmt.Fprintf(w, "-- BigBase SQLite dump %s\nPRAGMA foreign_keys=OFF;\nBEGIN TRANSACTION;\n\n",
+	if _, err := fmt.Fprintf(w, "-- BigBase SQLite dump %s;\nPRAGMA foreign_keys=OFF;\nBEGIN TRANSACTION;\n\n",
 		time.Now().UTC().Format(time.RFC3339)); err != nil {
 		return fmt.Errorf("write header: %w", err)
 	}

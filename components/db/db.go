@@ -65,9 +65,9 @@ func New(opts Options) *DB {
 	}
 }
 
-func (d *DB) Name() string                  { return "db" }
-func (d *DB) Version() string               { return version }
-func (d *DB) Dependencies() []string        { return nil }
+func (d *DB) Name() string           { return "db" }
+func (d *DB) Version() string        { return version }
+func (d *DB) Dependencies() []string { return nil }
 
 func (d *DB) Init(_ *kernel.Context, _ json.RawMessage) error {
 	if d.driver == DriverSQLite && d.dsn == "" {
@@ -176,4 +176,10 @@ func (d *DB) Migrate(migration string) error {
 		return fmt.Errorf("migrate: %w", err)
 	}
 	return nil
+}
+
+// BeginTx starts a database transaction. It is the SQLite driver's
+// implementation of the optional kernel.TxBeginner seam.
+func (d *DB) BeginTx(ctx context.Context, opts *sql.TxOptions) (*sql.Tx, error) {
+	return d.db.BeginTx(ctx, opts)
 }
