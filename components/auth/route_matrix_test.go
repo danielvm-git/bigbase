@@ -70,16 +70,16 @@ const (
 //   - name:         human label, used in the sub-test name.
 //   - method:       HTTP method.
 //   - pathTemplate: the route with the tenant path parameter replaced by %s
-//                   (e.g. "/api/sites/%s" or "/api/deploy/%s/logs"). At run time
-//                   %s is substituted with the target resource id.
+//     (e.g. "/api/sites/%s" or "/api/deploy/%s/logs"). At run time
+//     %s is substituted with the target resource id.
 //   - handler:      which component handler serves the route
-//                   (matrixHandlerSites / matrixHandlerDeploy / matrixHandlerAuth).
+//     (matrixHandlerSites / matrixHandlerDeploy / matrixHandlerAuth).
 //   - targetIsSite: true when %s is a SITE id, false when it is a DEPLOYMENT id
-//                   (used to pick which seeded id to substitute for A and B).
+//     (used to pick which seeded id to substitute for A and B).
 //   - skipOwn:      set true ONLY for destructive/mutating routes (DELETE,
-//                   POST that creates a row) where the own-org success case
-//                   would mutate the shared fixture and destabilise other rows.
-//                   Cross-tenant denial is still asserted. Prefer leaving false.
+//     POST that creates a row) where the own-org success case
+//     would mutate the shared fixture and destabilise other rows.
+//     Cross-tenant denial is still asserted. Prefer leaving false.
 //
 // A route that touches tenant data MUST appear in routeMatrixCases. If you
 // cannot express your route here, that is a signal the matrix needs extending,
@@ -97,9 +97,9 @@ type routeMatrixCase struct {
 type matrixHandler int
 
 const (
-	matrixHandlerSites matrixHandler = iota // sites.Sites.Handler()
-	matrixHandlerDeploy                     // deploy.Deploy.Handler()
-	matrixHandlerAuth                       // auth.Auth.ProtectedHandler() (deploy-key routes)
+	matrixHandlerSites  matrixHandler = iota // sites.Sites.Handler()
+	matrixHandlerDeploy                      // deploy.Deploy.Handler()
+	matrixHandlerAuth                        // auth.Auth.ProtectedHandler() (deploy-key routes)
 )
 
 // routeMatrixCases is the authoritative list of org-scoped routes. New routes

@@ -78,11 +78,11 @@ type Monitoring struct {
 	cpuSampleAt  time.Time
 	cpuTotalNano int64
 
-	stopHost   chan struct{}
-	stopAlerts chan struct{}
-	kctx       *kernel.Context // set in Start; used by alert checker to emit events
-	recorder   *eventrecorder.Recorder
-	llm        *llm.Client
+	stopHost     chan struct{}
+	stopAlerts   chan struct{}
+	kctx         *kernel.Context // set in Start; used by alert checker to emit events
+	recorder     *eventrecorder.Recorder
+	llm          *llm.Client
 	llmModelName string
 
 	// siteStatus feeds the site_up / site_http_status metrics (Issue #178).
@@ -134,9 +134,9 @@ func llmConfigFromOptions(opts Options) (llm.Config, string) {
 
 const hostCollectInterval = 15 * time.Second
 
-func (m *Monitoring) Name() string                                           { return "monitoring" }
-func (m *Monitoring) Version() string                                        { return version }
-func (m *Monitoring) Dependencies() []string                                 { return []string{"db"} }
+func (m *Monitoring) Name() string           { return "monitoring" }
+func (m *Monitoring) Version() string        { return version }
+func (m *Monitoring) Dependencies() []string { return []string{"db"} }
 
 func (m *Monitoring) Init(ctx *kernel.Context, config json.RawMessage) error { return nil }
 func (m *Monitoring) Start(ctx *kernel.Context) error {

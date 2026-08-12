@@ -8,7 +8,7 @@ tasks:
     verify: "go test ./components/secrets ./components/api -run 'Test.*Secret.*API' -count=1 && echo 'no new security findings in affected paths'"
     scenarios: [SC-e89s04-P0-01]
     risk: P0
-    status: failing
+    status: passing
     security: high
     allure:
       severity: critical
@@ -18,7 +18,7 @@ tasks:
     verify: "go test ./components/secrets ./components/auth -run 'Test.*Secret.*Auth|Test.*Org' -count=1 && echo 'no new security findings in affected paths'"
     scenarios: [SC-e89s04-P0-02, SC-e89s04-P0-03]
     risk: P0
-    status: failing
+    status: passing
     security: high
     allure:
       severity: critical
@@ -28,7 +28,7 @@ tasks:
     verify: "go test ./tests/contract -run 'Test.*Secret' -count=1 && echo 'no new security findings in affected paths'"
     scenarios: [SC-e89s04-P1-05, SC-e89s04-P1-06]
     risk: P1
-    status: failing
+    status: passing
     security: high
     allure:
       severity: high
@@ -38,7 +38,7 @@ tasks:
     verify: "go test ./components/secrets ./components/monitoring -run 'Test.*Secret.*Audit' -count=1 && echo 'no new security findings in affected paths'"
     scenarios: [SC-e89s04-P0-04]
     risk: P0
-    status: failing
+    status: passing
     security: high
     allure:
       severity: critical
