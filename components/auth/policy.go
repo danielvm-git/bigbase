@@ -59,9 +59,9 @@ import (
 type authLevel int
 
 const (
-	authNone   authLevel = iota // no auth required (public route)
-	authRequired                // any authenticated caller
-	authAdmin                   // authenticated caller with role "admin"
+	authNone     authLevel = iota // no auth required (public route)
+	authRequired                  // any authenticated caller
+	authAdmin                     // authenticated caller with role "admin"
 )
 
 // Policy is a declarative description of a route's access requirements.
@@ -106,7 +106,9 @@ func PolicyOrgScoped() Policy { return Policy{level: authRequired, orgScoped: tr
 // scopes. Requests authenticated via JWT or a site deploy key (no scopes in
 // context) pass through, mirroring the legacy RequireScopes middleware
 // contract for backward compatibility. Use this on org/site write routes.
-func PolicyScopes(required ...string) Policy { return Policy{level: authNone, scopes: append([]string(nil), required...)} }
+func PolicyScopes(required ...string) Policy {
+	return Policy{level: authNone, scopes: append([]string(nil), required...)}
+}
 
 // WithScopes returns a copy of p that ALSO requires at least one of the given
 // API-key scopes. It composes scope enforcement onto an auth/org policy, e.g.
