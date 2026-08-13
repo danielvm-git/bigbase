@@ -1,6 +1,6 @@
 story_id: e40s02
 title: "bigbase init CLI — generate default manifest for detected framework"
-status: planned
+status: done  # reconciled 2026-08-13 (phase-1 audit): runInitCmd + deploy.InitManifest shipped; deploy --manifest flag wired (main.go:722,745)
 bcps: 1
 tasks:
   - id: 1

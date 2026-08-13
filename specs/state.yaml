@@ -76,8 +76,13 @@ cleanup:
   zero_open_prs: true
   open_issues: 3 (all deferred/labeled)
 handoff:
-  last_step_completed: Active deploy-redeploy flake fixed and verified; resume e89
-    build-epic
+  last_step_completed: >-
+    Phase 0/1 reconciliation (2026-08-13). Deep re-audit confirmed e75, e39s03, e40s02
+    already shipped and green (see specs/audit/phase1-reaudit.md) — statuses reconciled
+    todo/planned → done. Deferred bugs BUG-...160006 (resolved) and BUG-...160111
+    (wontfix) closed. Fixed red Deploy workflow: provisioned BIGBASE_ROOT_ENCRYPTION_KEY
+    (e89 boot fix) + CI hardening (UI vitest in CI, root lockfile guard, Node 24 pinned).
+  prior_step: Active deploy-redeploy flake fixed and verified; resume e89 build-epic
   open_decisions:
   - Checkpoint e89 planning/helper artifacts before kickoff-branch
   - Resolve F-001 optional Site encryption / canonical root-key wiring before s01
