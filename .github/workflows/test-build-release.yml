@@ -29,6 +29,7 @@ concurrency:
 
 env:
   GO_VERSION: '1.26'
+  NODE_VERSION: '24'
   BINARY_PATH: 'bigbase-linux-amd64'
 
 jobs:
@@ -140,6 +141,37 @@ jobs:
         run: go test ./... -count=1 -timeout 120s
 
   # ==========================================================================
+  # JOB: Test (UI / vitest) — runs the Admin UI unit suite under jsdom.
+  # Previously the UI was only *built* in CI, never tested, so dependabot-class
+  # breakage (jsdom/vitest/typescript) slipped through. Gates release.
+  # Depends on: lint
+  # ==========================================================================
+  test-ui:
+    name: Test (UI / vitest)
+    needs: [lint]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Setup Node ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: '${{ env.NODE_VERSION }}'
+
+      # --legacy-peer-deps matches the Admin UI build step: typescript ~7 is
+      # pinned while typescript-eslint@8 peer-caps typescript <6.1.0. This
+      # install also doubles as the UI lockfile-sync guard.
+      - name: Install UI dependencies
+        working-directory: ui
+        run: npm ci --prefer-offline --legacy-peer-deps
+
+      - name: Vitest (jsdom)
+        working-directory: ui
+        run: npm run test
+
+  # ==========================================================================
   # JOB: Verify — Go preflight (vet/test/gosec) + Gitleaks + Conventional
   #       Commits + No AI Attribution
   # Depends on: lint, test-sqlite, test-postgres
@@ -159,6 +191,18 @@ jobs:
         with:
           go-version: '${{ env.GO_VERSION }}'
           cache: true
+
+      - name: Setup Node ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: '${{ env.NODE_VERSION }}'
+          cache: 'npm'
+
+      # Lockfile-sync guard: `npm ci` fails fast if package.json and
+      # package-lock.json have drifted (the @ctxo/plugin-api class of
+      # release-job break). --ignore-scripts keeps it quick and side-effect free.
+      - name: Lockfile sync guard (root)
+        run: npm ci --ignore-scripts
 
       - name: Go preflight (vet, test, gosec)
         run: npm run preflight:go
@@ -208,10 +252,10 @@ jobs:
 
       # --- Provision the SAME tools setup-vps.sh installs on the VPS ---
       # Node 24 LTS (Vite 8 floor is Node >= 20.19; VPS standard is 24 LTS).
-      - name: Setup Node 24 (VPS parity)
+      - name: Setup Node ${{ env.NODE_VERSION }} (VPS parity)
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
-          node-version: '24'
+          node-version: '${{ env.NODE_VERSION }}'
 
       # pnpm + corepack (the VPS runs `corepack enable`; pnpm is a declared
       # required tool — BUG-2026-07-24 exit 127 was pnpm missing).
@@ -300,7 +344,7 @@ jobs:
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         if: always()
         with:
-          node-version: '20'
+          node-version: '${{ env.NODE_VERSION }}'
 
       - name: Generate Allure Report
         if: always()
@@ -368,7 +412,7 @@ jobs:
   # ==========================================================================
   release:
     name: Release
-    needs: [verify]
+    needs: [verify, test-ui]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -392,7 +436,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
-          node-version: '22'
+          node-version: '${{ env.NODE_VERSION }}'
           cache: 'npm'
 
       - name: Save pre-release HEAD
@@ -445,6 +489,11 @@ jobs:
         with:
           go-version: '${{ env.GO_VERSION }}'
           cache: true
+
+      - name: Setup Node ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: '${{ env.NODE_VERSION }}'
 
       - name: Run tests
         run: go test ./... -count=1
