@@ -154,8 +154,12 @@ bugs:
     scope: kernel,auth,proxy,deploy,sites
     summary: WithProjectID has zero production callers — e57 blocker
     file: null  # deferred bug — no separate doc; tracked here
-    status: deferred
-    deferred_to: e57
+    status: resolved
+    resolution: >-
+      Resolved by removal, not adoption. WithProjectID/ProjectIDFromContext were
+      deleted in commit e673ed0de (v2.76.16) as dead code; WithSiteID is the active
+      scope key (proxy + deploy flows). Documented in
+      specs/tech-architecture/tech-stack.md:170. Reconciled 2026-08-13 (phase-1 audit).
     audit_source: null  # original audit source lost; not in git history
   - id: BUG-2026-07-10T160008
     date: "2026-07-10"
@@ -216,8 +220,13 @@ bugs:
     scope: auth
     summary: JWT generation lacks project_id claim for e57 scoping
     file: null  # deferred bug — no separate doc; tracked here
-    status: deferred
-    deferred_to: e57
+    status: wontfix
+    resolution: >-
+      Won't-fix under YAGNI. A project_id JWT claim would be a dead field: the
+      WithProjectID context plumbing and downstream enforcement it depended on were
+      removed (see BUG-2026-07-10T160006), and org_id already carries the active
+      multi-tenant boundary (components/auth/jwt.go). Revisit only if project scoping
+      (the superseded e57) is re-planned. Reconciled 2026-08-13 (phase-1 audit).
     audit_source: null  # original audit source lost; not in git history
   - id: BUG-2026-07-10T160202
     date: "2026-07-10"

@@ -1,6 +1,6 @@
 story_id: e39s03
 title: "Terminal-style live log viewer in admin UI"
-status: planned
+status: done  # reconciled 2026-08-13 (phase-1 audit): TerminalLogViewer shipped + wired in SiteDetailPage; BuildLogs deprecated from index barrel
 bcps: 2
 tasks:
   - id: 1

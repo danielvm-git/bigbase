@@ -4,7 +4,13 @@ id: e75
 title: "Deploy Hardening — Log Eviction + Flaky Tests"
 wsjf: 3.0
 wsjf_rationale: "BV=4(improves reliability: deterministic log retention + stable CI) TC=2(no urgency, but flaky tests erode dev velocity) RR=4(prevent time wasted on re-running flaky tests + debugging missing logs) / JS=3(~1.5 days across 2 stories)"
-status: todo
+status: done
+status_note: >-
+  Reconciled 2026-08-13 (phase-1 re-audit). Both stories were already implemented
+  on main and green — the 'todo' marker was stale. Evidence: logs.go uses a
+  deterministic FIFO order slice + mutex (not random map iteration);
+  TestDeployLogFIFOEviction passes; the three flaky tests pass -count=10 with 0
+  failures; full deploy suite 374/374.
 tier: 3
 depends_on: []
 covers:
@@ -26,7 +32,7 @@ out_of_scope:
 stories:
   - id: e75s01
     title: "Deterministic log eviction — replace random map iteration with FIFO"
-    status: todo
+    status: done
     bcps: 2
     hard_gates:
       - id: gate-e75s01-pre
@@ -91,7 +97,7 @@ stories:
 
   - id: e75s02
     title: "Fix three flaky tests in deploy component"
-    status: todo
+    status: done
     bcps: 2
     hard_gates:
       - id: gate-e75s02-post
