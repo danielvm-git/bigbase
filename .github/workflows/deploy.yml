@@ -143,6 +143,7 @@ jobs:
           HEALTH_URL: ${{ env.HEALTH_URL }}
           MAX_BACKUPS: ${{ env.MAX_BACKUPS_TO_KEEP }}
           EXPECTED_VERSION: ${{ steps.meta.outputs.version }}
+          BIGBASE_ROOT_ENCRYPTION_KEY: ${{ secrets.BIGBASE_ROOT_ENCRYPTION_KEY }}
           GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
           GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
           BIGBASE_GITHUB_APP_ID: ${{ secrets.BIGBASE_GITHUB_APP_ID }}
@@ -157,6 +158,7 @@ jobs:
             BINARY_PATH,VPS_BIN_DIR,VPS_RELEASES_DIR,
             VPS_BACKUPS_DIR,VPS_DATA_DIR,VPS_ENV_FILE,
             HEALTH_URL,MAX_BACKUPS,EXPECTED_VERSION,
+            BIGBASE_ROOT_ENCRYPTION_KEY,
             GOOGLE_CLIENT_ID,GOOGLE_CLIENT_SECRET,
             BIGBASE_GITHUB_APP_ID,BIGBASE_GITHUB_APP_SLUG,GITHUB_APP_PEM_PATH
           # -------- Script executed on VPS --------
@@ -253,6 +255,20 @@ jobs:
               } > "${VPS_ENV_FILE}"
               chmod 600 "${VPS_ENV_FILE}"
               echo "  GitHub App credentials written to new ${VPS_ENV_FILE}"
+            fi
+
+            # Write the root encryption key (required by main.go since e89 —
+            # the service refuses to boot without it). Idempotent: create the
+            # .env if missing, strip any prior line, then append the current
+            # value from the BIGBASE_ROOT_ENCRYPTION_KEY repo secret.
+            if [ -n "${BIGBASE_ROOT_ENCRYPTION_KEY:-}" ]; then
+              mkdir -p "$(dirname "${VPS_ENV_FILE}")"
+              touch "${VPS_ENV_FILE}"
+              sed -i '/^BIGBASE_ROOT_ENCRYPTION_KEY=/d' "${VPS_ENV_FILE}"
+              echo "BIGBASE_ROOT_ENCRYPTION_KEY=${BIGBASE_ROOT_ENCRYPTION_KEY}" >> "${VPS_ENV_FILE}"
+              echo "  Root encryption key written to ${VPS_ENV_FILE}"
+            else
+              echo "  WARNING: BIGBASE_ROOT_ENCRYPTION_KEY secret is empty — service will fail to boot (e89)"
             fi
 
             if [ -f "${VPS_ENV_FILE}" ]; then
