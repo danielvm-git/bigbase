@@ -60,6 +60,15 @@ updates:
           - "vitest*"
           - "@vitejs*"
           - "@types/*"
+    # Hold typescript-eslint at 8.66.x — 8.67.0 drags in the new
+    # @typescript/typescript-*@7.0.2 platform packages and its runtime check
+    # then fails with "typescript-eslint does not support TS 7.0" against the
+    # pinned TS ~6.0.3 (see ui/package.json). Remove this ignore once a
+    # typescript-eslint release supports the TS 7.x platform layout.
+    ignore:
+      - dependency-name: "typescript-eslint"
+        versions:
+          - ">=8.67.0"
 
   - package-ecosystem: "github-actions"
     directory: "/"
