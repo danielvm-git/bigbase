@@ -1,32 +1,53 @@
+// GENERATED — do not edit. Source: .mcp.json. Run: scripts/gen-mcp-configs.sh
 {
-  "$schema": "https://opencode.ai/config.json",
   "mcp": {
-    "context7": {
-      "type": "remote",
-      "url": "https://mcp.context7.com/mcp",
-      "headers": {
-        "CONTEXT7_API_KEY": "${CONTEXT7_API_KEY}"
+    "servers": {
+      "context7": {
+        "type": "http",
+        "url": "https://mcp.context7.com/mcp",
+        "headers": {
+          "CONTEXT7_API_KEY": "${CONTEXT7_API_KEY}"
+        }
+      },
+      "bigbase": {
+        "type": "http",
+        "url": "https://mcp.bigbase.click/mcp"
+      },
+      "sqz": {
+        "command": "sqz-mcp",
+        "args": []
+      },
+      "ctxo": {
+        "command": "npx",
+        "args": [
+          "-y",
+          "@ctxo/cli@0.11.4"
+        ]
+      },
+      "filesystem": {
+        "command": "npx",
+        "args": [
+          "-y",
+          "@modelcontextprotocol/server-filesystem@2026.7.10",
+          ".",
+          "/tmp"
+        ]
+      },
+      "sequential-thinking": {
+        "command": "npx",
+        "args": [
+          "-y",
+          "@modelcontextprotocol/server-sequential-thinking@2026.7.4"
+        ]
+      },
+      "claude_design": {
+        "type": "http",
+        "url": "https://api.anthropic.com/v1/design/mcp",
+        "headers": {
+          "x-api-key": "${ANTHROPIC_API_KEY}",
+          "anthropic-version": "2023-06-01"
+        }
       }
-    },
-    "bigbase": {
-      "type": "remote",
-      "url": "https://mcp.bigbase.click/mcp"
-    },
-    "sqz": {
-      "type": "local",
-      "command": ["sqz-mcp"]
-    },
-    "ctxo": {
-      "type": "local",
-      "command": ["npx", "-y", "@ctxo/cli@0.11.4"]
-    },
-    "filesystem": {
-      "type": "local",
-      "command": ["npx", "-y", "@modelcontextprotocol/server-filesystem@2026.7.10", ".", "/tmp"]
-    },
-    "sequential-thinking": {
-      "type": "local",
-      "command": ["npx", "-y", "@modelcontextprotocol/server-sequential-thinking@2026.7.4"]
     }
   }
 }

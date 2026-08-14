@@ -5,24 +5,68 @@ updates:
     schedule:
       interval: "weekly"
       day: "monday"
-    open-pull-requests-limit: 10
+    open-pull-requests-limit: 5
+    groups:
+      go-modules:
+        patterns:
+          - "*"
 
   - package-ecosystem: "npm"
     directory: "/"
     schedule:
       interval: "weekly"
       day: "monday"
-    open-pull-requests-limit: 10
+    open-pull-requests-limit: 5
+    groups:
+      npm-root:
+        patterns:
+          - "*"
 
   - package-ecosystem: "npm"
     directory: "/ui"
     schedule:
       interval: "weekly"
       day: "monday"
-    open-pull-requests-limit: 10
+    open-pull-requests-limit: 5
+    groups:
+      npm-ui-react:
+        patterns:
+          - "react"
+          - "react-*"
+          - "@types/react*"
+      npm-ui-eslint:
+        patterns:
+          - "eslint*"
+          - "@typescript-eslint*"
+          - "@eslint*"
+      npm-ui-vite:
+        patterns:
+          - "vite*"
+          - "vitest*"
+          - "@vitejs*"
+      npm-ui-types:
+        patterns:
+          - "@types/*"
+      npm-ui-misc:
+        patterns:
+          - "*"
+        exclude-patterns:
+          - "react*"
+          - "@types/react*"
+          - "eslint*"
+          - "@typescript-eslint*"
+          - "@eslint*"
+          - "vite*"
+          - "vitest*"
+          - "@vitejs*"
+          - "@types/*"
 
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "weekly"
       day: "monday"
+    groups:
+      github-actions:
+        patterns:
+          - "*"

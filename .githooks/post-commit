@@ -1,0 +1,13 @@
+#!/bin/sh
+
+# ctxo-start
+# Rebuild the ctxo index incrementally after each local commit.
+#
+# post-merge handles pulls; this hook handles local commits so the index
+# stays warm within a working session without waiting for a push/pull.
+# Versioned in .githooks/ (not .git/hooks/) so it ships with the repo
+# and actually runs when core.hooksPath=.githooks is set.
+if command -v ctxo > /dev/null 2>&1; then
+  ctxo index > /dev/null 2>&1 || true
+fi
+# ctxo-end

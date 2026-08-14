@@ -323,6 +323,12 @@ jobs:
       - name: Check required env keys documented
         run: bash scripts/check-required-env-documented.sh
 
+      - name: Check version drift (docs vs go.mod / .nvmrc)
+        run: bash scripts/check-version-drift.sh
+
+      - name: Check MCP adapter files are up-to-date
+        run: bash scripts/gen-mcp-configs.sh --check
+
       - name: Check Conventional Commits
         run: bash scripts/check-conventional-commits.sh
 
