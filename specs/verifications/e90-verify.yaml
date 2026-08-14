@@ -1,0 +1,45 @@
+epic_id: e90
+title: "Dev-Environment Hardening — Config Consolidation, CI Gaps, Tooling Debt"
+verified_at: "2026-08-14T14:15:26Z"
+verifier: verify-work
+branch: danielvm-git/dev-environment-hardening-55ffa8
+note: >-
+  Dev-environment epic (config, CI, docs) + New Relic removal. No user-observable
+  runtime UAT flow — verification is the mechanical + CI gates. Runtime behavior
+  is unchanged except the New Relic removal, which the Go suite covers.
+phases:
+  branch_check:
+    passed: true
+    note: "not main/master"
+  build:
+    passed: true
+    command: "go build ./..."
+  lint:
+    passed: true
+    command: "golangci-lint run ./..."
+    result: "No issues found"
+  tests:
+    passed: true
+    command: "go test ./... -count=1 -timeout 500s"
+    result: "1502 passed in 32 packages"
+  terminal_verdict:
+    command: "go test ./... -count=1 -timeout 500s"
+    exit_code: 0
+    result: "1502 passed in 32 packages"
+    note: "Single contiguous run (scratchpad/fulltest2.log); no code changes since"
+  new_ci_gates:
+    passed: true
+    checks:
+      - "scripts/check-conflict-markers.sh -> OK"
+      - "scripts/gen-mcp-configs.sh --check -> OK"
+      - "scripts/check-doc-drift.sh -> OK (Go 1.26, Node 24)"
+      - "gosec -conf .gosec.json ./... -> exit 0"
+  race:
+    passed: true
+    command: "go test -race ./components/deploy/... ./components/functions/... ./components/realtime/..."
+    exit_code: 0
+  security_sanity:
+    passed: true
+    note: "No leaked secrets in diff; no eval/curl|bash/unquoted rm in new scripts; NR removal is deletion-only."
+  gaps:
+    closed: true
