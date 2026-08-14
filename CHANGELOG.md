@@ -1,3 +1,11 @@
+## [2.90.1](https://github.com/danielvm-git/bigbase/compare/v2.90.0...v2.90.1) (2026-08-14)
+
+
+### Bug Fixes
+
+* **deploy:** atomic terminal transitions — kill the sidecar test flake class ([7ecb579](https://github.com/danielvm-git/bigbase/commit/7ecb579cd35cd6f1c96fc585a01522c80ec3f623))
+* **deploy:** persist error_message before failed status (TestDeployBuildError flake) ([f4aa371](https://github.com/danielvm-git/bigbase/commit/f4aa371fe67e2f24aa5ac722db7edc03188f8dfc))
+
 # [2.90.0](https://github.com/danielvm-git/bigbase/compare/v2.89.0...v2.90.0) (2026-08-14)
 
 
