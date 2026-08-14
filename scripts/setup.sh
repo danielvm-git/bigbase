@@ -92,3 +92,15 @@ fi
 
 info ""
 info "BigBase development environment is ready."
+
+# --- ctxo codebase index (optional) ---
+# Warm the index so MCP clients (AGENTS.md ctxo workflow) have data on a
+# fresh clone instead of waiting for the first source commit. Failure is
+# non-fatal — pre-commit/post-merge rebuild it automatically.
+info "Checking ctxo..."
+if command -v ctxo &>/dev/null; then
+  info "Warming ctxo index (first build may take a minute)..."
+  ctxo index >/dev/null 2>&1 || warn "ctxo index failed — it will rebuild on the next source commit"
+else
+  warn "ctxo not installed — skip index warm-up (npm i -g @ctxo/cli to enable)"
+fi

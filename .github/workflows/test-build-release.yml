@@ -317,6 +317,12 @@ jobs:
             exit 1
           fi
 
+      # Required deploy env keys (deploy.yml REQUIRED_ENV_KEYS) must be
+      # documented in .env.example — catches the BIGBASE_ROOT_ENCRYPTION_KEY
+      # class of deploy-time config drift before release.
+      - name: Check required env keys documented
+        run: bash scripts/check-required-env-documented.sh
+
       - name: Check Conventional Commits
         run: bash scripts/check-conventional-commits.sh
 

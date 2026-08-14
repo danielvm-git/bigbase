@@ -414,6 +414,9 @@ jobs:
     runs-on: ubuntu-latest
     needs: [deploy]
     if: failure() && github.event_name != 'workflow_dispatch'
+    permissions:
+      contents: read
+      issues: write
 
     steps:
       - name: Build failure summary
@@ -422,3 +425,42 @@ jobs:
           echo "   Repository: ${{ github.repository }}"
           echo "   Workflow run: ${{ github.event.workflow_run.html_url }}"
           echo "   Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+
+      # One open issue per failure wave — dedup on title so a crash-looping
+      # release doesn't spam the tracker; each new failure comments instead.
+      - name: Check for existing deploy-failure issue
+        id: existing
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          COUNT=$(gh issue list --repo "$GITHUB_REPOSITORY" --state open \
+            --search '🚨 Deploy failed in:title' --json number --jq 'length')
+          echo "count=${COUNT:-0}" >> "$GITHUB_OUTPUT"
+          echo "   Open deploy-failure issues: ${COUNT:-0}"
+
+      - name: Create deploy-failure issue
+        if: steps.existing.outputs.count == '0'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          BODY="Deploy workflow failed: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+          Triggered by: ${{ github.event.workflow_run.html_url }}
+
+          The pipeline auto-rolls back on health-check failure, so production stays on the previous release. Check the failed run log for the root cause — common causes: a missing required env key (see REQUIRED_ENV_KEYS in deploy.yml) or a startup config error in the new binary.
+
+          Keep this issue open until the root cause is fixed and a deploy succeeds."
+          gh issue create --repo "$GITHUB_REPOSITORY" \
+            --title "🚨 Deploy failed on main" \
+            --label bug \
+            --body "$BODY"
+
+      - name: Comment on existing deploy-failure issue
+        if: steps.existing.outputs.count != '0'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ISSUE=$(gh issue list --repo "$GITHUB_REPOSITORY" --state open \
+            --search '🚨 Deploy failed in:title' --json number --jq '.[0].number')
+          gh issue comment "$ISSUE" --repo "$GITHUB_REPOSITORY" \
+            --body "Another deploy failure: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"

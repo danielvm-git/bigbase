@@ -17,7 +17,7 @@ enable_review_labels_effort = true    # adds effort label to PR
 require_security_review = true        # explicit security audit on every PR
 num_max_findings = 5                  # more thorough: 5 instead of default 3
 extra_instructions = """
-  This is a Go 1.22+ BaaS platform (BigBase) using Entity-Component-Construct (ECC) architecture.
+  This is a Go 1.26.3 BaaS platform (BigBase) using Entity-Component-Construct (ECC) architecture.
   Components: proxy, auth, db, api, storage, git, forge, cici, functions, realtime, messaging, deploy, admin, monitoring.
   Conventions: no `any` type, no direct imports between components (use event bus), errors wrapped with fmt.Errorf,
   table-driven tests, parameterized SQL only, no secrets in code.

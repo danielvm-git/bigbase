@@ -44,4 +44,14 @@ if [ -n "$STAGED_SRC" ]; then
     fi
 fi
 
+# Required env keys (deploy.yml REQUIRED_ENV_KEYS) must be documented in
+# .env.example — the BIGBASE_ROOT_ENCRYPTION_KEY class of config drift. This
+# mirrors the CI verify gate (scripts/check-required-env-documented.sh).
+if [ -x scripts/check-required-env-documented.sh ]; then
+    if ! bash scripts/check-required-env-documented.sh; then
+        echo "❌ Add the missing keys to .env.example (or drop them from REQUIRED_ENV_KEYS)"
+        exit 1
+    fi
+fi
+
 echo "✅ Pre-commit checks passed"

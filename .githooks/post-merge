@@ -1,0 +1,16 @@
+#!/bin/sh
+
+# ctxo-start
+# Rebuild the ctxo codebase index after a pull/merge.
+#
+# git pull/merge never runs pre-commit, so without this hook the index would
+# serve stale symbol data until the next source commit. Versioned here (not
+# .git/hooks) so it ships with the repo and actually runs under
+# core.hooksPath=.githooks (git ignores .git/hooks entirely when hooksPath is
+# set). A full rebuild is used instead of `ctxo sync` because the JSON index
+# is not committed (see .gitignore) — sync would only rebuild the SQLite cache
+# from stale JSON.
+if command -v ctxo >/dev/null 2>&1; then
+  ctxo index >/dev/null 2>&1 || true
+fi
+# ctxo-end
