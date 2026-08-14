@@ -1,3 +1,17 @@
+# [2.90.0](https://github.com/danielvm-git/bigbase/compare/v2.89.0...v2.90.0) (2026-08-14)
+
+
+### Bug Fixes
+
+* **ci:** keep gosec suppressions reproducible ([8bf05ac](https://github.com/danielvm-git/bigbase/commit/8bf05ac173fe2a21ae09710144414b693722d858))
+* **ci:** pin UI TypeScript for eslint compatibility ([24026f3](https://github.com/danielvm-git/bigbase/commit/24026f3e119ee2a1c6ed3e0621b0698d2806a213))
+* **deploy:** provision BIGBASE_ROOT_ENCRYPTION_KEY to VPS env (e89 boot fix) ([4709352](https://github.com/danielvm-git/bigbase/commit/47093524c2f02fdc8caaac1ec95bb0c1d5515fdd))
+
+
+### Features
+
+* **dev:** harden environment and verification gates ([147b711](https://github.com/danielvm-git/bigbase/commit/147b7116bd314b3f8de9f98138dc6a781bf83216))
+
 # [2.89.0](https://github.com/danielvm-git/bigbase/compare/v2.88.3...v2.89.0) (2026-08-12)
 
 
