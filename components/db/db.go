@@ -6,11 +6,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"time"
-	"unicode/utf8"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/jackc/pgx/v5/stdlib"
-	"github.com/newrelic/go-agent/v3/newrelic"
 	_ "modernc.org/sqlite"
 
 	"github.com/danielvm/bigbase/kernel"
@@ -116,46 +114,15 @@ func (d *DB) DB() *sql.DB {
 }
 
 func (d *DB) ExecContext(ctx context.Context, query string, args ...any) (sql.Result, error) {
-	seg := nrDatastoreSegment(ctx, query)
-	if seg != nil {
-		defer seg.End()
-	}
 	return d.db.ExecContext(ctx, query, args...)
 }
 
 func (d *DB) QueryContext(ctx context.Context, query string, args ...any) (*sql.Rows, error) {
-	seg := nrDatastoreSegment(ctx, query)
-	if seg != nil {
-		defer seg.End()
-	}
 	return d.db.QueryContext(ctx, query, args...)
 }
 
 func (d *DB) QueryRowContext(ctx context.Context, query string, args ...any) *sql.Row {
-	seg := nrDatastoreSegment(ctx, query)
-	if seg != nil {
-		defer seg.End()
-	}
 	return d.db.QueryRowContext(ctx, query, args...)
-}
-
-// nrDatastoreSegment creates a New Relic datastore segment from context if available.
-// Returns nil when there is no active NR transaction (e.g. background tasks, migrations).
-func nrDatastoreSegment(ctx context.Context, query string) *newrelic.DatastoreSegment {
-	txn := newrelic.FromContext(ctx)
-	if txn == nil {
-		return nil
-	}
-	// Truncate long queries to avoid excessive payload size.
-	if utf8.RuneCountInString(query) > 200 {
-		query = string([]rune(query)[:200])
-	}
-	return &newrelic.DatastoreSegment{
-		Product:            newrelic.DatastoreSQLite,
-		Operation:          "query",
-		ParameterizedQuery: query,
-		StartTime:          txn.StartSegmentNow(),
-	}
 }
 
 func (d *DB) Exec(query string, args ...any) (sql.Result, error) {

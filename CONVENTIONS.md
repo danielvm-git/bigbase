@@ -78,6 +78,19 @@ var ErrNotFound = errors.New("not found")
 - Test files: `*_test.go` co-located with source
 - For goroutines and supervisors, synchronize with a channel or poll helper before asserting state; never rely on a timing sleep alone.
 
+### Async tests — poll, never assert on timing
+After launching a goroutine, supervisor, or anything that changes state
+asynchronously, **poll for the expected state before asserting** — never assert
+once and hope the timing lined up. A bare `go func()` followed by
+`require.Equal` is the recurring flake class in this repo (22 race/flake fixes
+in history).
+
+- Use a `waitForX` helper (or `require.Eventually` / a channel sync) that retries
+  with a short interval up to a timeout, then assert.
+- Canonical example: `waitForHostRegistration` in the deploy component tests
+  (commit `336614804`) — copy that shape rather than sprinkling `time.Sleep`.
+- Prove it: `go test -race -count=20 ./...` must run without flakes.
+
 ## Project Structure
 ```
 bigbase/
@@ -147,6 +160,14 @@ The production VPS at Contabo (vmi3338033, 89.116.26.187) follows a three-layer 
 - The project follows a solo-git workflow pattern.
 - Work is done in short-lived feature branches or worktrees.
 - Direct pushes or fast-forward merges to `main` when CI passes. No complex PR reviews.
+
+### Rebase before push
+- Always `git pull --rebase --autostash` before pushing to `main`. The
+  semantic-release bot commits to `origin/main` between your fetch and push
+  (3 releases/day at peak), which causes non-fast-forward rejections.
+- If the release bot beat you, **rebase** onto the new `main` and push again.
+- **Never** use `--force`/`--force-with-lease` to win a race against the bot —
+  that discards its release commit. Rebase, don't force.
 
 ### Conventional Commits
 - All commits must follow the Conventional Commits format:

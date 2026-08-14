@@ -109,9 +109,6 @@ Config merge priority: CLI flags > environment variables > defaults.
 | `--mcp-disabled` | — | `false` | Disable MCP server |
 | `--mcp-port` | — | `3900` | MCP server port |
 | `--mcp-transport` | — | `http` | MCP transport: stdio, http |
-| `--newrelic-license-key` | `NEW_RELIC_LICENSE_KEY` | — | New Relic license key |
-| `--newrelic-app-name` | `NEW_RELIC_APP_NAME` | BigBase | New Relic app name |
-| `--newrelic-enabled` | `NEW_RELIC_ENABLED` | `true` | Enable New Relic agent |
 
 ## Architecture
 
