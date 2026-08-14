@@ -5,6 +5,9 @@ export default defineConfig({
   testDir: '.',
   timeout: 30000,
   retries: 1,
+  // Tests share one isolated SQLite server and the auth rate limiter. A single
+  // worker keeps registration deterministic and prevents cross-test 429s.
+  workers: 1,
   use: {
     baseURL: process.env.BASE_URL || 'http://localhost:9999',
     trace: 'on-first-retry',

@@ -187,6 +187,7 @@ export default function MonitoringPage() {
       {error && <p className="input-error-text" role="alert">{error}</p>}
 
       <Tabs tabs={monitoringTabs} active={tab} onChange={setTab} />
+      <div id={`panel-${tab}`} role="tabpanel" aria-labelledby={`tab-${tab}`}>
 
       {tab === 'overview' && metrics && (
         <>
@@ -365,6 +366,7 @@ export default function MonitoringPage() {
           )}
         </>
       )}
+      </div>
     </div>
   )
 }

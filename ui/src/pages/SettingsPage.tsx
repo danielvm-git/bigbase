@@ -25,9 +25,11 @@ export default function SettingsPage() {
       subtitle="Manage your account, workspace, and billing"
       tabs={tabs}
     >
-      {tab === 'account' && <AccountSection />}
-      {tab === 'workspace' && <WorkspaceSection />}
-      {tab === 'billing' && <BillingSection />}
+      <div id={`panel-${tab}`} role="tabpanel" aria-labelledby={`tab-${tab}`}>
+        {tab === 'account' && <AccountSection />}
+        {tab === 'workspace' && <WorkspaceSection />}
+        {tab === 'billing' && <BillingSection />}
+      </div>
     </SettingsPageTemplate>
   )
 }

@@ -71,7 +71,7 @@ test.describe('Dashboard & Navigation UI', () => {
     // Mobile — sidebar should collapse
     await page.setViewportSize({ width: 375, height: 667 });
     await page.waitForTimeout(300); // allow CSS transition
-    await expect(page.getByRole('navigation')).not.toHaveClass(/sidebar-open/);
+    await expect(page.locator('#sidebar-nav')).not.toHaveClass(/sidebar-open/)
 
     // Hamburger toggle button should be visible — uses aria-label "Open sidebar" / "Close sidebar"
     const toggle = page.getByRole('button', { name: /sidebar/i });
@@ -81,19 +81,19 @@ test.describe('Dashboard & Navigation UI', () => {
     // Click hamburger to open sidebar
     await toggle.click();
     await page.waitForTimeout(300);
-    await expect(page.getByRole('navigation')).toHaveClass(/sidebar-open/);
+    await expect(page.locator('#sidebar-nav')).toHaveClass(/sidebar-open/)
 
     // Click again to close
     await toggle.click();
     await page.waitForTimeout(300);
-    await expect(page.getByRole('navigation')).not.toHaveClass(/sidebar-open/);
+    await expect(page.locator('#sidebar-nav')).not.toHaveClass(/sidebar-open/)
   });
 
   // ─── Test 2: Theme picker ─────────────────────────────────────
   test('theme picker dropdown opens and accent color can be changed', async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 800 });
     await page.goto('/admin/#/');
-    await page.getByRole('navigation').waitFor({ state: 'visible', timeout: 15000 });
+    await page.locator('#sidebar-nav').waitFor({ state: 'visible', timeout: 15000 })
 
     // Sidebar footer should contain the theme picker — trigger has aria-label "Accent theme"
     const themeTrigger = page.getByRole('button', { name: /accent/i });
@@ -105,24 +105,24 @@ test.describe('Dashboard & Navigation UI', () => {
     await expect(themeMenu).toBeVisible();
 
     // Grab the list of available theme options (each has role="menuitem")
-    const themeItems = page.getByRole('menuitem');
-    const count = await themeItems.count();
-    expect(count).toBeGreaterThan(1);
+    const themeItems = page.getByRole('menuitemradio')
+    const count = await themeItems.count()
+    expect(count).toBeGreaterThan(1)
 
-    // Find the currently active theme (has aria-current="true")
-    const activeItem = page.getByRole('menuitem').and(page.locator('[aria-current="true"]'));
-    const activeLabel = await activeItem.textContent();
-    expect(activeLabel).toBeTruthy();
+    // Find the currently active theme (has aria-checked="true")
+    const activeItem = page.getByRole('menuitemradio').and(page.locator('[aria-checked="true"]'))
+    const activeLabel = await activeItem.textContent()
+    expect(activeLabel).toBeTruthy()
 
-    // Click a different theme (any item without aria-current="true")
-    let clickedDifferent = false;
+    // Click a different theme (any item without aria-checked="true")
+    let clickedDifferent = false
     for (let i = 0; i < count; i++) {
-      const item = themeItems.nth(i);
-      const isActive = await item.getAttribute('aria-current');
+      const item = themeItems.nth(i)
+      const isActive = await item.getAttribute('aria-checked')
       if (isActive !== 'true') {
-        await item.click();
-        clickedDifferent = true;
-        break;
+        await item.click()
+        clickedDifferent = true
+        break
       }
     }
     expect(clickedDifferent).toBe(true);
@@ -133,7 +133,7 @@ test.describe('Dashboard & Navigation UI', () => {
     // Re-open and verify the new theme is now marked active
     await themeTrigger.click();
     await expect(themeMenu).toBeVisible();
-    const newActiveItem = page.getByRole('menuitem').and(page.locator('[aria-current="true"]'));
+    const newActiveItem = page.getByRole('menuitemradio').and(page.locator('[aria-checked="true"]'))
     const newActiveLabel = await newActiveItem.textContent();
     expect(newActiveLabel).not.toBe(activeLabel);
 

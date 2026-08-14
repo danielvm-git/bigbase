@@ -55,11 +55,11 @@ test.beforeEach(async ({ context }) => {
 
 for (const route of ROUTES) {
   test(`axe scan: ${route.name} (${route.path})`, async ({ page }) => {
-    await page.goto(`http://localhost:9999${route.path}`);
-    await page.waitForLoadState('networkidle');
+    await page.goto(`http://localhost:9999${route.path}`, { waitUntil: 'domcontentloaded' })
 
-    // Wait for the page shell to render (main landmark or h1).
-    await page.waitForSelector('.page-header, main, .content', { timeout: 15000 }).catch(() => {});
+    // Some public routes keep a request open; DOM readiness plus the shell
+    // selector is the stable signal for an accessibility scan.
+    await page.waitForSelector('.page-header, main, .content', { timeout: 15000 }).catch(() => {})
 
     const results = await new AxeBuilder({ page })
       .withTags(['wcag2a', 'wcag2aa', 'wcag2aaa'])

@@ -18,15 +18,15 @@
     },
     "ctxo": {
       "type": "local",
-      "command": ["npx", "-y", "@ctxo/cli"]
+      "command": ["npx", "-y", "@ctxo/cli@0.11.4"]
     },
     "filesystem": {
       "type": "local",
-      "command": ["npx", "-y", "@modelcontextprotocol/server-filesystem", "/Users/danielvm/Developer/bigbase", "/tmp"]
+      "command": ["npx", "-y", "@modelcontextprotocol/server-filesystem@2026.7.10", ".", "/tmp"]
     },
     "sequential-thinking": {
       "type": "local",
-      "command": ["npx", "-y", "@modelcontextprotocol/server-sequential-thinking"]
+      "command": ["npx", "-y", "@modelcontextprotocol/server-sequential-thinking@2026.7.4"]
     }
   }
 }

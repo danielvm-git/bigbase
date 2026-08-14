@@ -1,8 +1,8 @@
-## ctxo MCP Tool Usage (MANDATORY)
+## ctxo MCP Tool Usage
 
-**ALWAYS use ctxo MCP tools before reading source files or making code changes.** The ctxo index contains dependency graphs, git intent, anti-patterns, and change health that cannot be derived from reading files alone. Skipping these tools leads to blind edits and broken dependencies.
+Use ctxo MCP tools before source changes when the index is available and fresh. If ctxo is unavailable or stale, continue with LSP and repository search; do not block development on an external index.
 
-### Before ANY Code Modification
+### Before Code Modification (when ctxo is available)
 1. Call `get_blast_radius` for the symbol you are about to change — understand what breaks
 2. Call `get_why_context` for the same symbol — check for revert history or anti-patterns
 3. Only then read and edit source files
@@ -26,11 +26,11 @@
 - Call `get_architectural_overlay` to understand layer boundaries
 - Call `get_symbol_importance` to identify critical symbols
 
-### NEVER Do These
-- NEVER edit a function without first calling `get_blast_radius` on it
-- NEVER skip `get_why_context` — reverted code and anti-patterns are invisible without it
-- NEVER grep source files to find symbols when `search_symbols` exists
-- NEVER manually trace imports when `find_importers` gives the full reverse dependency graph
+### Guidelines
+- For high-risk symbols, call `get_blast_radius` before editing when ctxo is available.
+- Check `get_why_context` for high-risk or historically unstable symbols.
+- Prefer `search_symbols` for indexed symbol lookup, but use LSP or grep when the index is stale or the target is plain text/configuration.
+- Use `find_importers` for dependency tracing when available; verify critical callsites with LSP or repository search.
 
 ## Orca Terminal Commands (from orca-cli skill)
 

@@ -5,8 +5,10 @@ set -euo pipefail
 # Can be run multiple times without side effects.
 
 BIGBASE_DIR="$(cd "$(dirname "$0")/.." && pwd)"
-GO_VERSION_MIN="1.22"
-
+GO_VERSION_MIN="1.26.3"
+GOPLS_VERSION="v0.23.0"
+GO_BIN_DIR="$(go env GOPATH 2>/dev/null || printf '%s' "$HOME/go")/bin"
+export PATH="$GO_BIN_DIR:$PATH"
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m'
@@ -24,14 +26,26 @@ fi
 GO_VERSION=$(go version | awk '{print $3}' | sed 's/go//')
 info "Go $GO_VERSION found"
 
+# --- gopls ---
+info "Checking gopls..."
+if ! command -v gopls &>/dev/null; then
+  info "Installing gopls ${GOPLS_VERSION}..."
+  go install "golang.org/x/tools/gopls@${GOPLS_VERSION}"
+fi
+info "gopls found: $(gopls version | head -1)"
+
+# --- npm dependencies ---
+info "Installing root npm dependencies..."
+(cd "$BIGBASE_DIR" && npm ci --ignore-scripts)
+info "typescript-language-server found: $(cd "$BIGBASE_DIR" && npx --no-install typescript-language-server --version)"
+
 # --- golangci-lint ---
 info "Checking golangci-lint..."
 if ! command -v golangci-lint &>/dev/null; then
-  warn "golangci-lint not found. Install: brew install golangci-lint"
+  warn "golangci-lint not found. Install it with your platform package manager."
   exit 1
 fi
 info "golangci-lint found: $(golangci-lint --version | head -1)"
-
 # --- Go module dependencies ---
 info "Downloading Go module dependencies..."
 (cd "$BIGBASE_DIR" && go mod download)
@@ -39,7 +53,7 @@ info "Downloading Go module dependencies..."
 # --- Build admin UI ---
 if [ -d "$BIGBASE_DIR/ui" ]; then
   info "Building admin UI..."
-  (cd "$BIGBASE_DIR/ui" && npm ci && npm run build)
+  (cd "$BIGBASE_DIR/ui" && npm ci --legacy-peer-deps && npm run build)
   info "Admin UI build OK"
 fi
 

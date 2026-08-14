@@ -1,0 +1,319 @@
+type: epic-shard
+context: domain
+id: e90
+title: "Dev-Environment Hardening — Config Consolidation, CI Gaps, Tooling Debt"
+wsjf: 9.0
+wsjf_rationale: >
+  BV=9 (prevents recurrence of prod-deploy failure, race regressions, agent tooling
+  contradictions that blocked active sessions) TC=4 (no hard deadline but P1 items
+  actively mislead agents right now) RR=8 (unblocks reliable concurrent-agent
+  workflows, honest CI gates, reproducible fresh clones) /
+  JS=8 (~2 dev-days across 9 stories, mostly config/docs/script work)
+status: open
+tier: 1
+threat_model: LOW
+depends_on: [e89]
+covers:
+  - .githooks/
+  - .mcp.json
+  - specs/
+  - .github/workflows/
+  - scripts/
+  - AGENTS.md
+  - CLAUDE.md
+  - GEMINI.md
+  - CONVENTIONS.md
+  - README.md
+  - .gitignore
+  - .gosec.json
+  - ui/
+
+assessment_sources:
+  - "git log — 1,225 commits, 2026-05-26 to 2026-08-12, 3 independent reviewers"
+  - "CI failure: BIGBASE_ROOT_ENCRYPTION_KEY missing on deploy host (Aug 12)"
+  - "ctxo revert commits 32c5fe1 + 95b7cb6 (2026-08-11)"
+  - "gosec config split (.gosec.json vs package.json:preflight:go)"
+  - ".gitignore merge-conflict marker at line 44"
+
+theme: >
+  Three independent assessments converge on the same diagnosis: the product
+  engineering process is mature; the dev-environment contracts have not caught up.
+  You have 3-5 copies of several things that should be one (MCP configs, agent
+  instruction files, gosec configs, version declarations). Fixing the
+  generate-or-reference pattern will pay off more than any single tool upgrade.
+
+stories:
+  - id: e90s01
+    title: "Provision BIGBASE_ROOT_ENCRYPTION_KEY and add required-env gate to CI"
+    status: open
+    bcps: 3
+    priority: P0
+    problem: >
+      e89 deployed but the VPS never got BIGBASE_ROOT_ENCRYPTION_KEY. Binary fails
+      hard at startup; auto-rollback kicked in silently (no webhook/Slack). The
+      failure class — new required env key not reflected in .env.example or
+      deploy.yml — has no structural gate.
+    tasks:
+      - desc: "Provision BIGBASE_ROOT_ENCRYPTION_KEY on VPS via harden-vps skill"
+        notes: |
+          Load .agents/skills/harden-vps/SKILL.md before SSH.
+          Add key to VPS /opt/bigbase/.env and GitHub Actions secret.
+          Re-deploy and verify 8-gate health check passes.
+          Add key entry to .env.example with placeholder and comment.
+        verify: "curl https://bigbase.click/health -> 200, version = 2.89.x"
+      - desc: "Add config-preflight step to deploy.yml before binary swap"
+        notes: |
+          Assert all REQUIRED_ENV_KEYS are set before swap.
+          Source list from new config/required.env file (checked into repo).
+          Fail the deploy job — not just log — if any key is missing.
+          Mirror deploy.yml Phase 4 pattern; extend to BIGBASE_ROOT_ENCRYPTION_KEY.
+        verify: "Simulate missing key in workflow_dispatch dry-run — job fails before swap"
+      - desc: "Add silent-failure notification (webhook or GH issue)"
+        notes: |
+          The Notify on failure job echoes to log only. Wire a repository_dispatch
+          or open a GH issue so prod failures surface outside the Actions UI.
+        verify: "Manually trigger failure path; confirm notification arrives"
+
+  - id: e90s02
+    title: "Fix .gitignore conflict marker and consolidate gosec config"
+    status: open
+    bcps: 1
+    priority: P1
+    problem: >
+      .gitignore:44 has a dangling conflict marker from the ctxo merge.
+      gosec is configured in two places with divergent exclusions — CI silently
+      disables G204/G304/G306 because package.json:preflight:go shadows .gosec.json.
+    tasks:
+      - desc: "Remove merge-conflict marker from .gitignore line 44"
+        notes: |
+          Single-line delete.
+          Add CI check: grep -rn '<<<<<<<' .gitignore && exit 1
+        verify: "git diff .gitignore shows no conflict markers"
+      - desc: "Consolidate gosec to single .gosec.json with documented exclusions"
+        notes: |
+          Merge both exclusion lists into .gosec.json.
+          Add inline comment for each excluded rule (e.g., G404 = math/rand non-crypto).
+          Re-evaluate G204/G304/G306 — document or re-enable.
+          Update package.json preflight:go to use -conf .gosec.json.
+        verify: "gosec -conf .gosec.json ./... exits 0; no duplicate configs"
+      - desc: "Add conflict-marker check to verify workflow"
+        notes: |
+          grep -rn '<<<<<<<' --include='*.go' --include='*.yaml' --include='*.json' .
+          Non-zero exit fails the verify job.
+        verify: "Inject marker in test branch; CI fails"
+
+  - id: e90s03
+    title: "Reconcile AGENTS.md ctxo mandate with 2026-08-11 revert reality"
+    status: open
+    bcps: 2
+    priority: P1
+    problem: >
+      AGENTS.md says ctxo is MANDATORY and NEVER grep. Commits 32c5fe1 + 95b7cb6
+      reverted ctxo committed-index as non-viable. verify-index gate is
+      upstream-broken. This actively misleads agents into depending on a stale index.
+    tasks:
+      - desc: "Rewrite AGENTS.md ctxo section to reflect operational reality"
+        notes: |
+          Demote MANDATORY/NEVER to: preferred when index is warm and fresh.
+          Document the pattern parameter (not query) for search_symbols.
+          Document that verify-index is upstream-broken; skip it.
+          Clarify: ctxo is a dependency-graph oracle (blast_radius, why_context,
+          pr_impact) — not a search replacement. grep/LSP is always correct.
+        verify: "AGENTS.md review; no MANDATORY/NEVER language around ctxo search"
+      - desc: "Move ctxo post-commit/post-merge hooks into .githooks/ (versioned)"
+        notes: |
+          .git/hooks/ is ignored when core.hooksPath=.githooks. The auto-index
+          promise is broken on fresh clones.
+          Add .githooks/post-commit and .githooks/post-merge with ctxo index --incremental.
+          Add setup.sh step: git config core.hooksPath .githooks
+        verify: "Fresh clone -> commit -> .ctxo/ index updates"
+
+  - id: e90s04
+    title: "Add -race CI job and frontend lint/test gate"
+    status: open
+    bcps: 3
+    priority: P1
+    problem: >
+      22 race/flake commits; zero -race flags in any CI workflow. React 19 + Vitest
+      frontend has no CI job — TypeScript regression can merge green. a11y conformance
+      certified once (e88), can silently regress.
+    tasks:
+      - desc: "Add test-race job to test-build-release.yml"
+        notes: |
+          go test -race -timeout 300s ./components/deploy/... ./components/...
+          Start with highest-risk packages (deploy, functions, realtime).
+          Gate as required for main merges.
+        verify: "CI shows test-race job"
+      - desc: "Add ui-checks job to test-build-release.yml"
+        notes: |
+          cd ui && npm ci && npm run lint && npm run typecheck && npm run build && npm run test
+          Trigger on push touching ui/** or any PR.
+        verify: "ESLint violation in ui/ -> CI fails"
+      - desc: "Gate axe-scan over all routes in CI (not local-only)"
+        notes: |
+          Move Playwright/axe from local to nightly or PR-triggered workflow.
+          Extend from 2 routes (/, /docs) to all 17+ admin + public routes.
+          Add no-new-axe-violations to PR template Definition of Done.
+        verify: "Introduce a11y regression -> axe CI job fails"
+
+  - id: e90s05
+    title: "Canonical MCP config — single source, generated adapters"
+    status: open
+    bcps: 3
+    priority: P1
+    problem: >
+      MCP configuration duplicated across 8+ files: .mcp.json, .claude/mcp.json,
+      .cursor/mcp.json, .pi/mcp.json, .agents/mcp_config.json, opencode.json/jsonc,
+      .vscode/mcp.json. Already diverge on transport, secret handling, filesystem
+      paths, available servers. Production MCP (mcp.bigbase.click) silently present
+      in every dev profile — accidental prod mutations risk.
+    tasks:
+      - desc: "Designate .mcp.json as canonical; audit all 8 config files"
+        notes: |
+          Document every divergence across files.
+          Classify servers: dev-only / write-capable / prod-only.
+          Production MCP only in explicit write profile, never default dev.
+          Remove absolute /Users/danielvm/... paths; use $HOME or env vars.
+          Pin all npx-spawned MCP packages to explicit versions (no @latest).
+        verify: "grep for hardcoded paths -> 0 results"
+      - desc: "Write scripts/gen-mcp-configs.sh"
+        notes: |
+          Generate .claude/mcp.json, .cursor/mcp.json, opencode.jsonc from .mcp.json.
+          Mark generated files: # GENERATED — do not edit; edit .mcp.json
+          CI lint step: gen-mcp-configs.sh --check -> fail if any generated file is stale.
+        verify: "Edit .mcp.json -> run script -> all adapters regenerate consistently"
+      - desc: "Add scripts/setup-dev.sh — one-command onboarding"
+        notes: |
+          Steps: git config core.hooksPath .githooks, gen-mcp-configs.sh,
+          go install tools, npm install (root + ui/), ctxo index.
+          Print doctor summary: tool versions, hook status, index age.
+        verify: "Fresh clone -> ./scripts/setup-dev.sh -> developer ready in < 2 min"
+
+  - id: e90s06
+    title: "Consolidate agent instruction files — AGENTS.md as single source"
+    status: open
+    bcps: 2
+    priority: P1
+    problem: >
+      AGENTS.md (10KB), CLAUDE.md (20KB), GEMINI.md (11.7KB), CONVENTIONS.md (5.4KB)
+      share 67-77% content overlap. Every rule edit requires 4x changes. AGENTS.md
+      already contradicts reality (ctxo mandate vs revert). Same drift disease as MCPs.
+    tasks:
+      - desc: "Promote AGENTS.md to single source of engineering truth"
+        notes: |
+          Move unique content from CLAUDE.md/GEMINI.md into AGENTS.md sections.
+          CLAUDE.md and GEMINI.md become thin adapters: tool-specific overrides only.
+          Add header: "# THIN ADAPTER — canonical rules live in AGENTS.md"
+          Split operational runbook (VPS gates, harden-vps) from contributor guidance.
+          No machine paths or production operator details in contributor-facing files.
+        verify: "CLAUDE.md and GEMINI.md each < 50 lines; all substantive rules in AGENTS.md"
+      - desc: "Add CI doc-drift check for version claims"
+        notes: |
+          Extract declared Go/Node versions from README, CLAUDE.md, GEMINI.md,
+          CONTRIBUTING.md, .nvmrc, setup.sh, .pr_agent.toml.
+          Assert all agree with go.mod toolchain and CI workflow pins.
+          ~20 lines of shell added to verify job.
+        verify: "Stale Go version in README -> CI fails"
+
+  - id: e90s07
+    title: "Version declaration sweep and docs reconciliation"
+    status: open
+    bcps: 1
+    priority: P2
+    problem: >
+      README badge v2.13.0 (actual: v2.89.0). README says Go 1.22+ (go.mod: 1.26.3).
+      .nvmrc=22 (CI parity: Node 24). README references deleted ci-cd.yml workflow.
+      CONTRIBUTING says open a PR; CONVENTIONS permits direct pushes.
+      .env.example is OpenCode-only; no BIGBASE_* vars documented.
+      specs/MCP_CONFIG_INVENTORY.md claims 8 servers + seal (absent from .mcp.json).
+    tasks:
+      - desc: "One-pass version and reference reconciliation"
+        notes: |
+          README: update badge, Go version, Node version, workflow filename.
+          .nvmrc: align to 24 (match CI parity job and VPS).
+          CONTRIBUTING: reconcile push discipline with CONVENTIONS.
+          .env.example: add BIGBASE_ROOT_ENCRYPTION_KEY and all required vars.
+          specs/MCP_CONFIG_INVENTORY.md: resync with actual .mcp.json.
+          .golangci.yml comment: update ci-cd.yml ref to test-build-release.yml.
+        verify: "doc-drift CI check (e90s06) passes green"
+      - desc: "Delete repo root cruft and add make clean"
+        notes: |
+          Delete stray <stdin> file (58KB MCP manifest dump).
+          Add Makefile clean target: rm -f bigbase bigbase_linux deploy.test *.db coverage.out.
+        verify: "git status after make clean shows clean tree"
+
+  - id: e90s08
+    title: "Dependabot grouping and semantic-release push discipline"
+    status: open
+    bcps: 2
+    priority: P2
+    problem: >
+      78 individual dependabot commits; 3 releases/day at peak. Release bot commits
+      to origin/main between agent fetch and push -> non-fast-forward conflicts.
+      npm ci lockfile drift recurred twice (Aug 12 @ctxo/plugin-api@0.7.2 failure).
+    tasks:
+      - desc: "Enable Dependabot update groups in .github/dependabot.yml"
+        notes: |
+          groups: npm-ui, npm-root, go-modules, github-actions.
+          Schedule: weekly, monday for all groups.
+          Enable auto-merge for patch-level bumps that pass CI.
+        verify: "Next Dependabot window produces 4 grouped PRs instead of 20+"
+      - desc: "Add npm lockfile consistency check to CI verify job"
+        notes: |
+          npm ci --dry-run (root + ui/) -> fail if package.json and lockfile diverge.
+          Would have caught the Aug 12 @ctxo/plugin-api failure.
+        verify: "Break package-lock.json manually -> CI verify fails"
+      - desc: "Document rebase-before-push discipline in CONVENTIONS.md"
+        notes: |
+          Add: Always git pull --rebase --autostash before push to main.
+          Add: Never use --force-with-lease. If release bot beat you, rebase.
+        verify: "CONVENTIONS.md has the rebase-before-push rule"
+
+  - id: e90s09
+    title: "Async-assert pattern sweep and test guideline"
+    status: open
+    bcps: 2
+    priority: P2
+    problem: >
+      22 race/flake commits across history. The waitForHostRegistration helper
+      (336614804) is the correct pattern but exists only in deploy tests. Other
+      component suites likely have bare goroutine-then-assert patterns.
+    tasks:
+      - desc: "Sweep component tests for goroutine-then-assert without poll helper"
+        notes: |
+          Search: go func() followed within 10 lines by require.Equal/assert.Equal
+          without intervening poll helper or channel sync.
+          Apply waitForX pattern to findings.
+          Audit: deploy, functions, realtime, monitoring, auth.
+        verify: "go test -race -count=20 ./... passes; no flakes in 20 runs"
+      - desc: "Add async test guideline to CONVENTIONS.md"
+        notes: |
+          Rule: after launching a goroutine or supervisor, always poll (waitForX)
+          before asserting state. Never assert once on timing.
+          Reference waitForHostRegistration as canonical example.
+        verify: "CONVENTIONS.md has async test guideline with example"
+
+key_results:
+  - "Production running v2.89.x with BIGBASE_ROOT_ENCRYPTION_KEY provisioned"
+  - "CI catches: races (-race job), frontend regressions, conflict markers, lockfile drift, required-env gaps, version doc drift"
+  - "Single .mcp.json canonical source; generated adapters for all AI clients"
+  - "AGENTS.md is the one truth; CLAUDE.md / GEMINI.md are thin adapters (< 50 lines each)"
+  - "Fresh clone + ./scripts/setup-dev.sh -> developer ready in < 2 min"
+  - "Dependabot grouped -> 4 PRs/week instead of 20+"
+  - "No stale version claims in any doc (enforced by CI)"
+
+anti_patterns:
+  - "Copy-paste instead of generate-or-reference (MCP configs, agent files, gosec, version claims)"
+  - "New runtime requirement added without a corresponding CI gate (caused prod deploy failure)"
+  - "Mandating a tool whose automation was reverted 2 days earlier (ctxo MANDATORY)"
+  - "Asserting async goroutine state without a poll helper (recurring flake class)"
+
+patterns_to_preserve:
+  - "SHA-pinned GitHub Actions — supply-chain hygiene, easy to regress, keep it"
+  - "Dual-DB test matrix (SQLite + Postgres) — catches driver-specific bugs early"
+  - "toolchain.toml + parity CI job — extend this pattern to env keys and lockfiles"
+  - "RCA discipline in commit bodies (336614804 is the model)"
+  - "Auto-rollback deploy + binary swap — strengthen with required-env preflight"
+  - "BUG-* registry and epic/story/BCP planning structure"
+  - "CodeQL + gitleaks + gosec + race + axe — posture is strong; just close CI gaps"
+  - "Real database tests instead of mocks — right pattern for this project"

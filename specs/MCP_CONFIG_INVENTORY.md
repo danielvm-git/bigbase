@@ -1,8 +1,8 @@
 # MCP Configuration Inventory
 
-**Generated:** 2026-07-27  
-**Root:** `~/Developer/bigbase`  
-**Status:** ✅ All MCPs configured correctly
+**Generated:** 2026-08-13
+**Root:** repository-relative paths only
+**Status:** credentials use `${CONTEXT7_API_KEY}`; local MCP packages are pinned
 
 ---
 
@@ -10,28 +10,26 @@
 
 | Agent | Config File | MCPs | Status |
 |-------|-------------|------|--------|
-| Claude Code | `.mcp.json` | 8 | ✅ Correct |
-| agy CLI | `~/.gemini/config/mcp_config.json` | 7 | ✅ Correct |
-| Antigravity IDE | `~/.gemini/config/mcp_config.json` | 7 | ✅ Correct |
-| Cursor | `.cursor/mcp.json` | 7 | ✅ Correct |
-| VS Code/Cline/Roo | `.vscode/mcp.json` | 7 | ✅ Correct |
-| Pi | `.pi/mcp.json` | 7 | ✅ Correct |
-| MiMo/OpenCode | `opencode.jsonc` | 7 | ✅ Correct |
+| Claude Code | `.mcp.json` / `.claude/mcp.json` | 7 | ✅ Current |
+| agy / Antigravity | `.agents/mcp_config.json` | 6 | ✅ Current |
+| Cursor | `.cursor/mcp.json` | 6 | ✅ Current |
+| VS Code/Cline/Roo | `.vscode/mcp.json` | 6 | ✅ Current |
+| Pi | `.pi/mcp.json` | 6 | ✅ Current |
+| OpenCode | `opencode.json` / `opencode.jsonc` | 6 | ✅ Current |
 
 ---
 
-## MCP Servers (7 total + 1 Claude-only)
+## MCP Servers (6 shared + 1 Claude-only)
 
 | # | Name | Type | URL/Command | Agents |
-|---|------|------|-------------|--------|
-| 1 | context7 | HTTP | `https://mcp.context7.com/mcp` | All |
+|---|------|-------------|-------------|--------|
+| 1 | context7 | HTTP/local | `https://mcp.context7.com/mcp` | All |
 | 2 | bigbase | HTTP | `https://mcp.bigbase.click/mcp` | All |
-| 3 | seal | HTTP | `https://api-stage.35.253.75.95.nip.io/mcp` | All |
-| 4 | sqz | Local | `sqz-mcp` | All |
-| 5 | ctxo | Stdio | `npx -y @ctxo/cli` | All |
-| 6 | filesystem | Stdio | `npx -y @modelcontextprotocol/server-filesystem` | All |
-| 7 | sequential-thinking | Stdio | `npx -y @modelcontextprotocol/server-sequential-thinking` | All |
-| 8 | claude_design | HTTP | `https://api.anthropic.com/v1/design/mcp` | Claude Code only |
+| 3 | sqz | Local | `sqz-mcp` | All |
+| 4 | ctxo | Stdio | `npx -y @ctxo/cli@0.11.4` | All |
+| 5 | filesystem | Stdio | `npx -y @modelcontextprotocol/server-filesystem@2026.7.10 . /tmp` | All |
+| 6 | sequential-thinking | Stdio | `npx -y @modelcontextprotocol/server-sequential-thinking@2026.7.4` | All |
+| 7 | claude_design | HTTP | `https://api.anthropic.com/v1/design/mcp` | Claude Code only |
 
 ---
 

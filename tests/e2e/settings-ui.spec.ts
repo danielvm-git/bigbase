@@ -141,7 +141,7 @@ test.describe('Settings Page UI', () => {
     // Find the Settings link in the sidebar footer
     const settingsLink = page.locator('.sidebar-footer-nav a', { hasText: 'Settings' });
     await expect(settingsLink).toBeVisible();
-    await expect(settingsLink).toHaveAttribute('href', '/settings');
+    await expect(settingsLink).toHaveAttribute('href', '#/settings')
 
     // Navigate directly to settings page via hash route (full SPA navigation)
     await page.goto('/admin/#/settings');

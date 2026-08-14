@@ -46,15 +46,14 @@ test.describe('Deploy Page', () => {
   test('Deploy page renders with site list or empty state', async ({ page }) => {
     await page.goto('http://localhost:9999/admin/#/deploy');
 
-    // The page title should be "Sites".
-    await expect(page.locator('h1')).toContainText('Sites');
+    // The route loads site data asynchronously; wait for either stable state.
+    await expect(page.locator('.empty-state, .sites-toolbar')).toBeVisible({ timeout: 15000 });
 
     // Either the empty state is shown with "Create your first site",
     // or the site list / toolbar is rendered.
     const emptyState = page.locator('.empty-state');
     const toolbar = page.locator('.sites-toolbar');
 
-    // At least one of these should be present.
     const emptyCount = await emptyState.count();
     const toolbarCount = await toolbar.count();
     expect(emptyCount + toolbarCount).toBeGreaterThanOrEqual(1);

@@ -161,15 +161,100 @@ jobs:
           node-version: '${{ env.NODE_VERSION }}'
 
       # --legacy-peer-deps matches the Admin UI build step: typescript ~7 is
-      # pinned while typescript-eslint@8 peer-caps typescript <6.1.0. This
-      # install also doubles as the UI lockfile-sync guard.
+      # pinned while typescript-eslint@8 peer-caps typescript <6.1.0.
       - name: Install UI dependencies
         working-directory: ui
         run: npm ci --prefer-offline --legacy-peer-deps
 
+      - name: ESLint
+        working-directory: ui
+        run: npm run lint
+
+      - name: TypeScript
+        working-directory: ui
+        run: npm run typecheck
+
       - name: Vitest (jsdom)
         working-directory: ui
         run: npm run test
+
+      - name: Production build
+        working-directory: ui
+        run: npm run build
+
+  # ============================================================================
+  # JOB: Test (race) — exercise concurrency-sensitive Go components.
+  # Depends on: lint
+  # ============================================================================
+  test-race:
+    name: Test (race)
+    needs: [lint]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Setup Go ${{ env.GO_VERSION }}
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
+        with:
+          go-version: '${{ env.GO_VERSION }}'
+          cache: true
+
+      - name: Race tests
+        run: go test -race -timeout 300s ./components/deploy/... ./components/functions/... ./components/realtime/... ./components/monitoring/...
+
+  # ============================================================================
+  # JOB: Test (E2E) — browser and API flows against an isolated server.
+  # Depends on: lint
+  # ============================================================================
+  test-e2e:
+    name: Test (E2E)
+    needs: [lint]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Setup Go ${{ env.GO_VERSION }}
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
+        with:
+          go-version: '${{ env.GO_VERSION }}'
+          cache: true
+
+      - name: Setup Node ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: '${{ env.NODE_VERSION }}'
+          cache: 'npm'
+
+      - name: Install root dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Install UI dependencies
+        working-directory: ui
+        run: npm ci --legacy-peer-deps
+
+      - name: Build embedded UI
+        working-directory: ui
+        run: npm run build
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Playwright E2E
+        run: npx playwright test tests/e2e --config=tests/e2e/playwright.config.ts
+
+      - name: Upload Playwright artifacts
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: playwright-artifacts
+          path: |
+            test-results/
+            playwright-report/
+          if-no-files-found: ignore
 
   # ==========================================================================
   # JOB: Verify — Go preflight (vet/test/gosec) + Gitleaks + Conventional
@@ -177,7 +262,7 @@ jobs:
   # Depends on: lint, test-sqlite, test-postgres
   # ==========================================================================
   verify:
-    needs: [lint, test-sqlite, test-postgres]
+    needs: [lint, test-sqlite, test-postgres, test-race]
     if: always() && !cancelled() && (github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/main'))
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -223,6 +308,14 @@ jobs:
 
       - name: Gitleaks scan
         run: gitleaks detect --source . --no-git --no-banner --config .gitleaks.toml
+
+      - name: Check conflict markers
+        run: |
+          if git grep -n -E '^(<<<<<<<|>>>>>>>)( |$)|^=======$' -- \
+            ':!CHANGELOG.md' ':!specs/archive/**'; then
+            echo "ERROR: unresolved merge-conflict marker found"
+            exit 1
+          fi
 
       - name: Check Conventional Commits
         run: bash scripts/check-conventional-commits.sh
@@ -298,7 +391,7 @@ jobs:
   # ==========================================================================
   report:
     name: Generate Progress Dashboard
-    needs: [lint, test-sqlite, test-postgres, toolchain-parity, verify]
+    needs: [lint, test-sqlite, test-postgres, test-race, test-ui, test-e2e, toolchain-parity, verify]
     if: always()
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -412,7 +505,7 @@ jobs:
   # ==========================================================================
   release:
     name: Release
-    needs: [verify, test-ui]
+    needs: [verify, test-ui, test-race, test-e2e]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 15

@@ -136,7 +136,7 @@ export default function MessagingPage() {
       <Tabs tabs={pageTabs} active={pageTab} onChange={setPageTab} />
 
       {pageTab === 'templates' && (
-        <div className="template-grid">
+        <div id="panel-templates" role="tabpanel" aria-labelledby="tab-templates" className="template-grid">
           {mockTemplates.map(t => (
             <Link key={t.id} to={`/messaging/${t.id}`} className="template-row">
               <span>{t.name}</span>
@@ -149,9 +149,9 @@ export default function MessagingPage() {
       )}
 
       {pageTab === 'send' && (
-        <>
+        <div id="panel-send" role="tabpanel" aria-labelledby="tab-send">
           <Tabs tabs={channelTabs} active={tab} onChange={id => setTab(id as Channel)} />
-          <div className="card" style={{ marginBottom: 'var(--space-12)' }}>
+          <div id={`panel-${tab}`} role="tabpanel" aria-labelledby={`tab-${tab}`} className="card" style={{ marginBottom: 'var(--space-12)' }}>
             {tab === 'email' && (
               <form onSubmit={requestSend('email')} className="msg-form">
                 <Input label="To" name="emailTo" placeholder="To" hint="Recipient email address, e.g. name@example.com" value={emailTo} onChange={e => setEmailTo(e.target.value)} required />
@@ -176,11 +176,11 @@ export default function MessagingPage() {
               </form>
             )}
           </div>
-        </>
+        </div>
       )}
 
       {pageTab === 'history' && (
-        <>
+        <div id="panel-history" role="tabpanel" aria-labelledby="tab-history">
           <h2 className="section-title">Outbound history</h2>
           {loading ? <div className="loading">Loading...</div> : messages.length === 0 ? <p className="dim">No messages sent.</p> : (
             <div className="table-wrap">
@@ -208,7 +208,7 @@ export default function MessagingPage() {
               </table>
             </div>
           )}
-        </>
+        </div>
       )}
 
       <Dialog

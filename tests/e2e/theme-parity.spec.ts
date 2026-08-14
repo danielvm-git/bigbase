@@ -109,7 +109,7 @@ test.describe('e85 — cross-surface theme parity', () => {
   test('admin sidebar writes theme keys that the landing page honors', async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 800 });
     await page.goto('/admin/#/');
-    await page.getByRole('navigation').waitFor({ state: 'visible', timeout: 15000 });
+    await page.locator('#sidebar-nav').waitFor({ state: 'visible', timeout: 15000 });
 
     // Toggle dark mode via the sidebar appearance button.
     const darkToggle = page.getByRole('button', { name: /Switch to dark mode/i });
@@ -127,7 +127,7 @@ test.describe('e85 — cross-surface theme parity', () => {
     expect(menuBox!.y).toBeGreaterThanOrEqual(0);
     expect(menuBox!.y + menuBox!.height).toBeLessThanOrEqual(viewport!.height);
 
-    await page.getByRole('menuitem', { name: /March/i }).click();
+    await page.getByRole('menuitemradio', { name: /March/i }).click();
 
     // The admin ThemeProvider must have persisted both keys.
     const stored = await page.evaluate(() => ({

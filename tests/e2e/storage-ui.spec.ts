@@ -54,7 +54,7 @@ test.describe('Storage UI — browser E2E', () => {
     await expect(page.locator('input[type="file"]')).toBeVisible();
 
     // Verify the upload button is present
-    await expect(page.getByRole('button', { name: 'Upload' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Upload', exact: true })).toBeVisible();
 
     // Verify grid/list view toggle buttons are present
     await expect(page.getByRole('button', { name: 'List' })).toBeVisible();
@@ -79,7 +79,7 @@ test.describe('Storage UI — browser E2E', () => {
     // Verify upload controls remain functional
     await expect(page.locator('.upload-form')).toBeVisible();
     await expect(page.locator('input[type="file"]')).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Upload' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Upload', exact: true })).toBeVisible();
   });
 
 });

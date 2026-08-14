@@ -10,19 +10,18 @@
 // which is what these tests exercise.
 import { test, expect, type APIRequestContext, type Page } from '@playwright/test';
 
-const email = `e2e-timeout-${Date.now()}@test.com`;
 const password = 'TestPass123!';
 
-async function registerViaApi(request: APIRequestContext): Promise<void> {
+async function registerViaApi(request: APIRequestContext, userEmail: string): Promise<void> {
   const res = await request.post('/api/auth/register', {
-    data: { email, password },
+    data: { email: userEmail, password },
   });
   expect(res.status()).toBe(201);
 }
 
-async function loginViaUi(page: Page): Promise<void> {
+async function loginViaUi(page: Page, userEmail: string): Promise<void> {
   await page.goto('/admin/#login');
-  await page.getByPlaceholder('Email').fill(email);
+  await page.getByPlaceholder('Email').fill(userEmail);
   await page.getByPlaceholder('Password').fill(password);
   await page.getByRole('button', { name: 'Sign In' }).click();
   await page.waitForURL('**/admin/#/');
@@ -35,8 +34,9 @@ test.describe('Session timeout warning + re-auth (e87s05)', () => {
     page,
     request,
   }) => {
-    await registerViaApi(request);
-    await loginViaUi(page);
+    const testEmail = `e2e-timeout-${Date.now()}@test.com`
+    await registerViaApi(request, testEmail);
+    await loginViaUi(page, testEmail);
 
     // 30s access expiry < 5 min threshold → the dialog is visible immediately.
     const dialog = page.getByRole('dialog', { name: /Session expiring soon/i });
@@ -58,8 +58,9 @@ test.describe('Session timeout warning + re-auth (e87s05)', () => {
     page,
     request,
   }) => {
-    await registerViaApi(request);
-    await loginViaUi(page);
+    const testEmail = `e2e-timeout-${Date.now()}@test.com`
+    await registerViaApi(request, testEmail);
+    await loginViaUi(page, testEmail);
     await expect(page.getByRole('dialog', { name: /Session expiring soon/i })).toBeVisible({
       timeout: 10_000,
     });
@@ -82,7 +83,7 @@ test.describe('Session timeout warning + re-auth (e87s05)', () => {
     expect(pending).toBe('/deploy');
 
     // Sign in again → the saved route is restored (and cleared).
-    await page.getByPlaceholder('Email').fill(email);
+    await page.getByPlaceholder('Email').fill(testEmail)
     await page.getByPlaceholder('Password').fill(password);
     await page.getByRole('button', { name: 'Sign In' }).click();
     await expect(page).toHaveURL(/\/admin\/#\/deploy/, { timeout: 15_000 });

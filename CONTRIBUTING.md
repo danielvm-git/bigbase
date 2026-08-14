@@ -20,13 +20,13 @@ BigBase is a Go-based Backend-as-a-Service platform with 19 ECC components. Cont
 - New features should fit the ECC pattern — kernel discovers, components register, event bus communicates.
 
 ### Pull Request Process
-1. **Branch from main.** `fix/bug-description` or `feat/feature-description`.
+1. **Branch from main.** Use `fix/bug-description` or `feat/feature-description`.
 2. **Follow CONVENTIONS.md.** Go conventions, test coverage, no direct component imports.
 3. **Run tests:** `go test ./...`
 4. **Run lint:** `golangci-lint run ./...`
 5. **Run preflight:** `npm run preflight`
 6. **Commit:** Conventional Commits format — `feat(component): description` or `fix(component): description`.
-7. **Open a PR with `gh pr create`.** Include what you changed, why, and how to verify.
+7. **Integrate:** Solo work may fast-forward `main` only after required checks pass; use a PR for collaborative review.
 
 ### Code Standards
 - Functions: 4–20 lines. Split if longer.
@@ -43,7 +43,7 @@ go run . serve --port 8080
 ```
 
 ### Prerequisites
-- Go 1.22+
+- Go 1.26.3+
 - `golangci-lint` (development only)
 - SQLite (bundled via `modernc.org/sqlite`) or PostgreSQL for dual-driver testing
 

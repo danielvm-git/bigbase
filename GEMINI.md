@@ -4,7 +4,7 @@ Read CONVENTIONS.md before any GitHub or git operation.
 
 ## Project
 Single-binary, component-based BaaS platform using Entity-Component-Construct (ECC) architecture.
-Stack: Go 1.22+ / ECC Kernel + Plugins / SQLite + PostgreSQL
+Stack: Go 1.26.3 / ECC Kernel + Plugins / SQLite + PostgreSQL
 
 ## Commands
 | Action | Command |
@@ -166,11 +166,11 @@ Env vars: `OPENSRC_HOME` (cache location), `GITHUB_TOKEN` / `GITLAB_TOKEN` / `BI
 **opensrc is for reading code, not docs.** When your question is "how does X work internally?" or "what does this function actually do?", reach for opensrc first. The source is the ground truth — types, docs, and blog posts are approximations. Only fall back to `web_search`, `fetch_content`, or `context7` when you need documentation, usage examples, community patterns, or repo metadata that isn't in the source.
 
 <!-- ctxo-rules-start -->
-## ctxo MCP Tool Usage (MANDATORY)
+## ctxo MCP Tool Usage
 
-**ALWAYS use ctxo MCP tools before reading source files or making code changes.** The ctxo index contains dependency graphs, git intent, anti-patterns, and change health that cannot be derived from reading files alone. Skipping these tools leads to blind edits and broken dependencies.
+Use ctxo MCP tools before source changes when the index is available and fresh. If ctxo is unavailable or stale, continue with LSP and repository search; do not block development on an external index.
 
-### Before ANY Code Modification
+### Before Code Modification (when ctxo is available)
 1. Call `get_blast_radius` for the symbol you are about to change — understand what breaks
 2. Call `get_why_context` for the same symbol — check for revert history or anti-patterns
 3. Only then read and edit source files
@@ -194,9 +194,9 @@ Env vars: `OPENSRC_HOME` (cache location), `GITHUB_TOKEN` / `GITLAB_TOKEN` / `BI
 - Call `get_architectural_overlay` to understand layer boundaries
 - Call `get_symbol_importance` to identify critical symbols
 
-### NEVER Do These
-- NEVER edit a function without first calling `get_blast_radius` on it
-- NEVER skip `get_why_context` — reverted code and anti-patterns are invisible without it
-- NEVER grep source files to find symbols when `search_symbols` exists
-- NEVER manually trace imports when `find_importers` gives the full reverse dependency graph
+### Guidelines
+- For high-risk symbols, call `get_blast_radius` before editing when ctxo is available.
+- Check `get_why_context` for high-risk or historically unstable symbols.
+- Prefer `search_symbols` for indexed symbol lookup, but use LSP or grep when the index is stale or the target is plain text/configuration.
+- Use `find_importers` for dependency tracing when available; verify critical callsites with LSP or repository search.
 <!-- ctxo-rules-end -->

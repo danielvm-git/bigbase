@@ -80,6 +80,8 @@ type Monitoring struct {
 
 	stopHost     chan struct{}
 	stopAlerts   chan struct{}
+	lifecycleMu  sync.Mutex
+	workers      sync.WaitGroup
 	kctx         *kernel.Context // set in Start; used by alert checker to emit events
 	recorder     *eventrecorder.Recorder
 	llm          *llm.Client
@@ -140,6 +142,9 @@ func (m *Monitoring) Dependencies() []string { return []string{"db"} }
 
 func (m *Monitoring) Init(ctx *kernel.Context, config json.RawMessage) error { return nil }
 func (m *Monitoring) Start(ctx *kernel.Context) error {
+	m.lifecycleMu.Lock()
+	defer m.lifecycleMu.Unlock()
+	m.stopWorkersLocked()
 	m.stream = newEventStream()
 	if m.db != nil {
 		if err := m.initObservability(); err != nil {
@@ -191,19 +196,35 @@ func (m *Monitoring) Start(ctx *kernel.Context) error {
 	m.kctx = ctx
 	m.stopHost = make(chan struct{})
 	m.stopAlerts = make(chan struct{})
-	go m.runHostCollector()
-	go m.runAlertChecker()
+	m.workers.Add(2)
+	go func() {
+		defer m.workers.Done()
+		m.runHostCollector()
+	}()
+	go func() {
+		defer m.workers.Done()
+		m.runAlertChecker()
+	}()
 	return nil
 }
 
 func (m *Monitoring) Stop(ctx *kernel.Context) error {
+	m.lifecycleMu.Lock()
+	defer m.lifecycleMu.Unlock()
+	m.stopWorkersLocked()
+	return nil
+}
+
+func (m *Monitoring) stopWorkersLocked() {
 	if m.stopHost != nil {
 		close(m.stopHost)
 	}
 	if m.stopAlerts != nil {
 		close(m.stopAlerts)
 	}
-	return nil
+	m.workers.Wait()
+	m.stopHost = nil
+	m.stopAlerts = nil
 }
 
 func (m *Monitoring) runHostCollector() {

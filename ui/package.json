@@ -9,6 +9,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build && node scripts/verify-sites-css-in-dist.mjs",
+    "typecheck": "tsc -b --pretty false",
     "verify:sites-css": "node scripts/verify-sites-css-in-dist.mjs",
     "lint": "eslint .",
     "preview": "vite preview",

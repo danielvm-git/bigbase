@@ -165,10 +165,16 @@ jobs:
           script: |
             set -euo pipefail
 
-            # ----------------------------------------------------------------
-            # Phase 1: Verify preconditions
-            # ----------------------------------------------------------------
-            echo "=== Phase 1: Preconditions ==="
+            # Required runtime configuration must be present before any backup,
+            # environment mutation, binary replacement, or service restart.
+            REQUIRED_ENV_KEYS=(BIGBASE_ROOT_ENCRYPTION_KEY)
+            for required_key in "${REQUIRED_ENV_KEYS[@]}"; do
+              if [ -z "${!required_key:-}" ]; then
+                echo "ERROR: required deployment secret ${required_key} is missing."
+                exit 1
+              fi
+            done
+            echo "  Required deployment secrets are present"
 
             if [ ! -d "${VPS_BIN_DIR}" ]; then
               echo "ERROR: ${VPS_BIN_DIR} does not exist."
@@ -257,18 +263,18 @@ jobs:
               echo "  GitHub App credentials written to new ${VPS_ENV_FILE}"
             fi
 
-            # Write the root encryption key (required by main.go since e89 —
-            # the service refuses to boot without it). Idempotent: create the
-            # .env if missing, strip any prior line, then append the current
-            # value from the BIGBASE_ROOT_ENCRYPTION_KEY repo secret.
-            if [ -n "${BIGBASE_ROOT_ENCRYPTION_KEY:-}" ]; then
-              mkdir -p "$(dirname "${VPS_ENV_FILE}")"
-              touch "${VPS_ENV_FILE}"
-              sed -i '/^BIGBASE_ROOT_ENCRYPTION_KEY=/d' "${VPS_ENV_FILE}"
-              echo "BIGBASE_ROOT_ENCRYPTION_KEY=${BIGBASE_ROOT_ENCRYPTION_KEY}" >> "${VPS_ENV_FILE}"
-              echo "  Root encryption key written to ${VPS_ENV_FILE}"
-            else
-              echo "  WARNING: BIGBASE_ROOT_ENCRYPTION_KEY secret is empty — service will fail to boot (e89)"
+            # Write the root encryption key (required by main.go since e89).
+            # The Phase 1 preflight already rejects an empty secret; this write
+            # remains idempotent so the VPS .env stays synchronized.
+            mkdir -p "$(dirname "${VPS_ENV_FILE}")"
+            touch "${VPS_ENV_FILE}"
+            sed -i '/^BIGBASE_ROOT_ENCRYPTION_KEY=/d' "${VPS_ENV_FILE}"
+            printf 'BIGBASE_ROOT_ENCRYPTION_KEY=%s\n' "${BIGBASE_ROOT_ENCRYPTION_KEY}" >> "${VPS_ENV_FILE}"
+            echo "  Root encryption key written to ${VPS_ENV_FILE}"
+
+            if ! grep -q '^BIGBASE_ROOT_ENCRYPTION_KEY=.' "${VPS_ENV_FILE}"; then
+              echo "ERROR: ${VPS_ENV_FILE} does not contain a non-empty root encryption key."
+              exit 1
             fi
 
             if [ -f "${VPS_ENV_FILE}" ]; then
