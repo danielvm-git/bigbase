@@ -806,14 +806,17 @@ func (d *Deploy) failDeployment(id string, buildErr error) {
 	// Close the log stream so WebSocket subscribers know the deployment failed.
 	d.closeLogStream(id)
 
-	// Use TransitionState for validated status change
-	_ = d.TransitionState(context.Background(), id, "failed")
-
-	// Update error_message (separate from TransitionState to keep it focused on status)
+	// Persist error_message BEFORE the status transition. Writing status first
+	// left a window where a concurrent reader (polling API, tests) could observe
+	// status=failed with an empty error_message — the TestDeployBuildError flake
+	// under -race. TransitionState still owns validation + event emission.
 	d.mu.Lock()
-	defer d.mu.Unlock()
 	_, _ = d.db.ExecContext(context.Background(),
 		"UPDATE deployments SET error_message = ? WHERE id = ?", msg, id)
+	d.mu.Unlock()
+
+	// Use TransitionState for validated status change
+	_ = d.TransitionState(context.Background(), id, "failed")
 }
 
 // applyManifestCSP writes a manifest-declared CSP to deploy_defaults.csp_policy
