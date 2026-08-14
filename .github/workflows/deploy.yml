@@ -80,6 +80,15 @@ jobs:
           fi
           echo "run_id=${RUN_ID}" >> "$GITHUB_OUTPUT"
 
+      # --- Checkout only config/required.env — the checked-in list of env keys
+      # the deploy preflight enforces (e90s01). Sparse to keep it light. ---
+      - name: Checkout required-env manifest
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          sparse-checkout: |
+            config/required.env
+          sparse-checkout-cone-mode: false
+
       # --- Download the artifact test-build-release's build job uploaded.
       # continue-on-error because a push to main that didn't publish a new
       # release still triggers this workflow via workflow_run, but never
@@ -103,6 +112,14 @@ jobs:
           else
             echo "proceed=true" >> "$GITHUB_OUTPUT"
           fi
+
+      - name: Load required env keys
+        if: steps.check.outputs.proceed == 'true'
+        id: reqenv
+        run: |
+          KEYS=$(grep -vE '^[[:space:]]*#|^[[:space:]]*$' config/required.env | tr '\n' ' ')
+          echo "keys=${KEYS}" >> "$GITHUB_OUTPUT"
+          echo "Required env keys: ${KEYS}"
 
       - name: Read deploy metadata
         if: steps.check.outputs.proceed == 'true'
@@ -148,6 +165,7 @@ jobs:
           BIGBASE_GITHUB_APP_ID: ${{ secrets.BIGBASE_GITHUB_APP_ID }}
           BIGBASE_GITHUB_APP_SLUG: ${{ secrets.BIGBASE_GITHUB_APP_SLUG }}
           GITHUB_APP_PEM_PATH: ${{ env.GITHUB_APP_PEM_PATH }}
+          REQUIRED_ENV_KEYS: ${{ steps.reqenv.outputs.keys }}
         with:
           host: ${{ secrets.CONTABO_HOST }}
           username: ${{ secrets.CONTABO_USER }}
@@ -158,7 +176,8 @@ jobs:
             VPS_BACKUPS_DIR,VPS_DATA_DIR,VPS_ENV_FILE,
             HEALTH_URL,MAX_BACKUPS,EXPECTED_VERSION,
             GOOGLE_CLIENT_ID,GOOGLE_CLIENT_SECRET,
-            BIGBASE_GITHUB_APP_ID,BIGBASE_GITHUB_APP_SLUG,GITHUB_APP_PEM_PATH
+            BIGBASE_GITHUB_APP_ID,BIGBASE_GITHUB_APP_SLUG,GITHUB_APP_PEM_PATH,
+            REQUIRED_ENV_KEYS
           # -------- Script executed on VPS --------
           script: |
             set -euo pipefail
@@ -258,6 +277,28 @@ jobs:
             if [ -f "${VPS_ENV_FILE}" ]; then
               chmod 600 "${VPS_ENV_FILE}" 2>/dev/null || true
             fi
+
+            # ----------------------------------------------------------------
+            # Phase 4.5: Config preflight — REQUIRED env keys must be present and
+            # non-empty in the env file BEFORE we swap the binary. A missing key
+            # fails the deploy here instead of bricking the service and forcing a
+            # rollback (the Aug 12 BIGBASE_ROOT_ENCRYPTION_KEY incident). Keys are
+            # sourced from the checked-in config/required.env manifest.
+            # ----------------------------------------------------------------
+            echo "=== Phase 4.5: Config preflight ==="
+
+            MISSING=""
+            for key in ${REQUIRED_ENV_KEYS:-}; do
+              if ! grep -qE "^[[:space:]]*${key}=.+" "${VPS_ENV_FILE}" 2>/dev/null; then
+                MISSING="${MISSING} ${key}"
+              fi
+            done
+            if [ -n "${MISSING}" ]; then
+              echo "ERROR: required env key(s) missing or empty in ${VPS_ENV_FILE}:${MISSING}"
+              echo "Refusing to swap the binary. Provision the key(s), then re-deploy."
+              exit 1
+            fi
+            echo "  All required env keys present: ${REQUIRED_ENV_KEYS:-<none>}"
 
             # ----------------------------------------------------------------
             # Phase 5: Deploy new binary
@@ -392,6 +433,9 @@ jobs:
     runs-on: ubuntu-latest
     needs: [deploy]
     if: failure() && github.event_name != 'workflow_dispatch'
+    permissions:
+      contents: read
+      issues: write
 
     steps:
       - name: Build failure summary
@@ -400,3 +444,25 @@ jobs:
           echo "   Repository: ${{ github.repository }}"
           echo "   Workflow run: ${{ github.event.workflow_run.html_url }}"
           echo "   Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+
+      # Surface prod failures OUTSIDE the Actions UI (e90s01): open a GitHub
+      # issue so a silent auto-rollback can't go unnoticed. Best-effort — a
+      # failed issue create must not mask the underlying deploy failure.
+      - name: Open deploy-failure issue
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          SRC_RUN_URL: ${{ github.event.workflow_run.html_url }}
+        run: |
+          gh issue create \
+            --repo "${{ github.repository }}" \
+            --title "🚨 Production deploy failed — run ${{ github.run_id }}" \
+            --body "$(printf '%s\n' \
+              "The **Deploy** workflow failed (auto-rollback may have fired)." \
+              "" \
+              "- Deploy run: ${RUN_URL}" \
+              "- Triggering build: ${SRC_RUN_URL:-n/a}" \
+              "- Commit: ${{ github.sha }}" \
+              "" \
+              "Check the deploy job log for the failing phase (a Phase 4.5 config-preflight failure means a required env key is missing on the VPS)." )" \
+            || echo "::warning::could not open deploy-failure issue (continuing)"

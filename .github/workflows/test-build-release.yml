@@ -29,6 +29,7 @@ concurrency:
 
 env:
   GO_VERSION: '1.26'
+  NODE_VERSION: '24'   # VPS/CI parity (Node 24 LTS)
   BINARY_PATH: 'bigbase-linux-amd64'
 
 jobs:
@@ -140,6 +141,73 @@ jobs:
         run: go test ./... -count=1 -timeout 120s
 
   # ==========================================================================
+  # JOB: Test (race) — race detector on the highest-risk concurrent packages
+  # (e90s04). 22 race/flake fixes in history, zero -race in CI until now. Start
+  # with deploy/functions/realtime; widen as they stay green. Gate as a required
+  # check for main in branch protection.
+  # Depends on: lint
+  # ==========================================================================
+  test-race:
+    name: Test (race)
+    needs: [lint]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    env:
+      BIGBASE_DB_DRIVER: sqlite
+      BIGBASE_DB_DSN: ':memory:'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Setup Go ${{ env.GO_VERSION }}
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
+        with:
+          go-version: '${{ env.GO_VERSION }}'
+          cache: true
+
+      - name: Race detector (highest-risk packages)
+        run: go test -race -timeout 300s ./components/deploy/... ./components/functions/... ./components/realtime/...
+
+  # ==========================================================================
+  # JOB: UI checks — lint, typecheck+build, unit tests for the React admin UI
+  # (e90s04). Runs on every push/PR so a TypeScript or lint regression cannot
+  # merge green. `npm run build` runs `tsc -b`, which is the typecheck.
+  # ==========================================================================
+  ui-checks:
+    name: UI checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Setup Node ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: '${{ env.NODE_VERSION }}'
+          cache: 'npm'
+          cache-dependency-path: ui/package-lock.json
+
+      - name: Install (ui)
+        working-directory: ui
+        run: npm ci --legacy-peer-deps
+
+      - name: Lint (ui)
+        working-directory: ui
+        run: npm run lint
+
+      - name: Typecheck + build (ui)
+        working-directory: ui
+        run: npm run build
+
+      - name: Unit tests (ui)
+        working-directory: ui
+        run: npm run test
+
+  # ==========================================================================
   # JOB: Verify — Go preflight (vet/test/gosec) + Gitleaks + Conventional
   #       Commits + No AI Attribution
   # Depends on: lint, test-sqlite, test-postgres
@@ -180,11 +248,34 @@ jobs:
       - name: Gitleaks scan
         run: gitleaks detect --source . --no-git --no-banner --config .gitleaks.toml
 
+      - name: Check for merge-conflict markers
+        run: bash scripts/check-conflict-markers.sh
+
+      - name: Check MCP adapter configs are in sync with .mcp.json
+        run: bash scripts/gen-mcp-configs.sh --check
+
+      - name: Check doc version drift (Go/Node)
+        run: bash scripts/check-doc-drift.sh
+
       - name: Check Conventional Commits
         run: bash scripts/check-conventional-commits.sh
 
       - name: Check no AI agent attribution
         run: bash scripts/check-no-ai-attribution.sh
+
+      # npm lockfile drift guard (e90s08): `npm ci` fails when package.json and
+      # the lockfile disagree. --dry-run validates without installing. Would have
+      # caught the Aug 12 @ctxo/plugin-api@0.7.2 lockfile failure.
+      - name: Setup Node ${{ env.NODE_VERSION }} (lockfile check)
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: '${{ env.NODE_VERSION }}'
+
+      - name: npm lockfile consistency (root)
+        run: npm ci --dry-run --no-audit --no-fund
+
+      - name: npm lockfile consistency (ui)
+        run: cd ui && npm ci --dry-run --no-audit --no-fund --legacy-peer-deps
 
   # ==========================================================================
   # JOB: Toolchain Parity — declared-toolchain contract (issue #179)

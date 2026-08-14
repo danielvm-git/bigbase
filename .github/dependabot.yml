@@ -1,3 +1,12 @@
+# Dependabot — grouped weekly updates (e90s08).
+# Grouping collapses the previous flood (78 individual PRs / 3 releases/day at
+# peak) into at most 4 PRs per week: go-modules, npm-root, npm-ui, github-actions.
+#
+# NOTE on auto-merge: Dependabot itself cannot merge PRs. To auto-merge passing
+# patch bumps, enable "Allow auto-merge" in repo settings, require the CI checks
+# in branch protection, and add a workflow that runs `gh pr merge --auto` for
+# dependabot patch PRs. Left as an explicit opt-in rather than wired here, since
+# it auto-lands commits on main.
 version: 2
 updates:
   - package-ecosystem: "gomod"
@@ -6,6 +15,9 @@ updates:
       interval: "weekly"
       day: "monday"
     open-pull-requests-limit: 10
+    groups:
+      go-modules:
+        patterns: ["*"]
 
   - package-ecosystem: "npm"
     directory: "/"
@@ -13,6 +25,9 @@ updates:
       interval: "weekly"
       day: "monday"
     open-pull-requests-limit: 10
+    groups:
+      npm-root:
+        patterns: ["*"]
 
   - package-ecosystem: "npm"
     directory: "/ui"
@@ -20,9 +35,15 @@ updates:
       interval: "weekly"
       day: "monday"
     open-pull-requests-limit: 10
+    groups:
+      npm-ui:
+        patterns: ["*"]
 
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "weekly"
       day: "monday"
+    groups:
+      github-actions:
+        patterns: ["*"]
