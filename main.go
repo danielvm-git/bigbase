@@ -40,14 +40,9 @@ import (
 	"github.com/danielvm/bigbase/components/storage"
 	"github.com/danielvm/bigbase/config"
 	"github.com/danielvm/bigbase/kernel"
-	"github.com/newrelic/go-agent/v3/integrations/logcontext-v2/nrslog"
-	"github.com/newrelic/go-agent/v3/newrelic"
 )
 
-var (
-	version = kernel.Version
-	nrApp   *newrelic.Application
-)
+var version = kernel.Version
 
 // parseLogLevel converts a case-insensitive log level string to slog.Level.
 // Returns an error for unknown or empty values.
@@ -83,19 +78,6 @@ func parseLogLevel(level string) (slog.Level, error) {
 	default:
 		return slog.LevelInfo, fmt.Errorf("unknown log level: %q (valid: debug, info, warn, error)", level)
 	}
-}
-
-// buildHandler returns the slog handler for the application logger. When a New
-// Relic application is present, logs are routed through nrslog so they are
-// forwarded to New Relic Logs and correlated with the active APM transaction.
-// When nrApp is nil (New Relic disabled), it returns a plain JSON handler so
-// local/dev behaviour is unchanged.
-func buildHandler(nrApp *newrelic.Application, w io.Writer, opts *slog.HandlerOptions) slog.Handler {
-	base := slog.NewJSONHandler(w, opts)
-	if nrApp == nil {
-		return base
-	}
-	return nrslog.WrapHandler(nrApp, base)
 }
 
 func main() {
@@ -185,9 +167,6 @@ func startProxy() {
 	mcpDisabled := serveFS.Bool("mcp-disabled", false, "Disable MCP server")
 	mcpPort := serveFS.Int("mcp-port", 3900, "MCP server HTTP port")
 	mcpTransport := serveFS.String("mcp-transport", "http", "MCP transport (stdio, http)")
-	nrLicenseKey := serveFS.String("newrelic-license-key", "", "New Relic license key (env: NEW_RELIC_LICENSE_KEY)")
-	nrAppName := serveFS.String("newrelic-app-name", "BigBase", "New Relic application name (env: NEW_RELIC_APP_NAME)")
-	nrEnabled := serveFS.Bool("newrelic-enabled", true, "Enable New Relic agent (env: NEW_RELIC_ENABLED)")
 	_ = serveFS.Parse(os.Args[2:])
 
 	googleID := config.FlagOrEnv(*googleClientID, "GOOGLE_CLIENT_ID")
@@ -262,10 +241,6 @@ func startProxy() {
 	}
 	rlEnabled := config.FlagOrEnvBool(*rateLimitEnabled, "BIGBASE_RATE_LIMIT_ENABLED")
 
-	newRelicLicenseKey := config.FlagOrEnv(*nrLicenseKey, "NEW_RELIC_LICENSE_KEY")
-	newRelicAppName := config.FlagOrEnv(*nrAppName, "NEW_RELIC_APP_NAME")
-	newRelicEnabled := *nrEnabled
-
 	level, err := parseLogLevel(*logLevel)
 	if err != nil {
 		logger := slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: slog.LevelWarn}))
@@ -276,29 +251,7 @@ func startProxy() {
 	// Parse CORS allowed origins (empty = CORS disabled, default safe).
 	corsAllowedOrigins := parseCORSOrigins(*corsOrigins)
 
-	// New Relic Application agent initialization. Must precede logger
-	// construction so buildHandler can route logs through the agent for
-	// forwarding to New Relic Logs (Logs in Context).
-	var nrInitErr error
-	if newRelicEnabled && newRelicLicenseKey != "" {
-		nrApp, nrInitErr = newrelic.NewApplication(
-			newrelic.ConfigAppName(newRelicAppName),
-			newrelic.ConfigLicense(newRelicLicenseKey),
-			newrelic.ConfigAppLogForwardingEnabled(true),
-			newrelic.ConfigDebugLogger(os.Stdout),
-		)
-	}
-
-	logger := slog.New(buildHandler(nrApp, os.Stdout, &slog.HandlerOptions{Level: level}))
-
-	switch {
-	case nrInitErr != nil:
-		logger.Warn("new relic agent initialization failed", "error", nrInitErr)
-	case nrApp != nil:
-		logger.Info("new relic agent initialized", "app", newRelicAppName)
-	default:
-		logger.Debug("new relic agent disabled")
-	}
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: level}))
 	k := kernel.New(logger)
 
 	p := proxy.New(proxy.Options{
@@ -306,7 +259,6 @@ func startProxy() {
 		Kernel:             k,
 		Logger:             logger,
 		CORSAllowedOrigins: corsAllowedOrigins,
-		NRApp:              nrApp,
 	})
 	d := db.New(db.Options{
 		Driver: dbDriverVal,

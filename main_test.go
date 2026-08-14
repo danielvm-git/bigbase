@@ -1,38 +1,9 @@
 package main
 
 import (
-	"bytes"
 	"log/slog"
 	"testing"
-
-	"github.com/newrelic/go-agent/v3/newrelic"
 )
-
-// When New Relic is disabled (nil app), buildHandler must return a plain
-// slog JSON handler so local/dev logging is unchanged.
-func TestBuildHandler_NRDisabled(t *testing.T) {
-	h := buildHandler(nil, &bytes.Buffer{}, &slog.HandlerOptions{Level: slog.LevelInfo})
-	if _, ok := h.(*slog.JSONHandler); !ok {
-		t.Fatalf("buildHandler(nil, ...) = %T, want *slog.JSONHandler", h)
-	}
-}
-
-// When a New Relic app is present, buildHandler must wrap the base handler
-// through nrslog so records are forwarded to New Relic — i.e. it must NOT be a
-// bare *slog.JSONHandler. Uses a disabled app (no network/license required).
-func TestBuildHandler_NREnabled(t *testing.T) {
-	app, err := newrelic.NewApplication(
-		newrelic.ConfigAppName("BigBaseTest"),
-		newrelic.ConfigEnabled(false),
-	)
-	if err != nil {
-		t.Fatalf("NewApplication: %v", err)
-	}
-	h := buildHandler(app, &bytes.Buffer{}, &slog.HandlerOptions{Level: slog.LevelInfo})
-	if _, ok := h.(*slog.JSONHandler); ok {
-		t.Fatalf("buildHandler(app, ...) = *slog.JSONHandler, want nrslog-wrapped handler")
-	}
-}
 
 func TestParseLogLevel(t *testing.T) {
 	tests := []struct {
