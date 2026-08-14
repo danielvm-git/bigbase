@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+# Versioned ctxo post-commit hook (e90s03).
+#
+# ctxo's own `ctxo init` installs this into .git/hooks/, which git IGNORES when
+# core.hooksPath=.githooks — so the auto-index promise silently breaks on fresh
+# clones. Versioning it here makes it survive clone + hooksPath.
+#
+# Best-effort by design: indexing must never block a commit, so every step is
+# guarded with `|| true` and there is no `set -e`. Incrementally re-indexes only
+# the files the commit touched (ctxo index --file; there is no --incremental).
+if command -v ctxo >/dev/null 2>&1; then
+  for file in $(git diff --name-only HEAD~1 HEAD 2>/dev/null); do
+    ctxo index --file "$file" >/dev/null 2>&1 || true
+  done
+fi

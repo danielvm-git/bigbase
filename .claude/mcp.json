@@ -1,39 +1,50 @@
 {
   "mcpServers": {
-    "context7": {
-      "type": "http",
-      "url": "https://mcp.context7.com/mcp",
-      "headers": {
-        "CONTEXT7_API_KEY": "${CONTEXT7_API_KEY}"
-      }
-    },
     "bigbase": {
       "type": "http",
       "url": "https://mcp.bigbase.click/mcp"
     },
-    "sqz": {
-      "command": "sqz-mcp",
-      "args": []
+    "claude_design": {
+      "headers": {
+        "anthropic-version": "2023-06-01",
+        "x-api-key": "${ANTHROPIC_API_KEY}"
+      },
+      "type": "http",
+      "url": "https://api.anthropic.com/v1/design/mcp"
+    },
+    "context7": {
+      "headers": {
+        "CONTEXT7_API_KEY": "${CONTEXT7_API_KEY}"
+      },
+      "type": "http",
+      "url": "https://mcp.context7.com/mcp"
     },
     "ctxo": {
-      "command": "npx",
-      "args": ["-y", "@ctxo/cli"]
+      "args": [
+        "-y",
+        "@ctxo/cli@0.11.4"
+      ],
+      "command": "npx"
     },
     "filesystem": {
-      "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-filesystem", "/Users/danielvm/Developer/bigbase", "/tmp"]
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem@2026.7.10",
+        "${BIGBASE_ROOT:-.}",
+        "/tmp"
+      ],
+      "command": "npx"
     },
     "sequential-thinking": {
-      "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"]
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-sequential-thinking@2026.7.4"
+      ],
+      "command": "npx"
     },
-    "claude_design": {
-      "type": "http",
-      "url": "https://api.anthropic.com/v1/design/mcp",
-      "headers": {
-        "x-api-key": "${ANTHROPIC_API_KEY}",
-        "anthropic-version": "2023-06-01"
-      }
+    "sqz": {
+      "args": [],
+      "command": "sqz-mcp"
     }
   }
 }

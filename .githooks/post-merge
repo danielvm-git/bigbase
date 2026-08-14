@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# Versioned ctxo post-merge hook (e90s03).
+#
+# Fires after `git pull`/merge — which never triggers pre-commit — so without
+# this the ctxo index and its SQLite cache go stale on every pull. `ctxo sync`
+# rebuilds the cache from the merged index.
+#
+# Best-effort by design: must never block a merge, so it is guarded with
+# `|| true` and there is no `set -e`.
+if command -v ctxo >/dev/null 2>&1; then
+  ctxo sync >/dev/null 2>&1 || true
+fi

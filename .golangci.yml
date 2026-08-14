@@ -1,5 +1,5 @@
 # golangci-lint v2 configuration for BigBase
-# Schema reference (matches CI version v2.11.0, .github/workflows/ci-cd.yml lint job):
+# Schema reference (matches CI version v2.11.0, .github/workflows/test-build-release.yml lint job):
 #   https://github.com/golangci/golangci-lint/blob/v2.11.0/.golangci.reference.yml
 #
 # NOTE on v2 schema: In golangci-lint v2, directory/path exclusions moved out of

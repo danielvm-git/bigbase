@@ -39,7 +39,7 @@
   },
 
   "lsp": {
-    "gopls": { "command": ["/Users/danielvm/go/bin/gopls"] },
+    "gopls": { "command": ["gopls"] },
     "typescript": { "command": ["typescript-language-server", "--stdio"] }
   },
 
