@@ -1,145 +1,49 @@
 # MCP Configuration Inventory
 
-**Generated:** 2026-07-27  
-**Root:** `~/Developer/bigbase`  
-**Status:** ✅ All MCPs configured correctly
+**Model:** single canonical source → generated adapters (e90s05).
+**Canonical:** [`.mcp.json`](../.mcp.json) — edit this, nothing else.
+**Generator:** [`scripts/gen-mcp-configs.sh`](../scripts/gen-mcp-configs.sh)
+(CI enforces sync via `--check`).
 
 ---
 
-## Summary
+## Files
 
-| Agent | Config File | MCPs | Status |
-|-------|-------------|------|--------|
-| Claude Code | `.mcp.json` | 8 | ✅ Correct |
-| agy CLI | `~/.gemini/config/mcp_config.json` | 7 | ✅ Correct |
-| Antigravity IDE | `~/.gemini/config/mcp_config.json` | 7 | ✅ Correct |
-| Cursor | `.cursor/mcp.json` | 7 | ✅ Correct |
-| VS Code/Cline/Roo | `.vscode/mcp.json` | 7 | ✅ Correct |
-| Pi | `.pi/mcp.json` | 7 | ✅ Correct |
-| MiMo/OpenCode | `opencode.jsonc` | 7 | ✅ Correct |
+| File | Role | Committed | Format |
+|------|------|-----------|--------|
+| `.mcp.json` | **canonical** (Claude Code project config) | yes | `mcpServers`, `http` / `command`+`args` |
+| `.claude/mcp.json` | generated mirror of `.mcp.json` | yes | identical to canonical |
+| `opencode.jsonc` | generated adapter | yes | `mcp`, `remote` / `local` (Claude-only servers omitted) |
+| `opencode.json` | hand-maintained opencode config; its `mcp` block mirrors the canonical set | yes | opencode |
+| `.cursor/mcp.json`, `.vscode/mcp.json` | per-machine, regenerated locally if present | **no** (gitignored) | client-specific |
 
----
+Regenerate after editing `.mcp.json`:
 
-## MCP Servers (7 total + 1 Claude-only)
-
-| # | Name | Type | URL/Command | Agents |
-|---|------|------|-------------|--------|
-| 1 | context7 | HTTP | `https://mcp.context7.com/mcp` | All |
-| 2 | bigbase | HTTP | `https://mcp.bigbase.click/mcp` | All |
-| 3 | seal | HTTP | `https://api-stage.35.253.75.95.nip.io/mcp` | All |
-| 4 | sqz | Local | `sqz-mcp` | All |
-| 5 | ctxo | Stdio | `npx -y @ctxo/cli` | All |
-| 6 | filesystem | Stdio | `npx -y @modelcontextprotocol/server-filesystem` | All |
-| 7 | sequential-thinking | Stdio | `npx -y @modelcontextprotocol/server-sequential-thinking` | All |
-| 8 | claude_design | HTTP | `https://api.anthropic.com/v1/design/mcp` | Claude Code only |
-
----
-
-## Config Format Reference
-
-### Claude Code (`.mcp.json`)
-```json
-{
-  "mcpServers": {
-    "context7": {
-      "type": "http",
-      "url": "https://mcp.context7.com/mcp",
-      "headers": { "CONTEXT7_API_KEY": "..." }
-    },
-    "sqz": { "command": "sqz-mcp", "args": [] }
-  }
-}
-```
-
-### agy CLI / Antigravity IDE (`mcp_config.json`)
-```json
-{
-  "mcpServers": {
-    "context7": {
-      "serverUrl": "https://mcp.context7.com/mcp",
-      "headers": { "CONTEXT7_API_KEY": "..." }
-    },
-    "sqz": { "command": "sqz-mcp", "args": [] }
-  }
-}
-```
-
-### MiMo/OpenCode (`opencode.jsonc`)
-```json
-{
-  "mcp": {
-    "context7": {
-      "type": "remote",
-      "url": "https://mcp.context7.com/mcp",
-      "headers": { "CONTEXT7_API_KEY": "..." }
-    },
-    "sqz": { "type": "local", "command": ["sqz-mcp"] }
-  }
-}
-```
-
-### Cursor (`.cursor/mcp.json`)
-```json
-{
-  "mcpServers": {
-    "context7": {
-      "serverUrl": "https://mcp.context7.com/mcp",
-      "headers": { "CONTEXT7_API_KEY": "..." }
-    },
-    "sqz": { "command": "sqz-mcp", "args": [] }
-  }
-}
-```
-
-### VS Code/Cline/Roo (`.vscode/mcp.json`)
-```json
-{
-  "servers": {
-    "context7": {
-      "serverUrl": "https://mcp.context7.com/mcp",
-      "headers": { "CONTEXT7_API_KEY": "..." }
-    },
-    "sqz": { "command": "sqz-mcp", "args": [] }
-  }
-}
-```
-
-### Pi (`.pi/mcp.json`)
-```json
-{
-  "mcpServers": {
-    "context7": {
-      "url": "https://mcp.context7.com/mcp",
-      "headers": { "CONTEXT7_API_KEY": "..." }
-    },
-    "sqz": { "command": "sqz-mcp", "args": [] }
-  }
-}
+```bash
+scripts/gen-mcp-configs.sh          # write adapters
+scripts/gen-mcp-configs.sh --check  # CI: fail on drift
 ```
 
 ---
 
-## Key Differences Between Agents
+## Servers (6 universal + 1 Claude-only)
 
-| Feature | Claude Code | agy | MiMo/OpenCode | Cursor | VS Code | Pi |
-|---------|-------------|-----|---------------|--------|---------|-----|
-| HTTP key | `url` + `type` | `serverUrl` | `url` + `type` | `serverUrl` | `serverUrl` | `url` |
-| Stdio key | `command` + `args` | `command` + `args` | `command` (array) | `command` + `args` | `command` + `args` | `command` + `args` |
-| Top key | `mcpServers` | `mcpServers` | `mcp` | `mcpServers` | `servers` | `mcpServers` |
-| Headers | `headers` | `headers` | `headers` | `headers` | `headers` | `headers` |
+| # | Name | Transport | URL / Command | Scope |
+|---|------|-----------|---------------|-------|
+| 1 | context7 | HTTP | `https://mcp.context7.com/mcp` | all |
+| 2 | bigbase | HTTP | `https://mcp.bigbase.click/mcp` | all |
+| 3 | sqz | local | `sqz-mcp` | all |
+| 4 | ctxo | local | `npx -y @ctxo/cli@0.11.4` | all |
+| 5 | filesystem | local | `npx -y @modelcontextprotocol/server-filesystem@2026.7.10 ${BIGBASE_ROOT:-.} /tmp` | all |
+| 6 | sequential-thinking | local | `npx -y @modelcontextprotocol/server-sequential-thinking@2026.7.4` | all |
+| 7 | claude_design | HTTP | `https://api.anthropic.com/v1/design/mcp` | **Claude only** |
 
----
+Notes:
 
-## Root Cause of agy Hang
-
-The `.agents/mcp_config.json` had `context7` configured with `npx -y @upstash/context7-mcp` format, which agy couldn't connect to. Fixed by using `serverUrl` format.
-
----
-
-## Notes
-
-- `claude_design` is Claude Code-specific and NOT included in other agents
-- agy CLI uses `serverUrl` for HTTP servers, not `url` or `type`
-- MiMo/OpenCode uses `type: "remote"` and `type: "local"` for HTTP and stdio servers
-- VS Code uses `servers` key instead of `mcpServers`
-- Pi uses `url` key for HTTP servers
+- `claude_design` is not agent-universal — the generator omits it from
+  `opencode.jsonc` (and any non-Claude adapter).
+- npx-spawned packages are **version-pinned** in the canonical file (no `@latest`).
+- The `filesystem` root is portable: `${BIGBASE_ROOT}` (set locally by
+  `scripts/setup.sh` in `.envrc`), falling back to the launch directory. No
+  machine-specific absolute paths live in committed config.
+- New Relic MCP was removed (project no longer uses New Relic).

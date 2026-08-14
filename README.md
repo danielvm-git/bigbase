@@ -2,8 +2,8 @@
 
 [![Site](https://img.shields.io/badge/Site-bigbase.click-4f46e5)](https://bigbase.click)
 ![License](https://img.shields.io/badge/License-MIT-yellow.svg)
-![Version](https://img.shields.io/badge/version-2.13.0-blue.svg)
-![Go](https://img.shields.io/badge/Go-1.22+-00ADD8?logo=go)
+![Version](https://img.shields.io/github/v/release/danielvm-git/bigbase?label=version&color=blue)
+![Go](https://img.shields.io/github/go-mod/go-version/danielvm-git/bigbase?logo=go)
 
 > Single-binary, component-based BaaS platform using Entity-Component-Construct (ECC) architecture.
 
@@ -13,7 +13,7 @@ Built on the **ECC pattern**: a kernel discovers, starts, and connects independe
 
 ## Prerequisites
 
-- **Runtime**: Go 1.22+
+- **Runtime**: Go 1.26+
 - **Database**: SQLite (default, zero-CGO via `modernc.org/sqlite`) or PostgreSQL
 - **Linter**: `golangci-lint` (development only)
 
@@ -34,7 +34,7 @@ required binary is absent or below its declared minimum:
 bash scripts/verify-toolchain.sh
 ```
 
-The `toolchain-parity` CI job (`.github/workflows/ci-cd.yml`) provisions the
+The `toolchain-parity` CI job (`.github/workflows/test-build-release.yml`) provisions the
 same tools `scripts/setup-vps.sh` installs on the VPS and then runs the
 verifier — so a tool missing in CI is a tool that would be missing on the VPS,
 caught pre-deploy instead of mid-build.
@@ -109,9 +109,6 @@ Config merge priority: CLI flags > environment variables > defaults.
 | `--mcp-disabled` | — | `false` | Disable MCP server |
 | `--mcp-port` | — | `3900` | MCP server port |
 | `--mcp-transport` | — | `http` | MCP transport: stdio, http |
-| `--newrelic-license-key` | `NEW_RELIC_LICENSE_KEY` | — | New Relic license key |
-| `--newrelic-app-name` | `NEW_RELIC_APP_NAME` | BigBase | New Relic app name |
-| `--newrelic-enabled` | `NEW_RELIC_ENABLED` | `true` | Enable New Relic agent |
 
 ## Architecture
 

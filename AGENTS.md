@@ -1,36 +1,226 @@
-## ctxo MCP Tool Usage (MANDATORY)
+# BigBase — Engineering Guide (canonical)
 
-**ALWAYS use ctxo MCP tools before reading source files or making code changes.** The ctxo index contains dependency graphs, git intent, anti-patterns, and change health that cannot be derived from reading files alone. Skipping these tools leads to blind edits and broken dependencies.
+This is the single source of engineering truth for AI agents on BigBase.
+`CLAUDE.md` and `GEMINI.md` are thin adapters that import this file and add only
+their own model-routing overrides. Edit rules HERE, not in the adapters.
 
-### Before ANY Code Modification
-1. Call `get_blast_radius` for the symbol you are about to change — understand what breaks
-2. Call `get_why_context` for the same symbol — check for revert history or anti-patterns
-3. Only then read and edit source files
+Read CONVENTIONS.md before any GitHub or git operation.
 
-### Before Starting a Task
-| Task Type | REQUIRED First Call |
-|---|---|
-| Fixing a bug | `get_context_for_task(taskType: "fix")` |
-| Adding/extending a feature | `get_context_for_task(taskType: "extend")` |
-| Refactoring | `get_context_for_task(taskType: "refactor")` |
-| Understanding code | `get_context_for_task(taskType: "understand")` |
+## Project
+Single-binary, component-based BaaS platform using Entity-Component-Construct (ECC) architecture.
+Stack: Go 1.26+ / ECC Kernel + Plugins / SQLite + PostgreSQL
 
-### Before Reviewing a PR or Diff
-- Call `get_pr_impact` — single call gives full risk assessment with co-change analysis
+## Commands
+| Action | Command |
+|--------|---------|
+| Run    | `go run .` |
+| Test   | `go test ./...` |
+| Build  | `go build -o bigbase .` |
+| Lint   | `golangci-lint run ./...` |
+| Test coverage | `go test -coverprofile=coverage.out ./... && go tool cover -func=coverage.out` |
 
-### When Exploring or Searching Code
-- Use `search_symbols` for name/regex lookup — DO NOT grep source files for symbol discovery
-- Use `get_ranked_context` for natural language queries — DO NOT manually browse directories
+## Architecture
+ECC pattern: Kernel (discovery, lifecycle, event bus, config merge) + pluggable components (proxy, auth, db, api, storage, git, forge, cici, functions, realtime, messaging, deploy, admin, monitoring). Components communicate via event hooks, not direct imports.
 
-### Orientation in Unfamiliar Areas
-- Call `get_architectural_overlay` to understand layer boundaries
-- Call `get_symbol_importance` to identify critical symbols
+## Conventions
+- Go standard layout: `kernel/`, `components/<name>/`, `config/`
+- Component interface: `Init(ctx, config) → Start(ctx) → Stop(ctx)`
+- Event bus for cross-component communication (no direct imports)
+- TDD workflow: write test first, see it fail, implement, verify green
+- All planning output in `specs/`
 
-### NEVER Do These
-- NEVER edit a function without first calling `get_blast_radius` on it
-- NEVER skip `get_why_context` — reverted code and anti-patterns are invisible without it
-- NEVER grep source files to find symbols when `search_symbols` exists
-- NEVER manually trace imports when `find_importers` gives the full reverse dependency graph
+## Never
+- Hardcode secrets, API keys, or tokens
+- Mutate state directly — use spread/immutable patterns
+- Commit to main without PR
+- Expose internal errors or stack traces to API clients
+- Use `any` in Go — prefer concrete types or interfaces
+
+## Specs (bigpowers YAML)
+
+Read `specs/state.yaml`, `specs/release-plan.yaml`, and the active file under `specs/epics/` before coding. Architecture: `specs/tech-architecture/tech-stack.md` (canonical; `specs/plans/TECH_STACK_LATEST.md` is superseded). Legacy docs: `specs/archive/` only.
+
+## Agent Rules
+- Read specs YAML (not `specs/archive/`) before writing code.
+- All planning specifications MUST be written under `specs/` before code.
+- Write minimum code that solves the stated problem.
+- Run tests after every change. Show evidence before declaring done.
+
+## sqz — Context Compression (READ FIRST)
+
+sqz is installed in this project. It compresses tool output so large files, long
+logs, and verbose command output cost far fewer tokens. There are **two ways**
+sqz is wired in. Prefer each one in the situations below.
+
+### Preferred tools (MCP)
+
+The `sqz-mcp` server is registered in this project's MCP config. It exposes three
+read-only tools that compress their output through the sqz pipeline:
+
+- **`sqz_read_file`** — read a file from disk and return a compressed view.
+  **PREFER this over a plain file read** for any file larger than ~2KB or any
+  file you might read more than once in the same session. Repeat reads return a
+  13-token `§ref:HASH§` reference instead of the full content.
+- **`sqz_grep`** — search files for a literal string or regex. **PREFER this over
+  a plain grep** for anything that might match more than a handful of lines. Caps
+  at 200 matches by default; raise with `max_matches`.
+- **`sqz_list_dir`** — list a directory, skipping `.git`, `node_modules`,
+  `target`, `dist`, `build`, `vendor`, `__pycache__`.
+
+Built-in read/grep/glob tools remain available. Use them for tiny config files
+(<1KB), byte-exact reads you'll hash or diff (lockfiles, signatures), and
+globbing (sqz has no glob tool).
+
+### Bash commands (hooked automatically)
+
+A PreToolUse hook rewrites shell commands to pipe output through `sqz compress`
+(e.g. `git status`, `cargo test`, `docker ps`, `kubectl get pods`). Transparent;
+skipped for interactive commands (`vim`, `ssh`, `python`), compound commands
+(`a && b`, `a > file`), and anything already going through sqz.
+
+### Escape hatch — when you see a `§ref:HASH§` token
+
+To resolve a `§ref:a1b2c3d4§` token to full content: `sqz expand a1b2c3d4` (or
+paste the whole token), or call the `expand` MCP tool with `{ "prefix": "a1b2c3d4" }`,
+or prefix one command with `SQZ_NO_DEDUP=1`. If compressed output is making the
+task harder, call the `passthrough` MCP tool for raw text.
+
+### When NOT to use sqz tools
+- Writing or editing files — use the built-in Write/Edit tools (sqz has no write tools).
+- Running commands interactively or in watch mode.
+- Reading very small files (<1KB) where compression can't help.
+
+# RTK (Rust Token Killer) — Token-Optimized Commands
+
+## Golden Rule
+
+**Always prefix commands with `rtk`**. If RTK has a dedicated filter, it uses it;
+if not, it passes through unchanged — so `rtk` is always safe. This holds inside
+`&&` chains too: `rtk git add . && rtk git commit -m "msg" && rtk git push`.
+
+## RTK Commands by Workflow
+
+### Build & Compile (80-90% savings)
+```bash
+rtk cargo build / check / clippy    # Rust build/lint output, grouped
+rtk tsc                 # TypeScript errors grouped by file/code (83%)
+rtk lint                # ESLint/Biome violations grouped (84%)
+rtk prettier --check    # Files needing format only (70%)
+rtk next build          # Next.js build with route metrics (87%)
+```
+
+### Test (60-99% savings)
+```bash
+rtk go test / cargo test / pytest / jest / vitest / playwright test / rspec
+rtk test <cmd>          # Generic test wrapper — failures only
+```
+
+### Git (59-80% savings)
+```bash
+rtk git status / log / diff / show / add / commit / push / pull / branch / stash / worktree
+```
+Git passthrough works for ALL subcommands, even those not listed.
+
+### GitHub (26-87% savings)
+```bash
+rtk gh pr view <num> / gh pr checks / gh run list / gh issue list / gh api
+```
+
+### JS/TS Tooling (70-90%)
+```bash
+rtk pnpm list / outdated / install   ;   rtk npm run <script>   ;   rtk npx <cmd>   ;   rtk prisma
+```
+
+### Files & Search (60-75%)
+```bash
+rtk ls <path>           # Tree format, compact (65%)
+rtk read <file>         # Code reading with filtering (60%)
+rtk grep <pattern>      # Search grouped by file (75%). Format flags (-c,-l,-L,-o,-Z) run raw.
+rtk find <pattern>      # Find grouped by directory (70%)
+```
+
+### Analysis & Debug (70-90%)
+```bash
+rtk err <cmd> / log <file> / json <file> / deps / env / summary <cmd> / diff
+```
+
+### Infra & Network (65-85%)
+```bash
+rtk docker ps / images / logs <c>    ;    rtk kubectl get / logs    ;    rtk curl <url> / wget <url>
+```
+
+### Meta
+```bash
+rtk gain [--history]    # token savings stats
+rtk proxy <cmd>         # run without filtering (debug)
+rtk discover            # find missed RTK usage in sessions
+```
+
+Overall: **60-90% token reduction** on common development operations.
+
+## bts toolchain
+
+`bts` is installed. Prefer its verbs over ad-hoc shell commands.
+
+| Task | Command | Avoid |
+|------|---------|-------|
+| Search code | `bts find --print <pattern>` | grep / find / cat |
+| Interactive search | `bts find <pattern>` | manual grep pipes |
+| Compress for context | `bts compress <file>` or `cmd \| bts compress` | summarising by hand |
+| Repo map | `bts map` | listing files by hand |
+| Library docs | `bts docs <lib>` | guessing from training data |
+| Package source | `bts src <pkg>` | git clone |
+| Toolchain health | `bts doctor` | which / command -v |
+
+**Rules**
+- Search with `bts find` before opening files to locate a symbol or pattern.
+- Pipe anything > 200 lines through `bts compress` before adding to context.
+- Run `bts map` when asked for a repo overview.
+- Use `bts docs <lib>` before answering questions about library APIs.
+- If a tool is missing, say so and run `bts doctor` — do not silently substitute.
+
+## ctxo — dependency-graph oracle (preferred when the index is fresh)
+
+ctxo is a **dependency-graph and change-intelligence oracle, not a search
+engine.** Its unique value is data you cannot get by reading files: reverse
+dependencies, blast radius, revert/anti-pattern history, and PR risk. For
+finding a symbol or a string, `grep`/`rg` and LSP are always correct. Reach for
+ctxo when you need graph or history context, and prefer it *when the local
+`.ctxo/` index is warm and fresh* (the git hooks below keep it that way). A
+wrong answer from a stale index is worse than a slower correct one — when in
+doubt, grep.
+
+### Where ctxo earns its keep
+- `get_blast_radius(symbol)` — what breaks if you change a symbol. Worth running
+  before a non-trivial edit to a shared symbol.
+- `get_why_context(symbol)` — revert history and known anti-patterns. Reverted
+  code and past mistakes are invisible from the current tree alone.
+- `get_pr_impact` / `get_context_for_task(taskType: fix|extend|refactor|understand)`
+  — risk assessment with co-change analysis for a diff or a task.
+- `find_importers(symbol)` — the reverse dependency graph, instead of tracing
+  imports by hand.
+- `get_architectural_overlay` / `get_symbol_importance` — orientation in an
+  unfamiliar area.
+
+### Searching with ctxo
+- `search_symbols` takes a **`pattern`** parameter (substring or regex), with
+  optional `kind` and `filePattern` — it is NOT a `query` parameter.
+- `get_ranked_context` answers natural-language queries. Both are conveniences,
+  not replacements: `grep`/`rg`/LSP remain correct and are the right call when
+  the index may be cold or stale.
+
+### Index freshness & known gaps
+- The `.ctxo/` index is kept fresh by **versioned git hooks**:
+  `.githooks/pre-commit` full-indexes staged source; `.githooks/post-commit`
+  incrementally re-indexes changed files (`ctxo index --file`); and
+  `.githooks/post-merge` runs `ctxo sync` after a pull. Run `./scripts/setup.sh`
+  on a fresh clone to wire `core.hooksPath=.githooks`.
+- **`verify-index` is upstream-broken here — skip it.** Its temporary comparison
+  build runs with default config and can never match this repo's configured
+  index (see `.ctxo/config.yaml`).
+- A committed baseline index is intentionally NOT kept: every index JSON embeds
+  a `lastModified` timestamp, so committing one would dirty all files on each
+  rebuild. Freshness is hook-managed, per-clone.
 
 ## Orca Terminal Commands (from orca-cli skill)
 
