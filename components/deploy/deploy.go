@@ -237,7 +237,16 @@ func New(opts Options) *Deploy {
 		runner = &deployRunner{db: d.db}
 	}
 	d.supervisor = NewSupervisor(runner, &wallClock{}, opts.HostRouter,
-		func(id string) { d.updateStatus(id, "failed") },
+		// Crash-loop trip is a terminal failure: record a reason even when the
+		// app-exit handler hasn't written a specific one yet (previously the
+		// row could reach status=failed with an empty error_message — the
+		// TestStaticSidecar_BuildAndStart flake), then transition.
+		func(id string) {
+			_, _ = d.db.ExecContext(context.Background(),
+				"UPDATE deployments SET error_message = COALESCE(NULLIF(error_message,''), 'Application crashed too many times (crash-loop)') WHERE id = ?",
+				id)
+			d.updateStatus(id, "failed")
+		},
 		func(name string, _ Spec) { d.logger.Info("supervisor event", "event", name) },
 	)
 	return d

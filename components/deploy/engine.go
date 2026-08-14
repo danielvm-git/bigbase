@@ -372,10 +372,15 @@ func (d *Deploy) runDeployment(deploy *Deployment, buildDir, repoName string) {
 	} else {
 		d.appendDeployLog(deploy.ID, fmt.Sprintf("✗ Health check failed after %d attempts: %s",
 			result.Attempts, result.FirstFailureReason))
-		_ = d.TransitionState(context.Background(), deploy.ID, "failed")
+		// Persist error_message BEFORE the failed transition so a concurrent
+		// reader never observes status=failed with an empty error_message
+		// (same two-statement window fixed in failDeployment).
+		d.mu.Lock()
 		_, _ = d.db.ExecContext(context.Background(),
 			"UPDATE deployments SET error_message = ? WHERE id = ?",
 			fmt.Sprintf("Health check failed: %s", result.FirstFailureReason), deploy.ID)
+		d.mu.Unlock()
+		_ = d.TransitionState(context.Background(), deploy.ID, "failed")
 	}
 }
 func (d *Deploy) cloneAndCheckout(ctx context.Context, deployID, repoPath, buildDir, branch string) error {

@@ -39,8 +39,25 @@ func (d *Deploy) TransitionState(ctx context.Context, id, newStatus string) erro
 	// Persist status change
 	d.mu.Lock()
 	defer d.mu.Unlock()
-	_, _ = d.db.ExecContext(ctx,
-		"UPDATE deployments SET status = ? WHERE id = ?", newStatus, id)
+
+	// Persist status atomically with build_log on terminal states, so a
+	// concurrent reader never observes status=running/failed with a stale
+	// build_log (the TestStaticSidecar_BuildAndStart flake: status and
+	// build_log were written in two separate statements).
+	terminal := newStatus == string(StateRunning) || newStatus == string(StateFailed)
+	if terminal {
+		if buildLog := strings.Join(d.getDeployLogs(id), "\n"); buildLog != "" {
+			_, _ = d.db.ExecContext(ctx,
+				"UPDATE deployments SET status = ?, build_log = ? WHERE id = ?", newStatus, buildLog, id)
+			// skip the fall-through status-only update
+		} else {
+			_, _ = d.db.ExecContext(ctx,
+				"UPDATE deployments SET status = ? WHERE id = ?", newStatus, id)
+		}
+	} else {
+		_, _ = d.db.ExecContext(ctx,
+			"UPDATE deployments SET status = ? WHERE id = ?", newStatus, id)
+	}
 
 	// Append to status_history
 	transition := StatusTransition{
@@ -63,15 +80,6 @@ func (d *Deploy) TransitionState(ctx context.Context, id, newStatus string) erro
 		}, &kernel.Context{})
 		if newStatus == string(StateFailed) && current != string(StateFailed) {
 			d.emitDeployFailed(ctx, id)
-		}
-	}
-
-	// Persist build_log on terminal states
-	if newStatus == string(StateRunning) || newStatus == string(StateFailed) {
-		lines := d.getDeployLogs(id)
-		if len(lines) > 0 {
-			_, _ = d.db.ExecContext(ctx,
-				"UPDATE deployments SET build_log = ? WHERE id = ?", strings.Join(lines, "\n"), id)
 		}
 	}
 
