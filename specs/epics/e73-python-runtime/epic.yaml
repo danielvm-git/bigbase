@@ -4,7 +4,15 @@ id: e73
 title: "Python (FastAPI) Runtime"
 wsjf: 5.25
 total_bcps: 8
-status: planned
+status: done
+status_note: >-
+  Reconciled 2026-08-15 (phase-2 re-audit, specs/audit/e73-reaudit.md). All 4 stories
+  were already implemented on main and green — status was stale. Python detection
+  (python.go: HasPyProjectTOML/ParsePyProjectTOML/ParseScripts), uv-sync build with pip
+  fallback + apt system-deps allowlist (engine.go, python.go:SystemDeps), uvicorn/ASGI
+  start command with fallback (pythonStartCommand), writable dir + WRITABLE_DIR, and
+  Supervisor health-poll → deploy.health_failed → restart (supervisor.go) all present and
+  tested. Added the previously-missing direct unit test for the health-poll loop (s03).
 tier: 1
 depends_on: []
 note: "4 stories, 8 BCPs. Python runtime support with uv/uvicorn. No e57 dependency — all changes in components/deploy/. Reference app: Grimoire (FastAPI 3.13, uv, SQLite)."
@@ -12,27 +20,27 @@ stories:
   - id: e73s01
     title: "pyproject.toml detection + uv package manager"
     bcps: 2
-    status: pending
+    status: done
     spec: e73s01-spec.md
     tasks: e73s01-tasks.yaml
   - id: e73s02
     title: "ASGI server (uvicorn) runtime"
     bcps: 2
-    status: pending
+    status: done
     depends_on: [e73s01]
     spec: e73s02-spec.md
     tasks: e73s02-tasks.yaml
   - id: e73s03
     title: "Writable disk + health check polling"
     bcps: 2
-    status: pending
+    status: done
     depends_on: [e73s01]
     spec: e73s03-spec.md
     tasks: e73s03-tasks.yaml
   - id: e73s04
     title: "System dependencies + long-running subprocesses"
     bcps: 2
-    status: pending
+    status: done
     depends_on: [e73s01]
     spec: e73s04-spec.md
     tasks: e73s04-tasks.yaml

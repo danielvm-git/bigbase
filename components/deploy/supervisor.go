@@ -20,14 +20,15 @@ const (
 	crashLoopBurst  = 5
 	crashLoopWindow = 60 * time.Second
 
-	// healthPollInterval is how often the Supervisor polls the deployment's
-	// health endpoint during runtime.
-	healthPollInterval = 10 * time.Second
-
 	// healthFailureThreshold is the number of consecutive failures before
 	// the Supervisor forces a restart.
 	healthFailureThreshold = 3
 )
+
+// healthPollInterval is how often the Supervisor polls the deployment's health
+// endpoint during runtime. Declared as a var (not a const) purely so tests can
+// tighten it; production keeps the 10s default.
+var healthPollInterval = 10 * time.Second
 
 // Supervisor owns the fleet of running deployments: restart policy (backoff +
 // crash-loop detection), resume-on-boot, and guaranteed proxy host
