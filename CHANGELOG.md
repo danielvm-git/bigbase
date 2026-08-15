@@ -1,3 +1,10 @@
+## [2.90.2](https://github.com/danielvm-git/bigbase/compare/v2.90.1...v2.90.2) (2026-08-15)
+
+
+### Bug Fixes
+
+* **monitoring:** scope logs to org_id and add keyset pagination (e86s01+s03) ([5a26cbd](https://github.com/danielvm-git/bigbase/commit/5a26cbd35b8ec49d350c0bfd391f50720a9fa60d))
+
 ## [2.90.1](https://github.com/danielvm-git/bigbase/compare/v2.90.0...v2.90.1) (2026-08-14)
 
 
