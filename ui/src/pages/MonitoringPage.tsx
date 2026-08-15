@@ -56,6 +56,9 @@ export default function MonitoringPage() {
   const [error, setError] = useState('')
   const [tab, setTab] = useState('overview')
   const [logQuery, setLogQuery] = useState('')
+  const [logCursor, setLogCursor] = useState('')
+  const [logsHasMore, setLogsHasMore] = useState(false)
+  const [logsFetching, setLogsFetching] = useState(false)
   const [showAlertForm, setShowAlertForm] = useState(false)
   const [alertForm, setAlertForm] = useState({ name: '', metric: '', threshold: 0, operator: 'gt', enabled: true })
 
@@ -113,12 +116,25 @@ export default function MonitoringPage() {
     } catch { /* silent */ }
   }, [])
 
-  const fetchLogs = useCallback(async (q?: string) => {
+  const fetchLogs = useCallback(async (q?: string, cursor?: string) => {
+    setLogsFetching(true)
     try {
-      const url = q ? `/api/monitoring/logs?q=${encodeURIComponent(q)}` : '/api/monitoring/logs'
+      const params = new URLSearchParams()
+      if (q) params.set('q', q)
+      if (cursor) params.set('cursor', cursor)
+      const qs = params.toString()
+      const url = qs ? `/api/monitoring/logs?${qs}` : '/api/monitoring/logs'
       const res = await fetch(url)
-      if (res.ok) { const d = await res.json(); setLogs((d as { data: LogEntry[] }).data || []) }
+      if (res.ok) {
+        const d = await res.json() as { data: LogEntry[]; next_cursor?: string; has_more?: boolean }
+        const rows = d.data || []
+        // Append when paginating with a cursor; replace on a fresh load/search.
+        setLogs(prev => (cursor ? [...prev, ...rows] : rows))
+        setLogCursor(d.next_cursor || '')
+        setLogsHasMore(Boolean(d.has_more))
+      }
     } catch { /* silent */ }
+    finally { setLogsFetching(false) }
   }, [])
 
   const fetchAlerts = useCallback(async () => {
@@ -313,6 +329,14 @@ export default function MonitoringPage() {
                   ))}
                 </tbody>
               </table>
+            </div>
+          )}
+          {logsHasMore && (
+            <div style={{ marginTop: 'var(--space-8)' }}>
+              <Button variant="secondary" size="sm" disabled={logsFetching}
+                onClick={() => fetchLogs(logQuery || undefined, logCursor)}>
+                {logsFetching ? 'Loading…' : 'Load more'}
+              </Button>
             </div>
           )}
         </>

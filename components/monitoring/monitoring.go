@@ -1,12 +1,12 @@
 package monitoring
 
 import (
-	"database/sql"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"runtime"
 	"sort"
+	"strconv"
 	"strings"
 	"sync"
 	"syscall"
@@ -36,6 +36,7 @@ type LogEntry struct {
 	ID        string `json:"id"`
 	Level     string `json:"level"`
 	Message   string `json:"message"`
+	OrgID     int64  `json:"org_id"`
 	CreatedAt string `json:"created_at"`
 }
 
@@ -159,9 +160,17 @@ func (m *Monitoring) Start(ctx *kernel.Context) error {
 			id TEXT PRIMARY KEY,
 			level TEXT NOT NULL DEFAULT 'info',
 			message TEXT NOT NULL,
+			org_id INTEGER NOT NULL DEFAULT 0,
 			created_at TEXT NOT NULL DEFAULT (datetime('now'))
 		)`); err != nil {
 			return err
+		}
+		// Add org_id column for tenant isolation on DBs created before it (BUG-143).
+		if _, err := m.db.Exec(
+			"ALTER TABLE monitoring_logs ADD COLUMN org_id INTEGER NOT NULL DEFAULT 0"); err != nil {
+			if !strings.Contains(err.Error(), "duplicate column") {
+				m.logger.Warn("add org_id column to logs", "error", err)
+			}
 		}
 		if err := m.db.Migrate(`CREATE TABLE IF NOT EXISTS monitoring_alerts (
 			id TEXT PRIMARY KEY,
@@ -559,6 +568,12 @@ func (m *Monitoring) handleLogCreate(w http.ResponseWriter, r *http.Request) {
 		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "db not configured"})
 		return
 	}
+	// Require org_id for tenant isolation (BUG-143).
+	orgID, ok := kernel.OrgIDFromContext(r.Context())
+	if !ok {
+		kernel.WriteJSON(w, http.StatusUnauthorized, map[string]string{"error": "org_id required"})
+		return
+	}
 	var entry struct {
 		Level   string `json:"level"`
 		Message string `json:"message"`
@@ -572,8 +587,8 @@ func (m *Monitoring) handleLogCreate(w http.ResponseWriter, r *http.Request) {
 	}
 	id := fmt.Sprintf("%d", time.Now().UnixNano())
 	_, err := m.db.ExecContext(r.Context(),
-		"INSERT INTO monitoring_logs (id, level, message, created_at) VALUES (?, ?, ?, datetime('now'))",
-		id, entry.Level, entry.Message)
+		"INSERT INTO monitoring_logs (id, level, message, org_id, created_at) VALUES (?, ?, ?, ?, datetime('now'))",
+		id, entry.Level, entry.Message, orgID)
 	if err != nil {
 		m.logger.Error("insert log", "error", err)
 		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
@@ -584,20 +599,45 @@ func (m *Monitoring) handleLogCreate(w http.ResponseWriter, r *http.Request) {
 
 func (m *Monitoring) handleLogSearch(w http.ResponseWriter, r *http.Request) {
 	if m.db == nil {
-		kernel.WriteJSON(w, http.StatusOK, map[string]any{"data": []LogEntry{}})
+		kernel.WriteJSON(w, http.StatusOK, map[string]any{"data": []LogEntry{}, "next_cursor": "", "has_more": false})
 		return
 	}
-	q := r.URL.Query().Get("q")
-	var rows *sql.Rows
-	var err error
-	if q != "" {
-		rows, err = m.db.QueryContext(r.Context(),
-			"SELECT id, level, message, created_at FROM monitoring_logs WHERE message LIKE ? ORDER BY created_at DESC LIMIT 100",
-			"%"+q+"%")
-	} else {
-		rows, err = m.db.QueryContext(r.Context(),
-			"SELECT id, level, message, created_at FROM monitoring_logs ORDER BY created_at DESC LIMIT 100")
+	// Require org_id for tenant isolation (BUG-143).
+	orgID, ok := kernel.OrgIDFromContext(r.Context())
+	if !ok {
+		kernel.WriteJSON(w, http.StatusUnauthorized, map[string]string{"error": "org_id required"})
+		return
 	}
+
+	// limit: default 100, clamp to [1, 500].
+	limit := 100
+	if v := r.URL.Query().Get("limit"); v != "" {
+		if n, err := strconv.Atoi(v); err == nil && n > 0 {
+			limit = n
+		}
+	}
+	if limit > 500 {
+		limit = 500
+	}
+	cursor := r.URL.Query().Get("cursor")
+	q := r.URL.Query().Get("q")
+
+	// Keyset pagination on the monotonic id: WHERE org_id = ? [AND message LIKE ?]
+	// [AND id < cursor] ORDER BY id DESC. Fetch limit+1 to detect has_more.
+	query := "SELECT id, level, message, org_id, created_at FROM monitoring_logs WHERE org_id = ?"
+	args := []any{orgID}
+	if q != "" {
+		query += " AND message LIKE ?"
+		args = append(args, "%"+q+"%")
+	}
+	if cursor != "" {
+		query += " AND id < ?"
+		args = append(args, cursor)
+	}
+	query += " ORDER BY id DESC LIMIT ?"
+	args = append(args, limit+1)
+
+	rows, err := m.db.QueryContext(r.Context(), query, args...)
 	if err != nil {
 		m.logger.Error("search logs", "error", err)
 		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
@@ -605,16 +645,27 @@ func (m *Monitoring) handleLogSearch(w http.ResponseWriter, r *http.Request) {
 	}
 	defer func() { _ = rows.Close() }()
 
-	logs := make([]LogEntry, 0)
+	logs := make([]LogEntry, 0, limit)
 	for rows.Next() {
 		var l LogEntry
-		if err := rows.Scan(&l.ID, &l.Level, &l.Message, &l.CreatedAt); err != nil {
+		if err := rows.Scan(&l.ID, &l.Level, &l.Message, &l.OrgID, &l.CreatedAt); err != nil {
 			m.logger.Error("scan log", "error", err)
 			continue
 		}
 		logs = append(logs, l)
 	}
-	kernel.WriteJSON(w, http.StatusOK, map[string]any{"data": logs})
+
+	hasMore := len(logs) > limit
+	nextCursor := ""
+	if hasMore {
+		logs = logs[:limit]
+		nextCursor = logs[len(logs)-1].ID
+	}
+	kernel.WriteJSON(w, http.StatusOK, map[string]any{
+		"data":        logs,
+		"next_cursor": nextCursor,
+		"has_more":    hasMore,
+	})
 }
 
 func (m *Monitoring) handleLogByID(w http.ResponseWriter, r *http.Request) {
@@ -627,10 +678,17 @@ func (m *Monitoring) handleLogByID(w http.ResponseWriter, r *http.Request) {
 		kernel.WriteJSON(w, http.StatusNotFound, map[string]string{"error": "not found"})
 		return
 	}
+	// Require org_id and scope the lookup to it (BUG-143): a log from another
+	// org must be indistinguishable from a nonexistent one (404).
+	orgID, ok := kernel.OrgIDFromContext(r.Context())
+	if !ok {
+		kernel.WriteJSON(w, http.StatusUnauthorized, map[string]string{"error": "org_id required"})
+		return
+	}
 	var l LogEntry
 	err := m.db.QueryRowContext(r.Context(),
-		"SELECT id, level, message, created_at FROM monitoring_logs WHERE id = ?", id).
-		Scan(&l.ID, &l.Level, &l.Message, &l.CreatedAt)
+		"SELECT id, level, message, org_id, created_at FROM monitoring_logs WHERE id = ? AND org_id = ?", id, orgID).
+		Scan(&l.ID, &l.Level, &l.Message, &l.OrgID, &l.CreatedAt)
 	if err != nil {
 		kernel.WriteJSON(w, http.StatusNotFound, map[string]string{"error": "log not found"})
 		return
