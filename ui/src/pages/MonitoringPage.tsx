@@ -59,6 +59,7 @@ export default function MonitoringPage() {
   const [logCursor, setLogCursor] = useState('')
   const [logsHasMore, setLogsHasMore] = useState(false)
   const [logsFetching, setLogsFetching] = useState(false)
+  const [logsLive, setLogsLive] = useState(false)
   const [showAlertForm, setShowAlertForm] = useState(false)
   const [alertForm, setAlertForm] = useState({ name: '', metric: '', threshold: 0, operator: 'gt', enabled: true })
 
@@ -164,6 +165,22 @@ export default function MonitoringPage() {
     es.onerror = () => { /* reconnect is automatic */ }
     return () => es.close()
   }, [metrics === null, applySSEEvent]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Live log tail (e86s02): subscribe while the Logs tab is active, prepend new
+  // entries deduped by id, and tear down on tab switch/unmount.
+  useEffect(() => {
+    if (tab !== 'logs') return
+    const es = new EventSource('/api/monitoring/logs/stream')
+    es.onopen = () => setLogsLive(true)
+    es.onmessage = (e: MessageEvent<string>) => {
+      try {
+        const entry = JSON.parse(e.data) as LogEntry
+        setLogs(prev => (prev.some(l => l.id === entry.id) ? prev : [entry, ...prev]))
+      } catch { /* ignore malformed events */ }
+    }
+    es.onerror = () => setLogsLive(false)
+    return () => { es.close(); setLogsLive(false) }
+  }, [tab])
 
   const handleCreateAlert = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -311,6 +328,7 @@ export default function MonitoringPage() {
             <form onSubmit={e => { e.preventDefault(); fetchLogs(logQuery) }} className="form-row">
               <Input aria-label="Search logs" placeholder="Search logs..." value={logQuery} onChange={e => setLogQuery(e.target.value)} />
               <Button type="submit" size="sm">Search</Button>
+              {logsLive && <Badge variant="success" aria-label="Live log stream connected">LIVE</Badge>}
             </form>
           </div>
           {logs.length === 0 ? <p className="dim">No logs.</p> : (

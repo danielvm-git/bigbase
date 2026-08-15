@@ -71,6 +71,18 @@ func (d *Deploy) handleDeployRelatedEvents(w http.ResponseWriter, r *http.Reques
 	kernel.WriteJSON(w, http.StatusOK, rel)
 }
 
+// deploymentOrg resolves a deployment's site and owning org (via the sites
+// table). Missing rows or a missing sites table degrade gracefully to ("", 0).
+func (d *Deploy) deploymentOrg(ctx context.Context, deploymentID string) (string, int64) {
+	var siteID string
+	var orgID int64
+	_ = d.db.QueryRowContext(ctx,
+		`SELECT COALESCE(d.site_id, ''), COALESCE(s.org_id, 0)
+		 FROM deployments d LEFT JOIN sites s ON s.id = d.site_id
+		 WHERE d.id = ?`, deploymentID).Scan(&siteID, &orgID)
+	return siteID, orgID
+}
+
 func (d *Deploy) emitDeployFailed(ctx context.Context, id string) {
 	var siteID, repoID, appType, errMsg, buildLog string
 	if err := d.db.QueryRowContext(ctx,
@@ -79,6 +91,7 @@ func (d *Deploy) emitDeployFailed(ctx context.Context, id string) {
 		Scan(&siteID, &repoID, &appType, &errMsg, &buildLog); err != nil {
 		return
 	}
+	_, orgID := d.deploymentOrg(ctx, id)
 	if buildLog == "" {
 		if lines := d.getDeployLogs(id); len(lines) > 0 {
 			buildLog = strings.Join(lines, "\n")
@@ -89,6 +102,7 @@ func (d *Deploy) emitDeployFailed(ctx context.Context, id string) {
 		Data: map[string]any{
 			"deployment_id": id,
 			"site_id":       siteID,
+			"org_id":        orgID,
 			"repo_id":       repoID,
 			"app_type":      appType,
 			"error_message": errMsg,
