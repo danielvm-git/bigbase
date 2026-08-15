@@ -5,7 +5,7 @@ title: "Monitoring Logs — Live Streaming, Pagination, Org Scope & Auto-Ingesti
 wsjf: 3.2
 wsjf_rationale: "BV=7 (live streaming + auto-ingestion make deploy debugging real-time; pagination is table stakes for a log viewer) TC=3 (no deadline, but org scoping is an open security gap that grows with usage) RR=6 (closes cross-tenant log exposure; reduces operational toil) / JS=5 (4 stories: schema migration + SSE + event-bus hook + UI)"
 total_bcps: 12
-status: open
+status: done
 tier: 2
 depends_on:
   - e14
@@ -41,28 +41,28 @@ stories:
   - id: e86s01
     title: "Paginated log search API + UI (keyset cursor)"
     bcps: 3
-    status: open
+    status: done
     depends_on: []
     spec: e86s01-spec.md
     tasks: e86s01-tasks.yaml
   - id: e86s02
     title: "Live log streaming via SSE + Logs tab subscribe"
     bcps: 3
-    status: open
+    status: done
     depends_on: []
     spec: e86s02-spec.md
     tasks: e86s02-tasks.yaml
   - id: e86s03
     title: "Org-scoped logs — org_id migration + isolation"
     bcps: 3
-    status: open
+    status: done
     depends_on: []
     spec: e86s03-spec.md
     tasks: e86s03-tasks.yaml
   - id: e86s04
     title: "Deploy-component automatic log ingestion"
     bcps: 3
-    status: open
+    status: done
     depends_on: [e86s03]
     spec: e86s04-spec.md
     tasks: e86s04-tasks.yaml
