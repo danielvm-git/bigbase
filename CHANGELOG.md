@@ -1,3 +1,10 @@
+# [2.91.0](https://github.com/danielvm-git/bigbase/compare/v2.90.2...v2.91.0) (2026-08-15)
+
+
+### Features
+
+* **monitoring:** live log SSE stream + deploy auto-ingestion (e86s02+s04) ([af94355](https://github.com/danielvm-git/bigbase/commit/af9435578341adb1fdbfcb2b0fa32228a84f5b7d))
+
 ## [2.90.2](https://github.com/danielvm-git/bigbase/compare/v2.90.1...v2.90.2) (2026-08-15)
 
 
