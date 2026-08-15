@@ -34,3 +34,32 @@ metadata was stale. No production `.go`/UI code changes were required.
 - Separately (not from a GAP): the `Deploy` workflow was red on `main` because the e89
   release made `BIGBASE_ROOT_ENCRYPTION_KEY` mandatory but it was never provisioned —
   fixed under Phase 1 CI/CD hardening.
+
+## Phase 1 CI/CD hardening (2026-08-13 → 2026-08-15)
+
+- **Production fix:** provisioned `BIGBASE_ROOT_ENCRYPTION_KEY` (repo secret + `deploy.yml`
+  VPS-env wiring). `Deploy` green; `https://bigbase.click/api/monitoring/health` → `{"status":"ok"}`.
+- **UI vitest in CI:** added a `test-ui` job (jsdom) that gates release — the Admin UI was
+  previously only *built*, never tested. Later extended by peers with eslint/typecheck/build.
+- **Lockfile-sync guard:** `npm ci` drift check in `verify` (the `@ctxo/plugin-api` failure class).
+- **Node pinned to 24** across all jobs via `NODE_VERSION`.
+
+## e81s06 security regression tests — 6/6 complete
+
+Regression tests guarding already-fixed vulns so they cannot silently return. No production
+code changed; each asserts an existing guard. Initially 4/6 landed with 2 documented gaps;
+both gaps were subsequently closed with real behavioral tests (2026-08-15).
+
+| # | Test | Location | Guards |
+|---|------|----------|--------|
+| 1 | `TestPathTraversal` | `components/git/path_traversal_regression_test.go` | `deleteRepo` rejects `/`- and `..`-containing repo ids with 400 before any FS `RemoveAll` (seeds rows the public API can't mint) |
+| 2 | `TestCommandInjection` | `components/deploy/security_regression_test.go` | `cloneAndCheckout`'s `--` separator treats a `--upload-pack=<cmd>` payload as a nonexistent path — injected command never runs (sentinel absent) |
+| 3 | `TestAnonymousWriteBlocked` | `components/auth/anon_write_regression_test.go` | anonymous JWTs get 403 on POST/PUT/PATCH/DELETE; 200 on GET/HEAD/OPTIONS |
+| 4 | `TestAppTypeIsValid` | `components/deploy/security_regression_test.go` | `AppType.IsValid()` / `AllAppTypes()` stay in sync; unknown types rejected |
+| 5 | `TestErrorSentinels` | `components/deploy/security_regression_test.go` | `ErrRepoNotFound` / `ErrDeploymentNotFound` match via `errors.Is`, not fragile strings |
+| 6 | `TestManifestPathTraversal` | `components/deploy/security_regression_test.go` | `LoadManifestPath` rejects absolute and directory-escaping manifest paths |
+
+All six pass in `test-sqlite` / `test-postgres`. Every GitHub Actions workflow green on `main`
+(`b5814bdb7`). One unrelated pre-existing flake surfaced during landing —
+`TestDrainStatusHistory` under `-race` in full parallel runs (passes in isolation and on rerun);
+filed as a separate task, not part of this work.
