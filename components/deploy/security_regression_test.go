@@ -5,12 +5,37 @@ package deploy
 // production code is exercised beyond the public deploy API.
 
 import (
+	"context"
 	"errors"
 	"fmt"
+	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
 )
+
+// TestCommandInjection guards the "--" separator in cloneAndCheckout's git
+// invocation. A repo path crafted to look like a git option (e.g.
+// --upload-pack=<cmd>) must be treated as a (nonexistent) positional path, not
+// executed. Without the "--", git would run the injected command.
+func TestCommandInjection(t *testing.T) {
+	if _, err := exec.LookPath("git"); err != nil {
+		t.Skip("git not installed")
+	}
+	d := &Deploy{}
+	buildDir := t.TempDir()
+	sentinel := filepath.Join(t.TempDir(), "pwned")
+
+	payload := "--upload-pack=touch " + sentinel
+	err := d.cloneAndCheckout(context.Background(), "regress", payload, buildDir, "main")
+	if err == nil {
+		t.Error("expected clone to fail: injected option must be treated as a nonexistent path")
+	}
+	if _, statErr := os.Stat(sentinel); statErr == nil {
+		t.Fatalf("command injection: sentinel %q was created — the -- guard failed", sentinel)
+	}
+}
 
 // TestAppTypeIsValid guards AppType.IsValid(): every known type is valid and
 // unknown/empty/differently-cased inputs are rejected. Prevents a silent
