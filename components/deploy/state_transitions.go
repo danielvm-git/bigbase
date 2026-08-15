@@ -69,10 +69,13 @@ func (d *Deploy) TransitionState(ctx context.Context, id, newStatus string) erro
 
 	// Emit event (nil-safe)
 	if d.eventBus != nil {
+		siteID, orgID := d.deploymentOrg(ctx, id)
 		_ = d.eventBus.Emit(kernel.Event{
 			Name: "deploy.state_changed",
 			Data: map[string]any{
 				"deployment_id": id,
+				"site_id":       siteID,
+				"org_id":        orgID,
 				"from_state":    current,
 				"to_state":      newStatus,
 				"timestamp":     transition.Timestamp,

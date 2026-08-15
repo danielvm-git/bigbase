@@ -73,7 +73,8 @@ type Monitoring struct {
 	db      DBer
 	logger  kernel.Logger
 	metrics *MetricsCollector
-	stream  *eventStream
+	stream    *eventStream
+	logStream *logSSEStream
 
 	cpuMu        sync.Mutex
 	cpuSampleAt  time.Time
@@ -147,6 +148,7 @@ func (m *Monitoring) Start(ctx *kernel.Context) error {
 	defer m.lifecycleMu.Unlock()
 	m.stopWorkersLocked()
 	m.stream = newEventStream()
+	m.logStream = newLogSSEStream()
 	if m.db != nil {
 		if err := m.initObservability(); err != nil {
 			return err
@@ -377,6 +379,7 @@ func (m *Monitoring) Handler() http.Handler {
 	mux.HandleFunc("/api/monitoring/metrics/stream", m.handleMetricsStream)
 	mux.HandleFunc("/api/monitoring/metrics/prometheus", m.handlePrometheusMetrics)
 	mux.HandleFunc("/api/monitoring/logs", m.handleLogs)
+	mux.HandleFunc("/api/monitoring/logs/stream", m.handleLogStream)
 	mux.HandleFunc("/api/monitoring/logs/", m.handleLogByID)
 	mux.HandleFunc("/api/monitoring/alerts", m.handleAlerts)
 	mux.HandleFunc("GET /api/orgs/{id}/usage", m.handleOrgUsage)
@@ -594,6 +597,14 @@ func (m *Monitoring) handleLogCreate(w http.ResponseWriter, r *http.Request) {
 		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
+	// Push to live SSE subscribers (e86s02). Timestamp mirrors datetime('now').
+	m.broadcastLog(LogEntry{
+		ID:        id,
+		Level:     entry.Level,
+		Message:   entry.Message,
+		OrgID:     orgID,
+		CreatedAt: time.Now().UTC().Format("2006-01-02 15:04:05"),
+	})
 	kernel.WriteJSON(w, http.StatusCreated, map[string]string{"id": id})
 }
 

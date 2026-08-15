@@ -107,6 +107,24 @@ func (m *Monitoring) wireObservabilityHooks(bus *kernel.EventBus) {
 		return
 	}
 	m.WithEventBus(bus, knownEventHooks)
+	// e86s04: auto-ingest deploy lifecycle events as org-scoped log rows so
+	// they surface in the Logs tab (and the live SSE stream) alongside manual logs.
+	bus.Subscribe(kernel.HookDef{
+		Name:     "deploy.state_changed",
+		Priority: 400,
+		Handler: func(_ *kernel.Context, ev kernel.Event) error {
+			m.ingestDeployLog(ev.Data, "info")
+			return nil
+		},
+	})
+	bus.Subscribe(kernel.HookDef{
+		Name:     "deploy.failed",
+		Priority: 400,
+		Handler: func(_ *kernel.Context, ev kernel.Event) error {
+			m.ingestDeployLog(ev.Data, "error")
+			return nil
+		},
+	})
 	bus.Subscribe(kernel.HookDef{
 		Name:     "deploy.failed",
 		Priority: 500,
@@ -126,6 +144,37 @@ func (m *Monitoring) wireObservabilityHooks(bus *kernel.EventBus) {
 			go m.deliverAlert(ev.Data)
 			return nil
 		},
+	})
+}
+
+// ingestDeployLog turns a deploy lifecycle event into an org-scoped log row and
+// pushes it to live subscribers. org_id arrives as int64 (same-process event
+// bus, no JSON round-trip). Never emits a deploy event, so it cannot loop.
+func (m *Monitoring) ingestDeployLog(data map[string]any, level string) {
+	if m.db == nil {
+		return
+	}
+	orgID, _ := data["org_id"].(int64)
+	deployID, _ := data["deployment_id"].(string)
+	var msg string
+	if level == "error" {
+		msg = fmt.Sprintf("deploy %s failed", deployID)
+		if em, ok := data["error_message"].(string); ok && em != "" {
+			msg = fmt.Sprintf("deploy %s failed: %s", deployID, em)
+		}
+	} else {
+		msg = fmt.Sprintf("deploy %s: %v → %v", deployID, data["from_state"], data["to_state"])
+	}
+	id := fmt.Sprintf("%d", time.Now().UnixNano())
+	if _, err := m.db.ExecContext(context.Background(),
+		"INSERT INTO monitoring_logs (id, level, message, org_id, created_at) VALUES (?, ?, ?, ?, datetime('now'))",
+		id, level, msg, orgID); err != nil {
+		m.logger.Error("ingest deploy log", "error", err)
+		return
+	}
+	m.broadcastLog(LogEntry{
+		ID: id, Level: level, Message: msg, OrgID: orgID,
+		CreatedAt: time.Now().UTC().Format("2006-01-02 15:04:05"),
 	})
 }
 

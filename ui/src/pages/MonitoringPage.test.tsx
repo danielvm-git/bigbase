@@ -1,7 +1,24 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, act } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
+
+// Minimal EventSource stub (jsdom has none). Captures instances so tests can
+// drive open/message events.
+class FakeEventSource {
+  static instances: FakeEventSource[] = []
+  url: string
+  onopen: (() => void) | null = null
+  onmessage: ((e: MessageEvent<string>) => void) | null = null
+  onerror: (() => void) | null = null
+  readyState = 0
+  constructor(url: string) { this.url = url; FakeEventSource.instances.push(this) }
+  close() { this.readyState = 2 }
+  emitOpen() { this.readyState = 1; this.onopen?.() }
+  emitMessage(data: unknown) {
+    this.onmessage?.(new MessageEvent('message', { data: JSON.stringify(data) }))
+  }
+}
 
 // Keep metrics null so the SSE EventSource effect never runs (it early-returns
 // on `if (!metrics)`), letting us focus on the logs pagination flow.
@@ -34,6 +51,8 @@ function logPage(cursor: string | null) {
 
 describe('MonitoringPage logs pagination', () => {
   beforeEach(() => {
+    FakeEventSource.instances = []
+    vi.stubGlobal('EventSource', FakeEventSource)
     vi.stubGlobal('fetch', vi.fn(async (input: string) => {
       const url = new URL(input, 'http://localhost')
       if (url.pathname === '/api/monitoring/logs') {
@@ -71,5 +90,26 @@ describe('MonitoringPage logs pagination', () => {
     await waitFor(() => {
       expect(screen.queryByRole('button', { name: /load more/i })).toBeNull()
     })
+  })
+
+  it('tails live logs: shows LIVE on open and prepends streamed entries', async () => {
+    const user = userEvent.setup()
+    render(<MemoryRouter><MonitoringPage /></MemoryRouter>)
+
+    await user.click(await screen.findByRole('tab', { name: 'Logs' }))
+    await screen.findByText('m0')
+
+    const es = FakeEventSource.instances.find(e => e.url.includes('/api/monitoring/logs/stream'))
+    expect(es).toBeTruthy()
+
+    act(() => es!.emitOpen())
+    expect(await screen.findByText('LIVE')).toBeInTheDocument()
+
+    act(() => es!.emitMessage({ id: '9999', level: 'error', message: 'live-entry', created_at: '2026-01-01T00:00:00Z' }))
+    expect(await screen.findByText('live-entry')).toBeInTheDocument()
+
+    // Duplicate id must not double-insert.
+    act(() => es!.emitMessage({ id: '9999', level: 'error', message: 'live-entry', created_at: '2026-01-01T00:00:00Z' }))
+    expect(screen.getAllByText('live-entry')).toHaveLength(1)
   })
 })
