@@ -137,15 +137,11 @@ func (a *Auth) handleGoogleCallback(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// SPA token delivery: redirect to SPA with #token=... instead of setting cookie.
-	if spaRedirect != "" && a.isSPAOriginAllowed(spaRedirect) {
+	if safeURL, ok := a.safeSPARedirectURL(spaRedirect, token); ok {
 		a.clearOAuthStateCookie(w, r)
-		target, err := url.Parse(strings.ReplaceAll(spaRedirect, "\\", "/"))
-		if err == nil && target != nil {
-			target.Fragment = "token=" + url.QueryEscape(token)
-			a.recordAudit("auth.oauth_callback", userID, googleUser.Email, getIP(r), nil)
-			http.Redirect(w, r, target.String(), http.StatusFound)
-			return
-		}
+		a.recordAudit("auth.oauth_callback", userID, googleUser.Email, getIP(r), nil)
+		http.Redirect(w, r, safeURL, http.StatusFound)
+		return
 	}
 
 	// Clear the OAuth state cookie now that the flow is complete.

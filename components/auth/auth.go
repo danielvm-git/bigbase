@@ -108,28 +108,55 @@ func (a *Auth) CORSMiddleware() func(http.Handler) http.Handler {
 // bypass attacks like https://trusted.example.com.evil.com (CWE-601).
 // Relative URLs (no host) are always safe — they resolve against the current origin.
 func (a *Auth) isSPAOriginAllowed(redirectURL string) bool {
-	if len(a.spaOriginAllowlist) == 0 {
-		return false
+	_, ok := a.safeSPARedirectURL(redirectURL, "")
+	return ok
+}
+
+// safeSPARedirectURL validates redirectURL against the SPA allowlist and constructs
+// a sanitized redirect URL with optional JWT fragment. The host and scheme are
+// populated from allowlisted values to ensure untrusted user input cannot control
+// the redirect destination (CWE-601).
+func (a *Auth) safeSPARedirectURL(redirectURL, jwt string) (string, bool) {
+	if redirectURL == "" || len(a.spaOriginAllowlist) == 0 {
+		return "", false
 	}
 	clean := strings.ReplaceAll(redirectURL, "\\", "/")
-	parsed, err := url.Parse(clean)
-	if err != nil {
-		return false
+	if strings.HasPrefix(clean, "/") && !strings.HasPrefix(clean, "//") {
+		target, err := url.Parse(clean)
+		if err != nil || target.Hostname() != "" {
+			return "", false
+		}
+		if jwt != "" {
+			target.Fragment = "token=" + url.QueryEscape(jwt)
+		}
+		return target.String(), true
 	}
-	// Relative redirects (no host) are always safe — same origin.
-	if parsed.Hostname() == "" {
-		return true
+	target, err := url.Parse(clean)
+	if err != nil || target.Scheme == "" || target.Hostname() == "" {
+		return "", false
 	}
 	for _, allowed := range a.spaOriginAllowlist {
-		allowedParsed, err := url.Parse(strings.ReplaceAll(allowed, "\\", "/"))
-		if err != nil {
+		allowedClean := strings.ReplaceAll(allowed, "\\", "/")
+		allowedParsed, err := url.Parse(allowedClean)
+		if err != nil || allowedParsed.Scheme == "" || allowedParsed.Hostname() == "" {
 			continue
 		}
-		if parsed.Scheme == allowedParsed.Scheme && parsed.Hostname() == allowedParsed.Hostname() {
-			return true
+		if target.Scheme == allowedParsed.Scheme && target.Hostname() == allowedParsed.Hostname() {
+			dest := url.URL{
+				Scheme:   allowedParsed.Scheme,
+				Host:     allowedParsed.Host,
+				Path:     target.Path,
+				RawQuery: target.RawQuery,
+			}
+			if jwt != "" {
+				dest.Fragment = "token=" + url.QueryEscape(jwt)
+			} else {
+				dest.Fragment = target.Fragment
+			}
+			return dest.String(), true
 		}
 	}
-	return false
+	return "", false
 }
 
 // PublicURLOrDefault returns the configured public URL.
