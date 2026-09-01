@@ -1,3 +1,10 @@
+## [2.91.3](https://github.com/danielvm-git/bigbase/compare/v2.91.2...v2.91.3) (2026-09-01)
+
+
+### Bug Fixes
+
+* **deploy:** close race between supervisor Spawn and Stop; extend preflight timeout ([84aca28](https://github.com/danielvm-git/bigbase/commit/84aca28fab86373741235ff8795955164cd863aa))
+
 ## [2.91.2](https://github.com/danielvm-git/bigbase/compare/v2.91.1...v2.91.2) (2026-09-01)
 
 
