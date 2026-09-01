@@ -2,6 +2,7 @@
   "scripts": {
     "preflight": "npm run preflight:go && npm run preflight:build && npm run preflight:codeql && npm run preflight:secrets",
     "preflight:go": "go vet ./... && go test -timeout 600s ./... && go run github.com/securego/gosec/v2/cmd/gosec@v2.28.0 -conf .gosec.json -quiet -exclude-dir=ui/node_modules -exclude=G104,G115,G404,G702,G703,G704,G112,G114,G118,G120,G124,G204,G301,G304,G306,G705,G710 ./...",
+    "preflight:secscan": "go vet ./... && go run github.com/securego/gosec/v2/cmd/gosec@v2.28.0 -conf .gosec.json -quiet -exclude-dir=ui/node_modules -exclude=G104,G115,G404,G702,G703,G704,G112,G114,G118,G120,G124,G204,G301,G304,G306,G705,G710 ./...",
     "preflight:build": "go build -o /dev/null .",
     "preflight:codeql": "./scripts/codeql-scan.sh",
     "preflight:secrets": "gitleaks detect --source . --no-banner 2>&1 && echo 'secrets: OK' || echo 'gitleaks: SKIP (not installed)'",
@@ -17,11 +18,7 @@
     "@ctxo/lang-go": "^0.8.1",
     "@ctxo/lang-typescript": "^0.7.1",
     "@playwright/test": "^1.62.1",
-    "@semantic-release/changelog": "^7.0.0",
-    "@semantic-release/exec": "^7.1.0",
-    "@semantic-release/git": "^11.0.1",
     "@types/node": "^26.4.0",
-    "semantic-release": "^25.0.9",
     "typescript-language-server": "^6.0.0"
   },
   "dependencies": {

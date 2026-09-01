@@ -6,7 +6,7 @@
 # Triggers via workflow_run after "Test, Build & Release" completes on a push
 # to main (not on PRs), consuming the `bigbase-release` artifact (binary +
 # deploy-meta.json) that workflow's `build` job uploads — no rebuild here.
-# A push to main that didn't produce a new semantic-release version still
+# A push to main that didn't produce a new big-release version still
 # fires this workflow_run event (test-build-release still succeeds — release
 # and build were just skipped), but no `bigbase-release` artifact exists for
 # that run, so the download step fails gracefully and the job no-ops.

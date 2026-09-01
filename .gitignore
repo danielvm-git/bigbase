@@ -30,7 +30,7 @@ data/
 .bigpowers/
 *.zip
 
-# Node / semantic-release
+# Node
 node_modules/
 
 # Environment (secrets)

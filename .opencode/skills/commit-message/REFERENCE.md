@@ -31,7 +31,7 @@ This reverts commit 676104e.
 
 ### Breaking Changes
 A breaking change can be signaled by:
-1.  A **`BREAKING CHANGE:`** footer (must be uppercase, at the start of the footer). This is the **most compatible** way to trigger a Major release in `semantic-release` (Angular preset).
+1.  A **`BREAKING CHANGE:`** footer (must be uppercase, at the start of the footer). This is the **most compatible** way to trigger a Major release in `big-release` (and any Conventional Commits tool).
 2.  A **`!`** after the type/scope: `feat(api)!: change user response shape`.
 
 **Pro-tip:** For maximum compatibility with all tooling (older and newer), use BOTH the `!` and the `BREAKING CHANGE:` footer.
@@ -50,9 +50,9 @@ When using `gh pr merge --squash`, the PR title is usually used as the commit su
 - **PR Title:** MUST follow `<type>(<scope>): <description>`
 - **PR Body:** Content will be moved to the commit body.
 
-## Release Type Mapping (Default Angular Preset)
+## Release Type Mapping (big-release)
 
-This table reflects the **out-of-the-box** behavior of `semantic-release` using the `@semantic-release/commit-analyzer` default (Angular) rules.
+This table reflects the built-in behavior of [`big-release`](https://github.com/danielvm-git/big-release)'s commit analyzer (`feat`→minor, `fix`/`perf`→patch, breaking→major, everything else→none) — identical to the semantic-release Angular preset.
 
 | Commit pattern | Release | Notes |
 |----------------|---------|-------|
@@ -67,8 +67,8 @@ This table reflects the **out-of-the-box** behavior of `semantic-release` using 
 
 ## Custom Repositories
 
-- Read `release.config.js`, `.releaserc`, or `package.json` → `release` / `semantic-release` config.
-- The **@semantic-release/commit-analyzer** preset may map types differently; prefer **their** rules when they conflict with this reference.
+- Read `.big-release.yml` (or `.big-release.json` / `.big-release.yaml`) for the release config — plugins, `tagFormat`, branches.
+- big-release's core type→bump mapping is fixed (see table above); custom `plugins`/`branches` in `.big-release.yml` change *behavior* (changelog, version file, publishers), not the bump rules.
 
 ## Squash and PR titles
 
@@ -78,5 +78,4 @@ This table reflects the **out-of-the-box** behavior of `semantic-release` using 
 ## Links
 
 - [Conventional Commits — specification](https://www.conventionalcommits.org/en/v1.0.0/#specification)
-- [semantic-release — README (commit format & flow)](https://github.com/semantic-release/semantic-release#commit-message-format)
-- Fork pointer: [semantic-release-baby](https://github.com/danielvm-git/semantic-release-baby) (automation and docs align with upstream semantic-release)
+- [big-release — repository (release tool used by this project)](https://github.com/danielvm-git/big-release)

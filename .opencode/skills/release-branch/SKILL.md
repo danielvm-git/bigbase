@@ -123,7 +123,7 @@ Wait for CI to pass. Merge using **Squash and Merge** so the PR title becomes th
 gh pr merge --squash --delete-branch
 ```
 
-`semantic-release` will automatically:
+`big-release` will automatically:
 1. Detect the commit on `main`.
 2. Determine the SemVer bump from the commit type.
 3. Tag the repo (e.g., `v2.1.0`).
