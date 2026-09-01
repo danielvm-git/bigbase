@@ -61,23 +61,26 @@ jobs:
       code: ${{ steps.filter.outputs.code }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-      # `code` is true if any changed file matches the positive pattern (**)
-      # and none of the negative exclusions (!). In dorny/paths-filter, a file
-      # matches a filter if it matches at least one positive rule and zero negative rules.
-      # A docs-only change matches only negative rules -> code=false.
-      # A mixed code+docs change has code files matching ** -> code=true.
+      # `code` is true when any changed file is NOT docs/spec/agent-config.
+      #
+      # dorny compiles each rule with picomatch and combines them with `.some()`
+      # (the default quantifier). That means the exclusion MUST be expressed as a
+      # SINGLE negated brace-alternation rule. Two traps this avoids:
+      #   * multiple separate `!glob` rules OR together — a root README.md still
+      #     matches `!specs/**` (it isn't under specs), so `code` would be true;
+      #   * a trailing `**` rule matches every file, forcing `code` true always.
+      # Both make docs-only changes run the full pipeline (skip never fires).
+      # `predicate-quantifier: every` does NOT fix this — dorny's `every` requires
+      # one file to match ALL patterns at once (impossible for disjoint path
+      # globs) and also emits an "Unexpected input" warning (undeclared in v3.0.2
+      # action.yml). Verified against dorny's filter.ts + picomatch for docs-only,
+      # code-only, mixed, and dotfile-dir changes.
       - uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # v3.0.2
         id: filter
         with:
           filters: |
             code:
-              - '!**/*.md'
-              - '!*.md'
-              - '!specs/**'
-              - '!.agents/**'
-              - '!.cursor/**'
-              - '!.vscode/**'
-              - '**'
+              - '!{**/*.md,*.md,specs/**,.agents/**,.cursor/**,.vscode/**}'
 
   # ============================================================================
   # JOB: Lint — golangci-lint (runs first for fast feedback)
