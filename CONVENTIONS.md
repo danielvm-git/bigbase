@@ -163,7 +163,7 @@ The production VPS at Contabo (vmi3338033, 89.116.26.187) follows a three-layer 
 
 ### Rebase before push
 - Always `git pull --rebase --autostash` before pushing to `main`. The
-  semantic-release bot commits to `origin/main` between your fetch and push
+  big-release bot commits to `origin/main` between your fetch and push
   (3 releases/day at peak), which causes non-fast-forward rejections.
 - If the release bot beat you, **rebase** onto the new `main` and push again.
 - **Never** use `--force`/`--force-with-lease` to win a race against the bot —
@@ -174,4 +174,4 @@ The production VPS at Contabo (vmi3338033, 89.116.26.187) follows a three-layer 
   - `feat:`, `fix:`, `chore:`, `refactor:`, `docs:`, `test:`, etc.
   - Ex: `feat(auth): add project scoping to JWT`
 - Breaking changes must include a `BREAKING CHANGE:` footer.
-- The system uses `semantic-release` to automate versioning based on these commit prefixes.
+- The system uses [`big-release`](https://github.com/danielvm-git/big-release) to automate versioning based on these commit prefixes (config in `.big-release.yml`).

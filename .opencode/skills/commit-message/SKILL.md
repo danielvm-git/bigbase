@@ -1,6 +1,6 @@
 ---
 name: commit-message
-description: "Reviews working-tree changes, then drafts a Conventional Commits title/body and states the semantic-release version bump a single such commit would imply. Also notes which defensive-code categories were touched. Use when the user wants to commit recent work, prepare a Conventional Commits message, or asks for semantic-release / semver-consistent messaging before git commit."
+description: "Reviews working-tree changes, then drafts a Conventional Commits title/body and states the big-release version bump a single such commit would imply. Also notes which defensive-code categories were touched. Use when the user wants to commit recent work, prepare a Conventional Commits message, or asks for big-release / semver-consistent messaging before git commit."
 compatibility: opencode
 ---
 
@@ -17,7 +17,7 @@ compatibility: opencode
 
 1. **Inventory** — List changed paths; group by feature vs chore vs docs vs test-only.
 2. **Decide commit shape** — One atomic commit is ideal. If the diff mixes unrelated concerns, recommend **multiple commits** (each with its own type/scope) before suggesting one message.
-3. **Classify for semantic release** — `fix` → patch, `feat` → minor, **breaking** → major.
+3. **Classify the version bump** (big-release) — `fix`/`perf` → patch, `feat` → minor, **breaking** → major.
 4. **Write the message** — `type(optional-scope)!: description` (see [REFERENCE.md](REFERENCE.md#message-format)). Use `!` or a `BREAKING CHANGE:` footer when behavior contracts change.
 5. **Note defensive-code categories touched** — from CONVENTIONS.md: Rate limit | Retry with backoff | Circuit breaker | Timeout | Graceful degradation
 6. **Deliver** — Output:
@@ -34,7 +34,7 @@ compatibility: opencode
 
 ## When not to invent a bump
 
-If the repo uses a custom `@semantic-release/commit-analyzer` preset, note that your bump is **heuristic** and they should match `.releaserc` / `release.config.*`. See [REFERENCE.md](REFERENCE.md#custom-repositories).
+big-release's core bump rules are fixed (`feat`→minor, `fix`/`perf`→patch, breaking→major, others→none); if `.big-release.yml` customizes plugins or branches, note that your bump is **heuristic** and they should match that config. See [REFERENCE.md](REFERENCE.md#custom-repositories).
 
 ## Further reading
 

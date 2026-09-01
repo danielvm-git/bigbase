@@ -4,9 +4,17 @@
 # Replaces ci-cd.yml + the release half of release-deploy.yml.
 #
 # Pipeline:
-#   lint → test (SQLite + PostgreSQL) + toolchain-parity → verify → allure report
+#   changes (path gate) → lint → test (SQLite + PostgreSQL) + toolchain-parity → verify → allure report
+#                           ↘  test-ui (builds ui/dist once, shared) ↘ test-e2e (reuses ui/dist)
+#                           ↘  dependency-review (PR only)
 #                                                          ↘
 #                                            (push to main only) release → build
+#
+# `changes` skips the whole chain for docs/spec-only edits (lint is gated on it;
+# heavy jobs cascade-skip via needs: [lint]). It always runs & succeeds, so it is
+# a safe single required check. The UI is built ONCE in test-ui and reused by
+# test-e2e and build via the `ui-dist` artifact. `release` runs big-release (see
+# .big-release.yml), which commits VERSION/CHANGELOG back to main and tags.
 #
 # The `build` job uploads a `bigbase-release` artifact (binary + deploy-meta.json).
 # deploy.yml picks it up via a `workflow_run` trigger on this workflow's name —
@@ -34,10 +42,57 @@ env:
 
 jobs:
   # ============================================================================
+  # JOB: Changes — path gate. Decides whether a run touches buildable code.
+  #
+  # Docs/spec-only changes (**.md, specs/, agent config) skip the whole
+  # lint→test→verify chain: `lint` is gated on `code == 'true'`, and every
+  # heavy job needs [lint], so a skipped lint cascade-skips them. `verify`
+  # (which uses always()) carries the same guard explicitly.
+  #
+  # This job ALWAYS runs and always succeeds, so it can safely be the single
+  # required status check if branch protection is enabled on main (the other
+  # job names stay stable regardless). It never leaves a PR waiting.
+  # ============================================================================
+  changes:
+    name: Changes
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      code: ${{ steps.decide.outputs.code }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      # `docs` is true only when EVERY changed file matches a docs/spec/config
+      # glob (predicate-quantifier: every). A mixed code+docs change therefore
+      # has docs=false → code=true, so real code is never skipped.
+      - uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # v3.0.2
+        id: filter
+        with:
+          predicate-quantifier: 'every'
+          filters: |
+            docs:
+              - '**/*.md'
+              - '*.md'
+              - 'specs/**'
+              - '.agents/**'
+              - '.cursor/**'
+              - '.vscode/**'
+      - id: decide
+        run: |
+          if [ "${{ steps.filter.outputs.docs }}" = "true" ]; then
+            echo "code=false" >> "$GITHUB_OUTPUT"
+            echo "Docs/spec-only change — skipping lint/test/verify."
+          else
+            echo "code=true" >> "$GITHUB_OUTPUT"
+            echo "Code change detected — running full pipeline."
+          fi
+
+  # ============================================================================
   # JOB: Lint — golangci-lint (runs first for fast feedback)
   # ============================================================================
   lint:
     name: Lint
+    needs: [changes]
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -54,6 +109,23 @@ jobs:
 
       - name: golangci-lint
         run: golangci-lint run ./...
+
+  # ============================================================================
+  # JOB: Dependency Review — block PRs that introduce vulnerable or
+  # license-incompatible dependencies (go.mod / package-lock.json deltas).
+  # PR-only: the action diffs the PR base against the head. Depends on: changes.
+  # ============================================================================
+  dependency-review:
+    name: Dependency Review
+    needs: [changes]
+    if: github.event_name == 'pull_request' && needs.changes.outputs.code == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
+        with:
+          comment-summary-in-pr: on-failure
 
   # ============================================================================
   # JOB: CI — Build, Vet, Test (SQLite) — depends on lint
@@ -182,6 +254,19 @@ jobs:
         working-directory: ui
         run: npm run build
 
+      # Build the embedded UI ONCE here and share it. test-e2e and build reuse
+      # this artifact instead of re-running `npm run build` (2 fewer UI builds
+      # per release run). The dist is source-derived and identical across those
+      # jobs, so reuse is safe.
+      - name: Upload built UI (ui/dist)
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: ui-dist
+          path: ui/dist
+          retention-days: 1
+          include-hidden-files: true
+          if-no-files-found: error
+
   # ============================================================================
   # JOB: Test (race) — exercise concurrency-sensitive Go components.
   # Depends on: lint
@@ -210,7 +295,7 @@ jobs:
   # ============================================================================
   test-e2e:
     name: Test (E2E)
-    needs: [lint]
+    needs: [lint, test-ui]
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -232,13 +317,13 @@ jobs:
       - name: Install root dependencies
         run: npm ci --ignore-scripts
 
-      - name: Install UI dependencies
-        working-directory: ui
-        run: npm ci --legacy-peer-deps
-
-      - name: Build embedded UI
-        working-directory: ui
-        run: npm run build
+      # Reuse the UI built by test-ui instead of rebuilding (go:embed all:dist
+      # in ui/embed.go embeds ui/dist into the `go run` server this job drives).
+      - name: Download built UI (ui/dist)
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        with:
+          name: ui-dist
+          path: ui/dist
 
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
@@ -262,8 +347,8 @@ jobs:
   # Depends on: lint, test-sqlite, test-postgres
   # ==========================================================================
   verify:
-    needs: [lint, test-sqlite, test-postgres, test-race]
-    if: always() && !cancelled() && (github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/main'))
+    needs: [changes, lint, test-sqlite, test-postgres, test-race]
+    if: always() && !cancelled() && needs.changes.outputs.code == 'true' && (github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/main'))
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -289,8 +374,10 @@ jobs:
       - name: Lockfile sync guard (root)
         run: npm ci --ignore-scripts
 
-      - name: Go preflight (vet, test, gosec)
-        run: npm run preflight:go
+      # Tests already ran in test-sqlite + test-postgres (both in this job's
+      # needs), so verify does NOT re-run the suite — it runs vet + gosec only.
+      - name: Go security scan (vet, gosec)
+        run: npm run preflight:secscan
 
       - name: Build preflight
         run: npm run preflight:build
@@ -503,16 +590,29 @@ jobs:
           mkdir -p "$ALLURE_HISTORY/last-history"
           cp -r "$ALLURE_REPORT/history/." "$ALLURE_HISTORY/last-history/"
 
+      # Publish to gh-pages ONLY on push-to-main. Previously this committed to
+      # gh-pages on every PR and push (hundreds of commits, constant rebases on
+      # main). PRs now get the dashboard as a job summary instead of a commit.
       - name: Deploy report to GitHub Pages
-        if: always()
+        if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: peaceiris/actions-gh-pages@84c30a85c19949d7eee79c4ff27748b70285e453 # v4.1.0
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages
           publish_dir: allure-history
 
+      - name: Job summary (PRs — no gh-pages commit)
+        if: always() && !(github.event_name == 'push' && github.ref == 'refs/heads/main')
+        run: |
+          {
+            echo "## Progress dashboard"
+            echo ""
+            echo "The Allure dashboard is published to GitHub Pages only on push to \`main\`."
+            echo "This is a \`${{ github.event_name }}\` run, so the report was generated but not committed to \`gh-pages\`."
+          } >> "$GITHUB_STEP_SUMMARY"
+
   # ==========================================================================
-  # JOB: Release — semantic-release (push to main only)
+  # JOB: Release — big-release (push to main only); see .big-release.yml
   # Depends on: verify
   # ==========================================================================
   release:
@@ -538,24 +638,39 @@ jobs:
           fetch-depth: 0
           persist-credentials: true
 
-      - name: Setup Node
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
-        with:
-          node-version: '${{ env.NODE_VERSION }}'
-          cache: 'npm'
-
       - name: Save pre-release HEAD
         id: pre-release
         run: echo "head=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
-      - name: Install dependencies
-        run: npm ci
+      # Install the pinned big-release CLI (replaces semantic-release). The
+      # published checksum is verified before use, mirroring the gitleaks
+      # install in the verify job. big-release is a static Go binary — no
+      # Node/npm needed in this job anymore.
+      - name: Install big-release
+        env:
+          BIG_RELEASE_VERSION: '2.5.0'
+          BIG_RELEASE_SHA256: '99fc0fc613938f926b5c744f93fffdd49e0c7a6238961b78593e9103eb221c7a'
+        run: |
+          curl -sSfLO "https://github.com/danielvm-git/big-release/releases/download/${BIG_RELEASE_VERSION}/big-release-linux-amd64"
+          echo "${BIG_RELEASE_SHA256}  big-release-linux-amd64" | sha256sum -c -
+          chmod +x big-release-linux-amd64
+          sudo mv big-release-linux-amd64 /usr/local/bin/big-release
+          big-release --version
 
-      - name: Semantic Release
-        id: semantic
-        run: npx --no-install semantic-release
+      # big-release: analyze Conventional Commits → compute the next SemVer →
+      # write VERSION, regenerate CHANGELOG.md, commit both back to main as
+      # "chore(release): <version> [skip ci]", tag (v${version}), and publish
+      # the GitHub Release. Config lives in .big-release.yml. The commit-back
+      # moves HEAD, which the detect step below keys off (same mechanism the
+      # previous semantic-release flow used).
+      - name: Run big-release
+        run: big-release release --verbose
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GIT_AUTHOR_NAME: bigbase-release-bot
+          GIT_AUTHOR_EMAIL: bigbase-release-bot@users.noreply.github.com
+          GIT_COMMITTER_NAME: bigbase-release-bot
+          GIT_COMMITTER_EMAIL: bigbase-release-bot@users.noreply.github.com
 
       - name: Detect new release
         id: detect-release
@@ -595,20 +710,16 @@ jobs:
           go-version: '${{ env.GO_VERSION }}'
           cache: true
 
-      - name: Setup Node ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+      # No `go test` here: the matrix (test-sqlite/test-postgres/test-race) and
+      # verify already validated this commit. The release commit only adds a
+      # [skip ci] VERSION/CHANGELOG bump — no Go source change to re-test.
+      # No Node/UI build here either: reuse the ui/dist built once in test-ui
+      # (go:embed all:dist embeds it into the binary below).
+      - name: Download built UI (ui/dist)
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
-          node-version: '${{ env.NODE_VERSION }}'
-
-      - name: Run tests
-        run: go test ./... -count=1
-
-      - name: Build Admin UI
-        working-directory: ui
-        run: |
-          npm ci --prefer-offline --legacy-peer-deps
-          npm run build
-          echo "Admin UI built: $(ls -lh dist/ | wc -l) files"
+          name: ui-dist
+          path: ui/dist
 
       - name: Build binary
         run: |

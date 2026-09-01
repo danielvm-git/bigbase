@@ -1,0 +1,33 @@
+# big-release configuration — replaces semantic-release (.releaserc).
+#
+# Preserves the exact prior pattern: analyze Conventional Commits, compute the
+# next SemVer, write VERSION, regenerate CHANGELOG.md, commit both back to main
+# with "chore(release): <version> [skip ci]", tag, and publish a GitHub Release.
+#
+# Existing tags are v-prefixed (v2.92.0); the VERSION file stays un-prefixed
+# (2.92.0). No language publishers: BigBase ships a single Go binary that the
+# test-build-release `build` job packages and deploy.yml delivers to the VPS —
+# nothing is published to npm/PyPI/crates.
+tagFormat: "v${version}"
+initialVersion: "2.92.0"
+
+plugins:
+  - changelog     # regenerate CHANGELOG.md (was @semantic-release/changelog)
+  - versionfile   # write VERSION (was @semantic-release/exec: echo <v> > VERSION)
+  - git           # commit VERSION + CHANGELOG.md back to main (was @semantic-release/git)
+  - github        # create the GitHub Release + notes (was @semantic-release/github)
+
+pluginConfigs:
+  git:
+    # Staged into the release commit alongside the tag. The default commit
+    # message is already "chore(release): <version> [skip ci]"; set explicitly
+    # so the [skip ci] guard against a release loop is unmistakable.
+    assets:
+      - CHANGELOG.md
+    postTagAssets:
+      - VERSION
+    message: "chore(release): ${version} [skip ci]"
+
+versionFile:
+  path: VERSION
+  template: "{{.Version}}"

@@ -21,12 +21,12 @@ Ship this feature using the bigpowers **release-branch** workflow. Load the `rel
 2. Push the branch:
    - `git push -u origin HEAD`
 
-3. Open PR with Conventional Commits title (feeds semantic-release on merge to `main`):
+3. Open PR with Conventional Commits title (feeds big-release on merge to `main`):
    - `gh pr create --title "<type>(<scope>): <description>" --body "$(cat <<'EOF'
 ## Summary
 - Implements feature: {{SHIP_SUMMARY}}
 - Go binary + embedded React admin UI
-- semantic-release on merge to main
+- big-release on merge to main
 
 ## Verify
 - [ ] `npm run preflight` passed locally
@@ -38,6 +38,6 @@ EOF
    - `gh pr merge --auto --squash` or `gh pr merge` when ready
    - User approval required if `permission` has `gh pr merge*` as `ask`
 
-5. `release.yml` on `main` runs semantic-release after merge.
+5. `test-build-release.yml` on `main` runs big-release after merge.
 
 Report: PR URL, CI status, merge result.
