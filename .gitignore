@@ -7,6 +7,8 @@ bigbase_linux
 *.test
 *.out
 vendor/
+.codeql-db/
+*.sarif
 
 # Terraform state — never commit
 *.tfstate
