@@ -24,12 +24,23 @@ func TestGetFreePort_ReturnsValidPort(t *testing.T) {
 }
 
 func TestGetFreePort_MultipleAllocationsUnique(t *testing.T) {
+	listeners := make([]net.Listener, 0, 10)
+	defer func() {
+		for _, ln := range listeners {
+			_ = ln.Close()
+		}
+	}()
 	ports := make(map[int]bool)
 	for i := 0; i < 10; i++ {
 		port, err := GetFreePort()
 		if err != nil {
 			t.Fatalf("GetFreePort attempt %d failed: %v", i, err)
 		}
+		ln, err := net.Listen("tcp", fmt.Sprintf("127.0.0.1:%d", port))
+		if err != nil {
+			t.Fatalf("port %d returned by GetFreePort cannot be listened on: %v", port, err)
+		}
+		listeners = append(listeners, ln)
 		if ports[port] {
 			t.Errorf("GetFreePort returned duplicate port %d on attempt %d", port, i)
 		}
