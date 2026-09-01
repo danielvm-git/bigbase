@@ -120,8 +120,15 @@ func (a *Auth) safeSPARedirectURL(redirectURL, jwt string) (string, bool) {
 	if redirectURL == "" || len(a.spaOriginAllowlist) == 0 {
 		return "", false
 	}
-	clean := strings.ReplaceAll(redirectURL, "\\", "/")
-	if strings.HasPrefix(clean, "/") && !strings.HasPrefix(clean, "//") {
+	// Disallow leading backslashes, double slashes, and slash-backslash combinations (CWE-601).
+	if strings.HasPrefix(redirectURL, "//") || strings.HasPrefix(redirectURL, "/\\") || strings.HasPrefix(redirectURL, "\\") {
+		return "", false
+	}
+	if len(redirectURL) > 0 && redirectURL[0] == '/' {
+		if len(redirectURL) > 1 && (redirectURL[1] == '/' || redirectURL[1] == '\\') {
+			return "", false
+		}
+		clean := strings.ReplaceAll(redirectURL, "\\", "/")
 		target, err := url.Parse(clean)
 		if err != nil || target.Hostname() != "" {
 			return "", false
@@ -131,6 +138,7 @@ func (a *Auth) safeSPARedirectURL(redirectURL, jwt string) (string, bool) {
 		}
 		return target.String(), true
 	}
+	clean := strings.ReplaceAll(redirectURL, "\\", "/")
 	target, err := url.Parse(clean)
 	if err != nil || target.Scheme == "" || target.Hostname() == "" {
 		return "", false
