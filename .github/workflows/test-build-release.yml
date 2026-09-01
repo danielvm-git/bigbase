@@ -58,33 +58,26 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     outputs:
-      code: ${{ steps.decide.outputs.code }}
+      code: ${{ steps.filter.outputs.code }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-      # `docs` is true only when EVERY changed file matches a docs/spec/config
-      # glob (predicate-quantifier: every). A mixed code+docs change therefore
-      # has docs=false → code=true, so real code is never skipped.
+      # `code` is true if any changed file matches the positive pattern (**)
+      # and none of the negative exclusions (!). In dorny/paths-filter, a file
+      # matches a filter if it matches at least one positive rule and zero negative rules.
+      # A docs-only change matches only negative rules -> code=false.
+      # A mixed code+docs change has code files matching ** -> code=true.
       - uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # v3.0.2
         id: filter
         with:
-          predicate-quantifier: 'every'
           filters: |
-            docs:
-              - '**/*.md'
-              - '*.md'
-              - 'specs/**'
-              - '.agents/**'
-              - '.cursor/**'
-              - '.vscode/**'
-      - id: decide
-        run: |
-          if [ "${{ steps.filter.outputs.docs }}" = "true" ]; then
-            echo "code=false" >> "$GITHUB_OUTPUT"
-            echo "Docs/spec-only change — skipping lint/test/verify."
-          else
-            echo "code=true" >> "$GITHUB_OUTPUT"
-            echo "Code change detected — running full pipeline."
-          fi
+            code:
+              - '!**/*.md'
+              - '!*.md'
+              - '!specs/**'
+              - '!.agents/**'
+              - '!.cursor/**'
+              - '!.vscode/**'
+              - '**'
 
   # ============================================================================
   # JOB: Lint — golangci-lint (runs first for fast feedback)
