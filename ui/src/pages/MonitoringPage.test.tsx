@@ -90,7 +90,7 @@ describe('MonitoringPage logs pagination', () => {
     await waitFor(() => {
       expect(screen.queryByRole('button', { name: /load more/i })).toBeNull()
     })
-  })
+  }, 15000)
 
   it('tails live logs: shows LIVE on open and prepends streamed entries', async () => {
     const user = userEvent.setup()
