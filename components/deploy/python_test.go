@@ -155,6 +155,7 @@ func TestPythonStartCommand_Uvicorn(t *testing.T) {
 	cmd := pythonStartCommand(context.Background(), dir, 8000, nil)
 	if cmd == nil {
 		t.Fatal("expected start command")
+		return
 	}
 	baseName := filepath.Base(cmd.Path)
 	// When uv is available, it uses "uv". When not, falls back to python3/python.
@@ -182,6 +183,7 @@ func TestPythonStartCommand_Fallback(t *testing.T) {
 	cmd := pythonStartCommand(context.Background(), dir, 8000, nil)
 	if cmd == nil {
 		t.Fatal("expected start command")
+		return
 	}
 	if cmd.Args[0] != "python3" && cmd.Args[0] != "python" {
 		t.Errorf("expected python3 or python, got %s", cmd.Args[0])
@@ -198,6 +200,7 @@ func TestPythonStartCommand_Uvicorn_Path(t *testing.T) {
 	cmd := pythonStartCommand(context.Background(), dir, 8000, nil)
 	if cmd == nil {
 		t.Fatal("expected start command")
+		return
 	}
 	baseName := filepath.Base(cmd.Path)
 	// When uv is available, it uses "uv". When not, falls back to python3/python.
@@ -225,6 +228,7 @@ func TestPythonStartCommand_PyProject_NoUv(t *testing.T) {
 	cmd := pythonStartCommand(context.Background(), dir, 8000, nil)
 	if cmd == nil {
 		t.Fatal("expected start command")
+		return
 	}
 	baseName := filepath.Base(cmd.Path)
 	// When uv is available, it uses "uv". When not, falls back to python3/python.
@@ -242,6 +246,7 @@ func TestPythonStartCommand_SetsDir(t *testing.T) {
 	cmd := pythonStartCommand(context.Background(), dir, 8000, nil)
 	if cmd == nil {
 		t.Fatal("expected start command")
+		return
 	}
 	if cmd.Dir != dir {
 		t.Errorf("cmd.Dir = %q, want %q", cmd.Dir, dir)
@@ -259,6 +264,7 @@ func TestPythonStartCommand_UvicornDefaultsAppApp(t *testing.T) {
 	cmd := pythonStartCommand(context.Background(), dir, 8000, nil)
 	if cmd == nil {
 		t.Fatal("expected start command")
+		return
 	}
 	if cmd.Dir != dir {
 		t.Errorf("cmd.Dir = %q, want %q", cmd.Dir, dir)
@@ -327,6 +333,7 @@ func TestPythonStartCommand_CLIScriptFallsBackToAppApp(t *testing.T) {
 			cmd := pythonStartCommand(context.Background(), dir, 8000, nil)
 			if cmd == nil {
 				t.Fatal("expected start command")
+				return
 			}
 			found := false
 			for _, arg := range cmd.Args {
@@ -410,6 +417,7 @@ func TestPythonStartCommand_ManifestASGIImport(t *testing.T) {
 	cmd := pythonStartCommand(context.Background(), dir, 8000, manifest)
 	if cmd == nil {
 		t.Fatal("expected start command")
+		return
 	}
 
 	// Must contain the ASGI import string from the manifest.
@@ -452,6 +460,7 @@ func TestPythonStartCommand_ManifestASGIImportSimple(t *testing.T) {
 	cmd := pythonStartCommand(context.Background(), dir, 8000, manifest)
 	if cmd == nil {
 		t.Fatal("expected start command")
+		return
 	}
 
 	foundImport := false

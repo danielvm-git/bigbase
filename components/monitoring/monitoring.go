@@ -627,8 +627,8 @@ func (m *Monitoring) handleLogSearch(w http.ResponseWriter, r *http.Request) {
 			limit = n
 		}
 	}
-	if limit > 500 {
-		limit = 500
+	if limit < 1 || limit > 500 {
+		limit = 100
 	}
 	cursor := r.URL.Query().Get("cursor")
 	q := r.URL.Query().Get("q")
@@ -656,7 +656,7 @@ func (m *Monitoring) handleLogSearch(w http.ResponseWriter, r *http.Request) {
 	}
 	defer func() { _ = rows.Close() }()
 
-	logs := make([]LogEntry, 0, limit)
+	logs := make([]LogEntry, 0)
 	for rows.Next() {
 		var l LogEntry
 		if err := rows.Scan(&l.ID, &l.Level, &l.Message, &l.OrgID, &l.CreatedAt); err != nil {

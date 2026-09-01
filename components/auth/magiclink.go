@@ -153,9 +153,12 @@ func (a *Auth) handleVerifyMagicLink(w http.ResponseWriter, r *http.Request) {
 
 	// SPA redirect with #token= if redirect_to is allowed.
 	if redirectTo != "" && a.isSPAOriginAllowed(redirectTo) {
-		spaURL := redirectTo + "#token=" + url.QueryEscape(jwt)
-		http.Redirect(w, r, spaURL, http.StatusFound)
-		return
+		target, err := url.Parse(strings.ReplaceAll(redirectTo, "\\", "/"))
+		if err == nil && target != nil {
+			target.Fragment = "token=" + url.QueryEscape(jwt)
+			http.Redirect(w, r, target.String(), http.StatusFound)
+			return
+		}
 	}
 
 	// Standard flow: set cookie and redirect.

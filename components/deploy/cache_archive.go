@@ -118,7 +118,14 @@ func extractTarGz(r io.Reader, dstDir string) error {
 
 // extractEntry writes one tar entry into dstDir, guarding against path traversal.
 func extractEntry(tr *tar.Reader, hdr *tar.Header, dstDir string) error {
+	if strings.Contains(hdr.Name, "..") || filepath.IsAbs(hdr.Name) {
+		return fmt.Errorf("invalid tar path: %s", hdr.Name)
+	}
 	target := filepath.Join(dstDir, filepath.Clean(hdr.Name))
+	rel, err := filepath.Rel(dstDir, target)
+	if err != nil || strings.HasPrefix(rel, "..") || rel == ".." {
+		return fmt.Errorf("invalid tar path: %s", hdr.Name)
+	}
 	if !isUnderDir(target, dstDir) {
 		return fmt.Errorf("invalid tar path: %s", hdr.Name)
 	}

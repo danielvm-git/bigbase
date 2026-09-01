@@ -111,20 +111,21 @@ func (a *Auth) isSPAOriginAllowed(redirectURL string) bool {
 	if len(a.spaOriginAllowlist) == 0 {
 		return false
 	}
-	parsed, err := url.Parse(redirectURL)
+	clean := strings.ReplaceAll(redirectURL, "\\", "/")
+	parsed, err := url.Parse(clean)
 	if err != nil {
 		return false
 	}
 	// Relative redirects (no host) are always safe — same origin.
-	if parsed.Host == "" {
+	if parsed.Hostname() == "" {
 		return true
 	}
 	for _, allowed := range a.spaOriginAllowlist {
-		allowedParsed, err := url.Parse(allowed)
+		allowedParsed, err := url.Parse(strings.ReplaceAll(allowed, "\\", "/"))
 		if err != nil {
 			continue
 		}
-		if parsed.Scheme == allowedParsed.Scheme && parsed.Host == allowedParsed.Host {
+		if parsed.Scheme == allowedParsed.Scheme && parsed.Hostname() == allowedParsed.Hostname() {
 			return true
 		}
 	}

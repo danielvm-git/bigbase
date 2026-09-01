@@ -135,6 +135,7 @@ start:
 		}
 		if m == nil {
 			t.Fatal("expected manifest, got nil")
+			return
 		}
 		if m.Framework != "go" || m.Build.Command != "go build -o testapp ." {
 			t.Errorf("unexpected custom manifest contents: %+v", m)

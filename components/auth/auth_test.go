@@ -1107,6 +1107,7 @@ func TestOAuthStateCookieSet(t *testing.T) {
 	}
 	if stateCookie == nil {
 		t.Fatal("expected oauth_state cookie to be set")
+		return
 	}
 	if stateCookie.Value == "" {
 		t.Fatal("expected non-empty oauth_state cookie value")
@@ -1659,6 +1660,7 @@ func TestOrganization(t *testing.T) {
 		}
 		if fetched == nil {
 			t.Fatal("expected org, got nil")
+			return
 		}
 		if fetched.Name != org.Name {
 			t.Errorf("expected name %q, got %q", org.Name, fetched.Name)

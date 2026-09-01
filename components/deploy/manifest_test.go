@@ -28,6 +28,7 @@ env:
 		}
 		if m == nil {
 			t.Fatal("expected manifest, got nil")
+			return
 		}
 		if m.Version != 1 {
 			t.Errorf("version = %d, want 1", m.Version)
@@ -317,6 +318,7 @@ start:
 		}
 		if m == nil {
 			t.Fatal("expected manifest")
+			return
 		}
 		hc := m.HealthCheck.WithDefaults()
 		if hc.Path != "/" {
@@ -358,6 +360,7 @@ health_check:
 		}
 		if m == nil {
 			t.Fatal("expected manifest")
+			return
 		}
 		hc := m.HealthCheck.WithDefaults()
 		if hc.Path != "/api/health" {
@@ -404,6 +407,7 @@ health_check:
 		}
 		if m == nil {
 			t.Fatal("expected manifest")
+			return
 		}
 		hc := m.HealthCheck.WithDefaults()
 		if hc.Path != "/healthz" {
@@ -528,6 +532,7 @@ NODE_VERSION = "20"
 		}
 		if m == nil {
 			t.Fatal("expected manifest, got nil")
+			return
 		}
 		if m.Version != 1 {
 			t.Errorf("version = %d, want 1", m.Version)

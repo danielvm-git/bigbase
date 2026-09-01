@@ -43,6 +43,7 @@ func TestOTPStore(t *testing.T) {
 	}
 	if rec == nil {
 		t.Fatalf("Expected record, got nil")
+		return
 	}
 	if rec.codeHash != codeHash {
 		t.Errorf("Expected codeHash %q, got %q", codeHash, rec.codeHash)
@@ -209,6 +210,7 @@ func TestOTPPersistenceAcrossRestart(t *testing.T) {
 	}
 	if rec == nil {
 		t.Fatalf("Expected OTP record to persist across restart, but got nil")
+		return
 	}
 	// Verify expiry year matches to be sure parsing worked
 	if rec.codeHash != codeHash {

@@ -724,14 +724,14 @@ func (d *Deploy) startApp(ctx context.Context, buildDir string, deploy *Deployme
 }
 
 // hasTerminalStopStatus reports whether the deployment was already recorded as
-// intentionally stopped or replaced by a stop/drain/rollback path.
+// intentionally stopped, draining, or replaced by a stop/drain/rollback path.
 func (d *Deploy) hasTerminalStopStatus(id string) bool {
 	var status string
 	if err := d.db.QueryRowContext(context.Background(),
 		"SELECT status FROM deployments WHERE id = ?", id).Scan(&status); err != nil {
 		return false
 	}
-	return status == "stopped" || status == "replaced"
+	return status == "stopped" || status == "replaced" || status == "draining"
 }
 
 // hasRegisteredApp reports whether the deployment is still in the running-app

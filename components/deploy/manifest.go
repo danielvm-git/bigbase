@@ -129,23 +129,23 @@ func LoadManifestPath(dir, manifestPath string) (*Manifest, error) {
 
 	// Prevent path traversal (CWE-22): resolve and verify path stays within dir.
 	cleanManifestPath := filepath.Clean(manifestPath)
-	if filepath.IsAbs(cleanManifestPath) {
-		return nil, fmt.Errorf("manifest path must be relative: %s", manifestPath)
+	if strings.Contains(cleanManifestPath, "..") || filepath.IsAbs(cleanManifestPath) {
+		return nil, fmt.Errorf("manifest path must be relative without traversal: %s", manifestPath)
 	}
-	path := filepath.Join(dir, cleanManifestPath)
 	absDir, err := filepath.Abs(dir)
 	if err != nil {
 		return nil, fmt.Errorf("resolve manifest dir: %w", err)
 	}
-	absPath, err := filepath.Abs(path)
-	if err != nil {
-		return nil, fmt.Errorf("resolve manifest path: %w", err)
+	absPath := filepath.Join(absDir, cleanManifestPath)
+	rel, err := filepath.Rel(absDir, absPath)
+	if err != nil || strings.HasPrefix(rel, "..") || rel == ".." {
+		return nil, fmt.Errorf("manifest path escapes project directory: %s", manifestPath)
 	}
 	if !strings.HasPrefix(absPath, absDir+string(filepath.Separator)) && absPath != absDir {
 		return nil, fmt.Errorf("manifest path escapes project directory: %s", manifestPath)
 	}
 
-	data, err := os.ReadFile(path)
+	data, err := os.ReadFile(absPath)
 	if err != nil {
 		if os.IsNotExist(err) {
 			return nil, nil
