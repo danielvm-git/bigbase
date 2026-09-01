@@ -1,3 +1,10 @@
+# [2.92.0](https://github.com/danielvm-git/bigbase/compare/v2.91.3...v2.92.0) (2026-09-01)
+
+
+### Features
+
+* **scripts:** add local codeql-scan script and integrate with preflight ([9e927b5](https://github.com/danielvm-git/bigbase/commit/9e927b57f4b2bb1ef4d3dac4b2160614bcb04f00))
+
 ## [2.91.3](https://github.com/danielvm-git/bigbase/compare/v2.91.2...v2.91.3) (2026-09-01)
 
 
