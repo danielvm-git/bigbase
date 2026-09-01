@@ -88,6 +88,11 @@ func (s *Supervisor) Run(ctx context.Context, spec Spec) {
 			_ = s.registry.RegisterDeploymentHost(spec.Host, spec.Port, spec.DeployID, nil, nil)
 		}
 		s.setInstance(spec.DeployID, inst)
+		if s.isStopping(spec.DeployID) {
+			_ = inst.Stop(5 * time.Second)
+			s.setInstance(spec.DeployID, nil)
+			return
+		}
 
 		// Start health polling if configured.
 		healthCtx, healthCancel := context.WithCancel(ctx)

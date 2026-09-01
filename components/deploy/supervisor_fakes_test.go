@@ -12,6 +12,7 @@ import (
 // Each call to Wait() returns the next error from errSeq;
 // once exhausted it blocks until Stop is called.
 type FakeInstance struct {
+	mu      sync.Mutex
 	waitErr error
 	stopCh  chan struct{}
 	stopped bool
@@ -31,6 +32,8 @@ func (f *FakeInstance) Wait() error {
 }
 
 func (f *FakeInstance) Stop(grace time.Duration) error {
+	f.mu.Lock()
+	defer f.mu.Unlock()
 	if !f.stopped {
 		f.stopped = true
 		close(f.stopCh)
