@@ -1,3 +1,10 @@
+## [2.91.1](https://github.com/danielvm-git/bigbase/compare/v2.91.0...v2.91.1) (2026-09-01)
+
+
+### Bug Fixes
+
+* **deps:** resolve open security vulnerabilities in lockfiles ([2c245c9](https://github.com/danielvm-git/bigbase/commit/2c245c977733062d7fab8b075d59fd492fa75b6a))
+
 # [2.91.0](https://github.com/danielvm-git/bigbase/compare/v2.90.2...v2.91.0) (2026-08-15)
 
 
