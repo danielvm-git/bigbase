@@ -1,3 +1,12 @@
+## [2.91.2](https://github.com/danielvm-git/bigbase/compare/v2.91.1...v2.91.2) (2026-09-01)
+
+
+### Bug Fixes
+
+* **auth:** add explicit double-slash and backslash checks for open redirect defense ([ab1abfc](https://github.com/danielvm-git/bigbase/commit/ab1abfce7adee36b4be1ae9282fd6ae0c558032d))
+* **auth:** break untrusted url redirection dataflow using safeSPARedirectURL ([6441b1b](https://github.com/danielvm-git/bigbase/commit/6441b1b3d18b011442384ec2dfdc839d4e8196e5))
+* **security:** resolve path-injection, zipslip, url-redirection and linter staticcheck alerts ([843c432](https://github.com/danielvm-git/bigbase/commit/843c43201c98ec2adaa9cec499e3405bd37b5a95))
+
 ## [2.91.1](https://github.com/danielvm-git/bigbase/compare/v2.91.0...v2.91.1) (2026-09-01)
 
 
