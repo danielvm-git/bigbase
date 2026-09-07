@@ -18,7 +18,7 @@
     "@ctxo/lang-go": "^0.8.1",
     "@ctxo/lang-typescript": "^0.7.1",
     "@playwright/test": "^1.62.1",
-    "@types/node": "^26.4.0",
+    "@types/node": "^26.4.1",
     "typescript-language-server": "^6.0.0"
   },
   "dependencies": {
