@@ -17,9 +17,9 @@
     "@axe-core/playwright": "^4.13.0",
     "@ctxo/lang-go": "^0.8.1",
     "@ctxo/lang-typescript": "^0.7.1",
-    "@playwright/test": "^1.62.1",
-    "@types/node": "^26.4.0",
-    "typescript-language-server": "^6.0.0"
+    "@playwright/test": "^1.63.0",
+    "@types/node": "^26.6.4",
+    "typescript-language-server": "^6.0.1"
   },
   "dependencies": {
     "@ctxo/lang-csharp": "^0.7.4"
