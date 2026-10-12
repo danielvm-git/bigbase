@@ -75,7 +75,7 @@ jobs:
       # globs) and also emits an "Unexpected input" warning (undeclared in v3.0.2
       # action.yml). Verified against dorny's filter.ts + picomatch for docs-only,
       # code-only, mixed, and dotfile-dir changes.
-      - uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # v3.0.2
+      - uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
         id: filter
         with:
           filters: |
@@ -224,7 +224,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Setup Node ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: '${{ env.NODE_VERSION }}'
 
@@ -255,7 +255,7 @@ jobs:
       # per release run). The dist is source-derived and identical across those
       # jobs, so reuse is safe.
       - name: Upload built UI (ui/dist)
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: ui-dist
           path: ui/dist
@@ -305,7 +305,7 @@ jobs:
           cache: true
 
       - name: Setup Node ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: '${{ env.NODE_VERSION }}'
           cache: 'npm'
@@ -316,7 +316,7 @@ jobs:
       # Reuse the UI built by test-ui instead of rebuilding (go:embed all:dist
       # in ui/embed.go embeds ui/dist into the `go run` server this job drives).
       - name: Download built UI (ui/dist)
-        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: ui-dist
           path: ui/dist
@@ -329,7 +329,7 @@ jobs:
 
       - name: Upload Playwright artifacts
         if: failure()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: playwright-artifacts
           path: |
@@ -359,7 +359,7 @@ jobs:
           cache: true
 
       - name: Setup Node ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: '${{ env.NODE_VERSION }}'
           cache: 'npm'
@@ -441,7 +441,7 @@ jobs:
       # --- Provision the SAME tools setup-vps.sh installs on the VPS ---
       # Node 24 LTS (Vite 8 floor is Node >= 20.19; VPS standard is 24 LTS).
       - name: Setup Node ${{ env.NODE_VERSION }} (VPS parity)
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: '${{ env.NODE_VERSION }}'
 
@@ -522,14 +522,14 @@ jobs:
           path: gh-pages
 
       - name: Setup Java (Allure commandline runtime)
-        uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c # v6.0.0
+        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
         if: always()
         with:
           distribution: 'temurin'
           java-version: '17'
 
       - name: Setup Node (Allure commandline)
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         if: always()
         with:
           node-version: '${{ env.NODE_VERSION }}'
@@ -712,7 +712,7 @@ jobs:
       # No Node/UI build here either: reuse the ui/dist built once in test-ui
       # (go:embed all:dist embeds it into the binary below).
       - name: Download built UI (ui/dist)
-        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: ui-dist
           path: ui/dist
@@ -747,7 +747,7 @@ jobs:
           cat deploy-meta.json
 
       - name: Upload release bundle
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: bigbase-release
           path: |
