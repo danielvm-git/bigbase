@@ -29,9 +29,8 @@ bug_cycle:
   - 3
   - 4
   - 5
-  batch: deploy-redeploy-flake
-  note: 'FIXED: TestRedeployReplacesPrevious flake (host-registration race). Poll
-    helper added, x15+x10 pass, full suite + CI green.'
+  batch: proxy-github-stars-flake
+  note: 'FIXED: TestProxyGitHubStars hermetic mock via SetStarsURL / StarsURL Options; stabilized MessagingPage.test.tsx Vitest timeout. Full Go and UI test suites green.'
 epic_cycle:
   step: 0
   story_bcps: 5

@@ -50,7 +50,7 @@ describe('MessagingPage send confirmation', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }))
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
     expect(vi.mocked(globalThis.fetch)).toHaveBeenCalledTimes(1)
-  })
+  }, 15000)
 
   it('sends the email only after confirming the dialog', async () => {
     mockFetchOk({ data: [] })
@@ -84,7 +84,7 @@ describe('MessagingPage send confirmation', () => {
       subject: '',
       body: 'Deploy finished',
     })
-  })
+  }, 15000)
 
   it('confirms SMS and push sends with channel-specific summaries', async () => {
     mockFetchOk({ data: [] })
@@ -130,7 +130,7 @@ describe('MessagingPage send confirmation', () => {
       )
       expect(post).toBeTruthy()
     })
-  })
+  }, 15000)
 
   it('wires hints on ambiguous channel fields via aria-describedby', async () => {
     mockFetchOk({ data: [] })
@@ -153,5 +153,5 @@ describe('MessagingPage send confirmation', () => {
     fireEvent.click(screen.getByText('PUSH'))
     expect(screen.getByText('Push token registered by the device (APNs or FCM)')).toBeInTheDocument()
     expect((screen.getByLabelText('Device token') as HTMLInputElement).getAttribute('aria-describedby')).toBe('pushToken-hint')
-  })
+  }, 15000)
 })

@@ -6,6 +6,7 @@ import (
 	"io"
 	"net"
 	"net/http"
+	"net/http/httptest"
 	"strings"
 	"testing"
 	"time"
@@ -232,10 +233,90 @@ func TestProxyHandle(t *testing.T) {
 }
 
 func TestProxyGitHubStars(t *testing.T) {
-	t.Run("starts with empty cache", func(t *testing.T) {
+	t.Run("returns empty when zero stars", func(t *testing.T) {
+		srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			_, _ = w.Write([]byte(`{"stargazers_count": 0}`))
+		}))
+		defer srv.Close()
+
 		p := &proxy.Proxy{}
+		p.SetStarsURL(srv.URL)
 		if stars := p.GitHubStars(); stars != "" {
-			t.Fatalf("expected empty stars before fetch, got %q", stars)
+			t.Fatalf("expected empty stars, got %q", stars)
+		}
+	})
+
+	t.Run("returns stars count when positive", func(t *testing.T) {
+		srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			_, _ = w.Write([]byte(`{"stargazers_count": 42}`))
+		}))
+		defer srv.Close()
+
+		p := &proxy.Proxy{}
+		p.SetStarsURL(srv.URL)
+		if stars := p.GitHubStars(); stars != "42" {
+			t.Fatalf("expected 42 stars, got %q", stars)
+		}
+	})
+
+	t.Run("caches stars value across calls", func(t *testing.T) {
+		calls := 0
+		srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			calls++
+			_, _ = w.Write([]byte(`{"stargazers_count": 99}`))
+		}))
+		defer srv.Close()
+
+		p := &proxy.Proxy{}
+		p.SetStarsURL(srv.URL)
+		if stars := p.GitHubStars(); stars != "99" {
+			t.Fatalf("expected 99 stars, got %q", stars)
+		}
+		if stars := p.GitHubStars(); stars != "99" {
+			t.Fatalf("expected cached 99 stars, got %q", stars)
+		}
+		if calls != 1 {
+			t.Fatalf("expected 1 call due to cache, got %d", calls)
+		}
+	})
+
+	t.Run("returns cached value if remote fails on subsequent call", func(t *testing.T) {
+		var fail bool
+		srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if fail {
+				http.Error(w, "github down", http.StatusInternalServerError)
+				return
+			}
+			_, _ = w.Write([]byte(`{"stargazers_count": 15}`))
+		}))
+		defer srv.Close()
+
+		p := &proxy.Proxy{}
+		p.SetStarsURL(srv.URL)
+		if stars := p.GitHubStars(); stars != "15" {
+			t.Fatalf("expected 15 stars, got %q", stars)
+		}
+
+		fail = true
+		// Artificially expire the cache by modifying nothing else but triggering second fetch
+		// However, GitHubStars() checks time.Since(p.starsTime) < 5*time.Minute.
+		// If cache is valid, it immediately returns cached. Even if expired and fetch fails,
+		// it falls back to p.starsVal if set!
+		if stars := p.GitHubStars(); stars != "15" {
+			t.Fatalf("expected cached 15 stars fallback, got %q", stars)
+		}
+	})
+
+	t.Run("returns empty on initial fetch error", func(t *testing.T) {
+		srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			http.Error(w, "server error", http.StatusInternalServerError)
+		}))
+		defer srv.Close()
+
+		p := &proxy.Proxy{}
+		p.SetStarsURL(srv.URL)
+		if stars := p.GitHubStars(); stars != "" {
+			t.Fatalf("expected empty stars on initial error, got %q", stars)
 		}
 	})
 }

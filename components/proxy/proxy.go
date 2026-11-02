@@ -69,6 +69,7 @@ type Options struct {
 	DB                 DBer
 	ValidateToken      func(token string) (userID int64, role string, err error)
 	ValidateSiteKey    func(siteID string, token string) error
+	StarsURL           string
 }
 
 type Proxy struct {
@@ -92,6 +93,7 @@ type Proxy struct {
 	starsMu        sync.Mutex
 	starsVal       string
 	starsTime      time.Time
+	starsURL       string
 	deployHostsMu  sync.RWMutex
 	deployHosts    map[string]hostInfo
 	serviceHosts   map[string]int
@@ -121,9 +123,19 @@ func (p *Proxy) GitHubStars() string {
 	return p.starsVal
 }
 
+func (p *Proxy) SetStarsURL(url string) {
+	p.starsMu.Lock()
+	defer p.starsMu.Unlock()
+	p.starsURL = url
+}
+
 func (p *Proxy) fetchStars() (string, error) {
 	client := &http.Client{Timeout: 5 * time.Second}
-	resp, err := client.Get("https://api.github.com/repos/danielvm-git/bigbase")
+	url := p.starsURL
+	if url == "" {
+		url = "https://api.github.com/repos/danielvm-git/bigbase"
+	}
+	resp, err := client.Get(url)
 	if err != nil {
 		return "", err
 	}
@@ -159,6 +171,7 @@ func New(opts Options) *Proxy {
 		db:                 opts.DB,
 		validateToken:      opts.ValidateToken,
 		validateSiteKey:    opts.ValidateSiteKey,
+		starsURL:           opts.StarsURL,
 		authPolicies:       make(map[string]*AuthPolicy),
 		cspPolicies:        make(map[string]string),
 	}

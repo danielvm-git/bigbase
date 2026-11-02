@@ -2742,3 +2742,20 @@ bugs:
     regression_guards:
       - "go test ./components/deploy/ -run TestRedeployReplacesPrevious -count=15 (all pass)"
       - "go test ./components/deploy/ -run 'TestDrain|TestRedeploy' -count=10 (all pass)"
+
+  - id: BUG-2026-11-02-proxy-github-stars-flake
+    date: "2026-11-02"
+    severity: medium
+    priority: high
+    scope: proxy
+    summary: "TestProxyGitHubStars failed: unmocked live GitHub API call broke when repo stars changed from 0 to 2"
+    file: specs/bugs/BUG-2026-11-02-proxy-github-stars-flake.md
+    status: fixed
+    audit_source: fix-bug-2026-11-02
+    files_changed:
+      - components/proxy/proxy.go
+      - components/proxy/proxy_test.go
+    approach: "Added StarsURL to Options/Proxy and SetStarsURL setter; mocked responses with httptest.NewServer in proxy tests to ensure hermetic execution."
+    risk_level: low
+    regression_guards:
+      - "go test -v -run TestProxyGitHubStars ./components/proxy"
