@@ -4,6 +4,8 @@ id: e24
 title: Wire Observability
 wsjf: 5.0
 status: done
+follow_ups:
+  - 308  # alert on non-terminal states older than X minutes
 covers: []
 stories:
   - id: e24s01

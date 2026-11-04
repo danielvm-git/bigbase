@@ -5,6 +5,9 @@ title: "CI/CD — Pipelines & Workflows"
 wsjf: 1.0
 wsjf_rationale: "Historical — foundation epic. BV=8(CI automation) TC=5 RR=5 / JS=8"
 status: done
+follow_ups:
+  - 301  # reconcile orphaned running runs on boot
+  - 305  # explicit CICI state machine + persisted deadline
 migrated_from: specs/archive/slices/009-cici.md
 stories:
   - id: e09s01

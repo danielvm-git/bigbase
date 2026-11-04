@@ -5,6 +5,8 @@ title: "Sites — Deploy from GitHub Journey"
 wsjf: 1.0
 wsjf_rationale: "Historical — foundation epic. BV=8(GitHub integration) TC=8 RR=8 / JS=8"
 status: done
+follow_ups:
+  - 307  # avoid duplicate getSite request in getSiteDeployments
 migrated_from: specs/archive/slices/015-deploy-github-journey.md
 stories:
   - id: e15s01
