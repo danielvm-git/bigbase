@@ -39,6 +39,32 @@ var domainRE = regexp.MustCompile(`^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[
 // certWarnWindow is how far before expiry a certificate is flagged "expiring_soon".
 const certWarnWindow = 30 * 24 * time.Hour
 
+// Certificate attempt budget. A verified domain with no cached certificate is
+// "provisioning"; it ages out to "failed" once either limit is reached so a
+// broken ACME issuance cannot stay provisioning forever.
+const (
+	// certMaxAttempts is the number of provisioning observations tolerated
+	// before the domain is reported as failed.
+	certMaxAttempts = 5
+	// certStaleAfter is the wall-clock age, measured from the start of the
+	// provisioning window, after which the domain is reported as failed.
+	certStaleAfter = 15 * time.Minute
+	// certRetryAfter is the minimum interval between recorded provisioning
+	// observations and the backoff advertised after a manual retry.
+	certRetryAfter = 2 * time.Minute
+)
+
+// certState is the persisted attempt metadata for one domain. Nil timestamps
+// mean "not recorded yet"; the verified_at column is used as a fallback anchor
+// so domains verified before this metadata existed still age out.
+type certState struct {
+	Attempts      int
+	LastAttemptAt *time.Time
+	LastError     string
+	RetryAfter    *time.Time
+	StartedAt     *time.Time
+}
+
 type SiteDomain struct {
 	ID          string  `json:"id"`
 	SiteID      string  `json:"site_id"`
@@ -50,6 +76,20 @@ type SiteDomain struct {
 	// never stored. Empty when the domain is unverified or HTTPS is disabled.
 	CertStatus    string  `json:"cert_status,omitempty"`
 	CertExpiresAt *string `json:"cert_expires_at,omitempty"`
+	// CertError carries the stored failure reason when cert_status=failed.
+	CertError string `json:"cert_error,omitempty"`
+	// CertAttempts and CertRetryAfter expose the persisted attempt budget so
+	// operators (and the UI) can see how close a domain is to failing.
+	CertAttempts   int     `json:"cert_attempts"`
+	CertRetryAfter *string `json:"cert_retry_after,omitempty"`
+}
+
+// CertRetryResult is the typed response returned by the manual retry endpoint.
+type CertRetryResult struct {
+	Domain     string `json:"domain"`
+	CertStatus string `json:"cert_status"`
+	Attempts   int    `json:"attempts"`
+	RetryAfter string `json:"retry_after,omitempty"`
 }
 
 // verifyLimiter throttles the (DNS-lookup-backed) verify endpoint per site+domain
@@ -75,7 +115,24 @@ func (v *verifyLimiter) allow(key string, now time.Time) bool {
 }
 
 func (s *Sites) migrateDomains() error {
-	return s.db.Migrate(domainsMigration)
+	if err := s.db.Migrate(domainsMigration); err != nil {
+		return err
+	}
+	// Persisted certificate attempt metadata. ALTER TABLE ADD COLUMN is not
+	// idempotent, so each statement is attempted and its duplicate-column error
+	// ignored — the same pattern used for other column additions in sites.go.
+	// The DDL is deliberately dialect-neutral (TEXT / INTEGER, no datetime('now')
+	// defaults) so it also applies cleanly on PostgreSQL.
+	for _, stmt := range []string{
+		`ALTER TABLE site_domains ADD COLUMN cert_attempts INTEGER NOT NULL DEFAULT 0`,
+		`ALTER TABLE site_domains ADD COLUMN cert_started_at TEXT`,
+		`ALTER TABLE site_domains ADD COLUMN cert_last_attempt_at TEXT`,
+		`ALTER TABLE site_domains ADD COLUMN cert_last_error TEXT NOT NULL DEFAULT ''`,
+		`ALTER TABLE site_domains ADD COLUMN cert_retry_after TEXT`,
+	} {
+		_ = s.db.Migrate(stmt)
+	}
+	return nil
 }
 
 func (s *Sites) handleDomains(w http.ResponseWriter, r *http.Request) {
@@ -102,6 +159,8 @@ func (s *Sites) handleDomains(w http.ResponseWriter, r *http.Request) {
 		s.deleteDomain(w, r, siteID, parts[2])
 	case len(parts) == 4 && parts[3] == "verify" && r.Method == http.MethodPost:
 		s.verifyDomain(w, r, siteID, parts[2])
+	case len(parts) == 5 && parts[3] == "cert" && parts[4] == "retry" && r.Method == http.MethodPost:
+		s.retryDomainCert(w, r, siteID, parts[2])
 	default:
 		kernel.WriteJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
 	}
@@ -112,7 +171,8 @@ func (s *Sites) listDomains(w http.ResponseWriter, r *http.Request, siteID strin
 	defer cancel()
 
 	rows, err := s.db.QueryContext(ctx,
-		`SELECT id, site_id, domain, verify_token, verified_at, created_at
+		`SELECT id, site_id, domain, verify_token, verified_at, created_at,
+		        cert_attempts, cert_started_at, cert_last_attempt_at, cert_last_error, cert_retry_after
 		 FROM site_domains WHERE site_id = ? ORDER BY created_at`, siteID)
 	if err != nil {
 		s.logger.Error("list domains", "site_id", siteID, "error", err)
@@ -122,15 +182,25 @@ func (s *Sites) listDomains(w http.ResponseWriter, r *http.Request, siteID strin
 	defer func() { _ = rows.Close() }()
 
 	domains := make([]SiteDomain, 0)
+	states := make([]certState, 0)
 	for rows.Next() {
 		var d SiteDomain
-		var verifiedAt *string
-		if err := rows.Scan(&d.ID, &d.SiteID, &d.Domain, &d.VerifyToken, &verifiedAt, &d.CreatedAt); err != nil {
+		var verifiedAt, startedAt, lastAttemptAt, retryAfter *string
+		var lastError string
+		if err := rows.Scan(&d.ID, &d.SiteID, &d.Domain, &d.VerifyToken, &verifiedAt, &d.CreatedAt,
+			&d.CertAttempts, &startedAt, &lastAttemptAt, &lastError, &retryAfter); err != nil {
 			s.logger.Error("scan domain", "error", err)
 			continue
 		}
 		d.VerifiedAt = verifiedAt
 		domains = append(domains, d)
+		states = append(states, certState{
+			Attempts:      d.CertAttempts,
+			StartedAt:     parseRFC3339Ptr(startedAt),
+			LastAttemptAt: parseRFC3339Ptr(lastAttemptAt),
+			LastError:     lastError,
+			RetryAfter:    parseRFC3339Ptr(retryAfter),
+		})
 	}
 	if err := rows.Err(); err != nil {
 		s.logger.Error("iterate domains", "error", err)
@@ -138,27 +208,131 @@ func (s *Sites) listDomains(w http.ResponseWriter, r *http.Request, siteID strin
 		return
 	}
 
-	// Annotate verified domains with live certificate status from the proxy.
+	// Annotate verified domains with live certificate status from the proxy,
+	// falling back to the persisted attempt budget when no certificate is cached.
 	for i := range domains {
 		if domains[i].VerifiedAt == nil {
 			continue
 		}
-		status, expiresAt := s.certStatusFor(ctx, domains[i].Domain)
+		st := &states[i]
+		status, expiresAt, reason := s.certStatusFor(ctx, siteID, domains[i].Domain, domains[i].VerifiedAt, st)
 		domains[i].CertStatus = status
 		domains[i].CertExpiresAt = expiresAt
+		domains[i].CertError = reason
+		domains[i].CertAttempts = st.Attempts
+		if st.RetryAfter != nil {
+			iso := st.RetryAfter.UTC().Format(time.RFC3339)
+			domains[i].CertRetryAfter = &iso
+		}
 	}
 
 	kernel.WriteJSON(w, http.StatusOK, map[string]any{"data": domains})
 }
 
 // certStatusFor resolves the certificate status for a verified domain via the
-// optional CertInfo hook. Returns "provisioning" when no cert is cached yet.
-func (s *Sites) certStatusFor(ctx context.Context, domain string) (string, *string) {
+// optional CertInfo hook, then applies the persisted attempt budget when no
+// certificate is cached yet. It returns the status, ISO expiry (when present),
+// and a human-readable failure reason (only when status is "failed").
+//
+// While a domain is still provisioning, this records at most one attempt
+// observation per certRetryAfter window. That advances the N-attempt budget
+// without requiring a live ACME callback inside the sites component.
+func (s *Sites) certStatusFor(ctx context.Context, siteID, domain string, verifiedAt *string, st *certState) (string, *string, string) {
 	if s.certInfo == nil {
-		return "", nil
+		return "", nil, ""
 	}
-	notAfter, ok := s.certInfo(ctx, domain)
-	return certStatus(notAfter, ok, time.Now())
+	now := time.Now().UTC()
+	if notAfter, ok := s.certInfo(ctx, domain); ok {
+		status, expiresAt := certStatus(notAfter, true, now)
+		return status, expiresAt, ""
+	}
+
+	verified := parseRFC3339Ptr(verifiedAt)
+	if failed, reason := evaluateCertAttempts(now, *st, verified); failed {
+		return "failed", nil, reason
+	}
+
+	if st.RetryAfter == nil || !now.Before(*st.RetryAfter) {
+		next := now.Add(certRetryAfter)
+		recorded, err := s.recordCertAttempt(ctx, siteID, domain, now, next)
+		if err != nil {
+			s.logger.Warn("record cert attempt", "site_id", siteID, "domain", domain, "error", err)
+		} else if recorded {
+			st.Attempts++
+			st.LastAttemptAt = &now
+			st.RetryAfter = &next
+			if st.StartedAt == nil {
+				st.StartedAt = &now
+			}
+			if failed, reason := evaluateCertAttempts(now, *st, verified); failed {
+				return "failed", nil, reason
+			}
+		}
+	}
+	return "provisioning", nil, ""
+}
+
+// evaluateCertAttempts reports whether a provisioning domain has exhausted its
+// retry budget (N attempts) or its provisioning window (T time).
+func evaluateCertAttempts(now time.Time, st certState, verifiedAt *time.Time) (bool, string) {
+	if st.Attempts >= certMaxAttempts {
+		return true, certFailureReason(st.LastError,
+			fmt.Sprintf("certificate provisioning failed after %d attempts", st.Attempts))
+	}
+	anchor := st.StartedAt
+	if anchor == nil {
+		anchor = verifiedAt
+	}
+	if anchor != nil && now.Sub(*anchor) >= certStaleAfter {
+		return true, certFailureReason(st.LastError,
+			fmt.Sprintf("certificate provisioning timed out after %s", certStaleAfter))
+	}
+	return false, ""
+}
+
+func certFailureReason(lastError, fallback string) string {
+	if strings.TrimSpace(lastError) != "" {
+		return lastError
+	}
+	return fallback
+}
+
+// recordCertAttempt persists one provisioning observation and advances the
+// retry window. The WHERE clause makes the observation atomic across concurrent
+// list calls, so only one caller can consume a retry window. cert_started_at is
+// only set once so the T timeout is measured from the beginning of the
+// provisioning window, not from the latest poll. It reports whether a row was
+// actually updated.
+func (s *Sites) recordCertAttempt(ctx context.Context, siteID, domain string, now, next time.Time) (bool, error) {
+	res, err := s.db.ExecContext(ctx,
+		`UPDATE site_domains
+		    SET cert_attempts = cert_attempts + 1,
+		        cert_last_attempt_at = ?,
+		        cert_retry_after = ?,
+		        cert_started_at = COALESCE(cert_started_at, ?)
+		  WHERE site_id = ? AND domain = ?
+		    AND (cert_retry_after IS NULL OR cert_retry_after <= ?)`,
+		now.Format(time.RFC3339), next.Format(time.RFC3339), now.Format(time.RFC3339),
+		siteID, domain, now.Format(time.RFC3339))
+	if err != nil {
+		return false, err
+	}
+	affected, err := res.RowsAffected()
+	if err != nil {
+		return false, err
+	}
+	return affected > 0, nil
+}
+
+func parseRFC3339Ptr(v *string) *time.Time {
+	if v == nil || *v == "" {
+		return nil
+	}
+	t, err := time.Parse(time.RFC3339, *v)
+	if err != nil {
+		return nil
+	}
+	return &t
 }
 
 // certStatus maps a certificate expiry to a display status + ISO expiry string.
@@ -298,8 +472,11 @@ func (s *Sites) verifyDomain(w http.ResponseWriter, r *http.Request, siteID, dom
 	if verified {
 		now := time.Now().UTC().Format(time.RFC3339)
 		_, _ = s.db.ExecContext(ctx,
-			`UPDATE site_domains SET verified_at = ? WHERE site_id = ? AND domain = ?`,
-			now, siteID, domain)
+			`UPDATE site_domains
+			    SET verified_at = ?,
+			        cert_started_at = COALESCE(cert_started_at, ?)
+			  WHERE site_id = ? AND domain = ?`,
+			now, now, siteID, domain)
 		// Activate routing immediately rather than waiting for the next deploy.
 		if s.activateDomain != nil {
 			if err := s.activateDomain(ctx, siteID, domain); err != nil {
@@ -313,6 +490,72 @@ func (s *Sites) verifyDomain(w http.ResponseWriter, r *http.Request, siteID, dom
 		"verified":     verified,
 		"verify_token": verifyToken,
 		"txt_record":   expected,
+	})
+}
+
+// retryDomainCert resets the certificate attempt budget for a verified domain
+// and asks the proxy to re-register the host so issuance can be retried. It is
+// the manual escape hatch for a domain stuck in cert_status=failed.
+func (s *Sites) retryDomainCert(w http.ResponseWriter, r *http.Request, siteID, domain string) {
+	if !s.verifyLim.allow("cert|"+siteID+"|"+domain, time.Now()) {
+		w.Header().Set("Retry-After", "5")
+		kernel.WriteJSON(w, http.StatusTooManyRequests, map[string]string{"error": "too many retry attempts, try again shortly"})
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
+	defer cancel()
+
+	var verifiedAt *string
+	err := s.db.QueryRowContext(ctx,
+		`SELECT verified_at FROM site_domains WHERE site_id = ? AND domain = ?`,
+		siteID, domain).Scan(&verifiedAt)
+	if err != nil {
+		kernel.WriteJSON(w, http.StatusNotFound, map[string]string{"error": "domain not registered"})
+		return
+	}
+	if verifiedAt == nil {
+		kernel.WriteJSON(w, http.StatusConflict, map[string]string{"error": "domain is not verified"})
+		return
+	}
+
+	now := time.Now().UTC()
+	retryAfter := now.Add(certRetryAfter)
+	_, err = s.db.ExecContext(ctx,
+		`UPDATE site_domains
+		    SET cert_attempts = 0,
+		        cert_started_at = ?,
+		        cert_last_attempt_at = ?,
+		        cert_last_error = '',
+		        cert_retry_after = ?
+		  WHERE site_id = ? AND domain = ?`,
+		now.Format(time.RFC3339), now.Format(time.RFC3339), retryAfter.Format(time.RFC3339), siteID, domain)
+	if err != nil {
+		s.logger.Error("reset cert attempts", "site_id", siteID, "domain", domain, "error", err)
+		kernel.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		return
+	}
+
+	// Re-register the host with the proxy so a previously failed domain is
+	// served again and autocert gets a fresh issuance opportunity.
+	if s.activateDomain != nil {
+		if err := s.activateDomain(ctx, siteID, domain); err != nil {
+			s.logger.Warn("activate custom domain after cert retry", "domain", domain, "error", err)
+		}
+	}
+
+	status := "provisioning"
+	if s.certInfo != nil {
+		if notAfter, ok := s.certInfo(ctx, domain); ok {
+			status, _ = certStatus(notAfter, true, now)
+		}
+	}
+
+	kernel.WriteJSON(w, http.StatusOK, CertRetryResult{
+		Domain:     domain,
+		CertStatus: status,
+		Attempts:   0,
+		RetryAfter: retryAfter.Format(time.RFC3339),
 	})
 }
 
