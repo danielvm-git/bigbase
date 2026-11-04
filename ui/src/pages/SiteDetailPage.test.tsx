@@ -20,12 +20,13 @@ const mockDeploymentsWithPrevious = [
 ]
 
 // vi.fn() references kept outside vi.mock so tests can override per-describe
+const getSiteMock = vi.fn()
 const getSiteDeploymentsMock = vi.fn()
 const getRollbackEventsMock = vi.fn()
 const rollbackDeploymentMock = vi.fn()
 
 vi.mock('../lib/sitesData', () => ({
-  getSite: () => Promise.resolve({ data: mockSite, previewMode: false }),
+  getSite: (...args: unknown[]) => getSiteMock(...args),
   getSiteDeployments: (...args: unknown[]) => getSiteDeploymentsMock(...args),
   getSiteManifest: () => Promise.resolve({ data: { exists: false, content: '' }, previewMode: false }),
   saveSiteManifest: () => Promise.resolve({ ok: true, previewMode: false }),
@@ -49,6 +50,7 @@ function renderPage() {
 describe('SiteDetailPage', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    getSiteMock.mockResolvedValue({ data: mockSite, previewMode: false })
     getSiteDeploymentsMock.mockResolvedValue({ data: mockDeployments, previewMode: false })
     getRollbackEventsMock.mockResolvedValue({ ok: true, events: [] })
     rollbackDeploymentMock.mockResolvedValue({ ok: true })
@@ -69,6 +71,43 @@ describe('SiteDetailPage', () => {
     await waitFor(() => {
       expect(screen.getByRole('heading', { name: 'My Site' })).toBeInTheDocument()
     })
+  })
+
+  it('loads site, deployments and rollback events concurrently', async () => {
+    // All three resources are independent. If the page awaits them one by one,
+    // the first promise never sees the other two start, so startedAtRelease
+    // stays below 3 when the fail-safe releases the gate.
+    const started: string[] = []
+    let startedAtRelease = -1
+    let released = false
+    let release!: () => void
+    const gate = new Promise<void>((resolve) => { release = resolve })
+    const releaseOnce = () => {
+      if (released) return
+      released = true
+      startedAtRelease = started.length
+      release()
+    }
+    const failSafe = setTimeout(releaseOnce, 100)
+    const track = <T,>(name: string, value: T): Promise<T> => {
+      started.push(name)
+      if (started.length === 3) {
+        clearTimeout(failSafe)
+        releaseOnce()
+      }
+      return gate.then(() => value)
+    }
+    getSiteMock.mockImplementation(() => track('site', { data: mockSite, previewMode: false }))
+    getSiteDeploymentsMock.mockImplementation(() => track('deployments', { data: mockDeployments, previewMode: false }))
+    getRollbackEventsMock.mockImplementation(() => track('rollback', { ok: true, events: [] }))
+
+    renderPage()
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: 'My Site' })).toBeInTheDocument()
+    })
+
+    expect(startedAtRelease).toBe(3)
+    expect([...started].sort()).toEqual(['deployments', 'rollback', 'site'])
   })
 
   it('shows branch info', async () => {

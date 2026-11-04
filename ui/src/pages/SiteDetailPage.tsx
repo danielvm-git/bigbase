@@ -322,13 +322,15 @@ export default function SiteDetailPage() {
 
   const load = useCallback(async () => {
     setLoading(true)
-    const s = await getSite(siteId)
+    const [s, d, evRes] = await Promise.all([
+      getSite(siteId),
+      getSiteDeployments(siteId),
+      getRollbackEvents(siteId),
+    ])
     setSite(s.data)
     setPreviewMode(s.previewMode || isPreviewForced())
-    const d = await getSiteDeployments(siteId)
     setDeployments(d.data)
     setPreviewMode(p => p || d.previewMode)
-    const evRes = await getRollbackEvents(siteId)
     if (evRes.ok) setRollbackEvents(evRes.events)
     setLoading(false)
   }, [siteId])

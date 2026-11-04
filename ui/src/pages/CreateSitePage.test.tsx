@@ -48,6 +48,48 @@ describe('CreateSitePage layout', () => {
     })
   })
 
+  it('loads github status, github repos and local repos concurrently', async () => {
+    // The three bootstrap requests are independent; awaiting them one at a
+    // time means the gate never sees all three start before it releases.
+    const started: string[] = []
+    let startedAtRelease = -1
+    let released = false
+    let release!: () => void
+    const gate = new Promise<void>((resolve) => { release = resolve })
+    const releaseOnce = () => {
+      if (released) return
+      released = true
+      startedAtRelease = started.length
+      release()
+    }
+    const failSafe = setTimeout(releaseOnce, 100)
+    const track = <T,>(name: string, value: T): Promise<T> => {
+      started.push(name)
+      if (started.length === 3) {
+        clearTimeout(failSafe)
+        releaseOnce()
+      }
+      return gate.then(() => value)
+    }
+    getGitHubStatus.mockImplementation(() => track('status', {
+      data: { connected: true, configured: true, login: 'testuser' },
+      previewMode: false,
+    }))
+    getGitHubRepos.mockImplementation(() => track('github-repos', {
+      data: [{ id: 1, full_name: 'acme/one', default_branch: 'main', private: false }],
+      previewMode: false,
+    }))
+    getGitRepos.mockImplementation(() => track('local-repos', { data: [], previewMode: false }))
+
+    renderPage()
+    await waitFor(() => {
+      expect(screen.getByText('acme/one')).toBeInTheDocument()
+    })
+
+    expect(startedAtRelease).toBe(3)
+    expect([...started].sort()).toEqual(['github-repos', 'local-repos', 'status'])
+  })
+
   it('applies grid layout to choice cards', async () => {
     const { container } = renderPage()
     await waitFor(() => {
