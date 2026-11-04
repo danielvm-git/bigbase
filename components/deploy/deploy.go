@@ -38,6 +38,9 @@ const (
 	AppGo            AppType = "go"
 	AppPython        AppType = "python"
 	AppPHP           AppType = "php"
+	AppRust          AppType = "rust"
+	AppJava          AppType = "java"
+	AppRuby          AppType = "ruby"
 	AppStatic        AppType = "static"
 	AppStaticSidecar AppType = "static-sidecar"
 )
@@ -45,7 +48,7 @@ const (
 // IsValid reports whether the AppType is one of the known application types.
 func (a AppType) IsValid() bool {
 	switch a {
-	case AppNode, AppGo, AppPython, AppPHP, AppStatic, AppStaticSidecar:
+	case AppNode, AppGo, AppPython, AppPHP, AppRust, AppJava, AppRuby, AppStatic, AppStaticSidecar:
 		return true
 	default:
 		return false
@@ -55,7 +58,7 @@ func (a AppType) IsValid() bool {
 // AllAppTypes returns all known application types. New types should be added
 // to the const block above and this function to maintain OCP compliance.
 func AllAppTypes() []AppType {
-	return []AppType{AppNode, AppGo, AppPython, AppPHP, AppStatic, AppStaticSidecar}
+	return []AppType{AppNode, AppGo, AppPython, AppPHP, AppRust, AppJava, AppRuby, AppStatic, AppStaticSidecar}
 }
 
 type Deployment struct {

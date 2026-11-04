@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
@@ -89,12 +88,13 @@ func (r *deployRunner) buildCmd(ctx context.Context, spec Spec) *exec.Cmd {
 		name, args := NodeStartCommand(spec.Dir)
 		return exec.CommandContext(ctx, name, args...)
 	case AppPHP:
-		// Prefer public/ front controller when present (Laravel/Symfony-style).
-		docRoot := spec.Dir
-		if st, err := os.Stat(filepath.Join(spec.Dir, "public")); err == nil && st.IsDir() {
-			docRoot = filepath.Join(spec.Dir, "public")
-		}
-		return exec.CommandContext(ctx, "php", "-S", fmt.Sprintf("0.0.0.0:%d", spec.Port), "-t", docRoot)
+		return PHPStartCommand(ctx, spec.Dir, spec.Port)
+	case AppRust:
+		return RustStartCommand(ctx, spec.Dir)
+	case AppJava:
+		return JavaStartCommand(ctx, spec.Dir)
+	case AppRuby:
+		return RubyStartCommand(ctx, spec.Dir, spec.Port)
 	}
 	return nil
 }

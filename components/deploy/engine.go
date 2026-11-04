@@ -458,6 +458,13 @@ func (d *Deploy) buildApp(ctx context.Context, deployID, siteID, repoID, branch,
 				"Install Go on the deploy host (matching go.mod) before deploying AppType=go.")
 		}
 		return d.runBuildCommand(ctx, deployID, buildDir, resolved, "go", "build", "-o", "app", ".")
+	case AppRust:
+		if _, err := exec.LookPath("cargo"); err != nil {
+			return codedErr("tool_missing", "cargo not found on PATH",
+				"Install Rust toolchain (cargo) on the deploy host before deploying AppType=rust.")
+		}
+		name, args := RustBuildCommand(buildDir)
+		return d.runBuildCommand(ctx, deployID, buildDir, resolved, name, args...)
 	case AppPHP:
 		if _, err := exec.LookPath("composer"); err != nil {
 			return codedErr("tool_missing", "composer not found on PATH",
@@ -467,7 +474,31 @@ func (d *Deploy) buildApp(ctx context.Context, deployID, siteID, repoID, branch,
 			return codedErr("tool_missing", "php not found on PATH",
 				"Install PHP on the deploy host before deploying AppType=php.")
 		}
-		return d.runBuildCommand(ctx, deployID, buildDir, resolved, "composer", "install", "--no-dev", "--optimize-autoloader")
+		name, args := PHPBuildCommand(buildDir)
+		return d.runBuildCommand(ctx, deployID, buildDir, resolved, name, args...)
+	case AppJava:
+		if fileExists(filepath.Join(buildDir, "pom.xml")) {
+			if _, err := exec.LookPath("mvn"); err != nil {
+				return codedErr("tool_missing", "mvn not found on PATH",
+					"Install Maven (mvn) on the deploy host before deploying AppType=java.")
+			}
+		} else if fileExists(filepath.Join(buildDir, "build.gradle")) || fileExists(filepath.Join(buildDir, "build.gradle.kts")) {
+			if !fileExists(filepath.Join(buildDir, "gradlew")) {
+				if _, err := exec.LookPath("gradle"); err != nil {
+					return codedErr("tool_missing", "gradle not found on PATH",
+						"Install Gradle on the deploy host before deploying AppType=java.")
+				}
+			}
+		}
+		name, args := JavaBuildCommand(buildDir)
+		return d.runBuildCommand(ctx, deployID, buildDir, resolved, name, args...)
+	case AppRuby:
+		if _, err := exec.LookPath("bundle"); err != nil {
+			return codedErr("tool_missing", "bundle not found on PATH",
+				"Install Bundler (bundle) on the deploy host before deploying AppType=ruby.")
+		}
+		name, args := RubyBuildCommand(buildDir)
+		return d.runBuildCommand(ctx, deployID, buildDir, resolved, name, args...)
 	case AppPython:
 		if _, err := exec.LookPath("python3"); err != nil {
 			if _, err2 := exec.LookPath("python"); err2 != nil {
@@ -606,12 +637,13 @@ func (d *Deploy) startApp(ctx context.Context, buildDir string, deploy *Deployme
 		case AppPython:
 			cmd = pythonStartCommand(ctx, buildDir, deploy.Port, manifest)
 		case AppPHP:
-			docRoot := buildDir
-			if st, err := os.Stat(filepath.Join(buildDir, "public")); err == nil && st.IsDir() {
-				docRoot = filepath.Join(buildDir, "public")
-			}
-			cmd = exec.CommandContext(ctx, "php", "-S", fmt.Sprintf("0.0.0.0:%d", deploy.Port), "-t", docRoot)
-			cmd.Dir = buildDir
+			cmd = PHPStartCommand(ctx, buildDir, deploy.Port)
+		case AppRust:
+			cmd = RustStartCommand(ctx, buildDir)
+		case AppJava:
+			cmd = JavaStartCommand(ctx, buildDir)
+		case AppRuby:
+			cmd = RubyStartCommand(ctx, buildDir, deploy.Port)
 		}
 	}
 

@@ -40,6 +40,9 @@ func DetectAppType(buildDir string) AppType {
 	if fileExists(filepath.Join(buildDir, "go.mod")) {
 		return AppGo
 	}
+	if fileExists(filepath.Join(buildDir, "Cargo.toml")) {
+		return AppRust
+	}
 	if fileExists(filepath.Join(buildDir, "composer.json")) {
 		return AppPHP
 	}
@@ -51,6 +54,14 @@ func DetectAppType(buildDir string) AppType {
 	if fileExists(filepath.Join(buildDir, "app.py")) ||
 		fileExists(filepath.Join(buildDir, "main.py")) {
 		return AppPython
+	}
+	if fileExists(filepath.Join(buildDir, "pom.xml")) ||
+		fileExists(filepath.Join(buildDir, "build.gradle")) ||
+		fileExists(filepath.Join(buildDir, "build.gradle.kts")) {
+		return AppJava
+	}
+	if fileExists(filepath.Join(buildDir, "Gemfile")) {
+		return AppRuby
 	}
 	if fileExists(filepath.Join(buildDir, "index.html")) {
 		return AppStatic

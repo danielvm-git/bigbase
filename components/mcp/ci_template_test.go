@@ -73,3 +73,104 @@ command = "npm run start"
 		}
 	})
 }
+
+func TestCITemplateRust(t *testing.T) {
+	c := mcp.New(mcp.Options{Enabled: true})
+	ctx, session := connectMCPSession(t, c)
+
+	result, err := session.CallTool(ctx, &mcpsdk.CallToolParams{
+		Name:      "get_ci_template",
+		Arguments: map[string]any{"app_type": "rust"},
+	})
+	if err != nil {
+		t.Fatalf("CallTool(get_ci_template, rust): %v", err)
+	}
+	content := result.Content[0].(*mcpsdk.TextContent).Text
+	if !strings.Contains(content, "rust") {
+		t.Errorf("expected rust in template content, got: %s", content)
+	}
+	if strings.Contains(content, "No template for") {
+		t.Fatalf("get_ci_template returned no template for rust: %s", content)
+	}
+}
+
+func TestCITemplatePHP(t *testing.T) {
+	c := mcp.New(mcp.Options{Enabled: true})
+	ctx, session := connectMCPSession(t, c)
+
+	result, err := session.CallTool(ctx, &mcpsdk.CallToolParams{
+		Name:      "get_ci_template",
+		Arguments: map[string]any{"app_type": "php"},
+	})
+	if err != nil {
+		t.Fatalf("CallTool(get_ci_template, php): %v", err)
+	}
+	content := result.Content[0].(*mcpsdk.TextContent).Text
+	if !strings.Contains(content, "php") {
+		t.Errorf("expected php in template content, got: %s", content)
+	}
+	if strings.Contains(content, "No template for") {
+		t.Fatalf("get_ci_template returned no template for php: %s", content)
+	}
+}
+
+func TestCITemplateJava(t *testing.T) {
+	c := mcp.New(mcp.Options{Enabled: true})
+	ctx, session := connectMCPSession(t, c)
+
+	result, err := session.CallTool(ctx, &mcpsdk.CallToolParams{
+		Name:      "get_ci_template",
+		Arguments: map[string]any{"app_type": "java"},
+	})
+	if err != nil {
+		t.Fatalf("CallTool(get_ci_template, java): %v", err)
+	}
+	content := result.Content[0].(*mcpsdk.TextContent).Text
+	if !strings.Contains(content, "java") {
+		t.Errorf("expected java in template content, got: %s", content)
+	}
+	if strings.Contains(content, "No template for") {
+		t.Fatalf("get_ci_template returned no template for java: %s", content)
+	}
+}
+
+func TestCITemplateRuby(t *testing.T) {
+	c := mcp.New(mcp.Options{Enabled: true})
+	ctx, session := connectMCPSession(t, c)
+
+	result, err := session.CallTool(ctx, &mcpsdk.CallToolParams{
+		Name:      "get_ci_template",
+		Arguments: map[string]any{"app_type": "ruby"},
+	})
+	if err != nil {
+		t.Fatalf("CallTool(get_ci_template, ruby): %v", err)
+	}
+	content := result.Content[0].(*mcpsdk.TextContent).Text
+	if !strings.Contains(content, "ruby") {
+		t.Errorf("expected ruby in template content, got: %s", content)
+	}
+	if strings.Contains(content, "No template for") {
+		t.Fatalf("get_ci_template returned no template for ruby: %s", content)
+	}
+}
+
+func TestCITemplatesAll(t *testing.T) {
+	c := mcp.New(mcp.Options{Enabled: true})
+	ctx, session := connectMCPSession(t, c)
+
+	types := []string{"static", "node", "go", "python", "php", "rust", "java", "ruby"}
+	for _, appType := range types {
+		result, err := session.CallTool(ctx, &mcpsdk.CallToolParams{
+			Name:      "get_ci_template",
+			Arguments: map[string]any{"app_type": appType},
+		})
+		if err != nil {
+			t.Errorf("CallTool(get_ci_template, %s) error: %v", appType, err)
+			continue
+		}
+		content := result.Content[0].(*mcpsdk.TextContent).Text
+		if strings.Contains(content, "No template for") {
+			t.Errorf("missing template for %s: %s", appType, content)
+		}
+	}
+}

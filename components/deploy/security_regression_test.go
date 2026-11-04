@@ -37,11 +37,41 @@ func TestCommandInjection(t *testing.T) {
 	}
 }
 
+// TestPathTraversal guards ResolveAppRoot and deploy paths against path traversal attacks (CWE-22).
+func TestPathTraversal(t *testing.T) {
+	dir := t.TempDir()
+	child := filepath.Join(dir, "child")
+	if err := os.MkdirAll(child, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	traversalRoots := []string{
+		"../",
+		"../../",
+		"../escape",
+		"/etc/passwd",
+		"child/../../escape",
+	}
+
+	for _, p := range traversalRoots {
+		got := ResolveAppRoot(dir, p)
+		if got != dir {
+			t.Errorf("ResolveAppRoot(%q, %q) = %q, want base dir %q", dir, p, got, dir)
+		}
+	}
+
+	// Clean nested path within dir should resolve properly
+	got := ResolveAppRoot(dir, "child")
+	if got != child {
+		t.Errorf("ResolveAppRoot(%q, \"child\") = %q, want %q", dir, got, child)
+	}
+}
+
 // TestAppTypeIsValid guards AppType.IsValid(): every known type is valid and
 // unknown/empty/differently-cased inputs are rejected. Prevents a silent
 // widening or narrowing of the accepted runtime set.
 func TestAppTypeIsValid(t *testing.T) {
-	valid := []AppType{AppNode, AppGo, AppPython, AppPHP, AppStatic, AppStaticSidecar}
+	valid := []AppType{AppNode, AppGo, AppPython, AppPHP, AppRust, AppJava, AppRuby, AppStatic, AppStaticSidecar}
 	for _, at := range valid {
 		if !at.IsValid() {
 			t.Errorf("AppType %q should be valid", at)
@@ -58,7 +88,7 @@ func TestAppTypeIsValid(t *testing.T) {
 		t.Errorf("AllAppTypes length = %d, want %d", got, len(valid))
 	}
 
-	invalid := []AppType{"", "ruby", "rust", "java", "unknown", "NODE", "Static", " node"}
+	invalid := []AppType{"", "unknown", "NODE", "Static", " node", "python3", "golang"}
 	for _, at := range invalid {
 		if at.IsValid() {
 			t.Errorf("AppType %q should be invalid", at)

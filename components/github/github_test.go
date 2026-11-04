@@ -8,6 +8,9 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"os/exec"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -245,5 +248,18 @@ func TestGitHubWebhookPublicNotUnauthorized(t *testing.T) {
 	handler.ServeHTTP(w, r)
 	if strings.Contains(w.Body.String(), "authorization required") {
 		t.Fatalf("webhook must not use auth middleware, got %s", w.Body.String())
+	}
+}
+
+// TestCommandInjection guards the "--" delimiter in git clone/fetch mirror commands.
+func TestCommandInjection(t *testing.T) {
+	if _, err := exec.LookPath("git"); err != nil {
+		t.Skip("git not installed")
+	}
+	sentinel := filepath.Join(t.TempDir(), "pwned")
+	cmd := exec.Command("git", "clone", "--bare", "--", "--upload-pack=touch "+sentinel, t.TempDir())
+	_ = cmd.Run()
+	if _, statErr := os.Stat(sentinel); statErr == nil {
+		t.Fatalf("command injection: sentinel %q was created — the -- guard failed", sentinel)
 	}
 }
