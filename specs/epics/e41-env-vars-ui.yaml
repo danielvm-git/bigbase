@@ -5,6 +5,8 @@ title: "Deploy — Environment Variables UI"
 wsjf: 4.0
 wsjf_rationale: "BV=6(moderate: stops SSH-based env var management — daily quality-of-life win for solo dev) TC=3(no urgent deadline) RR=6(reduces friction: env vars in UI vs CLI flags) / JS=2(~1.5 days across 2 stories)"
 status: done
+follow_ups:
+  - 309  # bounded concurrency or bulk endpoint for env/secret imports
 tier: 2
 depends_on: []
 covers:
