@@ -32,6 +32,18 @@ func (m *Monitoring) runAlertChecker() {
 	}
 }
 
+// alertRuleRow is a scanned monitoring_alerts row, buffered before evaluation
+// so incident writes never nest inside the rule cursor (SQLite has a single
+// connection, so a nested query would block until the context deadline).
+type alertRuleRow struct {
+	id          string
+	name        string
+	metric      string
+	threshold   float64
+	operator    string
+	durationSec int64
+}
+
 // checkAlertRules evaluates every enabled alert rule against current host metrics.
 func (m *Monitoring) checkAlertRules(breachStart map[breachKey]time.Time) {
 	if m.db == nil {
@@ -41,6 +53,11 @@ func (m *Monitoring) checkAlertRules(breachStart map[breachKey]time.Time) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
+	// Snapshot state ages before opening the alert-rule rows. SQLite runs with
+	// a single connection; a nested query while a rows cursor is open would
+	// block until the context deadline and make every state-age rule unknown.
+	stateAges := m.stateAgeReport(ctx)
+
 	rows, err := m.db.QueryContext(ctx,
 		"SELECT id, name, metric, threshold, operator, duration_seconds FROM monitoring_alerts WHERE enabled = 1")
 	if err != nil {
@@ -49,23 +66,33 @@ func (m *Monitoring) checkAlertRules(breachStart map[breachKey]time.Time) {
 	}
 	defer func() { _ = rows.Close() }()
 
+	rules := make([]alertRuleRow, 0)
+	for rows.Next() {
+		var rule alertRuleRow
+		if err := rows.Scan(&rule.id, &rule.name, &rule.metric, &rule.threshold,
+			&rule.operator, &rule.durationSec); err != nil {
+			m.logger.Error("alert checker scan", "error", err)
+			continue
+		}
+		rules = append(rules, rule)
+	}
+	if err := rows.Err(); err != nil {
+		m.logger.Error("alert checker rows", "error", err)
+	}
+	_ = rows.Close()
+
 	host := m.LatestHostMetrics()
 	sys := m.SystemMetrics()
 	now := time.Now()
 
 	var activeIDs []breachKey
 
-	for rows.Next() {
-		var id, name, metric, operator string
-		var threshold float64
-		var durationSec int64
+	for _, rule := range rules {
+		id, name, metric := rule.id, rule.name, rule.metric
+		threshold, operator := rule.threshold, rule.operator
+		durationSec := rule.durationSec
 
-		if err := rows.Scan(&id, &name, &metric, &threshold, &operator, &durationSec); err != nil {
-			m.logger.Error("alert checker scan", "error", err)
-			continue
-		}
-
-		value, known := m.metricValueWithSite(metric, host, sys)
+		value, known := m.metricValueWithState(metric, host, sys, &stateAges)
 		if !known {
 			// Fail closed on unknown/typo'd metric names: log loudly and skip
 			// the rule so it can neither fire forever (lt) nor never fire (gt).
@@ -151,6 +178,13 @@ func metricValue(metric string, host HostMetrics, sys SystemMetrics) (float64, b
 // produced a reading), site metrics are treated as unknown so a rule
 // referencing them never silently fires on 0.
 func (m *Monitoring) metricValueWithSite(metric string, host HostMetrics, sys SystemMetrics) (float64, bool) {
+	return m.metricValueWithState(metric, host, sys, nil)
+}
+
+// metricValueWithState is metricValueWithSite with an optional pre-computed
+// state-age report. The alert checker passes a snapshot so all rules in one
+// pass share a single query and cannot nest a DB read inside an open cursor.
+func (m *Monitoring) metricValueWithState(metric string, host HostMetrics, sys SystemMetrics, stateAges *StateAgeReport) (float64, bool) {
 	switch metric {
 	case "site_up", "site_http_status":
 		if m == nil || m.siteStatus == nil {
@@ -177,6 +211,13 @@ func (m *Monitoring) metricValueWithSite(metric string, host HostMetrics, sys Sy
 			return float64(st.HTTPStatus), true
 		}
 	default:
+		if stateAges != nil {
+			if value, ok, handled := stateAgeMetricValueFromReport(metric, *stateAges); handled {
+				return value, ok
+			}
+		} else if value, ok, handled := m.stateAgeMetricValue(metric); handled {
+			return value, ok
+		}
 		return metricValue(metric, host, sys)
 	}
 	return 0, false
