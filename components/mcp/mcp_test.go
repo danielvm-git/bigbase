@@ -967,3 +967,137 @@ func TestMCPDeleteSiteEnvVarNoArgs(t *testing.T) {
 		t.Errorf("expected 'site_id is required', got: %s", tc.Text)
 	}
 }
+
+// callEnvVarTool invokes an env var tool and returns its text payload.
+func callEnvVarTool(t *testing.T, ctx context.Context, session *mcpsdk.ClientSession, name string, args map[string]any) string {
+	t.Helper()
+	result, err := session.CallTool(ctx, &mcpsdk.CallToolParams{Name: name, Arguments: args})
+	if err != nil {
+		t.Fatalf("%s: %v", name, err)
+	}
+	tc, ok := result.Content[0].(*mcpsdk.TextContent)
+	if !ok {
+		t.Fatalf("%s: expected *TextContent, got %T", name, result.Content[0])
+	}
+	return tc.Text
+}
+
+func TestEnvVarGetMasked(t *testing.T) {
+	mock := newMockEnvVarManager()
+	mock.vars["site-1"] = []mcp.SiteEnvVar{
+		{ID: "ev-1", SiteID: "site-1", Key: "DATABASE_URL", ValuePreview: "••••5432", IsRuntime: true},
+		{ID: "ev-2", SiteID: "site-1", Key: "API_KEY", ValuePreview: "••••abcd", IsBuildTime: true},
+	}
+
+	c := mcp.New(mcp.Options{Enabled: true, SiteEnvVarManager: mock})
+	ctx, session := connectMCPSession(t, c)
+
+	text := callEnvVarTool(t, ctx, session, "get_site_env_vars", map[string]any{"site_id": "site-1"})
+	if !strings.Contains(text, "DATABASE_URL") || !strings.Contains(text, "API_KEY") {
+		t.Errorf("expected both keys in response, got: %s", text)
+	}
+	if !strings.Contains(text, "••••5432") || !strings.Contains(text, "••••abcd") {
+		t.Errorf("expected masked value previews in response, got: %s", text)
+	}
+	if strings.Contains(text, "postgres://") {
+		t.Errorf("response leaked a plaintext value: %s", text)
+	}
+}
+
+func TestEnvVarSetUpsertMultiple(t *testing.T) {
+	mock := newMockEnvVarManager()
+	c := mcp.New(mcp.Options{Enabled: true, SiteEnvVarManager: mock})
+	ctx, session := connectMCPSession(t, c)
+
+	first := callEnvVarTool(t, ctx, session, "set_site_env_vars", map[string]any{
+		"site_id": "site-1",
+		"vars": map[string]any{
+			"DATABASE_URL": "postgres://localhost:5432/db",
+			"API_KEY":      "test-value-1234",
+		},
+	})
+	if !strings.Contains(first, "DATABASE_URL") || !strings.Contains(first, "API_KEY") {
+		t.Errorf("expected both keys in set response, got: %s", first)
+	}
+	if got := len(mock.vars["site-1"]); got != 2 {
+		t.Fatalf("expected 2 stored vars after first upsert, got %d", got)
+	}
+
+	second := callEnvVarTool(t, ctx, session, "set_site_env_vars", map[string]any{
+		"site_id": "site-1",
+		"vars":    map[string]any{"DATABASE_URL": "postgres://remote:9999/new"},
+	})
+	if got := len(mock.vars["site-1"]); got != 2 {
+		t.Errorf("expected upsert to keep 2 stored vars, got %d", got)
+	}
+	if !strings.Contains(second, "••••/new") {
+		t.Errorf("expected updated masked preview in response, got: %s", second)
+	}
+}
+
+func TestEnvVarDelete(t *testing.T) {
+	mock := newMockEnvVarManager()
+	mock.vars["site-1"] = []mcp.SiteEnvVar{
+		{ID: "ev-1", SiteID: "site-1", Key: "DATABASE_URL", ValuePreview: "••••5432"},
+	}
+	c := mcp.New(mcp.Options{Enabled: true, SiteEnvVarManager: mock})
+	ctx, session := connectMCPSession(t, c)
+
+	text := callEnvVarTool(t, ctx, session, "delete_site_env_var", map[string]any{"site_id": "site-1", "key": "DATABASE_URL"})
+	if !strings.Contains(text, "deleted") {
+		t.Errorf("expected 'deleted' response, got: %s", text)
+	}
+	if got := len(mock.vars["site-1"]); got != 0 {
+		t.Errorf("expected 0 vars after delete, got %d", got)
+	}
+
+	missing := callEnvVarTool(t, ctx, session, "delete_site_env_var", map[string]any{"site_id": "site-1", "key": "MISSING"})
+	if !strings.Contains(missing, "not found") {
+		t.Errorf("expected 'not found' for missing key, got: %s", missing)
+	}
+}
+
+func TestEnvVarKeyValidationRejectsInvalid(t *testing.T) {
+	invalid := []string{"lower_case", "1LEADING", "WITH-DASH", "with space", "camelCase", "TRAILING_" + "!"}
+	valid := []string{"DATABASE_URL", "API_KEY_2", "A"}
+
+	for _, key := range invalid {
+		key := key
+		t.Run("invalid/"+key, func(t *testing.T) {
+			mock := newMockEnvVarManager()
+			c := mcp.New(mcp.Options{Enabled: true, SiteEnvVarManager: mock})
+			ctx, session := connectMCPSession(t, c)
+
+			text := callEnvVarTool(t, ctx, session, "set_site_env_vars", map[string]any{
+				"site_id": "site-1",
+				"vars":    map[string]any{key: "value"},
+			})
+			if !strings.Contains(text, "invalid env var key") {
+				t.Errorf("expected key %q to be rejected, got: %s", key, text)
+			}
+			if got := len(mock.vars["site-1"]); got != 0 {
+				t.Errorf("expected no vars stored for invalid key %q, got %d", key, got)
+			}
+		})
+	}
+
+	for _, key := range valid {
+		key := key
+		t.Run("valid/"+key, func(t *testing.T) {
+			mock := newMockEnvVarManager()
+			c := mcp.New(mcp.Options{Enabled: true, SiteEnvVarManager: mock})
+			ctx, session := connectMCPSession(t, c)
+
+			text := callEnvVarTool(t, ctx, session, "set_site_env_vars", map[string]any{
+				"site_id": "site-1",
+				"vars":    map[string]any{key: "value"},
+			})
+			if strings.Contains(text, "invalid env var key") {
+				t.Errorf("expected key %q to be accepted, got: %s", key, text)
+			}
+			if got := len(mock.vars["site-1"]); got != 1 {
+				t.Errorf("expected 1 stored var for valid key %q, got %d", key, got)
+			}
+		})
+	}
+}
