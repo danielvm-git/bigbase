@@ -1,6 +1,6 @@
 # Traceability Matrix
 
-Generated: 2026-08-12T00:24:37.616472+00:00
+Generated: 2026-11-04T19:50:28.289069+00:00
 
 ## Story Coverage
 
@@ -126,12 +126,12 @@ Generated: 2026-08-12T00:24:37.616472+00:00
 | e88s02 | Formal conformance exceptions (1.4.8 partial + 2.2.3 security) | 0 | 0 | Dark |
 | e88s03 | AAA re-certification — matrix + axe + conformance statement | 0 | 0 | Dark |
 | e89s01 | Harden existing site-secret storage and delivery | 0 | 0 | Dark |
-| e89s02 | Add organization-scoped Projects and Environments | 0 | 0 | Dark |
+| e89s02 | Add organization-scoped Projects and Environments | 1 | 1 | Covered |
 | e89s03 | Add versioned envelope-encrypted project secrets | 0 | 0 | Dark |
 | e89s04 | Add secret REST API, policies, and audit events | 0 | 0 | Dark |
-| e89s05 | Add Admin UI for project secrets | 0 | 0 | Dark |
+| e89s05 | Add Admin UI for project secrets | 1 | 1 | Covered |
 | e89s06 | Resolve project and site secrets in deployments | 0 | 0 | Dark |
-| e89s07 | Secure MCP secret-management tools | 0 | 0 | Dark |
+| e89s07 | Secure MCP secret-management tools | 2 | 1 | Covered |
 
 ## Gaps
 
@@ -239,13 +239,10 @@ Generated: 2026-08-12T00:24:37.616472+00:00
 - e88s02: no story-tagged implementation files
 - e88s03: no story-tagged implementation files
 - e89s01: no story-tagged implementation files
-- e89s02: no story-tagged implementation files
 - e89s03: no story-tagged implementation files
 - e89s04: no story-tagged implementation files
-- e89s05: no story-tagged implementation files
 - e89s06: no story-tagged implementation files
-- e89s07: no story-tagged implementation files
 
 ## Summary
 
-Stories: 16 covered / 110 dark / 126 total.
+Stories: 19 covered / 107 dark / 126 total.
