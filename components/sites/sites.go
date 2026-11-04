@@ -907,7 +907,7 @@ func (s *Sites) hasActiveDeployment(ctx context.Context, target siteDeleteTarget
 	err := s.db.QueryRowContext(ctx,
 		`SELECT COUNT(*) FROM deployments
 		 WHERE (site_id = ? OR (site_id = '' AND repo_id = ?))
-		 AND status IN ('pending', 'building', 'running')`,
+		 AND status IN ('pending', 'building', 'deploying', 'running')`,
 		target.ID, target.GitRepoID).Scan(&count)
 	if isMissingOptionalTable(err) {
 		return false, nil
