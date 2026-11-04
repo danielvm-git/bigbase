@@ -18,7 +18,7 @@ import (
 var ErrTransitionConflict = errors.New("deployment status changed concurrently")
 
 // ErrInvalidTransition is returned when a deployment attempts an illegal state change.
-var ErrInvalidTransition = errors.New("invalid deployment status transition")
+var ErrInvalidTransition = errors.New("invalid transition")
 
 const transitionMaxAttempts = 4
 
