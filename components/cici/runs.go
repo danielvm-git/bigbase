@@ -211,12 +211,21 @@ func (c *CICI) finishRun(ctx context.Context, runID string, status RunStatus) er
 	// terminal write so a timeout still records the failure.
 	writeCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 5*time.Second)
 	defer cancel()
-	if _, err := c.db.ExecContext(writeCtx,
-		"UPDATE cici_runs SET status = ?, finished_at = ? WHERE id = ?",
-		string(status), now, runID); err != nil {
+	res, err := c.db.ExecContext(writeCtx,
+		`UPDATE cici_runs SET status = ?, finished_at = ?
+		 WHERE id = ? AND status IN (?, ?, ?)`,
+		string(status), now, runID,
+		string(RunStatusQueued), string(RunStatusRunning), legacyPendingStatus)
+	if err != nil {
 		wrapped := fmt.Errorf("finish run %s: %w", runID, err)
 		c.logger.Error("finish run", "run_id", runID, "status", status, "error", wrapped)
 		return wrapped
+	}
+	if rows, _ := res.RowsAffected(); rows == 0 {
+		var currentStatus string
+		if qErr := c.db.QueryRowContext(writeCtx, "SELECT status FROM cici_runs WHERE id = ?", runID).Scan(&currentStatus); qErr == nil {
+			c.logger.Warn("finish run ignored: run is already terminal", "run_id", runID, "current_status", currentStatus, "attempted_status", status)
+		}
 	}
 	return nil
 }

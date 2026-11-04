@@ -63,3 +63,32 @@ func TestSitesMigrationConstExtracted(t *testing.T) {
 		t.Errorf("Start() does not reference the sitesMigration const; expected s.db.Migrate(sitesMigration)")
 	}
 }
+
+func TestIsDuplicateColumnError(t *testing.T) {
+	cases := []struct {
+		msg  string
+		want bool
+	}{
+		{"", false},
+		{"duplicate column name: cert_attempts", true},
+		{"column cert_attempts already exists", true},
+		{"pq: column \"cert_attempts\" of relation \"site_domains\" already exists", true},
+		{"syntax error at or near 'ALTER'", false},
+		{"connection refused", false},
+	}
+	for _, tc := range cases {
+		var err error
+		if tc.msg != "" {
+			err = &testMigrationErr{msg: tc.msg}
+		}
+		if got := isDuplicateColumnError(err); got != tc.want {
+			t.Errorf("isDuplicateColumnError(%q) = %v, want %v", tc.msg, got, tc.want)
+		}
+	}
+}
+
+type testMigrationErr struct {
+	msg string
+}
+
+func (e *testMigrationErr) Error() string { return e.msg }
