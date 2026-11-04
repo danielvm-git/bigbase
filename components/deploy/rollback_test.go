@@ -201,9 +201,10 @@ func TestRollbackSkipsInFlightDeployments(t *testing.T) {
 			t.Fatalf("insert %s: %v", id, err)
 		}
 	}
-	insert("dep-current", string(deploy.StateRunning), "2026-01-01T00:00:05Z")
-	insert("dep-deploying", string(deploy.StateDeploying), "2026-01-01T00:00:04Z")
-	insert("dep-draining", string(deploy.StateDraining), "2026-01-01T00:00:03Z")
+	insert("dep-current", string(deploy.StateRunning), "2026-01-01T00:00:06Z")
+	insert("dep-deploying", string(deploy.StateDeploying), "2026-01-01T00:00:05Z")
+	insert("dep-draining", string(deploy.StateDraining), "2026-01-01T00:00:04Z")
+	insert("dep-rolled-back", string(deploy.StateRolledBack), "2026-01-01T00:00:03Z")
 	insert("dep-stopped", string(deploy.StateStopped), "2026-01-01T00:00:02Z")
 	insert("dep-failed", string(deploy.StateFailed), "2026-01-01T00:00:01Z")
 
@@ -225,6 +226,7 @@ func TestRollbackSkipsInFlightDeployments(t *testing.T) {
 		t.Fatalf("rollback target = %q, want dep-stopped (in-flight rows must be skipped)", event.RolledBackFrom)
 	}
 	verifyDeploymentStatusRow(t, database, "dep-stopped", "running")
+	verifyDeploymentStatusRow(t, database, "dep-rolled-back", "rolled_back")
 	verifyDeploymentStatusRow(t, database, "dep-deploying", "deploying")
 	verifyDeploymentStatusRow(t, database, "dep-draining", "draining")
 }

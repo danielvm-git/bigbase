@@ -112,7 +112,6 @@ func TestStateAgeReportCoversNonTerminalStates(t *testing.T) {
 	}{
 		{"deployment", "pending", 600, 1, "dep-pending"},
 		{"deployment", "building", 2700, 1, "dep-building"},
-		{"deployment", "running", 7200, 1, "dep-running"},
 		{"deployment", "deploying", 0, 0, ""},
 		{"deployment", "draining", 0, 0, ""},
 		{"cici_run", "running", 1800, 1, "run-running"},
@@ -134,6 +133,9 @@ func TestStateAgeReportCoversNonTerminalStates(t *testing.T) {
 		}
 	}
 
+	if _, ok := findReading(report, "deployment", "running"); ok {
+		t.Error("running deployment state must not appear in the non-terminal report")
+	}
 	if _, ok := findReading(report, "deployment", "failed"); ok {
 		t.Error("terminal deployment state must not appear in the report")
 	}
@@ -144,10 +146,10 @@ func TestStateAgeReportCoversNonTerminalStates(t *testing.T) {
 	if report.Worst == nil {
 		t.Fatal("expected a worst offender")
 	}
-	if report.Worst.Machine != "deployment" || report.Worst.State != "running" {
-		t.Fatalf("worst = %s/%s, want deployment/running", report.Worst.Machine, report.Worst.State)
+	if report.Worst.Machine != "deployment" || report.Worst.State != "building" {
+		t.Fatalf("worst = %s/%s, want deployment/building", report.Worst.Machine, report.Worst.State)
 	}
-	if report.Worst.AgeSeconds != 7200 || report.Worst.OldestID != "dep-running" {
+	if report.Worst.AgeSeconds != 2700 || report.Worst.OldestID != "dep-building" {
 		t.Fatalf("worst reading = %+v", *report.Worst)
 	}
 }
@@ -203,7 +205,8 @@ func TestStateAgeMetricValue(t *testing.T) {
 		{"state_age_seconds", 2700, true},
 		{"deployment_state_age_seconds", 2700, true},
 		{"deployment_pending_age_seconds", 600, true},
-		{"deployment_running_age_seconds", 0, true},
+		{"deployment_draining_age_seconds", 0, true},
+		{"deployment_running_age_seconds", 0, false},
 		{"cici_run_state_age_seconds", 900, true},
 		{"cici_state_age_seconds", 900, true},
 		{"cici_run_queued_age_seconds", 900, true},

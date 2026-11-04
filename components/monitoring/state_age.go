@@ -19,7 +19,7 @@ var stateMachineSpecs = []stateMachineSpec{
 		Name:            "deployment",
 		Table:           "deployments",
 		TimestampColumn: "created_at",
-		States:          []string{"pending", "building", "deploying", "draining", "running"},
+		States:          []string{"pending", "building", "deploying", "draining"},
 	},
 	{
 		Name:            "cici_run",

@@ -111,6 +111,7 @@ func TestReconcileOrphanedDeployments(t *testing.T) {
 
 	seedDeployment(t, database, "stale-pending", "pending", 0, oldRFC3339)
 	seedDeployment(t, database, "stale-building", "building", 0, oldRFC3339)
+	seedDeployment(t, database, "stale-draining", "draining", 0, oldRFC3339)
 	// Mixed timestamp format — the legacy migration default uses SQLite's format.
 	seedDeployment(t, database, "stale-deploying", "deploying", 0, oldSQLite)
 	seedDeployment(t, database, "running-noport", "running", 0, oldRFC3339)
@@ -119,12 +120,13 @@ func TestReconcileOrphanedDeployments(t *testing.T) {
 	seedDeployment(t, database, "terminal-failed", "failed", 0, oldRFC3339)
 
 	got := d.reconcileOrphanedDeployments(context.Background())
-	if got != 5 {
-		t.Fatalf("reconciled = %d, want 5", got)
+	if got != 6 {
+		t.Fatalf("reconciled = %d, want 6", got)
 	}
 
 	assertFailedByReconciliation(t, readDeployment(t, database, "stale-pending"), "stale-pending", "pending")
 	assertFailedByReconciliation(t, readDeployment(t, database, "stale-building"), "stale-building", "building")
+	assertFailedByReconciliation(t, readDeployment(t, database, "stale-draining"), "stale-draining", "draining")
 	assertFailedByReconciliation(t, readDeployment(t, database, "stale-deploying"), "stale-deploying", "deploying")
 	assertFailedByReconciliation(t, readDeployment(t, database, "running-noport"), "running-noport", "running")
 	assertFailedByReconciliation(t, readDeployment(t, database, "running-nullport"), "running-nullport", "running")

@@ -658,10 +658,14 @@ func (d *Deploy) startApp(ctx context.Context, buildDir string, deploy *Deployme
 	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
 
 	// Reserved runtime values are owned by the platform and always win: the
-	// allocated port, the writable runtime directory, and the native DB
-	// connection. They are applied as the final resolution layer so neither a
-	// manifest value nor a secret can hijack them.
-	reserved := []string{fmt.Sprintf("PORT=%d", deploy.Port)}
+	// allocated port (injected as both PORT and SERVER_PORT for Spring Boot),
+	// the writable runtime directory, and the native DB connection.
+	// They are applied as the final resolution layer so neither a manifest
+	// value nor a secret can hijack them.
+	reserved := []string{
+		fmt.Sprintf("PORT=%d", deploy.Port),
+		fmt.Sprintf("SERVER_PORT=%d", deploy.Port),
+	}
 
 	// Create and inject writable persistent directory for runtime data.
 	writableDir := filepath.Join(d.buildsDir, "..", "writable", deploy.ID)

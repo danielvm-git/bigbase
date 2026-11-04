@@ -66,7 +66,7 @@ func TestBuildPHP(t *testing.T) {
 	if cmd != "composer" {
 		t.Errorf("PHPBuildCommand cmd = %q, want composer", cmd)
 	}
-	wantArgs := []string{"install", "--no-dev", "--optimize-autoloader"}
+	wantArgs := []string{"install", "--no-dev", "--optimize-autoloader", "--no-interaction"}
 	if strings.Join(args, " ") != strings.Join(wantArgs, " ") {
 		t.Errorf("PHPBuildCommand args = %v, want %v", args, wantArgs)
 	}
@@ -235,6 +235,23 @@ func TestRunJava(t *testing.T) {
 		}
 		if !foundJar {
 			t.Errorf("expected jar path in java args: %v", cmd.Args)
+		}
+	})
+
+	t.Run("skips plain jar", func(t *testing.T) {
+		dir := t.TempDir()
+		libsDir := filepath.Join(dir, "build", "libs")
+		_ = os.MkdirAll(libsDir, 0755)
+		_ = os.WriteFile(filepath.Join(libsDir, "app-0.0.1-plain.jar"), []byte("PK"), 0644)
+		_ = os.WriteFile(filepath.Join(libsDir, "app-0.0.1.jar"), []byte("PK"), 0644)
+
+		cmd := JavaStartCommand(context.Background(), dir)
+		if cmd == nil {
+			t.Fatal("expected non-nil cmd from JavaStartCommand")
+		}
+		wantJar := filepath.Join(libsDir, "app-0.0.1.jar")
+		if cmd.Args[2] != wantJar {
+			t.Errorf("got %s, want %s (must skip -plain.jar)", cmd.Args[2], wantJar)
 		}
 	})
 }
