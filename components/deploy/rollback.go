@@ -54,9 +54,9 @@ func (d *Deploy) Rollback(ctx context.Context, currentID string) (*RollbackEvent
 	}
 
 	// Fetch the most recent successful deployment for the same site.
-	// "Successful" excludes failed builds and every in-flight state
-	// (pending, building, deploying, draining) — the exclusion list comes from
-	// the state machine so it cannot drift (#304).
+	// "Successful" excludes failed builds, previously rolled-back deployments, and every
+	// in-flight state (pending, building, deploying, draining) — the exclusion list
+	// comes from the state machine so it cannot drift (#304).
 	type prevRow struct {
 		id, status, appType, url, passthroughJSON, commitSHA string
 		port                                                 int
@@ -65,10 +65,10 @@ func (d *Deploy) Rollback(ctx context.Context, currentID string) (*RollbackEvent
 	placeholders := strings.TrimSuffix(strings.Repeat("?,", len(excluded)), ",")
 	query := `SELECT id, status, port, app_type, COALESCE(url,''), COALESCE(passthrough_paths,''), COALESCE(commit_sha,'')
 		 FROM deployments
-		 WHERE site_id = ? AND id != ? AND status != ? AND status NOT IN (` + placeholders + `)
+		 WHERE site_id = ? AND id != ? AND status NOT IN (?, ?, ` + placeholders + `)
 		 ORDER BY created_at DESC LIMIT 1`
-	args := make([]any, 0, 3+len(excluded))
-	args = append(args, currentSiteID, currentID, string(StateFailed))
+	args := make([]any, 0, 4+len(excluded))
+	args = append(args, currentSiteID, currentID, string(StateFailed), string(StateRolledBack))
 	for _, status := range excluded {
 		args = append(args, status)
 	}

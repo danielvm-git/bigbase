@@ -39,7 +39,7 @@ func (d *Deploy) reconcileOrphanedDeployments(ctx context.Context) int {
 	rows, err := d.db.QueryContext(ctx,
 		`SELECT id, status, COALESCE(created_at, ''), COALESCE(port, 0)
 		 FROM deployments
-		 WHERE status IN ('pending', 'building', 'deploying')
+		 WHERE status IN ('pending', 'building', 'deploying', 'draining')
 		    OR (status = 'running' AND COALESCE(port, 0) <= 0)`)
 	if err != nil {
 		d.logger.Warn("reconcile orphaned deployments: query", "error", err)

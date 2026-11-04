@@ -114,7 +114,7 @@ func rustBinaryPath(dir string) string {
 
 // PHPBuildCommand returns the command and arguments for installing PHP dependencies.
 func PHPBuildCommand(dir string) (string, []string) {
-	return "composer", []string{"install", "--no-dev", "--optimize-autoloader"}
+	return "composer", []string{"install", "--no-dev", "--optimize-autoloader", "--no-interaction"}
 }
 
 // PHPStartCommand returns the exec.Cmd for running PHP with the built-in web server.
@@ -156,7 +156,8 @@ func javaJarPath(dir string) string {
 		for _, e := range entries {
 			if !e.IsDir() && strings.HasSuffix(e.Name(), ".jar") &&
 				!strings.HasSuffix(e.Name(), "-sources.jar") &&
-				!strings.HasSuffix(e.Name(), "-javadoc.jar") {
+				!strings.HasSuffix(e.Name(), "-javadoc.jar") &&
+				!strings.HasSuffix(e.Name(), "-plain.jar") {
 				return filepath.Join(targetDir, e.Name())
 			}
 		}
@@ -166,7 +167,8 @@ func javaJarPath(dir string) string {
 		for _, e := range entries {
 			if !e.IsDir() && strings.HasSuffix(e.Name(), ".jar") &&
 				!strings.HasSuffix(e.Name(), "-sources.jar") &&
-				!strings.HasSuffix(e.Name(), "-javadoc.jar") {
+				!strings.HasSuffix(e.Name(), "-javadoc.jar") &&
+				!strings.HasSuffix(e.Name(), "-plain.jar") {
 				return filepath.Join(buildLibsDir, e.Name())
 			}
 		}
