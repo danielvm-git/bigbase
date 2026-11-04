@@ -11,7 +11,7 @@ func TestStateMachineValidTransitions(t *testing.T) {
 		from     DeploymentState
 		expected []DeploymentState
 	}{
-		{StatePending, []DeploymentState{StateBuilding}},
+		{StatePending, []DeploymentState{StateBuilding, StateFailed}},
 		{StateBuilding, []DeploymentState{StateDeploying, StateRunning, StateFailed}},
 		{StateDeploying, []DeploymentState{StateRunning, StateFailed}},
 		{StateRunning, []DeploymentState{StateFailed, StateRolledBack, StateDraining}},
@@ -40,6 +40,7 @@ func TestStateMachineCanTransition(t *testing.T) {
 
 	valid := []struct{ from, to string }{
 		{"pending", "building"},
+		{"pending", "failed"},
 		{"building", "deploying"},
 		{"building", "running"},
 		{"building", "failed"},
@@ -62,7 +63,6 @@ func TestStateMachineCanTransition(t *testing.T) {
 	invalid := []struct{ from, to string }{
 		{"pending", "running"},
 		{"pending", "deploying"},
-		{"pending", "failed"},
 		{"running", "building"},
 		{"running", "deploying"},
 		{"running", "pending"},

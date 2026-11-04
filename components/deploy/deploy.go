@@ -121,6 +121,7 @@ type Deploy struct {
 	diagnosisReader     DeployDiagnosisReader
 	relatedEventsReader DeployRelatedEventsReader
 	envResolver         *EnvResolver
+	reconcileStaleAfter time.Duration
 }
 
 var _ kernel.Component = (*Deploy)(nil)
@@ -157,6 +158,9 @@ type Options struct {
 	DBDriver string
 	// DBDSN is the platform database connection string passed to deployed apps.
 	DBDSN string
+	// ReconcileStaleAfter is how old an in-flight deployment (pending/building/
+	// deploying) must be before boot reconciliation marks it failed. Default: 30m.
+	ReconcileStaleAfter time.Duration
 }
 
 func New(opts Options) *Deploy {
@@ -197,6 +201,10 @@ func New(opts Options) *Deploy {
 	if drainTimeout <= 0 {
 		drainTimeout = 30 * time.Second
 	}
+	reconcileStaleAfter := opts.ReconcileStaleAfter
+	if reconcileStaleAfter <= 0 {
+		reconcileStaleAfter = defaultReconcileStaleAfter
+	}
 	d := &Deploy{
 		db:             opts.DB,
 		logger:         logger,
@@ -217,6 +225,7 @@ func New(opts Options) *Deploy {
 		dbDriver:       opts.DBDriver,
 		dbDSN:          opts.DBDSN,
 	}
+	d.reconcileStaleAfter = reconcileStaleAfter
 	if len(envKey) > 0 {
 		d.envKey = append([]byte(nil), envKey...)
 	}
@@ -345,6 +354,10 @@ func (d *Deploy) Start(ctx *kernel.Context) error {
 		return fmt.Errorf("migrate deploy_cache_config table: %w", err)
 	}
 	d.loadCacheConfig()
+	// Heal rows orphaned by a previous process before restoring routes or
+	// resuming candidates. Boot is the safe point: every in-flight row belongs
+	// to a process that no longer exists.
+	d.reconcileOrphanedDeployments(context.Background())
 	d.restoreRunningDeploymentHosts()
 	candidates := d.loadResumeCandidates()
 	d.logger.Info("deploy component ready", "dir", d.buildsDir, "resume", len(candidates))

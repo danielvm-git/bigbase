@@ -36,7 +36,9 @@ type StateMachine struct {
 func NewStateMachine() *StateMachine {
 	return &StateMachine{
 		valid: map[string][]string{
-			string(StatePending):    {string(StateBuilding)},
+			// pending → failed is used by boot reconciliation: a process restart
+			// can orphan a row before the build goroutine ever runs.
+			string(StatePending):    {string(StateBuilding), string(StateFailed)},
 			string(StateBuilding):   {string(StateDeploying), string(StateRunning), string(StateFailed)},
 			string(StateDeploying):  {string(StateRunning), string(StateFailed)},
 			string(StateRunning):    {string(StateFailed), string(StateRolledBack), string(StateDraining)},
