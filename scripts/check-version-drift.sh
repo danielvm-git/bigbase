@@ -102,6 +102,16 @@ for f in README.md CONTRIBUTING.md CLAUDE.md GEMINI.md AGENTS.md; do
   fi
 done
 
+# ── README version badge must be dynamic ──────────────────────────────────────
+# The release bot bumps VERSION/CHANGELOG, not README. A literal
+# `badge/version-X.Y.Z` silently drifts (it read 2.89.0 while VERSION was
+# 2.92.2). Require the dynamic GitHub release badge instead.
+if [[ -f README.md ]] && grep -qE 'badge/version-[0-9]+\.[0-9]+\.[0-9]+' README.md; then
+  fail "README.md hardcodes a version badge (use shields github/v/release)"
+else
+  ok "README.md version badge is dynamic"
+fi
+
 # ── Result ────────────────────────────────────────────────────────────────────
 echo ""
 if [[ "$FAILED" == "true" ]]; then

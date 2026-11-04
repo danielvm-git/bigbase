@@ -2,7 +2,7 @@
 
 [![Site](https://img.shields.io/badge/Site-bigbase.click-4f46e5)](https://bigbase.click)
 ![License](https://img.shields.io/badge/License-MIT-yellow.svg)
-![Version](https://img.shields.io/badge/version-2.89.0-blue.svg)
+[![Version](https://img.shields.io/github/v/release/danielvm-git/bigbase?label=version&color=blue)](https://github.com/danielvm-git/bigbase/releases)
 ![Go](https://img.shields.io/badge/Go-1.26.3-00ADD8?logo=go)
 
 > Single-binary, component-based BaaS platform using Entity-Component-Construct (ECC) architecture.

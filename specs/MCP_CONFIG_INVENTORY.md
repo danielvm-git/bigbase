@@ -4,6 +4,14 @@
 **Root:** repository-relative paths only
 **Status:** credentials use `${CONTEXT7_API_KEY}`; local MCP packages are pinned
 
+> **Canonical source:** `.mcp.json` is the single source of truth for the server
+> list. `opencode.jsonc` is generated from it by `scripts/gen-mcp-configs.sh`
+> (CI fails on drift via `--check`); `.claude/mcp.json` and `.cursor/mcp.json`
+> are local-only generated copies (gitignored). When adding or removing a
+> server, update `.mcp.json` first, run the generator, then mirror the change
+> into the remaining tracked adapters (`.agents/`, `.vscode/`, `.pi/`,
+> `opencode.json`). Never add `@latest` — pin every npx-spawned package.
+
 ---
 
 ## Summary
