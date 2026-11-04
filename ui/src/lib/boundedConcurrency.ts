@@ -16,15 +16,22 @@ export async function mapWithConcurrency<T, R>(
   limit: number,
   task: (item: T, index: number) => Promise<R>,
 ): Promise<R[]> {
+  if (items.length === 0) return []
   const results = new Array<R>(items.length)
   const workerCount = Math.max(1, Math.min(limit, items.length))
   let next = 0
+  let aborted = false
 
   const worker = async (): Promise<void> => {
-    while (next < items.length) {
+    while (!aborted && next < items.length) {
       const index = next
       next += 1
-      results[index] = await task(items[index], index)
+      try {
+        results[index] = await task(items[index], index)
+      } catch (err) {
+        aborted = true
+        throw err
+      }
     }
   }
 

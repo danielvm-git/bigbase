@@ -215,8 +215,16 @@ export function SiteEnvVarsTab({ siteId, id }: { siteId: string; id?: string }) 
   const handleImportFile = async (file: File) => {
     setImporting(true); setImportError(null)
     const text = await file.text()
-    const pairs = parseEnvFile(text)
-    if (pairs.length === 0) { setImportError('No valid KEY=value pairs found'); setImporting(false); return }
+    const rawPairs = parseEnvFile(text)
+    if (rawPairs.length === 0) { setImportError('No valid KEY=value pairs found'); setImporting(false); return }
+
+    // Deduplicate parsed pairs so duplicate keys in a single file take the last
+    // value (standard .env precedence) and don't trigger concurrent create races.
+    const dedupedMap = new Map<string, string>()
+    for (const { key, value } of rawPairs) {
+      dedupedMap.set(key, value)
+    }
+    const pairs = Array.from(dedupedMap.entries()).map(([key, value]) => ({ key, value }))
 
     const existingKeys = new Set(envVars.map(e => e.key))
     const overlapping = pairs.filter(p => existingKeys.has(p.key)).map(p => p.key)

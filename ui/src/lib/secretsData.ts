@@ -241,8 +241,16 @@ export async function importEnvSecrets(
   text: string,
   existingKeys: ReadonlySet<string>,
 ): Promise<ImportSecretsResult> {
-  const pairs = parseEnvFile(text)
+  const rawPairs = parseEnvFile(text)
   const result: ImportSecretsResult = { created: 0, updated: 0, failedKeys: [], skipped: 0 }
+
+  // Deduplicate parsed pairs so duplicate keys in a single file take the last
+  // value (standard .env precedence) and don't trigger concurrent create races.
+  const dedupedMap = new Map<string, string>()
+  for (const { key, value } of rawPairs) {
+    dedupedMap.set(key, value)
+  }
+  const pairs = Array.from(dedupedMap.entries()).map(([key, value]) => ({ key, value }))
 
   const bounded = pairs.slice(0, MAX_SECRET_BATCH_KEYS)
   result.skipped = Math.max(0, pairs.length - MAX_SECRET_BATCH_KEYS)

@@ -304,4 +304,22 @@ describe('importEnvSecrets (bounded concurrency)', () => {
     expect(result.failedKeys).toEqual(['Z_INVALID', 'A_1', 'a_bad', 'B_1'])
     expect(result.created).toBe(0)
   })
+
+  it('deduplicates duplicate keys keeping the last value', async () => {
+    const writtenValues: Record<string, string> = {}
+    stubFetch(async (_url, init) => {
+      const body = JSON.parse(String(init?.body ?? '{}')) as { key?: string; value?: string }
+      if (body.key && body.value) {
+        writtenValues[body.key] = body.value
+      }
+      return jsonResponse({ data: metaFixture(body.key ?? 'key') })
+    })
+
+    const text = ['FOO_VAR=first', 'BAR_VAR=only', 'FOO_VAR=second'].join('\n')
+    const result = await importEnvSecrets('p1', 'e1', text, new Set())
+
+    expect(result.created).toBe(2)
+    expect(writtenValues.FOO_VAR).toBe('second')
+    expect(writtenValues.BAR_VAR).toBe('only')
+  })
 })
