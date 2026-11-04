@@ -22,9 +22,13 @@ type StatusTransition struct {
 }
 
 // StateMachine defines valid transitions between deployment states.
-// 'running' is the terminal state (kept to avoid changing 5 SQL queries
-// that all use WHERE status = 'running'). 'deploying' is the only new,
-// transitional state (building → deploying → running for process apps).
+//
+// 'running' is a stable state (kept to avoid changing the 5 SQL queries that
+// all use WHERE status = 'running'); the deployment is healthy and serving.
+// 'deploying' is a transitional state (building → deploying → running for
+// process apps). 'stopped' is a stable terminal state for the build pipeline,
+// but it is deliberately revivable via stopped → running: rollback restores a
+// previously drained deployment (see components/deploy/rollback.go).
 type StateMachine struct {
 	valid map[string][]string
 }
@@ -70,4 +74,52 @@ func (sm *StateMachine) ValidTransitions(from string) []string {
 func (sm *StateMachine) IsValidState(status string) bool {
 	_, ok := sm.valid[status]
 	return ok
+}
+
+// IsActive reports whether the deployment is live or in flight, so a site
+// delete must wait for it: pending, building, deploying, draining, running.
+func (sm *StateMachine) IsActive(status string) bool {
+	return sm.isOneOf(status, StatePending, StateBuilding, StateDeploying, StateDraining, StateRunning)
+}
+
+// IsTerminal reports whether the build/start pipeline has finished: running,
+// stopped, failed, rolled_back. A terminal deployment still has lifecycle
+// transitions (drain, rollback), but no further build work is expected.
+func (sm *StateMachine) IsTerminal(status string) bool {
+	return sm.isOneOf(status, StateRunning, StateStopped, StateFailed, StateRolledBack)
+}
+
+// IsInFlight reports whether the deployment is transient work — a build,
+// deploy, or drain currently in progress — that must not be deleted or chosen
+// as a rollback target.
+func (sm *StateMachine) IsInFlight(status string) bool {
+	return sm.isOneOf(status, StatePending, StateBuilding, StateDeploying, StateDraining)
+}
+
+// InFlightStatuses returns the statuses for which IsInFlight is true. Callers
+// that filter in SQL (rollback target selection) derive their exclusion list
+// from here so the sets cannot drift.
+func (sm *StateMachine) InFlightStatuses() []string {
+	return []string{
+		string(StatePending),
+		string(StateBuilding),
+		string(StateDeploying),
+		string(StateDraining),
+	}
+}
+
+// CanDelete reports whether a deployment may be deleted now. In-flight rows
+// must finish first; running is deletable because the delete path stops it
+// before removing the row. Unknown/legacy statuses remain deletable.
+func (sm *StateMachine) CanDelete(status string) bool {
+	return !sm.IsInFlight(status)
+}
+
+func (sm *StateMachine) isOneOf(status string, states ...DeploymentState) bool {
+	for _, s := range states {
+		if status == string(s) {
+			return true
+		}
+	}
+	return false
 }

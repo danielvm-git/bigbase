@@ -902,13 +902,36 @@ func (s *Sites) siteDeleteTarget(ctx context.Context, id string) (siteDeleteTarg
 	return target, err
 }
 
+// activeDeploymentStatuses mirrors deploy.StateMachine.IsActive (#304). The
+// sites component deliberately does not import components/deploy — they are
+// wired together by the composition root — so this allow-list is the one
+// intentional duplication; TestActiveDeploymentStatusesMatchDeployPredicate
+// fails if it drifts.
+var activeDeploymentStatuses = []string{"pending", "building", "deploying", "draining", "running"}
+
+// IsActiveDeploymentStatus reports whether a deployment in this status should
+// block deleting its site.
+func IsActiveDeploymentStatus(status string) bool {
+	for _, s := range activeDeploymentStatuses {
+		if status == s {
+			return true
+		}
+	}
+	return false
+}
+
 func (s *Sites) hasActiveDeployment(ctx context.Context, target siteDeleteTarget) (bool, error) {
-	var count int
-	err := s.db.QueryRowContext(ctx,
-		`SELECT COUNT(*) FROM deployments
+	placeholders := strings.TrimSuffix(strings.Repeat("?,", len(activeDeploymentStatuses)), ",")
+	query := `SELECT COUNT(*) FROM deployments
 		 WHERE (site_id = ? OR (site_id = '' AND repo_id = ?))
-		 AND status IN ('pending', 'building', 'deploying', 'running')`,
-		target.ID, target.GitRepoID).Scan(&count)
+		 AND status IN (` + placeholders + `)`
+	args := make([]any, 0, 2+len(activeDeploymentStatuses))
+	args = append(args, target.ID, target.GitRepoID)
+	for _, status := range activeDeploymentStatuses {
+		args = append(args, status)
+	}
+	var count int
+	err := s.db.QueryRowContext(ctx, query, args...).Scan(&count)
 	if isMissingOptionalTable(err) {
 		return false, nil
 	}

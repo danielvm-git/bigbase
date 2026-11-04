@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"strings"
+	"sync"
 	"testing"
 
 	"github.com/danielvm/bigbase/components/db"
@@ -101,8 +102,9 @@ func TestTransitionStateIdempotent(t *testing.T) {
 }
 
 func TestTransitionStateLenientMode(t *testing.T) {
-	// Lenient mode: if current status is unknown to state machine, allow the transition.
-	// This prevents blocking deployments with legacy statuses (e.g., "replaced" from stopDeployment).
+	// Lenient mode exists only for legacy rows that still carry a status the
+	// state machine no longer declares (e.g. "replaced" written by older
+	// builds). Normal flows write only declared DeploymentStates (#303).
 	dep, _, database, gitDir := setupDeploy(t)
 	repoID := createTestRepo(t, database, "repo-ts4", gitDir)
 
@@ -123,6 +125,81 @@ func TestTransitionStateLenientMode(t *testing.T) {
 
 	verifyStatus(t, database, depID, "running")
 	verifyStatusHistory(t, database, depID, 1)
+}
+
+func TestConcurrentTransitionSingleTerminalOutcome(t *testing.T) {
+	// #302: competing transitions must not both write. failed and rolled_back
+	// are both reachable from running but neither allows an outgoing transition,
+	// so exactly one can win and the loser must report a deterministic error.
+	dep, _, database, gitDir := setupDeploy(t)
+	repoID := createTestRepo(t, database, "repo-ts-race", gitDir)
+
+	depID := "dep-ts-race"
+	_, err := database.ExecContext(context.Background(),
+		`INSERT INTO deployments (id, repo_id, site_id, status, url, port, app_type)
+		 VALUES (?, ?, '', 'running', '', 0, '')`, depID, repoID)
+	if err != nil {
+		t.Fatalf("insert deployment: %v", err)
+	}
+
+	ctx := context.Background()
+	targets := []string{string(deploy.StateFailed), string(deploy.StateRolledBack)}
+
+	var (
+		wg      sync.WaitGroup
+		start   = make(chan struct{})
+		errs    = make([]error, len(targets))
+		mu      sync.Mutex
+		results = make([]string, 0, len(targets))
+	)
+	for i, target := range targets {
+		wg.Add(1)
+		go func(i int, target string) {
+			defer wg.Done()
+			<-start
+			err := dep.TransitionState(ctx, depID, target)
+			mu.Lock()
+			errs[i] = err
+			results = append(results, target)
+			mu.Unlock()
+		}(i, target)
+	}
+	close(start)
+	wg.Wait()
+
+	successes := 0
+	for i, err := range errs {
+		if err == nil {
+			successes++
+		} else if !strings.Contains(err.Error(), "invalid transition") &&
+			!strings.Contains(err.Error(), "changed concurrently") {
+			t.Errorf("loser %d returned non-deterministic error: %v", i, err)
+		}
+	}
+	if successes != 1 {
+		t.Fatalf("successful transitions = %d, want exactly 1 (errs: %v)", successes, errs)
+	}
+
+	var final string
+	if err := database.QueryRowContext(ctx,
+		"SELECT status FROM deployments WHERE id = ?", depID).Scan(&final); err != nil {
+		t.Fatalf("query final status: %v", err)
+	}
+	if final != string(deploy.StateFailed) && final != string(deploy.StateRolledBack) {
+		t.Fatalf("final status = %q, want a single terminal outcome", final)
+	}
+
+	// Only the winning transition may append history.
+	verifyStatusHistory(t, database, depID, 1)
+}
+
+func TestTransitionStateNotFound(t *testing.T) {
+	dep, _, _, _ := setupDeploy(t)
+
+	err := dep.TransitionState(context.Background(), "missing-deployment", string(deploy.StateBuilding))
+	if err == nil {
+		t.Fatal("expected error for missing deployment")
+	}
 }
 
 func TestTransitionStateStatusHistoryPersistence(t *testing.T) {

@@ -286,12 +286,12 @@ func (d *Deploy) handleDeleteDeployment(w http.ResponseWriter, r *http.Request, 
 		kernel.WriteJSON(w, http.StatusNotFound, map[string]string{"error": "deployment not found"})
 		return
 	}
-	if status == "pending" || status == "building" || status == "deploying" {
+	if !d.sm.CanDelete(status) {
 		kernel.WriteJSON(w, http.StatusConflict, map[string]string{"error": "deployment is in progress — wait or trigger a new deploy"})
 		return
 	}
 
-	d.stopDeployment(id, "replaced")
+	d.stopDeployment(id, string(StateStopped))
 
 	_ = os.RemoveAll(filepath.Join(d.buildsDir, cleanID))
 	d.deleteDeployLogs(id)

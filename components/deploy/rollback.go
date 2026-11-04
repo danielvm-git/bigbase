@@ -2,7 +2,6 @@ package deploy
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -54,19 +53,27 @@ func (d *Deploy) Rollback(ctx context.Context, currentID string) (*RollbackEvent
 		return nil, fmt.Errorf("can only rollback a running deployment (current status: %s)", currentStatus)
 	}
 
-	// Fetch previous successful deployment for the same site
-	// Exclude current, failed, pending, and building deployments.
+	// Fetch the most recent successful deployment for the same site.
+	// "Successful" excludes failed builds and every in-flight state
+	// (pending, building, deploying, draining) — the exclusion list comes from
+	// the state machine so it cannot drift (#304).
 	type prevRow struct {
 		id, status, appType, url, passthroughJSON, commitSHA string
 		port                                                 int
 	}
-	var prev prevRow
-	err = d.db.QueryRowContext(ctx,
-		`SELECT id, status, port, app_type, COALESCE(url,''), COALESCE(passthrough_paths,''), COALESCE(commit_sha,'')
+	excluded := d.sm.InFlightStatuses()
+	placeholders := strings.TrimSuffix(strings.Repeat("?,", len(excluded)), ",")
+	query := `SELECT id, status, port, app_type, COALESCE(url,''), COALESCE(passthrough_paths,''), COALESCE(commit_sha,'')
 		 FROM deployments
-		 WHERE site_id = ? AND id != ? AND status NOT IN ('failed', 'pending', 'building')
-		 ORDER BY created_at DESC LIMIT 1`,
-		currentSiteID, currentID).Scan(&prev.id, &prev.status, &prev.port, &prev.appType, &prev.url, &prev.passthroughJSON, &prev.commitSHA)
+		 WHERE site_id = ? AND id != ? AND status != ? AND status NOT IN (` + placeholders + `)
+		 ORDER BY created_at DESC LIMIT 1`
+	args := make([]any, 0, 3+len(excluded))
+	args = append(args, currentSiteID, currentID, string(StateFailed))
+	for _, status := range excluded {
+		args = append(args, status)
+	}
+	var prev prevRow
+	err = d.db.QueryRowContext(ctx, query, args...).Scan(&prev.id, &prev.status, &prev.port, &prev.appType, &prev.url, &prev.passthroughJSON, &prev.commitSHA)
 	if err != nil {
 		return nil, fmt.Errorf("no previous successful deployment found for site %s", currentSiteID)
 	}
@@ -81,11 +88,10 @@ func (d *Deploy) Rollback(ctx context.Context, currentID string) (*RollbackEvent
 	d.stopDeploymentWithTransition(ctx, currentID, string(StateRolledBack))
 	d.appendDeployLog(currentID, fmt.Sprintf("→ Rolled back — replacing with deployment %s", prev.id[:min(8, len(prev.id))]))
 
-	// Update the old deployment's status to running (it was in "replaced" state)
-	// Use updateStatus which calls TransitionState — this works because
-	// TransitionState has lenient mode for unknown statuses like "replaced".
+	// Restore the old deployment through the state machine. A drained
+	// deployment is stopped; stopped → running is the documented rollback
+	// transition (see StateMachine), so no lenient/unknown-state path is used.
 	d.updateStatus(prev.id, string(StateRunning))
-	d.updateStatusHistory(ctx, prev.id, prev.status, string(StateRunning))
 	d.appendDeployLog(prev.id, "→ Rolled back — deployment restored as live")
 
 	// Re-register the host with the old deployment's port
@@ -204,36 +210,6 @@ func (d *Deploy) stopDeploymentWithTransition(ctx context.Context, id, newStatus
 	if newStatus != "" {
 		_ = d.TransitionState(ctx, id, newStatus)
 	}
-}
-
-// updateStatusHistory appends a transition record to the deployment's
-// status_history JSON without going through TransitionState validation.
-// Used for rollback where the status change crosses states not in the
-// state machine (e.g., "replaced" → "running").
-func (d *Deploy) updateStatusHistory(ctx context.Context, id, from, to string) {
-	var current string
-	if err := d.db.QueryRowContext(ctx,
-		"SELECT status_history FROM deployments WHERE id = ?", id).Scan(&current); err != nil {
-		return
-	}
-	if current == "" {
-		current = "[]"
-	}
-	var history []StatusTransition
-	if err := json.Unmarshal([]byte(current), &history); err != nil {
-		history = nil
-	}
-	history = append(history, StatusTransition{
-		From:      from,
-		To:        to,
-		Timestamp: time.Now().UTC().Format(time.RFC3339),
-	})
-	data, err := json.Marshal(history)
-	if err != nil {
-		return
-	}
-	_, _ = d.db.ExecContext(ctx,
-		"UPDATE deployments SET status_history = ? WHERE id = ?", string(data), id)
 }
 
 // handleRollbackEvents returns all rollback events for a site.
