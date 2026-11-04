@@ -48,6 +48,34 @@
       "maturity": "planned",
       "recommended_for": "Python web apps (Flask, FastAPI)",
       "caveats": "Coming soon"
+    },
+    {
+      "name": "rust",
+      "display": "Rust",
+      "maturity": "full",
+      "recommended_for": "Rust web servers and APIs",
+      "caveats": "Requires cargo build"
+    },
+    {
+      "name": "php",
+      "display": "PHP",
+      "maturity": "full",
+      "recommended_for": "PHP web apps and APIs",
+      "caveats": "Composer dependencies"
+    },
+    {
+      "name": "java",
+      "display": "Java",
+      "maturity": "full",
+      "recommended_for": "Java web apps (Spring Boot, Maven, Gradle)",
+      "caveats": "Requires Java runtime"
+    },
+    {
+      "name": "ruby",
+      "display": "Ruby",
+      "maturity": "full",
+      "recommended_for": "Ruby web apps (Sinatra, Rails, Rack)",
+      "caveats": "Requires Bundler"
     }
   ]
 }

@@ -86,6 +86,10 @@ var validFrameworks = map[string]bool{
 	"go":             true,
 	"python":         true,
 	"node":           true,
+	"php":            true,
+	"rust":           true,
+	"java":           true,
+	"ruby":           true,
 }
 
 // manifestToAppType converts a manifest framework string to an AppType.
@@ -97,6 +101,14 @@ func manifestToAppType(m *Manifest) AppType {
 		return AppGo
 	case "python":
 		return AppPython
+	case "php":
+		return AppPHP
+	case "rust":
+		return AppRust
+	case "java":
+		return AppJava
+	case "ruby":
+		return AppRuby
 	case "static":
 		return AppStatic
 	case "static-sidecar":
