@@ -2,11 +2,19 @@ package deploy_test
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"path/filepath"
 	"testing"
 	"time"
+
+	"github.com/danielvm/bigbase/components/db"
+	"github.com/danielvm/bigbase/components/deploy"
+	"github.com/danielvm/bigbase/components/git"
+	"github.com/danielvm/bigbase/kernel"
 )
 
 func TestRollbackStaticSite(t *testing.T) {
@@ -154,6 +162,82 @@ func TestRollbackNotFound(t *testing.T) {
 	handler.ServeHTTP(w, req)
 	if w.Code != http.StatusNotFound {
 		t.Fatalf("expected 404 for nonexistent deployment, got %d: %s", w.Code, w.Body.String())
+	}
+}
+
+// TestRollbackSkipsInFlightDeployments is the #304 regression: an in-flight
+// deployment (deploying / draining) must never be chosen as the "previous
+// successful" rollback target, even when it is the most recent row.
+func TestRollbackSkipsInFlightDeployments(t *testing.T) {
+	logger := testLogger{}
+	k := kernel.New(logger)
+	database := db.New(db.Options{Path: ":memory:", Logger: logger})
+	buildsDir := t.TempDir()
+
+	dep := deploy.New(deploy.Options{
+		DB:        database,
+		Logger:    logger,
+		BuildsDir: buildsDir,
+		GitDir:    t.TempDir(),
+	})
+	gitDir := t.TempDir()
+	gitComp := git.New(git.Options{DB: database, Logger: logger, Dir: gitDir})
+	k.Register(database)
+	k.Register(gitComp)
+	k.Register(dep)
+	if err := k.Start(); err != nil {
+		t.Fatalf("kernel start: %v", err)
+	}
+	t.Cleanup(func() { _ = k.Stop() })
+
+	const siteID = "site-rollback-filter"
+	insert := func(id, status, createdAt string) {
+		t.Helper()
+		_, err := database.ExecContext(context.Background(),
+			`INSERT INTO deployments (id, repo_id, site_id, status, port, app_type, created_at)
+			 VALUES (?, 'repo-rf', ?, ?, 0, 'static', ?)`,
+			id, siteID, status, createdAt)
+		if err != nil {
+			t.Fatalf("insert %s: %v", id, err)
+		}
+	}
+	insert("dep-current", string(deploy.StateRunning), "2026-01-01T00:00:05Z")
+	insert("dep-deploying", string(deploy.StateDeploying), "2026-01-01T00:00:04Z")
+	insert("dep-draining", string(deploy.StateDraining), "2026-01-01T00:00:03Z")
+	insert("dep-stopped", string(deploy.StateStopped), "2026-01-01T00:00:02Z")
+	insert("dep-failed", string(deploy.StateFailed), "2026-01-01T00:00:01Z")
+
+	// The stopped deployment is the only successful candidate and needs
+	// on-disk artifacts for rollback to restore it.
+	distDir := filepath.Join(buildsDir, "dep-stopped", "dist")
+	if err := os.MkdirAll(distDir, 0755); err != nil {
+		t.Fatalf("create dist dir: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(distDir, "index.html"), []byte("<h1>old</h1>"), 0644); err != nil {
+		t.Fatalf("write index.html: %v", err)
+	}
+
+	event, err := dep.Rollback(context.Background(), "dep-current")
+	if err != nil {
+		t.Fatalf("rollback: %v", err)
+	}
+	if event.RolledBackFrom != "dep-stopped" {
+		t.Fatalf("rollback target = %q, want dep-stopped (in-flight rows must be skipped)", event.RolledBackFrom)
+	}
+	verifyDeploymentStatusRow(t, database, "dep-stopped", "running")
+	verifyDeploymentStatusRow(t, database, "dep-deploying", "deploying")
+	verifyDeploymentStatusRow(t, database, "dep-draining", "draining")
+}
+
+func verifyDeploymentStatusRow(t *testing.T, database *db.DB, id, want string) {
+	t.Helper()
+	var status string
+	if err := database.QueryRowContext(context.Background(),
+		"SELECT status FROM deployments WHERE id = ?", id).Scan(&status); err != nil {
+		t.Fatalf("query status for %s: %v", id, err)
+	}
+	if status != want {
+		t.Fatalf("deployment %s status = %q, want %q", id, status, want)
 	}
 }
 

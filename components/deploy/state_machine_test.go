@@ -114,6 +114,74 @@ func TestStatusTransitionStruct(t *testing.T) {
 	}
 }
 
+func TestStateMachineIsActive(t *testing.T) {
+	sm := NewStateMachine()
+
+	// Active = live or in-flight. A site delete must wait for these.
+	active := []string{"pending", "building", "deploying", "draining", "running"}
+	for _, s := range active {
+		if !sm.IsActive(s) {
+			t.Errorf("IsActive(%s) = false, want true", s)
+		}
+	}
+
+	for _, s := range []string{"stopped", "failed", "rolled_back", "", "unknown", "replaced"} {
+		if sm.IsActive(s) {
+			t.Errorf("IsActive(%s) = true, want false", s)
+		}
+	}
+}
+
+func TestStateMachineIsTerminal(t *testing.T) {
+	sm := NewStateMachine()
+
+	// Terminal = the build/start pipeline has finished. No automatic build
+	// transition is expected, though rollback may revive a stopped deployment.
+	for _, s := range []string{"running", "stopped", "failed", "rolled_back"} {
+		if !sm.IsTerminal(s) {
+			t.Errorf("IsTerminal(%s) = false, want true", s)
+		}
+	}
+
+	for _, s := range []string{"pending", "building", "deploying", "draining", "", "unknown"} {
+		if sm.IsTerminal(s) {
+			t.Errorf("IsTerminal(%s) = true, want false", s)
+		}
+	}
+}
+
+func TestStateMachineCanDelete(t *testing.T) {
+	sm := NewStateMachine()
+
+	// In-flight deployments cannot be deleted out from under the engine.
+	for _, s := range []string{"pending", "building", "deploying", "draining"} {
+		if sm.CanDelete(s) {
+			t.Errorf("CanDelete(%s) = true, want false", s)
+		}
+	}
+
+	// Running is deletable because the delete path stops it first; finished
+	// states are always deletable; unknown legacy rows stay deletable.
+	for _, s := range []string{"running", "stopped", "failed", "rolled_back", "", "replaced"} {
+		if !sm.CanDelete(s) {
+			t.Errorf("CanDelete(%s) = false, want true", s)
+		}
+	}
+}
+
+func TestStateMachineStoppedIsRevivable(t *testing.T) {
+	sm := NewStateMachine()
+
+	// e45 declared stopped terminal, but rollback (TestRollbackStaticSite)
+	// restores a drained deployment, so stopped → running is intentional.
+	if !sm.CanTransition("stopped", "running") {
+		t.Error("CanTransition(stopped, running) = false, want true (rollback relies on it)")
+	}
+	if !sm.IsTerminal("stopped") {
+		t.Error("IsTerminal(stopped) = false, want true (build pipeline is complete)")
+	}
+}
+
 func TestStateConstants(t *testing.T) {
 	if StatePending != "pending" {
 		t.Errorf("StatePending = %s, want pending", StatePending)

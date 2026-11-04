@@ -386,7 +386,7 @@ func TestDeleteSiteNotFound(t *testing.T) {
 }
 
 func TestDeleteSiteActiveDeploymentConflict(t *testing.T) {
-	for _, status := range []string{"pending", "building", "deploying", "running"} {
+	for _, status := range []string{"pending", "building", "deploying", "draining", "running"} {
 		t.Run(status, func(t *testing.T) {
 			d, h := setupSitesDeleteTest(t)
 			createSiteDeleteSupportTables(t, d)
@@ -406,6 +406,43 @@ func TestDeleteSiteActiveDeploymentConflict(t *testing.T) {
 				t.Fatalf("site should remain, got %d rows", got)
 			}
 		})
+	}
+}
+
+func TestDeleteSiteInactiveDeploymentAllowed(t *testing.T) {
+	for _, status := range []string{"stopped", "failed", "rolled_back"} {
+		t.Run(status, func(t *testing.T) {
+			d, h := setupSitesDeleteTest(t)
+			createSiteDeleteSupportTables(t, d)
+			seedSiteForDelete(t, d, "site-"+status, "repo-"+status)
+			_, _ = d.ExecContext(context.Background(),
+				`INSERT INTO deployments (id, site_id, repo_id, status) VALUES (?, ?, ?, ?)`,
+				"dep-"+status, "site-"+status, "repo-"+status, status)
+
+			req := authedRequestSite(http.MethodDelete, "/api/sites/site-"+status, nil)
+			w := httptest.NewRecorder()
+			h.ServeHTTP(w, req)
+
+			if w.Code != http.StatusNoContent {
+				t.Fatalf("expected 204 for inactive %s, got %d: %s", status, w.Code, w.Body.String())
+			}
+		})
+	}
+}
+
+// TestActiveDeploymentStatusesMatchDeployPredicate guards the deliberate
+// duplication in sites (no components/deploy import) against drift from the
+// authoritative deploy.StateMachine.IsActive predicate (#304).
+func TestActiveDeploymentStatusesMatchDeployPredicate(t *testing.T) {
+	sm := deploy.NewStateMachine()
+	for _, candidate := range []string{
+		"pending", "building", "deploying", "draining", "running",
+		"stopped", "failed", "rolled_back",
+	} {
+		if sites.IsActiveDeploymentStatus(candidate) != sm.IsActive(candidate) {
+			t.Errorf("IsActiveDeploymentStatus(%q) = %v, deploy.IsActive = %v",
+				candidate, sites.IsActiveDeploymentStatus(candidate), sm.IsActive(candidate))
+		}
 	}
 }
 

@@ -1518,6 +1518,16 @@ func TestDeleteDeployment(t *testing.T) {
 		}
 	})
 
+	t.Run("409 on draining deployment", func(t *testing.T) {
+		insertDeployment(t, database, "dep-draining", "draining", buildsDir)
+		req := httptest.NewRequest("DELETE", "/api/deploy/dep-draining", nil)
+		w := httptest.NewRecorder()
+		handler.ServeHTTP(w, req)
+		if w.Code != http.StatusConflict {
+			t.Fatalf("expected 409, got %d: %s", w.Code, w.Body.String())
+		}
+	})
+
 	t.Run("204 deletes failed deployment", func(t *testing.T) {
 		insertDeployment(t, database, "dep-failed", "failed", buildsDir)
 		req := httptest.NewRequest("DELETE", "/api/deploy/dep-failed", nil)
