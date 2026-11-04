@@ -82,28 +82,26 @@ export default function CreateSitePage() {
   }, [logError])
   /* eslint-enable react-hooks/set-state-in-effect */
 
-  const loadGitHub = async () => {
-    setGhLoading(true)
-    setGhReposError('')
-    const st = await getGitHubStatus()
-    setGhConnected(st.data.connected)
-    setGhConfigured(st.data.configured)
-    setGhLogin(st.data.login)
-    setPreviewMode(p => p || st.previewMode)
-    const repos = await getGitHubRepos()
-    setGhRepos(repos.data)
-    setGhReposError(repos.error ?? '')
-    setPreviewMode(p => p || repos.previewMode)
-    setGhLoading(false)
-  }
-
   useEffect(() => {
     const init = async () => {
       const force = isPreviewForced()
       setPreviewMode(force)
-      await loadGitHub()
-      const local = await getGitRepos()
+      setGhLoading(true)
+      setGhReposError('')
+      const [st, repos, local] = await Promise.all([
+        getGitHubStatus(),
+        getGitHubRepos(),
+        getGitRepos(),
+      ])
+      setGhConnected(st.data.connected)
+      setGhConfigured(st.data.configured)
+      setGhLogin(st.data.login)
+      setPreviewMode(p => p || st.previewMode)
+      setGhRepos(repos.data)
+      setGhReposError(repos.error ?? '')
+      setPreviewMode(p => p || repos.previewMode)
       setLocalRepos(local.data)
+      setGhLoading(false)
       if (preRepo) {
         const r = local.data.find(x => x.id === preRepo)
         if (r) {
