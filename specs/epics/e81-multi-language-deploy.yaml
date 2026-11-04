@@ -31,7 +31,7 @@ stories:
   - id: e81s01
     title: "Rust runtime support"
     depends_on: [e81s00]
-    status: open
+    status: done
     tasks:
       - desc: "Detect Cargo.toml in repo root"
         verify: "go test ./components/deploy/ -run TestDetectRust -v"
@@ -45,7 +45,7 @@ stories:
   - id: e81s02
     title: "PHP runtime support"
     depends_on: [e81s00]
-    status: open
+    status: done
     tasks:
       - desc: "Detect composer.json in repo root"
         verify: "go test ./components/deploy/ -run TestDetectPHP -v"
@@ -59,7 +59,7 @@ stories:
   - id: e81s03
     title: "Java runtime support"
     depends_on: [e81s00]
-    status: open
+    status: done
     tasks:
       - desc: "Detect pom.xml or build.gradle in repo root"
         verify: "go test ./components/deploy/ -run TestDetectJava -v"
@@ -73,7 +73,7 @@ stories:
   - id: e81s04
     title: "Ruby runtime support"
     depends_on: [e81s00]
-    status: open
+    status: done
     tasks:
       - desc: "Detect Gemfile in repo root"
         verify: "go test ./components/deploy/ -run TestDetectRuby -v"
@@ -87,7 +87,7 @@ stories:
   - id: e81s05
     title: "Deploy profiles & bigbase.toml for new runtimes"
     depends_on: [e81s01, e81s02, e81s03, e81s04]
-    status: open
+    status: done
     tasks:
       - desc: "Add rust/php/java/ruby to AllAppTypes()"
         verify: "go test ./components/deploy/ -run TestAllAppTypes -v"
@@ -99,7 +99,7 @@ stories:
   - id: e81s06
     title: "Security regression tests — bug registry gaps"
     depends_on: []
-    status: open
+    status: done
     note: "6 regression test gaps from bug registry (2026-07-12 audit). Code guards exist but no tests to prevent reintroduction."
     tasks:
       - desc: "Path traversal regression test — verify filepath.Clean + containment in engine.go, gateway.go, git.go reject ../ patterns"

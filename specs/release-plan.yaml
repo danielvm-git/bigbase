@@ -708,12 +708,22 @@ epics:
   note: "6 stories (incl. e81s00 infra). Extends Deploy with 4 new runtimes + profiles + CI templates. Ships in Wave 1."
   file: epics/e81-multi-language-deploy.yaml
 
+- id: e83
+  title: "MCP Tools — Site-Scoped Environment Variables"
+  wsjf: 7.0
+  mode: flat
+  tier: 1
+  status: done
+  depends_on: [e41, e38]
+  note: "1 story, 3 BCPs. MCP tools for site-scoped env var CRUD with key validation and value masking. SHIPPED on integration/3.1.0."
+  file: epics/e83-mcp-env-var-tools.yaml
+
 - id: e84
   title: "Per-Site CSP Configuration (Issue #197)"
   wsjf: 6.0
   mode: capsule
   tier: 2
-  status: open
+  status: done
   depends_on: []
   note: "3 stories, 8 BCPs. Makes CSP configurable per deployed site via DeployDefaults and bigbase.toml [security] section."
   capsule_dir: epics/e84-per-site-csp
@@ -735,7 +745,7 @@ epics:
   wsjf: 3.2
   mode: capsule
   tier: 2
-  status: open
+  status: done
   depends_on: [e14, e39]
   note: "4 stories, 12 BCPs. SSE live log streaming, keyset pagination (replaces LIMIT 100), org_id isolation (closes cross-tenant log leak), deploy-component auto-ingestion via event bus. Deltas: ADDED streaming+ingestion, MODIFIED pagination+org scope. WSJF 3.2 = (7+3+6)/5."
   capsule_dir: epics/e86-monitoring-logs
@@ -762,3 +772,13 @@ epics:
   note: "3 stories, 8 BCPs. SHIPPED 2026-08-11. Per-theme brandLink >=7:1 for all 13 accent themes (7.10-9.93:1), CONFORMANCE.md formal exceptions (1.4.8 partial + 2.2.3 security), re-certified: matrix 13/13 PASS, axe 17/17 zero violations, UI 709/709. Final claim: AA certified; AAA except documented partials. Archived to epics/archive/."
   capsule_dir: epics/archive/e88-aaa-closing
   file: epics/archive/e88-aaa-closing/epic.yaml
+
+- id: e90
+  title: "Dev-Environment Hardening — Config Consolidation, CI Gaps, Tooling Debt"
+  wsjf: 9.0
+  mode: flat
+  tier: 1
+  status: open
+  depends_on: [e89]
+  note: "Dev-environment hardening: config consolidation, CI gates, MCP configs, single source agent docs."
+  file: epics/e90-dev-environment-hardening.yaml

@@ -4,7 +4,7 @@ id: e83
 title: "MCP Tools — Site-Scoped Environment Variables"
 wsjf: 7.0
 wsjf_rationale: "BV=8(blocks CI/CD automation for env var management via MCP) TC=3(no urgent deadline) RR=7(unblocks fully automated deploy pipelines for encrypted-health-data apps) / JS=2(~1 day across 1 story)"
-status: open
+status: done
 tier: 1
 depends_on: [e41, e38]
 covers:
@@ -15,7 +15,7 @@ covers:
 stories:
   - id: e83s01
     title: "MCP tools for site-scoped env var CRUD"
-    status: open
+    status: done
     bcps: 3
     tasks:
       - desc: "Add SiteEnvVarManager interface and adapter"

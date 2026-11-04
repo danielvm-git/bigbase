@@ -4,7 +4,7 @@ id: e46
 title: "Infra — Custom Domains & Auto SSL"
 wsjf: 4.5
 wsjf_rationale: "BV=8(high: production apps need myapp.com not myapp.bigbase.click — this is table stakes for a BaaS) TC=5(blocks making BigBase a primary hosting platform) RR=5(auto Let's Encrypt removes manual SSL management) / JS=4(~3 days across 3 stories)"
-status: in_progress
+status: done
 follow_ups:
   - 306  # cert_status=provisioning has no timeout/refresh path
 tier: 5
