@@ -1,1 +1,25 @@
-{}
+{
+  "_comment": "Single source of truth for gosec. package.json preflight:go and preflight:secscan both pass -conf .gosec.json. Do NOT re-add -exclude on the command line: it overrides this list.",
+  "global": {
+    "exclude": "G104,G115,G404,G702,G703,G704,G112,G114,G118,G120,G124,G204,G301,G304,G306,G705,G710"
+  },
+  "_rationale": {
+    "G104": "Unhandled errors — reviewed by go vet and explicit error handling; errcheck noise.",
+    "G115": "Integer conversion overflow — conversions are bounded by validated input.",
+    "G404": "Weak random (math/rand) — used for non-cryptographic jitter/IDs only; secrets use crypto/rand.",
+    "G702": "Tainted command injection — deploy component executes user-declared build commands by design.",
+    "G703": "Tainted path — deploy/storage paths are validated against their configured roots.",
+    "G704": "SSRF — outbound targets come from operator-configured deploy settings, not request input.",
+    "G112": "Slowloris — timeouts are configured at the proxy/http.Server layer.",
+    "G114": "net/http server without timeouts — server construction sets Read/Write/Idle timeouts.",
+    "G118": "Goroutine context/cancel — long-lived workers intentionally use a background context.",
+    "G120": "Decompression bomb — upload/archive size limits are enforced before decompression.",
+    "G124": "Insecure TLS options — self-signed/insecure mode is opt-in for local development only.",
+    "G204": "Subprocess with variable — deploy runner executes declared commands; args are passed as a slice, not a shell string.",
+    "G301": "File permission > 0750 — storage directories are intentionally group-readable.",
+    "G304": "File path from variable — storage paths are validated and confined to the data root.",
+    "G306": "File permission > 0600 — generated config/docs are intentionally world-readable (0644).",
+    "G705": "XSS via tainted data — React escapes by default; no dangerouslySetInnerHTML on tainted input.",
+    "G710": "Open redirect — redirect targets are validated/allowlisted."
+  }
+}

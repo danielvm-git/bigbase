@@ -370,6 +370,13 @@ jobs:
       - name: Lockfile sync guard (root)
         run: npm ci --ignore-scripts
 
+      # UI lockfile guard: `npm ci --dry-run` validates ui/package-lock.json
+      # against ui/package.json without installing anything (same
+      # @ctxo/plugin-api drift class; --legacy-peer-deps mirrors test-ui).
+      - name: Lockfile sync guard (UI)
+        working-directory: ui
+        run: npm ci --dry-run --ignore-scripts --legacy-peer-deps
+
       # Tests already ran in test-sqlite + test-postgres (both in this job's
       # needs), so verify does NOT re-run the suite — it runs vet + gosec only.
       - name: Go security scan (vet, gosec)
