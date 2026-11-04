@@ -322,9 +322,12 @@ export default function SiteDetailPage() {
 
   const load = useCallback(async () => {
     setLoading(true)
+    // One site request per load: the deployments lookup reuses this in-flight
+    // promise instead of issuing its own GET /api/sites/:id on every poll.
+    const sitePromise = getSite(siteId)
     const [s, d, evRes] = await Promise.all([
-      getSite(siteId),
-      getSiteDeployments(siteId),
+      sitePromise,
+      getSiteDeployments(siteId, sitePromise),
       getRollbackEvents(siteId),
     ])
     setSite(s.data)

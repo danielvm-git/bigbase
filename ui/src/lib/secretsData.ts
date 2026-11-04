@@ -1,3 +1,4 @@
+import { IMPORT_CONCURRENCY_LIMIT, mapWithConcurrency } from './boundedConcurrency'
 import type {
   Project,
   ProjectEnvironment,
@@ -246,23 +247,31 @@ export async function importEnvSecrets(
   const bounded = pairs.slice(0, MAX_SECRET_BATCH_KEYS)
   result.skipped = Math.max(0, pairs.length - MAX_SECRET_BATCH_KEYS)
 
-  for (const pair of bounded) {
-    // Client-side validation mirrors the server bounds so invalid keys are
-    // reported by name without issuing a write or echoing the value.
-    if (!isValidSecretKey(pair.key) || pair.value.length > MAX_SECRET_VALUE_BYTES) {
-      result.failedKeys.push(pair.key)
-      continue
-    }
-    const res = existingKeys.has(pair.key)
-      ? await updateSecret(projectId, envId, pair.key, { value: pair.value })
-      : await createSecret(projectId, envId, { key: pair.key, value: pair.value })
-    if (!res.ok) {
-      result.failedKeys.push(pair.key)
-      continue
-    }
-    if (existingKeys.has(pair.key)) result.updated += 1
+  // Writes run with bounded concurrency (issue #309); results are collected by
+  // input index so failures are reported in .env order, not completion order.
+  const outcomes = await mapWithConcurrency(
+    bounded,
+    IMPORT_CONCURRENCY_LIMIT,
+    async (pair): Promise<'created' | 'updated' | 'failed'> => {
+      // Client-side validation mirrors the server bounds so invalid keys are
+      // reported by name without issuing a write or echoing the value.
+      if (!isValidSecretKey(pair.key) || pair.value.length > MAX_SECRET_VALUE_BYTES) {
+        return 'failed'
+      }
+      const res = existingKeys.has(pair.key)
+        ? await updateSecret(projectId, envId, pair.key, { value: pair.value })
+        : await createSecret(projectId, envId, { key: pair.key, value: pair.value })
+      if (!res.ok) return 'failed'
+      return existingKeys.has(pair.key) ? 'updated' : 'created'
+    },
+  )
+
+  bounded.forEach((pair, index) => {
+    const outcome = outcomes[index]
+    if (outcome === 'failed') result.failedKeys.push(pair.key)
+    else if (outcome === 'updated') result.updated += 1
     else result.created += 1
-  }
+  })
 
   return result
 }
