@@ -240,9 +240,15 @@ func (s *Sites) Start(ctx *kernel.Context) error {
 	if err := s.db.Migrate(sitesMigration); err != nil {
 		return fmt.Errorf("migrate sites: %w", err)
 	}
-	_ = s.db.Migrate(`ALTER TABLE sites ADD COLUMN auth_policy TEXT NOT NULL DEFAULT '{}'`)
-	_ = s.db.Migrate(`ALTER TABLE sites ADD COLUMN org_id INTEGER NOT NULL DEFAULT 0`)
-	_ = s.db.Migrate(`ALTER TABLE sites ADD COLUMN project_id TEXT REFERENCES projects(id)`)
+	for _, stmt := range []string{
+		`ALTER TABLE sites ADD COLUMN auth_policy TEXT NOT NULL DEFAULT '{}'`,
+		`ALTER TABLE sites ADD COLUMN org_id INTEGER NOT NULL DEFAULT 0`,
+		`ALTER TABLE sites ADD COLUMN project_id TEXT REFERENCES projects(id)`,
+	} {
+		if err := s.db.Migrate(stmt); err != nil && !isDuplicateColumnError(err) {
+			return fmt.Errorf("migrate sites column: %w", err)
+		}
+	}
 	_ = s.db.Migrate(`CREATE INDEX IF NOT EXISTS idx_sites_project_id ON sites(project_id)`)
 	// Reassign orphaned sites (org_id=0 from the DEFAULT) to the admin's
 	// default_org_id so they become visible under org-scoped queries.
@@ -265,9 +271,24 @@ func (s *Sites) Start(ctx *kernel.Context) error {
 			return fmt.Errorf("migrate site project attachments: %w", err)
 		}
 	}
-	_ = s.db.Migrate(`ALTER TABLE sites ADD COLUMN deploy_defaults TEXT NOT NULL DEFAULT '{}'`)
+	if err := s.db.Migrate(`ALTER TABLE sites ADD COLUMN deploy_defaults TEXT NOT NULL DEFAULT '{}'`); err != nil && !isDuplicateColumnError(err) {
+		return fmt.Errorf("migrate sites deploy_defaults: %w", err)
+	}
 	s.logger.Info("sites component ready")
 	return nil
+}
+
+// isDuplicateColumnError matches SQLite ("duplicate column name") and
+// PostgreSQL ("column ... already exists") migration noise.
+func isDuplicateColumnError(err error) bool {
+	if err == nil {
+		return false
+	}
+	msg := strings.ToLower(err.Error())
+	if strings.Contains(msg, "duplicate column") {
+		return true
+	}
+	return strings.Contains(msg, "column") && strings.Contains(msg, "already exists")
 }
 
 func (s *Sites) Stop(ctx *kernel.Context) error {

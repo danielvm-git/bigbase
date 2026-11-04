@@ -67,6 +67,31 @@ func TestFinishRunRejectsNonTerminalStatus(t *testing.T) {
 	}
 }
 
+func TestFinishRunDoesNotOverwriteTerminalStatus(t *testing.T) {
+	c, d := newTestCICI(t)
+
+	now := time.Now().UTC().Format(time.RFC3339)
+	if _, err := d.ExecContext(context.Background(),
+		"INSERT INTO cici_runs (id, workflow_id, event, status, started_at, finished_at) VALUES (?, ?, ?, ?, ?, ?)",
+		"r-terminal", "wf-1", "manual", "failure", now, now); err != nil {
+		t.Fatalf("seed terminal run: %v", err)
+	}
+
+	// finishRun attempting to mark success on an already-terminal failed run
+	if err := c.finishRun(context.Background(), "r-terminal", RunStatusSuccess); err != nil {
+		t.Fatalf("finishRun on terminal run returned error: %v", err)
+	}
+
+	var status string
+	if err := d.QueryRowContext(context.Background(),
+		"SELECT status FROM cici_runs WHERE id = ?", "r-terminal").Scan(&status); err != nil {
+		t.Fatalf("query run: %v", err)
+	}
+	if status != string(RunStatusFailure) {
+		t.Fatalf("status = %q, want %q (must not overwrite terminal status)", status, RunStatusFailure)
+	}
+}
+
 func TestFinishRunSurfacesDBErrors(t *testing.T) {
 	c, d := newTestCICI(t)
 

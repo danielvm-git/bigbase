@@ -119,8 +119,8 @@ func (s *Sites) migrateDomains() error {
 		return err
 	}
 	// Persisted certificate attempt metadata. ALTER TABLE ADD COLUMN is not
-	// idempotent, so each statement is attempted and its duplicate-column error
-	// ignored — the same pattern used for other column additions in sites.go.
+	// idempotent, so each statement is attempted and duplicate-column errors
+	// ignored. Any unexpected database failure is returned wrapped.
 	// The DDL is deliberately dialect-neutral (TEXT / INTEGER, no datetime('now')
 	// defaults) so it also applies cleanly on PostgreSQL.
 	for _, stmt := range []string{
@@ -130,7 +130,9 @@ func (s *Sites) migrateDomains() error {
 		`ALTER TABLE site_domains ADD COLUMN cert_last_error TEXT NOT NULL DEFAULT ''`,
 		`ALTER TABLE site_domains ADD COLUMN cert_retry_after TEXT`,
 	} {
-		_ = s.db.Migrate(stmt)
+		if err := s.db.Migrate(stmt); err != nil && !isDuplicateColumnError(err) {
+			return fmt.Errorf("migrate site_domains column: %w", err)
+		}
 	}
 	return nil
 }
