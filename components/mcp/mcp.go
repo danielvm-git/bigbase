@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"regexp"
 	"strings"
 
 	"github.com/BurntSushi/toml"
@@ -18,6 +19,13 @@ import (
 )
 
 const version = "0.1.0"
+
+// siteEnvKeyPattern mirrors the site env var key contract enforced by the sites
+// component. Keys are validated at the MCP boundary so writes fail with an
+// actionable message before reaching storage.
+var siteEnvKeyPattern = regexp.MustCompile(`^[A-Z][A-Z0-9_]*$`)
+
+const maxSiteEnvKeyLen = 128
 
 // DeploymentResult is the MCP-facing deploy trigger result (no deploy import).
 type DeploymentResult struct {
@@ -1148,6 +1156,9 @@ Port is set via ` + "`PORT`" + ` env var. Database is SQLite by default.
 		}
 		vars := make(map[string]string, len(varsMap))
 		for k, v := range varsMap {
+			if len(k) > maxSiteEnvKeyLen || !siteEnvKeyPattern.MatchString(k) {
+				return textResult(fmt.Sprintf("invalid env var key %q: keys must match ^[A-Z][A-Z0-9_]*$", k)), nil, nil
+			}
 			vars[k] = fmt.Sprintf("%v", v)
 		}
 		result, err := c.siteEnvVarManager.SetSiteEnvVars(ctx, siteID, vars)
@@ -1180,6 +1191,9 @@ Port is set via ` + "`PORT`" + ` env var. Database is SQLite by default.
 		key, _ := args["key"].(string)
 		if key == "" {
 			return textResult("key is required. Use get_site_env_vars to see available keys."), nil, nil
+		}
+		if len(key) > maxSiteEnvKeyLen || !siteEnvKeyPattern.MatchString(key) {
+			return textResult(fmt.Sprintf("invalid env var key %q: keys must match ^[A-Z][A-Z0-9_]*$", key)), nil, nil
 		}
 		if err := c.siteEnvVarManager.DeleteSiteEnvVar(ctx, siteID, key); err != nil {
 			return textResult(safeSiteEnvError(err)), nil, nil
