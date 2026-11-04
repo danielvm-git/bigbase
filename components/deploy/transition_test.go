@@ -3,6 +3,7 @@ package deploy_test
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"strings"
 	"sync"
 	"testing"
@@ -67,8 +68,8 @@ func TestTransitionStateInvalidRejected(t *testing.T) {
 	if err == nil {
 		t.Fatalf("pending → running should be invalid, but got nil")
 	}
-	if !strings.Contains(err.Error(), "invalid transition") {
-		t.Errorf("error should mention invalid transition, got: %v", err)
+	if !errors.Is(err, deploy.ErrInvalidTransition) {
+		t.Errorf("expected ErrInvalidTransition, got: %v", err)
 	}
 
 	// Status unchanged after rejected transition

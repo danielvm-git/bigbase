@@ -17,6 +17,9 @@ import (
 // was exhausted.
 var ErrTransitionConflict = errors.New("deployment status changed concurrently")
 
+// ErrInvalidTransition is returned when a deployment attempts an illegal state change.
+var ErrInvalidTransition = errors.New("invalid deployment status transition")
+
 const transitionMaxAttempts = 4
 
 // TransitionState applies a validated state transition atomically.
@@ -54,7 +57,7 @@ func (d *Deploy) TransitionState(ctx context.Context, id, newStatus string) erro
 				"id", id, "from", current, "to", newStatus)
 		} else if !d.sm.CanTransition(current, newStatus) {
 			allowed := d.sm.ValidTransitions(current)
-			return fmt.Errorf("invalid transition: %s → %s (allowed: %v)", current, newStatus, allowed)
+			return fmt.Errorf("%w: %s → %s (allowed: %v)", ErrInvalidTransition, current, newStatus, allowed)
 		}
 
 		// Snapshot build_log for finished states so a concurrent reader never
@@ -158,8 +161,10 @@ func (d *Deploy) appendStatusHistory(ctx context.Context, id string, tr StatusTr
 	if err != nil {
 		return
 	}
-	_, _ = d.db.ExecContext(ctx,
-		"UPDATE deployments SET status_history = ? WHERE id = ?", string(data), id)
+	if _, err := d.db.ExecContext(ctx,
+		"UPDATE deployments SET status_history = ? WHERE id = ?", string(data), id); err != nil {
+		d.logger.Warn("append status history failed", "deployment_id", id, "error", err)
+	}
 }
 func (d *Deploy) updateStatus(id, status string) {
 	_ = d.TransitionState(context.Background(), id, status)
