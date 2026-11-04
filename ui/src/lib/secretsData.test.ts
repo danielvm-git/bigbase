@@ -11,6 +11,7 @@ import {
   readSecretValue,
   updateSecret,
 } from './secretsData'
+import { IMPORT_CONCURRENCY_LIMIT } from './boundedConcurrency'
 import type { SecretMetadata, SecretValue } from '../types/secrets'
 
 function jsonResponse(body: unknown, status = 200): Response {
@@ -241,5 +242,66 @@ describe('importEnvSecrets (safe .env import)', () => {
     expect(result.created).toBe(0)
     // The value characters never appear anywhere in the report.
     expect(result.failedKeys.join(' ')).not.toMatch(/[12]/)
+  })
+})
+
+describe('importEnvSecrets (bounded concurrency)', () => {
+  afterEach(() => vi.unstubAllGlobals())
+
+  it('caps concurrent writes at the configured import limit', async () => {
+    let inFlight = 0
+    let maxInFlight = 0
+    stubFetch(async () => {
+      inFlight += 1
+      maxInFlight = Math.max(maxInFlight, inFlight)
+      await new Promise(resolve => setTimeout(resolve, 5))
+      inFlight -= 1
+      return jsonResponse({ data: metaFixture('K') })
+    })
+
+    const keys = Array.from({ length: 12 }, (_, i) => `KEY_${i}`)
+    const result = await importEnvSecrets('p1', 'e1', keys.map(k => `${k}=v`).join('\n'), new Set())
+
+    expect(result.created).toBe(12)
+    expect(maxInFlight).toBe(IMPORT_CONCURRENCY_LIMIT)
+    expect(maxInFlight).toBeLessThanOrEqual(IMPORT_CONCURRENCY_LIMIT)
+  })
+
+  it('reports per-key failures in input order even when writes complete out of order', async () => {
+    const failing = new Set(['KEY_1', 'KEY_4', 'KEY_7'])
+    stubFetch(async (url) => {
+      const key = decodeURIComponent(String(url).split('/').pop() ?? '')
+      const index = Number(key.slice('KEY_'.length))
+      // Earlier keys finish later, so completion order is reversed.
+      await new Promise(resolve => setTimeout(resolve, (10 - index) * 2))
+      if (failing.has(key)) return jsonResponse({ error: 'boom' }, 500)
+      return jsonResponse({ data: metaFixture(key) })
+    })
+
+    const keys = Array.from({ length: 10 }, (_, i) => `KEY_${i}`)
+    const result = await importEnvSecrets(
+      'p1',
+      'e1',
+      keys.map(k => `${k}=v`).join('\n'),
+      new Set(keys),
+    )
+
+    expect(result.updated).toBe(7)
+    expect(result.created).toBe(0)
+    expect(result.failedKeys).toEqual(['KEY_1', 'KEY_4', 'KEY_7'])
+  })
+
+  it('keeps client-side invalid keys in order alongside API failures', async () => {
+    stubFetch(async () => {
+      await new Promise(resolve => setTimeout(resolve, 5))
+      return jsonResponse({ error: 'boom' }, 500)
+    })
+
+    const text = ['Z_INVALID=1', 'A_1=ok', 'a_bad=x', 'B_1=ok2'].join('\n')
+    const result = await importEnvSecrets('p1', 'e1', text, new Set())
+
+    // The invalid key is reported without a write; API failures stay in .env order.
+    expect(result.failedKeys).toEqual(['Z_INVALID', 'A_1', 'a_bad', 'B_1'])
+    expect(result.created).toBe(0)
   })
 })

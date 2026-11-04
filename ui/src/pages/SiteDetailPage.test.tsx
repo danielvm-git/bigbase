@@ -73,6 +73,23 @@ describe('SiteDetailPage', () => {
     })
   })
 
+  it('fetches the site once per load and shares it with the deployments request', async () => {
+    renderPage()
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: 'My Site' })).toBeInTheDocument()
+    })
+
+    expect(getSiteMock).toHaveBeenCalledTimes(1)
+    expect(getSiteDeploymentsMock).toHaveBeenCalledTimes(1)
+
+    // The page hands the in-flight site result to getSiteDeployments so the
+    // deployments lookup does not issue a duplicate GET /api/sites/:id.
+    const deployedArgs = getSiteDeploymentsMock.mock.calls[0]
+    expect(deployedArgs[0]).toBe('site-1')
+    expect(deployedArgs[1]).toBeDefined()
+    await expect(deployedArgs[1]).resolves.toEqual({ data: mockSite, previewMode: false })
+  })
+
   it('loads site, deployments and rollback events concurrently', async () => {
     // All three resources are independent. If the page awaits them one by one,
     // the first promise never sees the other two start, so startedAtRelease

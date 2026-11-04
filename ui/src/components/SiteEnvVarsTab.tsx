@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { Button, Card } from '.'
 import { getEnvVars, createEnvVar, updateEnvVar, deleteEnvVar } from '../lib/sitesData'
+import { IMPORT_CONCURRENCY_LIMIT, mapWithConcurrency } from '../lib/boundedConcurrency'
 import type { EnvVar } from '../types/sites'
 
 const KEY_RE = /^[A-Z][A-Z0-9_]*$/
@@ -225,17 +226,19 @@ export function SiteEnvVarsTab({ siteId, id }: { siteId: string; id?: string }) 
       }
     }
 
-    // F04: collect per-item errors and report aggregate
-    const errors: string[] = []
-    for (const { key, value } of pairs) {
-      let res: { ok: boolean; error?: string }
-      if (existingKeys.has(key)) {
-        res = await updateEnvVar(siteId, key, { value, is_build_time: false, is_runtime: true })
-      } else {
-        res = await createEnvVar(siteId, { key, value, is_build_time: false, is_runtime: true })
-      }
-      if (!res.ok) errors.push(`${key}: ${res.error ?? 'failed'}`)
-    }
+    // F04: collect per-item errors and report aggregate. Writes run with bounded
+    // concurrency (issue #309); results keep .env order for a stable report.
+    const outcomes = await mapWithConcurrency(
+      pairs,
+      IMPORT_CONCURRENCY_LIMIT,
+      async ({ key, value }): Promise<string | null> => {
+        const res = existingKeys.has(key)
+          ? await updateEnvVar(siteId, key, { value, is_build_time: false, is_runtime: true })
+          : await createEnvVar(siteId, { key, value, is_build_time: false, is_runtime: true })
+        return res.ok ? null : `${key}: ${res.error ?? 'failed'}`
+      },
+    )
+    const errors = outcomes.filter((error): error is string => error !== null)
     setImporting(false)
     if (errors.length > 0) {
       setImportError(`${errors.length} var(s) failed to import:\n${errors.join('\n')}`)

@@ -106,12 +106,35 @@ export async function getSite(siteId: string): Promise<SitesDataResult<Site | nu
   return { data: found ?? null, previewMode: all.previewMode }
 }
 
-export async function getSiteDeployments(siteId: string): Promise<SitesDataResult<Deployment[]>> {
+/**
+ * A site lookup the caller already started. SiteDetailPage fetches the site and
+ * deployments in parallel, so passing the in-flight promise avoids the duplicate
+ * `GET /api/sites/:id` that the 2s deploy poll used to issue (issue #307).
+ */
+export type PrefetchedSite =
+  | SitesDataResult<Site | null>
+  | Promise<SitesDataResult<Site | null>>
+
+async function resolveSiteRepoId(
+  siteId: string,
+  prefetchedSite?: PrefetchedSite,
+): Promise<string> {
+  if (prefetchedSite) {
+    const site = await prefetchedSite
+    return site.data?.git_repo_id ?? siteId
+  }
+  const site = await getSite(siteId)
+  return site.data?.git_repo_id ?? siteId
+}
+
+export async function getSiteDeployments(
+  siteId: string,
+  prefetchedSite?: PrefetchedSite,
+): Promise<SitesDataResult<Deployment[]>> {
   if (isPreviewForced()) {
     return { data: mockDeployments, previewMode: true }
   }
-  const site = await getSite(siteId)
-  const repoId = site.data?.git_repo_id ?? siteId
+  const repoId = await resolveSiteRepoId(siteId, prefetchedSite)
   const { ok, data } = await fetchJSON<{ data: Deployment[] }>('/api/deploy')
   if (!ok) {
     return { data: isPreviewForced() ? mockDeployments : [], previewMode: true }
