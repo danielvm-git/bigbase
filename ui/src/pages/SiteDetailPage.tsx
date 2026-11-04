@@ -320,22 +320,22 @@ export default function SiteDetailPage() {
     { id: 'manifest', label: 'Manifest' },
   ]
 
-  const load = useCallback(async () => {
-    setLoading(true)
+  const load = useCallback(async (isBackground = false) => {
+    if (!isBackground) setLoading(true)
     // One site request per load: the deployments lookup reuses this in-flight
     // promise instead of issuing its own GET /api/sites/:id on every poll.
     const sitePromise = getSite(siteId)
     const [s, d, evRes] = await Promise.all([
       sitePromise,
       getSiteDeployments(siteId, sitePromise),
-      getRollbackEvents(siteId),
+      !isBackground ? getRollbackEvents(siteId) : Promise.resolve(null),
     ])
     setSite(s.data)
     setPreviewMode(s.previewMode || isPreviewForced())
     setDeployments(d.data)
     setPreviewMode(p => p || d.previewMode)
-    if (evRes.ok) setRollbackEvents(evRes.events)
-    setLoading(false)
+    if (evRes && evRes.ok) setRollbackEvents(evRes.events)
+    if (!isBackground) setLoading(false)
   }, [siteId])
 
   /* eslint-disable react-hooks/set-state-in-effect */
@@ -345,7 +345,7 @@ export default function SiteDetailPage() {
   useEffect(() => {
     const active = deployments.some(d => d.status === 'pending' || d.status === 'building' || d.status === 'deploying')
     if (!active || previewMode) return
-    const t = setInterval(load, 2000)
+    const t = setInterval(() => { void load(true) }, 2000)
     return () => clearInterval(t)
   }, [deployments, previewMode, load])
 

@@ -88,4 +88,19 @@ describe('SiteEnvVarsTab .env import', () => {
     // Submitted values never appear in the aggregated error report.
     expect(text).not.toMatch(/value\d/)
   })
+
+  it('deduplicates duplicate keys in imported file, keeping the last value', async () => {
+    createEnvVarMock.mockResolvedValue({ ok: true })
+    await renderReady()
+    const file = new File(['KEY_A=first\nKEY_B=only\nKEY_A=second\n'], 'bulk.env', { type: 'text/plain' })
+    fireEvent.change(screen.getByLabelText('Import .env file'), {
+      target: { files: [file] },
+    })
+
+    await waitFor(() => {
+      expect(createEnvVarMock).toHaveBeenCalledTimes(2)
+    })
+    expect(createEnvVarMock).toHaveBeenCalledWith('site-1', expect.objectContaining({ key: 'KEY_A', value: 'second' }))
+    expect(createEnvVarMock).toHaveBeenCalledWith('site-1', expect.objectContaining({ key: 'KEY_B', value: 'only' }))
+  })
 })
