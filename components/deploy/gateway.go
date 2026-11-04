@@ -286,7 +286,7 @@ func (d *Deploy) handleDeleteDeployment(w http.ResponseWriter, r *http.Request, 
 		kernel.WriteJSON(w, http.StatusNotFound, map[string]string{"error": "deployment not found"})
 		return
 	}
-	if status == "pending" || status == "building" {
+	if status == "pending" || status == "building" || status == "deploying" {
 		kernel.WriteJSON(w, http.StatusConflict, map[string]string{"error": "deployment is in progress — wait or trigger a new deploy"})
 		return
 	}

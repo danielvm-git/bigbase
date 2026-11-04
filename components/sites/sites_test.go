@@ -386,7 +386,7 @@ func TestDeleteSiteNotFound(t *testing.T) {
 }
 
 func TestDeleteSiteActiveDeploymentConflict(t *testing.T) {
-	for _, status := range []string{"pending", "building", "running"} {
+	for _, status := range []string{"pending", "building", "deploying", "running"} {
 		t.Run(status, func(t *testing.T) {
 			d, h := setupSitesDeleteTest(t)
 			createSiteDeleteSupportTables(t, d)
