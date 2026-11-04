@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"regexp"
 	"strings"
+	"time"
 
 	"gopkg.in/yaml.v3"
 
@@ -90,9 +91,9 @@ func New(opts Options) *CICI {
 	return &CICI{db: opts.DB, logger: logger}
 }
 
-func (c *CICI) Name() string                  { return "cici" }
-func (c *CICI) Version() string               { return version }
-func (c *CICI) Dependencies() []string        { return []string{"db"} }
+func (c *CICI) Name() string           { return "cici" }
+func (c *CICI) Version() string        { return version }
+func (c *CICI) Dependencies() []string { return []string{"db"} }
 
 func (c *CICI) Init(ctx *kernel.Context, config json.RawMessage) error {
 	return nil
@@ -105,8 +106,8 @@ func (c *CICI) Start(ctx *kernel.Context) error {
 			yaml TEXT NOT NULL, created_at TEXT NOT NULL)`,
 		`CREATE TABLE IF NOT EXISTS cici_runs (
 			id TEXT PRIMARY KEY, workflow_id TEXT NOT NULL, event TEXT NOT NULL,
-			status TEXT NOT NULL DEFAULT 'pending', started_at TEXT NOT NULL,
-			finished_at TEXT)`,
+			status TEXT NOT NULL DEFAULT 'queued', started_at TEXT NOT NULL,
+			finished_at TEXT, deadline_at TEXT)`,
 		`CREATE TABLE IF NOT EXISTS cici_logs (
 			id INTEGER PRIMARY KEY AUTOINCREMENT, run_id TEXT NOT NULL,
 			step TEXT NOT NULL, output TEXT NOT NULL,
@@ -116,8 +117,51 @@ func (c *CICI) Start(ctx *kernel.Context) error {
 			return fmt.Errorf("migrate: %w", err)
 		}
 	}
+	if err := c.migrateRunColumns(); err != nil {
+		return err
+	}
+
+	// No CICI execution goroutine survives a process restart, so every row left
+	// non-terminal belongs to a dead process. Fail them instead of leaving them
+	// "running" forever; a future run is a new row.
+	reconcileCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	reconciled, err := c.reconcileOrphanedRuns(reconcileCtx)
+	if err != nil {
+		return err
+	}
+	if reconciled > 0 {
+		c.logger.Warn("reconciled orphaned cici runs", "count", reconciled, "status", string(RunStatusFailure))
+	}
+
 	c.logger.Info("cici component ready")
 	return nil
+}
+
+// migrateRunColumns brings older cici_runs tables up to the current schema.
+// ALTER TABLE ADD COLUMN is not idempotent, so a duplicate-column error is
+// treated as "already migrated".
+func (c *CICI) migrateRunColumns() error {
+	if err := c.db.Migrate(`ALTER TABLE cici_runs ADD COLUMN deadline_at TEXT`); err != nil {
+		if !isDuplicateColumnError(err) {
+			return fmt.Errorf("add cici_runs.deadline_at: %w", err)
+		}
+	}
+	if err := c.db.Migrate(
+		`UPDATE cici_runs SET status = 'queued' WHERE status = 'pending'`); err != nil {
+		return fmt.Errorf("normalize legacy pending runs: %w", err)
+	}
+	return nil
+}
+
+// isDuplicateColumnError matches SQLite ("duplicate column name") and
+// PostgreSQL ("column ... already exists") migration noise.
+func isDuplicateColumnError(err error) bool {
+	msg := strings.ToLower(err.Error())
+	if strings.Contains(msg, "duplicate column") {
+		return true
+	}
+	return strings.Contains(msg, "column") && strings.Contains(msg, "already exists")
 }
 
 func (c *CICI) Stop(ctx *kernel.Context) error {
