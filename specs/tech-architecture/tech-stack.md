@@ -29,7 +29,7 @@ kernel discovers, starts, and connects independent components via an event bus.
 | Design system | Custom token-based system in `ui/src/tokens/` + CSS custom properties |
 | SDK | `packages/auth` + adapters (react/vue/svelte/astro/next) + `auth-ui-svelte` |
 | Deployment | Child processes (no containers), ACME auto-SSL, custom domains via autocert |
-| CI/CD | GitHub Actions + semantic-release |
+| CI/CD | GitHub Actions + big-release |
 | Hosting | Contabo VPS, Terraform-defined infra |
 | Messaging | Email (SMTP) · SMS · Push · Webhook · Telegram |
 | Real-time | WebSocket subscriptions, mutation event broadcasting |

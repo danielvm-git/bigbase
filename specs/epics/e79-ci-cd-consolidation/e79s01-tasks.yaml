@@ -11,7 +11,7 @@ tasks:
       - Add PostgreSQL matrix to ci job (sqlite + postgres, matching current ci.yml)
       - Preserve Postgres service container config from current ci.yml
       - Add Allure report job (from current ci.yml report job)
-      - Do NOT include semantic-release or deploy jobs (handled by release-deploy.yml)
+      - Do NOT include big-release or deploy jobs (handled by release-deploy.yml)
       - Name: "CI/CD"
       - Add concurrency group
     verify: "yamllint .github/workflows/ci-cd.yml"

@@ -23,9 +23,9 @@ Migrate BigBase's CI/CD workflows to match the consolidated templates in `daniel
 - Go version stays at 1.26 (template defaults to 1.22)
 - Keep PostgreSQL matrix test strategy (not in template)
 - Keep Allure report generation (not in template)
-- Keep semantic-release in `release-deploy.yml` (already works)
+- Keep big-release in `release-deploy.yml` (already works)
 - Do NOT include deploy job from template — SSH deploy is separate
-- Do NOT include verify/semantic-release from template — handled by release-deploy.yml
+- Do NOT include verify/big-release from template — handled by release-deploy.yml
 
 ## Out of Scope
 - Changing `release-deploy.yml` SSH deploy logic

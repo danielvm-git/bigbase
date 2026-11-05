@@ -52,7 +52,7 @@ When using `gh pr merge --squash`, the PR title is usually used as the commit su
 
 ## Release Type Mapping (big-release)
 
-This table reflects the built-in behavior of [`big-release`](https://github.com/danielvm-git/big-release)'s commit analyzer (`feat`→minor, `fix`/`perf`→patch, breaking→major, everything else→none) — identical to the semantic-release Angular preset.
+This table reflects the built-in behavior of [`big-release`](https://github.com/danielvm-git/big-release)'s commit analyzer (`feat`→minor, `fix`/`perf`→patch, breaking→major, everything else→none).
 
 | Commit pattern | Release | Notes |
 |----------------|---------|-------|

@@ -13,7 +13,7 @@ Audited against: `/security-review` lens, `/deepen-architecture` open issues (#4
 | Build command | `go build -o bigbase .` | ✅ |
 | Lint | `golangci-lint run ./...` | ✅ |
 | Typecheck | `go vet ./...` | ✅ |
-| CI platform | GitHub Actions + semantic-release | ✅ |
+| CI platform | GitHub Actions + big-release | ✅ |
 | Solo or team | Solo (worktree branching, direct-to-main) | ✅ |
 | Language + framework | Go 1.26.3 / ECC kernel + SQLite/PostgreSQL + React 19 | ✅ |
 | Greenfield or existing | Existing — 19 components, 51/66 epics complete | ✅ |

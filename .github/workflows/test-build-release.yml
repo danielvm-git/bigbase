@@ -645,14 +645,15 @@ jobs:
         id: pre-release
         run: echo "head=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
-      # Install the pinned big-release CLI (replaces semantic-release). The
+      # Install the pinned big-release CLI (zero-dependency release automation per
+      # https://github.com/danielvm-git/big-release/discussions/72). The
       # published checksum is verified before use, mirroring the gitleaks
       # install in the verify job. big-release is a static Go binary — no
-      # Node/npm needed in this job anymore.
+      # Node/npm needed in this job.
       - name: Install big-release
         env:
-          BIG_RELEASE_VERSION: '2.5.0'
-          BIG_RELEASE_SHA256: '99fc0fc613938f926b5c744f93fffdd49e0c7a6238961b78593e9103eb221c7a'
+          BIG_RELEASE_VERSION: '2.8.1'
+          BIG_RELEASE_SHA256: 'af1ea3817e43b46d2677456e5863d8c18ae9a1976a7e836823b635a35e974656'
         run: |
           curl -sSfLO "https://github.com/danielvm-git/big-release/releases/download/${BIG_RELEASE_VERSION}/big-release-linux-amd64"
           echo "${BIG_RELEASE_SHA256}  big-release-linux-amd64" | sha256sum -c -
@@ -664,8 +665,7 @@ jobs:
       # write VERSION, regenerate CHANGELOG.md, commit both back to main as
       # "chore(release): <version> [skip ci]", tag (v${version}), and publish
       # the GitHub Release. Config lives in .big-release.yml. The commit-back
-      # moves HEAD, which the detect step below keys off (same mechanism the
-      # previous semantic-release flow used).
+      # moves HEAD, which the detect step below keys off.
       - name: Run big-release
         run: big-release release --verbose
         env:

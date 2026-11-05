@@ -16,7 +16,7 @@ kernel discovers, starts, and connects independent components via an event bus.
 | Functions runtime | goja (pure Go JavaScript) |
 | Admin UI | React 19 + Vite + TypeScript, embedded via `//go:embed` |
 | Deployment | Child processes on host, port-allocation |
-| CI/CD | GitHub Actions + semantic-release |
+| CI/CD | GitHub Actions + big-release |
 | Hosting | Contabo Cloud VPS (current), Terraform-defined |
 
 ## Architecture
@@ -111,7 +111,7 @@ git.onPush ──► cici runs workflow ──► deploy previews
 ```
 GitHub ──push──► GitHub Actions
                     │
-               semantic-release
+               big-release
                     │
                deploy to VPS
                     │

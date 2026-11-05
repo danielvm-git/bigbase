@@ -12,4 +12,4 @@ success_criteria:
 constraints:
   - Pure Go where possible (modernc.org/sqlite; lib/pq for PostgreSQL)
   - MIT license
-  - Semantic-release on merge to main
+  - Automated big-release on merge to main

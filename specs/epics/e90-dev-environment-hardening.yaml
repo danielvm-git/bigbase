@@ -243,7 +243,7 @@ stories:
         verify: "git status after make clean shows clean tree"
 
   - id: e90s08
-    title: "Dependabot grouping and semantic-release push discipline"
+    title: "Dependabot grouping and big-release push discipline"
     status: done
     bcps: 2
     priority: P2

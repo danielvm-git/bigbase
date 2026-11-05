@@ -9,4 +9,4 @@ enforced_by: [audit-code, plan-work, verify-work]
   - `feat:`, `fix:`, `chore:`, `refactor:`, `docs:`, `test:`, etc.
   - Ex: `feat(auth): add project scoping to JWT`
 - Breaking changes must include a `BREAKING CHANGE:` footer.
-- The system uses `semantic-release` to automate versioning based on these commit prefixes.
+- The system uses `big-release` to automate versioning based on these commit prefixes.
