@@ -282,8 +282,13 @@ jobs:
           go-version: '${{ env.GO_VERSION }}'
           cache: true
 
+      # go test applies -timeout per package binary. The deploy package is the
+      # long pole (~250-300s under -race on a loaded dev machine) and was
+      # hitting the old 300s ceiling as a timeout panic rather than a race
+      # report — a gate that fails for the wrong reason. 600s keeps 2x headroom
+      # while still catching a genuine hang; the job itself allows 20 minutes.
       - name: Race tests
-        run: go test -race -timeout 300s ./components/deploy/... ./components/functions/... ./components/realtime/... ./components/monitoring/...
+        run: go test -race -timeout 600s ./components/deploy/... ./components/functions/... ./components/realtime/... ./components/monitoring/...
 
   # ============================================================================
   # JOB: Test (E2E) — browser and API flows against an isolated server.

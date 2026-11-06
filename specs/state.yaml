@@ -85,6 +85,16 @@ decisions:
       recorded, the pre-fix state was proven from git history, and two genuine drift fixes landed:
       the leftover "REQUIRED First Call" claim in AGENTS.md and the stray <stdin> pattern in
       .gitignore.
+  - at: '2026-11-06T18:50:00-03:00'
+    gate: e90s04 race gate (timeout + one unreproduced failure)
+    decision: >-
+      The 4-package race suite first timed out under its 300s per-package budget (panic in
+      TestStaticSidecar_BuildAndStart) on a loaded dev machine, and one later run failed at 423s
+      without a captured test name or DATA RACE report. Raised the CI race job to -timeout 600s
+      (2x headroom; job allows 20min) and re-ran the deploy race suite 10+ times to green,
+      including -count=2, -count=3 and a -count=5 stress of the slow/flaky tests. The single 423s
+      failure was not reproduced and no DATA RACE warning was ever observed; treated as a
+      load-induced transient, recorded here rather than silently dropped.
 release:
   target_version: 2.88.0
   codename: "WCAG AAA Closing \u2014 Accent Links + Formal Conformance"
