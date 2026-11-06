@@ -1,0 +1,26 @@
+story_id: e90s04
+title: "Add -race CI job and frontend lint/test gate"
+status: passing
+bcps: 3
+tasks:
+  - id: e90s04t1
+    description: "Verify test-race job exists in CI workflow"
+    verify: "grep -q 'test-race:' .github/workflows/test-build-release.yml"
+    scenarios: [SC-e90s04-P1-01]
+    risk: P1
+    status: passing
+    security: medium
+  - id: e90s04t2
+    description: "Verify test-ui job exists and checks lint/typecheck/build"
+    verify: "grep -q 'test-ui:' .github/workflows/test-build-release.yml"
+    scenarios: [SC-e90s04-P1-02]
+    risk: P1
+    status: passing
+    security: low
+  - id: e90s04t3
+    description: "Drain transitions reach status_history (regression for the -race failure)"
+    verify: "go test -race -run 'TestDrainStatusHistory|TestDrainWithoutRegisteredAppRecordsHistory' -timeout 120s ./components/deploy/"
+    scenarios: [SC-e90s04-P1-01]
+    risk: P1
+    status: passing
+    security: low

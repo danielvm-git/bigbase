@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# story: e90s01
 # check-required-env-documented.sh
 #
 # Fail if a required deployment env key — declared as REQUIRED_ENV_KEYS in
@@ -11,10 +12,13 @@
 # nobody documented it for local/ops users.
 #
 # Usage: bash scripts/check-required-env-documented.sh
+#
+# Set BIGBASE_ENV_DOC_ROOT to check a directory other than this repository
+# (used by scripts/check-required-env-documented.test.cjs fixtures).
 # Exit 0 = all required keys documented (or files missing), 1 = drift found.
 set -euo pipefail
 
-root="$(git rev-parse --show-toplevel)"
+root="${BIGBASE_ENV_DOC_ROOT:-$(git rev-parse --show-toplevel)}"
 cd "$root"
 
 DEPLOY_YML=".github/workflows/deploy.yml"

@@ -1,0 +1,26 @@
+story_id: e90s02
+title: "Fix .gitignore conflict marker and consolidate gosec config"
+status: passing
+bcps: 1
+tasks:
+  - id: e90s02t1
+    description: "Ensure no merge conflict markers exist in source/config files"
+    verify: "! git grep -n -E '^(<<<<<<<|>>>>>>>)( |$)|^=======$' -- ':!CHANGELOG.md' ':!specs/archive/**'"
+    scenarios: [SC-e90s02-P1-01]
+    risk: P1
+    status: passing
+    security: low
+  - id: e90s02t2
+    description: "Run unified gosec security scan"
+    verify: "npm run preflight:secscan"
+    scenarios: [SC-e90s02-P1-02]
+    risk: P1
+    status: passing
+    security: high
+  - id: e90s02t3
+    description: "Reusable conflict-marker gate backs CI and pre-commit (single implementation)"
+    verify: "node --test scripts/check-conflict-markers.test.cjs"
+    scenarios: [SC-e90s02-P1-01]
+    risk: P1
+    status: passing
+    security: low

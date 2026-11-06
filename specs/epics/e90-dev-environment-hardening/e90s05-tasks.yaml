@@ -1,0 +1,19 @@
+story_id: e90s05
+title: "Canonical MCP config — single source, generated adapters"
+status: passing
+bcps: 3
+tasks:
+  - id: e90s05t1
+    description: "Verify gen-mcp-configs.sh generates adapters cleanly"
+    verify: "bash scripts/gen-mcp-configs.sh"
+    scenarios: [SC-e90s05-P1-01]
+    risk: P1
+    status: passing
+    security: low
+  - id: e90s05t2
+    description: "Adapter drift gate plus the documented make mcp entry point"
+    verify: "node --test scripts/gen-mcp-configs.test.cjs"
+    scenarios: [SC-e90s05-P1-01]
+    risk: P1
+    status: passing
+    security: low

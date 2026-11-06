@@ -1,0 +1,12 @@
+story_id: e90s08
+title: "Dependabot grouping and big-release push discipline"
+status: passing
+bcps: 2
+tasks:
+  - id: e90s08t1
+    description: "Verify rebase before push discipline documented in CONVENTIONS.md"
+    verify: "grep -q 'Rebase before push' CONVENTIONS.md"
+    scenarios: [SC-e90s08-P2-01]
+    risk: P2
+    status: passing
+    security: low

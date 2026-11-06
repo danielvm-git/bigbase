@@ -5,13 +5,19 @@ Generated from `AGENTS.md`.
 source: AGENTS.md
 references: [AGENTS.md]
 
-- [ctxo MCP Tool Usage (MANDATORY)](ctxo-mcp-tool-usage-mandatory.md)
-- [Before ANY Code Modification](before-any-code-modification.md)
+- [BigBase — Engineering & Agent Rules](bigbase-engineering-agent-rules.md)
+- [Project](project.md)
+- [Commands](commands.md)
+- [Session Start](session-start.md)
+- [Agent Rules](agent-rules.md)
+- [Model Routing Matrix](model-routing-matrix.md)
+- [ctxo MCP Tool Usage](ctxo-mcp-tool-usage.md)
+- [Before Code Modification (when ctxo is available)](before-code-modification-when-ctxo-is-available.md)
 - [Before Starting a Task](before-starting-a-task.md)
 - [Before Reviewing a PR or Diff](before-reviewing-a-pr-or-diff.md)
 - [When Exploring or Searching Code](when-exploring-or-searching-code.md)
 - [Orientation in Unfamiliar Areas](orientation-in-unfamiliar-areas.md)
-- [NEVER Do These](never-do-these.md)
+- [Guidelines](guidelines.md)
 - [Orca Terminal Commands (from orca-cli skill)](orca-terminal-commands-from-orca-cli-skill.md)
 - [Key Rules](key-rules.md)
 - [harden-vps — Production VPS Security (LOAD BEFORE VPS work)](harden-vps-production-vps-security-load-before-vps-work.md)
@@ -28,3 +34,4 @@ references: [AGENTS.md]
 - [Registry Map](registry-map.md)
 - [How It Works](how-it-works.md)
 - [The Rule](the-rule.md)
+- [sqz — Context Compression (READ FIRST)](sqz-context-compression-read-first.md)

@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+# Pre-push hook: blocks direct manual push to protected branch 'main'
+# unless GIT_BIGPOWERS_LAND=1 (set by automated landing scripts)
+
+set -euo pipefail
+
+protected_branch="main"
+current_branch=$(git symbolic-ref --short HEAD 2>/dev/null || true)
+
+# Read stdin lines: <local ref> <local sha> <remote ref> <remote sha>
+while read -r local_ref local_sha remote_ref remote_sha; do
+    remote_branch=$(echo "$remote_ref" | sed 's#refs/heads/##')
+    if [ "$remote_branch" = "$protected_branch" ] || [ "$current_branch" = "$protected_branch" ]; then
+        if [ "${GIT_BIGPOWERS_LAND:-0}" != "1" ]; then
+            echo "❌ [guard-git] Direct push to protected branch '$protected_branch' is blocked." >&2
+            echo "   Use a feature branch and land via 'scripts/land-branch.sh' or set GIT_BIGPOWERS_LAND=1." >&2
+            exit 1
+        fi
+    fi
+done
+
+exit 0

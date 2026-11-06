@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# story: e90s08
 # Safely merge a feature branch into main.
 # Usage: scripts/land-branch.sh <branch-name>
 set -euo pipefail
@@ -18,4 +19,5 @@ fi
 
 echo "🔀 Merging $BRANCH into main..."
 git merge --no-ff "$BRANCH" -m "chore: merge $BRANCH into main"
+export GIT_BIGPOWERS_LAND=1
 echo "✅ Merged $BRANCH. Run 'git push origin main' to deploy."

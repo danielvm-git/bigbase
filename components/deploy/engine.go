@@ -1,3 +1,4 @@
+// story: e89s06
 package deploy
 
 import (
@@ -120,9 +121,45 @@ func (d *Deploy) stopDeployment(id, newStatus string) {
 	}
 
 	if newStatus != "" {
-		_, _ = d.db.ExecContext(context.Background(),
-			"UPDATE deployments SET status = ? WHERE id = ?", newStatus, id)
+		d.forceStatus(context.Background(), id, newStatus, "stop")
 	}
+}
+
+// forceStatus applies a status change the state machine would reject —
+// force-stop of a non-draining deployment, orphan cleanup, boot reconciliation.
+// The normal path is TransitionState; this override still appends
+// status_history so the audit trail never loses a transition (e90s04: drain of
+// an app-less deployment left history frozen at "running").
+//
+// The read, the write and the append share the same mutex TransitionState uses
+// for its history read-modify-write, so a concurrent transition cannot slip
+// between them and leave the transition's From field stale.
+func (d *Deploy) forceStatus(ctx context.Context, id, newStatus, reason string) {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+
+	var current string
+	if err := d.db.QueryRowContext(ctx,
+		"SELECT status FROM deployments WHERE id = ?", id).Scan(&current); err != nil {
+		d.logger.Warn("force status: read current failed", "deployment_id", id, "error", err)
+		return
+	}
+	if current == newStatus {
+		return
+	}
+	if _, err := d.db.ExecContext(ctx,
+		"UPDATE deployments SET status = ? WHERE id = ?", newStatus, id); err != nil {
+		d.logger.Warn("force status: update failed", "deployment_id", id, "error", err)
+		return
+	}
+
+	d.appendStatusHistory(ctx, id, StatusTransition{
+		From:      current,
+		To:        newStatus,
+		Timestamp: time.Now().UTC().Format(time.RFC3339),
+	})
+
+	d.logger.Info("forced status change", "deployment_id", id, "from", current, "to", newStatus, "reason", reason)
 }
 func (d *Deploy) runDeployment(deploy *Deployment, buildDir, repoName string) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)

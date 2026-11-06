@@ -2,6 +2,9 @@
 
 Generated from `CONVENTIONS.md`.
 
+- [Commands](commands.md)
+- [Stack Profile](stack-profile.md)
+- [Never-Do List](never-do-list.md)
 - [Architecture](architecture.md)
 - [Entity-Component-Construct (ECC)](entity-component-construct-ecc.md)
 - [Kernel Responsibilities](kernel-responsibilities.md)
@@ -16,6 +19,7 @@ Generated from `CONVENTIONS.md`.
 - [Error Handling](error-handling.md)
 - [Immutability](immutability.md)
 - [Testing](testing.md)
+- [Async tests — poll, never assert on timing](async-tests-poll-never-assert-on-timing.md)
 - [Project Structure](project-structure.md)
 - [Specs Convention](specs-convention.md)
 - [Defensive Code Categories](defensive-code-categories.md)
@@ -23,4 +27,5 @@ Generated from `CONVENTIONS.md`.
 - [Production Hardening (Contabo VPS)](production-hardening-contabo-vps.md)
 - [Git & Workflow](git-workflow.md)
 - [Solo-git Mode](solo-git-mode.md)
+- [Rebase before push](rebase-before-push.md)
 - [Conventional Commits](conventional-commits.md)

@@ -1,0 +1,19 @@
+story_id: e90s07
+title: "Version declaration sweep and docs reconciliation"
+status: passing
+bcps: 1
+tasks:
+  - id: e90s07t1
+    description: "Verify version consistency across all documentation and configurations"
+    verify: "bash scripts/check-version-drift.sh"
+    scenarios: [SC-e90s07-P2-01]
+    risk: P2
+    status: passing
+    security: low
+  - id: e90s07t2
+    description: "CI version pins and toolchain.toml Go floor match go.mod/.nvmrc"
+    verify: "node --test scripts/check-version-drift.test.cjs"
+    scenarios: [SC-e90s07-P2-01]
+    risk: P2
+    status: passing
+    security: low

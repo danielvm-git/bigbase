@@ -1,0 +1,19 @@
+story_id: e90s03
+title: "Reconcile AGENTS.md ctxo mandate with 2026-08-11 revert reality"
+status: passing
+bcps: 2
+tasks:
+  - id: e90s03t1
+    description: "Verify AGENTS.md specifies non-mandatory fallback to grep/LSP"
+    verify: "grep -q 'If ctxo is unavailable or stale, continue with LSP and repository search' AGENTS.md"
+    scenarios: [SC-e90s03-P1-01]
+    risk: P1
+    status: passing
+    security: low
+  - id: e90s03t2
+    description: "Verify ctxo hook exists in .githooks/pre-commit"
+    verify: "grep -q 'ctxo index' .githooks/pre-commit"
+    scenarios: [SC-e90s03-P1-01]
+    risk: P1
+    status: passing
+    security: low

@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# story: e90s02
 set -euo pipefail
 
 root=$(git rev-parse --show-toplevel)

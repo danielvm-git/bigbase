@@ -1,0 +1,19 @@
+story_id: e90s01
+title: "Provision BIGBASE_ROOT_ENCRYPTION_KEY and add required-env gate to CI"
+status: passing
+bcps: 3
+tasks:
+  - id: e90s01t1
+    description: "Assert REQUIRED_ENV_KEYS in deploy.yml and document key in .env.example"
+    verify: "bash scripts/check-required-env-documented.sh"
+    scenarios: [SC-e90s01-P0-01]
+    risk: P0
+    status: passing
+    security: high
+  - id: e90s01t2
+    description: "Pin the gate's failure path (missing key, missing workflow, empty declaration) with fixtures"
+    verify: "node --test scripts/check-required-env-documented.test.cjs"
+    scenarios: [SC-e90s01-P0-01]
+    risk: P0
+    status: passing
+    security: high

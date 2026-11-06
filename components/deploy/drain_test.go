@@ -317,50 +317,78 @@ func TestDrainStatusHistory(t *testing.T) {
 		t.Fatalf("Trigger second: %v", err)
 	}
 	waitForDeploymentTerminal(t, handler, dep2.ID, 10*time.Second)
-	startDrain := time.Now()
-	for time.Since(startDrain) < 5*time.Second {
-		req := httptest.NewRequest("GET", "/api/deploy/"+dep1.ID, nil)
-		w := httptest.NewRecorder()
-		handler.ServeHTTP(w, req)
-		var got map[string]any
-		_ = json.NewDecoder(w.Body).Decode(&got)
-		if st, ok := got["status"].(string); ok && st == "stopped" {
-			break
+	waitForDeployStatus(t, handler, dep1.ID, "stopped", 15*time.Second)
+
+	// status_history is written after the status CAS (see
+	// TransitionState), so a reader can observe "stopped" while the history
+	// entry is still in flight. Poll for the recorded transitions instead of
+	// reading once — the -race CI job was observing the status one beat ahead
+	// of its history entry.
+	waitForStatusHistory(t, database, dep1.ID, 15*time.Second, "draining", "stopped")
+}
+
+// TestDrainWithoutRegisteredAppRecordsHistory pins the audit-trail invariant
+// for the orphan path: draining a deployment that has no in-memory app entry
+// must still record the draining and stopped transitions. The old code called
+// stopDeployment(), which wrote the status with a raw UPDATE and left
+// status_history frozen at "running" — the -race CI job (e90s04) observed
+// status=stopped with a history that never mentioned the drain.
+func TestDrainWithoutRegisteredAppRecordsHistory(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping integration test in short mode")
+	}
+
+	dep, handler, database, _ := setupDeploy(t)
+	const depID = "dep-drain-orphan"
+	insertDeployment(t, database, depID, "running", t.TempDir())
+
+	dep.DrainForTest(depID)
+
+	waitForDeployStatus(t, handler, depID, "stopped", 10*time.Second)
+	waitForStatusHistory(t, database, depID, 10*time.Second, "draining", "stopped")
+}
+
+// waitForStatusHistory polls the recorded transitions until every wanted "to"
+// state is present and returns the history it observed. TransitionState commits
+// the status before appending status_history, so status and history are
+// eventually consistent, never atomically consistent, for readers.
+func waitForStatusHistory(t *testing.T, database *db.DB, deployID string, timeout time.Duration, want ...string) []map[string]string {
+	t.Helper()
+
+	deadline := time.Now().Add(timeout)
+	for {
+		var historyJSON string
+		if err := database.QueryRowContext(context.Background(),
+			"SELECT COALESCE(status_history, '[]') FROM deployments WHERE id = ?", deployID).Scan(&historyJSON); err != nil {
+			t.Fatalf("query status_history: %v", err)
+		}
+
+		var history []map[string]string
+		if historyJSON != "" && historyJSON != "[]" {
+			if err := json.Unmarshal([]byte(historyJSON), &history); err != nil {
+				t.Fatalf("unmarshal history %q: %v", historyJSON, err)
+			}
+		}
+
+		seen := make(map[string]bool, len(history))
+		for _, tr := range history {
+			seen[tr["to"]] = true
+		}
+		complete := true
+		for _, state := range want {
+			if !seen[state] {
+				complete = false
+				break
+			}
+		}
+		if complete {
+			return history
+		}
+
+		if time.Now().After(deadline) {
+			t.Fatalf("status_history for %s never recorded %v; last observed: %s", deployID, want, historyJSON)
 		}
 		time.Sleep(10 * time.Millisecond)
-	}
-	verifyDeployStatus(t, handler, dep1.ID, "stopped")
-
-	// Check status_history includes draining → stopped (read from DB directly)
-	var historyJSON string
-	if err := database.QueryRowContext(ctx,
-		"SELECT COALESCE(status_history, '[]') FROM deployments WHERE id = ?", dep1.ID).Scan(&historyJSON); err != nil {
-		t.Fatalf("query status_history: %v", err)
-	}
-	if historyJSON == "" || historyJSON == "[]" {
-		t.Fatal("status_history is empty")
-	}
-
-	var history []map[string]string
-	if err := json.Unmarshal([]byte(historyJSON), &history); err != nil {
-		t.Fatalf("unmarshal history: %v", err)
-	}
-
-	foundDraining := false
-	foundStopped := false
-	for _, tr := range history {
-		if tr["to"] == "draining" {
-			foundDraining = true
-		}
-		if tr["to"] == "stopped" {
-			foundStopped = true
-		}
-	}
-	if !foundDraining {
-		t.Error("status_history missing 'draining' transition")
-	}
-	if !foundStopped {
-		t.Error("status_history missing 'stopped' transition")
 	}
 }
 

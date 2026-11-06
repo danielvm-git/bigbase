@@ -1,0 +1,41 @@
+story_id: e90s01
+verified_at: "2026-11-06T17:42:28Z"
+verifier: verify-work
+risk: P0
+phases:
+  preflight:
+    passed: true
+    command: "npm run preflight"
+    note: "go vet + go test ./... + gosec + build + codeql + gitleaks on feat/e90-dev-environment-hardening"
+  build:
+    passed: true
+    command: "go build -o /dev/null ."
+  task_verifies:
+    passed: true
+    count: 2
+    commands:
+      - command: "bash scripts/check-required-env-documented.sh"
+        exit_code: 0
+      - command: "node --test scripts/check-required-env-documented.test.cjs"
+        exit_code: 0
+  terminal_verdict:
+    command: "node --test scripts/check-required-env-documented.test.cjs"
+    exit_code: 0
+    captured_at: "2026-11-06T17:42:28Z"
+    note: "Single contiguous run; the full task_verifies block above is the same session."
+  security:
+    passed: true
+    report: "specs/security/epics/e90/THREAT_MODEL.md"
+  blind_spots:
+    passed: true
+    command: "bash scripts/check-blind-spots.sh"
+    note: "0 high / 0 medium / 0 low findings"
+  trace:
+    passed: true
+    command: "bash scripts/trace-stories.sh --strict"
+    exit_code: 0
+gaps:
+  closed: true
+  remaining: []
+notes: >-
+  Required-env gate: BIGBASE_ROOT_ENCRYPTION_KEY documented in .env.example, asserted against deploy.yml REQUIRED_ENV_KEYS, enforced in pre-commit and the CI verify job, failure path pinned by fixtures.

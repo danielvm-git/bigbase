@@ -1,10 +1,100 @@
 type: session-state
 context: infra
-active_flow: null
-active_epic_id: e89
-active_story_id: e89s01
-active_story_status: planned
+bigpowers_version: "2.0.0"
+workflow_mode: solo-git
+project_cycle:
+  phases:
+    discover: completed
+    elaborate: completed
+    plan: completed
+    build: completed
+    verify: active
+    release: pending
+  current_phase: 5
+  active_phase: verify
+active_flow: build_epic
+active_epic: e90
+active_epic_id: e90
+active_story_id: null
+active_story_status: done
 bug_id: null
+decisions:
+  - at: '2026-11-06T13:50:00-03:00'
+    gate: preflight
+    decision: >-
+      Preflight (go vet + go test + gosec + build + codeql + gitleaks) ran green before forward
+      work. No remediation needed.
+  - at: '2026-11-06T13:52:00-03:00'
+    gate: planning-spine
+    decision: >-
+      e90 already carried a capsule with per-task verify: commands for all 9 stories, so
+      scope-work/slice-tasks/plan-work were not re-run. Three tasks were ADDED during step 2
+      (plan-work) because the epic test plan names scripts/check-conflict-markers.sh and the
+      generator documents a `make mcp` target, neither of which existed: e90s02t3, e90s04t3 and
+      e90s05t2 close that drift. Acceptance criteria unchanged.
+  - at: '2026-11-06T13:54:00-03:00'
+    gate: build-epic step 0 (security-review)
+    decision: >-
+      THREAT_MODEL for e90 was already authored at specs/security/epics/e90/THREAT_MODEL.md
+      (risk LOW, STRIDE table, verdict proceed). Accepted as the step-0 artifact and committed
+      with the capsule.
+  - at: '2026-11-06T13:55:00-03:00'
+    gate: build-epic step 3 (kickoff-branch)
+    decision: >-
+      Branch feat/e90-dev-environment-hardening already existed at main tip with
+      core.hooksPath=.githooks set; reused it instead of creating a second worktree.
+  - at: '2026-11-06T13:56:00-03:00'
+    gate: verify-work / develop-tdd harness
+    decision: >-
+      scripts/verify-tdd-red-commit.sh, scripts/verify-adversarial.sh, scripts/bp-timing.sh,
+      scripts/bp-read-agents.sh and scripts/lib/assert-epic-gate.sh are absent from this repo
+      (pre-existing gap, not caused by e90). Used the equivalent manual evidence (test-only commit
+      that fails, then the implementation commit) and recorded the harness gap as deferred;
+      adding those scripts would change e90 scope.
+  - at: '2026-11-06T17:40:00-03:00'
+    gate: e90s04 verify (race gate red)
+    decision: >-
+      `go test -race` on deploy/functions/realtime/monitoring failed in TestDrainStatusHistory.
+      Per the red-gate rule this was fixed at the cause, not retried: stopDeployment() wrote status
+      with a raw UPDATE (bypassing status_history), and drainDeployment() skipped the draining
+      transition whenever no in-memory app existed, so a second drain could force-stop a deployment
+      mid-drain. Added forceStatus() plus an idempotent drain guard and a deterministic regression
+      test (TestDrainWithoutRegisteredAppRecordsHistory). Race suite green afterwards.
+  - at: '2026-11-06T18:05:00-03:00'
+    gate: e90s05 verify (doc/impl drift)
+    decision: >-
+      scripts/gen-mcp-configs.sh tells contributors to run `make mcp`, but the Makefile was an
+      untracked scratch file with no such target. Tracked the Makefile and added mcp/mcp-check,
+      red-first (scripts/gen-mcp-configs.test.cjs).
+  - at: '2026-11-06T18:20:00-03:00'
+    gate: e90s07 verify (configuration drift not covered)
+    decision: >-
+      The drift script only checked prose. Extended it to compare the CI GO_VERSION/NODE_VERSION
+      pins and the toolchain.toml Go floor against go.mod/.nvmrc, with fixture tests. The live
+      values already matched, so this closes a blind gate rather than a live mismatch.
+  - at: '2026-11-06T18:30:00-03:00'
+    gate: CI enforcement of new gate tests
+    decision: >-
+      The new fixture tests were local-only. Wired `node --test scripts/*.test.cjs` into the verify
+      job and added `make test-scripts`, so a gate that silently stops detecting drift fails CI.
+  - at: '2026-11-06T18:35:00-03:00'
+    gate: e90s01, s02, s03, s06, s08 stories
+    decision: >-
+      These stories were already implemented and green in earlier commits (147b7116b, ba742d460,
+      9ca155487, b6139996c). Instead of re-implementing, each verify command was executed and
+      recorded, the pre-fix state was proven from git history, and two genuine drift fixes landed:
+      the leftover "REQUIRED First Call" claim in AGENTS.md and the stray <stdin> pattern in
+      .gitignore.
+  - at: '2026-11-06T18:50:00-03:00'
+    gate: e90s04 race gate (timeout + one unreproduced failure)
+    decision: >-
+      The 4-package race suite first timed out under its 300s per-package budget (panic in
+      TestStaticSidecar_BuildAndStart) on a loaded dev machine, and one later run failed at 423s
+      without a captured test name or DATA RACE report. Raised the CI race job to -timeout 600s
+      (2x headroom; job allows 20min) and re-ran the deploy race suite 10+ times to green,
+      including -count=2, -count=3 and a -count=5 stress of the slow/flaky tests. The single 423s
+      failure was not reproduced and no DATA RACE warning was ever observed; treated as a
+      load-induced transient, recorded here rather than silently dropped.
 release:
   target_version: 2.88.0
   codename: "WCAG AAA Closing \u2014 Accent Links + Formal Conformance"
@@ -15,11 +105,31 @@ release:
   release_skipped: 'no new release: pushed diff is chore/docs only (dependabot bumps,
     WCAG registry, e86 epic specs); big-release correctly skipped (default rules
     require feat/fix/perf)'
+buildship:
+  cycle: build-ship
+  scope: all pending work
+  phase: ship
+  baseline:
+    preflight: green
+    branch: feat/e90-dev-environment-hardening
+    local_main: 04fb4554e
+    origin_main: cb1f1791b
+    local_main_ahead: 5
+    e90_branch_ahead_of_origin_main: 29
+  work_items:
+    bugs: []
+    failing_tests: []
+  ship_plan:
+    - push_local_main: "Fast-forward origin/main by 5 chore-only readiness-gates commits; big-release skips chore so no release/build/deploy."
+    - ship_e90: "feat/e90-dev-environment-hardening has 4 feat + 2 fix commits, so merging auto-publishes a release and auto-deploys to prod. Publishing a release is outside this run's approval, so the e90 merge is paused for user confirmation."
+  triage_note: >-
+    The only non-fixed registry entry (BUG-2026-07-10T160006) is already
+    resolved-by-removal with a resolution note, so it is not a work item.
 metrics:
   session_start: '2026-07-12T16:00:00-03:00'
   session_end: '2026-07-12T18:45:00-03:00'
   epics_completed: 66
-  stories_completed: 202
+  stories_completed: 211
   bcps_per_hour: 0
 bug_cycle:
   current_step: 5
@@ -32,15 +142,28 @@ bug_cycle:
   batch: proxy-github-stars-flake
   note: 'FIXED: TestProxyGitHubStars hermetic mock via SetStarsURL / StarsURL Options; stabilized MessagingPage.test.tsx Vitest timeout. Full Go and UI test suites green.'
 epic_cycle:
-  step: 0
-  story_bcps: 5
-  story: e89s01
-  audit_result: null
-  completed_steps: []
-  story_complete: false
+  step: 8
+  story_bcps: 0
+  story: e90s09
+  audit_result: pass
+  completed_steps:
+  - e90s01
+  - e90s02
+  - e90s03
+  - e90s04
+  - e90s05
+  - e90s06
+  - e90s07
+  - e90s08
+  - e90s09
+  story_complete: true
   yolo_mode: true
-  worktree_strategy: 'DAG: s01 -> s02 -> s03 -> (s04 || s06) -> (s05 || s07)'
-  note: Parallel execution plan and YOLO runbook recorded in specs/epics/e89-native-secret-manager/
+  worktree_strategy: 'Sequential WSJF order s01 -> s09 on feat/e90-dev-environment-hardening'
+  note: >-
+    All 9 stories pass their tasks.yaml verify commands, Preflight is green and
+    trace-stories --strict exits 0. Two stories carried real forward work (s04 drain audit
+    trail, s05 make mcp); the rest reconciled artifacts landed by earlier commits and closed
+    the remaining doc/config drift.
 git:
   branch: main
   hash: ba123ea92
@@ -76,20 +199,22 @@ cleanup:
   open_issues: 3 (all deferred/labeled)
 handoff:
   last_step_completed: >-
-    Phase 0/1 reconciliation (2026-08-13). Deep re-audit confirmed e75, e39s03, e40s02
-    already shipped and green (see specs/audit/phase1-reaudit.md) — statuses reconciled
-    todo/planned → done. Deferred bugs BUG-...160006 (resolved) and BUG-...160111
-    (wontfix) closed. Fixed red Deploy workflow: provisioned BIGBASE_ROOT_ENCRYPTION_KEY
-    (e89 boot fix) + CI hardening (UI vitest in CI, root lockfile guard, Node 24 pinned).
-  prior_step: Active deploy-redeploy flake fixed and verified; resume e89 build-epic
+    Epic e90 built end to end (2026-11-06): all 9 stories done, Preflight green,
+    trace-stories --strict green, race suite green. verify-work + audit-code + request-review +
+    respond-review completed. Stopped at the release-branch decision for user approval.
+  prior_step: >-
+    Red deploy -race gate fixed at its cause (drain transitions reach status_history) and the
+    new gate-script tests wired into CI verify.
   open_decisions:
-  - Checkpoint e89 planning/helper artifacts before kickoff-branch
-  - Resolve F-001 optional Site encryption / canonical root-key wiring before s01
-    completion
-  - Resolve F-002 MCP Site target IDOR with authenticated principal binding
-  - Resolve F-003 runtime fail-open decryption/fetch behavior and log redaction
-  - Resolve F-004 MCP internal error disclosure with generic typed errors
-  - Run build-epic step 0 security review on the e89 implementation branch
-  next_skill: kickoff-branch
-  context: Bug cycle complete; e89 yolo mode may resume after a clean planning checkpoint.
-    Security gate remains non-bypassable.
+  - >-
+    release-branch decision for feat/e90-dev-environment-hardening (land on main, open a PR, or
+    keep the branch) — outward-facing, needs the user
+  - >-
+    Harness scripts absent from this repo (bp-timing, bp-read-agents, assert-epic-gate,
+    verify-tdd-red-commit, verify-adversarial) — deferred; closing it needs its own scope
+  - >-
+    orchestrator.go resume path still sets error_message via a raw UPDATE; the status now flows
+    through forceStatus so history is recorded, but status and error_message remain two writes
+  next_skill: release-branch
+  context: >-
+    Epic complete on feat/e90-dev-environment-hardening; awaiting the release decision.

@@ -1,0 +1,43 @@
+story_id: e90s02
+verified_at: "2026-11-06T17:42:28Z"
+verifier: verify-work
+risk: P1
+phases:
+  preflight:
+    passed: true
+    command: "npm run preflight"
+    note: "go vet + go test ./... + gosec + build + codeql + gitleaks on feat/e90-dev-environment-hardening"
+  build:
+    passed: true
+    command: "go build -o /dev/null ."
+  task_verifies:
+    passed: true
+    count: 3
+    commands:
+      - command: "! git grep -n -E '^(<<<<<<<|>>>>>>>)( |$)|^=======$' -- ':!CHANGELOG.md' ':!specs/archive/**'"
+        exit_code: 0
+      - command: "npm run preflight:secscan"
+        exit_code: 0
+      - command: "node --test scripts/check-conflict-markers.test.cjs"
+        exit_code: 0
+  terminal_verdict:
+    command: "node --test scripts/check-conflict-markers.test.cjs"
+    exit_code: 0
+    captured_at: "2026-11-06T17:42:28Z"
+    note: "Single contiguous run; the full task_verifies block above is the same session."
+  security:
+    passed: true
+    report: "specs/security/epics/e90/THREAT_MODEL.md"
+  blind_spots:
+    passed: true
+    command: "bash scripts/check-blind-spots.sh"
+    note: "0 high / 0 medium / 0 low findings"
+  trace:
+    passed: true
+    command: "bash scripts/trace-stories.sh --strict"
+    exit_code: 0
+gaps:
+  closed: true
+  remaining: []
+notes: >-
+  One conflict-marker implementation (scripts/check-conflict-markers.sh) backs CI and pre-commit; stray <stdin> pattern removed from .gitignore; single .gosec.json governs scans.

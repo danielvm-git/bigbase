@@ -1,0 +1,26 @@
+story_id: e90s09
+title: "Async-assert pattern sweep and test guideline"
+status: passing
+bcps: 2
+tasks:
+  - id: e90s09t1
+    description: "Verify async tests poll pattern is documented in CONVENTIONS.md"
+    verify: "grep -q 'Async tests — poll, never assert on timing' CONVENTIONS.md"
+    scenarios: [SC-e90s09-P2-01]
+    risk: P2
+    status: passing
+    security: low
+  - id: e90s09t2
+    description: "Audit-trail poll helper named as the canonical example for eventually-consistent reads"
+    verify: "grep -q 'waitForStatusHistory' CONVENTIONS.md"
+    scenarios: [SC-e90s09-P2-01]
+    risk: P2
+    status: passing
+    security: low
+  - id: e90s09t3
+    description: "Deploy package is green under the race detector (flake class closed)"
+    verify: "go test -race -timeout 400s ./components/deploy/"
+    scenarios: [SC-e90s09-P2-01]
+    risk: P2
+    status: passing
+    security: low

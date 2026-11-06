@@ -4,7 +4,7 @@ source: AGENTS.md
 references: [AGENTS.md]
 
 ### Before Starting a Task
-| Task Type | REQUIRED First Call |
+| Task Type | First Call (when ctxo is available) |
 |---|---|
 | Fixing a bug | `get_context_for_task(taskType: "fix")` |
 | Adding/extending a feature | `get_context_for_task(taskType: "extend")` |
