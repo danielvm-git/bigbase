@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# story: e90s05
 # gen-mcp-configs.sh — Generate per-tool MCP adapter files from .mcp.json (canonical source).
 #
 # Usage:
