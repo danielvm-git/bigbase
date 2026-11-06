@@ -1,6 +1,6 @@
 # Traceability Matrix
 
-Generated: 2026-11-06T19:09:41.067867+00:00
+Generated: 2026-11-06T22:18:29.696284+00:00
 
 ## Story Coverage
 
