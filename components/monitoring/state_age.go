@@ -248,7 +248,7 @@ func (r StateAgeReport) maxAge(machine string) (float64, bool) {
 //   - cici_run_running_age_seconds             — oldest CICI run in one state
 //   - cici_state_age_seconds / cici_queued_age_seconds (short aliases)
 func (m *Monitoring) stateAgeMetricValue(metric string) (float64, bool, bool) {
-	return stateAgeMetricValueFromReport(metric, m.stateAgeReportForAlerts())
+	return stateAgeMetricValueFromReport(metric, m.stateAgeReportTimed())
 }
 
 func stateAgeMetricValueFromReport(metric string, report StateAgeReport) (float64, bool, bool) {
@@ -307,8 +307,12 @@ func writeStateAgeGauges(w http.ResponseWriter, report StateAgeReport) {
 	writePromLine(w, "\n")
 }
 
-// stateAgeReportForAlerts computes a fresh report for the alert checker.
-func (m *Monitoring) stateAgeReportForAlerts() StateAgeReport {
+// stateAgeReportTimed computes a fresh state-age report bounded by
+// stateAgeQueryTimeout. The metrics endpoints use this so a slow or locked
+// database cannot hang the admin dashboard, which awaits /api/monitoring/metrics
+// before clearing its loading state (v2.93.0 regression: the dashboard showed
+// "Loading dashboard..." forever when the un-timed query blocked).
+func (m *Monitoring) stateAgeReportTimed() StateAgeReport {
 	if m == nil || m.db == nil {
 		return StateAgeReport{}
 	}
