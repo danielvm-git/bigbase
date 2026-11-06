@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# story: e90s03
 # setup-dev.sh — One-command developer onboarding for a fresh BigBase clone.
 #
 # Usage: ./scripts/setup-dev.sh
