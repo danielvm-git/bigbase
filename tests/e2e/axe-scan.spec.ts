@@ -3,7 +3,7 @@
 // Scans every SPA route with wcag2a + wcag2aa + wcag2aaa rule tags and
 // collects all violations. Each test FAILS on any violation so the run
 // doubles as a conformance gate.
-// story: e90s04
+// story: e90s04 — frontend test gates (test-ui / test-e2e)
 import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 

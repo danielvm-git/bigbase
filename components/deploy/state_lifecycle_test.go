@@ -1,4 +1,4 @@
-// story: e90s09
+// story: e90s09 — polls via waitForDeploymentTerminal, never a bare sleep
 package deploy_test
 
 import (
