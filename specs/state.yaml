@@ -151,23 +151,25 @@ release:
 buildship:
   cycle: build-ship
   scope: all pending work
-  phase: ship-done-deploy-failed
+  phase: triage
   baseline:
     preflight: green
-    branch: feat/e90-dev-environment-hardening
-    local_main: 04fb4554e
-    origin_main: cb1f1791b
-    local_main_ahead: 5
-    e90_branch_ahead_of_origin_main: 29
+    branch: fix/dashboard-metrics-hang
+    main: f2b7f479a
+    origin_main: f2b7f479a
+    main_synced: true
   work_items:
-    bugs: []
-    failing_tests: []
+    - id: BUG-2026-11-06-dashboard-metrics-hang
+      status: fixed
+      summary: "admin dashboard hangs on 'Loading dashboard...' — metrics state-age query unbounded"
+      evidence: "go test -run TestStateAgeReportTimedBoundsBlockedQuery ./components/monitoring (PASS); go test ./... (PASS)"
+      branch: fix/dashboard-metrics-hang
+    - id: deploy-scp-failure
+      status: external
+      summary: "Deploy workflow fails at 'Upload binary to VPS' (SCP) — VPS-side SSH state after the rollback"
+      note: "Not a code work item; needs VPS authorized_keys/fail2ban/disk check or a CONTABO_* secret update."
   ship_plan:
-    - push_local_main: "Fast-forward origin/main by 5 chore-only readiness-gates commits; big-release skips chore so no release/build/deploy."
-    - ship_e90: "feat/e90-dev-environment-hardening has 4 feat + 2 fix commits, so merging auto-publishes a release and auto-deploys to prod. Publishing a release is outside this run's approval, so the e90 merge is paused for user confirmation."
-  triage_note: >-
-    The only non-fixed registry entry (BUG-2026-07-10T160006) is already
-    resolved-by-removal with a resolution note, so it is not a work item.
+    - ship_fix: "Rebase fix/dashboard-metrics-hang on main, PR, merge (fix: commit -> patch release + deploy; deploy still blocked by the SCP issue)."
 metrics:
   session_start: '2026-07-12T16:00:00-03:00'
   session_end: '2026-07-12T18:45:00-03:00'

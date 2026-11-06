@@ -2759,3 +2759,23 @@ bugs:
     risk_level: low
     regression_guards:
       - "go test -v -run TestProxyGitHubStars ./components/proxy"
+
+  - id: BUG-2026-11-06-dashboard-metrics-hang
+    date: "2026-11-06"
+    severity: high
+    priority: critical
+    scope: monitoring,ui
+    summary: "v2.93.0 regression: admin dashboard hangs on 'Loading dashboard...' when /api/monitoring/metrics state-age query blocks (unbounded request context)"
+    file: specs/bugs/BUG-2026-11-06-dashboard-metrics-hang.md
+    status: fixed
+    audit_source: buildship-2026-11-06
+    files_changed:
+      - components/monitoring/monitoring.go
+      - components/monitoring/state_age.go
+      - components/monitoring/state_age_test.go
+    approach: "06f86d39d added state_age DB queries to /api/monitoring/metrics with the unbounded request context; DashboardPage awaits that endpoint before setLoading(false), so a blocked query left it stuck on Loading. Applied the existing 2s stateAgeQueryTimeout to both metrics endpoints (stateAgeReportTimed)."
+    risk_level: medium
+    regression_guards:
+      - "go test -run TestStateAgeReportTimedBoundsBlockedQuery ./components/monitoring (pass)"
+      - "go test ./components/monitoring (pass)"
+      - "go test ./... (pass)"
