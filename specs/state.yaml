@@ -1,6 +1,19 @@
 type: session-state
 context: infra
+bigpowers_version: "2.0.0"
+workflow_mode: solo-git
+project_cycle:
+  phases:
+    discover: completed
+    elaborate: completed
+    plan: completed
+    build: active
+    verify: pending
+    release: pending
+  current_phase: 4
+  active_phase: build
 active_flow: null
+active_epic: e89
 active_epic_id: e89
 active_story_id: e89s01
 active_story_status: planned

@@ -1,5 +1,26 @@
 # BigBase Conventions
 
+## Commands
+| Action | Command |
+|--------|---------|
+| Run    | `go run .` |
+| Test   | `go test ./...` |
+| Build  | `go build -o bigbase .` |
+| Lint   | `golangci-lint run ./...` |
+| Preflight | `npm run preflight` |
+| Test coverage | `go test -coverprofile=coverage.out ./... && go tool cover -func=coverage.out` |
+
+## Stack Profile
+Stack Profile: none (custom Go/ECC profile per CONVENTIONS.md)
+
+## Never-Do List
+- **Never** commit secrets, private keys, or API tokens.
+- **Never** force-push (`--force` or `--force-with-lease`) to `main`.
+- **Never** include `Co-authored-by` or any AI attribution in git commits.
+- **Never** bypass access controls, permission checks, or security gates.
+- **Never** directly import between components without going through kernel event bus.
+- **Never** mutate inputs or assert on timing sleeps in tests (poll or synchronize channels).
+
 ## Architecture
 
 ### Entity-Component-Construct (ECC)

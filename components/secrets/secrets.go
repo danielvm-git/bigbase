@@ -5,6 +5,7 @@
 //
 // Storage is ciphertext-only. List and mutation results are metadata-only;
 // plaintext is available exclusively through the explicit value-read methods.
+// story: e89s03
 package secrets
 
 import (

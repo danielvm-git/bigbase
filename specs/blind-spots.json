@@ -1,51 +1,8 @@
 {
-  "generated_at": "2026-08-12T00:25:17.563534+00:00",
-  "findings": [
-    {
-      "severity": "HIGH",
-      "code": "task-not-passing",
-      "story_id": "e89s01",
-      "detail": "5 tasks are not passing"
-    },
-    {
-      "severity": "HIGH",
-      "code": "task-not-passing",
-      "story_id": "e89s02",
-      "detail": "4 tasks are not passing"
-    },
-    {
-      "severity": "HIGH",
-      "code": "task-not-passing",
-      "story_id": "e89s03",
-      "detail": "4 tasks are not passing"
-    },
-    {
-      "severity": "HIGH",
-      "code": "task-not-passing",
-      "story_id": "e89s04",
-      "detail": "4 tasks are not passing"
-    },
-    {
-      "severity": "HIGH",
-      "code": "task-not-passing",
-      "story_id": "e89s05",
-      "detail": "4 tasks are not passing"
-    },
-    {
-      "severity": "HIGH",
-      "code": "task-not-passing",
-      "story_id": "e89s06",
-      "detail": "5 tasks are not passing"
-    },
-    {
-      "severity": "HIGH",
-      "code": "task-not-passing",
-      "story_id": "e89s07",
-      "detail": "4 tasks are not passing"
-    }
-  ],
+  "generated_at": "2026-11-06T15:29:46.915328+00:00",
+  "findings": [],
   "summary": {
-    "high": 7,
+    "high": 0,
     "medium": 0,
     "low": 0
   }
