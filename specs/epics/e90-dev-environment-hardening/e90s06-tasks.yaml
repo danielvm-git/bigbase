@@ -1,0 +1,12 @@
+story_id: e90s06
+title: "Consolidate agent instruction files — AGENTS.md as single source"
+status: passing
+bcps: 2
+tasks:
+  - id: e90s06t1
+    description: "Verify CLAUDE.md and GEMINI.md are symlinked to AGENTS.md"
+    verify: "test -L CLAUDE.md && test -L GEMINI.md"
+    scenarios: [SC-e90s06-P1-01]
+    risk: P1
+    status: passing
+    security: low

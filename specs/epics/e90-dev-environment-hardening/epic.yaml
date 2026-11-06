@@ -1,0 +1,104 @@
+type: epic-shard
+context: domain
+id: e90
+title: "Dev-Environment Hardening — Config Consolidation, CI Gaps, Tooling Debt"
+wsjf: 9.0
+wsjf_rationale: >
+  BV=9 (prevents recurrence of prod-deploy failure, race regressions, agent tooling
+  contradictions that blocked active sessions) TC=4 (no hard deadline but P1 items
+  actively mislead agents right now) RR=8 (unblocks reliable concurrent-agent
+  workflows, honest CI gates, reproducible fresh clones) /
+  JS=8 (~2 dev-days across 9 stories, mostly config/docs/script work)
+total_bcps: 19
+status: done
+tier: 1
+threat_model: LOW
+depends_on: [e89]
+covers:
+  - .githooks/
+  - .mcp.json
+  - specs/
+  - .github/workflows/
+  - scripts/
+  - AGENTS.md
+  - CLAUDE.md
+  - GEMINI.md
+  - CONVENTIONS.md
+  - README.md
+  - .gitignore
+  - .gosec.json
+  - ui/
+implementation_order:
+  - e90s01
+  - e90s02
+  - e90s03
+  - e90s04
+  - e90s05
+  - e90s06
+  - e90s07
+  - e90s08
+  - e90s09
+stories:
+  - id: e90s01
+    title: "Provision BIGBASE_ROOT_ENCRYPTION_KEY and add required-env gate to CI"
+    bcps: 3
+    status: done
+    delta: ADDED
+    spec: e90s01-provision-env-gate.md
+    tasks: e90s01-tasks.yaml
+  - id: e90s02
+    title: "Fix .gitignore conflict marker and consolidate gosec config"
+    bcps: 1
+    status: done
+    delta: MODIFIED
+    spec: e90s02-conflict-marker-gosec.md
+    tasks: e90s02-tasks.yaml
+  - id: e90s03
+    title: "Reconcile AGENTS.md ctxo mandate with 2026-08-11 revert reality"
+    bcps: 2
+    status: done
+    delta: MODIFIED
+    spec: e90s03-reconcile-agents-ctxo.md
+    tasks: e90s03-tasks.yaml
+  - id: e90s04
+    title: "Add -race CI job and frontend lint/test gate"
+    bcps: 3
+    status: done
+    delta: ADDED
+    spec: e90s04-race-ci-ui-gates.md
+    tasks: e90s04-tasks.yaml
+  - id: e90s05
+    title: "Canonical MCP config — single source, generated adapters"
+    bcps: 3
+    status: done
+    delta: ADDED
+    spec: e90s05-canonical-mcp-configs.md
+    tasks: e90s05-tasks.yaml
+  - id: e90s06
+    title: "Consolidate agent instruction files — AGENTS.md as single source"
+    bcps: 2
+    status: done
+    delta: MODIFIED
+    spec: e90s06-consolidate-agent-docs.md
+    tasks: e90s06-tasks.yaml
+  - id: e90s07
+    title: "Version declaration sweep and docs reconciliation"
+    bcps: 1
+    status: done
+    delta: MODIFIED
+    spec: e90s07-version-declaration-sweep.md
+    tasks: e90s07-tasks.yaml
+  - id: e90s08
+    title: "Dependabot grouping and big-release push discipline"
+    bcps: 2
+    status: done
+    delta: ADDED
+    spec: e90s08-dependabot-groups-push-discipline.md
+    tasks: e90s08-tasks.yaml
+  - id: e90s09
+    title: "Async-assert pattern sweep and test guideline"
+    bcps: 2
+    status: done
+    delta: MODIFIED
+    spec: e90s09-async-assert-pattern-sweep.md
+    tasks: e90s09-tasks.yaml

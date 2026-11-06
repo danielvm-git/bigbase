@@ -1,70 +1,39 @@
 type: requirements-scope
 context: domain
 version: "1.0.0"
-release: "Next BigBase secret-management increment"
+release: "e90: Dev-Environment Hardening"
 core_value: >-
-  Give BigBase operators one secure, auditable, project-scoped place to manage
-  secrets and deliver only authorized values to builds and running applications.
+  Consolidate dev-environment contracts, eliminate config duplication (MCP, agent docs,
+  gosec), close critical CI verification gaps (race detection, UI gates, required-env
+  preflight), and enforce tooling hygiene across BigBase.
 summary: >-
-  This initiative hardens the existing site environment-variable path, introduces
-  Project, Environment, Folder, Secret, and SecretVersion concepts, and adds a
-  native encrypted secret manager. Existing site_env_vars routes remain usable
-  while values migrate to the native model.
-
-  The release provides authenticated REST, Admin UI, MCP, and deployment-resolver
-  paths. It deliberately stops before advanced Infisical features such as dynamic
-  secrets, external KMS, secret syncs, PKI, PAM, and Kubernetes delivery.
+  Epic e90 addresses technical debt in the dev and CI environment across 9 stories covering
+  provisioning, gosec, agent instructions, CI race/UI testing, canonical MCP configs,
+  version claims, Dependabot grouping, and async testing patterns.
 in_scope:
-  - id: e89s01
-    title: Harden existing site-secret storage and delivery
-  - id: e89s02
-    title: Add organization-scoped Projects and Environments
-  - id: e89s03
-    title: Add versioned envelope-encrypted project secrets
-  - id: e89s04
-    title: Add secret REST API, policies, and audit events
-  - id: e89s05
-    title: Add Admin UI for project secrets
-  - id: e89s06
-    title: Resolve project and site secrets in deployments
-  - id: e89s07
-    title: Secure MCP secret-management tools
+  - id: e90s01
+    title: Provision BIGBASE_ROOT_ENCRYPTION_KEY and add required-env gate to CI
+  - id: e90s02
+    title: Fix .gitignore conflict marker and consolidate gosec config
+  - id: e90s03
+    title: Reconcile AGENTS.md ctxo mandate with 2026-08-11 revert reality
+  - id: e90s04
+    title: Add -race CI job and frontend lint/test gate
+  - id: e90s05
+    title: Canonical MCP config — single source, generated adapters
+  - id: e90s06
+    title: Consolidate agent instruction files — AGENTS.md as single source
+  - id: e90s07
+    title: Version declaration sweep and docs reconciliation
+  - id: e90s08
+    title: Dependabot grouping and big-release push discipline
+  - id: e90s09
+    title: Async-assert pattern sweep and test guideline
 out_of_scope:
-  - item: External AWS KMS, GCP KMS, and HSM adapters
-    reason: Requires new provider dependencies and a separate threat model.
-  - item: Dynamic secrets and provider-specific rotation
-    reason: Depends on external systems and is not required for static deployment secrets.
-  - item: Secret syncs to GitHub, Vercel, AWS, or other platforms
-    reason: Adds outbound credentials and retry/reconciliation surfaces.
-  - item: PKI, PAM, honey tokens, secret scanning, and agent vaults
-    reason: Separate product capabilities with different domain models.
-  - item: Kubernetes Operator, Agent, and generated client SDKs
-    reason: BigBase currently has no Kubernetes runtime or SDK-generation commitment.
-  - item: Approval workflows, secret sharing, and cross-project imports
-    reason: Require a mature policy and collaboration model after core access control.
-  - item: Wholesale Infisical source-code port
-    reason: Runtime, storage, licensing, and operational assumptions do not match BigBase.
+  - item: Rewriting backend business logic or kernel event bus
+    reason: e90 is strictly tooling, CI, docs, and environment configuration.
+  - item: Changing database schemas or API payload models
+    reason: Unrelated to dev environment hardening.
 constraints:
-  - BigBase remains a single Go binary using ECC lifecycle and composition-root wiring.
-  - SQLite and PostgreSQL are supported with parameterized SQL and equivalent behavior.
-  - No Redis, containers, or new external dependency is required for the core release.
-  - Existing site_env_vars REST/UI/MCP behavior remains available during migration.
-  - Production secret encryption fails closed; plaintext mode is explicit and development-only.
-  - Secret values never appear in logs, audit records, list responses, or write responses.
-success_criteria:
-  - Missing or invalid production encryption configuration prevents startup or secret writes.
-  - Cross-organization HTTP and MCP requests cannot read or mutate another tenant's secrets.
-  - Secret list and mutation responses contain metadata and masked previews only.
-  - Every update creates an immutable SecretVersion and preserves prior versions.
-  - Build and runtime environments use one deterministic resolver with tested precedence.
-  - Decryption failures fail protected deployment paths instead of silently omitting values.
-  - Build, runtime, diagnostic, and LLM log paths redact resolved secret values.
-  - Existing site_env_vars remain deployable during dual-read migration.
-  - SQLite/PostgreSQL migrations, backup/restore, race tests, API tests, UI tests, and E2E tests pass.
-references:
-  - specs/planning-context.yaml
-  - specs/adr/0008-native-secret-manager.md
-  - specs/adr/0009-secret-envelope-encryption.md
-  - specs/security/epics/e89/THREAT_MODEL.md
-  - specs/IMPACT_LATEST.md
-  - https://github.com/Infisical/infisical
+  - Pure Go and lightweight Node toolchain where possible.
+  - Maintain backward compatibility with existing developer workflows.

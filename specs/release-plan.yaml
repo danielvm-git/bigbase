@@ -776,9 +776,10 @@ epics:
 - id: e90
   title: "Dev-Environment Hardening — Config Consolidation, CI Gaps, Tooling Debt"
   wsjf: 9.0
-  mode: flat
+  mode: capsule
   tier: 1
-  status: open
+  status: done
   depends_on: [e89]
   note: "Dev-environment hardening: config consolidation, CI gates, MCP configs, single source agent docs."
-  file: epics/e90-dev-environment-hardening.yaml
+  capsule_dir: epics/e90-dev-environment-hardening
+  file: epics/e90-dev-environment-hardening/epic.yaml
