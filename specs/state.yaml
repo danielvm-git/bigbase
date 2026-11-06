@@ -103,6 +103,5 @@ handoff:
   - Resolve F-003 runtime fail-open decryption/fetch behavior and log redaction
   - Resolve F-004 MCP internal error disclosure with generic typed errors
   - Run build-epic step 0 security review on the e89 implementation branch
-  next_skill: kickoff-branch
-  context: Bug cycle complete; e89 yolo mode may resume after a clean planning checkpoint.
-    Security gate remains non-bypassable.
+  next_skill: survey-context
+  context: Readiness gates remediated and merged to main via release-branch solo-git landing.
