@@ -44,6 +44,16 @@ if [ -n "$STAGED_SRC" ]; then
     fi
 fi
 
+# Unresolved merge-conflict markers must never be committed. One
+# implementation (scripts/check-conflict-markers.sh) backs both this hook and
+# the CI verify job.
+if [ -x scripts/check-conflict-markers.sh ]; then
+    if ! bash scripts/check-conflict-markers.sh; then
+        echo "❌ Resolve the conflict markers before committing"
+        exit 1
+    fi
+fi
+
 # Required env keys (deploy.yml REQUIRED_ENV_KEYS) must be documented in
 # .env.example — the BIGBASE_ROOT_ENCRYPTION_KEY class of config drift. This
 # mirrors the CI verify gate (scripts/check-required-env-documented.sh).

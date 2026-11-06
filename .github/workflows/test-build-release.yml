@@ -400,12 +400,7 @@ jobs:
         run: gitleaks detect --source . --no-git --no-banner --config .gitleaks.toml
 
       - name: Check conflict markers
-        run: |
-          if git grep -n -E '^(<<<<<<<|>>>>>>>)( |$)|^=======$' -- \
-            ':!CHANGELOG.md' ':!specs/archive/**'; then
-            echo "ERROR: unresolved merge-conflict marker found"
-            exit 1
-          fi
+        run: bash scripts/check-conflict-markers.sh
 
       # Required deploy env keys (deploy.yml REQUIRED_ENV_KEYS) must be
       # documented in .env.example — catches the BIGBASE_ROOT_ENCRYPTION_KEY
