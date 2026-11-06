@@ -1,0 +1,43 @@
+story_id: e90s04
+verified_at: "2026-11-06T17:42:28Z"
+verifier: verify-work
+risk: P1
+phases:
+  preflight:
+    passed: true
+    command: "npm run preflight"
+    note: "go vet + go test ./... + gosec + build + codeql + gitleaks on feat/e90-dev-environment-hardening"
+  build:
+    passed: true
+    command: "go build -o /dev/null ."
+  task_verifies:
+    passed: true
+    count: 3
+    commands:
+      - command: "grep -q 'test-race:' .github/workflows/test-build-release.yml"
+        exit_code: 0
+      - command: "grep -q 'test-ui:' .github/workflows/test-build-release.yml"
+        exit_code: 0
+      - command: "go test -race -run 'TestDrainStatusHistory|TestDrainWithoutRegisteredAppRecordsHistory' -timeout 120s ./components/deploy/"
+        exit_code: 0
+  terminal_verdict:
+    command: "go test -race -run 'TestDrainStatusHistory|TestDrainWithoutRegisteredAppRecordsHistory' -timeout 120s ./components/deploy/"
+    exit_code: 0
+    captured_at: "2026-11-06T17:42:28Z"
+    note: "Single contiguous run; the full task_verifies block above is the same session."
+  security:
+    passed: true
+    report: "specs/security/epics/e90/THREAT_MODEL.md"
+  blind_spots:
+    passed: true
+    command: "bash scripts/check-blind-spots.sh"
+    note: "0 high / 0 medium / 0 low findings"
+  trace:
+    passed: true
+    command: "bash scripts/trace-stories.sh --strict"
+    exit_code: 0
+gaps:
+  closed: true
+  remaining: []
+notes: >-
+  test-race and test-ui jobs exist and gate verify/release/build. The race job exposed a real defect: drain transitions never reached status_history. Fixed at the cause (forceStatus + idempotent drain) after the full 4-package -race suite went green.

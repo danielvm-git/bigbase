@@ -1,5 +1,13 @@
 {
-  "generated_at": "2026-11-06T15:42:30.483035+00:00",
-  "suspect_links": [],
-  "count": 0
+  "generated_at": "2026-11-06T17:36:06.256800+00:00",
+  "suspect_links": [
+    {
+      "story_id": "e89s06",
+      "spec": "specs/epics/e89-native-secret-manager/e89s06-deployment-resolution.md",
+      "newer_tagged_files": [
+        "components/deploy/engine.go"
+      ]
+    }
+  ],
+  "count": 1
 }

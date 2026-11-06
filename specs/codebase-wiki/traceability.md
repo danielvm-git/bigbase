@@ -1,6 +1,6 @@
 # Traceability Matrix
 
-Generated: 2026-11-06T15:42:31.183262+00:00
+Generated: 2026-11-06T17:35:59.511165+00:00
 
 ## Story Coverage
 
@@ -71,6 +71,15 @@ Generated: 2026-11-06T15:42:31.183262+00:00
 | e89s05 | Add Admin UI for project secrets | 2 | 1 | Covered |
 | e89s06 | Resolve project and site secrets in deployments | 2 | 0 | Covered |
 | e89s07 | Secure MCP secret-management tools | 2 | 1 | Covered |
+| e90s01 | Provision BIGBASE_ROOT_ENCRYPTION_KEY and add required-env gate to CI | 1 | 0 | Covered |
+| e90s02 | Fix .gitignore conflict marker and consolidate gosec config | 2 | 0 | Covered |
+| e90s03 | Reconcile AGENTS.md ctxo mandate with 2026-08-11 revert reality | 1 | 0 | Covered |
+| e90s04 | Add -race CI job and frontend lint/test gate | 1 | 1 | Covered |
+| e90s05 | Canonical MCP config — single source, generated adapters | 1 | 0 | Covered |
+| e90s06 | Consolidate agent instruction files — AGENTS.md as single source | 1 | 0 | Covered |
+| e90s07 | Version declaration sweep and docs reconciliation | 1 | 0 | Covered |
+| e90s08 | Dependabot grouping and big-release push discipline | 1 | 0 | Covered |
+| e90s09 | Async-assert pattern sweep and test guideline | 1 | 1 | Covered |
 
 ## Gaps
 
@@ -119,4 +128,4 @@ Generated: 2026-11-06T15:42:31.183262+00:00
 
 ## Summary
 
-Stories: 23 covered / 42 dark / 65 total.
+Stories: 32 covered / 42 dark / 74 total.

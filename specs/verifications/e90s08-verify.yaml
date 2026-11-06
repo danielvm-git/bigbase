@@ -1,0 +1,39 @@
+story_id: e90s08
+verified_at: "2026-11-06T17:42:28Z"
+verifier: verify-work
+risk: P2
+phases:
+  preflight:
+    passed: true
+    command: "npm run preflight"
+    note: "go vet + go test ./... + gosec + build + codeql + gitleaks on feat/e90-dev-environment-hardening"
+  build:
+    passed: true
+    command: "go build -o /dev/null ."
+  task_verifies:
+    passed: true
+    count: 1
+    commands:
+      - command: "grep -q 'Rebase before push' CONVENTIONS.md"
+        exit_code: 0
+  terminal_verdict:
+    command: "grep -q 'Rebase before push' CONVENTIONS.md"
+    exit_code: 0
+    captured_at: "2026-11-06T17:42:28Z"
+    note: "Single contiguous run; the full task_verifies block above is the same session."
+  security:
+    passed: true
+    report: "specs/security/epics/e90/THREAT_MODEL.md"
+  blind_spots:
+    passed: true
+    command: "bash scripts/check-blind-spots.sh"
+    note: "0 high / 0 medium / 0 low findings"
+  trace:
+    passed: true
+    command: "bash scripts/trace-stories.sh --strict"
+    exit_code: 0
+gaps:
+  closed: true
+  remaining: []
+notes: >-
+  All four Dependabot ecosystems declare update groups; rebase-before-push discipline is documented in CONVENTIONS.md.

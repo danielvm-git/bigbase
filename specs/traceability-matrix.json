@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-06T15:42:31.183262+00:00",
+  "generated_at": "2026-11-06T17:35:59.511165+00:00",
   "source": [
     "specs/release-plan.yaml",
     "specs/epics/**/epic.yaml",
@@ -593,16 +593,102 @@
         "components/mcp/secrets_test.go"
       ],
       "status": "Covered"
+    },
+    {
+      "story_id": "e90s01",
+      "title": "Provision BIGBASE_ROOT_ENCRYPTION_KEY and add required-env gate to CI",
+      "files": [
+        "scripts/check-required-env-documented.sh"
+      ],
+      "tests": [],
+      "status": "Covered"
+    },
+    {
+      "story_id": "e90s02",
+      "title": "Fix .gitignore conflict marker and consolidate gosec config",
+      "files": [
+        "scripts/check-conflict-markers.sh",
+        "scripts/verify-cwe-fixture-sync.sh"
+      ],
+      "tests": [],
+      "status": "Covered"
+    },
+    {
+      "story_id": "e90s03",
+      "title": "Reconcile AGENTS.md ctxo mandate with 2026-08-11 revert reality",
+      "files": [
+        "scripts/setup-dev.sh"
+      ],
+      "tests": [],
+      "status": "Covered"
+    },
+    {
+      "story_id": "e90s04",
+      "title": "Add -race CI job and frontend lint/test gate",
+      "files": [
+        "tests/e2e/axe-scan.spec.ts"
+      ],
+      "tests": [
+        "tests/e2e/axe-scan.spec.ts"
+      ],
+      "status": "Covered"
+    },
+    {
+      "story_id": "e90s05",
+      "title": "Canonical MCP config \u2014 single source, generated adapters",
+      "files": [
+        "scripts/gen-mcp-configs.sh"
+      ],
+      "tests": [],
+      "status": "Covered"
+    },
+    {
+      "story_id": "e90s06",
+      "title": "Consolidate agent instruction files \u2014 AGENTS.md as single source",
+      "files": [
+        "scripts/generate-agent-guide.sh"
+      ],
+      "tests": [],
+      "status": "Covered"
+    },
+    {
+      "story_id": "e90s07",
+      "title": "Version declaration sweep and docs reconciliation",
+      "files": [
+        "scripts/check-version-drift.sh"
+      ],
+      "tests": [],
+      "status": "Covered"
+    },
+    {
+      "story_id": "e90s08",
+      "title": "Dependabot grouping and big-release push discipline",
+      "files": [
+        "scripts/land-branch.sh"
+      ],
+      "tests": [],
+      "status": "Covered"
+    },
+    {
+      "story_id": "e90s09",
+      "title": "Async-assert pattern sweep and test guideline",
+      "files": [
+        "components/deploy/state_lifecycle_test.go"
+      ],
+      "tests": [
+        "components/deploy/state_lifecycle_test.go"
+      ],
+      "status": "Covered"
     }
   ],
   "summary": {
-    "total": 65,
-    "covered": 23,
+    "total": 74,
+    "covered": 32,
     "dark": 42,
     "orphans": 14
   },
   "oracle_stats": {
-    "explicit_tag_links": 23,
+    "explicit_tag_links": 32,
     "heuristic_links": 0,
     "heuristic_ratio": 0.0
   }
