@@ -450,7 +450,7 @@ func (m *Monitoring) handleMetrics(w http.ResponseWriter, r *http.Request) {
 			"avg_latency_ms": avgLatency,
 		},
 		"host":       m.LatestHostMetrics(),
-		"state_ages": m.stateAgeReport(r.Context()),
+		"state_ages": m.stateAgeReportTimed(),
 	})
 }
 
@@ -523,7 +523,7 @@ func (m *Monitoring) handlePrometheusMetrics(w http.ResponseWriter, r *http.Requ
 	writePromGauge(w, "bigbase_goroutines", "Number of goroutines", float64(s.sys.Goroutines))
 	writePromGauge(w, "bigbase_memory_mb", "Memory usage in MB", s.sys.MemoryMB)
 	writePromGauge(w, "bigbase_cpu_percent", "CPU usage percent", s.sys.CPUPercent)
-	writeStateAgeGauges(w, m.stateAgeReport(r.Context()))
+	writeStateAgeGauges(w, m.stateAgeReportTimed())
 
 	for path, ep := range s.endpointStats {
 		writePromLinef(w, "bigbase_endpoint_requests_total{path=\"%s\"} %d\n", path, ep.count)

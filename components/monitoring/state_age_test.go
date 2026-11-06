@@ -2,10 +2,12 @@ package monitoring
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -320,4 +322,54 @@ func TestStateAgeExposedOnMetricsEndpoints(t *testing.T) {
 			}
 		}
 	})
+}
+
+// blockingDBer blocks in QueryContext until the context is cancelled, then
+// returns the cancellation error. It exercises the bounded-query path without
+// needing a real database.
+type blockingDBer struct {
+	started   chan struct{}
+	startOnce sync.Once
+}
+
+func (b *blockingDBer) QueryContext(ctx context.Context, _ string, _ ...any) (*sql.Rows, error) {
+	b.startOnce.Do(func() { close(b.started) })
+	<-ctx.Done()
+	return nil, ctx.Err()
+}
+
+func (b *blockingDBer) ExecContext(context.Context, string, ...any) (sql.Result, error) {
+	return nil, nil
+}
+func (b *blockingDBer) QueryRowContext(context.Context, string, ...any) *sql.Row {
+	return nil
+}
+func (b *blockingDBer) Exec(string, ...any) (sql.Result, error) { return nil, nil }
+func (b *blockingDBer) Query(string, ...any) (*sql.Rows, error) { return nil, nil }
+func (b *blockingDBer) QueryRow(string, ...any) *sql.Row          { return nil }
+func (b *blockingDBer) Migrate(string) error                      { return nil }
+
+// TestStateAgeReportTimedBoundsBlockedQuery pins the v2.93.0 fix: the metrics
+// endpoint must not hang the admin dashboard when the state-age DB query
+// blocks. stateAgeReportTimed wraps the query in stateAgeQueryTimeout, so it
+// returns an "unavailable" report promptly instead of blocking forever.
+func TestStateAgeReportTimedBoundsBlockedQuery(t *testing.T) {
+	blocker := &blockingDBer{started: make(chan struct{})}
+	m := New(Options{DB: blocker, Logger: kernel.NoopLogger{}})
+
+	start := time.Now()
+	report := m.stateAgeReportTimed()
+	elapsed := time.Since(start)
+
+	if elapsed > 3*time.Second {
+		t.Fatalf("stateAgeReportTimed took %v, want bounded by %v", elapsed, stateAgeQueryTimeout)
+	}
+	if len(report.Unavailable) != len(stateMachineSpecs) {
+		t.Fatalf("unavailable = %v, want all %d state machines", report.Unavailable, len(stateMachineSpecs))
+	}
+	select {
+	case <-blocker.started:
+	default:
+		t.Fatal("QueryContext was never called — the bound did not exercise the query path")
+	}
 }
