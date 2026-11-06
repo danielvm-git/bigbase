@@ -108,7 +108,7 @@ release:
 buildship:
   cycle: build-ship
   scope: all pending work
-  phase: triage
+  phase: ship
   baseline:
     preflight: green
     branch: feat/e90-dev-environment-hardening
@@ -117,17 +117,14 @@ buildship:
     local_main_ahead: 5
     e90_branch_ahead_of_origin_main: 29
   work_items:
-    bugs:
-      - id: BUG-2026-07-10T160006
-        status: resolved-by-removal
-        action: >-
-          Already resolved (WithProjectID/ProjectIDFromContext removed in e673ed0de).
-          No code fix needed; registry status left as resolved with the existing
-          resolution note. Not a work item — terminal state.
+    bugs: []
     failing_tests: []
-    unshipped:
-      - '5 readiness-gates commits on local main (04fb4554e..cb1f1791b inverse)'
-      - '24 e90 commits on feat/e90-dev-environment-hardening'
+  ship_plan:
+    - push_local_main: "Fast-forward origin/main by 5 chore-only readiness-gates commits; big-release skips chore so no release/build/deploy."
+    - ship_e90: "feat/e90-dev-environment-hardening has 4 feat + 2 fix commits, so merging auto-publishes a release and auto-deploys to prod. Publishing a release is outside this run's approval, so the e90 merge is paused for user confirmation."
+  triage_note: >-
+    The only non-fixed registry entry (BUG-2026-07-10T160006) is already
+    resolved-by-removal with a resolution note, so it is not a work item.
 metrics:
   session_start: '2026-07-12T16:00:00-03:00'
   session_end: '2026-07-12T18:45:00-03:00'
