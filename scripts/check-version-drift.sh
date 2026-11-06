@@ -7,6 +7,10 @@
 
 set -euo pipefail
 
+# Set BIGBASE_VERSION_ROOT to check a directory other than this repository
+# (used by scripts/check-version-drift.test.cjs fixtures).
+cd "${BIGBASE_VERSION_ROOT:-$(git rev-parse --show-toplevel)}"
+
 FAILED=false
 
 # ── Source of truth ───────────────────────────────────────────────────────────
@@ -103,6 +107,51 @@ for f in README.md CONTRIBUTING.md CLAUDE.md GEMINI.md AGENTS.md; do
   fi
 done
 
+# ── CI version pins ───────────────────────────────────────────────────────────
+# A CI pin that drifts from go.mod/.nvmrc builds with a different toolchain
+# than the one the repository declares. Major.minor is enough for Go (go.mod
+# carries the patch); Node pins the major only.
+CI_WORKFLOW=".github/workflows/test-build-release.yml"
+if [[ -f "$CI_WORKFLOW" ]]; then
+  ci_pin() {
+    sed -n "s/^[[:space:]]*$1:[[:space:]]*['\"]\{0,1\}\([0-9][0-9.]*\)['\"]\{0,1\}[[:space:]]*$/\1/p" \
+      "$CI_WORKFLOW" | head -1
+  }
+
+  CI_GO=$(ci_pin GO_VERSION)
+  if [[ -n "$CI_GO" ]]; then
+    if [[ "$CI_GO" != "$GOMOD_MAJOR_MINOR" ]]; then
+      fail "$CI_WORKFLOW: GO_VERSION $CI_GO (expected $GOMOD_MAJOR_MINOR per go.mod)"
+    else
+      ok "$CI_WORKFLOW: GO_VERSION $CI_GO"
+    fi
+  fi
+
+  CI_NODE=$(ci_pin NODE_VERSION)
+  if [[ -n "$CI_NODE" ]]; then
+    if [[ "$CI_NODE" != "$(echo "$NVMRC_VERSION" | cut -d. -f1)" ]]; then
+      fail "$CI_WORKFLOW: NODE_VERSION $CI_NODE (expected $NVMRC_VERSION per .nvmrc)"
+    else
+      ok "$CI_WORKFLOW: NODE_VERSION $CI_NODE"
+    fi
+  fi
+fi
+
+# ── Deploy-host toolchain contract ───────────────────────────────────────────
+# toolchain.toml is the single source of truth for binaries the deploy host
+# needs; its Go floor must agree with go.mod too.
+TOOLCHAIN="toolchain.toml"
+if [[ -f "$TOOLCHAIN" ]]; then
+  TOOLCHAIN_GO=$(awk '/^\[tools\.required\.go\]/{found=1; next} found && /^min[[:space:]]*=/{gsub(/[" ]/, "", $3); print $3; exit}' "$TOOLCHAIN")
+  if [[ -n "$TOOLCHAIN_GO" ]]; then
+    if [[ "$TOOLCHAIN_GO" != "$GOMOD_MAJOR_MINOR" ]]; then
+      fail "$TOOLCHAIN: go min $TOOLCHAIN_GO (expected $GOMOD_MAJOR_MINOR per go.mod)"
+    else
+      ok "$TOOLCHAIN: go min $TOOLCHAIN_GO"
+    fi
+  fi
+fi
+
 # ── README version badge must be dynamic ──────────────────────────────────────
 # The release bot bumps VERSION/CHANGELOG, not README. A literal
 # `badge/version-X.Y.Z` silently drifts (it read 2.89.0 while VERSION was
@@ -113,7 +162,7 @@ else
   ok "README.md version badge is dynamic"
 fi
 
-# ── Result ────────────────────────────────────────────────────────────────────
+# ── Result ──────────────────────────────
 echo ""
 if [[ "$FAILED" == "true" ]]; then
   echo "ERROR: Version drift detected. Update the files listed above."
