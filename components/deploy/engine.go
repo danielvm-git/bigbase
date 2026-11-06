@@ -130,7 +130,14 @@ func (d *Deploy) stopDeployment(id, newStatus string) {
 // The normal path is TransitionState; this override still appends
 // status_history so the audit trail never loses a transition (e90s04: drain of
 // an app-less deployment left history frozen at "running").
+//
+// The read, the write and the append share the same mutex TransitionState uses
+// for its history read-modify-write, so a concurrent transition cannot slip
+// between them and leave the transition's From field stale.
 func (d *Deploy) forceStatus(ctx context.Context, id, newStatus, reason string) {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+
 	var current string
 	if err := d.db.QueryRowContext(ctx,
 		"SELECT status FROM deployments WHERE id = ?", id).Scan(&current); err != nil {
@@ -146,14 +153,11 @@ func (d *Deploy) forceStatus(ctx context.Context, id, newStatus, reason string) 
 		return
 	}
 
-	transition := StatusTransition{
+	d.appendStatusHistory(ctx, id, StatusTransition{
 		From:      current,
 		To:        newStatus,
 		Timestamp: time.Now().UTC().Format(time.RFC3339),
-	}
-	d.mu.Lock()
-	d.appendStatusHistory(ctx, id, transition)
-	d.mu.Unlock()
+	})
 
 	d.logger.Info("forced status change", "deployment_id", id, "from", current, "to", newStatus, "reason", reason)
 }
