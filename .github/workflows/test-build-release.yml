@@ -414,6 +414,12 @@ jobs:
       - name: Check MCP adapter files are up-to-date
         run: bash scripts/gen-mcp-configs.sh --check
 
+      # The gates above are only trustworthy if their detection logic is
+      # exercised — these tests drive each script's failing path against
+      # throwaway fixtures (e90s01/s02/s05/s07).
+      - name: Gate script tests
+        run: node --test scripts/*.test.cjs
+
       - name: Check Conventional Commits
         run: bash scripts/check-conventional-commits.sh
 

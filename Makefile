@@ -1,4 +1,4 @@
-.PHONY: all build test lint preflight mcp mcp-check clean
+.PHONY: all build test test-scripts lint preflight mcp mcp-check clean
 
 all: build
 
@@ -7,6 +7,10 @@ build:
 
 test:
 	go test ./...
+
+# Gate-script tests (bash gates driven from Node's test runner).
+test-scripts:
+	node --test scripts/*.test.cjs
 
 lint:
 	golangci-lint run ./...
