@@ -72,7 +72,6 @@ allure-history/
 .pi/
 .mimocode/
 mimocode.jsonc
-<stdin>
 .agents/mcp_config.json
 agentic-cps/
 
