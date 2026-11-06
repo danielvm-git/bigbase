@@ -203,21 +203,41 @@ func (d *Deploy) drainOldDeployments(siteID string) {
 	}
 }
 func (d *Deploy) drainDeployment(id string) {
+	// Drains are idempotent: the same deployment can be collected by a second
+	// trigger before the first drain finishes, and a duplicate drain used to
+	// force-status "stopped" behind the first one's back.
 	d.mu.Lock()
+	if d.draining == nil {
+		d.draining = make(map[string]bool)
+	}
+	if d.draining[id] {
+		d.mu.Unlock()
+		d.logger.Debug("drain: already in progress", "id", id)
+		return
+	}
+	d.draining[id] = true
 	app, hasApp := d.apps[id]
 	d.mu.Unlock()
+
+	defer func() {
+		d.mu.Lock()
+		delete(d.draining, id)
+		d.mu.Unlock()
+	}()
+
+	// Record the drain intent before branching: the orphan path below has no
+	// in-memory app to shut down, but the transition still belongs in
+	// status_history.
+	ctx := context.Background()
+	if err := d.TransitionState(ctx, id, "draining"); err != nil {
+		d.logger.Warn("drain: transition to draining failed", "id", id, "error", err)
+	}
 
 	if !hasApp {
 		d.logger.Warn("drain: no running app found", "id", id)
 		// Try to stop via DB (orphaned process handling)
 		d.stopDeployment(id, "stopped")
 		return
-	}
-
-	// Transition to draining
-	ctx := context.Background()
-	if err := d.TransitionState(ctx, id, "draining"); err != nil {
-		d.logger.Warn("drain: transition to draining failed", "id", id, "error", err)
 	}
 
 	// Signal the Supervisor so any respawn loop knows this is intentional.

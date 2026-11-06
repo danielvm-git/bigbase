@@ -119,6 +119,9 @@ type Deploy struct {
 	DrainTimeout        time.Duration
 	oldDeploymentsMu    sync.RWMutex
 	oldDeployments      map[string][]string
+	// draining guards against a second drain racing the first one (a
+	// deployment can be collected by two triggers before either drain ends).
+	draining            map[string]bool
 	dbDriver            string
 	dbDSN               string
 	diagnosisReader     DeployDiagnosisReader
@@ -225,6 +228,7 @@ func New(opts Options) *Deploy {
 		sm:             NewStateMachine(),
 		DrainTimeout:   drainTimeout,
 		oldDeployments: make(map[string][]string),
+		draining:       make(map[string]bool),
 		dbDriver:       opts.DBDriver,
 		dbDSN:          opts.DBDSN,
 	}
