@@ -1,3 +1,45 @@
+# BigBase — Engineering & Agent Rules
+
+Read CONVENTIONS.md before any GitHub or git operation.
+
+## Project
+Single-binary, component-based BaaS platform using Entity-Component-Construct (ECC) architecture.
+Stack: Go 1.26.3 / ECC Kernel + Plugins / SQLite + PostgreSQL
+
+## Commands
+| Action | Command |
+|--------|---------|
+| Run    | `go run .` |
+| Test   | `go test ./...` |
+| Build  | `go build -o bigbase .` |
+| Lint   | `golangci-lint run ./...` |
+| Preflight | `npm run preflight` |
+| Test coverage | `go test -coverprofile=coverage.out ./... && go tool cover -func=coverage.out` |
+
+## Session Start
+Before starting work in any session:
+1. Read `CLAUDE.md` and `CONVENTIONS.md`.
+2. Read `specs/state.yaml` and `specs/release-plan.yaml`.
+3. Check active epic and story under `specs/epics/`.
+
+## Agent Rules
+- Read specs YAML (not `specs/archive/`) before writing code.
+- All planning specifications MUST be written under `specs/` before code.
+- Write minimum code that solves the stated problem.
+- Run tests after every change. Show evidence before declaring done.
+- Follow Conventional Commits format (`feat:`, `fix:`, `chore:`, etc.).
+- NEVER include `Co-authored-by` or AI attribution in commits.
+
+## Model Routing Matrix
+
+| Task Category | Optimal Model | Reason |
+| :--- | :--- | :--- |
+| **Global Planning & ADRs** | `Claude Opus 4.6 (Thinking)` or `Gemini 3.1 Pro (High)` | Deep reasoning, architecture trade-offs |
+| **Codebase Context Search** | `Claude Sonnet 4.6` or `Gemini 3.1 Pro (Low)` | Balanced context window + speed |
+| **Feature Coding & TDD Loops** | `Claude Sonnet 4.6 (Thinking)` or `Gemini 3.1 Pro (High)` | Precision coding, exact syntax execution |
+| **Verification & Utility Tasks** | `Claude Haiku 3.5` or `Gemini 3.5 Flash` | Low latency for lint/test/compile |
+| **Browser UI Testing** | `Claude Haiku 3.5` or `Gemini 3.5 Flash (Low)` | Fast image/visual processing |
+
 ## ctxo MCP Tool Usage
 
 Use ctxo MCP tools before source changes when the index is available and fresh. If ctxo is unavailable or stale, continue with LSP and repository search; do not block development on an external index.
@@ -159,3 +201,12 @@ Env vars: `OPENSRC_HOME` (cache location), `GITHUB_TOKEN` / `GITLAB_TOKEN` / `BI
 ### The Rule
 
 **opensrc is for reading code, not docs.** When your question is "how does X work internally?" or "what does this function actually do?", reach for opensrc first. The source is the ground truth — types, docs, and blog posts are approximations. Only fall back to `web_search`, `fetch_content`, or `context7` when you need documentation, usage examples, community patterns, or repo metadata that isn't in the source.
+
+<!-- BEGIN sqz-claude-guidance (auto-installed by sqz init; remove this block to disable) -->
+
+## sqz — Context Compression (READ FIRST)
+
+sqz is installed in this project. Prefer `sqz_read_file`, `sqz_grep`, `sqz_list_dir` MCP tools
+over the built-in Read/Grep/Glob for any file > ~2KB. Repeat reads return a `§ref:HASH§` token.
+
+<!-- END sqz-claude-guidance -->

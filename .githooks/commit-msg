@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+# commit-msg hook: enforces Conventional Commits format
+# format: <type>(<scope>): <subject>
+set -euo pipefail
+
+msg_file="$1"
+msg=$(head -n 1 "$msg_file")
+
+# Allow merge commits or fixup/squash commits
+if echo "$msg" | grep -qE "^(Merge branch|Merge pull request|fixup!|squash!)"; then
+    exit 0
+fi
+
+# Regex for Conventional Commits
+CC_REGEX="^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\([a-zA-Z0-9_-]+\))?!?: .+$"
+
+if ! echo "$msg" | grep -qE "$CC_REGEX"; then
+    echo "❌ [hook-commits] Invalid commit message format:" >&2
+    echo "   '$msg'" >&2
+    echo "" >&2
+    echo "   Commit message must follow Conventional Commits format:" >&2
+    echo "   <type>(<scope>): <subject>" >&2
+    echo "   Example: feat(auth): add project scoping to JWT" >&2
+    echo "   Types: feat, fix, docs, style, refactor, perf, test, build, ci, chore, revert" >&2
+    exit 1
+fi
+
+# Check for AI attribution
+if grep -qiE "Co-authored-by:\s*(Claude|Gemini|ChatGPT|OpenAI|Anthropic|Copilot|AI|Assistant)" "$msg_file"; then
+    echo "❌ [hook-commits] AI attribution footer (Co-authored-by) is prohibited in commit message." >&2
+    exit 1
+fi
+
+exit 0
