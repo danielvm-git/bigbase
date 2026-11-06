@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# story: e90s08
 # Safely merge a feature branch into main.
 # Usage: scripts/land-branch.sh <branch-name>
 set -euo pipefail

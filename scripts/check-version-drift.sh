@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# story: e90s07
 # check-version-drift.sh — Assert that Go and Node version claims in docs
 # match the actual go.mod toolchain and .nvmrc declarations.
 #
