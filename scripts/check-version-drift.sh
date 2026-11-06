@@ -4,6 +4,10 @@
 # match the actual go.mod toolchain and .nvmrc declarations.
 #
 # Fails with a non-zero exit and a list of mismatches. Used in CI verify job.
+#
+# Run from the repository root, or point BIGBASE_VERSION_ROOT at one. Outside a
+# git checkout, this exits non-zero on purpose: a drift gate that silently
+# passes when it cannot see the files is worse than a loud failure.
 
 set -euo pipefail
 
