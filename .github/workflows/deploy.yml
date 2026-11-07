@@ -116,18 +116,119 @@ jobs:
         if: steps.check.outputs.proceed == 'true'
         run: chmod +x ${{ env.BINARY_PATH }}
 
-      # --- Upload binary via SCP ---
-      - name: Upload binary to VPS
+      # --- SSH plumbing: one place owns the key and the options. ---
+      # The previous flow handed the key straight to appleboy/scp-action, which
+      # masked both the destination and the remote stderr. A full disk on the
+      # VPS surfaced only as "error copy file to dest: ***, error message:
+      # Process exited with status 1" (run 42316028080, 2026-11-07) — the cause
+      # was invisible. Owning the transfer means the real error reaches the log.
+      - name: Prepare SSH access
         if: steps.check.outputs.proceed == 'true'
-        uses: appleboy/scp-action@ff85246acaad7bdce478db94a363cd2bf7c90345 # v1.0.0
-        with:
-          host: ${{ secrets.CONTABO_HOST }}
-          username: ${{ secrets.CONTABO_USER }}
-          key: ${{ secrets.CONTABO_SSH_KEY }}
-          port: ${{ secrets.CONTABO_SSH_PORT || 22 }}
-          source: ${{ env.BINARY_PATH }}
-          target: /tmp/
-          strip_components: 0
+        env:
+          VPS_KEY: ${{ secrets.CONTABO_SSH_KEY }}
+          VPS_HOST: ${{ secrets.CONTABO_HOST }}
+          VPS_USER: ${{ secrets.CONTABO_USER }}
+          VPS_PORT: ${{ secrets.CONTABO_SSH_PORT || 22 }}
+        run: |
+          set -euo pipefail
+          KEY="$RUNNER_TEMP/deploy_key"
+          umask 077
+          printf '%s\n' "$VPS_KEY" > "$KEY"
+          chmod 600 "$KEY"
+          KH="$RUNNER_TEMP/known_hosts"
+          : > "$KH"
+          ssh-keyscan -p "$VPS_PORT" -H "$VPS_HOST" >> "$KH" 2>/dev/null || true
+          COMMON="-i $KEY -o BatchMode=yes -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=4 -o UserKnownHostsFile=$KH -o StrictHostKeyChecking=accept-new"
+          {
+            echo "SSH_TARGET=${VPS_USER}@${VPS_HOST}"
+            echo "SSH_OPTS=-p ${VPS_PORT} ${COMMON}"
+            echo "SCP_OPTS=-P ${VPS_PORT} ${COMMON}"
+          } >> "$GITHUB_ENV"
+
+      # Fails BEFORE the transfer, with a message that names the cause. Every
+      # check here corresponds to a failure mode that used to be reported as a
+      # bare non-zero exit code halfway through the deploy.
+      - name: Preflight — can the VPS accept this deploy?
+        if: steps.check.outputs.proceed == 'true'
+        run: |
+          set -Eeuo pipefail
+          trap 'rc=$?; echo "::error::preflight failed (exit $rc) at line $LINENO: $BASH_COMMAND"' ERR
+
+          echo "::group::Connectivity"
+          if ! ssh $SSH_OPTS "$SSH_TARGET" 'echo "connected as $(whoami) on $(hostname -s)"'; then
+            echo "::error::cannot SSH to $SSH_TARGET. Check secrets CONTABO_HOST / CONTABO_USER / CONTABO_SSH_KEY / CONTABO_SSH_PORT, and that port ${SSH_TARGET} is reachable from GitHub runners."
+            exit 1
+          fi
+          echo "::endgroup::"
+
+          echo "::group::Capacity"
+          ssh $SSH_OPTS "$SSH_TARGET" 'df -h / /tmp 2>/dev/null; echo; free -h | head -2'
+          require_mb() { # $1=mount  $2=minimum MB
+            local free
+            free=$(ssh $SSH_OPTS "$SSH_TARGET" "df -Pm $1 | awk 'NR==2{print \$4}'" | tr -d '\r')
+            free=${free:-0}
+            if [ "$free" -lt "$2" ]; then
+              echo "::error::$1 on the VPS has only ${free} MB free, need ${2} MB. The deploy would fail mid-copy with a bare 'Process exited with status 1'. Free space first: ssh <vps> 'df -h /; journalctl --vacuum-size=200M; docker system prune -af'"
+              exit 1
+            fi
+            echo "  $1: ${free} MB free (required ${2} MB)"
+          }
+          require_mb / 512
+          require_mb /tmp 256
+          echo "::endgroup::"
+
+          echo "::group::Target layout"
+          MISSING=$(ssh $SSH_OPTS "$SSH_TARGET" "for d in ${VPS_BIN_DIR} ${VPS_RELEASES_DIR} ${VPS_BACKUPS_DIR} ${VPS_DATA_DIR}; do [ -d \$d ] || echo \$d; done")
+          if [ -n "$MISSING" ]; then
+            echo "::error::missing directories on the VPS: $(echo "$MISSING" | tr '\n' ' ') — run scripts/setup-vps.sh on the server first"
+            exit 1
+          fi
+          ssh $SSH_OPTS "$SSH_TARGET" "ls -ld ${VPS_BIN_DIR} ${VPS_RELEASES_DIR} ${VPS_DATA_DIR}"
+          echo "::endgroup::"
+
+      # --- Upload binary (own error surface, integrity verified) ---
+      - name: Upload binary to the VPS
+        if: steps.check.outputs.proceed == 'true'
+        run: |
+          set -uo pipefail
+          echo "::group::Transfer"
+          if [ ! -f "$BINARY_PATH" ]; then
+            echo "::error::artifact missing: $BINARY_PATH was not produced by the build step. The release bundle downloaded but this binary is absent — check the Test, Build & Release job's build output."
+            exit 1
+          fi
+          echo "source: $BINARY_PATH ($(du -h "$BINARY_PATH" | cut -f1))"
+          echo "dest:   $SSH_TARGET:/tmp/"
+          set +e
+          scp $SCP_OPTS "$BINARY_PATH" "$SSH_TARGET:/tmp/" 2>&1
+          rc=$?
+          set -e
+          echo "::endgroup::"
+
+          if [ "$rc" -ne 0 ]; then
+            # Derive the cause instead of guessing from the exit code: scp folds
+            # transport, auth and remote-write failures into the same status.
+            if ssh $SSH_OPTS "$SSH_TARGET" true 2>/dev/null; then
+              echo "::error::transfer failed (exit ${rc}) but SSH to $SSH_TARGET works — the write was refused. The most common cause is a full disk on the target."
+            else
+              echo "::error::upload failed (exit ${rc}) and SSH to $SSH_TARGET fails too — this is auth or network, not the file. Check CONTABO_SSH_KEY / CONTABO_SSH_PORT."
+            fi
+            echo "::group::Remote state at the moment of failure"
+            BIN_NAME=$(basename "$BINARY_PATH")
+            ssh $SSH_OPTS "$SSH_TARGET" "df -h / /tmp; echo; ls -ld /tmp; ls -l /tmp/${BIN_NAME} 2>/dev/null || echo 'no partial file left behind'" 2>&1 || true
+            echo "::endgroup::"
+            exit "$rc"
+          fi
+
+          # Prove the bytes that landed are the bytes we built. The previous
+          # flow never verified the uploaded binary at all.
+          BIN_NAME=$(basename "$BINARY_PATH")
+          local_sum=$(sha256sum "$BINARY_PATH" | awk '{print $1}')
+          remote_sum=$(ssh $SSH_OPTS "$SSH_TARGET" "sha256sum /tmp/${BIN_NAME} 2>/dev/null | awk '{print \$1}'" | tr -d '\r')
+          if [ "$local_sum" != "$remote_sum" ]; then
+            echo "::error::uploaded binary checksum mismatch — local ${local_sum:-?} remote ${remote_sum:-?} (truncated transfer)"
+            exit 1
+          fi
+          echo "upload verified: sha256 ${local_sum:0:16}… on both sides"
 
       # --- Deploy via SSH ---
       - name: Deploy binary and restart service
@@ -375,6 +476,56 @@ jobs:
             echo "Binary:    $(ls -lh ${VPS_BIN_DIR}/bigbase | awk '{print $5}')"
             echo "Database:  $(ls -lh ${VPS_DATA_DIR}/bigbase.db 2>/dev/null | awk '{print $5}')"
 
+      # --- Failure diagnostics: collected wherever the failure happened ---
+      # Runs even when an earlier step already failed, so the log always ends
+      # with remote state instead of a bare exit code.
+      - name: Collect VPS diagnostics on failure
+        if: failure() && steps.check.outputs.proceed == 'true'
+        run: |
+          set -uo pipefail
+          LOG="$RUNNER_TEMP/vps-diagnostics.txt"
+          {
+            echo "# Deploy failure diagnostics"
+            echo "run:     $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+            echo "version: ${{ steps.meta.outputs.version }}"
+            echo "sha:     ${{ steps.meta.outputs.sha }}"
+            echo "target:  ${SSH_TARGET:-<ssh not prepared>}"
+            echo
+            if [ -n "${SSH_TARGET:-}" ] && ssh $SSH_OPTS "$SSH_TARGET" true 2>/dev/null; then
+              ssh $SSH_OPTS "$SSH_TARGET" 'set +e
+                echo "## disk";                 df -h
+                echo; echo "## memory";        free -h
+                echo; echo "## bigbase.service"; systemctl status bigbase --no-pager -l 2>&1 | head -40
+                echo; echo "## journal (80)";  journalctl -u bigbase -n 80 --no-pager 2>&1
+                echo; echo "## dirs";          ls -la /opt/bigbase/bin /opt/bigbase/releases 2>&1 | head -30
+                echo; echo "## recent OOM";    dmesg 2>/dev/null | grep -i -E "oom|killed process" | tail -5
+              ' 2>&1
+            else
+              echo "SSH to the VPS failed — cannot collect remote state."
+              ssh $SSH_OPTS "$SSH_TARGET" true 2>&1 || true
+            fi
+          } | tee "$LOG"
+
+          {
+            echo "### ❌ Deploy failed"
+            echo
+            echo "| field | value |"
+            echo "|---|---|"
+            echo "| version | `${{ steps.meta.outputs.version }}` |"
+            echo "| sha | `${{ steps.meta.outputs.sha }}` |"
+            echo "| target | `${SSH_TARGET:-unknown}` |"
+            echo
+            echo "Failing step: check the first red step above; the annotations name the cause."
+            echo
+            echo '<details><summary>Remote state at failure</summary>'
+            echo
+            echo '```'
+            tail -70 "$LOG"
+            echo '```'
+            echo
+            echo '</details>'
+          } >> "$GITHUB_STEP_SUMMARY"
+
       # --- Deployment verification ---
       - name: Deployment verification
         if: success() && steps.check.outputs.proceed == 'true'
@@ -382,7 +533,18 @@ jobs:
           echo "✅ Deploy finished successfully"
           echo "   Server: ${{ secrets.CONTABO_HOST }}"
           echo "   Version: ${{ steps.meta.outputs.version }}"
+          echo "   Sha: ${{ steps.meta.outputs.sha }}"
           echo "   Time: $(date -u)"
+          {
+            echo "### ✅ Deploy succeeded"
+            echo
+            echo "| field | value |"
+            echo "|---|---|"
+            echo "| version | `${{ steps.meta.outputs.version }}` |"
+            echo "| sha | `${{ steps.meta.outputs.sha }}` |"
+            echo "| target | `${SSH_TARGET:-unknown}` |"
+            echo "| finished | $(date -u) |"
+          } >> "$GITHUB_STEP_SUMMARY"
 
   # ==========================================================================
   # Notify on failure
@@ -395,8 +557,36 @@ jobs:
 
     steps:
       - name: Build failure summary
+        # Expressions reach the shell via env, never interpolated into the
+        # script: a commit title containing a quote or $(...) would execute.
+        env:
+          REPO: ${{ github.repository }}
+          TITLE: ${{ github.event.workflow_run.display_title }}
+          TRIGGER_URL: ${{ github.event.workflow_run.html_url }}
+          SHA: ${{ github.event.workflow_run.head_sha }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          RUN_ID: ${{ github.run_id }}
         run: |
-          echo "❌ BigBase deploy FAILED"
-          echo "   Repository: ${{ github.repository }}"
-          echo "   Workflow run: ${{ github.event.workflow_run.html_url }}"
-          echo "   Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          {
+            echo "## ❌ BigBase deploy FAILED"
+            echo
+            echo "| field | value |"
+            echo "|---|---|"
+            printf '| repository | `%s` |\n' "$REPO"
+            printf '| commit | `%s` |\n' "${SHA:-unknown}"
+            printf '| commit message | %s |\n' "${TITLE:-n/a}"
+            printf '| triggering run | %s |\n' "${TRIGGER_URL:-n/a}"
+            printf '| this run | %s |\n' "$RUN_URL"
+            echo
+            echo "### How to see what actually broke"
+            echo
+            echo '```bash'
+            printf 'gh run view %s --log-failed\n' "$RUN_ID"
+            echo '```'
+            echo
+            echo "The first failing step is the real one. If it is the preflight step,"
+            echo "the message names the cause — usually disk space on the VPS."
+            echo
+            echo "The **deploy** job summary also carries remote state captured at"
+            echo "failure: disk, memory, systemd status and the journal tail."
+          } >> "$GITHUB_STEP_SUMMARY"
