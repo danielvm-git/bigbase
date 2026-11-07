@@ -19,6 +19,20 @@ active_story_id: null
 active_story_status: done
 bug_id: null
 decisions:
+  - at: '2026-11-06T21:00:00-03:00'
+    gate: buildship phase 1 (triage)
+    decision: >-
+      Preflight green baseline. No active registry bugs; filed the v2.93.0 dashboard-hang regression
+      as BUG-2026-11-06-dashboard-metrics-hang (fixed) with regression-test evidence. One external
+      item: deploy SCP failure (VPS-side SSH).
+  - at: '2026-11-06T21:10:00-03:00'
+    gate: buildship phase 4 (ship)
+    decision: >-
+      fix/dashboard-metrics-hang merged via PR #313 (all checks green). big-release published v2.94.1.
+      The production Deploy workflow fired and FAILED again at 'Upload binary to VPS' (SCP) — the same
+      external VPS-side SSH issue (unchanged config + secrets since the Nov 5 success), still blocking
+      the fix from reaching production. Deploys kept in GitHub Actions; no manual SSH.
+decisions:
   - at: '2026-11-06T13:50:00-03:00'
     gate: preflight
     decision: >-
@@ -151,7 +165,7 @@ release:
 buildship:
   cycle: build-ship
   scope: all pending work
-  phase: triage
+  phase: ship-done
   baseline:
     preflight: green
     branch: fix/dashboard-metrics-hang
@@ -244,23 +258,17 @@ cleanup:
   open_issues: 3 (all deferred/labeled)
 handoff:
   last_step_completed: >-
-    Build&Ship cycle for "all pending work" (2026-11-06): epic e90 shipped via PR #311 (merged,
-    v2.94.0 auto-published), 5 chore readiness-gates commits shipped in the same PR, traceability
-    refreshed. Production Deploy FAILED at the SCP upload step (twice) — VPS is up and healthy on
-    v2.93.0, but GitHub Actions runners cannot SCP to it. See buildship decisions for the diagnosis.
+    Build&Ship cycle (2026-11-06/07): BUG-2026-11-06-dashboard-metrics-hang fixed and shipped via
+    PR #313, merged to main, released as v2.94.1. Production Deploy still FAILS at the SCP upload step
+    (external VPS-side SSH) — the fix is on main but not yet in production.
   prior_step: >-
-    Diagnosed the deploy failure as VPS-side SSH access (key/fail2ban/disk), not a code or workflow
-    regression; deploy kept entirely in GitHub Actions.
+    Verified the fix (go test ./..., race, trace-stories --strict, 24 gate tests, preflight) and
+    merged PR #313.
   open_decisions:
   - >-
-    Production Deploy (GitHub Actions) fails at SCP to the VPS. Needs VPS-side fix (fail2ban status,
-    authorized_keys, df -h on /tmp) or a CONTABO_* secret update. Issue #312 tracks it.
-  - >-
-    Harness scripts absent from repo (bp-timing, bp-read-agents, assert-epic-gate,
-    verify-tdd-red-commit, verify-adversarial) — pre-existing, out of scope.
-  - >-
-    orchestrator.go resume path still writes error_message in a second statement after the status
-    write (status now reaches status_history via forceStatus).
+    Production Deploy (GitHub Actions) fails at SCP to the VPS (issue #312). Needs a VPS-side fix
+    (authorized_keys / fail2ban / df -h on /tmp) or a CONTABO_* secret update before v2.94.1 reaches
+    production.
   next_skill: null
   context: >-
-    main == origin/main == f2b7f479a. PR #311 merged. Production deploy pending VPS-side SSH fix.
+    main == origin/main == 4af323ae8. PR #313 merged. v2.94.1 published but not deployed (SCP blocked).
