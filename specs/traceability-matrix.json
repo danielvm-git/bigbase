@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-06T23:45:38.665656+00:00",
+  "generated_at": "2026-11-07T21:20:54.467550+00:00",
   "source": [
     "specs/release-plan.yaml",
     "specs/epics/**/epic.yaml",
@@ -596,88 +596,97 @@
     },
     {
       "story_id": "e90s01",
-      "title": "Provision BIGBASE_ROOT_ENCRYPTION_KEY and add required-env gate to CI",
+      "title": "e90s01",
       "files": [
         "scripts/check-required-env-documented.sh"
       ],
       "tests": [],
+      "orphan": true,
       "status": "Covered"
     },
     {
       "story_id": "e90s02",
-      "title": "Fix .gitignore conflict marker and consolidate gosec config",
+      "title": "e90s02",
       "files": [
         "scripts/check-conflict-markers.sh",
         "scripts/verify-cwe-fixture-sync.sh"
       ],
       "tests": [],
+      "orphan": true,
       "status": "Covered"
     },
     {
       "story_id": "e90s03",
-      "title": "Reconcile AGENTS.md ctxo mandate with 2026-08-11 revert reality",
+      "title": "e90s03",
       "files": [
         "scripts/setup-dev.sh"
       ],
       "tests": [],
+      "orphan": true,
       "status": "Covered"
     },
     {
       "story_id": "e90s04",
-      "title": "Add -race CI job and frontend lint/test gate",
+      "title": "e90s04",
       "files": [
         "tests/e2e/axe-scan.spec.ts"
       ],
       "tests": [
         "tests/e2e/axe-scan.spec.ts"
       ],
+      "orphan": true,
       "status": "Covered"
     },
     {
       "story_id": "e90s05",
-      "title": "Canonical MCP config \u2014 single source, generated adapters",
+      "title": "e90s05",
       "files": [
         "scripts/gen-mcp-configs.sh"
       ],
       "tests": [],
+      "orphan": true,
       "status": "Covered"
     },
     {
       "story_id": "e90s06",
-      "title": "Consolidate agent instruction files \u2014 AGENTS.md as single source",
+      "title": "e90s06",
       "files": [
         "scripts/generate-agent-guide.sh"
       ],
       "tests": [],
+      "orphan": true,
       "status": "Covered"
     },
     {
       "story_id": "e90s07",
-      "title": "Version declaration sweep and docs reconciliation",
+      "title": "e90s07",
       "files": [
         "scripts/check-version-drift.sh"
       ],
       "tests": [],
+      "orphan": true,
       "status": "Covered"
     },
     {
       "story_id": "e90s08",
-      "title": "Dependabot grouping and big-release push discipline",
+      "title": "e90s08",
       "files": [
         "scripts/land-branch.sh"
       ],
       "tests": [],
+      "orphan": true,
       "status": "Covered"
     },
     {
       "story_id": "e90s09",
-      "title": "Async-assert pattern sweep and test guideline",
+      "title": "e90s09",
       "files": [
         "components/deploy/state_lifecycle_test.go"
       ],
       "tests": [
         "components/deploy/state_lifecycle_test.go"
       ],
+      "orphan": true,
       "status": "Covered"
     }
   ],
@@ -685,7 +694,7 @@
     "total": 74,
     "covered": 32,
     "dark": 42,
-    "orphans": 14
+    "orphans": 23
   },
   "oracle_stats": {
     "explicit_tag_links": 32,

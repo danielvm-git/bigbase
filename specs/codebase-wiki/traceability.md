@@ -1,6 +1,6 @@
 # Traceability Matrix
 
-Generated: 2026-11-06T23:45:38.665656+00:00
+Generated: 2026-11-07T21:20:54.467550+00:00
 
 ## Story Coverage
 
@@ -71,15 +71,15 @@ Generated: 2026-11-06T23:45:38.665656+00:00
 | e89s05 | Add Admin UI for project secrets | 2 | 1 | Covered |
 | e89s06 | Resolve project and site secrets in deployments | 2 | 0 | Covered |
 | e89s07 | Secure MCP secret-management tools | 2 | 1 | Covered |
-| e90s01 | Provision BIGBASE_ROOT_ENCRYPTION_KEY and add required-env gate to CI | 1 | 0 | Covered |
-| e90s02 | Fix .gitignore conflict marker and consolidate gosec config | 2 | 0 | Covered |
-| e90s03 | Reconcile AGENTS.md ctxo mandate with 2026-08-11 revert reality | 1 | 0 | Covered |
-| e90s04 | Add -race CI job and frontend lint/test gate | 1 | 1 | Covered |
-| e90s05 | Canonical MCP config — single source, generated adapters | 1 | 0 | Covered |
-| e90s06 | Consolidate agent instruction files — AGENTS.md as single source | 1 | 0 | Covered |
-| e90s07 | Version declaration sweep and docs reconciliation | 1 | 0 | Covered |
-| e90s08 | Dependabot grouping and big-release push discipline | 1 | 0 | Covered |
-| e90s09 | Async-assert pattern sweep and test guideline | 1 | 1 | Covered |
+| e90s01 | e90s01 | 1 | 0 | Covered |
+| e90s02 | e90s02 | 2 | 0 | Covered |
+| e90s03 | e90s03 | 1 | 0 | Covered |
+| e90s04 | e90s04 | 1 | 1 | Covered |
+| e90s05 | e90s05 | 1 | 0 | Covered |
+| e90s06 | e90s06 | 1 | 0 | Covered |
+| e90s07 | e90s07 | 1 | 0 | Covered |
+| e90s08 | e90s08 | 1 | 0 | Covered |
+| e90s09 | e90s09 | 1 | 1 | Covered |
 
 ## Gaps
 
