@@ -12,9 +12,9 @@ project_cycle:
     release: pending
   current_phase: 5
   active_phase: verify
-active_flow: build_epic
-active_epic: e90
-active_epic_id: e90
+active_flow: null
+active_epic: null
+active_epic_id: null
 active_story_id: null
 active_story_status: done
 bug_id: null
@@ -153,12 +153,12 @@ decisions:
       restore / fail2ban), not to these repo changes.
 
 release:
-  target_version: 2.94.0
+  target_version: 2.94.1
   codename: "WCAG AAA Closing \u2014 Accent Links + Formal Conformance"
-  last_tag: v2.94.0
+  last_tag: v2.94.1
   last_publish: '2026-08-11'
   ci_verified: true
-  ci_verified_at: '2026-08-11T21:36:23Z'
+  ci_verified_at: '2026-11-07T03:30:00Z'
   release_skipped: 'no new release: pushed diff is chore/docs only (dependabot bumps,
     WCAG registry, e86 epic specs); big-release correctly skipped (default rules
     require feat/fix/perf)'
@@ -258,17 +258,20 @@ cleanup:
   open_issues: 3 (all deferred/labeled)
 handoff:
   last_step_completed: >-
-    Build&Ship cycle (2026-11-06/07): BUG-2026-11-06-dashboard-metrics-hang fixed and shipped via
-    PR #313, merged to main, released as v2.94.1. Production Deploy still FAILS at the SCP upload step
-    (external VPS-side SSH) — the fix is on main but not yet in production.
+    release-branch finalization (2026-11-07): e90 epic capsule archived
+    (specs/epics/archive/e90-dev-environment-hardening). All stories done; v2.94.1 live on
+    production (footer confirms) after the VPS disk-full deploy blocker was cleared. Issue #312
+    closed.
   prior_step: >-
-    Verified the fix (go test ./..., race, trace-stories --strict, 24 gate tests, preflight) and
-    merged PR #313.
+    Fixed the VPS 100%-full disk (cleared caches + stale build/backup/release leftovers, kept the
+    9 running deployments) and re-triggered the Deploy workflow; v2.94.1 deployed.
   open_decisions:
   - >-
-    Production Deploy (GitHub Actions) fails at SCP to the VPS (issue #312). Needs a VPS-side fix
-    (authorized_keys / fail2ban / df -h on /tmp) or a CONTABO_* secret update before v2.94.1 reaches
-    production.
-  next_skill: null
+    exames.bigbase.click (Node site) exits with status 1 on startup — broken site build, separate
+    from the platform; needs a working build/rollback.
+  - >-
+    Monitoring alert rules 'VPS Disk above 80%' / 'VPS RAM above 85%' reference unknown metrics
+    (disk_used_percent, mem_used_percent) and are skipped — disk-full never alerted. Follow-up fix.
+  next_skill: survey-context
   context: >-
-    main == origin/main == 4af323ae8. PR #313 merged. v2.94.1 published but not deployed (SCP blocked).
+    main == origin/main. e90 archived. v2.94.1 in production.

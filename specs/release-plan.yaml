@@ -781,5 +781,5 @@ epics:
   status: done
   depends_on: [e89]
   note: "Dev-environment hardening: config consolidation, CI gates, MCP configs, single source agent docs."
-  capsule_dir: epics/e90-dev-environment-hardening
-  file: epics/e90-dev-environment-hardening/epic.yaml
+  capsule_dir: epics/archive/e90-dev-environment-hardening
+  file: epics/archive/e90-dev-environment-hardening/epic.yaml
