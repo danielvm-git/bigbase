@@ -31,7 +31,10 @@ jobs:
       contents: read
     steps:
       - name: PR Agent
-        uses: docker://pragent/pr-agent:0.36.0-github_action
+        # Pinned to the 0.36.0-github_action image digest (supply-chain hygiene:
+        # a mutable tag receiving DEEPSEEK_API_KEY + GITHUB_TOKEN could be
+        # repointed to an exfiltrating image). Re-pin when bumping the version.
+        uses: docker://pragent/pr-agent@sha256:0e0ab10b296d0d04df2049c51a27c3fc29b1a791f939a532a14f2b775316f6c5 # 0.36.0-github_action
         env:
           # OpenAI-compatible endpoint pointing to DeepSeek
           OPENAI_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
