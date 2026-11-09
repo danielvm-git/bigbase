@@ -8,8 +8,19 @@
     ".": "./dist/index.js",
     "./css": "./dist/auth-ui.css"
   },
-  "files": ["dist"],
-  "scripts": { "build": "svelte-package -i src/lib", "test": "echo ok" },
-  "peerDependencies": { "svelte": "^5.56" },
-  "devDependencies": { "svelte": "^5.57.2", "@sveltejs/package": "^3.0", "typescript": "^7.0" }
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "svelte-package -i src/lib",
+    "test": "echo ok"
+  },
+  "peerDependencies": {
+    "svelte": "^5.56"
+  },
+  "devDependencies": {
+    "@sveltejs/package": "^3.0.2",
+    "svelte": "^5.57.3",
+    "typescript": "^7.0"
+  }
 }
